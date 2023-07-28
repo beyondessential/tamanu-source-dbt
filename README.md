@@ -1,15 +1,14 @@
-Welcome to your new dbt project!
+# Tamanu source documentation
 
-### Using the starter project
+A dbt package for documenting and validating Tamanu's source data
 
-Try running the following commands:
-- dbt run
-- dbt test
+## Versioning
 
+We will use a 3-part version number < major >.< minor >.< patch >. This number will mirror Tamanu's release down to the minor number.
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Creating a release
+* 
+* Click on "Releases"
+* Click "Draft a new release"
+* You can select a branch to make the release from, but usually you'd release from `main`.
+* Give your release a "tag". This is the version number of the release.
