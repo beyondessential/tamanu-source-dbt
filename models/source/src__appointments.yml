@@ -1,0 +1,55 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: appointments
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: start_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: end_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: patient_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: clinician_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: location_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: type
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: status
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: start_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: end_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: location_group_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

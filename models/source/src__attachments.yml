@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: attachments
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: type
+            data_type: TEXT
+            description: ""
+          - name: size
+            data_type: INTEGER
+            description: ""
+          - name: data
+            data_type: BYTEA
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""

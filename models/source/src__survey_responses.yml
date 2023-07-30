@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: survey_responses
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: start_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: end_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: result
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: survey_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: encounter_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: result_text
+            data_type: TEXT
+            description: ""
+          - name: user_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: start_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: end_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

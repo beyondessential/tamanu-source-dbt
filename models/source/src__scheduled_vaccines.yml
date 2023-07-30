@@ -1,0 +1,49 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: scheduled_vaccines
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: category
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: label
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: schedule
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: weeks_from_birth_due
+            data_type: INTEGER
+            description: ""
+          - name: index
+            data_type: INTEGER
+            description: ""
+          - name: vaccine_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: weeks_from_last_vaccination_due
+            data_type: INTEGER
+            description: ""
+          - name: visibility_status
+            data_type: TEXT
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

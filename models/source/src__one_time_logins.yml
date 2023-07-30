@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: one_time_logins
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: user_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: token
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: expires_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: used_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""

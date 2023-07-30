@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: sequelizemeta
+        description: ""
+        columns:
+          - name: name
+            data_type: CHARACTER VARYING(255)
+            description: ""

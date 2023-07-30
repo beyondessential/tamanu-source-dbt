@@ -1,0 +1,103 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: vitals
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: date_recorded
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: temperature
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: weight
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: height
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: sbp
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: dbp
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: heart_rate
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: respiratory_rate
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: spo2
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: avpu
+            data_type: USER-DEFINED
+            description: ""
+          - name: encounter_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: gcs
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: hemoglobin
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: fasting_blood_glucose
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: urine_ph
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: urine_leukocytes
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: urine_nitrites
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: urobilinogen
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: urine_protein
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: blood_in_urine
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: urine_specific_gravity
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: urine_ketone
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: urine_bilirubin
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: urine_glucose
+            data_type: DOUBLE PRECISION
+            description: ""
+          - name: date_recorded_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: migrated_record
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

@@ -1,0 +1,61 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: triages
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: arrival_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: triage_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: closed_time
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: score
+            data_type: TEXT
+            description: ""
+          - name: encounter_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: practitioner_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: chief_complaint_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: secondary_complaint_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: arrival_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: triage_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: closed_time_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: arrival_mode_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

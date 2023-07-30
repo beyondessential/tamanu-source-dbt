@@ -1,0 +1,121 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: patient_additional_data
+        description: ""
+        columns:
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: place_of_birth
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: primary_contact_number
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: secondary_contact_number
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: marital_status
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: city_town
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: street_village
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: educational_level
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: social_media
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: blood_type
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: title
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: ethnicity_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: nationality_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: country_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: division_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: subdivision_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: medical_area_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: nursing_zone_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: settlement_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: occupation_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: patient_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: birth_certificate
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: driving_license
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: passport
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: religion_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: patient_billing_type_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: country_of_birth_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: registered_by_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: emergency_contact_name
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: emergency_contact_number
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: mother_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: father_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: id
+            data_type: TEXT
+            description: ""
+          - name: updated_at_by_field
+            data_type: JSON
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

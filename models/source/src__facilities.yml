@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: source
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: facilities
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: code
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: name
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: division
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: type
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: email
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: contact_number
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: city_town
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: street_address
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: visibility_status
+            data_type: TEXT
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""
