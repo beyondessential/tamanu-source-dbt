@@ -1,5 +1,5 @@
 sources:
-  - name: source
+  - name: tamanu
     schema: public
     description: "Tamanu source database"
     tables:
