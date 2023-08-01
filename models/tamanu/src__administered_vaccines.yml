@@ -4,50 +4,73 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: administered_vaccines
-        description: ""
+        description: "{{ doc('table__administered_vaccines') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('administered_vaccines__id') }}"
             tests:
               - unique
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__created_at') }} in administered_vaccines"
+            tests:
+              - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__updated_at') }} in administered_vaccines"
+            tests:
+              - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__deleted_at') }} in administered_vaccines"
+            tests:
+              - not_null
           - name: batch
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('administered_vaccines__batch') }}"
           - name: status
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('administered_vaccines__status') }}"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [ 'UNKNOWN', 'GIVEN', 'NOT_GIVEN', 'RECORDED_IN_ERROR', 'HISTORICAL' ]
           - name: reason
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('administered_vaccines__reason') }}"
           - name: date
             data_type: CHARACTER VARYING(19)
-            description: ""
+            description: "{{ doc('generic__date') }}"
+            tests:
+              - not_null
           - name: scheduled_vaccine_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('scheduled_vaccines__id') }}"
+            tests:
+              - relationships:
+                  to: source('tamanu', 'scheduled_vaccines')
+                  field: id
           - name: encounter_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('encounters__id') }}"
+            tests:
+              - relationships:
+                  to: source('tamanu', 'encounters')
+                  field: id
           - name: injection_site
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('administered_vaccines__injection_site') }}"
+            tests:
+              - accepted_values:
+                  values: [ 'Left arm', 'Right arm', 'Left thigh', 'Right thigh', 'Oral', 'Other' ]
           - name: consent
             data_type: BOOLEAN
-            description: ""
+            description: "{{ doc('administered_vaccines__consent') }}"
           - name: recorder_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('user__id') }} as the recorder of the administered vaccine"
           - name: location_id
             data_type: CHARACTER VARYING(255)
             description: ""
