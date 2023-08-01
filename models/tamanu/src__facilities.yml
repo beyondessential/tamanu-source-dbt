@@ -6,47 +6,64 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: facilities
-        description: ""
+        description: "{{ doc('table__facilities') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__id') }}"
+            tests:
+              - unique
+              - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__created_at') }} in facilities"
+            tests:
+              - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__updated_at') }} in facilities"
+            tests:
+              - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__deleted_at') }} in facilities"
           - name: code
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__code') }}"
+            tests:
+              - not_null
           - name: name
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__name') }}"
+            tests:
+              - not_null
           - name: division
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__division') }}"
           - name: type
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__type') }}"
           - name: email
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__email') }}"
           - name: contact_number
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__contact_number') }}"
           - name: city_town
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__city_town') }}"
           - name: street_address
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('facilities__street_address') }}"
           - name: visibility_status
             data_type: TEXT
-            description: ""
+            description: "{{ doc('generic__visibility_status') }} in facilities"
+            tests: 
+              - not_null
+              - accepted_values:
+                  values: [ 'current', 'historical' ]
           - name: updated_at_sync_tick
             data_type: BIGINT
-            description: ""
+            description: "{{ doc('generic__updated_at_sync_tick') }} facilities"
+            tests: 
+              - not_null
