@@ -6,65 +6,108 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: encounters
-        description: ""
+        description: "{{ doc('table__encounters') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('encounters__id') }}"
+            tests:
+              - unique
+              - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__created_at') }} in encounters"
+            tests:
+              - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__updated_at') }} in encounters"
+            tests:
+              - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__deleted_at') }} in encounters"
           - name: encounter_type
             data_type: CHARACTER VARYING(31)
-            description: ""
+            description: "{{ doc('encounters__encounter_type') }}"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [ 'admission', 'clinic', 'imaging', 'emergency', 'observation', 'triage', 'surveyResponse' ]
           - name: start_date
             data_type: CHARACTER VARYING(19)
-            description: ""
+            description: "{{ doc('encounters__start_date') }}"
+            tests:
+              - not_null
           - name: end_date
             data_type: CHARACTER VARYING(19)
-            description: ""
+            description: "{{ doc('encounters__end_date') }}"
           - name: reason_for_encounter
             data_type: TEXT
-            description: ""
+            description: "{{ doc('encounters__reason_for_encounter') }}"
           - name: device_id
             data_type: TEXT
-            description: ""
+            description: "{{ doc('encounters__device_id') }}"
           - name: patient_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('patients__id') }}"
+            tests: 
+              - relationships:
+                  to: source('tamanu', 'patients')
+                  field: id
           - name: examiner_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('users__id') }}"
+            tests: 
+              - relationships:
+                  to: source('tamanu', 'users')
+                  field: id
           - name: location_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('locations__id') }}"
+            tests: 
+              - relationships:
+                  to: source('tamanu', 'locations')
+                  field: id
           - name: department_id
             data_type: CHARACTER VARYING(255)
             description: ""
+            tests: 
+              - relationships:
+                  to: source('tamanu', 'departments')
+                  field: id
           - name: patient_billing_type_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('encounters__patient_billing_types__id') }}"
+            tests:
+              - relationships:
+                  to: source('tamanu', 'reference_data')
+                  field: id
           - name: start_date_legacy
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('encounters__start_date_legacy') }}"
           - name: end_date_legacy
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('encounters__end_date_legacy') }}"
           - name: referral_source_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('encounters__referral_source_id') }}"
+            tests:
+              - relationships:
+                  to: source('tamanu', 'reference_data')
+                  field: id
           - name: planned_location_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('encounters__planned_location_id ')}}"
+            tests: 
+              - relationships:
+                  to: source('tamanu', 'locations')
+                  field: id
           - name: planned_location_start_time
             data_type: CHARACTER VARYING(19)
-            description: ""
+            description: "{{ doc('encounters__planned_location_start_time') }}"
           - name: updated_at_sync_tick
             data_type: BIGINT
-            description: ""
+            description: "{{ doc('generic__updated_at_sync_tick') }} encounters"
+            tests: 
+              - not_null
