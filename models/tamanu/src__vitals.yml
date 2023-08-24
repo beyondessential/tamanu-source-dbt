@@ -97,7 +97,7 @@ sources:
             description: ""
           - name: migrated_record
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is NULL"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""

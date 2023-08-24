@@ -57,13 +57,13 @@ sources:
             description: "{{ doc('facilities__street_address') }}"
           - name: visibility_status
             data_type: TEXT
-            description: "{{ doc('generic__visibility_status') }} in facilities"
-            tests: 
+            description: "{{ doc('generic__visibility_status') }} in facilities, default value is 'current'"
+            tests:
               - not_null
               - accepted_values:
-                  values: [ 'current', 'historical' ]
+                  values: ["current", "historical"]
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} facilities"
-            tests: 
+            tests:
               - not_null

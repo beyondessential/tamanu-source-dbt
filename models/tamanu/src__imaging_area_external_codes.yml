@@ -22,7 +22,7 @@ sources:
             description: ""
           - name: visibility_status
             data_type: TEXT
-            description: ""
+            description: "Default value is 'current'"
           - name: area_id
             data_type: CHARACTER VARYING(255)
             description: ""

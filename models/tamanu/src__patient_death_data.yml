@@ -109,10 +109,10 @@ sources:
             description: ""
           - name: is_final
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: visibility_status
             data_type: TEXT
-            description: ""
+            description: "Default value is 'current'"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""

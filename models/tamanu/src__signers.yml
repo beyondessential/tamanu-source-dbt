@@ -43,7 +43,7 @@ sources:
             description: ""
           - name: signatures_issued
             data_type: INTEGER
-            description: ""
+            description: "Default value is 0"
           - name: request_sent_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: ""

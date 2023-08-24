@@ -25,19 +25,19 @@ sources:
             description: ""
           - name: require_signing
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: patient_id
             data_type: CHARACTER VARYING(255)
             description: ""
           - name: forward_address
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is NULL"
           - name: lab_test_id
             data_type: CHARACTER VARYING(255)
             description: ""
           - name: status
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'Queued'"
           - name: error
             data_type: TEXT
             description: ""

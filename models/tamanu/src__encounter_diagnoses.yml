@@ -22,7 +22,7 @@ sources:
             description: ""
           - name: certainty
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'suspected'"
           - name: is_primary
             data_type: BOOLEAN
             description: ""

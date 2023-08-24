@@ -22,7 +22,7 @@ sources:
             description: ""
           - name: completed
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: date
             data_type: CHARACTER VARYING(19)
             description: ""

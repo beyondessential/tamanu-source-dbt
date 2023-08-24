@@ -56,6 +56,9 @@ sources:
           - name: document_uploaded_at_legacy
             data_type: TIMESTAMP WITH TIME ZONE
             description: ""
+          - name: source
+            data_type: CHARACTER VARYING(255)
+            description: "Default value is 'uploaded'"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""

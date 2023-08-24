@@ -31,10 +31,10 @@ sources:
             description: ""
           - name: survey_type
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'programs'"
           - name: is_sensitive
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""

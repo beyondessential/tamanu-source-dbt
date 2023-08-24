@@ -43,7 +43,7 @@ sources:
             description: ""
           - name: maximum_dosage
             data_type: INTEGER
-            description: ""
+            description: "Default value is 1"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""

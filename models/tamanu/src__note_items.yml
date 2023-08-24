@@ -34,7 +34,7 @@ sources:
             description: ""
           - name: content
             data_type: TEXT
-            description: ""
+            description: "Default value is ''"
           - name: date
             data_type: CHARACTER VARYING(19)
             description: ""

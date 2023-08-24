@@ -34,4 +34,4 @@ sources:
             description: ""
           - name: is_deleted_by_remote
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"

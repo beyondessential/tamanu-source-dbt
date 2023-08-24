@@ -25,10 +25,10 @@ sources:
             description: ""
           - name: status
             data_type: CHARACTER VARYING(31)
-            description: ""
+            description: "Default value is 'reception_pending'"
           - name: result
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is ''"
           - name: lab_request_id
             data_type: CHARACTER VARYING(255)
             description: ""
