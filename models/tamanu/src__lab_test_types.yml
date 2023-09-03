@@ -25,10 +25,10 @@ sources:
             description: ""
           - name: name
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is ''"
           - name: unit
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is ''"
           - name: male_min
             data_type: DOUBLE PRECISION
             description: ""
@@ -55,7 +55,7 @@ sources:
             description: ""
           - name: visibility_status
             data_type: TEXT
-            description: ""
+            description: "Default value is 'current'"
           - name: external_code
             data_type: TEXT
             description: ""

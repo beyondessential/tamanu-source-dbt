@@ -28,13 +28,13 @@ sources:
             description: ""
           - name: urgent
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: specimen_attached
             data_type: BOOLEAN
-            description: ""
+            description: "Default value is false"
           - name: status
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'reception_pending'"
           - name: senaite_id
             data_type: CHARACTER VARYING(255)
             description: ""

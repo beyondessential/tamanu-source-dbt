@@ -100,10 +100,10 @@ sources:
             description: ""
           - name: emergency_contact_name
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is ''"
           - name: emergency_contact_number
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is ''"
           - name: mother_id
             data_type: CHARACTER VARYING(255)
             description: ""

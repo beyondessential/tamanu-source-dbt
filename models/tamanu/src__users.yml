@@ -42,13 +42,13 @@ sources:
             description: "{{ doc('users__display_name') }}"
           - name: role
             data_type: CHARACTER VARYING(255)
-            description: "{{ doc('roles__id') }}"
-            tests: 
+            description: "{{ doc('roles__id') }}, default value is 'practitioner'"
+            tests:
               - relationships:
                   to: source('tamanu', 'roles')
                   field: id
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} users"
-            tests: 
+            tests:
               - not_null

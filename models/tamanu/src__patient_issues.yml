@@ -28,7 +28,7 @@ sources:
             description: ""
           - name: type
             data_type: USER-DEFINED
-            description: ""
+            description: "Default value is 'issue'"
           - name: patient_id
             data_type: CHARACTER VARYING(255)
             description: ""

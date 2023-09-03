@@ -29,11 +29,11 @@ sources:
             description: "{{ doc('generic__deleted_at') }} in location groups"
           - name: visibility_status
             data_type: TEXT
-            description: "{{ doc('generic__visibility_status') }} in location groups"
-            tests: 
+            description: "{{ doc('generic__visibility_status') }} in location groups, default value is 'current'"
+            tests:
               - not_null
               - accepted_values:
-                  values: [ 'current', 'historical' ]
+                  values: ["current", "historical"]
           - name: name
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('location_groups__name') }}"
@@ -47,12 +47,12 @@ sources:
           - name: facility_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('facilities__id') }}"
-            tests: 
+            tests:
               - relationships:
                   to: source('tamanu', 'facilities')
                   field: id
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} location groups"
-            tests: 
+            tests:
               - not_null

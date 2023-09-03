@@ -37,7 +37,7 @@ sources:
             description: ""
           - name: status
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'active'"
           - name: date_generated_legacy
             data_type: TIMESTAMP WITH TIME ZONE
             description: ""

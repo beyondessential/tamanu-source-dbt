@@ -46,7 +46,7 @@ sources:
             description: ""
           - name: export_format
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "Default value is 'xlsx'"
           - name: report_definition_version_id
             data_type: CHARACTER VARYING(255)
             description: ""

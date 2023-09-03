@@ -37,7 +37,7 @@ sources:
             description: ""
           - name: visibility_status
             data_type: TEXT
-            description: ""
+            description: "Default value is 'current'"
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: ""
