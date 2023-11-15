@@ -6,7 +6,7 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: appointments
-        description: ""
+        description: "{{ doc('table__appointments') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)

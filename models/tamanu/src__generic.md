@@ -14,6 +14,10 @@ Timestamp of when record was deleted
 Local date and time of the event being recorded
 {% enddocs %}
 
+{% docs generic__date_legacy %}
+Legacy date field which is a timestamp of the event being recorded
+{% enddocs %}
+
 {% docs generic__visibility_status %}
 Whether or not the data will show up on the front end
 {% enddocs %}

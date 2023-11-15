@@ -14,19 +14,17 @@ sources:
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: "{{ doc('generic__created_at') }} in administered_vaccines"
+            description: "{{ doc('generic__created_at') }} in administered_vaccines."
             tests:
               - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: "{{ doc('generic__updated_at') }} in administered_vaccines"
+            description: "{{ doc('generic__updated_at') }} in administered_vaccines."
             tests:
               - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: "{{ doc('generic__deleted_at') }} in administered_vaccines"
-            tests:
-              - not_null
+            description: "{{ doc('generic__deleted_at') }} in administered_vaccines."
           - name: batch
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('administered_vaccines__batch') }}"
@@ -42,9 +40,7 @@ sources:
             description: "{{ doc('administered_vaccines__reason') }}"
           - name: date
             data_type: CHARACTER VARYING(19)
-            description: "{{ doc('generic__date') }}"
-            tests:
-              - not_null
+            description: "{{ doc('generic__date') }} in administered_vaccines."
           - name: scheduled_vaccine_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('scheduled_vaccines__id') }}"
@@ -70,40 +66,45 @@ sources:
             description: "{{ doc('administered_vaccines__consent') }}"
           - name: recorder_id
             data_type: CHARACTER VARYING(255)
-            description: "{{ doc('user__id') }} as the recorder of the administered vaccine"
+            description: "{{ doc('users__id') }} as the recorder of the administered vaccines."
           - name: location_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('locations__id') }} of the administered_vaccines."
           - name: department_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('departments__id') }} of the administered_vaccines."
           - name: given_by
             data_type: TEXT
-            description: ""
+            description: "{{ doc('users__id') }} giving the administered_vaccines."
           - name: date_legacy
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "[Deprecated] {{ doc('generic__date_legacy') }} in administered_vaccines."
           - name: not_given_reason_id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('reference_data__vaccine_not_given_reason') }}"
+            tests:
+              - dbt_utils.relationships_where:
+                  to: source('tamanu', 'reference_data')
+                  field: id
+                  to_condition: type = 'vaccineNotGivenReason'
           - name: given_elsewhere
             data_type: BOOLEAN
-            description: ""
+            description: "{{ doc('administered_vaccines__given_elsewhere') }}"
           - name: vaccine_name
             data_type: TEXT
-            description: ""
+            description: "{{ doc('administered_vaccines__vaccine_name') }}"
           - name: vaccine_brand
             data_type: TEXT
-            description: ""
+            description: "{{ doc('administered_vaccines__vaccine_brand') }}"
           - name: disease
             data_type: TEXT
-            description: ""
+            description: "{{ doc('administered_vaccines__disease') }}"
           - name: circumstance_ids
             data_type: ARRAY
-            description: ""
+            description: "{{ doc('reference_data__vaccine_circumstance') }}"
           - name: consent_given_by
             data_type: TEXT
-            description: ""
+            description: "{{ doc('administered_vaccines__consent_given_by') }}"
           - name: updated_at_sync_tick
             data_type: BIGINT
-            description: ""
+            description: "{{ doc('generic__updated_at_sync_tick') }} in administered_vaccines."

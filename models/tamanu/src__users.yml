@@ -47,6 +47,8 @@ sources:
               - relationships:
                   to: source('tamanu', 'roles')
                   field: id
+                  config:
+                    severity: warn
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} users"

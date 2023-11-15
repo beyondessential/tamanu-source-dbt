@@ -1,17 +1,17 @@
 {% docs table__locations %}
-Information of which room or specific area a patient is located
+Information on the hospital locations.
 {% enddocs %}
 
 {% docs locations__id %}
-Tamanu identifier for locations
+Tamanu identifier for location
 {% enddocs %}
 
 {% docs locations__code %}
-Code for locations
+Code for location
 {% enddocs %}
 
 {% docs locations__name %}
-Full readable name for locations
+Full readable name for location
 {% enddocs %}
 
 {% docs locations__max_occupancy %}

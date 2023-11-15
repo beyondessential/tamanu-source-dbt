@@ -1,16 +1,16 @@
-{% docs table__administered_vaccines %}
-Table of vaccines administered to patients related to the Vaccination modal.
+{% docs table__appointments %}
+Table of appointments related to the Vaccination modal.
 {% enddocs %}
 
-{% docs administered_vaccines__id %}
+{% docs appointments__id %}
 Tamanu identifier for administered vaccines recorded.
 {% enddocs %}
 
-{% docs administered_vaccines__batch %}
+{% docs appointments__batch %}
 Batch identifier of administered vaccines recorded.
 {% enddocs %}
 
-{% docs administered_vaccines__status %}
+{% docs appointments__status %}
 Status of administered vaccines recorded. 
 
 The `RECORDED_IN_ERROR` status is assigned to vaccines initially recorded
@@ -24,34 +24,34 @@ record.
 
 {% enddocs %}
 
-{% docs administered_vaccines__reason %}
+{% docs appointments__reason %}
 Reason for administered vaccine's `NOT_GIVEN` status. This is a free text field.
 {% enddocs %}
 
-{% docs administered_vaccines__injection_site %}
+{% docs appointments__injection_site %}
 Injection site of the administered vaccine recorded.
 {% enddocs %}
 
-{% docs administered_vaccines__consent %}
+{% docs appointments__consent %}
 Consent of the administered vaccine recorded
 {% enddocs %}
 
-{% docs administered_vaccines__given_elsewhere %}
+{% docs appointments__given_elsewhere %}
 Checks if the vaccine was given elsewhere.
 {% enddocs %}
 
-{% docs administered_vaccines__vaccine_name %}
+{% docs appointments__vaccine_name %}
 Vaccine name.
 {% enddocs %}
 
-{% docs administered_vaccines__vaccine_brand %}
+{% docs appointments__vaccine_brand %}
 Vaccine brand.
 {% enddocs %}
 
-{% docs administered_vaccines__disease %}
+{% docs appointments__disease %}
 Disease the vaccine addresses.
 {% enddocs %}
 
-{% docs administered_vaccines__consent_given_by %}
+{% docs appointments__consent_given_by %}
 Free text field recording consent given by.
 {% enddocs %}

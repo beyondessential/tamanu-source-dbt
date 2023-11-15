@@ -33,7 +33,8 @@ sources:
             tests:
               - not_null
               - accepted_values:
-                  values: [ 'admission', 'clinic', 'imaging', 'emergency', 'observation', 'triage', 'surveyResponse' ]
+                  values: [ 'admission', 'clinic', 'imaging', 'emergency', 'observation', 'triage', 'surveyResponse',
+                            'vaccination' ]
           - name: start_date
             data_type: CHARACTER VARYING(19)
             description: "{{ doc('encounters__start_date') }}"
@@ -78,7 +79,7 @@ sources:
                   field: id
           - name: patient_billing_type_id
             data_type: CHARACTER VARYING(255)
-            description: "{{ doc('encounters__patient_billing_types__id') }}"
+            description: "{{ doc('reference_data__patient_billing_type') }}"
             tests:
               - relationships:
                   to: source('tamanu', 'reference_data')
@@ -98,7 +99,7 @@ sources:
                   field: id
           - name: planned_location_id
             data_type: CHARACTER VARYING(255)
-            description: "{{ doc('encounters__planned_location_id ')}}"
+            description: "{{ doc('locations__id')}} that is planned for the encounter."
             tests: 
               - relationships:
                   to: source('tamanu', 'locations')

@@ -2,19 +2,19 @@
 Records of each user that can login to the site
 {% enddocs %}
 
-{% docs user__id %}
+{% docs users__id %}
 Tamanu identifier for user recorded
 {% enddocs %}
 
-{% docs user__email %}
-Email address for user. Is used to login and recieve emails.
+{% docs users__email %}
+Email address for user. Is used to login and receive emails.
 {% enddocs %}
 
-{% docs user__password %}
+{% docs users__password %}
 Encrypted password for user login
 {% enddocs %}
 
-{% docs user__display_name %}
+{% docs users__display_name %}
 The human readable display name for the user
 {% enddocs %}
 
