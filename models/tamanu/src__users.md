@@ -3,7 +3,7 @@ Records of each user that can login to the site
 {% enddocs %}
 
 {% docs users__id %}
-Tamanu identifier for user recorded
+Tamanu identifier for user
 {% enddocs %}
 
 {% docs users__email %}
