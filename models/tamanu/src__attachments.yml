@@ -6,26 +6,40 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: attachments
-        description: ""
+        description: "{{ doc('table__attachments') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('attachments__id') }}"
+            tests:
+              - unique
+              - not_null
           - name: type
             data_type: TEXT
-            description: ""
+            description: "{{ doc('attachments__type') }}"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["application/pdf", "image/jpeg"]
           - name: size
             data_type: INTEGER
-            description: ""
+            description: "{{ doc('attachments__size') }}"
           - name: data
             data_type: BYTEA
-            description: ""
+            description: "{{ doc('attachments__data') }}"
+            tests:
+              - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__created_at') }}"
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__updated_at') }}"
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__deleted_at') }}"
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: "{{ doc('generic__updated_at_sync_tick') }}"
+            tests:
+              - not_null

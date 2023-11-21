@@ -1,5 +1,5 @@
 {% docs table__assets %}
-Table of assets used in tamanu.
+Table of assets used in the tamanu app ui and patient letters.
 {% enddocs %}
 
 {% docs assets__id %}
