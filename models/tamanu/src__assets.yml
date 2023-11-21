@@ -6,29 +6,42 @@ sources:
     description: "Tamanu source database"
     tables:
       - name: assets
-        description: ""
+        description: "{{ doc('table__assets') }}"
         columns:
           - name: id
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('assets__id') }}"
+            tests:
+              - unique
+              - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__created_at') }}"
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__updated_at') }}"
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            description: "{{ doc('generic__deleted_at') }}"
           - name: name
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('assets__name') }}"
+            tests:
+              - not_null
           - name: type
             data_type: CHARACTER VARYING(255)
-            description: ""
+            description: "{{ doc('assets__type') }}"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["image/png", "image/svg"]
           - name: data
             data_type: BYTEA
-            description: ""
+            description: "{{ doc('assets__data') }}"
+            tests:
+              - not_null
           - name: updated_at_sync_tick
             data_type: BIGINT
-            description: ""
+            description: "{{ doc('generic__updated_at_sync_tick') }}"
+            tests:
+              - not_null
