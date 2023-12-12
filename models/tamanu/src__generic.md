@@ -1,3 +1,7 @@
+{% docs generic__id %}
+Tamanu identifier
+{% enddocs %}
+
 {% docs generic__created_at %}
 Timestamp of when record was created
 {% enddocs %}
@@ -15,7 +19,7 @@ Local date and time of the event being recorded
 {% enddocs %}
 
 {% docs generic__date_legacy %}
-Legacy date field which is a timestamp of the event being recorded
+[Deprecated] date field which is a timestamp of the event being recorded
 {% enddocs %}
 
 {% docs generic__visibility_status %}
