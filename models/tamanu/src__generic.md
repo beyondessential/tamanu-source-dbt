@@ -22,6 +22,10 @@ Local date and time of the event being recorded
 [Deprecated] date field which is a timestamp of the event being recorded
 {% enddocs %}
 
+{% docs generic__deletion_date %}
+Date field which is a timestamp of record being deleted
+{% enddocs %}
+
 {% docs generic__visibility_status %}
 Whether or not the data will show up on the front end
 {% enddocs %}

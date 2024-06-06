@@ -1,0 +1,55 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: patient_program_registrations
+        description: ""
+        columns:
+          - name: id
+            data_type: UUID
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: date
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: registration_status
+            data_type: TEXT
+            description: ""
+          - name: patient_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: program_registry_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: clinical_status_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: clinician_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: registering_facility_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: facility_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: village_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""
+          - name: is_most_recent
+            data_type: BOOLEAN
+            description: ""

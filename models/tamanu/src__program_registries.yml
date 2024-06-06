@@ -1,0 +1,40 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu source database"
+    tables:
+      - name: program_registries
+        description: ""
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: code
+            data_type: TEXT
+            description: ""
+          - name: name
+            data_type: TEXT
+            description: ""
+          - name: currently_at_type
+            data_type: TEXT
+            description: ""
+          - name: visibility_status
+            data_type: TEXT
+            description: ""
+          - name: program_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""
