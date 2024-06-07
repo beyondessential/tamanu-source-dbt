@@ -37,9 +37,9 @@ sources:
             description: ""
             tests:
               - accepted_values:
-                  values: [ 'Admission', 'Dietary', 'Discharge planning', 'Handover note', 'Medical', 'Nursing',
-                            'Other', 'Patient letter', 'Pharmacy', 'Physiotherapy', 'Social Welfare', 'Surgical',
-                            'Treatment plan' ]
+                  values: [ 'admission', 'dietary', 'discharge', 'handover', 'medical', 'nursing', 'other',
+                            'patientLetter', 'pharmacy', 'physiotherapy', 'social', 'surgical',
+                            'treatmentPlan' ]
           - name: visibility_status
             data_type: TEXT
             description: "Default value is 'current'"
