@@ -9,18 +9,18 @@ sources:
           - name: id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('administered_vaccines__id') }}"
-            tests:
+            data-tests:
               - unique
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__created_at') }} in administered_vaccines."
-            tests:
+            data-tests:
               - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__updated_at') }} in administered_vaccines."
-            tests:
+            data-tests:
               - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
@@ -31,7 +31,7 @@ sources:
           - name: status
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('administered_vaccines__status') }}"
-            tests:
+            data-tests:
               - not_null
               - accepted_values:
                   values: [ 'UNKNOWN', 'GIVEN', 'NOT_GIVEN', 'RECORDED_IN_ERROR', 'HISTORICAL' ]
@@ -44,21 +44,21 @@ sources:
           - name: scheduled_vaccine_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('scheduled_vaccines__id') }}"
-            tests:
+            data-tests:
               - relationships:
                   to: source('tamanu', 'scheduled_vaccines')
                   field: id
           - name: encounter_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('encounters__id') }}"
-            tests:
+            data-tests:
               - relationships:
                   to: source('tamanu', 'encounters')
                   field: id
           - name: injection_site
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('administered_vaccines__injection_site') }}"
-            tests:
+            data-tests:
               - accepted_values:
                   values: [ 'Left arm', 'Right arm', 'Left thigh', 'Right thigh', 'Oral', 'Other' ]
           - name: consent
@@ -82,7 +82,7 @@ sources:
           - name: not_given_reason_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('reference_data__vaccine_not_given_reason') }}"
-            tests:
+            data-tests:
               - dbt_utils.relationships_where:
                   to: source('tamanu', 'reference_data')
                   field: id

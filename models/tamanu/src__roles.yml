@@ -11,18 +11,18 @@ sources:
           - name: id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('roles__id') }}"
-            tests:
+            data-tests:
               - unique
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__created_at') }} in roles"
-            tests:
+            data-tests:
               - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__updated_at') }} in roles"
-            tests:
+            data-tests:
               - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
@@ -30,10 +30,10 @@ sources:
           - name: name
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('roles__name') }}"
-            tests:
+            data-tests:
               - not_null
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} roles"
-            tests: 
+            data-tests:
               - not_null

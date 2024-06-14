@@ -11,18 +11,18 @@ sources:
           - name: id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('location_groups__id') }}"
-            tests:
+            data-tests:
               - unique
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__created_at') }} in location groups"
-            tests:
+            data-tests:
               - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__updated_at') }} in location groups"
-            tests:
+            data-tests:
               - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
@@ -30,29 +30,29 @@ sources:
           - name: visibility_status
             data_type: TEXT
             description: "{{ doc('generic__visibility_status') }} in location groups, default value is 'current'"
-            tests:
+            data-tests:
               - not_null
               - accepted_values:
                   values: ["current", "historical"]
           - name: name
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('location_groups__name') }}"
-            tests:
+            data-tests:
               - not_null
           - name: code
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('location_groups__code') }}"
-            tests:
+            data-tests:
               - not_null
           - name: facility_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('facilities__id') }}"
-            tests:
+            data-tests:
               - relationships:
                   to: source('tamanu', 'facilities')
                   field: id
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} location groups"
-            tests:
+            data-tests:
               - not_null

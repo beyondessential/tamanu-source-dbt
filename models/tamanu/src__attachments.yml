@@ -11,13 +11,13 @@ sources:
           - name: id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('attachments__id') }}"
-            tests:
+            data-tests:
               - unique
               - not_null
           - name: type
             data_type: TEXT
             description: "{{ doc('attachments__type') }}"
-            tests:
+            data-tests:
               - not_null
               - accepted_values:
                   values: ["application/pdf", "image/jpeg"]
@@ -27,7 +27,7 @@ sources:
           - name: data
             data_type: BYTEA
             description: "{{ doc('attachments__data') }}"
-            tests:
+            data-tests:
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
@@ -41,5 +41,5 @@ sources:
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }}"
-            tests:
+            data-tests:
               - not_null

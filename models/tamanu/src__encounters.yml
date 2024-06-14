@@ -11,18 +11,18 @@ sources:
           - name: id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('encounters__id') }}"
-            tests:
+            data-tests:
               - unique
               - not_null
           - name: created_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__created_at') }} in encounters"
-            tests:
+            data-tests:
               - not_null
           - name: updated_at
             data_type: TIMESTAMP WITH TIME ZONE
             description: "{{ doc('generic__updated_at') }} in encounters"
-            tests:
+            data-tests:
               - not_null
           - name: deleted_at
             data_type: TIMESTAMP WITH TIME ZONE
@@ -30,7 +30,7 @@ sources:
           - name: encounter_type
             data_type: CHARACTER VARYING(31)
             description: "{{ doc('encounters__encounter_type') }}"
-            tests:
+            data-tests:
               - not_null
               - accepted_values:
                   values: [ 'admission', 'clinic', 'imaging', 'emergency', 'observation', 'triage', 'surveyResponse',
@@ -38,7 +38,7 @@ sources:
           - name: start_date
             data_type: CHARACTER VARYING(19)
             description: "{{ doc('encounters__start_date') }}"
-            tests:
+            data-tests:
               - not_null
           - name: end_date
             data_type: CHARACTER VARYING(19)
@@ -52,35 +52,35 @@ sources:
           - name: patient_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('patients__id') }}"
-            tests: 
+            data-tests:
               - relationships:
                   to: source('tamanu', 'patients')
                   field: id
           - name: examiner_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('users__id') }}"
-            tests: 
+            data-tests:
               - relationships:
                   to: source('tamanu', 'users')
                   field: id
           - name: location_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('locations__id') }}"
-            tests: 
+            data-tests:
               - relationships:
                   to: source('tamanu', 'locations')
                   field: id
           - name: department_id
             data_type: CHARACTER VARYING(255)
             description: ""
-            tests: 
+            data-tests:
               - relationships:
                   to: source('tamanu', 'departments')
                   field: id
           - name: patient_billing_type_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('reference_data__patient_billing_type') }}"
-            tests:
+            data-tests:
               - relationships:
                   to: source('tamanu', 'reference_data')
                   field: id
@@ -93,14 +93,14 @@ sources:
           - name: referral_source_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('encounters__referral_source_id') }}"
-            tests:
+            data-tests:
               - relationships:
                   to: source('tamanu', 'reference_data')
                   field: id
           - name: planned_location_id
             data_type: CHARACTER VARYING(255)
             description: "{{ doc('locations__id')}} that is planned for the encounter."
-            tests: 
+            data-tests:
               - relationships:
                   to: source('tamanu', 'locations')
                   field: id
@@ -110,5 +110,5 @@ sources:
           - name: updated_at_sync_tick
             data_type: BIGINT
             description: "{{ doc('generic__updated_at_sync_tick') }} encounters"
-            tests: 
+            data-tests:
               - not_null
