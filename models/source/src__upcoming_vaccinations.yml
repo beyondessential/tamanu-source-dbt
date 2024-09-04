@@ -1,0 +1,40 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu database"
+    tables:
+      - name: upcoming_vaccinations
+        description: "{{ doc('table__upcoming_vaccinations') }}"
+        tags: ['clinical']
+        columns:
+          - name: patient_id
+            data_type: character varying
+            description: "{{ doc('patients__id') }}"
+            data_tests:
+              - relationships:
+                  to: source('tamanu', 'patients')
+                  field: id
+          - name: scheduled_vaccine_id
+            data_type: character varying
+            description: "{{ doc('patients__id') }}"
+            data_tests:
+              - relationships:
+                  to: source('tamanu', 'patients')
+                  field: id
+          - name: vaccine_category
+            data_type: character varying
+            description: ""
+          - name: vaccine_id
+            data_type: character varying
+            description: ""
+          - name: due_date
+            data_type: date
+            description: ""
+          - name: days_till_due
+            data_type: integer
+            description: ""
+          - name: status
+            data_type: text
+            description: ""

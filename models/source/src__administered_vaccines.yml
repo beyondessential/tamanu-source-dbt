@@ -1,0 +1,112 @@
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu database"
+    tables:
+      - name: administered_vaccines
+        description: "{{ doc('table__vaccine_administrations') }}"
+        tags: ['clinical']
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_administrations__id') }}"
+            data-tests:
+              - unique
+              - not_null
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: "{{ doc('generic__created_at') }} in administered_vaccines."
+            data-tests:
+              - not_null
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: "{{ doc('generic__updated_at') }} in administered_vaccines"
+            data-tests:
+              - not_null
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: "{{ doc('generic__deleted_at') }} in administered_vaccines"
+          - name: batch
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_administrations__batch') }}"
+          - name: status
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_administrations__status') }}"
+            data-tests:
+              - not_null
+              - accepted_values:
+                  values: ['DUE', 'GIVEN', 'HISTORICAL', 'MISSED', 'NOT_GIVEN', 'OVERDUE', 'RECORDED_IN_ERROR',
+                           'SCHEDULED', 'UNKNOWN', 'UPCOMING']
+          - name: reason
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_administrations__reason') }}"
+          - name: date
+            data_type: CHARACTER VARYING(19)
+            description: "{{ doc('generic__datetime') }} in administered_vaccines"
+          - name: scheduled_vaccine_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_schedules__id') }}"
+            data-tests:
+              - relationships:
+                  to: source('tamanu', 'scheduled_vaccines')
+                  field: id
+          - name: encounter_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('encounters__id') }}"
+            data-tests:
+              - relationships:
+                  to: source('tamanu', 'encounters')
+                  field: id
+          - name: injection_site
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('vaccine_administrations__injection_site') }}"
+            data-tests:
+              - accepted_values:
+                  values: [ 'Left arm', 'Right arm', 'Left thigh', 'Right thigh', 'Oral', 'Other' ]
+          - name: consent
+            data_type: BOOLEAN
+            description: "{{ doc('vaccine_administrations__consent') }}"
+          - name: recorder_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('users__id') }} as the recorder of the administered vaccines"
+          - name: location_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('locations__id') }} of the administered_vaccines"
+          - name: department_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('departments__id') }} of the administered_vaccines"
+          - name: given_by
+            data_type: TEXT
+            description: "{{ doc('users__id') }} giving the administered_vaccines"
+          - name: date_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: "[Deprecated] {{ doc('generic__date_legacy') }} in administered_vaccines"
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: "{{ doc('generic__updated_at_sync_tick') }} in administered_vaccines"
+          - name: not_given_reason_id
+            data_type: CHARACTER VARYING(255)
+            description: "{{ doc('reference_data__vaccine_not_given_reason') }}"
+            data-tests:
+              - dbt_utils.relationships_where:
+                  to: source('tamanu', 'reference_data')
+                  field: id
+                  to_condition: type = 'vaccineNotGivenReason'
+          - name: given_elsewhere
+            data_type: BOOLEAN
+            description: "{{ doc('vaccine_administrations__given_elsewhere') }}"
+          - name: vaccine_name
+            data_type: TEXT
+            description: "{{ doc('vaccine_administrations__vaccine_name') }}"
+          - name: vaccine_brand
+            data_type: TEXT
+            description: "{{ doc('vaccine_administrations__vaccine_brand') }}"
+          - name: disease
+            data_type: TEXT
+            description: "{{ doc('vaccine_administrations__disease') }}"
+          - name: circumstance_ids
+            data_type: ARRAY
+            description: "{{ doc('reference_data__vaccine_circumstance') }}"
+          - name: consent_given_by
+            data_type: TEXT
+            description: "{{ doc('vaccine_administrations__consent_given_by') }}"

@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: departments
+    description: "{{ doc('table__departments') }}"
+    tags: ['reference']
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('departments__id') }}"
+      - name: code
+        data_type: character varying
+        description: "{{ doc('departments__code') }}"
+      - name: name
+        data_type: character varying
+        description: "{{ doc('departments__name') }}"
+      - name: facility_id
+        data_type: character varying
+        description: "{{ doc('facilities__id') }}"
+      - name: visibility_status
+        data_type: text
+        description: "{{ doc('generic__visibility_status') }} in departments"

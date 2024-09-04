@@ -1,0 +1,59 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu database"
+    tables:
+      - name: survey_screen_components
+        description: ""
+        tags: ['reference']
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: screen_index
+            data_type: INTEGER
+            description: ""
+          - name: component_index
+            data_type: INTEGER
+            description: ""
+          - name: text
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: visibility_criteria
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: validation_criteria
+            data_type: TEXT
+            description: ""
+          - name: detail
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: config
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: options
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: calculation
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: survey_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: data_element_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

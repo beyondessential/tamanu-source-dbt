@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: users
+    description: "{{ doc('table__users') }}"
+    tags: ['administration']
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('users__id') }}"
+      - name: display_id
+        data_type:  character varying
+        description: "{{ doc('users__display_id') }}"
+      - name: display_name
+        data_type:  character varying
+        description: "{{ doc('users__display_name') }}"
+      - name: email
+        data_type:  character varying
+        description: "{{ doc('users__email') }}"
+      - name: phone_number
+        data_type:  character varying
+        description: "{{ doc('users__phone_number') }}"
+      - name: role
+        data_type:  character varying
+        description: "{{ doc('roles__id') }}, default value is 'practitioner'"
+      - name: visibility_status
+        data_type:  character varying
+        description: "{{ doc('generic__visibility_status') }} in users"

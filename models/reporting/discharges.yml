@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: discharges
+    description: "{{ doc('table__discharges') }}"
+    tags: ['clinical']
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('discharges__id') }}"
+      - name: note
+        data_type: text
+        description: "{{ doc('discharges__note') }}"
+      - name: encounter_id
+        data_type: character varying
+        description: "{{ doc('encounters__id') }}"
+      - name: discharger_id
+        data_type: character varying
+        description: "{{ doc('users__id') }} that is the discharger of the encounter"
+      - name: disposition_id
+        data_type: character varying
+        description: "{{ doc('reference_data__discharge_disposition') }}"

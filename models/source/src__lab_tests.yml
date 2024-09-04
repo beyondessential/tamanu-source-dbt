@@ -1,0 +1,62 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu database"
+    tables:
+      - name: lab_tests
+        description: ""
+        tags: ['clinical']
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: date
+            data_type: CHARACTER VARYING(10)
+            description: ""
+          - name: status
+            data_type: CHARACTER VARYING(31)
+            description: "Default value is 'reception_pending'"
+          - name: result
+            data_type: CHARACTER VARYING(255)
+            description: "Default value is ''"
+          - name: lab_request_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: lab_test_type_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: category_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: lab_test_method_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: laboratory_officer
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: completed_date
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: verification
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: date_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: completed_date_legacy
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

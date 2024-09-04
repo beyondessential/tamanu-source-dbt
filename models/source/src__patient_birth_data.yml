@@ -1,0 +1,71 @@
+version: 2
+
+sources:
+  - name: tamanu
+    schema: public
+    description: "Tamanu database"
+    tables:
+      - name: patient_birth_data
+        description: ""
+        tags: ['clinical']
+        columns:
+          - name: id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: created_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: updated_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: deleted_at
+            data_type: TIMESTAMP WITH TIME ZONE
+            description: ""
+          - name: patient_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: birth_weight
+            data_type: NUMERIC
+            description: ""
+          - name: birth_length
+            data_type: NUMERIC
+            description: ""
+          - name: birth_delivery_type
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: gestational_age_estimate
+            data_type: INTEGER
+            description: ""
+          - name: apgar_score_one_minute
+            data_type: INTEGER
+            description: ""
+          - name: apgar_score_five_minutes
+            data_type: INTEGER
+            description: ""
+          - name: apgar_score_ten_minutes
+            data_type: INTEGER
+            description: ""
+          - name: time_of_birth
+            data_type: CHARACTER VARYING(19)
+            description: ""
+          - name: birth_type
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: attendant_at_birth
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: name_of_attendant_at_birth
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: birth_facility_id
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: registered_birth_place
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: time_of_birth_legacy
+            data_type: CHARACTER VARYING(255)
+            description: ""
+          - name: updated_at_sync_tick
+            data_type: BIGINT
+            description: ""

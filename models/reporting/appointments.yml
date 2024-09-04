@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: appointments
+    description: "{{ doc('table__appointments') }}"
+    tags: ['clinical']
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('appointments__id') }}"
+      - name: start_datetime
+        data_type: character
+        description: "{{ doc('appointments__start_datetime') }}"
+      - name: end_datetime
+        data_type: character
+        description: "{{ doc('appointments__end_datetime') }}"
+      - name: patient_id
+        data_type: character varying
+        description: "{{ doc('patients__id') }}"
+      - name: clinician_id
+        data_type: character varying
+        description: "{{ doc('users__id') }} running the appointment"
+      - name: location_id
+        data_type: character varying
+        description: "{{ doc('locations__id') }} of the appointment."
+      - name: location_group_id
+        data_type: character varying
+        description: "{{ doc('location_groups__id') }} of the appointment."
+      - name: type
+        data_type: character varying
+        description: "{{ doc('appointments__type') }}. Default value is 'Standard'"
+      - name: status
+        data_type: character varying
+        description: "{{ doc('appointments__status') }}. Default value is 'Confirmed'"
