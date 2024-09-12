@@ -49,11 +49,14 @@ sources:
             data_type: character varying
             description: "{{ doc('reference_data__discharge_disposition') }}"
             data_tests:
-              - valid_discharge_disposition
+              - dbt_utils.relationships_where:
+                  to: source('tamanu', 'reference_data')
+                  field: id
+                  to_condition: type = 'dischargeDisposition'
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in discharges"
-            data-tests:
+            data_tests:
               - not_null
           - name: facility_name
             data_type: character varying

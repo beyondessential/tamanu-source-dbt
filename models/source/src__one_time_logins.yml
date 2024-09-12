@@ -7,29 +7,29 @@ sources:
     tables:
       - name: one_time_logins
         description: ""
-        tags: ['systen']
+        tags: ['system']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: user_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: token
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: expires_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: used_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""

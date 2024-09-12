@@ -12,11 +12,11 @@ SELECT
     vaccine_name,
     vaccine_brand,
     disease,
-    consent,
+    consent AS is_consented,
     consent_given_by,
     injection_site,
     given_by,
-    given_elsewhere,
+    given_elsewhere AS is_given_elsewhere,
     circumstance_ids,
     recorder_id
 FROM {{ source("tamanu", "administered_vaccines") }}

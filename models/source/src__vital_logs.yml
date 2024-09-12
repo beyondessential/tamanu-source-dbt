@@ -10,37 +10,37 @@ sources:
         tags: ['clinical']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: timestamp with time zone
             description: "{{ doc('vital_logs__id') }}"
             data_tests:
               - unique
               - not_null
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in vital_logs"
             data_tests:
               - not_null
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__updated_at') }} in vital_logs"
             data_tests:
               - not_null
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__deleted_at') }} in vital_logs"
           - name: date
-            data_type: CHARACTER VARYING(19)
+            data_type: character
             description: "{{ doc('generic__date') }} in vital_logs"
             data_tests:
               - not_null
           - name: previous_value
-            data_type: TEXT
+            data_type: text
             description: "{{ doc('vital_logs__previous_value') }} in vital_logs"
           - name: new_value
-            data_type: TEXT
+            data_type: text
             description: "{{ doc('vital_logs__new_value') }} in vital_logs"
           - name: reason_for_change
-            data_type: TEXT
+            data_type: text
             description: "{{ doc('vital_logs__reason_for_change') }}"
             data_tests:
               - accepted_values:
@@ -48,14 +48,14 @@ sources:
                   config:
                     severity: warn
           - name: recorded_by_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('vital_logs__recorded_by_id') }} in vital_logs"
             data_tests:
               - relationships:
                   to: source('tamanu', 'users')
                   field: id
           - name: answer_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('generic__id') }} in survey_response_answers"
             data_tests:
               - not_null
@@ -63,7 +63,7 @@ sources:
                   to: source('tamanu', 'survey_response_answers')
                   field: id
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in vital_logs"
             data_tests:
               - not_null

@@ -10,41 +10,35 @@ sources:
         tags: ['administration']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: uuid
             description: ""
           - name: display_id
-            data_type: CHARACTER VARYING(255)
-            description: ""
-          - name: encounter_id
-            data_type: CHARACTER VARYING(255)
-            description: ""
-          - name: total
-            data_type: NUMERIC
-            description: ""
-          - name: status
-            data_type: CHARACTER VARYING(255)
-            description: ""
-          - name: payment_status
-            data_type: CHARACTER VARYING(255)
-            description: ""
-          - name: receipt_number
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: date
-            data_type: CHARACTER VARYING(10)
+            data_type: character
+            description: ""
+          - name: status
+            data_type: character varying
+            description: ""
+          - name: encounter_id
+            data_type: character varying
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
-          - name: date_legacy
-            data_type: TIMESTAMP WITH TIME ZONE
+          - name: patient_payment_status
+            data_type: character varying
+            description: ""
+          - name: insurer_payment_status
+            data_type: character varying
             description: ""
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: ""

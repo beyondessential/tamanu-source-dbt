@@ -10,50 +10,50 @@ sources:
         tags: ['reference']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('location_groups__id') }}"
             data-tests:
               - unique
               - not_null
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in location groups"
             data-tests:
               - not_null
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__updated_at') }} in location groups"
             data-tests:
               - not_null
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: "{{ doc('generic__deleted_at') }} in location groups"
           - name: visibility_status
-            data_type: TEXT
+            data_type: text
             description: "{{ doc('generic__visibility_status') }} in location groups, default value is 'current'"
             data-tests:
               - not_null
               - accepted_values:
                   values: ["current", "historical"]
           - name: name
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('location_groups__name') }}"
             data-tests:
               - not_null
           - name: code
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('location_groups__code') }}"
             data-tests:
               - not_null
           - name: facility_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: "{{ doc('facilities__id') }}"
             data-tests:
               - relationships:
                   to: source('tamanu', 'facilities')
                   field: id
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} location groups"
             data-tests:
               - not_null

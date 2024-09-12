@@ -50,22 +50,29 @@ sources:
             description: "{{ doc('vaccine_schedules__weeks_from_birth_due') }}"
           - name: index
             data_type: integer
-            description: ""
+            description: "{{ doc('vaccine_schedules__index') }}"
           - name: vaccine_id
             data_type: character varying
-            description: ""
+            description: "{{ doc('vaccine_schedules__vaccine_id') }}"
+            data-tests:
+              - not_null
           - name: weeks_from_last_vaccination_due
             data_type: integer
-            description: ""
+            description: "{{ doc('vaccine_schedules__weeks_from_last_vaccination_due') }}"
           - name: visibility_status
             data_type: text
-            description: ""
+            description: "{{ doc('generic__visibility_status') }} in scheduled_vaccines"
+            data_tests:
+              - not_null
+              - valid_visibility_status
           - name: updated_at_sync_tick
             data_type: bigint
-            description: ""
+            description: "{{ doc('generic__updated_at_sync_tick') }} in scheduled_vaccines"
+            data_tests:
+              - not_null
           - name: hide_from_certificate
             data_type: boolean
-            description: ""
+            description: "{{ doc('vaccine_schedules__hide_from_certificate') }}"
           - name: sort_index
             data_type: integer
-            description: ""
+            description: "{{ doc('vaccine_schedules__sort_index') }}"

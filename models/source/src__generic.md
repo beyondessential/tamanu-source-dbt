@@ -14,12 +14,24 @@ Timestamp of when record was last updated
 Timestamp of when record was deleted
 {% enddocs %}
 
+{% docs generic__updated_by %}
+The identifier of the user logged on when the record was created, updated or deleted 
+{% enddocs %}
+
 {% docs generic__date %}
-Local date and time of the event being recorded
+Local date for the record
 {% enddocs %}
 
 {% docs generic__datetime %}
-Local date and time of the event being recorded
+Local date and time for the record
+{% enddocs %}
+
+{% docs generic__start_datetime %}
+Local start date and time for the record
+{% enddocs %}
+
+{% docs generic__end_datetime %}
+Local end date and time for the record
 {% enddocs %}
 
 {% docs generic__date_legacy %}

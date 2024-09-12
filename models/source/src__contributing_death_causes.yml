@@ -21,7 +21,7 @@ sources:
           - name: patient_death_data_id
             data_type: character varying
             description: "{{ doc('patient_death_data__id') }}"
-            data-tests:
+            data_tests:
               - relationships:
                   to: source('tamanu', 'patient_death_data')
                   field: id
@@ -30,16 +30,19 @@ sources:
             description: "{{ doc('reference_data__diagnosis') }}"
             data_tests:
               - not_null
-              - valid_diagnosis
+              - dbt_utils.relationships_where:
+                  to: source('tamanu', 'reference_data')
+                  field: id
+                  to_condition: type = 'icd10'
           - name: created_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in contributing_death_causes"
-            data-tests:
+            data_tests:
               - not_null
           - name: updated_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__updated_at') }} in contributing_death_causes"
-            data-tests:
+            data_tests:
               - not_null
           - name: deleted_at
             data_type: timestamp with time zone
@@ -47,5 +50,5 @@ sources:
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in contributing_death_causes"
-            data-tests:
+            data_tests:
               - not_null

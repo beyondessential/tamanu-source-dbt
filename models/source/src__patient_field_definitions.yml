@@ -10,32 +10,32 @@ sources:
         tags: ['reference']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: name
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: field_type
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: options
-            data_type: ARRAY
+            data_type: array
             description: ""
           - name: visibility_status
-            data_type: CHARACTER VARYING(255)
-            description: "Default value is 'current'"
+            data_type: character varying
+            description: ""
           - name: category_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: ""

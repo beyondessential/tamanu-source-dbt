@@ -10,65 +10,65 @@ sources:
         tags: ['clinical']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: completed
-            data_type: BOOLEAN
-            description: "Default value is false"
+            data_type: boolean
+            description: ""
           - name: date
-            data_type: CHARACTER VARYING(19)
+            data_type: character
             description: ""
           - name: end_time
-            data_type: CHARACTER VARYING(19)
+            data_type: character
             description: ""
           - name: note
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: completed_note
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: encounter_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: location_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: procedure_type_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: anaesthetic_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: physician_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: assistant_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: anaesthetist_id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: start_time
-            data_type: CHARACTER VARYING(19)
+            data_type: character
             description: ""
           - name: date_legacy
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: start_time_legacy
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: end_time_legacy
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: ""

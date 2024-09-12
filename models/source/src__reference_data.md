@@ -8,8 +8,16 @@ out to use its own table.
 - Example types include `diagnosis`, `procedures`
 {% enddocs %}
 
+{% docs reference_data__catchment %}
+Catchment type. `type = catchment`.
+{% enddocs %}
+
 {% docs reference_data__diagnosis %}
 Diagnosis type. `type = icd10`.
+{% enddocs %}
+
+{% docs reference_data__diet %}
+Diet type. `type = diet`.
 {% enddocs %}
 
 {% docs reference_data__discharge_disposition %}

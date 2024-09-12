@@ -12,18 +12,18 @@ sources:
           - name: id
             data_type: character varying
             description: "{{ doc('appointments__id') }}"
-            data-tests:
+            data_tests:
               - unique
               - not_null
           - name: created_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in appointments"
-            data-tests:
+            data_tests:
               - not_null
           - name: updated_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__updated_at') }} in appointments"
-            data-tests:
+            data_tests:
               - not_null
           - name: deleted_at
             data_type: timestamp with time zone
@@ -37,7 +37,7 @@ sources:
           - name: patient_id
             data_type: character varying
             description: "{{ doc('patients__id') }}"
-            data-tests:
+            data_tests:
               - not_null
               - relationships:
                   to: source('tamanu', 'patients')
@@ -45,7 +45,7 @@ sources:
           - name: clinician_id
             data_type: character varying
             description: "{{ doc('users__id') }} running the appointment"
-            data-tests:
+            data_tests:
               - not_null
               - relationships:
                   to: source('tamanu', 'users')
@@ -53,22 +53,21 @@ sources:
           - name: location_id
             data_type: character varying
             description: "{{ doc('locations__id') }} of the appointment."
-            data-tests:
-              - not_null
+            data_tests:
               - relationships:
                   to: source('tamanu', 'locations')
                   field: id
           - name: type
             data_type: character varying
             description: "{{ doc('appointments__type') }}. Default value is 'Standard'"
-            data-tests:
+            data_tests:
               - not_null
               - accepted_values:
                   values: ["Standard", "Emergency", "Specialist", "Other"]
           - name: status
             data_type: character varying
             description: "{{ doc('appointments__status') }}. Default value is 'Confirmed'"
-            data-tests:
+            data_tests:
               - not_null
               - accepted_values:
                   values: ["Confirmed", "Arrived", "No-show", "Cancelled"]
@@ -81,12 +80,12 @@ sources:
           - name: location_group_id
             data_type: character varying
             description: "{{ doc('location_groups__id') }} of the appointment"
-            data-tests:
+            data_tests:
               - relationships:
                   to: source('tamanu', 'location_groups')
                   field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in appointments"
-            data-tests:
+            data_tests:
               - not_null

@@ -10,53 +10,56 @@ sources:
         tags: ['clinical']
         columns:
           - name: id
-            data_type: CHARACTER VARYING(255)
+            data_type: character varying
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
-          - name: date
-            data_type: CHARACTER VARYING(10)
+          - name: code
+            data_type: character varying
             description: ""
-          - name: status
-            data_type: CHARACTER VARYING(31)
-            description: "Default value is 'reception_pending'"
-          - name: result
-            data_type: CHARACTER VARYING(255)
-            description: "Default value is ''"
-          - name: lab_request_id
-            data_type: CHARACTER VARYING(255)
+          - name: name
+            data_type: character varying
             description: ""
-          - name: lab_test_type_id
-            data_type: CHARACTER VARYING(255)
+          - name: unit
+            data_type: character varying
             description: ""
-          - name: category_id
-            data_type: CHARACTER VARYING(255)
+          - name: male_min
+            data_type: double precision
             description: ""
-          - name: lab_test_method_id
-            data_type: CHARACTER VARYING(255)
+          - name: male_max
+            data_type: double precision
             description: ""
-          - name: laboratory_officer
-            data_type: CHARACTER VARYING(255)
+          - name: female_min
+            data_type: double precision
             description: ""
-          - name: completed_date
-            data_type: CHARACTER VARYING(19)
+          - name: female_max
+            data_type: double precision
             description: ""
-          - name: verification
-            data_type: CHARACTER VARYING(255)
+          - name: range_text
+            data_type: character varying
             description: ""
-          - name: date_legacy
-            data_type: TIMESTAMP WITH TIME ZONE
+          - name: result_type
+            data_type: character varying
             description: ""
-          - name: completed_date_legacy
-            data_type: TIMESTAMP WITH TIME ZONE
+          - name: options
+            data_type: text
+            description: ""
+          - name: lab_test_category_id
+            data_type: character varying
+            description: ""
+          - name: visibility_status
+            data_type: text
             description: ""
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
+            description: ""
+          - name: external_code
+            data_type: text
             description: ""

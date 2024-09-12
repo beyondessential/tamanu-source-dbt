@@ -6,39 +6,55 @@ sources:
     description: "Tamanu database"
     tables:
       - name: invoice_discounts
-        description: ""
+        description: "{{ doc('table__invoice_discounts') }}"
         tags: ['administration']
         columns:
           - name: id
-            data_type: UUID
-            description: ""
+            data_type: uuid
+            description: "{{ doc('invoice_discounts__id') }}"
           - name: invoice_id
-            data_type: UUID
-            description: ""
+            data_type: uuid
+            description: "{{ doc('invoices__id') }}"
+            data_tests:
+              - relationships:
+                  to: source('tamanu', 'invoices')
+                  field: id
           - name: percentage
-            data_type: NUMERIC
-            description: ""
+            data_type: numeric
+            description: "{{ doc('invoice_discounts__percentage') }}"
+            data_tests:
+              - not_null
           - name: reason
-            data_type: CHARACTER VARYING(255)
-            description: ""
+            data_type: character varying
+            description: "{{ doc('invoice_discounts__reason') }}"
           - name: is_manual
-            data_type: BOOLEAN
-            description: ""
+            data_type: boolean
+            description: "{{ doc('invoice_discounts__is_manual') }}"
           - name: applied_by_user_id
-            data_type: CHARACTER VARYING(255)
-            description: ""
+            data_type: character varying
+            description: "{{ doc('generic__updated_by') }} in invoice_discounts"
+            data_tests:
+              - not_null
           - name: applied_time
-            data_type: CHARACTER VARYING(19)
-            description: ""
+            data_type: character
+            description: "{{ doc('generic__datetime') }} in invoice_discounts"
+            data_tests:
+              - not_null
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            data_type: timestamp with time zone
+            description: "{{ doc('generic__created_at') }} in invoice_discounts"
+            data_tests:
+              - not_null
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            data_type: timestamp with time zone
+            description: "{{ doc('generic__updated_at') }} in invoice_discounts"
+            data_tests:
+              - not_null
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
-            description: ""
+            data_type: timestamp with time zone
+            description: "{{ doc('generic__deleted_at') }} in invoice_discounts"
           - name: updated_at_sync_tick
-            data_type: BIGINT
-            description: ""
+            data_type: bigint
+            description: "{{ doc('generic__updated_at_sync_tick') }} in invoice_discounts"
+            data_tests:
+              - not_null

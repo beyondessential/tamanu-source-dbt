@@ -14,9 +14,9 @@ models:
       - name: encounter_id
         data_type: character varying
         description: "{{ doc('encounters__id') }}"
-      - name: discharger_id
+      - name: discharged_by_id
         data_type: character varying
-        description: "{{ doc('users__id') }} that is the discharger of the encounter"
+        description: "{{ doc('users__id') }} that discharged the patient"
       - name: disposition_id
         data_type: character varying
         description: "{{ doc('reference_data__discharge_disposition') }}"

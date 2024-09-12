@@ -10,26 +10,26 @@ sources:
         tags: ['reference']
         columns:
           - name: id
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: string_id
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: language
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: text
-            data_type: TEXT
+            data_type: text
             description: ""
           - name: created_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: deleted_at
-            data_type: TIMESTAMP WITH TIME ZONE
+            data_type: timestamp with time zone
             description: ""
           - name: updated_at_sync_tick
-            data_type: BIGINT
+            data_type: bigint
             description: ""

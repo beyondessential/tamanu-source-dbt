@@ -6,35 +6,47 @@ sources:
     description: "Tamanu database"
     tables:
       - name: upcoming_vaccinations
-        description: "{{ doc('table__upcoming_vaccinations') }}"
+        description: "{{ doc('table__patient_vaccination_upcoming') }}"
         tags: ['clinical']
         columns:
           - name: patient_id
             data_type: character varying
             description: "{{ doc('patients__id') }}"
             data_tests:
+              - not_null
               - relationships:
                   to: source('tamanu', 'patients')
                   field: id
           - name: scheduled_vaccine_id
             data_type: character varying
-            description: "{{ doc('patients__id') }}"
+            description: "{{ doc('vaccine_schedules__id') }}"
             data_tests:
+              - not_null
               - relationships:
-                  to: source('tamanu', 'patients')
+                  to: source('tamanu', 'scheduled_vaccines')
                   field: id
           - name: vaccine_category
             data_type: character varying
-            description: ""
+            description: "{{ doc('vaccine_schedules__category') }}"
+            data_tests:
+              - not_null
           - name: vaccine_id
             data_type: character varying
-            description: ""
+            description: "{{ doc('vaccine_schedules__vaccine_id') }}"
+            data_tests:
+              - not_null
           - name: due_date
             data_type: date
-            description: ""
+            description: "{{ doc('patient_vaccination_upcoming__due_date') }}"
+            data_tests:
+              - not_null
           - name: days_till_due
             data_type: integer
-            description: ""
+            description: "{{ doc('patient_vaccination_upcoming__days_till_due') }}"
+            data_tests:
+              - not_null
           - name: status
             data_type: text
-            description: ""
+            description: "{{ doc('patient_vaccination_upcoming__status') }}"
+            data_tests:
+              - not_null
