@@ -13,7 +13,7 @@ Catchment type. `type = catchment`.
 {% enddocs %}
 
 {% docs reference_data__diagnosis %}
-Diagnosis type. `type = icd10`.
+Diagnosis type. `type = diagnosis`.
 {% enddocs %}
 
 {% docs reference_data__diet %}
