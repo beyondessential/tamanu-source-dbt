@@ -3,7 +3,7 @@
 A dbt project of Tamanu's standard models. This includes:
 - raw (or source) schema (incomplete documentation and validation test)
 - reporting schema (incomplete documentation)
-- aggregation schema (upcoming)
+- analytics schema (upcoming)
 
 ## Generating a .yml documentation file for tables
 

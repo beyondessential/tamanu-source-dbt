@@ -752,7 +752,7 @@ SELECT
 FROM "public"."scheduled_vaccines"
 WHERE deleted_at IS NULL);
 
-CREATE OR REPLACE VIEW "reporting"."patient_vaccination_upcoming" AS (
+CREATE OR REPLACE VIEW "reporting"."ds__patient_vaccination__upcoming" AS (
 SELECT
     patient_id,
     scheduled_vaccine_id AS vaccine_schedules_id,
@@ -778,5 +778,5 @@ SELECT
     eh.actor_id AS updated_by,
     eh.change_type
 FROM "public"."encounter_history" eh
-JOIN "tamanu_sync"."reporting_reporting"."encounters" e ON e.id = eh.encounter_id
+JOIN "tamanu_sync"."juliana_reporting"."encounters" e ON e.id = eh.encounter_id
 WHERE eh.deleted_at IS NULL);
