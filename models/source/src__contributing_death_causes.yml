@@ -33,7 +33,7 @@ sources:
               - dbt_utils.relationships_where:
                   to: source('tamanu', 'reference_data')
                   field: id
-                  to_condition: type = 'icd10'
+                  to_condition: type = 'diagnosis'
           - name: created_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in contributing_death_causes"

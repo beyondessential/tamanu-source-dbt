@@ -52,7 +52,7 @@ sources:
               - dbt_utils.relationships_where:
                   to: source('tamanu', 'reference_data')
                   field: id
-                  to_condition: type = 'icd10'
+                  to_condition: type = 'diagnosis'
           - name: date_legacy
             data_type: timestamp with time zone
             description: "{{ doc('generic__date_legacy') }} in encounter_diagnoses"
