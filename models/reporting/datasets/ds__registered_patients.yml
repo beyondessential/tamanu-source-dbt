@@ -30,6 +30,10 @@ models:
           - name: display_id
             data_type: character varying(255)
             description: "{{ doc('patients__display_id') }}"
+            meta:
+              metrics:
+                total_patients_count:
+                  type: count
           - name: sex
             data_type: character varying(255)
             description: "{{ doc('patients__sex') }}"
