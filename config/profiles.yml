@@ -10,6 +10,24 @@ tamanu_source_dbt:
       pass: "{{ env_var('TAMANU_DL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_DL_DB_DATABASE') }}"
       schema: reporting
+    fiji:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_FJ_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_FJ_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_FJ_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_FJ_DB_DATABASE') }}"
+      schema: reporting
+    kiribati:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_KI_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_KI_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_KI_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_KI_DB_DATABASE') }}"
+      schema: reporting
     palau:
       type: postgres
       threads: 1
