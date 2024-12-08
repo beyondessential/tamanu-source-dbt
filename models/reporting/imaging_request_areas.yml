@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: imaging_areas
+  - name: imaging_request_areas
     description: '{{ doc("table__imaging_request_areas") }}'
     tags:
       - clinical

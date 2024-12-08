@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: encounter_diet
+  - name: encounter_diets
     description: '{{ doc("table__encounter_diets") }}'
     tags: 
       - administration
