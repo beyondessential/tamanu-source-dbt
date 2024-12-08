@@ -28,6 +28,8 @@ models:
     reporting:
       +materialized: view
       +schema: reporting
+      +tags:
+        - reporting
 
 data_tests:
   +severity: warn
