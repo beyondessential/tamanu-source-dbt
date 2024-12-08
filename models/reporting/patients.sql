@@ -6,7 +6,7 @@ select
     last_name,
     cultural_name,
     email,
-    sex::text,
+    initcap(sex::text) as sex,
     date_of_birth::date,
     date_of_death::timestamp,
     village_id,
