@@ -1,23 +1,23 @@
-SELECT
+select
     id,
     manner,
-    recent_surgery AS had_recent_surgery,
-    last_surgery_date::date AS last_surgery_date,
+    recent_surgery as had_recent_surgery,
+    last_surgery_date::date as last_surgery_date,
     last_surgery_reason_id,
-    external_cause_date::date AS external_cause_date,
+    external_cause_date::date as external_cause_date,
     external_cause_location,
     external_cause_notes,
     was_pregnant,
     pregnancy_contributed,
-    fetal_or_infant AS was_fetal_or_infant,
-    stillborn AS was_stillborn,
+    fetal_or_infant as was_fetal_or_infant,
+    stillborn as was_stillborn,
     birth_weight,
-    within_day_of_birth AS was_within_day_of_birth,
+    within_day_of_birth as was_within_day_of_birth,
     hours_survived_since_birth,
     carrier_age,
     carrier_pregnancy_weeks,
     carrier_existing_condition_id,
-    outside_health_facility AS was_outside_health_facility,
+    outside_health_facility as was_outside_health_facility,
     primary_cause_time_after_onset as primary_cause_mins_after_onset,
     primary_cause_condition_id,
     antecedent_cause1_time_after_onset as antecedent_cause1_mins_after_onset,
@@ -27,10 +27,10 @@ SELECT
     antecedent_cause3_time_after_onset as antecedent_cause3_mins_after_onset,
     antecedent_cause3_condition_id,
     patient_id,
-    clinician_id AS recorded_by_id,
+    clinician_id as recorded_by_id,
     facility_id,
     is_final,
     visibility_status
-FROM {{ source("tamanu", "patient_death_data") }}
-WHERE deleted_at IS NULL
-    AND patient_id != '{{ var("test_patient") }}'
+from {{ source("tamanu", "patient_death_data") }}
+where deleted_at is null
+    and patient_id != '{{ var("test_patient") }}'

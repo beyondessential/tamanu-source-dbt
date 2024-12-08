@@ -31,14 +31,17 @@ models:
         data_type: character varying(255)
         description: "{{ doc('patients__email') }}"
       - name: sex
-        data_type: user-defined
+        data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
       - name: date_of_birth
-        data_type: character(10)
+        data_type: date
         description: "{{ doc('patients__date_of_birth') }}"
       - name: date_of_death
-        data_type: character(19)
+        data_type: timestamp
         description: "{{ doc('patients__date_of_death') }}"
       - name: village_id
         data_type: character varying(255)
         description: "{{ doc('patients__village_id') }}"
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }} in patients."

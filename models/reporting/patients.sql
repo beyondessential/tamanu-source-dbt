@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     display_id,
     first_name,
@@ -6,11 +6,12 @@ SELECT
     last_name,
     cultural_name,
     email,
-    sex,
-    date_of_birth,
-    date_of_death,
-    village_id
-FROM {{ source("tamanu", "patients") }}
-WHERE deleted_at IS NULL
-    AND id != '{{ var("test_patient") }}'
-    AND visibility_status != 'merged'
+    sex::text,
+    date_of_birth::date,
+    date_of_death::timestamp,
+    village_id,
+    created_at::date as registration_date
+from {{ source("tamanu", "patients") }}
+where deleted_at is null
+    and id != '{{ var("test_patient") }}'
+    and visibility_status != 'merged'

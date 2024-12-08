@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     category,
     vaccine_id,
@@ -9,5 +9,5 @@ SELECT
     weeks_from_last_vaccination_due,
     sort_index,
     visibility_status
-FROM {{ source("tamanu", "scheduled_vaccines") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "scheduled_vaccines") }}
+where deleted_at is null

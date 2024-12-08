@@ -1,9 +1,9 @@
-SELECT
+select
     cdc.id,
-    cdc.time_after_onset AS mins_after_onset,
+    cdc.time_after_onset as mins_after_onset,
     cdc.patient_death_data_id,
     cdc.condition_id
-FROM {{ source("tamanu", "contributing_death_causes") }} cdc
+from {{ source("tamanu", "contributing_death_causes") }} cdc
 join {{ source("tamanu", "patient_death_data") }} pdd on pdd.id = cdc.patient_death_data_id
 where cdc.deleted_at is null
     and pdd.deleted_at is null

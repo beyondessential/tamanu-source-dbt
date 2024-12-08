@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     display_id,
     display_name,
@@ -6,5 +6,5 @@ SELECT
     phone_number,
     role,
     visibility_status
-FROM {{ source("tamanu", "users") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "users") }}
+where deleted_at is null

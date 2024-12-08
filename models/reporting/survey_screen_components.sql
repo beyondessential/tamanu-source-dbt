@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     screen_index,
     component_index,
@@ -12,5 +12,5 @@ SELECT
     survey_id,
     data_element_id,
     visibility_status
-FROM {{ source("tamanu", "survey_screen_components") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "survey_screen_components") }}
+where deleted_at is null

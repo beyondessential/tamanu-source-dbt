@@ -1,4 +1,4 @@
-SELECT
+select
     patient_id,
     title,
     marital_status,
@@ -35,6 +35,6 @@ SELECT
     father_id,
     registered_by_id,
     updated_at_by_field as updated_by_field
-FROM {{ source("tamanu", "patient_additional_data") }}
-WHERE deleted_at IS NULL
-    AND id != '{{ var("test_patient") }}'
+from {{ source("tamanu", "patient_additional_data") }}
+where deleted_at is null
+    and id != '{{ var("test_patient") }}'
