@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: ll__registered_patients
-    description: Line list of registered patients
+  - name: ds__registered_patients
+    description: Registered patients
     config:
       contract:
         enforced: true

@@ -25,4 +25,4 @@ select
     occupation as "{{ translate_string('general.localisedField.occupationId.label', language) }}",
     religion as "{{ translate_string('general.localisedField.religionId.label', language) }}",
     patient_billing_type as "{{ translate_string('general.localisedField.patientBillingTypeId.label', language) }}"
-from {{ ref("ll__registered_patients") }}
+from {{ ref("ds__registered_patients") }}
