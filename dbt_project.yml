@@ -27,9 +27,12 @@ models:
   tamanu_source_dbt:
     reporting:
       +materialized: view
-      +schema: reporting
       +tags:
         - reporting
+      datasets:
+        +materialized: view
+        +tags:
+          - datasets
 
 data_tests:
   +severity: warn
