@@ -1,7 +1,8 @@
-SELECT
+select
     id,
     code,
     name,
+    facility_id,
     visibility_status
-FROM {{ source("tamanu", "location_groups") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "location_groups") }}
+where deleted_at is null

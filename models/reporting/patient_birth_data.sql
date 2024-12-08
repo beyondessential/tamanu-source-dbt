@@ -1,6 +1,6 @@
 SELECT
-    id,
-    RIGHT(time_of_birth, 8) AS birth_time,
+    patient_id,
+    time_of_birth::time AS birth_time,
     gestational_age_estimate,
     attendant_at_birth,
     name_of_attendant_at_birth,
@@ -15,4 +15,4 @@ SELECT
     birth_facility_id
 FROM {{ source("tamanu", "patient_birth_data") }}
 WHERE deleted_at IS NULL
-    AND id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    AND id != '{{ var("test_patient") }}'

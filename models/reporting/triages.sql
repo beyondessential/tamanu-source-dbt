@@ -1,8 +1,9 @@
 SELECT
     id,
-    arrival_time AS arrival_datetime,
-    triage_time AS triage_datetime,
-    closed_time AS closed_datetime,
+    arrival_time::timestamp AS arrival_datetime,
+    triage_time::timestamp AS triage_datetime,
+    closed_time::timestamp AS closed_datetime,
+    arrival_mode_id,
     score,
     encounter_id,
     practitioner_id AS clinician_id,

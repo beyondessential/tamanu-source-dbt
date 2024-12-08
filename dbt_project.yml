@@ -1,9 +1,13 @@
-name: "tamanu_source_dbt"
-version: "2.16.0"
+name: tamanu_source_dbt
+version: "2.20.0"
 config-version: 2
 
 
-profile: "tamanu_source_dbt"
+profile: tamanu_source_dbt
+
+
+vars:
+  test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 
 
 model-paths: ["models"]
@@ -15,8 +19,8 @@ snapshot-paths: ["snapshots"]
 
 
 clean-targets:
-  - "target"
-  - "dbt_packages"
+  - target
+  - dbt_packages
 
 
 models:

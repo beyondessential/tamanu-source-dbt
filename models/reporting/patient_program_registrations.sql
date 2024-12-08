@@ -1,6 +1,6 @@
 SELECT
     id,
-    date AS datetime,
+    date::timestamp AS datetime,
     registration_status,
     patient_id,
     program_registry_id,
@@ -12,4 +12,4 @@ SELECT
     is_most_recent
 FROM {{ source("tamanu", "patient_program_registrations") }}
 WHERE deleted_at IS NULL
-    AND patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    AND patient_id != '{{ var("test_patient") }}'

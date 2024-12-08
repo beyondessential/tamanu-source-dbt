@@ -2,9 +2,9 @@ SELECT
     id,
     manner,
     recent_surgery AS had_recent_surgery,
-    last_surgery_date,
+    last_surgery_date::date AS last_surgery_date,
     last_surgery_reason_id,
-    external_cause_date,
+    external_cause_date::date AS external_cause_date,
     external_cause_location,
     external_cause_notes,
     was_pregnant,
@@ -18,13 +18,13 @@ SELECT
     carrier_pregnancy_weeks,
     carrier_existing_condition_id,
     outside_health_facility AS was_outside_health_facility,
-    primary_cause_time_after_onset,
+    primary_cause_time_after_onset as primary_cause_mins_after_onset,
     primary_cause_condition_id,
-    antecedent_cause1_time_after_onset,
+    antecedent_cause1_time_after_onset as antecedent_cause1_mins_after_onset,
     antecedent_cause1_condition_id,
-    antecedent_cause2_time_after_onset,
+    antecedent_cause2_time_after_onset as antecedent_cause2_mins_after_onset,
     antecedent_cause2_condition_id,
-    antecedent_cause3_time_after_onset,
+    antecedent_cause3_time_after_onset as antecedent_cause3_mins_after_onset,
     antecedent_cause3_condition_id,
     patient_id,
     clinician_id AS recorded_by_id,
@@ -33,4 +33,4 @@ SELECT
     visibility_status
 FROM {{ source("tamanu", "patient_death_data") }}
 WHERE deleted_at IS NULL
-    AND patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    AND patient_id != '{{ var("test_patient") }}'

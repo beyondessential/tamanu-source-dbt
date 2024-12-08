@@ -70,15 +70,15 @@ min_alias_length = 1
 # formatting for any of these syntax elements then set them to "upper".
 # See https://stackoverflow.com/questions/608196/why-should-i-capitalize-my-sql-keywords-is-there-a-good-reason
 [sqlfluff:rules:capitalisation.keywords]
-capitalisation_policy = upper
+capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.identifiers]
 capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.functions]
-extended_capitalisation_policy = upper
+extended_capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.literals]
-capitalisation_policy = upper
+capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.types]
-extended_capitalisation_policy = upper
+extended_capitalisation_policy = lower
 
 [sqlfluff:rules:structure.join_condition_order]
 preferred_first_table_in_join_clause = later

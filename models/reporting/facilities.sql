@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     code,
     name,
@@ -10,5 +10,5 @@ SELECT
     street_address,
     catchment_id,
     visibility_status
-FROM {{ source("tamanu", "facilities") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "facilities") }}
+where deleted_at is null

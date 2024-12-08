@@ -1,0 +1,20 @@
+version: 2
+models:
+  - name: encounter_diet
+    description: '{{ doc("table__encounter_diets") }}'
+    tags: 
+      - administration
+    columns:
+      - name: id
+        data_type: uuid
+        description: "{{ doc('generic__id') }} in encounter_diets."
+        meta:
+          metrics:
+            total_diets_count:
+              type: count
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('encounter_diets__encounter_id') }}"
+      - name: diet_id
+        data_type: character varying(255)
+        description: "{{ doc('encounter_diets__diet_id') }}"

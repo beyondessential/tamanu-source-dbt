@@ -1,7 +1,7 @@
 SELECT
     id,
-    start_time AS start_datetime,
-    end_time AS end_datetime,
+    start_time::timestamp AS start_datetime,
+    end_time::timestamp AS end_datetime,
     result_text,
     notified AS is_notified,
     survey_id,

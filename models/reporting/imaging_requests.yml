@@ -1,0 +1,51 @@
+version: 2
+models:
+  - name: imaging_requests
+    description: '{{ doc("table__imaging_requests") }}'
+    tags:
+      - clinical
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('generic__id') }} in imaging_requests."
+        meta:
+          metrics:
+            total_imaging_requests_count:
+              type: count
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__display_id') }}"
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('imaging_requests__requested_date') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__status') }}"
+      - name: priority
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__priority') }}"
+      - name: imaging_type
+        data_type: character varying(31)
+        description: "{{ doc('imaging_requests__imaging_type') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__encounter_id') }}"
+        meta:
+          metrics:
+            total_encounters_distinct_count:
+              type: count_distinct
+      - name: requested_by_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__requested_by_id') }}"
+      - name: completed_by_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__completed_by_id') }}"
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__location_id') }}"
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__location_group_id') }}"
+      - name: reason_for_cancellation
+        data_type: character varying(1024)
+        description: "{{ doc('imaging_requests__reason_for_cancellation') }}"

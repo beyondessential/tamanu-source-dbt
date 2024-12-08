@@ -1,8 +1,8 @@
-SELECT
-    id,
-    name,
-    price,
-    discountable,
-    visibility_status
-FROM {{ source("tamanu", "invoice_products") }}
-WHERE deleted_at IS NULL
+select
+    ip.id,
+    ip.name,
+    ip.price,
+    ip.discountable,
+    ip.visibility_status
+from {{ source("tamanu", "invoice_products") }} ip
+where ip.deleted_at is null

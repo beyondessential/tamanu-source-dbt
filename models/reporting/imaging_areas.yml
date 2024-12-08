@@ -1,0 +1,20 @@
+version: 2
+models:
+  - name: imaging_areas
+    description: '{{ doc("table__imaging_request_areas") }}'
+    tags:
+      - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in imaging_request_areas."
+        meta:
+          metrics:
+            total_imaging_areas_count:
+              type: count
+      - name: imaging_request_id
+        data_type: character varying
+        description: "{{ doc('imaging_request_areas__imaging_request_id') }}"
+      - name: area_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_request_areas__area_id') }}"

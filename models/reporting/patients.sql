@@ -12,5 +12,5 @@ SELECT
     village_id
 FROM {{ source("tamanu", "patients") }}
 WHERE deleted_at IS NULL
-    AND id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    AND id != '{{ var("test_patient") }}'
     AND visibility_status != 'merged'

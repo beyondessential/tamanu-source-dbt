@@ -1,19 +1,27 @@
 version: 2
-
 models:
   - name: patient_death_contributing_causes
-    description: "{{ doc('table__patient_death_contributing_causes') }}"
-    tags: ['clinical']
+    description: "{{ doc('table__contributing_death_causes') }}"
+    tags:
+      - clinical
     columns:
       - name: id
-        data_type: character varying
-        description: "{{ doc('patient_death_contributing_causes__id') }}"
-      - name: mins_after_onset
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in contributing_death_causes."
+        meta:
+          metrics:
+            total_patient_death_contributing_causes_count:
+              type: count
+      - name: min_after_onset
         data_type: integer
-        description: "{{ doc('patient_death_contributing_causes__mins_after_onset') }}"
+        description: "{{ doc('contributing_death_causes__time_after_onset') }}"
       - name: patient_death_data_id
-        data_type: character varying
-        description: "{{ doc('patient_death_data__id') }}"
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__patient_death_data_id') }}"
+        meta:
+          metrics:
+            total_patient_death_data_distinct_count:
+              type: count_distinct
       - name: condition_id
-        data_type: character varying
-        description: "{{ doc('reference_data__diagnosis') }}"
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__condition_id') }}"

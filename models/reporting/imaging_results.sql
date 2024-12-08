@@ -1,10 +1,15 @@
-SELECT
-    id,
-    completed_at AS datetime,
-    description,
-    imaging_request_id,
-    external_code,
-    completed_by_id,
-    visibility_status
-FROM {{ source("tamanu", "imaging_results") }}
-WHERE deleted_at IS NULL
+select
+    ires.id,
+    ires.completed_at::timestamp as datetime,
+    ires.description,
+    ires.imaging_request_id,
+    ires.external_code,
+    ires.completed_by_id,
+    ires.visibility_status
+from {{ source("tamanu", "imaging_results") }} ires
+join {{ source("tamanu", "imaging_requests") }} ireq on ireq.id = ires.imaging_request_id
+join {{ source("tamanu", "encounters") }} e on e.id = ireq.encounter_id
+where ires.deleted_at is null
+    and ireq.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'

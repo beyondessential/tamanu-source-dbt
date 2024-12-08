@@ -1,24 +1,27 @@
-SELECT
-    id,
-    date AS start_datetime,
-    end_date AS end_datetime,
-    prescription,
-    note,
-    indication,
-    route,
-    qty_morning,
-    qty_lunch,
-    qty_evening,
-    qty_night,
-    encounter_id,
-    medication_id,
-    prescriber_id AS prescribed_by_id,
-    quantity,
-    repeats,
-    is_discharge AS is_discharged,
-    discontinued AS is_discontinued,
-    discontinued_date,
-    discontinuing_reason,
-    discontinuing_clinician_id AS discontinued_by_id
-FROM {{ source("tamanu", "encounter_medications") }}
-WHERE deleted_at IS NULL
+select
+    em.id,
+    em.date::timestamp as start_datetime,
+    em.end_date::timestamp as end_datetime,
+    em.prescription,
+    em.note,
+    em.indication,
+    em.route,
+    em.qty_morning,
+    em.qty_lunch,
+    em.qty_evening,
+    em.qty_night,
+    em.encounter_id,
+    em.medication_id,
+    em.prescriber_id as prescribed_by_id,
+    em.quantity,
+    em.repeats,
+    em.is_discharge as is_discharged,
+    em.discontinued as is_discontinued,
+    em.discontinued_date::date as discontinued_date,
+    em.discontinuing_reason,
+    em.discontinuing_clinician_id as discontinued_by_id
+from {{ source("tamanu", "encounter_medications") }} em
+join {{ source("tamanu", "encounters") }} e on e.id = em.encounter_id
+where em.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'

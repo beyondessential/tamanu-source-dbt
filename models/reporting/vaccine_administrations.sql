@@ -1,5 +1,5 @@
 SELECT
-    id,
+    av.id,
     date AS datetime,
     encounter_id,
     location_id,
@@ -19,5 +19,5 @@ SELECT
     given_elsewhere AS is_given_elsewhere,
     circumstance_ids,
     recorder_id
-FROM {{ source("tamanu", "administered_vaccines") }}
+FROM {{ source("tamanu", "administered_vaccines") }} av
 WHERE deleted_at IS NULL

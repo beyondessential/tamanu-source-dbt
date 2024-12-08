@@ -1,0 +1,38 @@
+version: 2
+models:
+  - name: surveys
+    description: '{{ doc("table__surveys") }}'
+    tags:
+      - reference
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in surveys."
+        meta:
+          metrics:
+            total_surveys_count:
+              type: count
+      - name: code
+        data_type: character varying(255)
+        description: "{{ doc('surveys__code') }}"
+      - name: name
+        data_type: character varying(255)
+        description: "{{ doc('surveys__name') }}"
+      - name: survey_type
+        data_type: character varying(255)
+        description: "{{ doc('surveys__survey_type') }}"
+      - name: is_sensitive
+        data_type: boolean
+        description: "{{ doc('surveys__is_sensitive') }}"
+      - name: is_notifiable
+        data_type: boolean
+        description: "{{ doc('surveys__notifiable') }}"
+      - name: notify_email_addresses
+        data_type: array
+        description: "{{ doc('surveys__notify_email_addresses') }}"
+      - name: program_id
+        data_type: character varying(255)
+        description: "{{ doc('surveys__program_id') }}"
+      - name: visibility_status
+        data_type: character varying(255)
+        description: "{{ doc('generic__visibility_status') }} in surveys."

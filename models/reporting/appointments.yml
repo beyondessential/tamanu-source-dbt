@@ -1,34 +1,46 @@
 version: 2
-
 models:
   - name: appointments
     description: "{{ doc('table__appointments') }}"
-    tags: ['clinical']
+    tags:
+      - clinical
     columns:
       - name: id
         data_type: character varying
-        description: "{{ doc('appointments__id') }}"
+        description: "{{ doc('generic__id') }} in appointments."
+        meta:
+          metrics:
+            total_appointments_count:
+              type: count
       - name: start_datetime
-        data_type: character
-        description: "{{ doc('appointments__start_datetime') }}"
+        data_type: timestamp
+        description: "{{ doc('appointments__start_time') }}"
       - name: end_datetime
-        data_type: character
-        description: "{{ doc('appointments__end_datetime') }}"
+        data_type: timestamp
+        description: "{{ doc('appointments__end_time') }}"
       - name: patient_id
         data_type: character varying
-        description: "{{ doc('patients__id') }}"
+        description: "{{ doc('appointments__patient_id') }}"
+        meta:
+          metrics:
+            total_patients_distinct_count:
+              type: count_distinct
       - name: clinician_id
         data_type: character varying
-        description: "{{ doc('users__id') }} running the appointment"
+        description: "{{ doc('appointments__clinician_id') }}"
+        meta:
+          metrics:
+            total_clinicians_distinct_count:
+              type: count_distinct
       - name: location_id
         data_type: character varying
-        description: "{{ doc('locations__id') }} of the appointment."
+        description: "{{ doc('appointments__location_id') }}"
       - name: location_group_id
         data_type: character varying
-        description: "{{ doc('location_groups__id') }} of the appointment."
+        description: "{{ doc('appointments__location_group_id') }}]"
       - name: type
         data_type: character varying
-        description: "{{ doc('appointments__type') }}. Default value is 'Standard'"
+        description: "{{ doc('appointments__type') }}"
       - name: status
         data_type: character varying
-        description: "{{ doc('appointments__status') }}. Default value is 'Confirmed'"
+        description: "{{ doc('appointments__status') }}"

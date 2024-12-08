@@ -7,6 +7,7 @@ SELECT
     index,
     weeks_from_birth_due,
     weeks_from_last_vaccination_due,
+    sort_index,
     visibility_status
 FROM {{ source("tamanu", "scheduled_vaccines") }}
 WHERE deleted_at IS NULL

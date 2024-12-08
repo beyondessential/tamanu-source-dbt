@@ -1,10 +1,15 @@
-SELECT
-    id,
-    applied_time AS datetime,
-    invoice_id,
-    percentage,
-    reason,
-    is_manual,
-    applied_by_user_id AS applied_by_id
-FROM {{ source("tamanu", "invoice_discounts") }}
-WHERE deleted_at IS NULL
+select
+    id.id,
+    id.applied_time::timestamp as datetime,
+    id.invoice_id,
+    id.percentage,
+    id.reason,
+    id.is_manual,
+    id.applied_by_user_id as applied_by_id
+from {{ source("tamanu", "invoice_discounts") }} id
+join {{ source("tamanu", "invoices") }} i on i.id = id.invoice_id
+join {{ source("tamanu", "encounters") }} e on e.id = i.encounter_id
+where id.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'

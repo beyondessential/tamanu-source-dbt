@@ -1,6 +1,13 @@
-SELECT
-    id,
-    invoice_payment_id,
-    method_id
-FROM {{ source("tamanu", "invoice_patient_payments") }}
-WHERE deleted_at IS NULL
+select
+    ipp.id,
+    ipp.invoice_payment_id,
+    ipp.method_id
+from {{ source("tamanu", "invoice_patient_payments") }} ipp
+join {{ source("tamanu", "invoice_payments") }} ip on ip.id = ipp.invoice_payment_id
+join {{ source("tamanu", "invoices") }} i on i.id = ip.invoice_id
+join {{ source("tamanu", "encounters") }} e on e.id = i.encounter_id
+where ipp.deleted_at is null
+    and ip.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'

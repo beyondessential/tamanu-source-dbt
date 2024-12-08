@@ -1,0 +1,41 @@
+version: 2
+models:
+  - name: triages
+    description: '{{ doc("table__triages") }}'
+    tags:
+      - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in triages."
+        meta:
+          metrics:
+            total_triages_count:
+              type: count
+      - name: arrival_datetime
+        data_type: timestamp
+        description: "{{ doc('triages__arrival_time') }}"
+      - name: triage_datetime
+        data_type: timestamp
+        description: "{{ doc('triages__triage_time') }}"
+      - name: closed_datetime
+        data_type: timestamp
+        description: "{{ doc('triages__closed_time') }}"
+      - name: arrival_mode_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__arrival_mode_id') }}"
+      - name: score
+        data_type: text
+        description: "{{ doc('triages__score') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__encounter_id') }}"
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__practitioner_id') }}"
+      - name: chief_complaint_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__chief_complaint_id') }}"
+      - name: secondary_complaint_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__secondary_complaint_id') }}"

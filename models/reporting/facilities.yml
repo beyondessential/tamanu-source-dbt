@@ -1,5 +1,4 @@
 version: 2
-
 models:
   - name: facilities
     description: "{{ doc('table__facilities') }}"
@@ -7,7 +6,11 @@ models:
     columns:
       - name: id
         data_type: character varying
-        description: "{{ doc('facilities__id') }}"
+        description: "{{ doc('generic__id') }} in facilities."
+        meta:
+          metrics:
+            total_facilities_count:
+              type: count
       - name: code
         data_type:  character varying
         description: "{{ doc('facilities__code') }}"
@@ -34,7 +37,7 @@ models:
         description: "{{ doc('facilities__street_address') }}"
       - name: visibility_status
         data_type: text
-        description: "{{ doc('generic__visibility_status') }} in facilities, default value is 'current'"
+        description: "{{ doc('generic__visibility_status') }} in facilities."
       - name: catchment_id
         data_type: text
-        description: "{{ doc('reference_data__catchment') }}"
+        description: "{{ doc('facilities__catchment_id') }}"

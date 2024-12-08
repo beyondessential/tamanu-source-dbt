@@ -1,6 +1,7 @@
-SELECT
+select
     id,
     code,
+    external_code,
     name,
     unit,
     male_min,
@@ -8,9 +9,9 @@ SELECT
     female_min,
     female_max,
     range_text
-    result_type,
+    as result_type,
     options,
     lab_test_category_id,
     visibility_status
-FROM {{ source("tamanu", "lab_test_types") }}
-WHERE deleted_at IS NULL
+from {{ source("tamanu", "lab_test_types") }}
+where deleted_at is null
