@@ -1,0 +1,81 @@
+version: 2
+models:
+  - name: ds__patients
+    description: Patients
+    columns:
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }} in patients."
+      - name: registered_by
+        data_type: character varying(255)
+        description: "{{ doc('users__display_id') }} the patient record is registered by."
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: middle_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__middle_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: cultural_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__cultural_name') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+        meta:
+          metrics:
+            total_patients_count:
+              type: count
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('reference_data__name') }} of the village"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: birth_certificate
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__birth_certificate') }}"
+      - name: driving_license
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__driving_license') }}"
+      - name: passport
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__passport') }}"
+      - name: blood_type
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__blood_type') }}"
+      - name: title
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__title') }}"
+      - name: marital_status
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__marital_status') }}"
+      - name: primary_contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__primary_contact_number') }}"
+      - name: secondary_contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__secondary_contact_number') }}"
+      - name: country_of_birth
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__country_of_birth_id') }}"
+      - name: nationality
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__nationality_id') }}"
+      - name: ethnicity
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__ethnicity_id') }}"
+      - name: occupation
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__occupation_id') }}"
+      - name: religion
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__religion_id') }}"
+      - name: patient_billing_type
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__patient_billing_type_id') }}"
