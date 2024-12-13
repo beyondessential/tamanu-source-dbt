@@ -6,13 +6,15 @@ This documentation aims to be a guide to Tamanu's standard models. The expected 
 
 ## Scope
 Models included in this documentation:
-- raw (or source) schema (incomplete documentation and validation test)
-- reporting schema (in progress)
+- sources
+- bases
+- datasets
+- reporting schema
 
 ## Content
 
 ### Raw schema
-The models in the "tamanu" folder under the "Sources" heading represents the models in the operational database. Tags are used to classify the data and operational status of the models.
+The models in the "sources" folder represents the models in the operational database. Tags are used to classify the data and operational status of the models.
 
 Data type tag:
 - administration - Thematically pretty close to reference data, but distinct in that adminisstration data is expected to change as part of normal day-to-day system operation (e.g. a user can change their password and email address outside of a project manager or admin reconfiguring the system).

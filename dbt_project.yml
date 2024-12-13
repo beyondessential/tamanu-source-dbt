@@ -7,6 +7,7 @@ profile: tamanu_source_dbt
 
 
 vars:
+  language: en
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 
 
@@ -25,11 +26,30 @@ clean-targets:
 
 models:
   tamanu_source_dbt:
-    reporting:
+    bases:
       +materialized: view
-      +schema: reporting
       +tags:
-        - reporting
+        - bases
+        
+    datasets:
+      +materialized: view
+      +tags:
+        - datasets
+
+      fiji:
+        +tags:
+          - datasets_fiji
+      generic:
+        +tags:
+          - datasets_generic
+      translated:
+        +tags:
+          - datasets_translated
+
+    reports:
+      +tags:
+        - reports
+
 
 data_tests:
   +severity: warn
