@@ -82,7 +82,7 @@ def generate_project_datasets(target):
                 print(f"Warning: Model file {compiled_model_path} not found.")
 
     create_directory(VIEWS_DIR)
-    output_filename = os.path.join(VIEWS_DIR, f"{target}_datasets_script_{datetime.now().strftime('%d_%m_%Y_%H_%M')}.sql")
+    output_filename = os.path.join(VIEWS_DIR, f"{target}_datasets.sql")
 
     with open(output_filename, "w") as f:
         f.write("\n".join(scripts))
