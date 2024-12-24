@@ -1,6 +1,7 @@
 
 target/
 dbt_packages/
+compiled/
 logs/
 .idea
 package-lock.yml
