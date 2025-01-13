@@ -24,27 +24,29 @@ models:
   tamanu_source_dbt:
     bases:
       +materialized: view
-      +tags:
-        - bases
+      +tags: [fiji, palau, samoa]
 
     datasets:
       +materialized: view
-      +tags:
-        - datasets
-
       fiji:
-        +tags:
-          - datasets_fiji
+        +tags: [fiji]
       generic:
-        +tags:
-          - datasets_generic
-      translated:
-        +tags:
-          - datasets_translated
+        +tags: [fiji, palau, samoa]
+
+    translated:
+      +materialized: view
+      fiji:
+        +tags: [fiji]
+      generic:
+        +tags: [fiji, palau, samoa]
 
     reports:
-      +tags:
-        - reports
+      +tags: [reports]
+      sql:
+        fiji:
+          +tags: [fiji]
+        generic:
+          +tags: [fiji, palau, samoa]
 
 data_tests:
   +severity: warn
