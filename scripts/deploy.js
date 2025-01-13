@@ -109,7 +109,7 @@ function generateProjectDatasets(target) {
   fs.writeFileSync(path.join(VIEWS_DIR, "datasets.sql"), scripts.join("\n"));
 }
 
-function generateProjectReports(target) {
+async function generateProjectReports(target) {
   const manifest = parseManifest();
 
   const reportModels = Object.keys(manifest.nodes).filter(
@@ -127,7 +127,7 @@ function generateProjectReports(target) {
 
   ensureDirectoryExists(REPORTS_DIR);
 
-  reportModels.forEach(async (model) => {
+  for (const model of reportModels) {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
     if (fs.existsSync(compiledModelPath)) {
@@ -149,7 +149,7 @@ function generateProjectReports(target) {
     } else {
       console.warn(`Compiled model file not found: ${compiledModelPath}`);
     }
-  });
+  }
 }
 
 function generateImportReportScript() {
@@ -215,7 +215,7 @@ function generateImportReportScript() {
   }
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const targetIndex = args.indexOf("--target") + 1;
   const target = targetIndex > 0 ? args[targetIndex] : "demoland";
@@ -224,11 +224,15 @@ function main() {
   executeCommand("dbt clean");
   executeCommand("dbt deps");
   executeCommand(`dbt compile --target ${target} --select tag:${target}`);
+
   generateProjectDatasets(target);
-  generateProjectReports(target);
+  await generateProjectReports(target);
   generateImportReportScript();
 }
 
 if (require.main === module) {
-  main();
+  main().catch((err) => {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  });
 }
