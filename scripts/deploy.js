@@ -2,6 +2,7 @@ const { readFile, writeFile } = require("node:fs/promises");
 const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const { Console } = require("node:console");
 
 const SCHEMA = "reporting";
 const ROLE = "tamanu_reporting";
@@ -130,11 +131,16 @@ async function generateProjectReports(target) {
   for (const model of reportModels) {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
+    console.log(compiledModelPath);
     if (fs.existsSync(compiledModelPath)) {
       const configFilePath = compiledModelPath
-        .replace("../target/compiled/tamanu_source_dbt/models", "../models")
+        .replace(
+          path.join("..", "target", "compiled", "tamanu_source_dbt", "models"),
+          path.join("..", "models")
+        )
         .replace(".sql", ".json")
         .replace("sql", "config");
+      console.log(configFilePath);
       const outputFilePath = path.join(
         REPORTS_DIR,
         `${path.basename(modelPath, ".sql")}.json`
