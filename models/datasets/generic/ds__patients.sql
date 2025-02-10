@@ -28,13 +28,8 @@ left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
 join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
 left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join
-    {{ ref("reference_data") }} nationality
-    on nationality.id = pad.nationality_id and nationality.type = 'nationality'
+left join {{ ref("reference_data") }} nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
 left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
 left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join
-    {{ ref("reference_data") }} billing
-    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
-order by p.registration_date
+left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
