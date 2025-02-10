@@ -1,0 +1,64 @@
+{
+  "query": "replace this",
+  "name": "Samoa syndromic surveillance report",
+  "notes": "Samoa syndromic surveillance report v2.19\nThis report generates a list of all patients that have been diagnosed with one of the following notifiable diseases:  \n- Influenza-like illness (ILI)\n- Severe acute respiratory infection (SARI)\n- Acute fever and rash (AFR)\n- Dengue-like illness (DLI)\n- Prolonger fever (PF)\n- Acute flacid paralysis (AFP)\n- Diarrhoea \n- Neonatal tetanus (NT)\n\nEach diagnosis for a patient is listed on an individual line. Diagnoses with a status of Disproven and Recorded in error are excluded from the report. Patients are listed by 'Encounter date' in chronological order. \n\nThe report also includes additional details including other diagnoses and lab requests generated for the encounter being reported. \n\n\n",
+  "status": "published",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "name": "facilityId",
+        "label": "Facility",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Village",
+        "name": "villageId",
+        "suggesterEndpoint": "village"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Diagnosis",
+        "name": "diagnosisId",
+        "options": [
+          {
+            "label": "Influenza-like Illness (ILI)",
+            "value": "icd10-ILI"
+          },
+          {
+            "label": "Severe Acute Respiratory Infection (SARI)",
+            "value": "icd10-SARI"
+          },
+          {
+            "label": "Acute Fever and Rash (AFR)",
+            "value": "icd10-AFR"
+          },
+          {
+            "label": "Dengue-like Illness (DLI)",
+            "value": "icd10-DLI"
+          },
+          {
+            "label": "Prolonged fever (PF)",
+            "value": "icd10-PF"
+          },
+          {
+            "label": "Acute Flaccid Paralysis (AFP)",
+            "value": "icd10-AFP"
+          },
+          {
+            "label": "Diarrhoea",
+            "value": "icd10-Diarrhoea"
+          },
+          {
+            "label": "Neonatal tetanus (NT)",
+            "value": "icd10-NT"
+          }
+        ]
+      }
+    ]
+  }
+}

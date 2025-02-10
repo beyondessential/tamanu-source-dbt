@@ -1,0 +1,26 @@
+{
+  "query": "replace this",
+  "status": "published",
+  "name": "Tuvalu patient vaccination summary",
+  "notes": "Tuvalu Patient Vaccination Summary v2.6",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter dates or leave blank for all data",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "name": "facilityId",
+        "label": "Facility",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Village",
+        "name": "villageId",
+        "suggesterEndpoint": "village"
+      }
+    ]
+  }
+}

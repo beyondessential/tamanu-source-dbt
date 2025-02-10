@@ -1,0 +1,19 @@
+{
+  "query": "replace this",
+  "status": "published",
+  "name": "Fiji lymphatic filariasis sentinel survey",
+  "notes": "Fiji Lymphatic Filariasis Sentinel Survey v2.19",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      }
+    ]
+  }
+}

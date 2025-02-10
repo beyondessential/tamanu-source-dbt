@@ -1,0 +1,25 @@
+{
+  "query": "replace this",
+  "status": "published",
+  "name": "Recent attendance line list",
+  "notes": "Recent attendance line list v2.19",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dateRangeLabel": "Date range (or leave blank for the past 24 hours of data)",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Subdivision",
+        "name": "subdivisionId",
+        "suggesterEndpoint": "subdivision"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis",
+        "name": "diagnosisId"
+      }
+    ]
+  }
+}
