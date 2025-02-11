@@ -1,5 +1,6 @@
-{%- macro translate_string(string_id, language='en', default_column_name=null) -%}
-    {%-set query -%}
+{%- macro translate_string(string_id, default_column_name=null) -%}
+    {%- set language = var('language') or 'en' -%}
+    {%- set query -%}
         select text from {{ source('tamanu', 'translated_strings') }}
         where string_id='{{ string_id }}' and language='{{ language }}'
     {%- endset -%}
