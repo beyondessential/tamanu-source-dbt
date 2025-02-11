@@ -7,7 +7,7 @@ select
     device_id,
     patient_id,
     department_id
-    location_id,
+    as location_id,
     examiner_id as clinician_id,
     patient_billing_type_id,
     referral_source_id,

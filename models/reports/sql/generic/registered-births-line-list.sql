@@ -36,3 +36,4 @@ where
     case
         when{{ parameter('facilityId') }} is null then true
         else birth_facility_id ={{ parameter('facilityId') }}
+    end
