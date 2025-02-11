@@ -11,11 +11,11 @@
 
 select
     {{ dbt_utils.star(
-            from=ref('ds__vaccinations_translated'), 
+            from=ref('translated_ds__vaccinations'), 
             except=excluded_columns
         )
     }}
-from {{ ref("ds__vaccinations_translated") }}
+from {{ ref("translated_ds__vaccinations") }}
 where
     "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}" in ('Given', 'Not Given')
     and

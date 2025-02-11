@@ -1,4 +1,6 @@
 select
+    patient_id,
+    village_id,
     registration_date as "Registration date",
     registered_by as "Registered by",
     first_name as "{{ translate_string('general.localisedField.firstName.label','First name') }}",

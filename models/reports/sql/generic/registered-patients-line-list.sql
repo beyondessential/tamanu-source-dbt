@@ -1,5 +1,13 @@
-select *
-from {{ ref("ds__patients_translated") }}
+select 
+    {{ dbt_utils.star(
+            from=ref('translated_ds__patients'), 
+            except=[
+                'patient_id',
+                'village_id'
+            ]
+        ) 
+    }}
+from {{ ref("translated_ds__patients") }}
 where
     case
         when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

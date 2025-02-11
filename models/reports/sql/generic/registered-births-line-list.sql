@@ -1,6 +1,6 @@
 select
     {{ dbt_utils.star(
-            from=ref('ds__births_translated'), 
+            from=ref('translated_ds__births'), 
             except=[
                 'village_id', 
                 'birth_facility_id', 
@@ -8,7 +8,7 @@ select
             ]
         ) 
     }}
-from {{ ref("ds__births_translated") }}
+from {{ ref("translated_ds__births") }}
 where
     case
         when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

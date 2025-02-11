@@ -131,7 +131,6 @@ async function generateProjectReports(target) {
   for (const model of reportModels) {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
-    console.log(compiledModelPath);
     if (fs.existsSync(compiledModelPath)) {
       const configFilePath = compiledModelPath
         .replace(
@@ -140,7 +139,6 @@ async function generateProjectReports(target) {
         )
         .replace(".sql", ".json")
         .replace("sql", "config");
-      console.log(configFilePath);
       const outputFilePath = path.join(
         REPORTS_DIR,
         `${path.basename(modelPath, ".sql")}.json`
@@ -229,6 +227,7 @@ async function main() {
   console.log(`Generating build script for target: ${target}`);
   executeCommand("dbt clean");
   executeCommand("dbt deps");
+  executeCommand(`dbt run --target ${target} --select tag:${target}`);
   executeCommand(`dbt compile --target ${target} --select tag:${target}`);
 
   generateProjectDatasets(target);
