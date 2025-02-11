@@ -15,10 +15,11 @@ select
     av.consent as is_consented,
     av.consent_given_by,
     av.injection_site,
-    av.given_by as given_by_id,
+    av.given_by,
     av.given_elsewhere as is_given_elsewhere,
     av.circumstance_ids,
-    av.recorder_id as recorded_by_id
+    av.recorder_id as recorded_by_id,
+    av.updated_at::timestamp as last_modified_at
 from {{ source("tamanu", "administered_vaccines") }} av
 join {{ source("tamanu", "encounters") }} e on e.id = av.encounter_id
 where av.deleted_at is null

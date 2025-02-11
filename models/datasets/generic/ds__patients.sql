@@ -32,4 +32,6 @@ left join {{ ref("reference_data") }} nationality on nationality.id = pad.nation
 left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
 left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join
+    {{ ref("reference_data") }} billing
+    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'

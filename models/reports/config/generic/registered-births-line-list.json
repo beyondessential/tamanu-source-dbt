@@ -1,0 +1,24 @@
+{
+  "query": "replace this",
+  "name": "Registered birth line list",
+  "notes": "Registered Birth - Line List v2.16\nThis report generate a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.",
+  "status": "published",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "VillageField",
+        "label": "Village",
+        "name": "villageId"
+      }
+    ]
+  }
+}

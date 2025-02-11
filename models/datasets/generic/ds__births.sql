@@ -1,7 +1,7 @@
 select
     to_char(pbd.registration_date, 'dd/mm/yyyy') as registration_date,
-    case 
-        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name 
+    case
+        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
     end as registered_by,
     p.id as patient_id,
     p.display_id,
@@ -40,7 +40,7 @@ select
         else pbd.attendant_at_birth
     end as attendant_at_birth,
     pbd.name_of_attendant_at_birth,
-    case 
+    case
         when pbd.birth_delivery_type = 'normal_vaginal_delivery' then 'Normal vaginal delivery'
         when pbd.birth_delivery_type = 'breech' then 'Breech'
         when pbd.birth_delivery_type = 'emergency_c_section' then 'Emergency C-section'
