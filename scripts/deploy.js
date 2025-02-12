@@ -5,7 +5,7 @@ const fs = require("fs");
 const { Console } = require("node:console");
 
 const SCHEMA = "reporting";
-const ROLE = "tamanu_reporting";
+const ROLE = "reporting";
 const MANIFEST_PATH = "../target/manifest.json";
 const COMPILED_MODELS_DIR = "../target/compiled/tamanu_source_dbt/models/";
 const VIEWS_DIR = "../compiled/views";
@@ -69,32 +69,42 @@ function generateProjectDatasets(target) {
     return;
   }
 
-  const modelsToProcess = new Set(models);
+  let processedNodes = new Set();
+  let orderedModels = [];
 
-  models.forEach((model) => {
-    const dependencies = manifest.nodes[model].depends_on.nodes || [];
-    dependencies.forEach((dep) => {
-      if (dep.startsWith("model") && !modelsToProcess.has(dep)) {
-        modelsToProcess.add(dep);
-      }
+  while (processedNodes.size < models.length) {
+    let currentLevel = models.filter((model) => {
+      let dependencies = manifest.nodes[model].depends_on.nodes || [];
+      return dependencies.every(
+        (dep) => dep.startsWith("source") || processedNodes.has(dep)
+      );
     });
-  });
+
+    if (currentLevel.length === 0) {
+      console.error(
+        "Error: Circular dependency detected or missing dependencies."
+      );
+      process.exit(1);
+    }
+
+    currentLevel.forEach((model) => {
+      processedNodes.add(model);
+      orderedModels.push(model);
+    });
+  }
 
   const scripts = [
     `CREATE SCHEMA IF NOT EXISTS ${SCHEMA};`,
     `ALTER DEFAULT PRIVILEGES IN SCHEMA ${SCHEMA} GRANT SELECT ON TABLES TO ${ROLE};`,
   ];
 
-  modelsToProcess.forEach((model) => {
+  orderedModels.forEach((model) => {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
     if (fs.existsSync(compiledModelPath)) {
       const sql = fs
         .readFileSync(compiledModelPath, "utf-8")
-        .replace(
-          new RegExp(`"${manifest.nodes[model].database}"\\.public`, "g"),
-          `"public"`
-        );
+        .replace(new RegExp(`"${manifest.nodes[model].database}"\\.`, "g"), ``);
       scripts.push(
         `CREATE OR REPLACE VIEW "${SCHEMA}"."${path.basename(
           modelPath,

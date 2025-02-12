@@ -1,7 +1,8 @@
 select
     iid.id,
     iid.invoice_item_id,
-    iid.percentage,
+    iid.amount,
+    iid.type,
     iid.reason
 from {{ source("tamanu", "invoice_item_discounts") }} iid
 join {{ source("tamanu", "invoice_items") }} ii on ii.id = iid.invoice_item_id

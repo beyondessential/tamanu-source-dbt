@@ -1,0 +1,51 @@
+{
+  "query": "replace this",
+  "name": "Upcoming vaccinations line list",
+  "notes": "Upcoming vaccinations line list v2.16\nThis report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.",
+  "status": "published",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "18years",
+    "dateRangeLabel": "Enter dates or leave blank for births in the past 18 years",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "VaccineCategoryField",
+        "label": "Category",
+        "name": "category"
+      },
+      {
+        "parameterField": "VaccineField",
+        "label": "Vaccine",
+        "name": "vaccine"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "name": "vaccineStatus",
+        "label": "Vaccine status",
+        "options": [
+          {
+            "label": "Missed",
+            "value": "MISSED"
+          },
+          {
+            "label": "Overdue",
+            "value": "OVERDUE"
+          },
+          {
+            "label": "Due",
+            "value": "DUE"
+          },
+          {
+            "label": "Upcoming",
+            "value": "UPCOMING"
+          },
+          {
+            "label": "Scheduled",
+            "value": "SCHEDULED"
+          }
+        ]
+      }
+    ]
+  }
+}

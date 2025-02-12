@@ -8,7 +8,7 @@ select
     p.cultural_name,
     p.display_id,
     p.sex,
-    p.village_id as village_id,
+    p.village_id,
     village.name as village,
     p.date_of_birth,
     pad.birth_certificate,
@@ -37,3 +37,4 @@ left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id 
 left join
     {{ ref("reference_data") }} billing
     on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+order by p.registration_date

@@ -14,7 +14,7 @@ select
     p.first_name,
     p.last_name,
     p.id as patient_id,
-    to_char(p.date_of_birth, 'dd/mm/yyyy') as date_of_birth,
+    p.date_of_birth,
     date_part('year', age(p.date_of_birth)) as age,
     initcap(p.sex::text) as sex,
     p.village_id,
@@ -28,8 +28,8 @@ select
     l.id as location_id,
     l.name as location,
     case
-        when av.is_given_elsewhere = true and av.datetime is null then 'Date not recorded'
-        else to_char(av.datetime, 'dd/mm/yyyy')
+        when av.is_given_elsewhere = true and av.datetime is null then null
+        else av.datetime::date
     end as vaccination_date,
     sv.category as vaccine_category,
     sv.label as vaccine_name,
@@ -41,7 +41,7 @@ select
         when av.status = 'RECORDED_IN_ERROR' then 'Recorded in error'
         when av.status = 'HISTORICAL' then 'Historical'
     end as vaccine_status,
-    sv.dose_label,
+    sv.dose_label as vaccine_schedule,
     av.batch,
     case
         when av.status in ('GIVEN', 'NOT_GIVEN', 'RECORDED_IN_ERROR') then u.display_name
@@ -65,7 +65,7 @@ select
     case
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
-    to_char(av.last_modified_at, 'dd/mm/yyyy') as last_modified_at
+    av.last_modified_at
 from {{ ref("vaccine_administrations") }} av
 join {{ ref("encounters") }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
@@ -78,3 +78,4 @@ left join {{ ref("users") }} u on u.id = av.recorded_by_id
 left join {{ ref("reference_data") }} rd_vil on rd_vil.id = p.village_id
 left join {{ ref("reference_data") }} rd_reason on rd_reason.id = av.not_given_reason_id
 left join administered_circumstances ac on ac.id = av.id
+order by av.datetime

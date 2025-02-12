@@ -22,7 +22,7 @@ select
     vaccine_brand as "{{ translate_string('', 'If category of Other, Vaccine brand') }}",
     disease as "{{ translate_string('', 'If category of Other, Disease') }}",
     vaccine_status as "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}",
-    dose_label as "{{ translate_string('vaccine.schedule.label', 'Schedule') }}",
+    vaccine_schedule as "{{ translate_string('vaccine.schedule.label', 'Schedule') }}",
     batch as "{{ translate_string('vaccine.batch.label', 'Batch') }}",
     given_by as "{{ translate_string('vaccine.givenBy.label', 'Given by') }}",
     recorded_by as "{{ translate_string('vaccine.recordedBy.label', 'Recorded by') }}",

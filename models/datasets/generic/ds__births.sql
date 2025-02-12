@@ -1,5 +1,5 @@
 select
-    to_char(pbd.registration_date, 'dd/mm/yyyy') as registration_date,
+    pbd.registration_date,
     case
         when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
     end as registered_by,
@@ -7,7 +7,7 @@ select
     p.display_id,
     p.first_name,
     p.last_name,
-    to_char(p.date_of_birth::date, 'dd/mm/yyyy') as date_of_birth,
+    p.date_of_birth,
     initcap(p.sex::text) as sex,
     rd_ethnicity.name as ethnicity,
     rd_nationality.name as nationality,
@@ -66,3 +66,4 @@ left join {{ ref("patients") }} p_mother on p_mother.id = pad.mother_id
 left join {{ ref("patients") }} p_father on p_father.id = pad.father_id
 left join {{ ref("facilities") }} f on f.id = pbd.birth_facility_id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
+order by p.date_of_birth, pbd.birth_time

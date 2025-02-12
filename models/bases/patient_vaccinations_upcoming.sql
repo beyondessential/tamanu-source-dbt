@@ -3,7 +3,7 @@ select
     scheduled_vaccine_id as vaccine_schedules_id,
     vaccine_category,
     vaccine_id,
-    due_date,
+    due_date::date,
     days_till_due,
     status
 from {{ source("tamanu", "upcoming_vaccinations") }}

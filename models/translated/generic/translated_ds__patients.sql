@@ -1,8 +1,8 @@
 select
     patient_id,
     village_id,
-    registration_date as "Registration date",
-    registered_by as "Registered by",
+    registration_date as "{{ translate_string('', 'Registration date') }}",
+    registered_by as "{{ translate_string('', 'Registered by') }}",
     first_name as "{{ translate_string('general.localisedField.firstName.label','First name') }}",
     middle_name as "{{ translate_string('general.localisedField.middleName.label','Middle name') }}",
     last_name as "{{ translate_string('general.localisedField.lastName.label','Last name') }}",

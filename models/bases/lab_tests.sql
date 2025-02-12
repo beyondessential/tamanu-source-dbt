@@ -1,7 +1,6 @@
 select
     lt.id,
     lt.date::date as date,
-    lt.status,
     lt.result,
     lt.lab_request_id,
     lt.lab_test_type_id,
