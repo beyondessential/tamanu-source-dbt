@@ -1,11 +1,11 @@
 {
   "query": "replace this",
   "name": "Samoa recent diagnoses line list",
-  "notes": "Samoa's recent diagnoses line list v2.6\nReport lists all patients that have had the specified diagnosis/es recorded.",
+  "notes": "Samoa's recent diagnoses line list v2.24\nThis report lists all patients that have had the specified diagnosis/es recorded.",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {
-    "defaultDateRange": "24hours",
+    "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {

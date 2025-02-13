@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Samoa syndromic surveillance report",
-  "notes": "Samoa syndromic surveillance report v2.19\nThis report generates a list of all patients that have been diagnosed with one of the following notifiable diseases:  \n- Influenza-like illness (ILI)\n- Severe acute respiratory infection (SARI)\n- Acute fever and rash (AFR)\n- Dengue-like illness (DLI)\n- Prolonger fever (PF)\n- Acute flacid paralysis (AFP)\n- Diarrhoea \n- Neonatal tetanus (NT)\n\nEach diagnosis for a patient is listed on an individual line. Diagnoses with a status of Disproven and Recorded in error are excluded from the report. Patients are listed by 'Encounter date' in chronological order. \n\nThe report also includes additional details including other diagnoses and lab requests generated for the encounter being reported. \n\n\n",
+  "notes": "Samoa syndromic surveillance report v2.24\nThis report generates a list of all patients that have been diagnosed with one of the following notifiable diseases:  \n- Influenza-like illness (ILI)\n- Severe acute respiratory infection (SARI)\n- Acute fever and rash (AFR)\n- Dengue-like illness (DLI)\n- Prolonger fever (PF)\n- Acute flacid paralysis (AFP)\n- Diarrhoea \n- Neonatal tetanus (NT)\n\nEach diagnosis for a patient is listed on an individual line. Diagnoses with a status of Disproven and Recorded in error are excluded from the report. Patients are listed by 'Encounter date' in chronological order. \n\nThe report also includes additional details including other diagnoses and lab requests generated for the encounter being reported. \n\n\n",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {

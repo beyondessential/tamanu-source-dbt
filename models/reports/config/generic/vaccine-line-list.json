@@ -2,7 +2,7 @@
   "query": "replace this",
   "status": "published",
   "name": "Vaccine line list",
-  "notes": "Vaccine line list v2.10\nThis report generates a list of all patients that have had a vaccination recorded for the selected parameters. Patients are listed alphabetically by last name and date of vaccination in chronological order. \n\nThe report includes vaccinations with statuses of both 'Given' and 'Not given', and each vaccination recorded is listed on a single row. If a vaccination was initially recorded as 'Not given' and is later marked as 'Given', only the vaccination record with a status of 'Given' will be included in the report.",
+  "notes": "Vaccine line list v2.24\nThis report generates a list of all patients that have had a vaccination recorded for the selected parameters. Patients are listed alphabetically by last name and date of vaccination in chronological order. \n\nThe report includes vaccinations with statuses of both 'Given' and 'Not given', and each vaccination recorded is listed on a single row. If a vaccination was initially recorded as 'Not given' and is later marked as 'Given', only the vaccination record with a status of 'Given' will be included in the report.",
   "dbSchema": "raw",
   "queryOptions": {
     "defaultDateRange": "7days",

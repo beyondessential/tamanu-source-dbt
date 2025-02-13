@@ -2,7 +2,7 @@
   "query": "replace this",
   "status": "published",
   "name": "Fiji lymphatic filariasis transmission report",
-  "notes": "Fiji lymphatic filariasis transmission report v2.19\nThis report generates a list of patients that have had a 'Post - MDA Transmission Survey - Part A - Registration' form completed. Each line in the report represents the completion of a single registration form. The report combines details from both the 'Post-MDA Transmission Survey - Part A - Registration' and 'Post-MDA Transmission Survey - Part B - Result' forms. Patients are listed in chronological order by date of 'Post - MDA Transmission Survey - Part A - Registration' form submission. ",
+  "notes": "Fiji lymphatic filariasis transmission report v2.24\nThis report generates a list of patients that have had a 'Post - MDA Transmission Survey - Part A - Registration' form completed. Each line in the report represents the completion of a single registration form. The report combines details from both the 'Post-MDA Transmission Survey - Part A - Registration' and 'Post-MDA Transmission Survey - Part B - Result' forms. Patients are listed in chronological order by date of 'Post - MDA Transmission Survey - Part A - Registration' form submission. ",
   "dbSchema": "raw",
   "queryOptions": {
     "defaultDateRange": "30days",

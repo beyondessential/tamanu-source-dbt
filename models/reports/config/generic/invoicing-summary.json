@@ -1,0 +1,13 @@
+{
+  "query": "replace this",
+  "name": "Invoicing Summary",
+  "notes": "Insurance Summary v2.24\nThis report generates a summary of invoices. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.",
+  "status": "published",
+  "dbSchema": "raw",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter discharge dates (or leave it blank for all)",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": []
+  }
+}

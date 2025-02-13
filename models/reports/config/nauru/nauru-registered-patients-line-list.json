@@ -2,10 +2,10 @@
   "query": "replace this",
   "status": "published",
   "name": "Nauru registered patients line list",
-  "notes": "Nauru registered patients line list v2.6\nThis report generates a list of all patients that have been registered, including date of registeration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. ",
+  "notes": "Nauru registered patients line list v2.24\nThis report generates a list of all patients that have been registered, including date of registeration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. ",
   "dbSchema": "raw",
   "queryOptions": {
-    "defaultDateRange": "24hours",
+    "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": []
   }

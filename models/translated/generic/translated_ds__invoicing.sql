@@ -1,0 +1,22 @@
+select
+    invoice_id,
+    patient_id,
+    encounter_id,
+    discharge_area_id,
+    status,
+    admission_datetime as "{{ translate_string('discharge.admissionDate.label','Admission date') }}",
+    discharge_datetime as "{{ translate_string('discharge.dischargeDate.label','Discharged date') }}",
+    invoice_number as "{{ translate_string('general.localisedField.invoiceDisplayId.label','Invoice number') }}",
+    patient_name as "{{ translate_string('general.table.column.patientName','Patient name') }}",
+    display_id as "{{ translate_string('general.localisedField.displayId.label','Patient ID') }}",
+    social_security_number as "{{ translate_string('refData.patientFieldDefinition.fieldCategory-SocialSecurityNumber','Social security number') }}",
+    nationality as "{{ translate_string('general.localisedField.nationalityId.label','Nationality') }}",
+    insurers as "{{ translate_string('','Insurer') }}",
+    discharge_area as "{{ translate_string('','Area (at time of discharge)') }}",
+    total_invoice_amount as "{{ translate_string('','Total invoice amount') }}",
+    total_insurer_amount as "{{ translate_string('','Total insurer amount') }}",
+    total_patient_discount as "{{ translate_string('','Total patient discount') }}",
+    total_patient_amount as "{{ translate_string('','Total patient amount') }}",
+    isdeceased as "{{ translate_string('','Deceased/Active') }}",
+    date_of_death as "{{ translate_string('','Date deceased') }}"
+from {{ ref('ds__invoicing') }}

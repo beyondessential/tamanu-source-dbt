@@ -5,7 +5,7 @@
   "notes": "Recent attendance line list v2.19",
   "dbSchema": "raw",
   "queryOptions": {
-    "defaultDateRange": "24hours",
+    "defaultDateRange": "7days",
     "dateRangeLabel": "Date range (or leave blank for the past 24 hours of data)",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
