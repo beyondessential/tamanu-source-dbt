@@ -1,5 +1,5 @@
-{%- macro select_with_transform(from, except, update) -%}
-    {%- set columns = adapter.get_columns_in_relation(ref(from)) | map(attribute="name") | list -%}
+{%- macro select_with_transform(from, except, update, select=None) -%}
+    {%- set columns = select if select else adapter.get_columns_in_relation(ref(from)) | map(attribute="name") | list -%}
     {%- set filtered_columns = columns | reject( "in", except) | list -%}
     {%- set date_format = var('date_format') -%}
     {%- set updated_columns = [] -%}
