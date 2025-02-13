@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "DM & HTN patient follow up",
-  "notes": "DM & HTN patient follow up - v2.24\nThis report will show those on the NCD registry and their vitals from the previous 2 visits to a facility. This will help follow up patients who do not have their diabetes or hypertension under control.",
+  "notes": "DM & HTN patient follow up\nThis report will show those on the NCD registry and their vitals from the previous 2 visits to a facility. This will help follow up patients who do not have their diabetes or hypertension under control.",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {

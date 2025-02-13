@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Upcoming vaccinations line list",
-  "notes": "Upcoming vaccinations line list v2.24\nThis report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.",
+  "notes": "Upcoming vaccinations line list\nThis report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {

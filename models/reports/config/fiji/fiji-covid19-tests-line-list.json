@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Fiji COVID 19 tests line list",
-  "notes": "Fiji COVID 19 tests line list v2.24\nThis report generates a list of all patients that have received a COVID-19 test. Each row represents a lab request and includes patient, 'COVID-19 Sample Collection' survey and lab request information. Patients are listed in chroological order by requested date. \n\nLab requests with a status of Cancelled, Deleted or Entered in error are excluded from this report.",
+  "notes": "Fiji COVID 19 tests line list\nThis report generates a list of all patients that have received a COVID-19 test. Each row represents a lab request and includes patient, 'COVID-19 Sample Collection' survey and lab request information. Patients are listed in chroological order by requested date. \n\nLab requests with a status of Cancelled, Deleted or Entered in error are excluded from this report.",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {

@@ -2,7 +2,7 @@
   "query": "replace this",
   "status": "published",
   "name": "Samoa COVID-19 test line list",
-  "notes": "Samoa COVID-19 test line list v2.24\nThis report generates a list of all patients that have received a COVID-19 test. Each row represents a lab request and includes patient, 'COVID-19 Sample Collection Form' survey and lab request information.  Patients are listed in chroological order by requested date. \n\nLab requests with a status of Cancelled, Deleted or Entered in error are excluded from this report. ",
+  "notes": "Samoa COVID-19 test line list\nThis report generates a list of all patients that have received a COVID-19 test. Each row represents a lab request and includes patient, 'COVID-19 Sample Collection Form' survey and lab request information.  Patients are listed in chroological order by requested date. \n\nLab requests with a status of Cancelled, Deleted or Entered in error are excluded from this report. ",
   "dbSchema": "raw",
   "queryOptions": {
     "defaultDateRange": "7days",

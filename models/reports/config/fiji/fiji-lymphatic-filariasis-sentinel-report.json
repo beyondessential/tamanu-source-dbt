@@ -2,7 +2,7 @@
   "query": "replace this",
   "status": "published",
   "name": "Fiji lymphatic filariasis sentinel survey",
-  "notes": "Fiji Lymphatic Filariasis Sentinel Survey v2.24\nThis report generates a list of patients that have had a 'Lymphatic Filariasis Sentinel Survey' form completed. Each line in the report represents the completion of a single survey form. The report combines details from both the 'Lymphatic Filariasis Sentinel Survey' and 'Lymphatic Filariasis Sentinel Survey - Result' forms. Patients are listed in chronological order by date of 'Lymphatic Filariasis Sentinel Survey' form submission.",
+  "notes": "Fiji Lymphatic Filariasis Sentinel Survey\nThis report generates a list of patients that have had a 'Lymphatic Filariasis Sentinel Survey' form completed. Each line in the report represents the completion of a single survey form. The report combines details from both the 'Lymphatic Filariasis Sentinel Survey' and 'Lymphatic Filariasis Sentinel Survey - Result' forms. Patients are listed in chronological order by date of 'Lymphatic Filariasis Sentinel Survey' form submission.",
   "dbSchema": "raw",
   "queryOptions": {
     "defaultDateRange": "allTime",

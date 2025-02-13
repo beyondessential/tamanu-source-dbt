@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Remaining balance (insurer) line list",
-  "notes": "Remaining balance - Insurer Line List v2.24\nThis report generates a list of all patients that have a remaining balance with an insurer. Each row in the report represents a single patient with a remaining balance. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.",
+  "notes": "Remaining balance - Insurer Line List\nThis report generates a list of all patients that have a remaining balance with an insurer. Each row in the report represents a single patient with a remaining balance. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.",
   "status": "published",
   "dbSchema": "raw",
   "queryOptions": {
