@@ -12,6 +12,7 @@ select {{
             translate_string('refData.patientFieldDefinition.fieldCategory-SocialSecurityNumber','Social security number'),
             translate_string('general.localisedField.nationalityId.label','Nationality'),
             translate_string('','Insurer'),
+            translate_string('','Remaining balance (patient)'),
             translate_string('','Deceased/Active'),
             translate_string('','Date deceased'),
         ],

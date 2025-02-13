@@ -7,7 +7,8 @@ select {{
             'encounter_id',
             'status',
             'discharge_area_id',
-            'discharge_area'
+            translate_string('','Area (at time of discharge)'),
+            translate_string('','Remaining balance (patient)')
         ],
         update={
             translate_string('discharge.admissionDate.label','Admission date'): 'date',

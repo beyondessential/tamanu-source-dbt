@@ -84,6 +84,16 @@ total_patient_amount as (
     group by tia.invoice_id
 ),
 
+total_patient_payments as (
+    select
+        ip.invoice_id,
+        sum(ip.amount) as total_amount_paid
+    from {{ ref("invoice_payments") }} ip
+    join {{ ref("invoice_patient_payments") }} ipp
+        on ipp.invoice_payment_id = ip.id
+    group by ip.invoice_id
+),
+
 patient_additional_fields as (
     select
         pfv.patient_id,
@@ -91,7 +101,7 @@ patient_additional_fields as (
         max(
             case when pfv.definition_id = 'fieldCategory-InsurancePolicyNumber' then pfv.value end
         ) as insurance_policy_number
-    from patient_field_values pfv
+    from {{ ref("patient_field_values") }} pfv
     group by pfv.patient_id
 )
 
@@ -111,10 +121,12 @@ select
     tia.insurers,
     lg.id as discharge_area_id,
     lg.name as discharge_area,
-    (coalesce(ta.total_discountable_amount, 0) + coalesce(ta.total_nondiscountable_amount,0)) as total_invoice_amount,
+    (coalesce(ta.total_discountable_amount, 0) + coalesce(ta.total_nondiscountable_amount, 0)) as total_invoice_amount,
     (tia.total_discountable_covered + tia.total_nondiscountable_covered) as total_insurer_amount,
     tpa.total_patient_discount,
     (tpa.total_nondiscountable_balance + tpa.total_discountable_balance) as total_patient_amount,
+    (coalesce(ta.total_discountable_amount, 0) + coalesce(ta.total_nondiscountable_amount, 0))
+    - coalesce(tpp.total_amount_paid, 0) as remaining_patient_balance,
     case when p.date_of_death is not null then 'Deceased' else 'Active' end as isdeceased,
     p.date_of_death
 from {{ ref("invoices") }} i
@@ -127,13 +139,15 @@ left join {{ ref("patient_additional_data") }} pd
     on pd.patient_id = p.id
 left join {{ ref("reference_data") }} rd_nationality
     on rd_nationality.id = pd.nationality_id
-join {{ ref('locations')}} l on l.id = e.location_id
-join {{ ref('location_groups')}} lg on lg.id = l.location_group_id
+join {{ ref('locations') }} l on l.id = e.location_id
+join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join total_invoice_amount ta
     on ta.invoice_id = i.id
 left join total_insurer_amount tia
     on tia.invoice_id = i.id
 left join total_patient_amount tpa
     on tpa.invoice_id = i.id
+left join total_patient_payments tpp
+    on tpp.invoice_id = i.id
 left join patient_additional_fields paf on paf.patient_id = p.id
 order by e.end_datetime

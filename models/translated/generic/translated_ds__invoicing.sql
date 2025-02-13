@@ -17,6 +17,7 @@ select
     total_insurer_amount as "{{ translate_string('','Total insurer amount') }}",
     total_patient_discount as "{{ translate_string('','Total patient discount') }}",
     total_patient_amount as "{{ translate_string('','Total patient amount') }}",
+    remaining_patient_balance as "{{ translate_string('','Remaining balance (patient)') }}",
     isdeceased as "{{ translate_string('','Deceased/Active') }}",
     date_of_death as "{{ translate_string('','Date deceased') }}"
 from {{ ref('ds__invoicing') }}
