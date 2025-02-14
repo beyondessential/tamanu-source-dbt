@@ -17,7 +17,7 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(lr.requested_datetime::date, p.date_of_birth::date)) as age,
+    date_part('year', age(lr.requested_datetime, p.date_of_birth)) as age,
     initcap(p.sex::text) as sex,
     village.id as village_id,
     village.name as village,
