@@ -3,7 +3,7 @@
   "name": "Registered birth line list",
   "notes": "Registered Birth - Line List\nThis report generate a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],

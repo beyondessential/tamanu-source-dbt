@@ -3,7 +3,7 @@
   "name": "Invoicing Summary",
   "notes": "Insurance Summary\nThis report generates a summary of invoices. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
     "dateRangeLabel": "Enter discharge dates (or leave it blank for all)",

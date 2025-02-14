@@ -3,7 +3,7 @@
   "name": "Samoa recent diagnoses line list",
   "notes": "Samoa's recent diagnoses line list\nThis report lists all patients that have had the specified diagnosis/es recorded.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],

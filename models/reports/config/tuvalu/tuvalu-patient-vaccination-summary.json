@@ -3,7 +3,7 @@
   "status": "published",
   "name": "Tuvalu patient vaccination summary",
   "notes": "Tuvalu Patient Vaccination Summary\nThis report generates a summary of patient vaccinations. The report includes patient, vaccination and facility information. Patients are listed in chronological order by date of vaccination.",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
     "dateRangeLabel": "Enter dates or leave blank for all data",

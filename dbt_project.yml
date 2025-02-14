@@ -34,13 +34,6 @@ models:
       generic:
         +tags: [fiji, palau, samoa, demoland, kiribati]
 
-    translated:
-      +materialized: view
-      fiji:
-        +tags: [fiji]
-      generic:
-        +tags: [fiji, palau, samoa, demoland, kiribati]
-
     reports:
       +tags: [reports]
       sql:

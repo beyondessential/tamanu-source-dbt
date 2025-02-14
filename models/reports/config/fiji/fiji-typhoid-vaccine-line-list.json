@@ -3,7 +3,7 @@
   "status": "published",
   "name": "Fiji typhoid vaccine line list",
   "notes": "Fiji typhoid vaccine line list\nThis report generates a list of all patients that have had a typhoid vaccination with a status of 'Given' 'Not given' or 'Recorded-in-error'. Each row in the report represents a typhoid vaccination dose and includes information about the patient, vaccine name and vaccine date.\nPatients are listed by 'Vaccine date' in chronological order (oldest to newest). ",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],

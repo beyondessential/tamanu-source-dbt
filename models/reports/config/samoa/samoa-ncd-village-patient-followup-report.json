@@ -3,7 +3,7 @@
   "name": "Samoa NCD village patient followup report",
   "notes": "Samoa NCD village screening patient follow up report\nThis report generates a list of all patients that have had a had a 'Village Screening Form' completed with a calculated 10 year CVD risk level of >20%. The report includes details of where and when screening took place, and any subsequent clinic visits a patient may have had since their screening took place. Patients are listed chronologically by date of screening.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
     "dateRangeLabel": "Date range (or leave blank for the past 24 hours of data)",

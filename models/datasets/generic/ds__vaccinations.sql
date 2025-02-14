@@ -65,7 +65,7 @@ select
     case
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
-    av.last_modified_at
+    av.last_modified_datetime
 from {{ ref("vaccine_administrations") }} av
 join {{ ref("encounters") }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id

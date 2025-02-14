@@ -3,7 +3,7 @@
   "name": "Upcoming vaccinations line list",
   "notes": "Upcoming vaccinations line list\nThis report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "18years",
     "dateRangeLabel": "Enter dates or leave blank for births in the past 18 years",

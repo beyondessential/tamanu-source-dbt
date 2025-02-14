@@ -11,7 +11,7 @@ select
     pvu.vaccine_schedules_id,
     sv.label as vaccine_name,
     sv.dose_label as vaccine_schedule,
-    pvu.status
+    pvu.status as vaccine_status
 from {{ ref("patient_vaccinations_upcoming") }} pvu
 join {{ ref("patients") }} p on p.id = pvu.patient_id
 join {{ ref("vaccine_schedules") }} sv on sv.id = pvu.vaccine_schedules_id

@@ -3,7 +3,7 @@
   "name": "DM & HTN patient follow up",
   "notes": "DM & HTN patient follow up\nThis report will show those on the NCD registry and their vitals from the previous 2 visits to a facility. This will help follow up patients who do not have their diabetes or hypertension under control.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
     "dateRangeLabel": "Date range (or leave blank for all active admissions)",

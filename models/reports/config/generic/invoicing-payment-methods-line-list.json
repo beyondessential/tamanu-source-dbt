@@ -3,7 +3,7 @@
   "name": "Payment method line list",
   "notes": "Payment Method Line List\nThis report generates a list of all patient payments. Each row in the report represents a single payment. The report includes patient, payment and payment method information. Payments are listed in chronological order by payment date.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
     "dateRangeLabel": "Enter payment dates (or leave it blank for all patient payments)",

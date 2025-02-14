@@ -1,44 +1,34 @@
-select {{
-    select_with_transform(
-        from='translated_ds__vaccinations', 
-        except=[
-            'patient_id',
-            'village_id',
-            'facility_id',
-            'department_id',
-            'location_group_id',
-            'location_id',
-            translate_string('general.localisedField.facility.label', 'Facility'),
-            translate_string('general.localisedField.departmentId.label', 'Department'),
-            translate_string('general.localisedField.area.label', 'Area'),
-            translate_string('general.localisedField.locationId.label', 'Location'),
-            translate_string('vaccine.category.label', 'Vaccine category'),
-            translate_string('vaccine.batch.label', 'Batch'),
-            translate_string('', 'If given elsewhere, Circumstances'),
-            translate_string('', 'If given elsewhere, Country'),
-            translate_string('', 'If not given, Supervising clinician'),
-            translate_string('vaccine.notGivenReason.label', 'If not given, Reason not given')
-        ],
-        update={
-            translate_string('vaccine.dateRecorded.label', 'Vaccination date'): 'date',
-            translate_string('general.localisedField.dateOfBirth.label', 'Date of birth'): 'date',
-            translate_string('', 'Record modification date'): 'date'
-        }
-    )
-}}
-from {{ ref("translated_ds__vaccinations") }}
+select 
+    display_id as "{{ translate_string('general.localisedField.displayId.label', 'Patient ID') }}",
+    first_name as "{{ translate_string('general.localisedField.firstName.label', 'First name') }}",
+    last_name as "{{ translate_string('general.localisedField.lastName.label', 'Last name') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('general.localisedField.dateOfBirth.label', 'Date of birth') }}",
+    age as "{{ translate_string('general.localisedField.Age', 'Age') }}",
+    sex as "{{ translate_string('general.localisedField.sex.label', 'Sex') }}",
+    village as "{{ translate_string('general.localisedField.villageId.label', 'Village') }}",
+    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_string('vaccine.dateRecorded.label', 'Vaccination date') }}",
+    vaccine_name as "{{ translate_string('vaccine.vaccineName.label', 'Vaccine name') }}",
+    vaccine_brand as "{{ translate_string('', 'If category of Other, Vaccine brand') }}",
+    disease as "{{ translate_string('', 'If category of Other, Disease') }}",
+    vaccine_status as "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}",
+    vaccine_schedule as "{{ translate_string('vaccine.schedule.label', 'Schedule') }}",
+    given_by as "{{ translate_string('vaccine.givenBy.label', 'Given by') }}",
+    recorded_by as "{{ translate_string('vaccine.recordedBy.label', 'Recorded by') }}",
+    modified_by as "{{ translate_string('', 'Record modified by') }}",
+    to_char(last_modified_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Record modification date') }}"
+from {{ ref("ds__vaccinations") }}
 where
-    "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}" in ('Recorded in error', 'Historical')
+    vaccine_status in ('Recorded in error', 'Historical')
     and
     case
         when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else "{{ translate_string('vaccine.dateRecorded.label', 'Vaccination date') }}"
+        else vaccination_date::date
             >={{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when{{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else "{{ translate_string('vaccine.dateRecorded.label', 'Vaccination date') }}"
+        else vaccination_date::date
             <={{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
@@ -54,15 +44,15 @@ where
     and
     case
         when{{ parameter('category') }} is null then true
-        else "{{ translate_string('vaccine.category.label', 'Vaccine category') }}" ={{ parameter('category') }}
+        else vaccine_category ={{ parameter('category') }}
     end
     and
     case
         when{{ parameter('vaccine') }} is null then true
-        else "{{ translate_string('vaccine.vaccineName.label', 'Vaccine name') }}" ={{ parameter('vaccine') }}
+        else vaccine_name ={{ parameter('vaccine') }}
     end
     and
     case
         when{{ parameter('status') }} is null then true
-        else "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}" ={{ parameter('status') }}
+        else vaccine_status ={{ parameter('status') }}
     end
