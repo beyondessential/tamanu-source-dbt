@@ -1,4 +1,5 @@
-select display_id as "{{ translate_string('general.localisedField.displayId.label', 'Patient ID') }}",
+select
+    display_id as "{{ translate_string('general.localisedField.displayId.label', 'Patient ID') }}",
     first_name as "{{ translate_string('general.localisedField.firstName.label', 'First name') }}",
     last_name as "{{ translate_string('general.localisedField.lastName.label', 'Last name') }}",
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('general.localisedField.dateOfBirth.label', 'Date of birth') }}",

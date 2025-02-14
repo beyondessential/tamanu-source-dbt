@@ -1,4 +1,4 @@
-select 
+select
     to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('', 'Registration date') }}",
     registered_by as "{{ translate_string('', 'Registered by') }}",
     first_name as "{{ translate_string('general.localisedField.firstName.label','First name') }}",

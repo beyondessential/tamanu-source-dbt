@@ -1,4 +1,4 @@
-select 
+select
     display_id as "{{ translate_string('general.localisedField.displayId.label', 'Patient ID') }}",
     first_name as "{{ translate_string('general.localisedField.firstName.label', 'First name') }}",
     last_name as "{{ translate_string('general.localisedField.lastName.label', 'Last name') }}",
