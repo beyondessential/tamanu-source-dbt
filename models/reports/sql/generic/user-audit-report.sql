@@ -1,6 +1,6 @@
 select
     user_name as "{{ translate_string('', 'User name') }}",
-    user_role as "{{ translate_string('', 'User role') }}", 
+    user_role as "{{ translate_string('', 'User role') }}",
     display_id as "{{ translate_string('general.localisedField.displayId.label','Patient ID') }}",
     patient_category as "{{ translate_string('', 'Patient category') }}",
     triage_category as "{{ translate_string('', 'Triage category') }}",
@@ -15,12 +15,12 @@ select
     to_char(last_note_datetime, '{{ var("time_format") }}') as "{{ translate_string('', 'Notes end time') }}",
     is_discharged as "{{ translate_string('', 'Discharges (has the patient been discharged)') }}",
     non_discharge_by_clinicians as "{{ translate_string('', 'Non-discharge by clinicians') }}"
-from {{ ref('ds__user_audit')}} e
+from {{ ref('ds__user_audit') }}
 where case
         when{{ parameter('departmentId') }} is null then true
         else department_id ={{ parameter('departmentId') }}
     end
-    and 
+    and
     case
         when{{ parameter('locationGroupId') }} is null then true
         else location_group_id ={{ parameter('locationGroupId') }}
