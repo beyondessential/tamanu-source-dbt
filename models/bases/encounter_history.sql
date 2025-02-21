@@ -1,4 +1,4 @@
-select 
+select
     eh.id,
     eh.date::timestamp as datetime,
     eh.encounter_id,

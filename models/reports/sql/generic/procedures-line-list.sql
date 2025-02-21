@@ -12,17 +12,17 @@ select
     to_char(encounter_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('', 'Encounter start date') }}",
     to_char(encounter_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('', 'Encounter end date') }}",
     procedure_facility as "{{ translate_string('', 'Procedure facility') }}",
-    procedure_area as "{{ translate_string('', 'Procedure area') }}",  
+    procedure_area as "{{ translate_string('', 'Procedure area') }}",
     procedure_location as "{{ translate_string('', 'Procedure location') }}",
     procedure_type as "{{ translate_string('procedure.table.column.name', 'Procedure') }}",
     to_char(procdure_start_time, '{{ var("datetime_format") }}') as "{{ translate_string('', 'Procedure start (date and time)') }}",
-    to_char(procedure_end_time, '{{ var("datetime_format") }}')  as "{{ translate_string('', 'Procedure end (date and time)') }}",
+    to_char(procedure_end_time, '{{ var("datetime_format") }}') as "{{ translate_string('', 'Procedure end (date and time)') }}",
     procedure_duration as "{{ translate_string('', 'Procedure duration') }}",
     procedure_clinician as "{{ translate_string('general.localisedField.clinician.label', 'Procedure Clinician') }}",
     procedure_anaesthetist as "{{ translate_string('', 'Procedure Anaesthetist') }}",
     procdeure_assistant as "{{ translate_string('', 'Procedure Assistant') }}",
     is_completed as "{{ translate_string('', 'Procedure marked as completed') }}"
-from {{ ref('ds__procedures') }} pc
+from {{ ref('ds__procedures') }}
 where case
         when{{ parameter('facilityId') }} is null then true
         else procedure_facility_id ={{ parameter('facilityId') }}
