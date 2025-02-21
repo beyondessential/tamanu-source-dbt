@@ -38,9 +38,6 @@ models:
       - name: location_group_id
         data_type: character varying
         description: "{{ doc('appointments__location_group_id') }}]"
-      - name: type_legacy
-        data_type: character varying
-        description: "{{ doc('appointments__type_legacy') }}"
       - name: status
         data_type: character varying
         description: "{{ doc('appointments__status') }}"

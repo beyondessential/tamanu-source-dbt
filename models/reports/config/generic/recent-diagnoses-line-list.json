@@ -3,7 +3,7 @@
   "name": "Recent diagnoses line list",
   "notes": "Recent diagnoses line list v2.6\nReport lists all patients that have had the specified diagnosis/es recorded.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
     "dataSources": ["thisFacility", "allFacilities"],

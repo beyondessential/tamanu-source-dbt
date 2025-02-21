@@ -7,7 +7,6 @@ select
     encounter_id,
     location_id,
     location_group_id,
-    type_legacy,
     booking_type_id,
     appointment_type_id,
     is_high_priority,

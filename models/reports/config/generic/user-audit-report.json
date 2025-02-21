@@ -3,7 +3,7 @@
   "name": "User Audit Report",
   "notes": "User audit report\nThis report generates a summary of user activity for all current and discharged inpatient, emergency and outpatient encounters for the selected date range. Encounters are listed in chronological order by encounter start date and time. \n\nThe following details are included for each encounter:\n- User name: The user assigned as the supervising clinician at the time of report generation or at time of discharge  \n- Role: The role of the supervising clinician \n- Patient category: Patient billing type\n- Triage category: Triage category for the patient if an emergency encounter\n- Department: Assigned department at the time of report generation or at time of discharge  \n- Area: Assigned area at the time of report generation or at time of discharge  \n- Location: Assigned location at the time of report generation or at time of discharge\n- Notes start time: The time first note was completed (excludes system generated notes)\n- Notes end time: The time the final note was completed (excludes system generated notes)\n- Discharges: Specifies whether or not the patient has been discharged\n- Non-discharge by clinicians: If patient is automatically discharged, this column will display the name of the clinician who last authored a note or who the note was written on behalf of",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
     "dataSources": ["thisFacility"],
