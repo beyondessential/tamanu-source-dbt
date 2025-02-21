@@ -10,7 +10,7 @@ select
     currently_at as "{{ translate_string('', 'Currently in') }}",
     related_conditions as "{{ translate_string('', 'Related conditions') }}",
     clinical_status as "{{ translate_string('', 'Status') }}",
-    registration_datetime as "{{ translate_string('', 'Date of Registration') }}"
+    to_char(registration_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Date of Registration') }}"
 from {{ ref('ds__patient_program_registrations') }}
 where registration_status = 'active'
     and is_most_recent

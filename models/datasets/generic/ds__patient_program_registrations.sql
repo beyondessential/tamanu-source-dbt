@@ -37,6 +37,7 @@ select
     prcs.name as clinical_status,
     ppr.is_most_recent,
     ppr.registration_status,
+    ppr.program_registry_id,
     ppr.datetime as registration_datetime
 from {{ ref('patient_program_registrations') }} ppr
 join {{ ref('program_registries') }} pr on pr.id = ppr.program_registry_id
