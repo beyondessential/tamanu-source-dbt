@@ -117,7 +117,10 @@ function generateProjectDatasets(target) {
   });
 
   ensureDirectoryExists(VIEWS_DIR);
-  fs.writeFileSync(path.join(VIEWS_DIR, "datasets.sql"), scripts.join("\n"));
+  fs.writeFileSync(
+    path.join(VIEWS_DIR, "reporting_schema_build_script.sql"),
+    scripts.join("\n")
+  );
 }
 
 async function generateProjectReports(target) {

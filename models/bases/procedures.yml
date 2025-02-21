@@ -13,7 +13,7 @@ models:
             total_procedures_count:
               type: count
       - name: date
-        data_type: date
+        data_type: timestamp
         description: "{{ doc('generic__date') }} in procedures."
       - name: start_time
         data_type: time

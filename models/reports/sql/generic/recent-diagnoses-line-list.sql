@@ -6,9 +6,9 @@ select
     display_id as "{{ translate_string('general.localisedField.displayId.label', 'Patient ID') }}",
     age as "{{ translate_string('general.localisedField.Age', 'Age') }}",
     sex as "{{ translate_string('general.localisedField.sex.label', 'Sex') }}",
-    contact_number as "{{ translate_string('', 'Contact number') }}",
+    contact_number as "{{ translate_string('general.contactNumber.label', 'Contact number') }}",
     village as "{{ translate_string('general.localisedField.villageId.label', 'Village') }}",
-    clinician as "{{ translate_string('', 'Clinician') }}",
+    clinician as "{{ translate_string('general.localisedField.clinician.label', 'Clinician') }}",
     department as "{{ translate_string('general.localisedField.departmentId.label', 'Department') }}",
     certainty as "{{ translate_string('diagnosis.certainty.label', 'Certainty') }}",
     is_primary as "{{ translate_string('diagnosis.isPrimary.label', 'Is primary') }}"

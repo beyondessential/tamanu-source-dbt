@@ -31,8 +31,8 @@ select
     lg.name as location_group,
     l.id as location_id,
     l.name as location,
-    e.start_datetime,
-    e.end_datetime,
+    e.start_datetime as encounter_start_datetime,
+    e.end_datetime as encounter_end_datetime,
     n.first_note_datetime,
     n.last_note_datetime,
     case when e.end_datetime isnull then 'Patient not discharged'
