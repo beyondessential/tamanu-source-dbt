@@ -19,7 +19,7 @@ select
     status as "{{ translate_string('general.localisedField.status.label', 'Status') }}",
     to_char(completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('imaging.completedDate.label', 'Completed date and time') }}",
     reason_for_cancellation as "{{ translate_string('imaging.modal.cancel.reason.label', 'Reason for cancellation') }}"
-from {{ ref('ds__imaging_requests') }} 
+from {{ ref('ds__imaging_requests') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }} is null then true
         else requested_datetime
