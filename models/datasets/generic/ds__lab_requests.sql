@@ -2,10 +2,15 @@ with lab_test_data as (
     select
         lr.id as lab_request_id,
         string_agg(
-            ltt.name, ', '
+            case when not ltt.is_sensitive then ltt.name end, ', '
             order by ltt.name
-        ) as tests,
-        max(lt.completed_datetime) as completed_datetime
+        ) as non_sensitive_tests,
+        string_agg(
+            case when ltt.is_sensitive then ltt.name end, ', '
+            order by ltt.name
+        ) as sensitive_tests,
+        max(case when ltt.is_sensitive then lt.completed_datetime end) as sensitive_completed_datetime,
+        max(case when not ltt.is_sensitive then lt.completed_datetime end) as non_sensitive_completed_datetime
     from {{ ref('lab_requests') }} lr
     join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
@@ -52,12 +57,14 @@ select
     priority.name as priority,
     category.id as category_id,
     category.name as category,
-    coalesce(ltp.name, lta.tests) as tests,
+    coalesce(ltp.name, lta.non_sensitive_tests) as non_sensitive_tests,
+    lta.sensitive_tests,
     lr.collected_datetime,
     collector.display_name as collected_by,
     specimen.name as specimen_type,
     site.name as site,
-    lta.completed_datetime,
+    lta.non_sensitive_completed_datetime,
+    lta.sensitive_completed_datetime,
     case lr.reason_for_cancellation
         when 'clinical' then 'Clinical reason'
         when 'duplicate' then 'Duplicate'

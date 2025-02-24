@@ -4,22 +4,22 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(a.start_time::date, p.date_of_birth::date)) as age,
+    date_part('year', age(a.start_datetime::date, p.date_of_birth::date)) as age,
     initcap(p.sex::text) as sex,
     vil.id as village_id,
     vil.name as village,
     billing.id as billing_type_id,
     billing.name as billing_type,
-    a.start_time as appointment_start_time,
-    a.end_time as appointment_end_time,
-    apt.appointment_type_id,
+    a.start_datetime as appointment_start_datetime,
+    a.end_datetime as appointment_end_datetime,
+    a.appointment_type_id,
     apt.name as appointment_type,
     a.status as appointment_status,
     u.id as clinician_id,
     u.display_name as clinician,
     lg.id as location_group_id,
     lg.name as location_group,
-    bt.id as booking_type_id,
+    a.booking_type_id,
     bt.name as booking_type
 from {{ ref('appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
@@ -30,4 +30,4 @@ left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
 left join {{ ref('reference_data') }} apt on apt.id = a.appointment_type_id
 left join {{ ref('reference_data') }} bt on bt.id = a.booking_type_id
-order by a.start_time
+order by a.start_datetime

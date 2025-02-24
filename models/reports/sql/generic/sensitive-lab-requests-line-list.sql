@@ -17,17 +17,17 @@ select
     requesting_department as "{{ translate_string('', 'Requesting department') }}",
     priority as "{{ translate_string('general.localisedField.priority.label', 'Priority') }}",
     category as "{{ translate_string('lab.testSelect.testCategory.label', 'Test category') }}",
-    non_sensitive_tests as "{{ translate_string('', 'Test requested') }}",
+    sensitive_tests as "{{ translate_string('', 'Test requested') }}",
     to_char(
         collected_datetime, '{{ var("date_format") }}'
     ) as "{{ translate_string('lab.sampleDetail.table.column.collectionDateTime', 'Sample collection date and time') }}",
     collected_by as "{{ translate_string('lab.sampleDetail.table.column.collectedBy', 'Sample collected by') }}",
     specimen_type as "{{ translate_string('refData.labTestType.labTestType-Specimentype', 'Specimen type') }}",
     site as "{{ translate_string('refData.labTestType.labTestType-Siteofcollection-Specimen', 'Site') }}",
-    to_char(non_sensitive_completed_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Completed date and time') }}",
+    to_char(sensitive_completed_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Completed date and time') }}",
     reason_for_cancellation as "{{ translate_string('', 'Reason for cancellation') }}"
 from {{ ref('ds__lab_requests') }}
-where non_sensitive_tests is not null
+where sensitive_tests is not null
     and
     case
         when {{ parameter('requestedById') }} is null then true
