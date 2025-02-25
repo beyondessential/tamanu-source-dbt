@@ -5,7 +5,8 @@ select
     eh.department_id,
     eh.location_id,
     eh.encounter_type,
-    eh.examiner_id as clinician_id
+    eh.examiner_id as clinician_id,
+    eh.change_type
 from {{ source("tamanu", 'encounter_history') }} eh
 join {{ source("tamanu", "encounters") }} e on e.id = eh.encounter_id
 where eh.deleted_at is null

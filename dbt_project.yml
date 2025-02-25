@@ -8,6 +8,7 @@ vars:
   language: en
   date_format: YYYY-MM-DD
   time_format: HH24:MI
+  monthyear_format: Mon-YY
   datetime_format: YYYY-MM-DD HH24:MI:SS
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 

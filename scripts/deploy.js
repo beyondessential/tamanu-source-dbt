@@ -94,8 +94,9 @@ function generateProjectDatasets(target) {
   }
 
   const scripts = [
-    `CREATE SCHEMA IF NOT EXISTS ${SCHEMA};`,
-    `ALTER DEFAULT PRIVILEGES IN SCHEMA ${SCHEMA} GRANT SELECT ON TABLES TO ${ROLE};`,
+    `drop schema if exists ${SCHEMA} cascade;`,
+    `create schema ${SCHEMA};`,
+    `alter default privileges in schema ${SCHEMA} grant select on tables to ${ROLE};`,
   ];
 
   orderedModels.forEach((model) => {
@@ -106,10 +107,10 @@ function generateProjectDatasets(target) {
         .readFileSync(compiledModelPath, "utf-8")
         .replace(new RegExp(`"${manifest.nodes[model].database}"\\.`, "g"), ``);
       scripts.push(
-        `CREATE OR REPLACE VIEW "${SCHEMA}"."${path.basename(
+        `create or replace view "${SCHEMA}"."${path.basename(
           modelPath,
           path.extname(modelPath)
-        )}" AS (\n${sql}\n);`
+        )}" as (\n${sql}\n);`
       );
     } else {
       console.warn(`Model file not found: ${compiledModelPath}`);
