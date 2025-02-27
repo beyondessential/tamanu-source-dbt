@@ -12,10 +12,10 @@ bed_occupancy as (
         rm.month,
         alo.facility_id,
         alo.location_id,
-        max(alo.capacity) as capacity,
+        max(l.max_occupancy) as capacity,
         sum(alo.occupancy) as occupancy,
         round(sum(alo.occupancy) / (
-            max(alo.capacity)
+            max(l.max_occupancy)
             * case
                 when rm.month > (current_date - '1 month'::interval) then current_date - rm.month
                 else (rm.month + '1 month'::interval)::date - rm.month
@@ -24,6 +24,7 @@ bed_occupancy as (
     from reporting_months rm
     join {{ ref('int__admission_location_occupancy') }} alo
         on alo.date::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
+    join {{ ref('locations') }} l on l.id = alo.location_id
     group by rm.month, alo.facility_id, alo.location_id
 ),
 

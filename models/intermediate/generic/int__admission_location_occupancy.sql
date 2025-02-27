@@ -1,8 +1,8 @@
 with dates as (
     select date::date
     from generate_series(
-        '{{ var("default_start_date") }}'::date,
-        now(),
+        concat(left( {{ parameter('fromDate', default_value='1900-01-01', data_type='text') }}, 7), '-01')::date,
+        concat(left( {{ parameter('toDate', default_value='9999-01-01', data_type='text') }}, 7), '-01')::date,
         '1 day'::interval
     ) date
 ),
@@ -35,7 +35,8 @@ select
     f.name as facility,
     l.id as location_id,
     l.name as location,
-    max(l.max_occupancy) as capacity,
+    lg.id as location_group_id,
+    lg.name as location_group,
     count(distinct alg.encounter_id) as occupancy
 from dates d
 join admission_location_log alg
@@ -45,7 +46,9 @@ join {{ ref('encounters') }} e
     and (e.end_datetime::date >= d.date or e.end_datetime is null)
 join {{ ref('locations') }} l
     on l.id = alg.location_id
+join {{ ref('location_groups') }} lg
+    on lg.id = l.location_group_id
 join {{ ref('facilities') }} f
     on f.id = l.facility_id
-group by d.date, l.facility_id, f.name, l.id, l.name
-order by d.date, l.facility_id, l.id
+group by d.date, l.facility_id, f.name, lg.id, lg.name, l.id, l.name
+order by d.date, l.facility_id, f.name, lg.id, lg.name, l.id, l.name

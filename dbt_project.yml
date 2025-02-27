@@ -32,7 +32,7 @@ models:
       +tags: [fiji, palau, samoa, demoland, kiribati]
 
     intermediate:
-      +materialized: view
+      +materialized: ephemeral
       +tags: [fiji, palau, samoa, demoland, kiribati]
 
     datasets:
