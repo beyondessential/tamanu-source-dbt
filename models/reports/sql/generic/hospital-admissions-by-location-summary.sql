@@ -59,7 +59,6 @@ select
     coalesce(ls.transfer_outs, 0) as "{{ translate_string('', 'Number of transfers out of location') }}",
     coalesce(ls.avg_length_of_stay, 0) as "{{ translate_string('', 'Average length of stay') }}",
     coalesce(bo.occupancy, 0) as "{{ translate_string('', 'Number of patient days') }}",
-    coalesce(bo.capacity, 0) as "{{ translate_string('', 'Number of beds') }}",
     case
         when bo.occupancy_rate notnull then concat(bo.occupancy_rate, '%') else 'N/A'
     end as "{{ translate_string('', 'Bed occupancy (%)') }}"

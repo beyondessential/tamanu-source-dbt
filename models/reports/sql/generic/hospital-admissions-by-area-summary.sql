@@ -79,11 +79,11 @@ left join bed_occupancy bo
     on bo.month = rm.month
     and (bo.facility_id = ls.facility_id or ls.facility_id is null)
     and (bo.location_group_id = ls.location_group_id or ls.location_group_id is null)
-join {{ ref('location_groups') }} lg on lg.id = coalesce(lg.location_group_id, bo.location_group_id)
+join {{ ref('location_groups') }} lg on lg.id = coalesce(ls.location_group_id, bo.location_group_id)
 join {{ ref('facilities') }} f on f.id = lg.facility_id
 where ls.facility_id notnull or bo.facility_id notnull
     and case
         when {{ parameter('locationGroupId') }} is null then true
         else lg.id::text = {{ parameter('locationGroupId') }}
     end
-order by rm.month, ls.facility_id, l.id, ls.location_id
+order by rm.month, ls.facility_id, lg.id
