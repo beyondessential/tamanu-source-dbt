@@ -21,6 +21,10 @@ from reporting_months rm
 left join {{ ref('int__admission_department_history') }} adh
     on adh.date::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
 where adh.facility_id notnull
+    and case
+        when {{ parameter('departmentId') }} is null then true
+        else adh.department_id::text = {{ parameter('departmentId') }}
+    end
 group by
     rm.month,
     adh.facility_id,
