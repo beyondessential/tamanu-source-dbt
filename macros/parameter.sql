@@ -4,9 +4,9 @@
     {%- else -%}
         {%- set param_value = var(parameter_name, default_value) -%}
         {%- if data_type is none -%}
-            '{{ param_value }}'
+            nullif('{{ param_value }}', '')
         {%- else -%}
-            '{{ param_value }}'::{{ data_type }}
+            nullif('{{ param_value }}', '')::{{ data_type }}
         {%- endif -%}
     {%- endif -%}
 {%- endmacro %}

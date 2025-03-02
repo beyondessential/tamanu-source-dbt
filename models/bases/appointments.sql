@@ -5,6 +5,7 @@ select
     patient_id,
     clinician_id,
     encounter_id,
+    schedule_id,
     location_id,
     location_group_id,
     booking_type_id,

@@ -19,7 +19,7 @@ select
     round(avg(adh.length_of_stay), 1) as "{{ translate_string('', 'Average length of stay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_department_history') }} adh
-    on adh.date::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
+    on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
 where adh.facility_id notnull
     and case
         when {{ parameter('departmentId') }} is null then true
@@ -31,3 +31,4 @@ group by
     adh.facility,
     adh.department_id,
     adh.department
+order by rm.month, adh.facility, adh.department

@@ -7,75 +7,72 @@ with reporting_months as (
     ) month
 ),
 
-bed_occupancy as (
-    select
-        rm.month,
-        alo.facility_id,
-        alo.location_id,
-        max(l.max_occupancy) as capacity,
-        sum(alo.occupancy) as occupancy,
-        round(sum(alo.occupancy) / (
-            max(l.max_occupancy)
-            * case
-                when rm.month > (current_date - '1 month'::interval) then current_date - rm.month
-                else (rm.month + '1 month'::interval)::date - rm.month
-            end
-        ) * 100, 1) as occupancy_rate
-    from reporting_months rm
-    join {{ ref('int__admission_location_occupancy') }} alo
-        on alo.date::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
-    join {{ ref('locations') }} l on l.id = alo.location_id
-    group by rm.month, alo.facility_id, alo.location_id
-),
-
 location_summary as (
     select
         rm.month,
         alh.facility_id,
+        alh.facility,
         alh.location_id,
-        count(*) filter (where alh.admission) as admissions,
-        count(*) filter (where alh.discharge) as discharges,
-        count(*) filter (where alh.death) as deaths,
-        count(*) filter (where alh.transfer_in) as transfer_ins,
-        count(*) filter (where alh.transfer_out) as transfer_outs,
-        round(avg(alh.length_of_stay), 1) as avg_length_of_stay
+        alh.location,
+        alh.location_group_id,
+        alh.location_group,
+        l.max_occupancy as capacity,
+        sum(
+            case when alh.end_datetime::date = alh.start_datetime::date then 1 else
+                    (least(
+                        coalesce(alh.end_datetime, current_date)::date,
+                        (rm.month + '1 month'::interval)::date
+                    ) - greatest(alh.start_datetime::date, rm.month))
+            end
+        )::numeric as occupancy,
+        count(*) filter (where alh.admission and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as admissions,
+        count(*) filter (where alh.discharge and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as discharges,
+        count(*) filter (where alh.death and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as deaths,
+        count(*) filter (where alh.transfer_in and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_ins,
+        count(*) filter (where alh.transfer_out and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
+        round(avg(alh.length_of_stay) filter (where alh.end_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
     from reporting_months rm
     join {{ ref('int__admission_location_history') }} alh
-        on alh.date::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
+        on alh.start_datetime::date <= (rm.month + '1 month'::interval - '1 day'::interval)
+        and (alh.end_datetime::date is null or alh.end_datetime::date >= rm.month)
+    join {{ ref('locations') }} l on l.id = alh.location_id
+    where rm.month <= current_date
     group by
         rm.month,
         alh.facility_id,
-        alh.location_id
+        alh.facility,
+        alh.location_id,
+        alh.location,
+        alh.location_group_id,
+        alh.location_group,
+        l.max_occupancy
 )
 
 select
-    to_char(rm.month, '{{ var("monthyear_format") }}') as "{{ translate_string('', 'Month') }}",
-    f.name as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
-    lg.name as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
-    l.name as "{{ translate_string('general.localisedField.locationId.label', 'Location') }}",
+    to_char(ls.month, '{{ var("monthyear_format") }}') as "{{ translate_string('', 'Month') }}",
+    facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
+    location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
+    location as "{{ translate_string('general.localisedField.locationId.label', 'Location') }}",
     coalesce(ls.admissions, 0) as "{{ translate_string('', 'Number of admissions') }}",
     coalesce(ls.discharges, 0) as "{{ translate_string('', 'Number of discharges') }}",
     coalesce(ls.deaths, 0) as "{{ translate_string('', 'Number of deaths') }}",
     coalesce(ls.transfer_ins, 0) as "{{ translate_string('', 'Number of transfers into location') }}",
     coalesce(ls.transfer_outs, 0) as "{{ translate_string('', 'Number of transfers out of location') }}",
     coalesce(ls.avg_length_of_stay, 0) as "{{ translate_string('', 'Average length of stay') }}",
-    coalesce(bo.occupancy, 0) as "{{ translate_string('', 'Number of patient days') }}",
-    case
-        when bo.occupancy_rate notnull then concat(bo.occupancy_rate, '%') else 'N/A'
+    coalesce(ls.occupancy, 0) as "{{ translate_string('', 'Number of patient days') }}",
+    case when ls.occupancy notnull and ls.capacity notnull
+            then concat(round(ls.occupancy / (
+                    ls.capacity
+                    * case
+                        when ls.month > (current_date - '1 month'::interval) then current_date - ls.month
+                        else (ls.month + '1 month'::interval)::date - ls.month
+                    end
+                ) * 100, 1)::text, '%')
+        else 'N/A'
     end as "{{ translate_string('', 'Bed occupancy (%)') }}"
-from reporting_months rm
-left join location_summary ls
-    on ls.month = rm.month
-left join bed_occupancy bo
-    on bo.month = rm.month
-    and (bo.facility_id = ls.facility_id or ls.facility_id is null)
-    and (bo.location_id = ls.location_id or ls.location_id is null)
-join {{ ref('locations') }} l on l.id = coalesce(ls.location_id, bo.location_id)
-join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-join {{ ref('facilities') }} f on f.id = lg.facility_id
-where ls.facility_id notnull or bo.facility_id notnull
-    and case
+from location_summary ls
+where case
         when {{ parameter('locationId') }} is null then true
-        else l.id::text = {{ parameter('locationId') }}
+        else ls.location_id::text = {{ parameter('locationId') }}
     end
-order by rm.month, ls.facility_id, l.location_group_id, ls.location_id
+order by ls.month, ls.facility, ls.location_group, ls.location
