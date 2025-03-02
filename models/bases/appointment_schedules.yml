@@ -26,15 +26,6 @@ models:
       - name: occurrence_count
         data_type: integer
         description: "{{ doc('appointment_schedules__occurrence_count') }}"
-      - name: created_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__created_at') }} in appointment_schedules."
-      - name: updated_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__updated_at') }} in appointment_schedules."
-      - name: deleted_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__deleted_at') }} in appointment_schedules."
       - name: updated_at_sync_tick
         data_type: bigint
         description: "{{ doc('generic__updated_at_sync_tick') }} in appointment_schedules."

@@ -14,26 +14,26 @@ select
     location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}"
 from {{ ref('ds__appointments') }}
 where case
-        when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else appointment_start_datetime >={{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
-        when{{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
+        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
         else appointment_start_datetime <={{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case
-        when{{ parameter('locationGroupId') }} is null then true
+        when {{ parameter('locationGroupId') }} is null then true
         else location_group_id ={{ parameter('locationGroupId') }}
     end
     and
     case
-        when{{ parameter('appointmentStatus') }} is null then true
+        when {{ parameter('appointmentStatus') }} is null then true
         else appointment_status ={{ parameter('appointmentStatus') }}
     end
     and
     case
-        when{{ parameter('clinicianId') }} is null then true
+        when {{ parameter('clinicianId') }} is null then true
         else clinician_id ={{ parameter('clinicianId') }}
     end

@@ -12,28 +12,28 @@ select
 from {{ ref("ds__vaccinations_upcoming") }}
 where
     case
-        when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else date_of_birth::date
             >={{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
-        when{{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
+        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
         else date_of_birth::date
-            <={{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case
-        when{{ parameter('status') }} is null then true
+        when {{ parameter('status') }} is null then true
         else vaccine_status ={{ parameter('status') }}
     end
     and
     case
-        when{{ parameter('category') }} is null then true
+        when {{ parameter('category') }} is null then true
         else vaccine_category ={{ parameter('category') }}
     end
     and
     case
-        when{{ parameter('vaccine') }} is null then true
+        when {{ parameter('vaccine') }} is null then true
         else vaccine_name ={{ parameter('vaccine') }}
     end

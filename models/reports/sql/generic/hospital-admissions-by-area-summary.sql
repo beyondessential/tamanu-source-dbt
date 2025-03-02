@@ -8,7 +8,7 @@ with reporting_months as (
 ),
 
 area_capacity as (
-    select 
+    select
         l.location_group_id,
         sum(l.max_occupancy::numeric) as capacity
     from {{ ref('locations') }} l
@@ -38,7 +38,7 @@ area_summary as (
         count(*) filter (where alh.transfer_out and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
         round(avg(alh.length_of_stay) filter (where alh.end_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
     from reporting_months rm
-    join {{ ref('int__admission_location_history') }} alh
+    join {{ ref('int__admission_history_location') }} alh
         on alh.start_datetime::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and (alh.end_datetime::date is null or alh.end_datetime::date >= rm.month)
     join area_capacity lg on lg.location_group_id = alh.location_group_id
@@ -54,8 +54,8 @@ area_summary as (
 
 select
     to_char(lg.month, '{{ var("monthyear_format") }}') as "{{ translate_string('', 'Month') }}",
-    facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
-    location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
+    lg.facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
+    lg.location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
     coalesce(lg.admissions, 0) as "{{ translate_string('', 'Number of admissions') }}",
     coalesce(lg.discharges, 0) as "{{ translate_string('', 'Number of discharges') }}",
     coalesce(lg.deaths, 0) as "{{ translate_string('', 'Number of deaths') }}",

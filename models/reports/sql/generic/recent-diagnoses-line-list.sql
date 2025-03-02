@@ -27,24 +27,22 @@ where
     end
     and
     case
-        when{{ parameter('facilityId') }} is null then true
+        when {{ parameter('facilityId') }} is null then true
         else facility_id ={{ parameter('facilityId') }}
     end
     and
     case
-        when{{ parameter('villageId') }} is null then true
+        when {{ parameter('villageId') }} is null then true
         else village_id ={{ parameter('villageId') }}
     end
     and
     case
-        when{{ parameter('clinicianId') }} is null then true
+        when {{ parameter('clinicianId') }} is null then true
         else clinician_id ={{ parameter('clinicianId') }}
     end
     and
     case when
-            coalesce(                                                                {{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}
-            ) is null
+            coalesce({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}) is null
             then true
-        else diagnosis_id in (                                                            {{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}
-            )
+        else diagnosis_id in ({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }})
     end

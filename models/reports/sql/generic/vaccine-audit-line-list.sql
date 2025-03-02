@@ -21,38 +21,38 @@ where
     vaccine_status in ('Recorded in error', 'Historical')
     and
     case
-        when{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else vaccination_date::date
             >={{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
-        when{{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
+        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
         else vaccination_date::date
             <={{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case
-        when{{ parameter('villageId') }} is null then true
+        when {{ parameter('villageId') }} is null then true
         else village_id ={{ parameter('villageId') }}
     end
     and
     case
-        when{{ parameter('facilityId') }} is null then true
+        when {{ parameter('facilityId') }} is null then true
         else facility_id ={{ parameter('facilityId') }}
     end
     and
     case
-        when{{ parameter('category') }} is null then true
+        when {{ parameter('category') }} is null then true
         else vaccine_category ={{ parameter('category') }}
     end
     and
     case
-        when{{ parameter('vaccine') }} is null then true
+        when {{ parameter('vaccine') }} is null then true
         else vaccine_name ={{ parameter('vaccine') }}
     end
     and
     case
-        when{{ parameter('status') }} is null then true
+        when {{ parameter('status') }} is null then true
         else vaccine_status ={{ parameter('status') }}
     end

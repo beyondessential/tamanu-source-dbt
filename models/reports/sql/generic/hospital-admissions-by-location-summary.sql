@@ -32,7 +32,7 @@ location_summary as (
         count(*) filter (where alh.transfer_out and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
         round(avg(alh.length_of_stay) filter (where alh.end_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
     from reporting_months rm
-    join {{ ref('int__admission_location_history') }} alh
+    join {{ ref('int__admission_history_location') }} alh
         on alh.start_datetime::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and (alh.end_datetime::date is null or alh.end_datetime::date >= rm.month)
     join {{ ref('locations') }} l on l.id = alh.location_id
@@ -50,9 +50,9 @@ location_summary as (
 
 select
     to_char(ls.month, '{{ var("monthyear_format") }}') as "{{ translate_string('', 'Month') }}",
-    facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
-    location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
-    location as "{{ translate_string('general.localisedField.locationId.label', 'Location') }}",
+    ls.facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
+    ls.location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
+    ls.location as "{{ translate_string('general.localisedField.locationId.label', 'Location') }}",
     coalesce(ls.admissions, 0) as "{{ translate_string('', 'Number of admissions') }}",
     coalesce(ls.discharges, 0) as "{{ translate_string('', 'Number of discharges') }}",
     coalesce(ls.deaths, 0) as "{{ translate_string('', 'Number of deaths') }}",

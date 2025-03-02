@@ -33,21 +33,21 @@ where case
     end
     and
     case
-        when{{ parameter('requestedById') }} is null then true
+        when {{ parameter('requestedById') }} is null then true
         else requesting_clinician_id ={{ parameter('requestedById') }}
     end
     and
     case
-        when{{ parameter('imagingType') }} is null then true
+        when {{ parameter('imagingType') }} is null then true
         else imaging_type_id ={{ parameter('imagingType') }}
     end
     and
     case
-        when{{ parameter('statusId') }} is null then true
+        when {{ parameter('statusId') }} is null then true
         else status_id ={{ parameter('statusId') }}
     end
     and
     case
-        when{{ parameter('facilityId') }} is null then true
+        when {{ parameter('facilityId') }} is null then true
         else facility_id ={{ parameter('facilityId') }}
     end

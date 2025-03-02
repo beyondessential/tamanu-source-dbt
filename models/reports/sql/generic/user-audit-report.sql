@@ -17,11 +17,11 @@ select
     non_discharge_by_clinicians as "{{ translate_string('', 'Non-discharge by clinicians') }}"
 from {{ ref('ds__user_audit') }}
 where case
-        when{{ parameter('departmentId') }} is null then true
+        when {{ parameter('departmentId') }} is null then true
         else department_id ={{ parameter('departmentId') }}
     end
     and
     case
-        when{{ parameter('locationGroupId') }} is null then true
+        when {{ parameter('locationGroupId') }} is null then true
         else location_group_id ={{ parameter('locationGroupId') }}
     end

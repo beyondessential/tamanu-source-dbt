@@ -18,7 +18,7 @@ select
     count(*) filter (where adh.transfer_out) as "{{ translate_string('', 'Number of transfers out of department') }}",
     round(avg(adh.length_of_stay), 1) as "{{ translate_string('', 'Average length of stay') }}"
 from reporting_months rm
-left join {{ ref('int__admission_department_history') }} adh
+left join {{ ref('int__admission_history_department') }} adh
     on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
 where adh.facility_id notnull
     and case
