@@ -26,9 +26,6 @@ models:
       - name: occurrence_count
         data_type: integer
         description: "{{ doc('appointment_schedules__occurrence_count') }}"
-      - name: updated_at_sync_tick
-        data_type: bigint
-        description: "{{ doc('generic__updated_at_sync_tick') }} in appointment_schedules."
       - name: is_fully_generated
         data_type: boolean
         description: "{{ doc('appointment_schedules__is_fully_generated') }}"
