@@ -7,21 +7,19 @@ select
     sex as "{{ translate_string('general.localisedField.sex.label', 'Sex') }}",
     village as "{{ translate_string('general.localisedField.villageId.label','Village') }}",
     billing_type as "{{ translate_string('general.localisedField.patientBillingTypeId.label', 'Patient type') }}",
-    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "Appointment date and time",
+    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('', 'Appointment date and time') }}",
     appointment_type as "{{ translate_string('scheduling.newAppointment.type.label', 'Appointment type') }}",
     appointment_status as "{{ translate_string('', 'Appointment status') }}",
     clinician as "{{ translate_string('general.localisedField.clinician.label', 'Clinician') }}",
     location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
     priority as "{{ translate_string('general.highPriority.label', 'Priority appointment') }}",
     case
-         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
-         else 'No'
+        when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
+        else 'No'
     end as "{{ translate_string('appointment.isRepeatingAppointment.label', 'Repeating appointment') }}",
-    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_string('', 'Repeating appointment end date') }}"	
+    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_string('', 'Repeating appointment end date') }}"
 from {{ ref('ds__appointments') }}
-where appointment_type_id notnull
-    and
-    case
+where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else appointment_start_datetime >={{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end

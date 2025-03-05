@@ -10,30 +10,25 @@ select
     vil.name as village,
     billing.id as billing_type_id,
     billing.name as billing_type,
-    a.start_datetime as appointment_start_datetime,
-    a.end_datetime as appointment_end_datetime,
-    a.appointment_type_id,
-    apt.name as appointment_type,
-    a.status as appointment_status,
+    a.start_datetime as booking_start_datetime,
+    a.end_datetime as booking_end_datetime,
+    a.status as booking_status,
     u.id as clinician_id,
     u.display_name as clinician,
     lg.id as location_group_id,
     lg.name as location_group,
-    case when a.is_high_priority then 'Yes' else 'No' end as priority,
-    a.schedule_id,
-    sa.until_date::date,
-    sa.interval,
-    sa.frequency,
-    sa.nth_weekday,
-    sa.days_of_week
+    l.id as location_id,
+    l.name as location,
+    a.booking_type_id,
+    bt.name as booking_type
 from {{ ref('appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
 left join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
+left join {{ ref('locations') }} l on l.id = a.location_id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
-left join {{ ref('appointment_schedules') }} sa on sa.id = a.schedule_id
 left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing_type_id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
-left join {{ ref('reference_data') }} apt on apt.id = a.appointment_type_id
-where a.appointment_type_id notnull
+left join {{ ref('reference_data') }} bt on bt.id = a.booking_type_id
+where a.booking_type_id notnull
 order by a.start_datetime

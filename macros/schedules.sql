@@ -1,22 +1,21 @@
 {%- macro get_nth_weekday(nth_weekday) -%}
-    case {{ nth_weekday }} 
-        when -1 then 'last ' when 1 then 'first ' when 2 then 'second ' 
-        when 3 then 'third ' when 4 then 'fourth ' else '' 
+    case {{ nth_weekday }}
+        when -1 then 'last ' when 1 then 'first ' when 2 then 'second '
+        when 3 then 'third ' when 4 then 'fourth ' else ''
     end
 {%- endmacro -%}
 
 {%- macro get_schedule_prefix(interval, frequency) -%}
     concat(
-        case 
-            when {{ interval }} = 1 then 
-                case {{ frequency }} 
-                    when 'WEEKLY' then 'Weekly on a ' 
-                    when 'MONTHLY' then 'Monthly on the ' 
+        case when '{{ interval }}' = 1 then
+                case {{ frequency }}
+                    when 'WEEKLY' then 'Weekly on a '
+                    when 'MONTHLY' then 'Monthly on the '
                 end
-            else concat('Every ', {{ interval }}, 
-                case {{ frequency }} 
-                    when 'WEEKLY' then ' weeks on ' 
-                    when 'MONTHLY' then ' months on the ' 
+            else concat('Every ', '{{ interval }}',
+                case {{ frequency }}
+                    when 'WEEKLY' then ' weeks on '
+                    when 'MONTHLY' then ' months on the '
                 end
             )
         end
@@ -25,13 +24,13 @@
 
 {%- macro get_day_name(day) -%}
     case {{ day }}
-        when 'MO' then 'Monday' 
-        when 'TU' then 'Tuesday' 
+        when 'MO' then 'Monday'
+        when 'TU' then 'Tuesday'
         when 'WE' then 'Wednesday'
-        when 'TH' then 'Thursday' 
+        when 'TH' then 'Thursday'
         when 'FR' then 'Friday'
          when 'SA' then 'Saturday'
-        when 'SU' then 'Sunday' 
+        when 'SU' then 'Sunday'
         else {{ day }}
     end
 {%- endmacro -%}
