@@ -7,12 +7,12 @@
 
 {%- macro get_schedule_prefix(interval, frequency) -%}
     concat(
-        case when '{{ interval }}' = 1 then
+        case when "{{ interval }}" = 1 then
                 case {{ frequency }}
                     when 'WEEKLY' then 'Weekly on a '
                     when 'MONTHLY' then 'Monthly on the '
                 end
-            else concat('Every ', '{{ interval }}',
+            else concat('Every ', "{{ interval }}",
                 case {{ frequency }}
                     when 'WEEKLY' then ' weeks on '
                     when 'MONTHLY' then ' months on the '
