@@ -6,14 +6,13 @@ This documentation aims to be a guide to Tamanu's standard models. The expected 
 
 ## Scope
 Models included in this documentation:
-- sources
-- bases
-- datasets
-- reporting schema
+- sources (raw public schema)
+- bases (reporting schema)
+- datasets (reporting schema)
 
 ## Content
 
-### Raw schema
+### Raw public schema
 The models in the "sources" folder represents the models in the operational database. Tags are used to classify the data and operational status of the models.
 
 Data type tag:
@@ -25,6 +24,11 @@ Data type tag:
 
 Operational status tag:
 - deprecated - Models that are no longer in use, data from these models are usually migrated to another part of the database. These models will not be available for reporting.
+
+### Reporting schema
+The models in the "bases" folder have been stripped of metadata relevant to an operational database as well as test patient and deleted data. It is envisaged that the models from this schema is used by our users rather than the raw public schema to build reports.
+
+The models in the "reports" folder have been flattened for ease of creating reports. These models are used in the standardised reports that are made available to users on Tamanu's facility servers.
 
 ## Exploring the documentation
 
