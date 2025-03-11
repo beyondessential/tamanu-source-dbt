@@ -279,17 +279,17 @@ async function main() {
   const target = targetIndex > 0 ? args[targetIndex] : "demoland";
 
   console.log(`Generating build script for target: ${target}`);
-  // executeCommand("dbt clean");
-  // executeCommand("dbt deps");
-  // executeCommand(`dbt run --target ${target} --select tag:${target}`);
+  executeCommand("dbt clean");
+  executeCommand("dbt deps");
+  executeCommand(`dbt run --target ${target} --select tag:${target}`);
   executeCommand(`dbt compile --target ${target} --select tag:${target}`);
   executeCommand(`dbt docs generate --target ${target} --select tag:${target}`);
 
   await hideMacrosFromDocs();
   await hideTestsFromDocs();
-  // generateProjectDatasets(target);
-  // await generateProjectReports(target);
-  // generateImportReportScript();
+  generateProjectDatasets(target);
+  await generateProjectReports(target);
+  generateImportReportScript();
 }
 
 if (require.main === module) {
