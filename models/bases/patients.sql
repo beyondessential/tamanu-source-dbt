@@ -8,7 +8,7 @@ select
     email,
     initcap(sex::text) as sex,
     date_of_birth::date,
-    date_of_death::date,
+    date_of_death::timestamp,
     village_id,
     created_at::date as registration_date
 from {{ source("tamanu", "patients") }}

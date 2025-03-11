@@ -1,23 +1,16 @@
 with admission_department_log as (
     select
-        da.id,
-        da.encounter_id,
-        da.start_datetime,
-        da.department_id,
-        'admission' as type
-    from {{ ref('ds__admissions') }} da
-    union all
-    select
-        ddh.id,
-        ddh.encounter_id,
-        ddh.start_datetime,
-        ddh.department_id,
-        'transfer-in' as type
-    from {{ ref('ds__department_history') }} ddh
-    join {{ ref('ds__admissions') }} da
-        on da.encounter_id = ddh.encounter_id
-        and da.start_datetime < ddh.start_datetime
-        and (da.end_datetime > ddh.start_datetime or da.end_datetime is null)
+        eh.id,
+        eh.encounter_id,
+        eh.datetime as start_datetime,
+        eh.department_id,
+        case
+            when eh.change_type is null or eh.change_type = 'encounter_type' then 'admission'
+            else 'transfer-in'
+        end as type
+    from {{ ref('encounter_history') }} eh
+    where (eh.change_type isnull or eh.change_type in ('department', 'encounter_type'))
+        and eh.encounter_type = 'admission'
 )
 
 select

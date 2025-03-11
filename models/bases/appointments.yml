@@ -56,3 +56,24 @@ models:
       - name: schedule_id
         data_type: uuid
         description: "{{ doc('appointments__schedule_id') }}"
+      - name: until_date
+        data_type: date
+        description: "{{ doc('appointment_schedules__until_date') }}"
+      - name: interval
+        data_type: integer
+        description: "{{ doc('appointment_schedules__interval') }}"
+      - name: frequency
+        data_type: character varying(255)
+        description: "{{ doc('appointment_schedules__frequency') }}"
+      - name: days_of_week
+        data_type: array
+        description: "{{ doc('appointment_schedules__days_of_week') }}"
+      - name: nth_weekday
+        data_type: integer
+        description: "{{ doc('appointment_schedules__nth_weekday') }}"
+      - name: occurrence_count
+        data_type: integer
+        description: "{{ doc('appointment_schedules__occurrence_count') }}"
+      - name: is_fully_generated
+        data_type: boolean
+        description: "{{ doc('appointment_schedules__is_fully_generated') }}"

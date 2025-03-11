@@ -1,4 +1,4 @@
-{%- macro parameter(parameter_name, default_value=null, data_type='text') -%}
+{%- macro parameter(parameter_name, default_value, data_type='text') -%}
     {%- if flags.WHICH == 'compile' %}
         :{{ parameter_name }}
     {%- else -%}

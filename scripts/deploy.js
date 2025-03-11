@@ -2,7 +2,6 @@ const { readFile, writeFile } = require("node:fs/promises");
 const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-const { Console } = require("node:console");
 
 const SCHEMA = "reporting";
 const ROLE = "reporting";
@@ -32,7 +31,6 @@ function executeCommand(command) {
     execSync(command, { stdio: "inherit", shell: true });
   } catch (err) {
     console.error(`Error while running command: ${command}`);
-    console.error(err.message);
     process.exit(1);
   }
 }
@@ -53,6 +51,48 @@ function ensureDirectoryExists(dirPath) {
 function parseManifest() {
   ensureFileExists(MANIFEST_PATH);
   return JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
+}
+
+async function hideMacrosFromDocs() {
+  ensureFileExists(MANIFEST_PATH);
+  const manifest = parseManifest();
+
+  const macros = Object.keys(manifest.macros).filter((key) =>
+    key.startsWith("macro")
+  );
+
+  if (macros.length === 0) {
+    console.warn(`No macros found with the target: ${target}`);
+    return;
+  }
+
+  for (const macro of macros) {
+    manifest.macros[macro].docs = manifest.macros[macro].docs || {};
+    manifest.macros[macro].docs.show = false;
+  }
+
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 4), "utf-8");
+}
+
+async function hideTestsFromDocs() {
+  ensureFileExists(MANIFEST_PATH);
+  const manifest = parseManifest();
+
+  const tests = Object.keys(manifest.nodes).filter((key) =>
+    key.startsWith("test")
+  );
+
+  if (tests.length === 0) {
+    console.warn(`No tests found with the target: ${target}`);
+    return;
+  }
+
+  for (const test of tests) {
+    manifest.nodes[test].docs = manifest.nodes[test].docs || {};
+    manifest.nodes[test].docs.show = false;
+  }
+
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 4), "utf-8");
 }
 
 function generateProjectDatasets(target) {
@@ -239,14 +279,17 @@ async function main() {
   const target = targetIndex > 0 ? args[targetIndex] : "demoland";
 
   console.log(`Generating build script for target: ${target}`);
-  executeCommand("dbt clean");
-  executeCommand("dbt deps");
-  executeCommand(`dbt run --target ${target} --select tag:${target}`);
+  // executeCommand("dbt clean");
+  // executeCommand("dbt deps");
+  // executeCommand(`dbt run --target ${target} --select tag:${target}`);
   executeCommand(`dbt compile --target ${target} --select tag:${target}`);
+  executeCommand(`dbt docs generate --target ${target} --select tag:${target}`);
 
-  generateProjectDatasets(target);
-  await generateProjectReports(target);
-  generateImportReportScript();
+  await hideMacrosFromDocs();
+  await hideTestsFromDocs();
+  // generateProjectDatasets(target);
+  // await generateProjectReports(target);
+  // generateImportReportScript();
 }
 
 if (require.main === module) {
