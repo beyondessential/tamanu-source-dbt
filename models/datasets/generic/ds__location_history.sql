@@ -7,7 +7,3 @@ select
 from {{ ref('encounter_history') }} eh
 join {{ ref('locations') }} l on l.id = eh.location_id
 where (eh.change_type isnull or eh.change_type = 'location')
-window w as (
-    partition by eh.encounter_id
-    order by eh.datetime
-)

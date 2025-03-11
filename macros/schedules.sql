@@ -1,7 +1,11 @@
 {%- macro get_nth_weekday(nth_weekday) -%}
     case {{ nth_weekday }}
-        when -1 then 'last ' when 1 then 'first ' when 2 then 'second '
-        when 3 then 'third ' when 4 then 'fourth ' else ''
+        when -1 then 'last '
+        when 1 then 'first '
+        when 2 then 'second '
+        when 3 then 'third '
+        when 4 then 'fourth ' 
+        else ''
     end
 {%- endmacro -%}
 

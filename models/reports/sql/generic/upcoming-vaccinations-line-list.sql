@@ -9,7 +9,7 @@ select
     vaccine_name as "{{ translate_string('vaccine.vaccineName.label', 'Vaccine name') }}",
     vaccine_schedule as "{{ translate_string('vaccine.schedule.label', 'Schedule') }}",
     vaccine_status as "{{ translate_string('general.localisedField.vaccinationStatus.label', 'Vaccine status') }}"
-from {{ ref("ds__vaccinations_upcoming") }}
+from {{ ref("ds__patient_vaccinations_upcoming") }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

@@ -10,7 +10,7 @@ with filtered_procedure as (
     from {{ ref('procedures') }} pc
     left join {{ ref('encounter_history') }} eh
         on eh.encounter_id = pc.encounter_id
-        and eh.datetime <= pc.datetime
+        and eh.datetime::date <= pc.date
 )
 
 select
@@ -19,7 +19,7 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(pc.start_time::date, p.date_of_birth::date)) as age,
+    date_part('year', age(pc.date, p.date_of_birth)) as age,
     p.sex,
     nationality.name as nationality,
     encounter_facility.id as encounter_facility_id,
@@ -47,10 +47,23 @@ select
         when pc.end_time is not null and pc.start_time is not null then
             concat(
                 lpad((
-                    extract(day from (pc.end_time::timestamp - pc.start_time::timestamp)) * 24
-                    + extract(hour from (pc.end_time::timestamp - pc.start_time::timestamp))
+                    case
+                        when pc.end_time < pc.start_time
+                            then
+                                (24 + extract(hour from pc.end_time) - extract(hour from pc.start_time))
+                        else
+                            extract(hour from (pc.end_time - pc.start_time))
+                    end
                 )::text, 2, '0'), ':',
-                lpad(extract(minute from (pc.end_time::timestamp - pc.start_time::timestamp))::text, 2, '0')
+                lpad((
+                    case
+                        when pc.end_time < pc.start_time
+                            then
+                                (extract(minute from pc.end_time) - extract(minute from pc.start_time))
+                        else
+                            extract(minute from (pc.end_time - pc.start_time))
+                    end
+                )::text, 2, '0')
             )
     end as procedure_duration,
     clinician.id as procedure_clinician_id,

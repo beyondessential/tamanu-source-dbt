@@ -8,15 +8,6 @@ models:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in encounter_history."
-      - name: created_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__created_at') }} in encounter_history."
-      - name: updated_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__updated_at') }} in encounter_history."
-      - name: deleted_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__deleted_at') }} in encounter_history."
       - name: date
         data_type: character(19)
         description: "{{ doc('generic__date') }} in encounter_history."
@@ -29,16 +20,13 @@ models:
       - name: location_id
         data_type: character varying(255)
         description: "{{ doc('encounter_history__location_id') }}"
-      - name: examiner_id
+      - name: clinician_id
         data_type: character varying(255)
         description: "{{ doc('encounter_history__examiner_id') }}"
       - name: encounter_type
         data_type: character varying(255)
         description: "{{ doc('encounter_history__encounter_type') }}"
-      - name: updated_at_sync_tick
-        data_type: bigint
-        description: "{{ doc('generic__updated_at_sync_tick') }} in encounter_history."
-      - name: actor_id
+      - name: updated_by_id
         data_type: character varying(255)
         description: "{{ doc('encounter_history__actor_id') }}"
       - name: change_type

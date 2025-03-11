@@ -12,8 +12,8 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(ir.datetime::date, p.date_of_birth::date)) as age,
-    initcap(p.sex::text) as sex,
+    date_part('year', age(ir.datetime::date, p.date_of_birth)) as age,
+    p.sex,
     v.id as village_id,
     v.name as village,
     f.id as facility_id,
@@ -33,6 +33,8 @@ select
         when ir.priority = 'urgent' then 'Urgent'
         when ir.priority = 'asap' then 'ASAP'
         when ir.priority = 'stat' then 'STAT'
+        when ir.priority = 'today' then 'Today'
+        else ir.priority
     end as priority,
     ir.imaging_type as imaging_type_id,
     case
@@ -50,6 +52,7 @@ select
         when ir.imaging_type = 'colonoscopy' then 'Colonoscopy'
         when ir.imaging_type = 'vascularStudy' then 'Vascular Study'
         when ir.imaging_type = 'stressTest' then 'Stress Test'
+        else ir.imaging_type
     end as imaging_type,
     case
         when ia.id is not null then ia.name
@@ -78,7 +81,7 @@ select
     end as reason_for_cancellation
 from {{ ref('imaging_requests') }} ir
 join {{ ref('encounters') }} e on e.id = ir.encounter_id
-left join {{ ref('patients') }} p on p.id = e.patient_id
+join {{ ref('patients') }} p on p.id = e.patient_id
 left join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('facilities') }} f on f.id = l.facility_id

@@ -1,7 +1,7 @@
 -- May include appointment schedules for the test patient.
 select
     s.id,
-    s.until_date,
+    s.until_date::date as until_date,
     s.interval,
     s.days_of_week,
     s.frequency,

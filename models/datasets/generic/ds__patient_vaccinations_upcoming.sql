@@ -5,7 +5,7 @@ select
     p.id as patient_id,
     p.date_of_birth,
     date_part('year', age(p.date_of_birth)) as age,
-    initcap(p.sex::text) as sex,
+    p.sex,
     pvu.due_date,
     pvu.vaccine_category,
     pvu.vaccine_schedules_id,

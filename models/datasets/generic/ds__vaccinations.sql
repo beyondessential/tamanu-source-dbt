@@ -16,7 +16,7 @@ select
     p.id as patient_id,
     p.date_of_birth,
     date_part('year', age(p.date_of_birth)) as age,
-    initcap(p.sex::text) as sex,
+    p.sex,
     p.village_id,
     rd_vil.name as village,
     f.id as facility_id,
@@ -65,7 +65,7 @@ select
     case
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
-    av.last_modified_datetime
+    av.modification_datetime
 from {{ ref("vaccine_administrations") }} av
 join {{ ref("encounters") }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id

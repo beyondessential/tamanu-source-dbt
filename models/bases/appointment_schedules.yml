@@ -9,7 +9,7 @@ models:
         data_type: uuid
         description: "{{ doc('generic__id') }} in appointment_schedules."
       - name: until_date
-        data_type: character(10)
+        data_type: date
         description: "{{ doc('appointment_schedules__until_date') }}"
       - name: interval
         data_type: integer

@@ -15,7 +15,7 @@ select
     given_by as "{{ translate_string('vaccine.givenBy.label', 'Given by') }}",
     recorded_by as "{{ translate_string('vaccine.recordedBy.label', 'Recorded by') }}",
     modified_by as "{{ translate_string('', 'Record modified by') }}",
-    to_char(last_modified_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Record modification date') }}"
+    to_char(modification_datetime, '{{ var("date_format") }}') as "{{ translate_string('', 'Record modification date') }}"
 from {{ ref("ds__vaccinations") }}
 where
     vaccine_status in ('Recorded in error', 'Historical')

@@ -21,7 +21,7 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    initcap(p.sex::text) as sex,
+    p.sex,
     village.id as village_id,
     village.name as village,
     registering_facility.id as registering_facility_id,

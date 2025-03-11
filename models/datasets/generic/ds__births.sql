@@ -8,7 +8,7 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    initcap(p.sex::text) as sex,
+    p.sex,
     rd_ethnicity.name as ethnicity,
     rd_nationality.name as nationality,
     p.village_id,
@@ -57,7 +57,7 @@ select
     pbd.apgar_score_five_minutes,
     pbd.apgar_score_ten_minutes
 from {{ ref("patient_birth_data") }} pbd
-left join {{ ref("patients") }} p on p.id = pbd.patient_id
+join {{ ref("patients") }} p on p.id = pbd.patient_id
 left join {{ ref("reference_data") }} rd_village on rd_village.id = p.village_id
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref("reference_data") }} rd_nationality on rd_nationality.id = pad.nationality_id

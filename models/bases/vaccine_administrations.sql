@@ -19,7 +19,7 @@ select
     av.given_elsewhere as is_given_elsewhere,
     av.circumstance_ids,
     av.recorder_id as recorded_by_id,
-    av.updated_at::timestamp as last_modified_datetime
+    av.updated_at::timestamp as modification_datetime
 from {{ source("tamanu", "administered_vaccines") }} av
 join {{ source("tamanu", "encounters") }} e on e.id = av.encounter_id
 where av.deleted_at is null

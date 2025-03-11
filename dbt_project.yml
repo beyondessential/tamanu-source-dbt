@@ -29,26 +29,49 @@ models:
   tamanu_source_dbt:
     bases:
       +materialized: view
-      +tags: [fiji, palau, samoa, demoland, kiribati]
+      +tags:
+        [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
 
     intermediate:
       +materialized: ephemeral
-      +tags: [fiji, palau, samoa, demoland, kiribati]
+      +tags:
+        [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
 
     datasets:
       +materialized: view
       fiji:
         +tags: [fiji]
       generic:
-        +tags: [fiji, palau, samoa, demoland, kiribati]
+        +tags:
+          [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
 
     reports:
       +tags: [reports]
       sql:
+        aspen:
+          +tags: [aspen]
         fiji:
           +tags: [fiji]
         generic:
-          +tags: [fiji, palau, samoa, demoland, kiribati]
-
+          +tags:
+            [
+              aspen,
+              demoland,
+              fiji,
+              kiribati,
+              nauru,
+              palau,
+              samoa,
+              tonga,
+              tuvalu,
+            ]
+        nauru:
+          +tags: [nauru]
+        palau:
+          +tags: [palau]
+        samoa:
+          +tags: [samoa]
+        tuvalu:
+          +tags: [tuvalu]
 data_tests:
   +severity: warn
