@@ -23,10 +23,14 @@ clean-targets:
 models:
   tamanu_source_dbt:
     bases:
+      +docs:
+        show: true
       +materialized: view
       +tags: [fiji, palau, samoa, demoland]
 
     datasets:
+      +docs:
+        show: false
       +materialized: view
       fiji:
         +tags: [fiji]
@@ -41,6 +45,8 @@ models:
         +tags: [fiji, palau, samoa, demoland]
 
     reports:
+      +docs:
+        show: false
       +tags: [reports]
       sql:
         fiji:
@@ -49,4 +55,6 @@ models:
           +tags: [fiji, palau, samoa, demoland]
 
 data_tests:
+  +docs:
+    show: false
   +severity: warn
