@@ -19,7 +19,7 @@ select
     u.id as user_id,
     u.display_name as user_name,
     r.name as user_role,
-    p.id,
+    p.id as patient_id,
     p.display_id,
     bt.name as patient_category,
     t.score as triage_category,

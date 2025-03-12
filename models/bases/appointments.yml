@@ -6,7 +6,7 @@ models:
       - clinical
     columns:
       - name: id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('generic__id') }} in appointments."
         meta:
           metrics:
@@ -19,27 +19,27 @@ models:
         data_type: timestamp
         description: "{{ doc('appointments__end_time') }}"
       - name: patient_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__patient_id') }}"
         meta:
           metrics:
             total_patients_distinct_count:
               type: count_distinct
       - name: clinician_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__clinician_id') }}"
         meta:
           metrics:
             total_clinicians_distinct_count:
               type: count_distinct
       - name: location_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__location_id') }}"
       - name: location_group_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__location_group_id') }}]"
       - name: status
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__status') }}"
       - name: booking_type_id
         data_type: character varying(255)

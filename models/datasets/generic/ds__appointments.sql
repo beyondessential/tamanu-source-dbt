@@ -19,7 +19,9 @@ select
     u.display_name as clinician,
     lg.id as location_group_id,
     lg.name as location_group,
-    case when a.is_high_priority then 'Yes' else 'No' end as priority,
+    case 
+        when a.is_high_priority then 'Yes' else 'No' 
+    end as priority,
     a.schedule_id,
     a.until_date,
     a.interval,

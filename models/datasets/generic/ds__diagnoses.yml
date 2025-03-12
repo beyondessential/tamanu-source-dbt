@@ -17,10 +17,10 @@ models:
         description: "{{ doc('encounter_diagnoses__diagnosis_id') }}"
       - name: diagnosis
         data_type: character varying(255)
-        description: "{{ doc('reference_data__name') }} of the diagnosis"
+        description: "{{ doc('generic__reference_data') }} of the diagnosis"
       - name: diagnosis_datetime
         data_type: timestamp
-        description: "{{ doc('generic__date') }} in encounter_diagnoses."
+        description: "{{ doc('generic__date') }}"
       - name: first_name
         data_type: character varying(255)
         description: "{{ doc('patients__first_name') }}"
@@ -36,7 +36,7 @@ models:
               type: count
       - name: age
         data_type: integer
-        description: "Age at the time of diagnosis."
+        description: "{{ doc('generic__patients_age') }} at the time of diagnosis."
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
@@ -48,31 +48,31 @@ models:
         description: "{{ doc('patients__village_id') }}"
       - name: village
         data_type: character varying(255)
-        description: "Full readable name of the village."
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
       - name: clinician_id
         data_type: character varying(255)
         description: "{{ doc('encounters__examiner_id') }}"
       - name: clinician
         data_type: character varying(255)
-        description: "{{ doc('users__display_name') }}"
-      - name: department_id
-        data_type: character varying(255)
-        description: "{{ doc('encounters__department_id') }}"
-      - name: department
-        data_type: character varying(255)
-        description: "{{ doc('departments__name') }}"
-      - name: location_id
-        data_type: character varying(255)
-        description: "{{ doc('encounters__location_id') }}"
-      - name: location
-        data_type: character varying(255)
-        description: "{{ doc('locations__name') }}"
+        description: "{{ doc('generic__user') }} who diagnosed the patient."
       - name: facility_id
         data_type: character varying(255)
-        description: "{{ doc('locations__facility_id') }}"
+        description: "{{ doc('generic__facility_id') }} where the encounter is currently active or has ended."
       - name: facility
         data_type: character varying(255)
-        description: "{{ doc('facilities__name') }}"
+        description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('administered_vaccines__department_id') }}"
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__department') }} where the encounter is currently active or has ended."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_id') }} where the encounter is currently active or has ended."
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} where the encounter is currently active or has ended."
       - name: certainty
         data_type: character varying(255)
         description: "{{ doc('encounter_diagnoses__certainty') }}"
