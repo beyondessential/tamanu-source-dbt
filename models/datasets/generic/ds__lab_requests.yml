@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__lab_requests
-    description:
+    description: Lab Requests
     tags:
       - clinical
     columns:
