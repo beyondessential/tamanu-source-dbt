@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ds__birth_data
-    description: Birth data of patients
+  - name: ds__births
+    description: Births
     tags:
       - clinical
     columns:
@@ -48,10 +48,10 @@ models:
         description: "{{ doc('generic__reference_data') }} of the patient's village."
       - name: mother
         data_type: character varying(255)
-        description: "{{ doc('patient_birth_data__mother_id') }}"
+        description: "{{ doc('patient_additional_data__mother_id') }}"
       - name: father
         data_type: character varying(255)
-        description: "{{ doc('patient_birth_data__father_id') }}"
+        description: "{{ doc('patient_additional_data__father_id') }}"
       - name: birth_time
         data_type: time
         description: "{{ doc('patient_birth_data__time_of_birth') }}"
