@@ -127,7 +127,7 @@ select
     (tpa.total_nondiscountable_balance + tpa.total_discountable_balance) as total_patient_amount,
     (coalesce(ta.total_discountable_amount, 0) + coalesce(ta.total_nondiscountable_amount, 0))
     - coalesce(tpp.total_amount_paid, 0) as remaining_patient_balance,
-    case when p.date_of_death is not null then 'Deceased' else 'Active' end as isdeceased,
+    case when p.date_of_death is not null then 'Deceased' else 'Active' end as is_deceased,
     p.date_of_death
 from {{ ref("invoices") }} i
 join {{ ref("encounters") }} e

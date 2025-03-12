@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: ds__invoicing_transactions_insurance
+    description: Invoicing Transactions Insurance
+    tags:
+      - administration
+    columns:
+      - name: date
+        data_type: date
+        description: "{{ doc('generic__date') }}"
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: invoice_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of invoice."
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of encounter."
+      - name: invoice_number
+        data_type: character varying(255)
+        description: "{{ doc('invoices__display_id') }}"
+      - name: patient_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__patients_name') }}"
+      - name: payment_method_id
+        data_type: character varying(255)
+        description: "{{ doc('invoice_patient_payments__method_id') }}"
+      - name: payment_method
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the payment method."
+      - name: receipt_number
+        data_type: character varying(255)
+        description: "{{ doc('invoice_payments__receipt_number') }}"
+      - name: amount
+        data_type: double precision
+        description: "{{ doc('generic__invoice_total_amount_paid') }}"
+      - name: recieved_by
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who recieved the payment."

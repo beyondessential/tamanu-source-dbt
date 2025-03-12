@@ -10,52 +10,100 @@ Reference to the [department](#!/source/tamanu-source-dbt.tamanu.departments)
 Full list of diagnoses
 {% enddocs %}
 
-{% docs generic__sensitive_tests %}
-Full list of sensitive tests
-{% enddocs %}
-
-{% docs generic__non_sensitive_tests %}
-Full list of non-sesnistive tests
-{% enddocs %}
-
 {% docs generic__duration %}
 Duration
-{% enddocs %}
-
-{% docs generic__facility_id %}
-Reference to the [facility](#!/source/tamanu-source-dbt.tamanu.facilities)
 {% enddocs %}
 
 {% docs generic__facility %}
 Full readable name of the facility
 {% enddocs %}
 
-{% docs generic__is_discharged %}
-Indicates whether the patient has been discharged.
+{% docs generic__facility_id %}
+Reference to the [facility](#!/source/tamanu-source-dbt.tamanu.facilities)
 {% enddocs %}
 
-{% docs generic__location_group_id %}
-Reference to the [group](#!/source/tamanu-source-dbt.tamanu.location_groups)
+{% docs generic__insurance_policy_number %}
+Insurance policy number of the patient.
 {% enddocs %}
 
-{% docs generic__location_group %}
-Full readable name of the location group
+{% docs generic__insurers %}
+List of insurers covering the patient.
+{% enddocs %}
+
+{% docs generic__invoice_remaining_patient_balance %}
+Remaining balance to be paid by the patient.
+{% enddocs %}
+
+{% docs generic__invoice_total_amount_paid %}
+Total amount paid.
+{% enddocs %}
+
+{% docs generic__invoice_total_insurer_amount %}
+Total amount covered by insurers.
+{% enddocs %}
+
+{% docs generic__invoice_total_invoice_amount %}
+Total invoicing amount.
+{% enddocs %}
+
+{% docs generic__invoice_total_patient_amount %}
+Total amount payable by the patient.
+{% enddocs %}
+
+{% docs generic__invoice_total_patient_discount %}
+Total discount applied to the patient.
 {% enddocs %}
 
 {% docs generic__location %}
 Full readable name of the location
 {% enddocs %}
 
+{% docs generic__location_group %}
+Full readable name of the location group
+{% enddocs %}
+
+{% docs generic__location_group_id %}
+Reference to the [group](#!/source/tamanu-source-dbt.tamanu.location_groups)
+{% enddocs %}
+
 {% docs generic__location_id %}
 Reference to the [location](#!/source/tamanu-source-dbt.tamanu.locations)
+{% enddocs %}
+
+{% docs generic__non_sensitive_tests %}
+Full list of non-sensitive tests
+{% enddocs %}
+
+{% docs generic__patient_conditions %}
+Full list of conditions
+{% enddocs %}
+
+{% docs generic__patient_is_deceased %}
+Indicates whether the patient has been deceased.
+{% enddocs %}
+
+{% docs generic__patient_is_discharged %}
+Indicates whether the patient has been discharged.
 {% enddocs %}
 
 {% docs generic__patients_age %}
 Patient's age
 {% enddocs %}
 
+{% docs generic__patients_name %}
+Patient Name
+{% enddocs %}
+
 {% docs generic__reference_data %}
 Full readable name
+{% enddocs %}
+
+{% docs generic__sensitive_tests %}
+Full list of sensitive tests
+{% enddocs %}
+
+{% docs generic__social_security_number %}
+Social security number of the patient.
 {% enddocs %}
 
 {% docs generic__user %}
