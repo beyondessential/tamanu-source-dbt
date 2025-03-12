@@ -18,6 +18,7 @@ with lab_test_data as (
 )
 
 select
+    p.id as patient_id,
     p.display_id,
     p.first_name,
     p.last_name,

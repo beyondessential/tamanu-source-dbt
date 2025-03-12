@@ -43,7 +43,7 @@ models:
         description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
       - name: department_id
         data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__department_id') }}"
+        description: "{{ doc('generic__department_id') }} where the encounter is currently active or has ended."
       - name: department
         data_type: character varying(255)
         description: "{{ doc('generic__department') }} where the encounter is currently active or has ended."

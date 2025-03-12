@@ -10,6 +10,14 @@ Reference to the [department](#!/source/tamanu-source-dbt.tamanu.departments)
 Full list of diagnoses
 {% enddocs %}
 
+{% docs generic__sensitive_tests %}
+Full list of sensitive tests
+{% enddocs %}
+
+{% docs generic__non_sensitive_tests %}
+Full list of non-sesnistive tests
+{% enddocs %}
+
 {% docs generic__duration %}
 Duration
 {% enddocs %}
