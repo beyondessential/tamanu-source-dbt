@@ -1,0 +1,37 @@
+{
+  "query": "replace this",
+  "status": "published",
+  "name": "Aspen user audit report",
+  "notes": "Aspen user audit report v2.19\nThis report generates a user audit report for all current and discharged inpatient, emergency and outpatient encounters for the selected date range. Encounters are listed in chronological order by encounter start date and time. If there are multiple actions performed within a single encounter these are listed in chronological order. \n\nThe following details are included for each encounter:\n- User name: The user assigned as the supervising clinician at the time of report generation or at time of discharge  \n- Role: The role of the supervising clinician \n- Patient category: Patient billing type\n- Encounter type: \n- Department: Assigned department at the time of report generation or at time of discharge  \n- Triage category: Triage category for the patient if an emergency encounter\n- Area: Assigned area at the time of report generation or at time of discharge  \n- Location: Assigned location at the time of report generation or at time of discharge\n- Action: Action user has taken (see full list of reportable actions below)\n- Action time: Time of the action\n\nBelow is a list of all reportable actions:\n- Patient creation\n- Encounter start\n- Note created (all non-system notes i.e. admission, dietary, discharge, handover, medical, nursing, other, pharmacy, physiotherapy, social, surgical, treatment plan)\n- Change supervising clinician\n- Change encounter type\n- Change department\n- Change location\n- Plan location move\n- Patient discharge\n- Enter vitals\n- Referral creation\n- Survey response\n- Create lab request\n- Create imaging request\n",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "areaId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      }
+    ]
+  }
+}
