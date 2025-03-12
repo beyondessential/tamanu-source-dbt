@@ -2,10 +2,9 @@ const { readFile, writeFile } = require("node:fs/promises");
 const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-const { Console } = require("node:console");
 
 const SCHEMA = "reporting";
-const ROLE = "tamanu_reporting";
+const ROLE = "reporting";
 const MANIFEST_PATH = "../target/manifest.json";
 const COMPILED_MODELS_DIR = "../target/compiled/tamanu_source_dbt/models/";
 const VIEWS_DIR = "../compiled/views";
@@ -32,7 +31,6 @@ function executeCommand(command) {
     execSync(command, { stdio: "inherit", shell: true });
   } catch (err) {
     console.error(`Error while running command: ${command}`);
-    console.error(err.message);
     process.exit(1);
   }
 }
@@ -55,6 +53,48 @@ function parseManifest() {
   return JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
 }
 
+async function hideMacrosFromDocs() {
+  ensureFileExists(MANIFEST_PATH);
+  const manifest = parseManifest();
+
+  const macros = Object.keys(manifest.macros).filter((key) =>
+    key.startsWith("macro")
+  );
+
+  if (macros.length === 0) {
+    console.warn(`No macros found with the target: ${target}`);
+    return;
+  }
+
+  for (const macro of macros) {
+    manifest.macros[macro].docs = manifest.macros[macro].docs || {};
+    manifest.macros[macro].docs.show = false;
+  }
+
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 4), "utf-8");
+}
+
+async function hideTestsFromDocs() {
+  ensureFileExists(MANIFEST_PATH);
+  const manifest = parseManifest();
+
+  const tests = Object.keys(manifest.nodes).filter((key) =>
+    key.startsWith("test")
+  );
+
+  if (tests.length === 0) {
+    console.warn(`No tests found with the target: ${target}`);
+    return;
+  }
+
+  for (const test of tests) {
+    manifest.nodes[test].docs = manifest.nodes[test].docs || {};
+    manifest.nodes[test].docs.show = false;
+  }
+
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 4), "utf-8");
+}
+
 function generateProjectDatasets(target) {
   const manifest = parseManifest();
   const models = Object.keys(manifest.nodes).filter(
@@ -69,37 +109,48 @@ function generateProjectDatasets(target) {
     return;
   }
 
-  const modelsToProcess = new Set(models);
+  let processedNodes = new Set();
+  let orderedModels = [];
 
-  models.forEach((model) => {
-    const dependencies = manifest.nodes[model].depends_on.nodes || [];
-    dependencies.forEach((dep) => {
-      if (dep.startsWith("model") && !modelsToProcess.has(dep)) {
-        modelsToProcess.add(dep);
-      }
+  while (processedNodes.size < models.length) {
+    let currentLevel = models.filter((model) => {
+      let dependencies = manifest.nodes[model].depends_on.nodes || [];
+      return dependencies.every(
+        (dep) => dep.startsWith("source") || processedNodes.has(dep)
+      );
     });
-  });
+
+    if (currentLevel.length === 0) {
+      console.error(
+        "Error: Circular dependency detected or missing dependencies."
+      );
+      process.exit(1);
+    }
+
+    currentLevel.forEach((model) => {
+      processedNodes.add(model);
+      orderedModels.push(model);
+    });
+  }
 
   const scripts = [
-    `CREATE SCHEMA IF NOT EXISTS ${SCHEMA};`,
-    `ALTER DEFAULT PRIVILEGES IN SCHEMA ${SCHEMA} GRANT SELECT ON TABLES TO ${ROLE};`,
+    `drop schema if exists ${SCHEMA} cascade;`,
+    `create schema ${SCHEMA};`,
+    `alter default privileges in schema ${SCHEMA} grant select on tables to ${ROLE};`,
   ];
 
-  modelsToProcess.forEach((model) => {
+  orderedModels.forEach((model) => {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
     if (fs.existsSync(compiledModelPath)) {
       const sql = fs
         .readFileSync(compiledModelPath, "utf-8")
-        .replace(
-          new RegExp(`"${manifest.nodes[model].database}"\\.public`, "g"),
-          `"public"`
-        );
+        .replace(new RegExp(`"${manifest.nodes[model].database}"\\.`, "g"), ``);
       scripts.push(
-        `CREATE OR REPLACE VIEW "${SCHEMA}"."${path.basename(
+        `create or replace view "${SCHEMA}"."${path.basename(
           modelPath,
           path.extname(modelPath)
-        )}" AS (\n${sql}\n);`
+        )}" as (\n${sql}\n);`
       );
     } else {
       console.warn(`Model file not found: ${compiledModelPath}`);
@@ -107,7 +158,10 @@ function generateProjectDatasets(target) {
   });
 
   ensureDirectoryExists(VIEWS_DIR);
-  fs.writeFileSync(path.join(VIEWS_DIR, "datasets.sql"), scripts.join("\n"));
+  fs.writeFileSync(
+    path.join(VIEWS_DIR, "reporting_schema_build_script.sql"),
+    scripts.join("\n")
+  );
 }
 
 async function generateProjectReports(target) {
@@ -131,7 +185,6 @@ async function generateProjectReports(target) {
   for (const model of reportModels) {
     const modelPath = manifest.nodes[model].path;
     const compiledModelPath = path.join(COMPILED_MODELS_DIR, modelPath);
-    console.log(compiledModelPath);
     if (fs.existsSync(compiledModelPath)) {
       const configFilePath = compiledModelPath
         .replace(
@@ -140,7 +193,6 @@ async function generateProjectReports(target) {
         )
         .replace(".sql", ".json")
         .replace("sql", "config");
-      console.log(configFilePath);
       const outputFilePath = path.join(
         REPORTS_DIR,
         `${path.basename(modelPath, ".sql")}.json`
@@ -229,8 +281,12 @@ async function main() {
   console.log(`Generating build script for target: ${target}`);
   executeCommand("dbt clean");
   executeCommand("dbt deps");
+  executeCommand(`dbt run --target ${target} --select tag:${target}`);
   executeCommand(`dbt compile --target ${target} --select tag:${target}`);
+  executeCommand(`dbt docs generate --target ${target} --select tag:${target}`);
 
+  await hideMacrosFromDocs();
+  await hideTestsFromDocs();
   generateProjectDatasets(target);
   await generateProjectReports(target);
   generateImportReportScript();

@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: ds__user_audit
+    description: User Audit
+    tags:
+      - administration
+    columns:
+      - name: user_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in users."
+        meta:
+          metrics:
+            total_users_count:
+              type: count
+      - name: user_name
+        data_type: character varying(255)
+        description: "{{ doc('users__display_id') }}"
+      - name: user_role
+        data_type: character varying(255)
+        description: "{{ doc('roles__name') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+        meta:
+          metrics:
+            total_patients_count:
+              type: count
+      - name: patient_category
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the billing type."
+      - name: triage_category
+        data_type: text
+        description: "{{ doc('triages__score') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} where the encounter is currently active or has ended."
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__department_id') }} where the encounter is currently active or has ended."
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__department') }} where the encounter is currently active or has ended."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group_id') }} where the encounter is currently active or has ended."
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} where the encounter is currently active or has ended."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_id') }} where the encounter is currently active or has ended."
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} where the encounter is currently active or has ended."
+      - name: encounter_start_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__start_date') }}"
+      - name: encounter_end_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__end_date') }}"
+      - name: first_note_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__datetime') }} of the first note."
+      - name: last_note_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__datetime') }} of the last note."
+      - name: is_discharged
+        data_type: text
+        description: "{{ doc('generic__patient_is_discharged') }}"
+      - name: non_discharge_by_clinicians
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who did not discharge the patient."

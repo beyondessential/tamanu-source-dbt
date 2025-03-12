@@ -125,7 +125,6 @@ sources:
                   values:
                     - duplicate
                     - entered-in-error
-                    - other
           - name: published_date
             data_type: character(19)
             description: "{{ doc('lab_requests__published_date') }}"

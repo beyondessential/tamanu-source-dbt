@@ -19,9 +19,12 @@ models:
           metrics:
             total_invoice_items_distinct_count:
               type: count_distinct
-      - name: percentage
+      - name: amount
         data_type: numeric
-        description: "{{ doc('invoice_item_discounts__percentage') }}"
+        description: "{{ doc('invoice_item_discounts__amount') }}"
       - name: reason
         data_type: character varying(255)
         description: "{{ doc('invoice_item_discounts__reason') }}"
+      - name: type
+        data_type: character varying(255)
+        description: "{{ doc('invoice_item_discounts__type') }}"

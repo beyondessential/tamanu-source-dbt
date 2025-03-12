@@ -6,6 +6,11 @@ profile: tamanu_source_dbt
 
 vars:
   language: en
+  date_format: YYYY-MM-DD
+  time_format: HH24:MI
+  monthyear_format: Mon-YY
+  datetime_format: YYYY-MM-DD HH24:MI:SS
+  default_start_date: "2020-01-01"
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 
 model-paths: ["models"]
@@ -26,7 +31,13 @@ models:
       +docs:
         show: true
       +materialized: view
-      +tags: [fiji, palau, samoa, demoland]
+      +tags:
+        [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
+
+    intermediate:
+      +materialized: ephemeral
+      +tags:
+        [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
 
     datasets:
       +docs:
@@ -35,25 +46,39 @@ models:
       fiji:
         +tags: [fiji]
       generic:
-        +tags: [fiji, palau, samoa, demoland]
-
-    translated:
-      +materialized: view
-      fiji:
-        +tags: [fiji]
-      generic:
-        +tags: [fiji, palau, samoa, demoland]
+        +tags:
+          [aspen, demoland, fiji, kiribati, nauru, palau, samoa, tonga, tuvalu]
 
     reports:
       +docs:
         show: false
       +tags: [reports]
       sql:
+        aspen:
+          +tags: [aspen]
         fiji:
           +tags: [fiji]
         generic:
-          +tags: [fiji, palau, samoa, demoland]
-
+          +tags:
+            [
+              aspen,
+              demoland,
+              fiji,
+              kiribati,
+              nauru,
+              palau,
+              samoa,
+              tonga,
+              tuvalu,
+            ]
+        nauru:
+          +tags: [nauru]
+        palau:
+          +tags: [palau]
+        samoa:
+          +tags: [samoa]
+        tuvalu:
+          +tags: [tuvalu]
 data_tests:
   +docs:
     show: false

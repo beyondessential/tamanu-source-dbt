@@ -34,7 +34,8 @@ select
     mother_id,
     father_id,
     registered_by_id,
-    updated_at_by_field as updated_by_field
+    updated_at_by_field as updated_by_field,
+    created_at::date as registration_date
 from {{ source("tamanu", "patient_additional_data") }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
