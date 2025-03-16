@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__invoicing_transactions_patient
-    description: Invoicing Transactions Patient
+    description: Invoicing transactions patient
     tags:
       - administration
     columns:

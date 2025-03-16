@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__patient_program_registrations
-    description: Patient Program Registrations
+    description: Patient program registrations
     tags:
       - clinical
     columns:

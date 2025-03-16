@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__ongoing_conditions
-    description: Ongoing Conditions
+    description: Ongoing conditions
     tags:
       - clinical
     columns:
