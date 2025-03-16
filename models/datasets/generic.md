@@ -1,5 +1,5 @@
 {% docs generic__department %}
-Full readable name of the department
+Name of the department
 {% enddocs %}
 
 {% docs generic__department_id %}
@@ -7,7 +7,7 @@ Reference to the [department](#!/source/tamanu-source-dbt.tamanu.departments)
 {% enddocs %}
 
 {% docs generic__diagnoses %}
-Full list of diagnoses
+List of diagnoses
 {% enddocs %}
 
 {% docs generic__duration %}
@@ -15,7 +15,7 @@ Duration
 {% enddocs %}
 
 {% docs generic__facility %}
-Full readable name of the facility
+Name of the facility
 {% enddocs %}
 
 {% docs generic__facility_id %}
@@ -55,11 +55,11 @@ Total discount applied to the patient.
 {% enddocs %}
 
 {% docs generic__location %}
-Full readable name of the location
+Name of the location
 {% enddocs %}
 
 {% docs generic__location_group %}
-Full readable name of the location group
+Name of the location group
 {% enddocs %}
 
 {% docs generic__location_group_id %}
@@ -79,7 +79,7 @@ Full list of conditions
 {% enddocs %}
 
 {% docs generic__patient_is_deceased %}
-Indicates whether the patient has been deceased.
+Indicates whether the patient is deceased.
 {% enddocs %}
 
 {% docs generic__patient_is_discharged %}
@@ -87,15 +87,15 @@ Indicates whether the patient has been discharged.
 {% enddocs %}
 
 {% docs generic__patients_age %}
-Patient's age
+Age of the patient
 {% enddocs %}
 
 {% docs generic__patients_name %}
-Patient Name
+Name of the patient
 {% enddocs %}
 
 {% docs generic__reference_data %}
-Full readable name
+Name
 {% enddocs %}
 
 {% docs generic__sensitive_tests %}
@@ -107,5 +107,5 @@ Social security number of the patient.
 {% enddocs %}
 
 {% docs generic__user %}
-Display identifier for the user
+Name of the user
 {% enddocs %}
