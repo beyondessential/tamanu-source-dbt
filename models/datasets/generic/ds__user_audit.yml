@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__user_audit
-    description: User Audit
+    description: User audit
     tags:
       - administration
     columns:

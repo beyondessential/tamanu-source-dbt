@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ds__invoicing_transactions_insurance
-    description: Invoicing Transactions Insurance
+    description: Invoicing transactions insurance
     tags:
       - administration
     columns:
