@@ -14,16 +14,6 @@ Start date and time of the appointment.
 End date and time of the appointment.
 {% enddocs %}
 
-{% docs appointments__type %}
-The type of appointment.
-
-One of:
-- `Standard`
-- `Emergency`
-- `Specialist`
-- `Other`
-{% enddocs %}
-
 {% docs appointments__start_time %}
 When the appointment starts.
 {% enddocs %}
@@ -44,6 +34,10 @@ Reference to the [clinician](#!/source/source.tamanu.tamanu.users) recording tha
 The [location](#!/source/source.tamanu.tamanu.locations) where the appointment will take place.
 {% enddocs %}
 
+{% docs appointments__schedule_id %}
+Reference to the [appointment schedule](#!/source/source.tamanu.tamanu.appointment_schedules) in the case of repeating appointments.
+{% enddocs %}
+
 {% docs appointments__status %}
 The current status of the appointment record.
 
@@ -52,6 +46,16 @@ One of:
 - `Arrived`
 - `No-show`
 - `Cancelled`
+{% enddocs %}
+
+{% docs appointments__type_legacy %}
+The legacy type of appointment.
+
+One of:
+- `Standard`
+- `Emergency`
+- `Specialist`
+- `Other`
 {% enddocs %}
 
 {% docs appointments__start_time_legacy %}
@@ -64,4 +68,22 @@ One of:
 
 {% docs appointments__location_group_id %}
 The [location group](#!/source/source.tamanu.tamanu.location_groups) where the appointment will take place.
+{% enddocs %}
+
+{% docs appointments__booking_type_id %}
+Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
+(`type=bookingType`).
+{% enddocs %}
+
+{% docs appointments__appointment_type_id %}
+Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
+(`type=appointmentType`).
+{% enddocs %}
+
+{% docs appointments__is_high_priority %}
+Boolean specify if the appointment is high priority.
+{% enddocs %}
+
+{% docs appointments__encounter_id %}
+Reference to the [encounter](#!/source/source.tamanu.tamanu.encounters) linked to this appointment
 {% enddocs %}

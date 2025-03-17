@@ -117,3 +117,6 @@ models:
       - name: updated_by_field
         data_type: json
         description: "{{ doc('patient_additional_data__updated_at_by_field') }}"
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }} in patient_additional_data which is used as a best estimate of registration date."
