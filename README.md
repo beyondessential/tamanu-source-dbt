@@ -26,7 +26,7 @@ There are two commands available to run:
 ## Refresh Tamanu source models
 
 To refresh the source models from the Tamanu repository, execute the following command:
-`node ./scripts/refresh_tamanu_source.js`
+`node refresh_tamanu_source.js`
 
 This command pulls the source model information from the Tamanu repository based on the version specified in the dbt_package.yml file. All models located under the `tamanu/database/model/central-server/public/` folder will be copied to the `models/sources/` folder.
 
