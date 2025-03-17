@@ -51,3 +51,6 @@ models:
       - name: birth_facility_id
         data_type: character varying(255)
         description: "{{ doc('patient_birth_data__birth_facility_id') }}"
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }} in patient_birth_data."

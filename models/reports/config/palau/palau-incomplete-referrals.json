@@ -1,0 +1,154 @@
+{
+  "query": "replace this",
+  "status": "published",
+  "name": "Incomplete referrals line list",
+  "notes": "Incomplete referrals\n This report lists all patients that have a pending referral for the selected parameters.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "VillageField",
+        "label": "Village",
+        "name": "villageIds"
+      },
+      {
+        "parameterField": "PractitionerField",
+        "label": "Referring clinician",
+        "name": "doctorIds"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Referral type",
+        "name": "referralType",
+        "options": [
+          {
+            "label": "Behavioral Health",
+            "value": "program-referralforms-behavioralhealth"
+          },
+          {
+            "label": "Cardiology",
+            "value": "program-referralforms-cardioreferralbnh"
+          },
+          {
+            "label": "CHC and Other Clinics",
+            "value": "program-referralforms-chsandother"
+          },
+          {
+            "label": "Communicable Disease Unit",
+            "value": "program-referralforms-communicablediseaseunit"
+          },
+          {
+            "label": "Dental",
+            "value": "program-referralforms-dentalreferral"
+          },
+          {
+            "label": "Dermatology",
+            "value": "program-referralforms-dermreferralvisit"
+          },
+          {
+            "label": "Diet and Nutrition",
+            "value": "program-referralforms-dietreferralbnh"
+          },
+          {
+            "label": "Ear Nose and Throat",
+            "value": "program-referralforms-entreferralbnh"
+          },
+          {
+            "label": "Endocrinology",
+            "value": "program-referralforms-endoreferralvisit"
+          },
+          {
+            "label": "Environmental Health",
+            "value": "program-referralforms-environmentalhealth"
+          },
+          {
+            "label": "Family Health Clinic",
+            "value": "program-referralforms-familyhealthclinic"
+          },
+          {
+            "label": "Gastroenterology",
+            "value": "program-referralforms-gastroreferralvisit"
+          },
+          {
+            "label": "General Surgery",
+            "value": "program-referralforms-gensurgreferralbnh"
+          },
+          {
+            "label": "Home Health",
+            "value": "program-referralforms-homehealthreferral"
+          },
+          {
+            "label": "Hyperbaric Chamber",
+            "value": "program-referralforms-hyperbaricchamber"
+          },
+          {
+            "label": "Internal Medicine",
+            "value": "program-referralforms-internistreferral"
+          },
+          {
+            "label": "Nephrology",
+            "value": "program-referralforms-nephrology"
+          },
+          {
+            "label": "Neurology",
+            "value": "program-referralforms-neuroreferralvisit"
+          },
+          {
+            "label": "NCD Clinic",
+            "value": "program-referralforms-ncdclinic"
+          },
+          {
+            "label": "OBGYN",
+            "value": "program-referralforms-obgynreferralbnh"
+          },
+          {
+            "label": "Oncology",
+            "value": "program-referralforms-oncology"
+          },
+          {
+            "label": "Ophthalmology",
+            "value": "program-referralforms-opthalreferralvisit"
+          },
+          {
+            "label": "Orthopedic",
+            "value": "program-referralforms-orthoreferralbnh"
+          },
+          {
+            "label": "Pediatric",
+            "value": "program-referralforms-pediatric"
+          },
+          {
+            "label": "Plastic surgery",
+            "value": "program-referralforms-plasticsreferralvisit"
+          },
+          {
+            "label": "Pulmonology",
+            "value": "program-referralforms-pulmonology"
+          },
+          {
+            "label": "Rehabilitation",
+            "value": "program-referralforms-rehabreferralbnh"
+          },
+          {
+            "label": "Rheumatology",
+            "value": "program-referralforms-rheumatology"
+          },
+          {
+            "label": "Social Services",
+            "value": "program-referralforms-ssreferral"
+          },
+          {
+            "label": "Urology",
+            "value": "program-referralforms-urologyreferralvisit"
+          },
+          {
+            "label": "Vascular Surgery",
+            "value": "program-referralforms-vascularsurgery"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@ models:
       - clinical
     columns:
       - name: id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('generic__id') }} in appointments."
         meta:
           metrics:
@@ -19,28 +19,61 @@ models:
         data_type: timestamp
         description: "{{ doc('appointments__end_time') }}"
       - name: patient_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__patient_id') }}"
         meta:
           metrics:
             total_patients_distinct_count:
               type: count_distinct
       - name: clinician_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__clinician_id') }}"
         meta:
           metrics:
             total_clinicians_distinct_count:
               type: count_distinct
       - name: location_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__location_id') }}"
       - name: location_group_id
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__location_group_id') }}]"
-      - name: type
-        data_type: character varying
-        description: "{{ doc('appointments__type') }}"
       - name: status
-        data_type: character varying
+        data_type: character varying(255)
         description: "{{ doc('appointments__status') }}"
+      - name: booking_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__booking_type_id') }}"
+      - name: appointment_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__appointment_type_id') }}"
+      - name: is_high_priority
+        data_type: boolean
+        description: "{{ doc('appointments__is_high_priority') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__encounter_id') }}"
+      - name: schedule_id
+        data_type: uuid
+        description: "{{ doc('appointments__schedule_id') }}"
+      - name: until_date
+        data_type: date
+        description: "{{ doc('appointment_schedules__until_date') }}"
+      - name: interval
+        data_type: integer
+        description: "{{ doc('appointment_schedules__interval') }}"
+      - name: frequency
+        data_type: character varying(255)
+        description: "{{ doc('appointment_schedules__frequency') }}"
+      - name: days_of_week
+        data_type: array
+        description: "{{ doc('appointment_schedules__days_of_week') }}"
+      - name: nth_weekday
+        data_type: integer
+        description: "{{ doc('appointment_schedules__nth_weekday') }}"
+      - name: occurrence_count
+        data_type: integer
+        description: "{{ doc('appointment_schedules__occurrence_count') }}"
+      - name: is_fully_generated
+        data_type: boolean
+        description: "{{ doc('appointment_schedules__is_fully_generated') }}"
