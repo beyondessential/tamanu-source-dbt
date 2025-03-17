@@ -1,12 +1,14 @@
 select
     p.registration_date,
     u.display_name as registered_by,
+    p.id as patient_id,
     p.first_name,
     p.middle_name,
     p.last_name,
     p.cultural_name,
     p.display_id,
     p.sex,
+    p.village_id,
     village.name as village,
     p.date_of_birth,
     pad.birth_certificate,
@@ -28,9 +30,7 @@ left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
 join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
 left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join
-    {{ ref("reference_data") }} nationality
-    on nationality.id = pad.nationality_id and nationality.type = 'nationality'
+left join {{ ref("reference_data") }} nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
 left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
 left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'

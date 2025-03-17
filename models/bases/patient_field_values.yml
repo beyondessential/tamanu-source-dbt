@@ -1,0 +1,15 @@
+models:
+  - name: patient_field_values
+    description: '{{ doc("table__patient_field_values") }}'
+    tags:
+      - patient
+    columns:
+      - name: value
+        data_type: text
+        description: "{{ doc('patient_field_values__value') }}"
+      - name: definition_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_field_values__definition_id') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_field_values__patient_id') }}"
