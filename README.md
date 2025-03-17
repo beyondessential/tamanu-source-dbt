@@ -23,10 +23,17 @@ There are two commands available to run:
 - `sqlfluff lint models` - Lints the file (does not apply fix)
 - `sqlfluff fix models` - Fixes the SQL files
 
-## Generate the build script for deployments
+## Refresh Tamanu source models
 
-Navigate to the .\scripts\ folder and execute the following command:
-`node deploy.js --target <target_environment>`
+To refresh the source models from the Tamanu repository, execute the following command:
+`node ./scripts/refresh_tamanu_source.js`
+
+This command pulls the source model information from the Tamanu repository based on the version specified in the dbt_package.yml file. All models located under the `tamanu/database/model/central-server/public/` folder will be copied to the `models/sources/` folder.
+
+## Generate the build script and reports for deployments
+
+Execute the following command:
+`node build_tamanu_assets.js --target <target_environment>`
 Replace <target_environment> with the desired deployment environment (e.g., fiji, palau). By default, it targets demoland.
 
 This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
