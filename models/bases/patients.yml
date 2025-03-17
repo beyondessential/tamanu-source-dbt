@@ -44,4 +44,4 @@ models:
         description: "{{ doc('patients__village_id') }}"
       - name: registration_date
         data_type: date
-        description: "{{ doc('generic__created_at') }} in patients."
+        description: "{{ doc('generic__created_at') }} in patients which is used as a best estimate of registration date."

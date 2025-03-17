@@ -6,12 +6,14 @@ Per-user preferences.
 The [user](#!/source/source.tamanu.tamanu.users) these preferences are for.
 {% enddocs %}
 
-{% docs user_preferences__selected_graphed_vitals_on_filter %}
-In the Vitals views, graphs can be filtered. This is remembered per user.
-
-Comma-separated.
+{% docs user_preferences__key %}
+Key of the user preference
 {% enddocs %}
 
-{% docs user_preferences__encounter_tab_orders %}
-Stores the tab encounter order that the user has adjusted
+{% docs user_preferences__value %}
+Value of the user preference
+{% enddocs %}
+
+{% docs user_preferences__facility_id %}
+Reference to the [facility](#!/source/source.tamanu.tamanu.facilities) that this preference applies to
 {% enddocs %}
