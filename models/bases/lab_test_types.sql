@@ -12,6 +12,7 @@ select
     as result_type,
     options,
     lab_test_category_id,
-    visibility_status
+    visibility_status,
+    is_sensitive
 from {{ source("tamanu", "lab_test_types") }}
 where deleted_at is null

@@ -73,3 +73,6 @@ models:
       - name: recorded_by_id
         data_type: character varying(255)
         description: "{{ doc('administered_vaccines__recorder_id') }}"
+      - name: modification_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__updated_at') }} in administered_vaccines which is used as a best estimate of modification datetime."

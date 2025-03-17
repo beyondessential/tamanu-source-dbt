@@ -12,7 +12,8 @@ select
     apgar_score_five_minutes,
     apgar_score_ten_minutes,
     registered_birth_place,
-    birth_facility_id
+    birth_facility_id,
+    created_at::date as registration_date
 from {{ source("tamanu", "patient_birth_data") }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
