@@ -15,7 +15,8 @@ select
     patient_billing_type_id,
     referral_source_id,
     planned_location_id,
-    planned_location_start_time::timestamp as planned_location_start_datetime
+    planned_location_start_time::timestamp as planned_location_start_datetime,
+    discharge_draft
 from {{ source("tamanu", "encounters") }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
