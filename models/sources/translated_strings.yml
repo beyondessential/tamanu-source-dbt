@@ -22,6 +22,7 @@ sources:
             data_type: text
             description: "{{ doc('translated_strings__language') }}"
             data_tests:
+              - unique
               - not_null
           - name: text
             data_type: text

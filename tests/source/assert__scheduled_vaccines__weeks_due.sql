@@ -1,23 +1,23 @@
-SELECT
+select
     category,
     vaccine_id
-FROM {{ source("tamanu", "scheduled_vaccines") }}
-WHERE weeks_from_birth_due notnull
-    AND index != 1
-    AND visibility_status = 'current'
-GROUP BY
+from {{ source("tamanu", "scheduled_vaccines") }}
+where weeks_from_birth_due notnull
+    and index != 1
+    and visibility_status = 'current'
+group by
     category,
     vaccine_id
 
-UNION
+union
 
-SELECT
+select
     category,
     vaccine_id
-FROM {{ source("tamanu", "scheduled_vaccines") }}
-WHERE weeks_from_last_vaccination_due notnull
-    AND index = 1
-    AND visibility_status = 'current'
-GROUP BY
+from {{ source("tamanu", "scheduled_vaccines") }}
+where weeks_from_last_vaccination_due notnull
+    and index = 1
+    and visibility_status = 'current'
+group by
     category,
     vaccine_id

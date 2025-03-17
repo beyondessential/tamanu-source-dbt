@@ -6,3 +6,4 @@ logs/
 .idea
 package-lock.yml
 .user.yml
+.DS_Store

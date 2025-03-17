@@ -1,13 +1,25 @@
 select
-    id,
-    start_time::timestamp as start_datetime,
-    end_time::timestamp as end_datetime,
-    patient_id,
-    clinician_id,
-    location_id,
-    location_group_id,
-    type,
-    status
-from {{ source("tamanu", "appointments") }}
-where deleted_at is null
-    and patient_id != '{{ var("test_patient") }}'
+    a.id,
+    a.start_time::timestamp as start_datetime,
+    a.end_time::timestamp as end_datetime,
+    a.patient_id,
+    a.clinician_id,
+    a.encounter_id,
+    a.schedule_id,
+    a.location_id,
+    a.location_group_id,
+    a.booking_type_id,
+    a.appointment_type_id,
+    a.is_high_priority,
+    a.status,
+    s.until_date::date as until_date,
+    s.interval,
+    s.days_of_week,
+    s.frequency,
+    s.nth_weekday,
+    s.occurrence_count,
+    s.is_fully_generated
+from {{ source("tamanu", "appointments") }} a
+join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
+where a.deleted_at is null
+    and a.patient_id != '{{ var("test_patient") }}'
