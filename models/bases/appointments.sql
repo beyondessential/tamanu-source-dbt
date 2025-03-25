@@ -7,7 +7,7 @@ select
     a.encounter_id,
     a.schedule_id,
     a.location_id,
-    a.location_group_id,
+    coalesce(a.location_group_id, l.location_group_id) as location_group_id,
     a.booking_type_id,
     a.appointment_type_id,
     a.is_high_priority,
@@ -20,6 +20,7 @@ select
     s.occurrence_count,
     s.is_fully_generated
 from {{ source("tamanu", "appointments") }} a
-join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
+left join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
+left join {{ source("tamanu", "locations") }} l on l.id = a.location_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
