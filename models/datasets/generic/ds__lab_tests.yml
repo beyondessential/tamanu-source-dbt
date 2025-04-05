@@ -92,10 +92,10 @@ models:
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} who requested the lab test."
       - name: lab_request_published_datetime
-        data_type: character(19)
+        data_type: timestamp
         description: "{{ doc('lab_requests__published_date') }}"
       - name: lab_test_date
-        data_type: character(10)
+        data_type: date
         description: "{{ doc('generic__date') }} in lab_tests."
       - name: result
         data_type: character varying(255)
