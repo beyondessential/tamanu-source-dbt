@@ -15,7 +15,7 @@ select
     lr.sample_time::timestamp as collected_datetime,
     lr.collected_by_id,
     lr.reason_for_cancellation,
-    lr.published_date,
+    lr.published_date::timestamp as published_datetime,
     lr.encounter_id,
     lr.department_id
 from {{ source("tamanu", "lab_requests") }} lr

@@ -37,7 +37,7 @@ select
     lr.requested_datetime,
     requester.id as requested_by_id,
     requester.display_name as requested_by,
-    lr.published_date as lab_request_published_datetime,
+    lr.published_datetime as lab_request_published_datetime,
     lt.date as lab_test_date,
     lt.result,
     ltt.id as lab_test_type_id,
@@ -60,7 +60,7 @@ join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
 order by
     lr.requested_datetime,
     ltp.name,
-    lr.published_date,
+    lr.published_datetime,
     lt.completed_datetime,
     ltt.name
 
