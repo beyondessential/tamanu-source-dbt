@@ -3,7 +3,7 @@ select
     first_name as "{{ translate_string('general.localisedField.firstName.label','First name') }}",
     last_name as "{{ translate_string('general.localisedField.lastName.label','Last name') }}",
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('general.localisedField.dateOfBirth.label', 'Date of birth') }}",
-    age as "{{ translate_string('general.localisedField.Age', 'Age') }}",
+    age as "{{ translate_string('general.table.column.age', 'Age') }}",
     sex as "{{ translate_string('general.localisedField.sex.label', 'Sex') }}",
     village as "{{ translate_string('general.localisedField.villageId.label', 'Village') }}",
     facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
