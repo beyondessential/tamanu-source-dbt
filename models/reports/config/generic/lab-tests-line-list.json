@@ -1,8 +1,9 @@
 {
   "query": "replace this",
+  "name": "Lab tests line list",
   "notes": "Lab tests line list\nThis report generates a list of all patients that have had a lab test created. Patients are listed in chronological order based on the lab request date and time.",
   "status": "published",
-  "dbSchema": "raw",
+  "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],
