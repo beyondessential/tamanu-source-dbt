@@ -16,7 +16,7 @@ REPO_URL = "https://github.com/beyondessential/tamanu.git"
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMP_DIR = Path(tempfile.gettempdir()) / "tamanu"
 DBT_SOURCE_DIR = BASE_DIR / "models" / "sources"
-REPO_SOURCE_DIR = TEMP_DIR / "database" / "model" / "central-server" / "public"
+REPO_SOURCE_DIR = TEMP_DIR / "database" / "model" / "public"
 
 
 def main():
