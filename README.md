@@ -23,6 +23,12 @@ There are two commands available to run:
 - `sqlfluff lint models` - Lints the file (does not apply fix)
 - `sqlfluff fix models` - Fixes the SQL files
 
+## Refresh Tamanu source models
+To refresh the source models from the Tamanu repository, execute the following command:
+`python refresh_tamanu_source.py`
+
+This command pulls the source model information from the Tamanu repository based on the version specified in the dbt_project.yml file. All models located under the `tamanu/database/model/central-server/public/` folder (remote tamanu repository) will be copied to the `models/sources/` folder (local repository).
+
 ## Generate the build script for deployments
 
 Navigate to the .\scripts\ folder and execute the following command:
