@@ -14,6 +14,7 @@ def main():
     args = sys.argv[1:]
     target_index = args.index("--target") + 1 if "--target" in args else -1
     target = args[target_index] if target_index > 0 else "demoland"
+
     print(f"Generating build script for target: {target}")
 
     # Execute DBT commands

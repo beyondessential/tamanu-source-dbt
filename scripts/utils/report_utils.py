@@ -1,8 +1,8 @@
 import os
 import re
 
-from dbt_utils import get_deployment_version
-from file_utils import ensure_directory_exists, read_file, write_file
+from .dbt_utils import get_deployment_version
+from .file_utils import ensure_directory_exists, read_file, write_file
 
 SCHEMA = "reporting"
 ROLE = "reporting"
