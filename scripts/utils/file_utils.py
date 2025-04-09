@@ -88,7 +88,6 @@ def copy_files_from_directory(source_dir, destination_dir):
             dest_file = os.path.join(destination_dir, file_name)
             if os.path.isfile(source_file):
                 shutil.copy2(source_file, dest_file)
-                print(f"File copied from {source_file} to {dest_file}")
     except Exception as e:
         print(f"Error copying files from {source_dir} to {destination_dir}: {e}")
         exit(1)
@@ -106,7 +105,6 @@ def remove_directory(dir_path):
     try:
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
-            print(f"Directory {dir_path} and all its contents have been removed.")
         else:
             print(f"Error: Directory not found: {dir_path}")
     except Exception as e:

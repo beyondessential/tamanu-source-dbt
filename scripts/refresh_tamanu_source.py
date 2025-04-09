@@ -22,18 +22,13 @@ REPO_SOURCE_DIR = TEMP_DIR / "database" / "model" / "central-server" / "public"
 def main():
     version = get_deployment_version()
     branch_name = f"release/{'.'.join(version.split('.')[:2])}"
-    print(f"Detected version: {version}")
+    print(f"\n\nDetected version: {version}")
     print(f"Cloning branch '{branch_name}' from repository '{REPO_URL}'")
 
     execute_command(f"git clone --branch {branch_name} --depth 1 {REPO_URL} {TEMP_DIR}")
-
-    print("Copying database folder...")
     copy_files_from_directory(REPO_SOURCE_DIR, DBT_SOURCE_DIR)
-
-    print("Files copied successfully! Cleaning up...")
     remove_directory(TEMP_DIR)
-
-    print("Cleanup complete.")
+    print("\nFiles copied successfully!")
 
 
 if __name__ == "__main__":
