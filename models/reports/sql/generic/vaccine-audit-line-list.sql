@@ -2,20 +2,20 @@ select
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDob', 'Date of birth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfDeath', 'Date of birth') }}",
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
     to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_string('vaccinationDate', 'Vaccination date') }}",
     vaccine_name as "{{ translate_string('vaccineName', 'Vaccine name') }}",
-    vaccine_brand as "{{ translate_string('vaccineBrand', 'If category of Other, Vaccine brand') }}",
-    disease as "{{ translate_string('vaccineDisease', 'If category of Other, Disease') }}",
-    vaccine_status as "{{ translate_string('vaccineStatus', 'Vaccine status') }}",
+    vaccine_brand as "{{ translate_string('vaccinationBrand', 'If category of Other, Vaccine brand') }}",
+    disease as "{{ translate_string('vaccinationDisease', 'If category of Other, Disease') }}",
+    vaccine_status as "{{ translate_string('vaccinationStatus', 'Vaccine status') }}",
     vaccine_schedule as "{{ translate_string('vaccineSchedule', 'Schedule') }}",
-    given_by as "{{ translate_string('givenBy', 'Given by') }}",
-    recorded_by as "{{ translate_string('recordedBy', 'Recorded by') }}",
-    modified_by as "{{ translate_string('modifiedBy', 'Record modified by') }}",
-    to_char(modification_datetime, '{{ var("date_format") }}') as "{{ translate_string('modifiedDate', 'Record modification date') }}"
+    given_by as "{{ translate_string('vaccinationGivenBy', 'Given by') }}",
+    recorded_by as "{{ translate_string('vaccinationRecordedBy', 'Recorded by') }}",
+    modified_by as "{{ translate_string('vaccinationModifiedBy', 'Record modified by') }}",
+    to_char(modification_datetime, '{{ var("date_format") }}') as "{{ translate_string('vaccinationModifiedDate', 'Record modification date') }}"
 from {{ ref("ds__vaccinations") }}
 where
     vaccine_status in ('Recorded in error', 'Historical')
