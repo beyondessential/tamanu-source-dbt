@@ -11,10 +11,10 @@ select
     to_char(encounter_start_datetime, '{{ var("date_format") }}') as "{{ translate_string('encounterStartDate', 'Encounter start date') }}",
     to_char(encounter_end_datetime, '{{ var("date_format") }}') as "{{ translate_string('encounterEndDate', 'Encounter end date') }}",
     to_char(encounter_start_datetime, '{{ var("time_format") }}') as "{{ translate_string('encounterStartTime', 'Encounter start time') }}",
-    to_char(first_note_datetime, '{{ var("time_format") }}') as "{{ translate_string('notesStartTime', 'Notes start time') }}",
-    to_char(last_note_datetime, '{{ var("time_format") }}') as "{{ translate_string('notesEndTime', 'Notes end time') }}",
-    is_discharged as "{{ translate_string('isDischarged', 'Discharges (has the patient been discharged)') }}",
-    non_discharge_by_clinicians as "{{ translate_string('nonDischargeByClinician', 'Non-discharge by clinicians') }}"
+    to_char(first_note_datetime, '{{ var("time_format") }}') as "{{ translate_string('noteStartTime', 'Notes start time') }}",
+    to_char(last_note_datetime, '{{ var("time_format") }}') as "{{ translate_string('noteEndTime', 'Notes end time') }}",
+    is_discharged as "{{ translate_string('encounterIsDischarged', 'Discharges (has the patient been discharged)') }}",
+    non_discharge_by_clinicians as "{{ translate_string('encounterNonDischargeClinician', 'Non-discharge by clinicians') }}"
 from {{ ref('ds__user_audit') }}
 where
     case
