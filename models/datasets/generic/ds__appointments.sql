@@ -23,7 +23,21 @@ select
         when a.is_high_priority then 'Yes' else 'No' 
     end as priority,
     a.schedule_id,
-    a.until_date,
+    case
+        when a.schedule_id notnull and a.occurrence_count notnull 
+        then (
+            first_value(a.start_datetime::date) over (partition by a.schedule_id order by a.start_datetime) 
+            + (a.occurrence_count * 
+                case 
+                    when a.frequency = 'DAILY' then interval '1 day'
+                    when a.frequency = 'WEEKLY' then interval '1 week'
+                    when a.frequency = 'MONTHLY' then interval '1 month'
+                    when a.frequency = 'YEARLY' then interval '1 year'
+                end * a.interval
+            )
+        ) 
+        else a.until_date
+    end as until_date,
     a.interval,
     a.frequency,
     a.nth_weekday,
