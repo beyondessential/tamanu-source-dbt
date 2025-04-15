@@ -18,7 +18,9 @@ select
     s.frequency,
     s.nth_weekday,
     s.occurrence_count,
-    s.is_fully_generated
+    s.is_fully_generated,
+    s.generated_until_date,
+    s.cancelled_at_date
 from {{ source("tamanu", "appointments") }} a
 join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
 where a.deleted_at is null
