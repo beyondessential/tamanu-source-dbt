@@ -1,12 +1,12 @@
 select
-    display_id as "{{ translate_string('general.localisedField.displayId.label','Patient ID') }}",
-    first_name as "{{ translate_string('general.localisedField.firstName.label','First name') }}",
-    last_name as "{{ translate_string('general.localisedField.lastName.label','Last name') }}",
-    diagnoses as "{{ translate_string('', 'Diagnoses') }}",
-    referral_type as "{{ translate_string('referral.table.column.referralType', 'Referral name') }}",
-    referring_doctor_name as "{{ translate_string('referral.table.column.referralCompletedBy', 'Referring doctor') }}",
-    referral_datetime as "{{ translate_string('', 'referral.table.column.referralDate') }}",
-    department as "{{ translate_string('general.localisedField.departmentId.label', 'Department') }}"
+    display_id as "{{ translate_string('patientDisplayId','Patient ID') }}",
+    first_name as "{{ translate_string('patientFirstName','First name') }}",
+    last_name as "{{ translate_string('patientLastName','Last name') }}",
+    diagnoses as "{{ translate_string('diagnosisName', 'Diagnoses') }}",
+    referral_type as "{{ translate_string('referralType', 'Referral name') }}",
+    referring_doctor_name as "{{ translate_string('referralCompletedBy', 'Referring doctor') }}",
+    referral_datetime as "{{ translate_string('referralDate', 'Referral date') }}",
+    department as "{{ translate_string('departmentName', 'Department') }}"
 from {{ ref('ds__referrals') }}
 where status in ('pending', 'cancelled')
     and case
