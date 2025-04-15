@@ -62,7 +62,7 @@ select
     coalesce(lg.transfer_ins, 0) as "{{ translate_string('transfersIntoLocationCount', 'Number of transfers into location') }}",
     coalesce(lg.transfer_outs, 0) as "{{ translate_string('transfersOutOfLocationCount', 'Number of transfers out of location') }}",
     coalesce(lg.avg_length_of_stay, 0) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}",
-    coalesce(lg.occupancy, 0) as "{{ translate_string('totalPatientDays', 'Number of patient days') }}",
+    coalesce(lg.occupancy, 0) as "{{ translate_string('patientDayCount', 'Number of patient days') }}",
     case
         when lg.occupancy notnull and lg.capacity notnull then
             concat(
