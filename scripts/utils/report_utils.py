@@ -23,9 +23,6 @@ def compile_report(database, sql_file, config_file, output_file):
 
     Returns:
         None: Writes the compiled configuration to the output file.
-
-    Raises:
-        Exception: If there is an error reading or processing the files.
     """
     try:
         sql = read_file(sql_file)
@@ -50,9 +47,6 @@ def generate_project_reports(target):
 
     Returns:
         None: Creates compiled report JSON files in the reports directory.
-
-    Raises:
-        Exception: If no report models are found for the target, or if there is an error in processing.
     """
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
@@ -94,9 +88,6 @@ def generate_import_report_script():
 
     Returns:
         None: Writes the Python script to the reports directory.
-
-    Raises:
-        Exception: If there is an error reading the JSON files or executing the commands.
     """
     script = """const fs = require("fs");
 const path = require("path");
@@ -163,9 +154,6 @@ def generate_reporting_schema_script(target):
 
     Returns:
         None: Writes the SQL schema build script to the views directory.
-
-    Raises:
-        Exception: If circular dependencies are detected or if there is an error in processing.
     """
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")

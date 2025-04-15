@@ -28,16 +28,24 @@ def read_file(file_path, file_type="text"):
     Returns:
         str or dict: The file content as a string (for text files) or a dictionary (for JSON files).
 
-    Exits the program if there is an error reading the file.
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file_type is not supported.
+        Exception: For other errors during reading or parsing.
     """
     try:
         ensure_file_exists(file_path)
         with open(file_path, "r", encoding="utf-8") as f:
             data = f.read()
-            return json.loads(data) if file_type == "json" else data
+            if file_type == "json":
+                return json.loads(data)
+            elif file_type == "text":
+                return data
+            else:
+                raise ValueError(f"Unsupported file_type: {file_type}")
     except Exception as e:
         print(f"Error reading file {file_path}: {e}")
-        exit(1)
+        raise Exception(f"Error reading file {file_path}: {e}")
 
 
 def write_file(file_path, data, file_type="text"):
@@ -49,15 +57,23 @@ def write_file(file_path, data, file_type="text"):
         data (str or dict): The data to write. Can be a string (for text files) or a dictionary (for JSON files).
         file_type (str): The type of the file ('text' or 'json'). Defaults to 'text'.
 
-    Exits the program if there is an error writing the file.
+    Raises:
+        ValueError: If the file_type is not supported.
+        Exception: For other errors during writing.
     """
     try:
-        content = json.dumps(data, indent=2) if file_type == "json" else data
+        if file_type == "json":
+            content = json.dumps(data, indent=2)
+        elif file_type == "text":
+            content = data
+        else:
+            raise ValueError(f"Unsupported file_type: {file_type}")
+
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
     except Exception as e:
         print(f"Error writing file {file_path}: {e}")
-        exit(1)
+        raise Exception(f"Error writing file {file_path}: {e}")
 
 
 def ensure_directory_exists(dir_path):
