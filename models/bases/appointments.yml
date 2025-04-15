@@ -77,3 +77,9 @@ models:
       - name: is_fully_generated
         data_type: boolean
         description: "{{ doc('appointment_schedules__is_fully_generated') }}"
+      - name: generated_until_date
+        data_type: character(10)
+        description: "{{ doc('appointment_schedules__generated_until_date') }}"
+      - name: cancelled_at_date
+        data_type: character(10)
+        description: "{{ doc('appointment_schedules__cancelled_at_date') }}"
