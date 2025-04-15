@@ -49,30 +49,37 @@ location_summary as (
 )
 
 select
-    to_char(ls.month, '{{ var("monthyear_format") }}') as "{{ translate_string('', 'Month') }}",
-    ls.facility as "{{ translate_string('general.localisedField.facility.label', 'Facility') }}",
-    ls.location_group as "{{ translate_string('general.localisedField.area.label', 'Area') }}",
-    ls.location as "{{ translate_string('general.localisedField.locationId.label', 'Location') }}",
-    coalesce(ls.admissions, 0) as "{{ translate_string('', 'Number of admissions') }}",
-    coalesce(ls.discharges, 0) as "{{ translate_string('', 'Number of discharges') }}",
-    coalesce(ls.deaths, 0) as "{{ translate_string('', 'Number of deaths') }}",
-    coalesce(ls.transfer_ins, 0) as "{{ translate_string('', 'Number of transfers into location') }}",
-    coalesce(ls.transfer_outs, 0) as "{{ translate_string('', 'Number of transfers out of location') }}",
-    coalesce(ls.avg_length_of_stay, 0) as "{{ translate_string('', 'Average length of stay') }}",
-    coalesce(ls.occupancy, 0) as "{{ translate_string('', 'Number of patient days') }}",
-    case when ls.occupancy notnull and ls.capacity notnull
-            then concat(round(ls.occupancy / (
-                    ls.capacity
-                    * case
-                        when ls.month > (current_date - '1 month'::interval) then current_date - ls.month
-                        else (ls.month + '1 month'::interval)::date - ls.month
-                    end
-                ) * 100, 1)::text, '%')
+    to_char(ls.month, '{{ var("monthyear_format") }}') as "{{ translate_string('month', 'Month') }}",
+    ls.facility as "{{ translate_string('facilityName', 'Facility') }}",
+    ls.location_group as "{{ translate_string('areaName', 'Area') }}",
+    ls.location as "{{ translate_string('locationName', 'Location') }}",
+    coalesce(ls.admissions, 0) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
+    coalesce(ls.discharges, 0) as "{{ translate_string('dischargeCount', 'Number of discharges') }}",
+    coalesce(ls.deaths, 0) as "{{ translate_string('deathCount', 'Number of deaths') }}",
+    coalesce(ls.transfer_ins, 0) as "{{ translate_string('transfersIntoLocationCount', 'Number of transfers into location') }}",
+    coalesce(ls.transfer_outs, 0) as "{{ translate_string('transfersOutOfLocationCount', 'Number of transfers out of location') }}",
+    coalesce(ls.avg_length_of_stay, 0) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}",
+    coalesce(ls.occupancy, 0) as "{{ translate_string('totalPatientDays', 'Number of patient days') }}",
+    case
+        when ls.occupancy notnull and ls.capacity notnull then
+            concat(
+                round(
+                    ls.occupancy / (
+                        ls.capacity * case
+                            when ls.month > (current_date - '1 month'::interval)
+                                then current_date - ls.month
+                            else (ls.month + '1 month'::interval)::date - ls.month
+                        end
+                    ) * 100, 1
+                )::text, '%'
+            )
         else 'N/A'
-    end as "{{ translate_string('', 'Bed occupancy (%)') }}"
+    end as "{{ translate_string('bedOccupancyPercent', 'Bed occupancy (%)') }}"
 from location_summary ls
-where case
+where
+    case
         when {{ parameter('locationId') }} is null then true
         else ls.location_id::text = {{ parameter('locationId') }}
     end
 order by ls.month, ls.facility, ls.location_group, ls.location
+
