@@ -1,6 +1,7 @@
 with lab_test_data as (
     select
         lr.id as lab_request_id,
+        ltp.name as lab_test_panel,
         string_agg(
             case when not ltt.is_sensitive then ltt.name end, ', '
             order by ltt.name
@@ -12,6 +13,9 @@ with lab_test_data as (
         max(case when ltt.is_sensitive then lt.completed_datetime end) as sensitive_completed_datetime,
         max(case when not ltt.is_sensitive then lt.completed_datetime end) as non_sensitive_completed_datetime
     from {{ ref('lab_requests') }} lr
+    left join {{ ref('lab_test_panel_requests') }} ltpr
+        on ltpr.id = lr.lab_test_panel_request_id
+    left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
     join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
     group by lr.id
@@ -58,7 +62,8 @@ select
     priority.name as priority,
     category.id as category_id,
     category.name as category,
-    coalesce(ltp.name, lta.non_sensitive_tests) as non_sensitive_tests,
+    lta.lab_test_panel,
+    lta.non_sensitive_tests as non_sensitive_tests,
     lta.sensitive_tests,
     lr.collected_datetime,
     collector.display_name as collected_by,
@@ -87,9 +92,6 @@ left join {{ ref('facilities') }} f on f.id = l.facility_id
 left join {{ ref('reference_data') }} laboratory on laboratory.id = lr.lab_test_laboratory_id
 left join {{ ref('users') }} req_clinician on req_clinician.id = lr.requested_by_id
 left join {{ ref('departments') }} req_department on req_department.id = lr.department_id
-left join {{ ref('lab_test_panel_requests') }} ltpr
-    on ltpr.id = lr.lab_test_panel_request_id
-left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
 left join {{ ref('reference_data') }} priority on priority.id = lr.lab_test_priority_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 left join {{ ref('users') }} collector on collector.id = lr.collected_by_id
