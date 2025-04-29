@@ -21,7 +21,7 @@ def main():
     execute_command("dbt clean")
     execute_command("dbt deps")
     execute_command(f"dbt run --target {target} --profiles-dir config --select tag:{target}")
-    execute_command(f"dbt docs generate --target --profiles-dir config {target} --select tag:{target}")
+    execute_command(f"dbt docs generate --target {target} --profiles-dir config --select tag:{target}")
     execute_command(f"dbt compile --target {target} --profiles-dir config --select tag:{target}")
 
     # Hide macros and tests from documentation
