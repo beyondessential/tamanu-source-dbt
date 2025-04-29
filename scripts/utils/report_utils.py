@@ -193,6 +193,7 @@ def generate_reporting_schema_script(target):
     scripts = [
         f"drop schema if exists {SCHEMA} cascade;",
         f"create schema {SCHEMA};",
+        f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
 
