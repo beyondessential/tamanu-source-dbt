@@ -29,7 +29,7 @@ def compile_report(database, sql_file, config_file, output_file):
         config = read_file(config_file, "json")
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
-        config["query"] = re.sub(f'"{database}"/.', "", query)
+        config["query"] = re.sub(f'"{database}"\\.', "", query)
         config["db_schema"] = SCHEMA
 
         write_file(output_file, config, "json")
