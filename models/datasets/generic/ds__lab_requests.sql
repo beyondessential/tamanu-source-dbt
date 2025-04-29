@@ -18,7 +18,7 @@ with lab_test_data as (
     left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
     join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
-    group by lr.id
+    group by lr.id, ltp.name
 )
 
 select
