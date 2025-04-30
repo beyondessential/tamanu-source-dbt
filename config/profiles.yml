@@ -1,6 +1,15 @@
 tamanu_source_dbt:
   target: demoland
   outputs:
+    aspen:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_ASPEN_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_ASPEN_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_ASPEN_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_ASPEN_DB_DATABASE') }}"
+      schema: reporting
     demoland:
       type: postgres
       threads: 1
@@ -28,6 +37,15 @@ tamanu_source_dbt:
       pass: "{{ env_var('TAMANU_KI_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_KI_DB_DATABASE') }}"
       schema: reporting
+    nauru:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_NR_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_NR_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_NR_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_NR_DB_DATABASE') }}"
+      schema: reporting
     palau:
       type: postgres
       threads: 1
@@ -36,4 +54,22 @@ tamanu_source_dbt:
       user: "{{ env_var('TAMANU_PW_DB_USER') }}"
       pass: "{{ env_var('TAMANU_PW_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_PW_DB_DATABASE') }}"
+      schema: reporting
+    samoa:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_WS_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_WS_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_WS_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_WS_DB_DATABASE') }}"
+      schema: reporting
+    tuvalu:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_TV_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_TV_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_TV_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_TV_DB_DATABASE') }}"
       schema: reporting
