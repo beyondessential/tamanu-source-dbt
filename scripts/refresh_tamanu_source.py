@@ -27,6 +27,13 @@ def main():
 
     execute_command(f"git clone --branch {branch_name} --depth 1 {REPO_URL} {TEMP_DIR}")
     copy_files_from_directory(REPO_SOURCE_DIR, DBT_SOURCE_DIR)
+
+    # Delete overview.md from the sources directory
+    overview_file = DBT_SOURCE_DIR / "overview.md"
+    if overview_file.exists():
+        overview_file.unlink()
+        print("Deleted overview.md from the sources directory.")
+    
     remove_directory(TEMP_DIR)
     print("\nFiles copied successfully!")
 
