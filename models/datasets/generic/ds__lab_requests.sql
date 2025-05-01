@@ -58,7 +58,8 @@ select
     priority.name as priority,
     category.id as category_id,
     category.name as category,
-    coalesce(ltp.name, lta.non_sensitive_tests) as non_sensitive_tests,
+    ltp.name as lab_test_panel,
+    lta.non_sensitive_tests as non_sensitive_tests,
     lta.sensitive_tests,
     lr.collected_datetime,
     collector.display_name as collected_by,
@@ -87,12 +88,12 @@ left join {{ ref('facilities') }} f on f.id = l.facility_id
 left join {{ ref('reference_data') }} laboratory on laboratory.id = lr.lab_test_laboratory_id
 left join {{ ref('users') }} req_clinician on req_clinician.id = lr.requested_by_id
 left join {{ ref('departments') }} req_department on req_department.id = lr.department_id
-left join {{ ref('lab_test_panel_requests') }} ltpr
-    on ltpr.id = lr.lab_test_panel_request_id
-left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
 left join {{ ref('reference_data') }} priority on priority.id = lr.lab_test_priority_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 left join {{ ref('users') }} collector on collector.id = lr.collected_by_id
 left join {{ ref('reference_data') }} specimen on specimen.id = lr.specimen_type_id
 left join {{ ref('reference_data') }} site on site.id = lr.lab_sample_site_id
+left join {{ ref('lab_test_panel_requests') }} ltpr
+    on ltpr.id = lr.lab_test_panel_request_id
+left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
 order by lr.requested_datetime
