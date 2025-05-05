@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Payment method line list",
-  "notes": "Payment Method Line List\nThis report generates a list of all patient payments. Each row in the report represents a single payment. The report includes patient, payment and payment method information. Payments are listed in chronological order by payment date.",
+  "notes": "Payment method line list\nThis report generates a list of all patient payments. Each row in the report represents a single payment. The report includes patient, payment and payment method information. Payments are listed in chronological order by payment date.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
