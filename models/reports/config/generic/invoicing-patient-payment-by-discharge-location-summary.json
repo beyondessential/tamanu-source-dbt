@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Patient payment by discharge location summary",
-  "notes": "Patient Payment by Discharge Location Report\nThis report generates a summary of patient payments by discharge location. Each row in the report represents a single discharge location. The report includes location and payment information. Locations are listed in alphabetical order.",
+  "notes": "Patient payment by discharge location summary\nThis report generates a summary of patient payments by discharge location. Each row in the report represents a single discharge location. The report includes location and payment information. Locations are listed in alphabetical order.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
@@ -9,6 +9,12 @@
     "dateRangeLabel": "Enter discharge dates (or leave it blank for all)",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
       {
         "parameterField": "ParameterAutocompleteField",
         "label": "Discharging Area",
