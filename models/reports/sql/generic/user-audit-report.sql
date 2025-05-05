@@ -6,7 +6,7 @@ select
     triage_category as "{{ translate_string('triageCategory', 'Triage category') }}",
     facility as "{{ translate_string('facilityName', 'Facility') }}",
     department as "{{ translate_string('departmentName', 'Department') }}",
-    location_group as "{{ translate_string('areaName', 'Area') }}",
+    location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     location as "{{ translate_string('locationName', 'Location') }}",
     to_char(encounter_start_datetime, '{{ var("date_format") }}') as "{{ translate_string('encounterStartDate', 'Encounter start date') }}",
     to_char(encounter_end_datetime, '{{ var("date_format") }}') as "{{ translate_string('encounterEndDate', 'Encounter end date') }}",
