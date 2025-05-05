@@ -34,23 +34,35 @@ This command generates views, reports, and an import script for deployment in th
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 
-## Generate list of Tamanu reports
+## Script to list Tamanu reports
 
-The `list_tamanu_reports.py` script generates a list of Tamanu reports in either Markdown or Excel format. It extracts metadata from JSON configuration files located in the specified folder structure and organizes the information for easy reference.
-
-### Features
-
-- Extracts report metadata such as report ID, description, default date range, and filters.
-- Supports output in Markdown or Excel format.
-- Groups reports by deployment for better organization.
+This script generates a list of all reports in the repository grouped by deployment, and outputs the result in a Markdown file.
 
 ### Usage
+The script accepts two optional command-line arguments:
 
-To run the script, use the following command:
+base_path (optional): The base path to start extracting the folder structure. Defaults to ./models/reports/config.
+output_file (optional): The path to the output Markdown file. Defaults to ./output/list_tamanu_reports.md.
 
-```bash
-python list_tamanu_reports.py [base_path] [output_file]
+### Command-Line Arguments
+base_path: The directory where the script will look for JSON report files. If not provided, it defaults to ./reports/config.
+output_file: The file path where the generated Markdown report will be saved. If not provided, it defaults to ./output/list_tamanu_reports.md.
+
+### Example
+To generate a report list using the default paths:
+
 ```
+python list_tamanu_reports.py
+```
+
+To specify a custom base path and output file:
+
+```
+python list_tamanu_reports.py ./custom/reports ./custom/output/reports_list.md
+```
+
+The output will be a Markdown file containing a structured list of reports, grouped by deployment, with details such as report description, filters, and default date range.
+
 
 ## Versioning
 
