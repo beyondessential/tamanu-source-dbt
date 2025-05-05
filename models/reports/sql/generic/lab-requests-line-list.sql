@@ -17,10 +17,10 @@ select
     requesting_department as "{{ translate_string('labRequestDepartment', 'Requesting department') }}",
     priority as "{{ translate_string('labRequestPriority', 'Priority') }}",
     category as "{{ translate_string('labTestCategory', 'Test category') }}",
-    non_sensitive_tests as "{{ translate_string('labTestResults', 'Test requested') }}",
+    non_sensitive_tests as "{{ translate_string('labTestRequested', 'Test requested') }}",
     to_char(
         collected_datetime, '{{ var("date_format") }}'
-    ) as "{{ translate_string('labRequestSampleDateTime', 'Sample collection date and time') }}",
+    ) as "{{ translate_string('labRequestSampleCollectionDateTime', 'Sample collection date and time') }}",
     collected_by as "{{ translate_string('labRequestSampleCollectedBy', 'Sample collected by') }}",
     specimen_type as "{{ translate_string('labRequestSpecimenType', 'Specimen type') }}",
     site as "{{ translate_string('labRequestSampleSite', 'Site') }}",
