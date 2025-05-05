@@ -11,11 +11,11 @@ select
     to_char(rm.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportingMonth', 'Month') }}",
     adh.facility as "{{ translate_string('facilityName', 'Facility') }}",
     adh.department as "{{ translate_string('departmentName', 'Department') }}",
-    count(*) filter (where adh.admission) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
-    count(*) filter (where adh.discharge) as "{{ translate_string('dischargeCount', 'Number of discharges') }}",
-    count(*) filter (where adh.death) as "{{ translate_string('deathCount', 'Number of deaths') }}",
-    count(*) filter (where adh.transfer_in) as "{{ translate_string('transfersIntoDepartmentCount', 'Number of transfers into department') }}",
-    count(*) filter (where adh.transfer_out) as "{{ translate_string('transfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
+    count(*) filter (where adh.admission) as "{{ translate_string('hospitalAdmissionCount', 'Number of admissions') }}",
+    count(*) filter (where adh.discharge) as "{{ translate_string('hospitalDischargeCount', 'Number of discharges') }}",
+    count(*) filter (where adh.death) as "{{ translate_string('hospitalDeathCount', 'Number of deaths') }}",
+    count(*) filter (where adh.transfer_in) as "{{ translate_string('hospitalTransfersIntoDepartmentCount', 'Number of transfers into department') }}",
+    count(*) filter (where adh.transfer_out) as "{{ translate_string('hospitalTransfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
     round(avg(adh.length_of_stay), 1) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_history_department') }} adh
