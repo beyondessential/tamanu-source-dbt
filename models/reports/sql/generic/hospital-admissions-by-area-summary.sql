@@ -70,7 +70,7 @@ select
                     lg.occupancy / (
                         lg.capacity * case
                             when lg.month > (current_date - '1 month'::interval)
-                                then current_date - lg.month
+                                then (current_date - lg.month) + 1
                             else (lg.month + '1 month'::interval)::date - lg.month
                         end
                     ) * 100, 1
