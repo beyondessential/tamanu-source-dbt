@@ -1,0 +1,55 @@
+{
+  "query": "replace this",
+  "name": "Recent diagnoses line list",
+  "notes": "Recent diagnoses line list\nReport lists all patients that have had the specified diagnosis/es recorded.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "VillageField",
+        "label": "Village",
+        "name": "villageId"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis",
+        "name": "diagnosisId"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis 2",
+        "name": "diagnosis2Id"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis 3",
+        "name": "diagnosis3Id"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis 4",
+        "name": "diagnosis4Id"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnosis 5",
+        "name": "diagnosis5Id"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      }
+    ]
+  }
+}
