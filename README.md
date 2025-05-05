@@ -2,17 +2,9 @@
 
 A dbt project of Tamanu's standard models. This includes:
 
-- raw (or source) schema (incomplete documentation and validation test)
-- reporting schema (incomplete documentation)
+- raw (or source) schema
+- reporting schema
 - analytics schema (upcoming)
-
-## Generating a .yml documentation file for tables
-
-The codegen package has a macro `generate_source` that will create a skeleton .yml file.
-
-Run `dbt run-operation generate_source --args '{"schema_name": "public", "table_names": ["table_name1", "table_name2"], "generate_columns": True, "include_descriptions": True, include_data_types: True}'`
-
-Replace "table_name1" and "table_name2" with the names of the new tables.
 
 ## SQL linting
 
@@ -41,6 +33,24 @@ This command generates views, reports, and an import script for deployment in th
 - Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script_<target_version>.sql.
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
+
+## Generate list of Tamanu reports
+
+The `list_tamanu_reports.py` script generates a list of Tamanu reports in either Markdown or Excel format. It extracts metadata from JSON configuration files located in the specified folder structure and organizes the information for easy reference.
+
+### Features
+
+- Extracts report metadata such as report ID, description, default date range, and filters.
+- Supports output in Markdown or Excel format.
+- Groups reports by deployment for better organization.
+
+### Usage
+
+To run the script, use the following command:
+
+```bash
+python list_tamanu_reports.py [base_path] [output_file]
+```
 
 ## Versioning
 

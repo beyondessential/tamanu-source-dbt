@@ -1,10 +1,10 @@
-
-target/
-dbt_packages/
-compiled/
-logs/
 .idea
-package-lock.yml
-.user.yml
+.vscode
 .DS_Store
 __pycache__
+compiled/
+dbt_packages/
+logs/
+target/
+package-lock.yml
+.user.yml
