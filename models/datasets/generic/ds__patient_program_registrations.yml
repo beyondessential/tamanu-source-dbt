@@ -40,6 +40,12 @@ models:
       - name: registering_facility
         data_type: character varying(255)
         description: "{{ doc('generic__facility') }} where the patient was registered."
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_program_registrations__facility_id') }}"
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the registration is from." 
       - name: registered_by_id
         data_type: character varying(255)
         description: "{{ doc('patient_program_registrations__clinician_id') }}"

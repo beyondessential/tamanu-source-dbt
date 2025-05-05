@@ -6,6 +6,7 @@ select
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
     registering_facility as "{{ translate_string('registryRegisteringFacility', 'Registering facility') }}",
+    facility as "{{ translate_string('registryFacility', 'Facility') }}",
     registered_by as "{{ translate_string('registryRegisteredBy', 'Registered by') }}",
     currently_at as "{{ translate_string('registryCurrentIn', 'Currently in') }}",
     related_conditions as "{{ translate_string('registryConditions', 'Related conditions') }}",
