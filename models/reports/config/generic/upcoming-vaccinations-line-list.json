@@ -21,7 +21,7 @@
       },
       {
         "parameterField": "ParameterSelectField",
-        "name": "vaccineStatus",
+        "name": "status",
         "label": "Vaccine status",
         "options": [
           {
