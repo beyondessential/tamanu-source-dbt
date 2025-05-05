@@ -1,5 +1,5 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('patientRegisteredDate', 'Registration date') }}",
+    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('patientRegistrationDate', 'Registration date') }}",
     registered_by as "{{ translate_string('patientRegisteredBy', 'Registered by') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     middle_name as "{{ translate_string('patientMiddleName', 'Middle name') }}",
