@@ -32,8 +32,8 @@ where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     )
     and (
         case
-            when {{ parameter('imaging_type') }} is null then true
-            else ir.imaging_type_id = {{ parameter('imaging_type') }}
+            when {{ parameter('imagingType') }} is null then true
+            else ir.imaging_type_id = {{ parameter('imagingType') }}
         end
     )
 group by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type

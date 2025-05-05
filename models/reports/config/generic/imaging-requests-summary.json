@@ -28,7 +28,7 @@
       {
         "parameterField": "ImagingTypeField",
         "label": "Imaging type",
-        "name": "imaging_type"
+        "name": "imagingType"
       }
     ]
   }
