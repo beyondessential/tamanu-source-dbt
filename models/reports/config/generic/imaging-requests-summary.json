@@ -9,6 +9,12 @@
     "dataSources": ["thisFacility"],
     "parameters": [
       {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
         "parameterField": "ParameterAutocompleteField",
         "label": "Department",
         "name": "department",
