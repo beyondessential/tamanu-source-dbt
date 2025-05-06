@@ -32,6 +32,7 @@ select
         when pr.currently_at_type = 'facility' then currently_at_facility.name
         when pr.currently_at_type = 'village' then currently_at_village.name
     end as currently_at,
+    pr.currently_at_type,
     c.conditions as related_conditions,
     prcs.id as clinical_status_id,
     prcs.name as clinical_status,
