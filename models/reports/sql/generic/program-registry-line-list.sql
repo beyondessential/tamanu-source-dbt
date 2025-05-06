@@ -8,7 +8,6 @@ select
     registering_facility as "{{ translate_string('registryRegisteringFacility', 'Registering facility') }}",
     facility as "{{ translate_string('registryFacility', 'Facility') }}",
     registered_by as "{{ translate_string('registryRegisteredBy', 'Registered by') }}",
-    currently_at as "{{ translate_string('registryCurrentIn', 'Currently in') }}",
     related_conditions as "{{ translate_string('registryConditions', 'Related conditions') }}",
     clinical_status as "{{ translate_string('registryClinicalStatus', 'Status') }}",
     to_char(registration_datetime, '{{ var("date_format") }}') as "{{ translate_string('registryRegisteredDate', 'Date of Registration') }}"
