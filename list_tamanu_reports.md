@@ -1,6 +1,7 @@
-# Generic
+# List of Tamanu reports
+## Generic
 
-## Hospital admissions by area summary
+### Hospital admissions by area summary
 
 **Report Description**
 
@@ -27,7 +28,7 @@ Facility, Area
 
 ---
 
-## Hospital admissions by department summary
+### Hospital admissions by department summary
 
 **Report Description**
 
@@ -51,7 +52,7 @@ Facility, Department
 
 ---
 
-## Hospital admissions by location summary
+### Hospital admissions by location summary
 
 **Report Description**
 
@@ -78,7 +79,7 @@ Facility, Location
 
 ---
 
-## Imaging requests line list
+### Imaging requests line list
 
 **Report Description**
 
@@ -96,7 +97,7 @@ Facility, Requesting clinician, Status, Imaging type
 
 ---
 
-## Imaging requests summary
+### Imaging requests summary
 
 **Report Description**
 
@@ -117,7 +118,7 @@ Facility, Department, Imaging type
 
 ---
 
-## Incomplete referrals
+### Incomplete referrals
 
 **Report Description**
 
@@ -133,7 +134,7 @@ Village, Doctor/Nurse
 
 ---
 
-## Invoicing patient payment by discharge location summary
+### Invoicing patient payment by discharge location summary
 
 **Report Description**
 
@@ -149,7 +150,7 @@ Facility, Discharging Area
 
 ---
 
-## Invoicing patient remaining balance line list
+### Invoicing patient remaining balance line list
 
 **Report Description**
 
@@ -161,7 +162,7 @@ This report generates a list of all patients that have a remaining balance. Each
 
 ---
 
-## Invoicing payment methods line list
+### Invoicing payment methods line list
 
 **Report Description**
 
@@ -177,7 +178,7 @@ Payment method
 
 ---
 
-## Invoicing summary
+### Invoicing summary
 
 **Report Description**
 
@@ -189,7 +190,7 @@ This report generates a summary of invoices. The report includes patient, insure
 
 ---
 
-## Lab tests line list
+### Lab tests line list
 
 **Report Description**
 
@@ -205,7 +206,7 @@ Status, Test category
 
 ---
 
-## Ongoing conditions line list
+### Ongoing conditions line list
 
 **Report Description**
 
@@ -217,7 +218,7 @@ Ongoing condition line list
 
 ---
 
-## Procedures line list
+### Procedures line list
 
 **Report Description**
 
@@ -233,7 +234,7 @@ Facility, Procedure clinician, Department, Area, Location
 
 ---
 
-## Recent diagnoses line list
+### Recent diagnoses line list
 
 **Report Description**
 
@@ -249,7 +250,7 @@ Facility, Village, Diagnosis, Diagnosis 2, Diagnosis 3, Diagnosis 4, Diagnosis 5
 
 ---
 
-## Registered births line list
+### Registered births line list
 
 **Report Description**
 
@@ -265,7 +266,7 @@ Facility, Village
 
 ---
 
-## Registered patients daily summary
+### Registered patients daily summary
 
 **Report Description**
 
@@ -277,7 +278,7 @@ This report generates a summary of the number of patients that have been registe
 
 ---
 
-## Registered patients line list
+### Registered patients line list
 
 **Report Description**
 
@@ -289,7 +290,7 @@ This report generates a list of all patients that have been registered, includin
 
 ---
 
-## Upcoming vaccinations line list
+### Upcoming vaccinations line list
 
 **Report Description**
 
@@ -305,7 +306,7 @@ Category, Vaccine, Vaccine status
 
 ---
 
-## User audit report
+### User audit report
 
 **Report Description**
 
@@ -334,7 +335,7 @@ Facility, Department, Area
 
 ---
 
-## Vaccine audit line list
+### Vaccine audit line list
 
 **Report Description**
 
@@ -358,7 +359,7 @@ Facility, Village, Category, Vaccine, Status
 
 ---
 
-## Vaccine line list
+### Vaccine line list
 
 **Report Description**
 
