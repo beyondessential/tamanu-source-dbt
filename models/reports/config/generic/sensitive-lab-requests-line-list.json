@@ -1,0 +1,66 @@
+{
+  "query": "replace this",
+  "name": "Sensitive lab requests line list",
+  "notes": "Sensitive lab requests line list\nThis report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  \n\nThe report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "PractitionerField",
+        "label": "Requesting clinician",
+        "name": "requestedById"
+      },
+      {
+        "parameterField": "SensitiveLabTestCategoryField",
+        "label": "Test category",
+        "name": "testCategoryId"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "statusId",
+        "options": [
+          {
+            "label": "Reception pending",
+            "value": "reception_pending"
+          },
+          {
+            "label": "Results pending",
+            "value": "results_pending"
+          },
+          {
+            "label": "To be verified",
+            "value": "to_be_verified"
+          },
+          {
+            "label": "Verified",
+            "value": "verified"
+          },
+          {
+            "label": "Published",
+            "value": "published"
+          },
+          {
+            "label": "Cancelled",
+            "value": "cancelled"
+          },
+          {
+            "label": "Deleted",
+            "value": "deleted"
+          },
+          {
+            "label": "Sample not collected",
+            "value": "sample-not-collected"
+          },
+          {
+            "label": "Entered in error",
+            "value": "entered-in-error"
+          }
+        ]
+      }
+    ]
+  }
+}

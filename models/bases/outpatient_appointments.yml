@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: appointments
-    description: "{{ doc('table__appointments') }}"
+  - name: outpatient_appointments
+    description: "{{ doc('table__appointments') }} (outpatient appointment)"
     tags:
       - clinical
     columns:
@@ -32,18 +32,12 @@ models:
           metrics:
             total_clinicians_distinct_count:
               type: count_distinct
-      - name: location_id
-        data_type: character varying(255)
-        description: "{{ doc('appointments__location_id') }}"
       - name: location_group_id
         data_type: character varying(255)
         description: "{{ doc('appointments__location_group_id') }}]"
       - name: status
         data_type: character varying(255)
         description: "{{ doc('appointments__status') }}"
-      - name: booking_type_id
-        data_type: character varying(255)
-        description: "{{ doc('appointments__booking_type_id') }}"
       - name: appointment_type_id
         data_type: character varying(255)
         description: "{{ doc('appointments__appointment_type_id') }}"

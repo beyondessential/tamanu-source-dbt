@@ -49,6 +49,9 @@ models:
       - name: currently_at
         data_type: text
         description: "{{ doc('program_registries__currently_at_type') }}"
+      - name: currently_at_type
+        data_type: text
+        description: "{{ doc('program_registries__currently_at_type') }}"
       - name: related_conditions
         data_type: text
         description: "{{ doc('generic__patient_conditions') }}"
