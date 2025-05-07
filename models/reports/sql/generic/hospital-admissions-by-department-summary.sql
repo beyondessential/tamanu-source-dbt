@@ -8,7 +8,7 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportingMonth', 'Month') }}",
+    to_char(rm.month, 'YYYY-MM') as "{{ translate_string('reportingMonth', 'Month') }}",
     adh.facility as "{{ translate_string('facilityName', 'Facility') }}",
     adh.department as "{{ translate_string('departmentName', 'Department') }}",
     count(*) filter (where adh.admission) as "{{ translate_string('hospitalAdmissionCount', 'Number of admissions') }}",
@@ -32,4 +32,3 @@ group by
     adh.department_id,
     adh.department
 order by rm.month, adh.facility, adh.department
-

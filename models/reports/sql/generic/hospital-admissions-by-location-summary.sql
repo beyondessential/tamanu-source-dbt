@@ -49,7 +49,7 @@ location_summary as (
 )
 
 select
-    to_char(ls.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportMonth', 'Month') }}",
+    to_char(ls.month, 'YYYY-MM') as "{{ translate_string('reportMonth', 'Month') }}",
     ls.facility as "{{ translate_string('facilityName', 'Facility') }}",
     ls.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     ls.location as "{{ translate_string('locationName', 'Location') }}",
@@ -61,18 +61,19 @@ select
     coalesce(ls.avg_length_of_stay, 0) as "{{ translate_string('hospitalAverageLengthOfStay', 'Average length of stay') }}",
     coalesce(ls.occupancy, 0) as "{{ translate_string('hospitalPatientDayCount', 'Number of patient days') }}",
     case
-        when ls.occupancy notnull and ls.capacity notnull then
-            concat(
-                round(
-                    ls.occupancy / (
-                        ls.capacity * case
-                            when ls.month > (current_date - '1 month'::interval)
-                                then current_date - ls.month
-                            else (ls.month + '1 month'::interval)::date - ls.month
-                        end
-                    ) * 100, 1
-                )::text, '%'
-            )
+        when ls.occupancy notnull and ls.capacity notnull
+            then
+                concat(
+                    round(
+                        ls.occupancy / (
+                            ls.capacity * case
+                                when ls.month > (current_date - '1 month'::interval)
+                                    then current_date - ls.month
+                                else (ls.month + '1 month'::interval)::date - ls.month
+                            end
+                        ) * 100, 1
+                    )::text, '%'
+                )
         else 'N/A'
     end as "{{ translate_string('hospitalBedOccupancyPercent', 'Bed occupancy (%)') }}"
 from location_summary ls
@@ -82,4 +83,3 @@ where
         else ls.location_id::text = {{ parameter('locationId') }}
     end
 order by ls.month, ls.facility, ls.location_group, ls.location
-

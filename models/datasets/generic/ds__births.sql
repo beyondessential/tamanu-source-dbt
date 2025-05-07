@@ -23,7 +23,7 @@ select
             p_father.id is not null
             then concat(p_father.first_name, ' ', p_father.last_name, ' (', p_father.display_id, ')')
     end as father,
-    to_char(pbd.birth_time, 'HH12:MI AM') as birth_time,
+    pbd.birth_time,
     pbd.gestational_age_estimate,
     case when pbd.registered_birth_place = 'health_facility' then 'Health facility'
         when pbd.registered_birth_place = 'home' then 'Home'
