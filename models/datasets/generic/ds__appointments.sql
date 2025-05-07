@@ -42,7 +42,7 @@ select
     a.frequency,
     a.nth_weekday,
     a.days_of_week
-from {{ ref('appointments') }} a
+from {{ ref('outpatient_appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
 left join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
