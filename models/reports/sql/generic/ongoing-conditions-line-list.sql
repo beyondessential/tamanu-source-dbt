@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
+    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",

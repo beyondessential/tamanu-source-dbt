@@ -1,5 +1,5 @@
 select
-    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('diagnosisDateTime', 'Date & time') }}",
+    diagnosis_datetime as "{{ translate_string('diagnosisDateTime', 'Date & time') }}",
     diagnosis as "{{ translate_string('diagnosisName', 'Diagnosis') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
@@ -45,10 +45,10 @@ where
             coalesce({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}) is null
             then true
         else diagnosis_id in (
-            {{ parameter('diagnosisId') }},
-            {{ parameter('diagnosis2Id') }},
-            {{ parameter('diagnosis3Id') }},
-            {{ parameter('diagnosis4Id') }},
-            {{ parameter('diagnosis5Id') }}
-        )
+                {{ parameter('diagnosisId') }},
+                {{ parameter('diagnosis2Id') }},
+                {{ parameter('diagnosis3Id') }},
+                {{ parameter('diagnosis4Id') }},
+                {{ parameter('diagnosis5Id') }}
+            )
     end

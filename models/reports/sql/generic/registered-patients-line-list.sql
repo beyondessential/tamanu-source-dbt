@@ -1,5 +1,5 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('patientRegistrationDate', 'Registration date') }}",
+    registration_date as "{{ translate_string('patientRegistrationDate', 'Registration date') }}",
     registered_by as "{{ translate_string('patientRegisteredBy', 'Registered by') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     middle_name as "{{ translate_string('patientMiddleName', 'Middle name') }}",
@@ -8,7 +8,7 @@ select
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     sex as "{{ translate_string('sex', 'patientSex') }}",
     village as "{{ translate_string('villageId', 'patientVillage') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
+    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
     birth_certificate as "{{ translate_string('patientBirthCertificate', 'Birth certificate') }}",
     driving_license as "{{ translate_string('patientDrivingLicense', 'Driving license') }}",
     passport as "{{ translate_string('patientPassport', 'Passport') }}",

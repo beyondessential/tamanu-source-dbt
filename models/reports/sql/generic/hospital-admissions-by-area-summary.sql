@@ -53,7 +53,7 @@ area_summary as (
 )
 
 select
-    to_char(lg.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportMonth', 'Month') }}",
+    to_char(lg.month, 'Mon-YY') as "{{ translate_string('reportMonth', 'Month') }}",
     lg.facility as "{{ translate_string('facilityName', 'Facility') }}",
     lg.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     coalesce(lg.admissions, 0) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
@@ -64,18 +64,19 @@ select
     coalesce(lg.avg_length_of_stay, 0) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}",
     coalesce(lg.occupancy, 0) as "{{ translate_string('patientDayCount', 'Number of patient days') }}",
     case
-        when lg.occupancy notnull and lg.capacity notnull then
-            concat(
-                round(
-                    lg.occupancy / (
-                        lg.capacity * case
-                            when lg.month > (current_date - '1 month'::interval)
-                                then (current_date - lg.month) + 1
-                            else (lg.month + '1 month'::interval)::date - lg.month
-                        end
-                    ) * 100, 1
-                )::text, '%'
-            )
+        when lg.occupancy notnull and lg.capacity notnull
+            then
+                concat(
+                    round(
+                        lg.occupancy / (
+                            lg.capacity * case
+                                when lg.month > (current_date - '1 month'::interval)
+                                    then (current_date - lg.month) + 1
+                                else (lg.month + '1 month'::interval)::date - lg.month
+                            end
+                        ) * 100, 1
+                    )::text, '%'
+                )
         else 'N/A'
     end as "{{ translate_string('bedOccupancyPercent', 'Bed occupancy (%)') }}"
 from area_summary lg
