@@ -49,7 +49,7 @@ location_summary as (
 )
 
 select
-    to_char(ls.month, 'Mon-YY') as "{{ translate_string('reportMonth', 'Month') }}",
+    to_char(ls.month, 'YYYY-MM') as "{{ translate_string('reportMonth', 'Month') }}",
     ls.facility as "{{ translate_string('facilityName', 'Facility') }}",
     ls.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     ls.location as "{{ translate_string('locationName', 'Location') }}",

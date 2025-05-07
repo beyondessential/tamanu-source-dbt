@@ -53,7 +53,7 @@ area_summary as (
 )
 
 select
-    to_char(lg.month, 'Mon-YY') as "{{ translate_string('reportMonth', 'Month') }}",
+    to_char(lg.month, 'YYYY-MM') as "{{ translate_string('reportMonth', 'Month') }}",
     lg.facility as "{{ translate_string('facilityName', 'Facility') }}",
     lg.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     coalesce(lg.admissions, 0) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
