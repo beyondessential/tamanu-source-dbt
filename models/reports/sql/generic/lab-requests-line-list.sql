@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
+    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
@@ -12,19 +12,17 @@ select
     laboratory as "{{ translate_string('labLaboratory', 'Laboratory') }}",
     request_id as "{{ translate_string('labRequestId', 'Request ID') }}",
     status as "{{ translate_string('labRequestStatus', 'Status') }}",
-    to_char(requested_datetime, '{{ var("date_format") }}') as "{{ translate_string('labRequestDateTime', 'Request date and time') }}",
+    requested_datetime as "{{ translate_string('labRequestDateTime', 'Request date and time') }}",
     clinician as "{{ translate_string('labRequestClinician', 'Requesting clinician') }}",
     requesting_department as "{{ translate_string('labRequestDepartment', 'Requesting department') }}",
     priority as "{{ translate_string('labRequestPriority', 'Priority') }}",
     category as "{{ translate_string('labTestCategory', 'Test category') }}",
     non_sensitive_tests as "{{ translate_string('labTestRequested', 'Test requested') }}",
-    to_char(
-        collected_datetime, '{{ var("date_format") }}'
-    ) as "{{ translate_string('labRequestSampleCollectionDateTime', 'Sample collection date and time') }}",
+    collected_datetime as "{{ translate_string('labRequestSampleCollectionDateTime', 'Sample collection date and time') }}",
     collected_by as "{{ translate_string('labRequestSampleCollectedBy', 'Sample collected by') }}",
     specimen_type as "{{ translate_string('labRequestSpecimenType', 'Specimen type') }}",
     site as "{{ translate_string('labRequestSampleSite', 'Site') }}",
-    to_char(non_sensitive_completed_datetime, '{{ var("date_format") }}') as "{{ translate_string('labRequestCompletedDateTime', 'Completed date and time') }}",
+    non_sensitive_completed_datetime as "{{ translate_string('labRequestCompletedDateTime', 'Completed date and time') }}",
     reason_for_cancellation as "{{ translate_string('labRequestCancellationReason', 'Reason for cancellation') }}"
 from {{ ref('ds__lab_requests') }}
 where non_sensitive_tests is not null

@@ -1,10 +1,10 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('birthRegisteredDateTime', 'Registration date') }}",
+    registration_date as "{{ translate_string('birthRegisteredDateTime', 'Registration date') }}",
     registered_by as "{{ translate_string('birthRegisteredBy', 'Registered by') }}",
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
+    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     ethnicity as "{{ translate_string('patientEthnicity', 'Ethnicity') }}",
     nationality as "{{ translate_string('patientNationality', 'Nationality') }}",
