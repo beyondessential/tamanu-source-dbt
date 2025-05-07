@@ -8,11 +8,10 @@ select
     department as "{{ translate_string('departmentName', 'Department') }}",
     location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     location as "{{ translate_string('locationName', 'Location') }}",
-    encounter_start_datetime::date as "{{ translate_string('encounterStartDate', 'Encounter start date') }}",
-    encounter_end_datetime::date as "{{ translate_string('encounterEndDate', 'Encounter end date') }}",
-    to_char(encounter_start_datetime, 'HH24:MI') as "{{ translate_string('encounterStartTime', 'Encounter start time') }}",
-    to_char(first_note_datetime, 'HH24:MI') as "{{ translate_string('noteStartTime', 'Notes start time') }}",
-    to_char(last_note_datetime, 'HH24:MI') as "{{ translate_string('noteEndTime', 'Notes end time') }}",
+    encounter_start_datetime as "{{ translate_string('encounterStartDate', 'Encounter start date and time') }}",
+    encounter_end_datetime as "{{ translate_string('encounterEndDate', 'Encounter end date and time') }}",
+    first_note_datetime as "{{ translate_string('noteStartTime', 'Notes start date and time') }}",
+    last_note_datetime as "{{ translate_string('noteEndTime', 'Notes end date and time') }}",
     is_discharged as "{{ translate_string('encounterIsDischarged', 'Discharges (has the patient been discharged)') }}",
     non_discharge_by_clinicians as "{{ translate_string('encounterNonDischargeClinician', 'Non-discharge by clinicians') }}"
 from {{ ref('ds__user_audit') }}
