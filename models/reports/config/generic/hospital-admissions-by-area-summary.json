@@ -1,0 +1,31 @@
+{
+  "query": "query here",
+  "name": "Hospital admissions by area summary",
+  "notes": "Hospital admissions by area summary\nThis report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of Janurary (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). \n\nDetails on how each indicator is calculated are provided below:\n- Number of admissions = Number of hospital admissions for specified month by area. Where area is the last area the patient was located prior to discharge/at reporting. \n- Number of discharges = Number of patients discharged from a hospital admission for specified month by area. Where area is the last area the patient was located prior to discharge. \n- Number of deaths = Number of deceased patients that had an active hospital admission for specified month by area when their death was recorded. Where area is the last area the patient was located prior to death. \n- Number of transfers into area = Number of patients assigned to area during a hospital admission for the specified month. \n- Number of transfers out of area = Number of patients moved from area to another area during a hospital admission for the specified month.\n- Average length of stay: LOS for single patient = Date of discharge - Date of admission. If these are the same dates, then LOS = 1. Therefore, ALOS = (Sum of LOS for patients discharged in specified month by area)/(Number of patients discharged in specified month by area). ALOS is reported to the accuracy of tenths, i.e. 0.1. Source - https://gateway.euro.who.int/en/indicators/hfa_540-6100-average-length-of-stay-all-hospitals/#:~:text=Total%20number%20of%20occupied%20hospital,is%20set%20to%20one%20day\n- Number of patient days = Total number of days patients are assigned to the specified area. \n- Number of beds = Number of locations within an area (as per deployment configuration). This excludes locations that have a status of historical or no maximum occupcancy (i.e. max occupancy does not equal 1). \n- Bed occupancy (%) = (Number of patient days in specified month by area / (Number of locations in area * Days in month)) * 100. Only locations with a max occupancy of 1 are included in number of locations in area count. If report is generated part way through a month, e.g. report generated on the 15th of March that includes March statistics, Days in month = 15. Note that it is possible for bed occupancy to be greater than 100% if a patient is admitted and discharge on the same day and another patient is admitted to the same bed on that same day. Bed occupancy (%) is reported to the accuracy of tenths, i.e. 0.1. Source - https://gateway.euro.who.int/en/indicators/hfa_542-6210-bed-occupancy-rate-acute-care-hospitals-only/.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dateRangeLabel": "Enter dates or leave blank for last full month and current month",
+    "dataSources": ["thisFacility"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      }
+    ]
+  }
+}

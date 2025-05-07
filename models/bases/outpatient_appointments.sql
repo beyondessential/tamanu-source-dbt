@@ -6,9 +6,7 @@ select
     a.clinician_id,
     a.encounter_id,
     a.schedule_id,
-    a.location_id,
-    coalesce(a.location_group_id, l.location_group_id) as location_group_id,
-    a.booking_type_id,
+    a.location_group_id,
     a.appointment_type_id,
     a.is_high_priority,
     a.status,
@@ -22,7 +20,6 @@ select
     s.generated_until_date,
     s.cancelled_at_date
 from {{ source("tamanu", "appointments") }} a
-left join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
-left join {{ source("tamanu", "locations") }} l on l.id = a.location_id
+join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'

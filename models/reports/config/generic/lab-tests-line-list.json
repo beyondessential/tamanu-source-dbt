@@ -1,0 +1,61 @@
+{
+  "query": "replace this",
+  "name": "Lab tests line list",
+  "notes": "Lab tests line list\nThis report generates a list of all patients that have had a lab test created. Patients are listed in chronological order based on the lab request date and time.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "statusId",
+        "options": [
+          {
+            "label": "Reception pending",
+            "value": "reception_pending"
+          },
+          {
+            "label": "Results pending",
+            "value": "results_pending"
+          },
+          {
+            "label": "To be verified",
+            "value": "to_be_verified"
+          },
+          {
+            "label": "Verified",
+            "value": "verified"
+          },
+          {
+            "label": "Published",
+            "value": "published"
+          },
+          {
+            "label": "Cancelled",
+            "value": "cancelled"
+          },
+          {
+            "label": "Deleted",
+            "value": "deleted"
+          },
+          {
+            "label": "Sample not collected",
+            "value": "sample-not-collected"
+          },
+          {
+            "label": "Entered in error",
+            "value": "entered-in-error"
+          }
+        ]
+      },
+      {
+        "parameterField": "LabTestCategoryField",
+        "label": "Test category",
+        "name": "testCategoryId"
+      }
+    ]
+  }
+}

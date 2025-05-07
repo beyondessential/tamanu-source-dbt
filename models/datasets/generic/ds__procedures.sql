@@ -41,7 +41,7 @@ select
     procedure_location.name as procedure_location,
     procedure_type.id as procedure_type_id,
     procedure_type.name as procedure_type,
-    pc.start_time as procdure_start_time,
+    pc.start_time as procedure_start_time,
     pc.end_time as procedure_end_time,
     case
         when pc.end_time is not null and pc.start_time is not null then
@@ -71,7 +71,7 @@ select
     anaesthetist.id as procedure_anaesthetist_id,
     anaesthetist.display_name as procedure_anaesthetist,
     assistant.id as procedure_assistant_id,
-    assistant.display_name as procdeure_assistant,
+    assistant.display_name as procedure_assistant,
     case
         when pc.is_completed then 'Y' else 'N'
     end as is_completed
