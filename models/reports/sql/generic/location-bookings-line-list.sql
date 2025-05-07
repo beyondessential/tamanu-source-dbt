@@ -7,7 +7,7 @@ select
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
     billing_type as "{{ translate_string('patientBillingType', 'Patient type') }}",
-    to_char(booking_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('bookingStartDateTime', 'Booking date and time') }}",
+    to_char(booking_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('bookingStartDateTime', 'Booking start date and time') }}",
     to_char(booking_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('bookingEndDateTime', 'Booking end date and time') }}",
     case
         when extract(day from age(booking_end_datetime, booking_start_datetime)) >= 1
