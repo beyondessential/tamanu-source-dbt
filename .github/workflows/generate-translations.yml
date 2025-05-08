@@ -1,0 +1,54 @@
+name: Generate Translations
+
+on:
+  pull_request:
+    branches:
+      - dev
+  push:
+    branches:
+      - dev
+    tags:
+      - v*
+
+jobs:
+  generate-translations:
+    name: Generate and deploy translations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: arn:aws:iam::491618206332:role/gha-dbt-docs
+          role-session-name: GithubActionsTranslations
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl boto3
+
+      - name: Generate translations
+        run: python scripts/generate_translation_file.py
+
+      - name: Upload to latest
+        if: github.event_name == 'push' && github.ref_type == 'branch'
+        run: |
+          aws s3 cp compiled/translations/translations_*.xlsx s3://bes-data-docs/translations/latest/ --acl public-read
+
+      - name: Upload to version
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        run: |
+          aws s3 cp compiled/translations/translations_*.xlsx s3://bes-data-docs/translations/${{ github.ref_name }}/ --acl public-read 

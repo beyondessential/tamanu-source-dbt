@@ -2,6 +2,8 @@ import json
 import os
 import shutil
 
+import boto3
+
 
 def ensure_file_exists(file_path):
     """
@@ -126,3 +128,21 @@ def remove_directory(dir_path):
     except Exception as e:
         print(f"Error removing directory {dir_path}: {e}")
         exit(1)
+
+
+def upload_to_s3(file_path: Path, bucket: str, key: str) -> None:
+    """Upload a file to S3 bucket."""
+    try:
+        s3_client = boto3.client("s3")
+        s3_client.upload_file(
+            str(file_path),
+            bucket,
+            key,
+            ExtraArgs={
+                "ACL": "public-read",
+                "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+        )
+        print(f"Successfully uploaded to s3://{bucket}/{key}")
+    except Exception as e:
+        print(f"Error uploading to S3: {e}")
