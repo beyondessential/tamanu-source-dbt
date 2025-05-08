@@ -1,5 +1,8 @@
 import os
 import re
+from pathlib import Path
+
+import yaml
 
 from .file_utils import read_file, write_file
 
@@ -81,3 +84,32 @@ def get_deployment_version():
     except Exception as e:
         print(f"Error reading dbt_project.yml: {e}")
         exit(1)
+
+
+def get_dbt_project_vars(param_name: str = None) -> dict | str:
+    """
+    Read and parse the dbt_project.yml file to get variable values.
+
+    Args:
+        param_name (str, optional): The name of the specific parameter to retrieve.
+            If None, returns all variables.
+
+    Returns:
+        dict | str: If param_name is None, returns a dictionary containing all variables.
+            If param_name is provided, returns the value of that specific parameter.
+            Returns None if the parameter is not found.
+    """
+    try:
+        config_path = os.path.join(BASE_DIR, "dbt_project.yml")
+        with open(config_path, "r") as f:
+            contents = yaml.safe_load(f)
+        vars = contents.get("vars", {})
+
+        if param_name is None:
+            return vars
+
+        return vars.get(param_name)
+
+    except Exception as e:
+        print(f"Error reading dbt_project.yml: {e}")
+        return None
