@@ -17,6 +17,8 @@ jobs:
     permissions:
       contents: read
       id-token: write 
+    env:
+      BUCKET: s3://bes-data-docs
 
     steps:
       - name: Checkout repository
