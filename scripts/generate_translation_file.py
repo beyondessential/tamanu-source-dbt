@@ -1,9 +1,10 @@
+import os
 import re
 from pathlib import Path
 
 import pandas as pd
 from utils.dbt_utils import get_dbt_project_vars, get_deployment_version
-from utils.file_utils import ensure_directory_exists, read_file
+from utils.file_utils import ensure_directory_exists, read_file, upload_to_s3
 
 BASE_DIR = Path(__file__).parent.parent
 SQL_DIR = BASE_DIR / "models" / "reports" / "sql"
@@ -42,11 +43,17 @@ def main():
         ).sort_values("stringId")
 
         ensure_directory_exists(TRANSLATION_DIR)
-        output_file = (
-            TRANSLATION_DIR / f"report_translations_v{get_deployment_version()}.csv"
-        )
+        version = get_deployment_version()
+        output_file = TRANSLATION_DIR / f"report_translations_v{version}.csv"
         df.to_csv(output_file, index=False)
         print(f"Translations saved to {output_file}")
+
+        if os.getenv("GITHUB_ACTIONS"):
+            bucket = os.getenv("BUCKET", "").replace("s3://", "")
+            if not bucket:
+                raise ValueError("BUCKET environment variable is not set")
+            key = f"{version}/report_translations_v{version}.csv"
+            upload_to_s3(output_file, bucket, key)
 
     except Exception as e:
         print(f"Error: {e}")
