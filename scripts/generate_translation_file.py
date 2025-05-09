@@ -42,8 +42,10 @@ def main():
         ).sort_values("stringId")
 
         ensure_directory_exists(TRANSLATION_DIR)
-        output_file = TRANSLATION_DIR / f"translations_{get_deployment_version()}.xlsx"
-        df.to_excel(output_file, index=False)
+        output_file = (
+            TRANSLATION_DIR / f"report_translations_v{get_deployment_version()}.csv"
+        )
+        df.to_csv(output_file, index=False)
         print(f"Translations saved to {output_file}")
 
     except Exception as e:
