@@ -17,7 +17,7 @@ select
     disease as "{{ translate_string('vaccineDisease', 'If category of Other, Disease') }}",
     vaccine_status as "{{ translate_string('vaccinationStatus', 'Vaccine status') }}",
     vaccine_schedule as "{{ translate_string('vaccineSchedule', 'Schedule') }}",
-    batch as "{{ translate_string('vaccineBatch', 'Batch') }}",
+    batch as "{{ translate_string('vaccinationBatch', 'Batch') }}",
     given_by as "{{ translate_string('vaccinationGivenBy', 'Given by') }}",
     recorded_by as "{{ translate_string('vaccinationRecordedBy', 'Recorded by') }}",
     circumstances as "{{ translate_string('vaccinationGivenElseWhereCircumstances', 'If given elsewhere, Circumstances') }}",
