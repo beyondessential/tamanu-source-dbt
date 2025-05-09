@@ -44,3 +44,13 @@ jobs:
 
       - name: Generate translations
         run: python scripts/generate_translation_file.py
+
+      - name: Upload to latest
+        if: github.event_name == 'push' && github.ref_type == 'branch'
+        run: |
+          aws s3 cp compiled/translations/translations_*.xlsx s3://bes-data-docs/translations/latest/ --acl public-read
+
+      - name: Upload to version
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        run: |
+          aws s3 cp compiled/translations/translations_*.xlsx s3://bes-data-docs/translations/${{ github.ref_name }}/ --acl public-read 
