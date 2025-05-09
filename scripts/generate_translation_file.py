@@ -48,7 +48,9 @@ def main():
         print(f"Translations saved to {output_file}")
 
         if os.getenv("GITHUB_ACTIONS"):
-            bucket = "bes-data-docs"
+            bucket = os.getenv("BUCKET", "").replace("s3://", "")
+            if not bucket:
+                raise ValueError("BUCKET environment variable is not set")
             key = f"translations/latest/translations_{get_deployment_version()}.xlsx"
             upload_to_s3(output_file, bucket, key)
 
