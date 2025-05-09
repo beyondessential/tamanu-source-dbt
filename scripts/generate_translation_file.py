@@ -43,7 +43,8 @@ def main():
         ).sort_values("stringId")
 
         ensure_directory_exists(TRANSLATION_DIR)
-        output_file = TRANSLATION_DIR / f"translations_{get_deployment_version()}.xlsx"
+        version = get_deployment_version()
+        output_file = TRANSLATION_DIR / f"translations_{version}.xlsx"
         df.to_excel(output_file, index=False)
         print(f"Translations saved to {output_file}")
 
@@ -51,7 +52,7 @@ def main():
             bucket = os.getenv("BUCKET", "").replace("s3://", "")
             if not bucket:
                 raise ValueError("BUCKET environment variable is not set")
-            key = f"translations/latest/translations_{get_deployment_version()}.xlsx"
+            key = f"{version}/translations_{version}.xlsx"
             upload_to_s3(output_file, bucket, key)
 
     except Exception as e:
