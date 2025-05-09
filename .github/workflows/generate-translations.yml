@@ -28,8 +28,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ap-southeast-2
-          role-to-assume: arn:aws:iam::491618206332:role/gha-dbt-docs
-          role-session-name: GithubActionsDataLakeDocs
+          role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
+          role-session-name: GithubActionsTamanuSourceDBT
 
       - name: Set up Python
         uses: actions/setup-python@v5
