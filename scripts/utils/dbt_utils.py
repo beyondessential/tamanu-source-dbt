@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 
 import yaml
 
@@ -100,14 +101,14 @@ def get_dbt_project_vars(param_name: str = None) -> dict | str:
     """
     try:
         config_path = os.path.join(BASE_DIR, "dbt_project.yml")
-        contents = read_file(config_path)
-        project_config = yaml.safe_load(contents)
-        vars_config = project_config.get("vars", {})
+        with open(config_path, "r") as f:
+            contents = yaml.safe_load(f)
+        vars = contents.get("vars", {})
 
         if param_name is None:
-            return vars_config
+            return vars
 
-        return vars_config.get(param_name)
+        return vars.get(param_name)
 
     except Exception as e:
         print(f"Error reading dbt_project.yml: {e}")

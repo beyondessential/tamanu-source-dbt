@@ -6,7 +6,7 @@ select
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
-    billing_type as "{{ translate_string('patientBillingType', 'Patient type') }}",
+    billing_type as "{{ translate_string('patientBillingType', 'Patient billing type') }}",
     appointment_start_datetime as "{{ translate_string('appointmentDateTime', 'Appointment date and time') }}",
     appointment_type as "{{ translate_string('appointmentType', 'Appointment type') }}",
     appointment_status as "{{ translate_string('appointmentStatus', 'Appointment status') }}",
