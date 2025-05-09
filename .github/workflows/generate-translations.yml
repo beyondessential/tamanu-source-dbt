@@ -31,6 +31,20 @@ jobs:
           role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
           role-session-name: GithubActionsTamanuSourceDBT
 
+      - name: Configure boto3
+        run: |
+          mkdir -p ~/.aws
+          echo "[default]" > ~/.aws/config
+          echo "s3 = {" >> ~/.aws/config
+          echo "    use_accelerate_endpoint = false" >> ~/.aws/config
+          echo "    addressing_style = path" >> ~/.aws/config
+          echo "    payload_signing_enabled = true" >> ~/.aws/config
+          echo "    use_dualstack_endpoint = false" >> ~/.aws/config
+          echo "    use_ssl = true" >> ~/.aws/config
+          echo "    use_verify_ssl = true" >> ~/.aws/config
+          echo "    use_acl = false" >> ~/.aws/config
+          echo "}" >> ~/.aws/config
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
