@@ -140,7 +140,6 @@ def upload_to_s3(file_path: Path, bucket: str, key: str) -> None:
             bucket,
             key,
             ExtraArgs={
-                "ACL": "public-read",
                 "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             },
         )
