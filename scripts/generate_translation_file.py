@@ -44,15 +44,15 @@ def main():
 
         ensure_directory_exists(TRANSLATION_DIR)
         version = get_deployment_version()
-        output_file = TRANSLATION_DIR / f"translations_{version}.xlsx"
-        df.to_excel(output_file, index=False)
+        output_file = TRANSLATION_DIR / f"report_translations_v{version}.csv"
+        df.to_csv(output_file, index=False)
         print(f"Translations saved to {output_file}")
 
         if os.getenv("GITHUB_ACTIONS"):
             bucket = os.getenv("BUCKET", "").replace("s3://", "")
             if not bucket:
                 raise ValueError("BUCKET environment variable is not set")
-            key = f"{version}/translations_{version}.xlsx"
+            key = f"{version}/report_translations_v{version}.csv"
             upload_to_s3(output_file, bucket, key)
 
     except Exception as e:

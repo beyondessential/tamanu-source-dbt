@@ -11,8 +11,8 @@ on:
       - v*
 
 jobs:
-  generate-translations:
-    name: Generate and deploy translations
+  setup:
+    name: Setup environment
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,5 +42,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas openpyxl boto3 PyYAML
 
+  generate:
+    name: Generate translations
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
       - name: Generate translations
         run: python scripts/generate_translation_file.py
+
+  list-reports:
+    name: List Tamanu Reports
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: List Tamanu Reports
+        run: python scripts/list_tamanu_reports.py
+
