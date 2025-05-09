@@ -11,8 +11,8 @@ select
     i.total_insurer_amount as "{{ translate_string('invoiceInsurerAmount','Total insurer amount') }}",
     i.total_patient_discount as "{{ translate_string('invoicePatientDiscount','Total patient discount') }}",
     i.total_patient_amount as "{{ translate_string('invoicePatientAmount','Total patient amount') }}",
-    i.is_deceased as "{{ translate_string('patientIsDeceased','Deceased/Active') }}",
-    i.date_of_death as "{{ translate_string('patientDateOfDeath','Date deceased') }}"
+    i.is_deceased as "{{ translate_string('patientDeceasedOrActive','Deceased/Active') }}",
+    i.date_of_death as "{{ translate_string('patientDateOfDeath','Date of death') }}"
 from {{ ref("ds__invoicing") }} i
 where i.status = 'finalised'
     and case
