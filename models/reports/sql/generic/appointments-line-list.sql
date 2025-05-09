@@ -2,12 +2,12 @@ select
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
+    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
-    billing_type as "{{ translate_string('patientBillingType', 'Patient type') }}",
-    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('appointmentDateTime', 'Appointment date and time') }}",
+    billing_type as "{{ translate_string('patientBillingType', 'Patient billing type') }}",
+    appointment_start_datetime as "{{ translate_string('appointmentDateTime', 'Appointment date and time') }}",
     appointment_type as "{{ translate_string('appointmentType', 'Appointment type') }}",
     appointment_status as "{{ translate_string('appointmentStatus', 'Appointment status') }}",
     clinician as "{{ translate_string('appointmentClinician', 'Clinician') }}",
@@ -17,7 +17,7 @@ select
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
     end as "{{ translate_string('appointmentIsRepeating', 'Repeating appointment') }}",
-    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_string('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
+    until_date as "{{ translate_string('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
 from {{ ref('ds__appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

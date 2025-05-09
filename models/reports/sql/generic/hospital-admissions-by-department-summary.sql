@@ -8,7 +8,7 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportingMonth', 'Month') }}",
+    to_char(rm.month, 'YYYY-MM') as "{{ translate_string('reportingMonth', 'Month') }}",
     adh.facility as "{{ translate_string('facilityName', 'Facility') }}",
     adh.department as "{{ translate_string('departmentName', 'Department') }}",
     count(*) filter (where adh.admission) as "{{ translate_string('hospitalAdmissionCount', 'Number of admissions') }}",
@@ -16,7 +16,7 @@ select
     count(*) filter (where adh.death) as "{{ translate_string('hospitalDeathCount', 'Number of deaths') }}",
     count(*) filter (where adh.transfer_in) as "{{ translate_string('hospitalTransfersIntoDepartmentCount', 'Number of transfers into department') }}",
     count(*) filter (where adh.transfer_out) as "{{ translate_string('hospitalTransfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
-    round(avg(adh.length_of_stay), 1) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}"
+    round(avg(adh.length_of_stay), 1) as "{{ translate_string('hospitalAverageLengthOfStay', 'Average length of stay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_history_department') }} adh
     on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
@@ -32,4 +32,3 @@ group by
     adh.department_id,
     adh.department
 order by rm.month, adh.facility, adh.department
-

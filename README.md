@@ -2,17 +2,9 @@
 
 A dbt project of Tamanu's standard models. This includes:
 
-- raw (or source) schema (incomplete documentation and validation test)
-- reporting schema (incomplete documentation)
+- raw (or source) schema
+- reporting schema
 - analytics schema (upcoming)
-
-## Generating a .yml documentation file for tables
-
-The codegen package has a macro `generate_source` that will create a skeleton .yml file.
-
-Run `dbt run-operation generate_source --args '{"schema_name": "public", "table_names": ["table_name1", "table_name2"], "generate_columns": True, "include_descriptions": True, include_data_types: True}'`
-
-Replace "table_name1" and "table_name2" with the names of the new tables.
 
 ## SQL linting
 
@@ -41,6 +33,36 @@ This command generates views, reports, and an import script for deployment in th
 - Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script_<target_version>.sql.
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
+
+## Script to list Tamanu reports
+
+This script generates a list of all reports in the repository grouped by deployment, and outputs the result in a Markdown file.
+
+### Usage
+The script accepts two optional command-line arguments:
+
+base_path (optional): The base path to start extracting the folder structure. Defaults to ./models/reports/config.
+output_file (optional): The path to the output Markdown file. Defaults to ./output/list_tamanu_reports.md.
+
+### Command-Line Arguments
+base_path: The directory where the script will look for JSON report files. If not provided, it defaults to ./reports/config.
+output_file: The file path where the generated Markdown report will be saved. If not provided, it defaults to ./output/list_tamanu_reports.md.
+
+### Example
+To generate a report list using the default paths:
+
+```
+python list_tamanu_reports.py
+```
+
+To specify a custom base path and output file:
+
+```
+python list_tamanu_reports.py ./custom/reports ./custom/output/reports_list.md
+```
+
+The output will be a Markdown file containing a structured list of reports, grouped by deployment, with details such as report description, filters, and default date range.
+
 
 ## Versioning
 

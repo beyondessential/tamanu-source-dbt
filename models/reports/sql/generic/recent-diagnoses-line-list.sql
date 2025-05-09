@@ -1,12 +1,12 @@
 select
-    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('diagnosisDateTime', 'Date & time') }}",
-    diagnosis as "{{ translate_string('diagnosisName', 'Diagnosis') }}",
+    diagnosis_datetime as "{{ translate_string('diagnosisDateTime', 'Date & time') }}",
+    diagnosis as "{{ translate_string('diagnosisName', 'Diagnoses') }}",
     first_name as "{{ translate_string('patientFirstName', 'First name') }}",
     last_name as "{{ translate_string('patientLastName', 'Last name') }}",
     display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
-    contact_number as "{{ translate_string('patientPrimaryContactNumber', 'Contact number') }}",
+    contact_number as "{{ translate_string('patientPrimaryContactNumber', 'Primary contact number') }}",
     village as "{{ translate_string('patientVillage', 'Village') }}",
     clinician as "{{ translate_string('encounterClinician', 'Clinician') }}",
     department as "{{ translate_string('departmentName', 'Department') }}",
@@ -45,10 +45,10 @@ where
             coalesce({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}) is null
             then true
         else diagnosis_id in (
-            {{ parameter('diagnosisId') }},
-            {{ parameter('diagnosis2Id') }},
-            {{ parameter('diagnosis3Id') }},
-            {{ parameter('diagnosis4Id') }},
-            {{ parameter('diagnosis5Id') }}
-        )
+                {{ parameter('diagnosisId') }},
+                {{ parameter('diagnosis2Id') }},
+                {{ parameter('diagnosis3Id') }},
+                {{ parameter('diagnosis4Id') }},
+                {{ parameter('diagnosis5Id') }}
+            )
     end
