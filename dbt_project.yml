@@ -6,6 +6,7 @@ profile: tamanu_source_dbt
 
 vars:
   language: en
+  translation_prefix: report.reporting
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 
 model-paths: ["models"]
