@@ -7,10 +7,10 @@ select
     village as "{{ translate_string('patientVillage', 'Village') }}",
     registering_facility as "{{ translate_string('registryRegisteringFacility', 'Registering facility') }}",
     registered_by as "{{ translate_string('registryRegisteredBy', 'Registered by') }}",
-    currently_at as "{{ translate_string('registryCurrentAt', 'Currently at') }}",
+    currently_at as "{{ translate_string('registryCurrentlyAt', 'Currently at') }}",
     related_conditions as "{{ translate_string('registryConditions', 'Related conditions') }}",
     clinical_status as "{{ translate_string('registryClinicalStatus', 'Status') }}",
-    registration_datetime as "{{ translate_string('registryRegisteredDate', 'Date of Registration') }}"
+    registration_datetime as "{{ translate_string('registryRegisteredDate', 'Date of registration') }}"
 from {{ ref('ds__patient_program_registrations') }}
 where registration_status = 'active'
     and is_most_recent

@@ -3,10 +3,10 @@ select
     i.invoice_number as "{{ translate_string('invoiceNumber','Invoice number') }}",
     i.patient_name as "{{ translate_string('patientName','Patient name') }}",
     i.discharge_area as "{{ translate_string('dischargeArea','Area (at time of discharge)') }}",
-    i.total_invoice_amount as "{{ translate_string('totalInvoiceAmount','Total invoice amount') }}",
-    i.total_insurer_amount as "{{ translate_string('totalInsurerAmount','Total insurer amount') }}",
-    i.total_patient_discount as "{{ translate_string('totalPatientDiscount','Total patient discount') }}",
-    i.total_patient_amount as "{{ translate_string('totalPatientAmount','Total patient amount') }}"
+    i.total_invoice_amount as "{{ translate_string('invoiceTotalAmount','Total invoice amount') }}",
+    i.total_insurer_amount as "{{ translate_string('invoiceInsurerAmount','Total insurer amount') }}",
+    i.total_patient_discount as "{{ translate_string('invoicePatientDiscount','Total patient discount') }}",
+    i.total_patient_amount as "{{ translate_string('invoicePatientAmount','Total patient amount') }}"
 from {{ ref("ds__invoicing") }} i
 where i.status = 'finalised'
     and case

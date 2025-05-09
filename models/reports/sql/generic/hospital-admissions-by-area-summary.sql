@@ -58,10 +58,10 @@ select
     lg.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     coalesce(lg.admissions, 0) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
     coalesce(lg.discharges, 0) as "{{ translate_string('dischargeCount', 'Number of discharges') }}",
-    coalesce(lg.deaths, 0) as "{{ translate_string('deathCount', 'Number of deaths') }}",
+    coalesce(lg.deaths, 0) as "{{ translate_string('hospitalDeathCount', 'Number of deaths') }}",
     coalesce(lg.transfer_ins, 0) as "{{ translate_string('transfersIntoLocationCount', 'Number of transfers into location') }}",
     coalesce(lg.transfer_outs, 0) as "{{ translate_string('transfersOutOfLocationCount', 'Number of transfers out of location') }}",
-    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}",
+    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_string('hospitalAverageLengthOfStay', 'Average length of stay') }}",
     coalesce(lg.occupancy, 0) as "{{ translate_string('patientDayCount', 'Number of patient days') }}",
     case
         when lg.occupancy notnull and lg.capacity notnull
@@ -78,7 +78,7 @@ select
                     )::text, '%'
                 )
         else 'N/A'
-    end as "{{ translate_string('bedOccupancyPercent', 'Bed occupancy (%)') }}"
+    end as "{{ translate_string('hospitalBedOcupancyPercent', 'Bed occupancy (%)') }}"
 from area_summary lg
 where
     case

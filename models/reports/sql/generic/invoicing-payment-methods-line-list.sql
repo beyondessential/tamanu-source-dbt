@@ -5,7 +5,7 @@ select
     itp.payment_method as "{{ translate_string('paymentMethod','Method') }}",
     itp.receipt_number as "{{ translate_string('paymentReceiptNumber','Receipt number') }}",
     itp.amount as "{{ translate_string('paymentAmount','Applied payment (amount)') }}",
-    itp.recieved_by as "{{ translate_string('paymentReceivedBy','Tamanu User Name') }}"
+    itp.recieved_by as "{{ translate_string('paymentReceivedBy','Tamanu user name') }}"
 from {{ ref("ds__invoicing_transactions_patient") }} itp
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

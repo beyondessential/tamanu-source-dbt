@@ -10,7 +10,7 @@ select
     department as "{{ translate_string('departmentName', 'Department') }}",
     location_group as "{{ translate_string('locationGroupName', 'Area') }}",
     request_id as "{{ translate_string('imagingRequestId', 'Request ID') }}",
-    requested_datetime as "{{ translate_string('imagingRequestDatetime', 'Request date and time') }}",
+    requested_datetime as "{{ translate_string('imagingRequestDateTime', 'Request date and time') }}",
     supervising_clinician as "{{ translate_string('imagingSupervisingClinician', 'Supervising clinician') }}",
     requesting_clinician as "{{ translate_string('imagingRequestingClinician', 'Requesting clinician') }}",
     priority as "{{ translate_string('imagingPriority', 'Priority') }}",

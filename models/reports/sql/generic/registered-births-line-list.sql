@@ -21,9 +21,9 @@ select
     birth_type as "{{ translate_string('birthType', 'Single/Plural birth') }}",
     birth_weight as "{{ translate_string('birthWeight', 'Birth weight (kg)') }}",
     birth_length as "{{ translate_string('birthLength', 'Birth length (cm)') }}",
-    apgar_score_one_minute as "{{ translate_string('birthAPGARScoreOneMinute', 'Apgar score at 1 min') }}",
-    apgar_score_five_minutes as "{{ translate_string('birthAPGARScoreFiveMinutes', 'Apgar score at 5 min') }}",
-    apgar_score_ten_minutes as "{{ translate_string('birthAPGARScoreTenMinutes', 'Apgar score at 10 min') }}"
+    apgar_score_one_minute as "{{ translate_string('birthApgarScoreOneMinute', 'Apgar score at 1 min') }}",
+    apgar_score_five_minutes as "{{ translate_string('birthApgarScoreFiveMinutes', 'Apgar score at 5 min') }}",
+    apgar_score_ten_minutes as "{{ translate_string('birthApgarScoreTenMinutes', 'Apgar score at 10 min') }}"
 from {{ ref("ds__births") }}
 where
     case

@@ -75,7 +75,7 @@ select
                     )::text, '%'
                 )
         else 'N/A'
-    end as "{{ translate_string('hospitalBedOccupancyPercent', 'Bed occupancy (%)') }}"
+    end as "{{ translate_string('hospitalBedOcupancyPercent', 'Bed occupancy (%)') }}"
 from location_summary ls
 where
     case

@@ -13,7 +13,7 @@ select
     status as "{{ translate_string('labRequestStatus', 'Status') }}",
     lab_test_panel as "{{ translate_string('labTestPanel', 'Lab test panel') }}",
     lab_test_category as "{{ translate_string('labTestCategory', 'Test category') }}",
-    requested_datetime as "{{ translate_string('labRequestDateAndTime', 'Lab request date and time') }}",
+    requested_datetime as "{{ translate_string('labRequestDateTime', 'Lab request date and time') }}",
     requested_by as "{{ translate_string('labRequestClinician', 'Requesting clinician') }}",
     lab_request_published_datetime as "{{ translate_string('labRequestPublishedDateTime', 'Lab request published date and time') }}",
     lab_test_date as "{{ translate_string('labTestDate', 'Lab test date') }}",

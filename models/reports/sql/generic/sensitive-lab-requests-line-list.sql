@@ -12,7 +12,7 @@ select
     laboratory as "{{ translate_string('labLaboratory', 'Laboratory') }}",
     request_id as "{{ translate_string('labRequestId', 'Request ID') }}",
     status as "{{ translate_string('labRequestStatus', 'Status') }}",
-    requested_datetime as "{{ translate_string('labRequestDateTime', 'Request date and time') }}",
+    requested_datetime as "{{ translate_string('labRequestDateTime', 'Lab request date and time') }}",
     clinician as "{{ translate_string('labRequestClinician', 'Requesting clinician') }}",
     requesting_department as "{{ translate_string('labRequestDepartment', 'Requesting department') }}",
     priority as "{{ translate_string('labRequestPriority', 'Priority') }}",
