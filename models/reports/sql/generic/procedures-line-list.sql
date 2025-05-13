@@ -6,7 +6,7 @@ select
     age as "{{ translate_string('patientAge', 'Age') }}",
     sex as "{{ translate_string('patientSex', 'Sex') }}",
     nationality as "{{ translate_string('patientNationality', 'Nationality') }}",
-    encounter_facility as "{{ translate_string('facilityName', Facility') }}",
+    encounter_facility as "{{ translate_string('facilityName', 'Facility') }}",
     encounter_department as "{{ translate_string('departmentName', 'Department') }}",
     encounter_type as "{{ translate_string('encounterType', 'Type') }}",
     encounter_start_datetime as "{{ translate_string('encounterStartDateTime', 'Encounter start date and time') }}",
