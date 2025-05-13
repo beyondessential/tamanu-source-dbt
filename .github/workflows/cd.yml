@@ -60,20 +60,18 @@ jobs:
       - name: Generate translations
         run: python scripts/generate_translation_file.py
 
-  # publish:
-  #   name: Publish to meta server
-  #   needs: generate
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Get version
-  #       id: version
-  #       run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
-  #     - name: Publish to meta server
-  #       run: |
-  #         curl -v "${{ vars.META_URL }}/artifacts/${{ steps.version.outputs.version }}/translations/container" \
-  #           -E meta.crt --key meta.key \
-  #           --data-binary "oci://ghcr.io/beyondessential/tamanu-translations:${{ github.ref_name }}" 
+  publish:
+    name: Publish to meta server
+    needs: generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish
+        run: |
+          echo "${{ secrets.META_CERT }}" > meta.crt
+          echo "${{ secrets.META_KEY }}" > meta.key
+          
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
+            -E meta.crt --key meta.key \
+            --data-binary "s3://bes-data-tamanu-translations/$VERSION/report_translations_$VERSION.csv"
