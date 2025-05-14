@@ -67,11 +67,12 @@ jobs:
     steps:
       - name: Publish
         run: |
-          # Create certificate files with proper PEM format
-          echo -e "${{ secrets.META_CERT }}" > meta.crt
-          echo -e "${{ secrets.META_KEY }}" > meta.key
-          
-          VERSION=${GITHUB_REF#refs/tags/v}
+          cat << EOF > ./meta.crt
+          ${{ secrets.META_CERT }}
+          EOF
+          cat << EOF > ./meta.key
+          ${{ secrets.META_KEY }}
+          EOF
           
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
             -E meta.crt --key meta.key \
