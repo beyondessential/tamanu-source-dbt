@@ -77,8 +77,6 @@ jobs:
           ${{ secrets.META_KEY }}
           EOF
           
-          chmod 600 meta.key
-          
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
-            -E meta.crt --key meta.key \
+            --cert meta.crt --key meta.key \
             --data-binary "s3://bes-data-tamanu-translations/$VERSION/report_translations_v$VERSION.csv"
