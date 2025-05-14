@@ -69,9 +69,15 @@ jobs:
           set -x
           VERSION=2.30.0
           
-          # Write certificate and key with proper newlines
-          printf "%s\n" "${{ secrets.META_CERT }}" > meta.crt
-          printf "%s\n" "${{ secrets.META_KEY }}" > meta.key
+          # Write certificate and key
+          echo -e "${{ secrets.META_CERT }}" > meta.crt
+          echo -e "${{ secrets.META_KEY }}" > meta.key
+          
+          # Verify file contents
+          echo "Certificate:"
+          cat meta.crt
+          echo "Key:"
+          cat meta.key
           
           chmod 600 meta.key
           
