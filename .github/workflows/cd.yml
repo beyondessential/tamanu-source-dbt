@@ -69,9 +69,10 @@ jobs:
           set -x
           VERSION=2.30.0
           
-          echo "${{ secrets.META_CERT }}" > meta.crt
-          echo "${{ secrets.META_KEY }}" > meta.key
-
+          # Write certificate and key with proper newlines
+          printf "%s\n" "${{ secrets.META_CERT }}" > meta.crt
+          printf "%s\n" "${{ secrets.META_KEY }}" > meta.key
+          
           chmod 600 meta.key
           
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
