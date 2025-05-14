@@ -67,13 +67,18 @@ jobs:
     steps:
       - name: Publish
         run: |
-          cat << EOF > ./meta.crt
+          set -x
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          cat << EOF > meta.crt
           ${{ secrets.META_CERT }}
           EOF
-          cat << EOF > ./meta.key
+          cat << EOF > meta.key
           ${{ secrets.META_KEY }}
           EOF
           
+          chmod 600 meta.key
+          
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
             -E meta.crt --key meta.key \
-            --data-binary "s3://bes-data-tamanu-translations/$VERSION/report_translations_$VERSION.csv"
+            --data-binary "s3://bes-data-tamanu-translations/$VERSION/report_translations_v$VERSION.csv"
