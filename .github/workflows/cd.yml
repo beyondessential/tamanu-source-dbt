@@ -67,8 +67,9 @@ jobs:
     steps:
       - name: Publish
         run: |
-          echo "${{ secrets.META_CERT }}" > meta.crt
-          echo "${{ secrets.META_KEY }}" > meta.key
+          # Create certificate files with proper PEM format
+          echo -e "${{ secrets.META_CERT }}" > meta.crt
+          echo -e "${{ secrets.META_KEY }}" > meta.key
           
           VERSION=${GITHUB_REF#refs/tags/v}
           
