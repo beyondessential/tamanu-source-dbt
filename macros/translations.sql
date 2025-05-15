@@ -1,4 +1,4 @@
-{%- macro translate_string(string_id, default_column_name=null) -%}
+{%- macro translate_label(string_id, default_column_name=null) -%}
     {%- set language = var('language') -%}
     {%- set full_string_id = 'report.reporting.' ~ string_id -%}
     

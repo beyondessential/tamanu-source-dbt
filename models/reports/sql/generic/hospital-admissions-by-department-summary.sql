@@ -8,15 +8,15 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, 'YYYY-MM') as "{{ translate_string('reportingMonth', 'Month') }}",
-    adh.facility as "{{ translate_string('facilityName', 'Facility') }}",
-    adh.department as "{{ translate_string('departmentName', 'Department') }}",
-    count(*) filter (where adh.admission) as "{{ translate_string('hospitalAdmissionCount', 'Number of admissions') }}",
-    count(*) filter (where adh.discharge) as "{{ translate_string('hospitalDischargeCount', 'Number of discharges') }}",
-    count(*) filter (where adh.death) as "{{ translate_string('hospitalDeathCount', 'Number of deaths') }}",
-    count(*) filter (where adh.transfer_in) as "{{ translate_string('hospitalTransfersIntoDepartmentCount', 'Number of transfers into department') }}",
-    count(*) filter (where adh.transfer_out) as "{{ translate_string('hospitalTransfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
-    round(avg(adh.length_of_stay), 1) as "{{ translate_string('hospitalAverageLengthOfStay', 'Average length of stay') }}"
+    to_char(rm.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
+    adh.facility as "{{ translate_label('facilityName', 'Facility') }}",
+    adh.department as "{{ translate_label('departmentName', 'Department') }}",
+    count(*) filter (where adh.admission) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",
+    count(*) filter (where adh.discharge) as "{{ translate_label('hospitalDischargeCount', 'Number of discharges') }}",
+    count(*) filter (where adh.death) as "{{ translate_label('hospitalDeathCount', 'Number of deaths') }}",
+    count(*) filter (where adh.transfer_in) as "{{ translate_label('hospitalTransfersIntoDepartmentCount', 'Number of transfers into department') }}",
+    count(*) filter (where adh.transfer_out) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
+    round(avg(adh.length_of_stay), 1) as "{{ translate_label('hospitalAverageLengthOfStay', 'Average length of stay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_history_department') }} adh
     on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)

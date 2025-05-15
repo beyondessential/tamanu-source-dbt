@@ -1,26 +1,26 @@
 select
-    display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
-    first_name as "{{ translate_string('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
-    age as "{{ translate_string('patientAge', 'Age') }}",
-    sex as "{{ translate_string('patientSex', 'Sex') }}",
-    village as "{{ translate_string('patientVillage', 'Village') }}",
-    billing_type as "{{ translate_string('patientBillingType', 'Patient billing type') }}",
-    booking_start_datetime as "{{ translate_string('bookingStartDateTime', 'Booking start date and time') }}",
-    booking_end_datetime as "{{ translate_string('bookingEndDateTime', 'Booking end date and time') }}",
+    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
+    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
+    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
+    date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    age as "{{ translate_label('patientAge', 'Age') }}",
+    sex as "{{ translate_label('patientSex', 'Sex') }}",
+    village as "{{ translate_label('patientVillage', 'Village') }}",
+    billing_type as "{{ translate_label('patientBillingType', 'Patient billing type') }}",
+    booking_start_datetime as "{{ translate_label('bookingStartDateTime', 'Booking start date and time') }}",
+    booking_end_datetime as "{{ translate_label('bookingEndDateTime', 'Booking end date and time') }}",
     case
         when extract(day from age(booking_end_datetime, booking_start_datetime)) >= 1
             then extract(day from age(booking_end_datetime, booking_start_datetime)) || ' nights'
         when extract(hour from age(booking_end_datetime, booking_start_datetime)) >= 1
             then extract(hour from age(booking_end_datetime, booking_start_datetime)) || ' hours'
         else extract(minute from age(booking_end_datetime, booking_start_datetime)) || ' minutes'
-    end as "{{ translate_string('bookingDuration', 'Booking duration') }}",
-    location_group as "{{ translate_string('bookingArea', 'Area') }}",
-    location as "{{ translate_string('bookingLocation', 'Location') }}",
-    clinician as "{{ translate_string('bookingClinician', 'Clinician') }}",
-    booking_type as "{{ translate_string('bookingType', 'Booking type') }}",
-    booking_status as "{{ translate_string('bookingStatus', 'Booking status') }}"
+    end as "{{ translate_label('bookingDuration', 'Booking duration') }}",
+    location_group as "{{ translate_label('bookingArea', 'Area') }}",
+    location as "{{ translate_label('bookingLocation', 'Location') }}",
+    clinician as "{{ translate_label('bookingClinician', 'Clinician') }}",
+    booking_type as "{{ translate_label('bookingType', 'Booking type') }}",
+    booking_status as "{{ translate_label('bookingStatus', 'Booking status') }}"
 from {{ ref('ds__location_bookings') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

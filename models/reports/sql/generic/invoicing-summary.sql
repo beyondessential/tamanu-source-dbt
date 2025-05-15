@@ -1,18 +1,18 @@
 select
-    i.admission_datetime as "{{ translate_string('admissionDate','Admission date') }}",
-    i.discharge_datetime as "{{ translate_string('dischargeDate','Discharged date') }}",
-    i.invoice_number as "{{ translate_string('invoiceNumber','Invoice number') }}",
-    i.patient_name as "{{ translate_string('patientName','Patient name') }}",
-    i.display_id as "{{ translate_string('patientDisplayId','Patient ID') }}",
-    i.social_security_number as "{{ translate_string('patientSSN','Social security number') }}",
-    i.nationality as "{{ translate_string('patientNationality','Nationality') }}",
-    i.insurers as "{{ translate_string('invoiceInsurers','Insurer') }}",
-    i.total_invoice_amount as "{{ translate_string('invoiceTotalAmount','Total invoice amount') }}",
-    i.total_insurer_amount as "{{ translate_string('invoiceInsurerAmount','Total insurer amount') }}",
-    i.total_patient_discount as "{{ translate_string('invoicePatientDiscount','Total patient discount') }}",
-    i.total_patient_amount as "{{ translate_string('invoicePatientAmount','Total patient amount') }}",
-    i.is_deceased as "{{ translate_string('patientDeceasedOrActive','Deceased/Active') }}",
-    i.date_of_death as "{{ translate_string('patientDateOfDeath','Date of death') }}"
+    i.admission_datetime as "{{ translate_label('admissionDate','Admission date') }}",
+    i.discharge_datetime as "{{ translate_label('dischargeDate','Discharged date') }}",
+    i.invoice_number as "{{ translate_label('invoiceNumber','Invoice number') }}",
+    i.patient_name as "{{ translate_label('patientName','Patient name') }}",
+    i.display_id as "{{ translate_label('patientDisplayId','Patient ID') }}",
+    i.social_security_number as "{{ translate_label('patientSSN','Social security number') }}",
+    i.nationality as "{{ translate_label('patientNationality','Nationality') }}",
+    i.insurers as "{{ translate_label('invoiceInsurers','Insurer') }}",
+    i.total_invoice_amount as "{{ translate_label('invoiceTotalAmount','Total invoice amount') }}",
+    i.total_insurer_amount as "{{ translate_label('invoiceInsurerAmount','Total insurer amount') }}",
+    i.total_patient_discount as "{{ translate_label('invoicePatientDiscount','Total patient discount') }}",
+    i.total_patient_amount as "{{ translate_label('invoicePatientAmount','Total patient amount') }}",
+    i.is_deceased as "{{ translate_label('patientDeceasedOrActive','Deceased/Active') }}",
+    i.date_of_death as "{{ translate_label('patientDateOfDeath','Date of death') }}"
 from {{ ref("ds__invoicing") }} i
 where i.status = 'finalised'
     and case
