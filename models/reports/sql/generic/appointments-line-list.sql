@@ -1,23 +1,23 @@
 select
-    display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
-    first_name as "{{ translate_string('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    date_of_birth as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
-    age as "{{ translate_string('patientAge', 'Age') }}",
-    sex as "{{ translate_string('patientSex', 'Sex') }}",
-    village as "{{ translate_string('patientVillage', 'Village') }}",
-    billing_type as "{{ translate_string('patientBillingType', 'Patient billing type') }}",
-    appointment_start_datetime as "{{ translate_string('appointmentDateTime', 'Appointment date and time') }}",
-    appointment_type as "{{ translate_string('appointmentType', 'Appointment type') }}",
-    appointment_status as "{{ translate_string('appointmentStatus', 'Appointment status') }}",
-    clinician as "{{ translate_string('appointmentClinician', 'Clinician') }}",
-    location_group as "{{ translate_string('appointmentArea', 'Area') }}",
-    priority as "{{ translate_string('appointmentPriority', 'Priority appointment') }}",
+    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
+    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
+    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
+    date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    age as "{{ translate_label('patientAge', 'Age') }}",
+    sex as "{{ translate_label('patientSex', 'Sex') }}",
+    village as "{{ translate_label('patientVillage', 'Village') }}",
+    billing_type as "{{ translate_label('patientBillingType', 'Patient billing type') }}",
+    appointment_start_datetime as "{{ translate_label('appointmentDateTime', 'Appointment date and time') }}",
+    appointment_type as "{{ translate_label('appointmentType', 'Appointment type') }}",
+    appointment_status as "{{ translate_label('appointmentStatus', 'Appointment status') }}",
+    clinician as "{{ translate_label('appointmentClinician', 'Clinician') }}",
+    location_group as "{{ translate_label('appointmentArea', 'Area') }}",
+    priority as "{{ translate_label('appointmentPriority', 'Priority appointment') }}",
     case
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
-    end as "{{ translate_string('appointmentIsRepeating', 'Repeating appointment') }}",
-    until_date as "{{ translate_string('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
+    end as "{{ translate_label('appointmentIsRepeating', 'Repeating appointment') }}",
+    until_date as "{{ translate_label('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
 from {{ ref('ds__appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

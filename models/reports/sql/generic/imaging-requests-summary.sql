@@ -8,18 +8,18 @@ with reporting_dates as (
 )
 
 select
-    rd.date as "{{ translate_string('reportDate', 'Date') }}",
-    ir.facility as "{{ translate_string('facilityName', 'Facility') }}",
-    ir.department as "{{ translate_string('departmentName', 'Department') }}",
-    ir.imaging_type as "{{ translate_string('imagingType', 'Imaging type') }}",
-    count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_string('imagingTotalRequests', 'Total new requests') }}",
+    rd.date as "{{ translate_label('reportDate', 'Date') }}",
+    ir.facility as "{{ translate_label('facilityName', 'Facility') }}",
+    ir.department as "{{ translate_label('departmentName', 'Department') }}",
+    ir.imaging_type as "{{ translate_label('imagingType', 'Imaging type') }}",
+    count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests', 'Total new requests') }}",
     count(distinct ir.request_id) filter (
         where ir.requested_datetime::date <= rd.date
         and (ir.completed_datetime::date > rd.date or ir.completed_datetime is null)
-    ) as "{{ translate_string('imagingPendingRequests', 'Total requests with a status of pending') }}",
+    ) as "{{ translate_label('imagingPendingRequests', 'Total requests with a status of pending') }}",
     count(distinct ir.request_id) filter (
         where ir.completed_datetime::date = rd.date
-    ) as "{{ translate_string('imagingCompletedRequests', 'Total requests completed') }}"
+    ) as "{{ translate_label('imagingCompletedRequests', 'Total requests completed') }}"
 from reporting_dates rd
 left join {{ ref('ds__imaging_requests') }} ir
     on ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
