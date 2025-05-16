@@ -1,6 +1,22 @@
 # List of Tamanu reports
 ## Generic
 
+### Appointments line list
+
+**Report Description**
+
+Outpatient appointments line list
+This report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment
+
+**Filters**
+
+Facility, Area, Clinician, Status
+
+**Default date range**: next30days
+
+
+---
+
 ### Hospital admissions by area summary
 
 **Report Description**
@@ -190,6 +206,24 @@ This report generates a summary of invoices. The report includes patient, insure
 
 ---
 
+### Lab requests line list
+
+**Report Description**
+
+Lab requests line list
+This report generates a list of all patients that have had a lab request created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  
+
+The report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. 
+
+**Filters**
+
+Requesting clinician, Test category, Status
+
+**Default date range**: 7days
+
+
+---
+
 ### Lab tests line list
 
 **Report Description**
@@ -202,6 +236,22 @@ This report generates a list of all patients that have had a lab test created. P
 Status, Test category
 
 **Default date range**: 7days
+
+
+---
+
+### Location bookings line list
+
+**Report Description**
+
+Location bookings line list
+This report generates a list of all location bookings for the selected parameters. Patients are listed in chronological order by date and time of booking
+
+**Filters**
+
+Facility, Area, Clinician, Status
+
+**Default date range**: next30days
 
 
 ---
@@ -230,6 +280,29 @@ This report pulls list of all patients that have documented procedures during th
 Facility, Procedure clinician, Department, Area, Location
 
 **Default date range**: 24hours
+
+
+---
+
+### Program registry line list
+
+**Report Description**
+
+Program registry line list
+This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
+Home village: Per patient details
+Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)
+Status: Current status of the patient per the 'status' function within the register.
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
+Registered by: Name of Tamanu user who added the patient to this registry
+Registering facility: Facility selected when patient is first added to the registry
+
+**Filters**
+
+Registry
+
+**Default date range**: allTime
 
 
 ---
@@ -284,6 +357,24 @@ This report generates a summary of the number of patients that have been registe
 
 Registered patients line list
 This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
+
+**Default date range**: 7days
+
+
+---
+
+### Sensitive lab requests line list
+
+**Report Description**
+
+Sensitive lab requests line list
+This report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  
+
+The report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. 
+
+**Filters**
+
+Requesting clinician, Test category, Status
 
 **Default date range**: 7days
 
