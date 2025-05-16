@@ -1,11 +1,11 @@
 select
-    registration_date as "{{ translate_string('patientRegistrationDate', 'Registration date') }}",
+    registration_date as "{{ translate_label('patientRegistrationDate', 'Registration date') }}",
     count(
         case when sex = 'Male' then 1 end
-    ) as "{{ translate_string('invoicePatientMaleAmount', 'Total patients (male)') }}",
+    ) as "{{ translate_label('invoicePatientMaleAmount', 'Total patients (male)') }}",
     count(
         case when sex = 'Female' then 1 end
-    ) as "{{ translate_string('invoicePatientFemaleAmount', 'Total patients (female)') }}"
+    ) as "{{ translate_label('invoicePatientFemaleAmount', 'Total patients (female)') }}"
 from {{ ref("ds__patients") }}
 where
     case

@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Procedures line list",
-  "notes": "Procedures line list\nThis report pulls list of all patients that have documented procedures during the selected date period ",
+  "notes": "This report pulls list of all patients that have documented procedures during the selected date period ",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

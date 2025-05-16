@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Sensitive lab requests line list",
-  "notes": "Sensitive lab requests line list\nThis report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  \n\nThe report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. ",
+  "notes": "This report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  \n\nThe report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. ",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

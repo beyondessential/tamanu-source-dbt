@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Location bookings line list",
-  "notes": "Location bookings line list\nThis report generates a list of all location bookings for the selected parameters. Patients are listed in chronological order by date and time of booking",
+  "notes": "This report generates a list of all location bookings for the selected parameters. Patients are listed in chronological order by date and time of booking",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

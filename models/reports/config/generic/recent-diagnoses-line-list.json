@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Recent diagnoses line list",
-  "notes": "Recent diagnoses line list\nReport lists all patients that have had the specified diagnosis/es recorded.",
+  "notes": "This report lists all patients that have had the specified diagnosis/es recorded.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

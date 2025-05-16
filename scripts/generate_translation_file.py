@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).parent.parent
 SQL_DIR = BASE_DIR / "models" / "reports" / "sql"
 TRANSLATION_DIR = BASE_DIR / "compiled" / "translations"
 TRANSLATION_PATTERN = (
-    r"\{\{\s*translate_string\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]+)['\"]\)\s*\}\}"
+    r"\{\{\s*translate_label\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]+)['\"]\)\s*\}\}"
 )
 
 
