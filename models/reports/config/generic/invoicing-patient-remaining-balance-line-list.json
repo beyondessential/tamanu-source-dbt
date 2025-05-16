@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Patient remaining balance line list",
-  "notes": "Remaining balance - patient line list\nThis report generates a list of all patients that have a remaining balance. Each row in the report represents a single patient with a remaining balance. The report includes patient and remaining balance information. Patients are listed in chronological order by discharge date.",
+  "notes": "This report generates a list of all patients that have a remaining balance. Each row in the report represents a single patient with a remaining balance. The report includes patient and remaining balance information. Patients are listed in chronological order by discharge date.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

@@ -1,27 +1,10 @@
 # List of Tamanu reports
 ## Generic
 
-### Appointments line list
-
-**Report Description**
-
-Outpatient appointments line list
-This report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment
-
-**Filters**
-
-Facility, Area, Clinician, Status
-
-**Default date range**: next30days
-
-
----
-
 ### Hospital admissions by area summary
 
 **Report Description**
 
-Hospital admissions by area summary
 This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
@@ -48,7 +31,6 @@ Facility, Area
 
 **Report Description**
 
-Hospital admissions by department summary
 This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
@@ -72,7 +54,6 @@ Facility, Department
 
 **Report Description**
 
-Hospital admissions by location summary
 This report provides a statistical summary of hospital admissions by location for the selected parameters. Statistics are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
@@ -99,7 +80,6 @@ Facility, Location
 
 **Report Description**
 
-Imaging requests line list
 This report generates a list of all patients that have had an imaging request created and details of that imaging request for the selected parameters. Patients are listed in chronological order based on the lab request date and time. 
 
 If an imaging request has more than one area to be imaged than the request will be reported across multiple lines. The report includes imaging requests with all statuses and if a request has been cancelled will display the reason for cancellation.  
@@ -117,7 +97,6 @@ Facility, Requesting clinician, Status, Imaging type
 
 **Report Description**
 
-Imaging requests summary
 This report generates a statistical summary of imaging requests by date, department and imaging type. Each indicator is reported by day. Dates are listed chronologically by department and imaging type. Imaging requests with a status of cancelled, deleted or entered in error are excluded from this report. 
 
 Details on how each indicator is calculated are provided below:
@@ -138,8 +117,7 @@ Facility, Department, Imaging type
 
 **Report Description**
 
-Incomplete referrals
- This report lists all patients that have a pending referral for the selected parameters.
+This report lists all patients that have a pending referral for the selected parameters.
 
 **Filters**
 
@@ -154,7 +132,6 @@ Village, Doctor/Nurse
 
 **Report Description**
 
-Patient payment by discharge location summary
 This report generates a summary of patient payments by discharge location. Each row in the report represents a single discharge location. The report includes location and payment information. Locations are listed in alphabetical order.
 
 **Filters**
@@ -170,7 +147,6 @@ Facility, Discharging Area
 
 **Report Description**
 
-Remaining balance - patient line list
 This report generates a list of all patients that have a remaining balance. Each row in the report represents a single patient with a remaining balance. The report includes patient and remaining balance information. Patients are listed in chronological order by discharge date.
 
 **Default date range**: allTime
@@ -182,7 +158,6 @@ This report generates a list of all patients that have a remaining balance. Each
 
 **Report Description**
 
-Payment method line list
 This report generates a list of all patient payments. Each row in the report represents a single payment. The report includes patient, payment and payment method information. Payments are listed in chronological order by payment date.
 
 **Filters**
@@ -198,7 +173,6 @@ Payment method
 
 **Report Description**
 
-Invoicing summary
 This report generates a summary of invoices. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.
 
 **Default date range**: allTime
@@ -210,7 +184,6 @@ This report generates a summary of invoices. The report includes patient, insure
 
 **Report Description**
 
-Lab requests line list
 This report generates a list of all patients that have had a lab request created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  
 
 The report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. 
@@ -228,7 +201,6 @@ Requesting clinician, Test category, Status
 
 **Report Description**
 
-Lab tests line list
 This report generates a list of all patients that have had a lab test created. Patients are listed in chronological order based on the lab request date and time.
 
 **Filters**
@@ -244,7 +216,6 @@ Status, Test category
 
 **Report Description**
 
-Location bookings line list
 This report generates a list of all location bookings for the selected parameters. Patients are listed in chronological order by date and time of booking
 
 **Filters**
@@ -260,10 +231,24 @@ Facility, Area, Clinician, Status
 
 **Report Description**
 
-Ongoing condition line list
- This report lists all patients with ongoing conditions for the selected parameters.
+This report lists all patients with ongoing conditions for the selected parameters.
 
 **Default date range**: 7days
+
+
+---
+
+### Outpatient appointments line list
+
+**Report Description**
+
+This report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment
+
+**Filters**
+
+Facility, Area, Clinician, Status
+
+**Default date range**: next30days
 
 
 ---
@@ -272,7 +257,6 @@ Ongoing condition line list
 
 **Report Description**
 
-Procedures line list
 This report pulls list of all patients that have documented procedures during the selected date period 
 
 **Filters**
@@ -288,7 +272,6 @@ Facility, Procedure clinician, Department, Area, Location
 
 **Report Description**
 
-Program registry line list
 This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
 Home village: Per patient details
 Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
@@ -311,8 +294,7 @@ Registry
 
 **Report Description**
 
-Recent diagnoses line list
-Report lists all patients that have had the specified diagnosis/es recorded.
+This report lists all patients that have had the specified diagnosis/es recorded.
 
 **Filters**
 
@@ -327,7 +309,6 @@ Facility, Village, Diagnosis, Diagnosis 2, Diagnosis 3, Diagnosis 4, Diagnosis 5
 
 **Report Description**
 
-Registered birth - line list
 This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.
 
 **Filters**
@@ -343,7 +324,6 @@ Facility, Village
 
 **Report Description**
 
-Registered patients daily summary
 This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. 
 
 **Default date range**: allTime
@@ -355,7 +335,6 @@ This report generates a summary of the number of patients that have been registe
 
 **Report Description**
 
-Registered patients line list
 This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
 
 **Default date range**: 7days
@@ -367,7 +346,6 @@ This report generates a list of all patients that have been registered, includin
 
 **Report Description**
 
-Sensitive lab requests line list
 This report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  
 
 The report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. 
@@ -385,7 +363,6 @@ Requesting clinician, Test category, Status
 
 **Report Description**
 
-Upcoming vaccinations line list
 This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
 
 **Filters**
@@ -401,7 +378,6 @@ Category, Vaccine, Vaccine status
 
 **Report Description**
 
-User audit report
 This report generates a summary of user activity for all current and discharged inpatient, emergency and outpatient encounters for the selected date range. Encounters are listed in chronological order by encounter start date and time. 
 
 The following details are included for each encounter:
@@ -430,7 +406,6 @@ Facility, Department, Area
 
 **Report Description**
 
-Vaccine audit line list
 This report generates a list of all patients that have a vaccination record deleted or updated from 'Not given' to 'Given'. Patients are listed alphabetically by last name and date of vaccination in chronological order. 
 
 The report includes the following information in addition to the vaccination date and name:
@@ -454,7 +429,6 @@ Facility, Village, Category, Vaccine, Status
 
 **Report Description**
 
-Vaccine line list
 This report generates a list of all patients that have had a vaccination recorded for the selected parameters. Patients are listed alphabetically by last name and date of vaccination in chronological order. 
 
 The report includes vaccinations with statuses of both 'Given' and 'Not given', and each vaccination recorded is listed on a single row. If a vaccination was initially recorded as 'Not given' and is later marked as 'Given', only the vaccination record with a status of 'Given' will be included in the report.
