@@ -63,4 +63,3 @@ order by
     lr.published_datetime,
     lt.completed_datetime,
     ltt.name
-
