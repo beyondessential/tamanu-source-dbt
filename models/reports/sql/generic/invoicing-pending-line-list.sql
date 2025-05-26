@@ -14,4 +14,3 @@ where case
         else ip.discharge_datetime::date
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
-
