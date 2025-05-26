@@ -4,7 +4,7 @@ select
     ed.age as "{{ translate_label('patientAge', 'Age') }}",
     concat_ws(', ', ed.location_group, ed.location) as "{{ translate_label('locationName', 'Location') }}",
     ed.diets as "{{ translate_label('encounterDiet', 'Diet') }}"
-from {{ ref('ds__encounter_diet') }} ed
+from {{ ref('ds__encounter_diets') }} ed
 where
     case
         when {{ parameter('locationGroupId') }} is null then true

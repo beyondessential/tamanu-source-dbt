@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: ds__encounter_diet
+  - name: ds__encounter_diets
     description: Active encounters with their associated dietary requirements
     tags:
       - clinical
