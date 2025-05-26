@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: ds__encounter_diet
+    description: Active encounters with their associated dietary requirements
+    tags:
+      - clinical
+    columns:
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of encounter."
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+        meta:
+          metrics:
+            total_patients_count:
+              type: count
+      - name: patient_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__patients_name') }}"
+      - name: age
+        data_type: character varying(255)
+        description: "{{ doc('generic__patients_age') }} at the time of the encounter, formatted with appropriate unit (days/weeks/months/years)."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('locations__location_group_id') }}"
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the location group where the encounter is currently active."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__location_id') }}"
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the location where the encounter is currently active."
+      - name: diets
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of dietary requirements for the patient during this encounter, comma-separated."
