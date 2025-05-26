@@ -39,43 +39,42 @@ select
     hours_survived_since_birth as "{{ translate_label('deathHoursSurvivedSinceBirth', 'Hours survived since birth') }}"
 from {{ ref('ds__deaths') }}
 where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null 
-        then true
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null
+            then true
         else date_of_death::date >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null 
-        then true
+        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null
+            then true
         else date_of_death::date <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case
-        when {{ parameter('causeOfDeath') }} is null 
-        then true
+        when {{ parameter('causeOfDeath') }} is null
+            then true
         else primary_cause_condition_id = {{ parameter('causeOfDeath') }}
     end
     and case
-        when {{ parameter('mannerOfDeath') }} is null 
-        then true
+        when {{ parameter('mannerOfDeath') }} is null
+            then true
         else manner_of_death = {{ parameter('mannerOfDeath') }}
     end
     and case
-        when {{ parameter('facilityId') }} is null 
-        then true
+        when {{ parameter('facilityId') }} is null
+            then true
         else facility_id = {{ parameter('facilityId') }}
     end
     and case
-        when {{ parameter('antecedentCause') }} is null 
-        then true
+        when {{ parameter('antecedentCause') }} is null
+            then true
         else antecedent_cause_1_id = {{ parameter('antecedentCause') }}
             or antecedent_cause_2_id = {{ parameter('antecedentCause') }}
     end
-    and case 
-        when {{ parameter('otherContributingCondition') }} is null 
-        then true
+    and case
+        when {{ parameter('otherContributingCondition') }} is null
+            then true
         else other_condition_1_id = {{ parameter('otherContributingCondition') }}
             or other_condition_2_id = {{ parameter('otherContributingCondition') }}
             or other_condition_3_id = {{ parameter('otherContributingCondition') }}
             or other_condition_4_id = {{ parameter('otherContributingCondition') }}
     end
 order by date_of_death
-
