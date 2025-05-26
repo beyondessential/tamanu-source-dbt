@@ -1,8 +1,9 @@
 with contributing_death_causes as (
     select
         cdc.patient_death_data_id,
-        array_agg(cdc.condition_id) over (partition by cdc.patient_death_data_id order by cdc.created_at) as other_conditions
+        array_agg(cdc.condition_id order by cdc.created_at) as other_conditions
     from {{ ref("contributing_death_causes") }} cdc
+    group by cdc.patient_death_data_id
 ),
 encounters_with_death as (
     select distinct on (e.patient_id)
@@ -16,8 +17,9 @@ encounters_with_death as (
     from {{ ref("encounters") }} e
     join {{ ref("patients") }} p on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
-    order by e.end_datetime desc
+    order by e.patient_id, e.end_datetime desc
 )
+
 select
     p.id as patient_id,
     ewd.encounter_id,
@@ -46,10 +48,10 @@ select
         when mod(pdd.primary_cause_time_after_onset, (60 * 24 * 7)) = 0 then concat(pdd.primary_cause_time_after_onset / (60 * 24 * 7), ' weeks')
         when mod(pdd.primary_cause_time_after_onset, (60 * 24)) = 0 then concat(pdd.primary_cause_time_after_onset / (60 * 24), ' days')
         when mod(pdd.primary_cause_time_after_onset, 60) = 0 then concat(pdd.primary_cause_time_after_onset / 60, ' hours')
-        else concat(pdi.primary_cause_time_after_onset, ' minutes')
+        else concat(pdd.primary_cause_time_after_onset, ' minutes')
     end as time_between_onset_and_death,
-    antecedent_cause_1.name as antecedent_cause_1,
-    antecedent_cause_2.name as antecedent_cause_2,
+    antecedent_condition_1.name as antecedent_cause_1,
+    antecedent_condition_2.name as antecedent_cause_2,
     other_condition_1.name as other_condition_1,
     other_condition_2.name as other_condition_2,
     other_condition_3.name as other_condition_3,
@@ -64,7 +66,7 @@ select
     pdd.pregnancy_contributed,
     case
         when pdd.fetal_or_infant then 'Yes'
-        when pdd.fetal_or_infant then 'No'
+        else 'No'
     end as fetal_or_infant,
     initcap(pdd.stillborn) as stillborn,
     pdd.birth_weight,
@@ -73,7 +75,7 @@ select
     carrier_condition.name as condition_in_mother_affecting_fetus_or_newborn,
     case
         when pdd.within_day_of_birth then 'Yes'
-        when pdd.within_day_of_birth then 'No'
+        else 'No'
     end as death_within_24_hours_of_birth,
     pdi.hours_survived_since_birth
 from {{ ref("patient_death_data") }} pdd
@@ -84,6 +86,7 @@ left join {{ ref("reference_data") }} nationality on nationality.id = pd.nationa
 left join {{ ref("reference_data") }} primary_condition on primary_condition.id = pdd.primary_cause_condition_id
 left join {{ ref("reference_data") }} antecedent_condition_1 on antecedent_condition_1.id = pdd.antecedent_cause1_condition_id
 left join {{ ref("reference_data") }} antecedent_condition_2 on antecedent_condition_2.id = pdd.antecedent_cause2_condition_id
+left join contributing_death_causes cdc on cdc.patient_death_data_id = pdd.id
 left join {{ ref("reference_data") }} other_condition_1 on other_condition_1.id = cdc.other_conditions[1]
 left join {{ ref("reference_data") }} other_condition_2 on other_condition_2.id = cdc.other_conditions[2]
 left join {{ ref("reference_data") }} other_condition_3 on other_condition_3.id = cdc.other_conditions[3]
@@ -91,9 +94,8 @@ left join {{ ref("reference_data") }} other_condition_4 on other_condition_4.id 
 left join {{ ref("reference_data") }} surgery_reason on surgery_reason.id = pdd.last_surgery_reason_id
 left join {{ ref("reference_data") }} carrier_condition on carrier_condition.id = pdd.carrier_existing_condition_id
 left join encounters_with_death ewd on ewd.patient_id = p.id
-left join contributing_death_causes cdc on cdc.patient_death_data_id = pdd.id
 left join {{ ref("departments") }} department on department.id = ewd.department_id
 left join {{ ref("locations") }} location on location.id = ewd.location_id
-left join {{ ref("location_groups") }} location_group  on location_group.id = location.location_group_id
+left join {{ ref("location_groups") }} location_group on location_group.id = location.location_group_id
 left join {{ ref("users") }} user on user.id = pdd.clinician_id
 order by pdd.date_of_death
