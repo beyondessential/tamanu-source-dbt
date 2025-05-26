@@ -8,6 +8,9 @@ models:
       - name: id
         data_type: character varying
         description: "{{ doc('generic__id') }} in contributing_death_causes."
+      - name: created_at
+        data_type: timestamp with time zone
+        description: "{{ doc('generic__created_at') }} in contributing_death_causes."
       - name: time_after_onset
         data_type: integer
         description: "{{ doc('contributing_death_causes__time_after_onset') }}"

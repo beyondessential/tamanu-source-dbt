@@ -9,8 +9,8 @@ with contributing_death_causes as (
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
-        e.start_date,
-        e.end_date,
+        e.start_datetime,
+        e.end_datetime,
         e.location_id,
         e.department_id,
         e.clinician_id
@@ -27,16 +27,17 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(pdi.date_of_death::date, pdi.date_of_birth::date)) as age,
+    date_part('year', age(p.date_of_death::date, p.date_of_birth::date)) as age,
     p.sex,
     village.id as village_id,
     village.name as village,
     nationality.id as nationality_id,
     nationality.name as nationality,
-    coalesce(
-        case when pdi.outside_health_facility then 'Died outside health facility' else f.name end,
-        'Unknown'
-    ) as place_of_death,
+    case 
+        when pdd.was_outside_health_facility then 'Died outside health facility' 
+        else facility.name 
+    end as place_of_death,
+    facility.id as facility_id,
     department.id as department_id,
     department.name as department,
     location_group.id as location_group_id,
@@ -49,19 +50,19 @@ select
     primary_condition.id as primary_cause_condition_id,
     primary_condition.name as primary_cause_condition,
     case
-        when pdd.primary_cause_time_after_onset is null or pdd.primary_cause_time_after_onset = 0 
+        when pdd.primary_cause_mins_after_onset is null or pdd.primary_cause_mins_after_onset = 0 
             then '0 minutes'
-        when mod(pdd.primary_cause_time_after_onset, (60 * 24 * 365)) = 0 
-            then concat(pdd.primary_cause_time_after_onset / (60 * 24 * 365), ' years')
-        when mod(pdd.primary_cause_time_after_onset, (60 * 24 * 30)) = 0 
-            then concat(pdd.primary_cause_time_after_onset / (60 * 24 * 30), ' months')
-        when mod(pdd.primary_cause_time_after_onset, (60 * 24 * 7)) = 0 
-            then concat(pdd.primary_cause_time_after_onset / (60 * 24 * 7), ' weeks')
-        when mod(pdd.primary_cause_time_after_onset, (60 * 24)) = 0 
-            then concat(pdd.primary_cause_time_after_onset / (60 * 24), ' days')
-        when mod(pdd.primary_cause_time_after_onset, 60) = 0 
-            then concat(pdd.primary_cause_time_after_onset / 60, ' hours')
-        else concat(pdd.primary_cause_time_after_onset, ' minutes')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 365)) = 0 
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 365), ' years')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 30)) = 0 
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 30), ' months')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 7)) = 0 
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 7), ' weeks')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24)) = 0 
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24), ' days')
+        when mod(pdd.primary_cause_mins_after_onset, 60) = 0 
+            then concat(pdd.primary_cause_mins_after_onset / 60, ' hours')
+        else concat(pdd.primary_cause_mins_after_onset, ' minutes')
     end as time_between_onset_and_death,
     antecedent_condition_1.id as antecedent_cause_1_id,
     antecedent_condition_1.name as antecedent_cause_1,
@@ -91,13 +92,13 @@ select
     initcap(pdd.was_stillborn) as was_stillborn,
     pdd.birth_weight,
     pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
-    pdi.carrier_age as age_of_mother,
+    pdd.carrier_age as age_of_mother,
     carrier_condition.name as condition_in_mother_affecting_fetus_or_newborn,
     case
-        when pdd.within_day_of_birth then 'Yes'
+        when pdd.was_within_day_of_birth then 'Yes'
         else 'No'
     end as death_within_day_of_birth,
-    pdi.hours_survived_since_birth
+    pdd.hours_survived_since_birth
 from {{ ref("patient_death_data") }} pdd
 join {{ ref("patients") }} p 
     on p.id = pdd.patient_id
@@ -129,6 +130,8 @@ left join {{ ref("reference_data") }} carrier_condition
     on carrier_condition.id = pdd.carrier_existing_condition_id
 left join encounters_with_death ewd 
     on ewd.patient_id = p.id
+left join {{ ref("facilities") }} facility 
+    on facility.id = pdd.facility_id
 left join {{ ref("departments") }} department 
     on department.id = ewd.department_id
 left join {{ ref("locations") }} location 
@@ -137,4 +140,6 @@ left join {{ ref("location_groups") }} location_group
     on location_group.id = location.location_group_id
 left join {{ ref("users") }} clinician 
     on clinician.id = pdd.recorded_by_id
-order by pdd.date_of_death
+where pdd.visibility_status = 'current'
+    and pdd.is_final
+order by p.date_of_death

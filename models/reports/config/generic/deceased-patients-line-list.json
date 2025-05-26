@@ -1,0 +1,75 @@
+{
+  "query": "query here",
+  "notes": "This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronologocal order by date and time of death. \nThe report includes all details documented in the patient death record. ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Cause of death",
+        "name": "causeOfDeath"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Due to (or as a consequence of)",
+        "name": "antecedentCause"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Other contributing condition",
+        "name": "otherContributingCondition"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Manner of death",
+        "name": "mannerOfDeath",
+        "options": [
+          {
+            "label": "Disease",
+            "value": "Disease"
+          },
+          {
+            "label": "Assault",
+            "value": "Assault"
+          },
+          {
+            "label": "Accident",
+            "value": "Accident"
+          },
+          {
+            "label": "Legal Intervention",
+            "value": "Legal Intervention"
+          },
+          {
+            "label": "Pending Investigation",
+            "value": "Pending Investigation"
+          },
+          {
+            "label": "Intentional Self Harm",
+            "value": "Intentional Self Harm"
+          },
+          {
+            "label": "War",
+            "value": "War"
+          },
+          {
+            "label": "Unknown/Could not be determined",
+            "value": "Unknown/Could not be determined"
+          }
+        ]
+      }
+    ]
+  }
+}
