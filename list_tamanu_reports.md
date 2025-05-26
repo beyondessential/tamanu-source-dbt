@@ -1,11 +1,34 @@
 # List of Tamanu reports
 ## Generic
 
+### Admissions line list
+
+**Report Description**
+
+This report generates a list of all patients with a hospital admission started within the selected date range. The report includes both active and discharged admissions. Patients are listed in order of most recent admission by admission date and time. The discharge date is displayed if the patient has been discharged, 
+otherwise if the encounter is active this column will appear blank. 
+
+The below information is included for each hospital admission:
+- List of all assigned departments and the date and time a patient was assigned to each department.
+- List of all assigned areas and the date and time a patient was assigned to each area.
+- List of all assigned locations and the date and time a patient was assigned to each location.
+- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed' and 'Suspected'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
+
+
+**Filters**
+
+Facility, Patient billing type, Admitting clinician, Area, Department
+
+**Default date range**: 7days
+
+
+---
+
 ### Hospital admissions by area summary
 
 **Report Description**
 
-This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
+This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23-20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
 - Number of admissions = Number of hospital admissions for specified month by area. Where area is the last area the patient was located prior to discharge/at reporting. 
@@ -31,7 +54,7 @@ Facility, Area
 
 **Report Description**
 
-This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
+This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
 - Number of admissions = Number of hospital admissions for specified month by department. Where department is the last department the patient was assigned prior to discharge/at reporting. 
