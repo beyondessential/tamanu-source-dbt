@@ -1,6 +1,6 @@
 with diets as (
     select
-        encounter_id,
+        ed.encounter_id,
         string_agg(rd.name, ', ') as diets
     from {{ ref('encounter_diets') }} ed
     join {{ ref('reference_data') }} rd
@@ -14,21 +14,18 @@ select
     p.display_id,
     concat(p.first_name, ' ', p.last_name) as patient_name,
     e.start_datetime,
-    concat(
-        current_date - p.date_of_birth, ' ',
-        case
-            when current_date - p.date_of_birth < interval '8 days'
-                then 'days'
-            when current_date - p.date_of_birth >= interval '8 days'
-                and current_date - p.date_of_birth < interval '1 month'
-                then 'weeks'
-            when current_date - p.date_of_birth >= interval '1 month'
-                and current_date - p.date_of_birth < interval '2 years'
-                then 'months'
-            when current_date - p.date_of_birth >= interval '2 years'
-                then 'years'
-        end
-    ) as age,
+    case
+        when age(current_date, p.date_of_birth) < interval '8 days'
+            then concat(extract(day from age(current_date, p.date_of_birth)), ' days')
+        when age(current_date, p.date_of_birth) >= interval '8 days'
+            and age(current_date, p.date_of_birth) < interval '1 month'
+            then concat(extract(week from age(current_date, p.date_of_birth)), ' weeks')
+        when age(current_date, p.date_of_birth) >= interval '1 month'
+            and age(current_date, p.date_of_birth) < interval '2 years'
+            then concat(extract(month from age(current_date, p.date_of_birth)), ' months')
+        when age(current_date, p.date_of_birth) >= interval '2 years'
+            then concat(extract(year from age(current_date, p.date_of_birth)), ' years')
+    end as age,
     l.id as location_id,
     l.name as location,
     lg.id as location_group_id,
@@ -42,5 +39,5 @@ join {{ ref('locations') }} l
 join {{ ref('location_groups') }} lg
     on lg.id = l.location_group_id
 left join diets d
-    on d.encounter_id = e.encounter_id
+    on d.encounter_id = e.id
 where e.end_datetime is null
