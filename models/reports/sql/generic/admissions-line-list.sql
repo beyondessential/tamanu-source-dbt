@@ -18,8 +18,8 @@ select
     location_group_datetimes as "{{ translate_label('locationGroupChangeDateTimes', 'Location group change date and times') }}",
     locations as "{{ translate_label('locationNames', 'Locations') }}",
     location_datetimes as "{{ translate_label('locationChangeDateTimes', 'Location change date and times') }}",
-    primary_diagnoses as "{{ translate_label('primaryDiagnoses', 'Primary diagnoses') }}",
-    secondary_diagnoses as "{{ translate_label('secondaryDiagnoses', 'Secondary diagnoses') }}"
+    primary_diagnoses as "{{ translate_label('diagnosesPrimary', 'Primary diagnoses') }}",
+    secondary_diagnoses as "{{ translate_label('diagnosesSecondary', 'Secondary diagnoses') }}"
 from {{ ref('ds__admissions') }}
 where 
     case when {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }} is null then true
