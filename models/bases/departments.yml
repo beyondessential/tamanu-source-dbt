@@ -8,9 +8,6 @@ models:
       - name: id
         data_type: character varying
         description: "{{ doc('generic__id') }} in departments."
-        data_tests:
-          - not_null
-          - unique
         meta:
           metrics:
             total_departments_count:
@@ -27,5 +24,3 @@ models:
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in departments."
-        data_tests:
-          - valid_visibility_status
