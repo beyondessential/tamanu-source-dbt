@@ -2,7 +2,7 @@ select
     lrl.id,
     lrl.lab_request_id,
     lrl.status,
-    lrl.updated_at,
+    lrl.updated_at::timestamp as updated_datetime,
     lrl.updated_by_id
 from {{ source("tamanu", "lab_request_logs") }} lrl
 join {{ source("tamanu", "lab_requests") }} lr on lr.id = lrl.lab_request_id

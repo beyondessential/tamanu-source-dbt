@@ -27,7 +27,7 @@ select
 from reporting_dates rd
 join {{ ref('int__lab_requests_history') }} lrh
     on lrh.status_start_date <= rd.reporting_date
-    and rd.reporting_date <= coalesce(lrh.status_end_date, rd.reporting_date)
+    and rd.reporting_date <= lrh.status_end_date
 where case
         when {{ parameter('departmentId', default_value='null', data_type='text') }} is null
             then true

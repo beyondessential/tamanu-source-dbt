@@ -66,6 +66,6 @@ models:
       - name: department_id
         data_type: character varying(255)
         description: "{{ doc('lab_requests__department_id') }}"
-      - name: updated_at
+      - name: updated_datetime
         data_type: timestamp
         description: "{{ doc('generic__updated_at') }} in lab_requests which is used as a best estimate of modification datetime."

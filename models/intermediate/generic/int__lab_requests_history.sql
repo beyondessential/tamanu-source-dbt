@@ -9,18 +9,18 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
     ltc.id as lab_test_category_id,
     ltc.name as lab_test_category,
     coalesce(lrl.status, lr.status) as status,
-    coalesce(lrl.updated_at, lr.updated_at)::date as status_start_date,
+    coalesce(lrl.updated_datetime, lr.updated_datetime)::date as status_start_date,
     case
         when coalesce(lrl.status, lr.status) = 'published'
             then
-                coalesce(lrl.updated_at, lr.updated_at)::date
-        when lead(coalesce(lrl.updated_at, lr.updated_at)) over w is not null
+                coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+        when lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w is not null
             then
                 case
-                    when coalesce(lrl.updated_at, lr.updated_at)::date
-                        = (lead(coalesce(lrl.updated_at, lr.updated_at)) over w)::date
-                        then (lead(coalesce(lrl.updated_at, lr.updated_at)) over w)::date
-                    else (lead(coalesce(lrl.updated_at, lr.updated_at)) over w - interval '1 day')::date
+                    when coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+                        = (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                        then (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                    else (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w - interval '1 day')::date
                 end
         else current_date
     end as status_end_date
@@ -34,6 +34,6 @@ where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
 window
     w as (
         partition by lr.id
-        order by coalesce(lrl.updated_at, lr.updated_at)
+        order by coalesce(lrl.updated_datetime, lr.updated_datetime)
     )
 order by lr.id, coalesce(lrl.status, lr.status)
