@@ -1,11 +1,11 @@
 {
   "query": "replace this",
-  "name": "Encounter diets line list",
-  "notes": "This report generates a list of all active encounters with their associated dietary requirements. The report includes:\n- Patient details and current location\n- Encounter start date and duration\n- Dietary requirements and restrictions\n- Current facility and area\n- Notes and special instructions\nThis report is useful for kitchen staff and nutritionists to track current dietary needs of admitted patients.",
+  "name": "Current encounters diets line list",
+  "notes": "This report generates a list of all active encounters with their associated dietary requirements. The report includes:\n- Patient details and current location\n- Dietary requirements and restrictions.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
-    "defaultDateRange": "24hours",
+    "defaultDateRange": "allTime",
     "dateRangeLabel": "Enter encounter start dates (or leave it blank for all)",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [

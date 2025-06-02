@@ -5,6 +5,7 @@ with diets as (
     from {{ ref('encounter_diets') }} ed
     join {{ ref('reference_data') }} rd
         on rd.id = ed.diet_id
+    order by rd.name
     group by ed.encounter_id
 )
 
