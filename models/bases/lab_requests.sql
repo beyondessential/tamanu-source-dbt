@@ -17,7 +17,8 @@ select
     lr.reason_for_cancellation,
     lr.published_date::timestamp as published_datetime,
     lr.encounter_id,
-    lr.department_id
+    lr.department_id,
+    lr.updated_at::timestamp as updated_datetime
 from {{ source("tamanu", "lab_requests") }} lr
 join {{ source("tamanu", "encounters") }} e on e.id = lr.encounter_id
 where lr.deleted_at is null
