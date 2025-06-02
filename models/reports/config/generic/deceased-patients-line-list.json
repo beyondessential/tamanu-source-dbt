@@ -4,7 +4,7 @@
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
-    "defaultDateRange": "24hours",
+    "defaultDateRange": "7days",
     "dataSources": [
       "thisFacility",
       "allFacilities"

@@ -3,7 +3,7 @@ with contributing_death_causes as (
         cdc.patient_death_data_id,
         array_agg(
             cdc.condition_id
-            order by cdc.created_at
+            order by cdc.time_after_onset
         ) as other_conditions
     from {{ ref("contributing_death_causes") }} cdc
     group by cdc.patient_death_data_id

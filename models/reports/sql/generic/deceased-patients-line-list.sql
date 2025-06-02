@@ -5,7 +5,7 @@ select
     date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_label('patientAge', 'Age') }}",
     sex as "{{ translate_label('patientSex', 'Sex') }}",
-    village as "{{ translate_label('patientVillage', 'village' ) }}",
+    village as "{{ translate_label('patientVillage', 'Village' ) }}",
     nationality as "{{ translate_label('patientNationality', 'Nationality') }}",
     place_of_death as "{{ translate_label('deathPlaceOfDeath', 'Place of death') }}",
     department as "{{ translate_label('departmentName', 'Department') }}",
