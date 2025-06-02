@@ -14,7 +14,7 @@ select
     birth_time as "{{ translate_label('birthTimeOfBirth', 'Time of birth') }}",
     gestational_age_estimate as "{{ translate_label('birthGestationalAgeEstimate', 'Gestational age (weeks)') }}",
     registered_birth_place as "{{ translate_label('patientPlaceOfBirth', 'Place of birth') }}",
-    birth_facility as "{{ translate_label('birthFacilityName', 'Name of health facility (if selected)') }}",
+    birth_facility as "{{ translate_label('birthFacility', 'Name of health facility (if selected)') }}",
     attendant_at_birth as "{{ translate_label('birthAttendantType', 'Attendant at birth') }}",
     name_of_attendant_at_birth as "{{ translate_label('birthAttendant', 'Name of attendant') }}",
     birth_delivery_type as "{{ translate_label('birthDeliveryType', 'Delivery type') }}",

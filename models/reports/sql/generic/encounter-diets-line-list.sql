@@ -1,8 +1,8 @@
 select
     ed.display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
-    ed.patient_name as "{{ translate_label('patientName', 'Patient Name') }}",
+    ed.patient_name as "{{ translate_label('patientName', 'Patient name') }}",
     ed.age as "{{ translate_label('patientAge', 'Age') }}",
-    concat_ws(', ', ed.location_group, ed.location) as "{{ translate_label('locationName', 'Location') }}",
+    concat_ws(', ', ed.location_group, ed.location) as "{{ translate_label('location', 'Location') }}",
     ed.diets as "{{ translate_label('encounterDiet', 'Diet') }}"
 from {{ ref('ds__encounter_diets') }} ed
 where
