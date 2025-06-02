@@ -24,9 +24,11 @@ select
     ethnicity.name as ethnicity,
     occupation.name as occupation,
     religion.name as religion,
-    billing.name as patient_billing_type
+    billing.name as patient_billing_type,
+    case when pbd.patient_id is null then 'Patient' else 'Birth' end as registration_type
 from {{ ref("patients") }} p
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
+left join {{ ref("patient_birth_data") }} pbd on pbd.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
 join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
 left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
