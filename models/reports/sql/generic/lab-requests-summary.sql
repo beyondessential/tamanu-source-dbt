@@ -9,8 +9,8 @@ with reporting_dates as (
 
 select
     rd.reporting_date as "{{ translate_label('reportingDate', 'Date') }}",
-    lrh.facility as "{{ translate_label('facilityName', 'Facility') }}",
-    lrh.department as "{{ translate_label('departmentName', 'Department') }}",
+    lrh.facility as "{{ translate_label('facility', 'Facility') }}",
+    lrh.department as "{{ translate_label('department', 'Department') }}",
     lrh.lab_test_category as "{{ translate_label('labTestCategory', 'Test category') }}",
     count(distinct case
         when rd.reporting_date = lrh.requested_date

@@ -1,11 +1,44 @@
 # List of Tamanu reports
 ## Generic
 
+### Deceased patients line list
+
+**Report Description**
+
+This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronologocal order by date and time of death. 
+The report includes all details documented in the patient death record. 
+
+**Filters**
+
+Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
+
+**Default date range**: 7days
+
+
+---
+
+### Encounter diets line list
+
+**Report Description**
+
+This report generates a list of all active encounters with their associated dietary requirements. The report includes:
+- Patient details and current location
+- Dietary requirements and restrictions.
+
+**Filters**
+
+Facility, Area
+
+**Default date range**: allTime
+
+
+---
+
 ### Hospital admissions by area summary
 
 **Report Description**
 
-This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
+This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23-20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
 - Number of admissions = Number of hospital admissions for specified month by area. Where area is the last area the patient was located prior to discharge/at reporting. 
@@ -31,7 +64,7 @@ Facility, Area
 
 **Report Description**
 
-This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
+This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
 - Number of admissions = Number of hospital admissions for specified month by department. Where department is the last department the patient was assigned prior to discharge/at reporting. 
@@ -169,6 +202,17 @@ Payment method
 
 ---
 
+### Invoicing pending line list
+
+**Report Description**
+
+Pending Invoicing Line List. This report generates a list of all encounters that have not been invoiced.
+
+**Default date range**: allTime
+
+
+---
+
 ### Invoicing summary
 
 **Report Description**
@@ -193,6 +237,21 @@ The report includes lab requests for all statuses and if a request has been canc
 Requesting clinician, Test category, Status
 
 **Default date range**: 7days
+
+
+---
+
+### Lab requests summary
+
+**Report Description**
+
+This report provides a statistical summary of lab requests by date, department and lab test category.
+
+**Filters**
+
+Facility, Department, Category
+
+**Default date range**: allTime
 
 
 ---
@@ -314,6 +373,17 @@ This report generates a list of all registered births for the selected parameter
 **Filters**
 
 Facility, Village
+
+**Default date range**: 7days
+
+
+---
+
+### Registered patients by dob line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
 
 **Default date range**: 7days
 
