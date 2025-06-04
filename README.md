@@ -34,6 +34,15 @@ This command generates views, reports, and an import script for deployment in th
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 
+## Generate report boilerplate
+Execute the following command to generate boilerplate SQL and JSON files:
+```bash
+python scripts/report_generator.py [OPTIONS]
+```
+### Command-Line Arguments
+- `--project` / `-p`: Project name (defaults to "generic")
+- `--name` / `-n`: Report name (defaults to timestamped name like "report-20241205_143022")
+
 ## Script to list Tamanu reports
 
 This script generates a list of all reports in the repository grouped by deployment, and outputs the result in a Markdown file.
