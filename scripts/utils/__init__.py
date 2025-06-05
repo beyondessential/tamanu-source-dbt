@@ -1,9 +1,16 @@
 from .dbt_utils import (
     get_deployment_version,
+    get_surveys_from_dbt,
     hide_macros_from_docs,
     hide_tests_from_docs,
 )
-from .file_utils import copy_files_from_directory, remove_directory
+from .file_utils import (
+    copy_files_from_directory,
+    ensure_directory_exists,
+    read_file,
+    remove_directory,
+    write_file,
+)
 from .report_utils import (
     generate_import_report_script,
     generate_project_reports,
