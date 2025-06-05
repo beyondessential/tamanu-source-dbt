@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  - name: program-nauruantenatal-ronhmaad
+    description: "Dataset containing responses for 'Maternity admission' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: ronhmaad1
+        description: "Admission date"
+      - name: ronhmaad2
+        description: "Admission time"
+      - name: ronhmaad3
+        description: "Reason for admission"
+      - name: ronhmaad4
+        description: "In labour"
+      - name: ronhmaad5
+        description: "Pregnancy booked"
+      - name: ronhmaad6
+        description: "If booked, number of antenatal visits"
+      - name: ronhmaad7
+        description: "Pregnancy intended"
+      - name: ronhmaad8
+        description: "If not intended, did the patient want to access family planning support?"
+      - name: ronhmaad9
+        description: "If yes, was the support given appropiate for the patients needs?"
+      - name: ronhmaad10
+        description: "Teenage pregnancy"
+      - name: ronhmaad11
+        description: "Admitted from"
+      - name: ronhmaad12
+        description: "Abnormalities and risk factors"
+      - name: ronhmaad13
+        description: "Gestation (weeks)"
+      - name: ronhmaad14
+        description: "Parity"
+      - name: ronhmaad15
+        description: "Gravidity"
+      - name: ronhmaad16
+        description: "Number of children dead"
+      - name: ronhmaad17
+        description: "Labour commence date"
+      - name: ronhmaad18
+        description: "Labour commence time"
+      - name: ronhmaad20
+        description: "General condition"
+      - name: ronhmaad21
+        description: "Weight (kg)"
+      - name: ronhmaad22
+        description: "Systolic (BP)"
+      - name: ronhmaad23
+        description: "Diastolic (BP)"
+      - name: ronhmaad24
+        description: "Pulse (bpm)"
+      - name: ronhmaad25
+        description: "Temperature (°C)"
+      - name: ronhmaad26
+        description: "Last Haemoglobin (g/dL)"
+      - name: ronhmaad27
+        description: "Diabetic"
+      - name: ronhmaad28
+        description: "Contractions (mins & secs)"
+      - name: ronhmaad29
+        description: "Fundal Height (cm)"
+      - name: ronhmaad30
+        description: "Lie of fetus"
+      - name: ronhmaad32
+        description: "Presentation"
+      - name: ronhmaad33
+        description: "Level of head abdominally"
+      - name: ronhmaad34
+        description: "Fetal heart rate (bpm)"
+      - name: ronhmaad35
+        description: "Membranes"
+      - name: ronhmaad36
+        description: "Date of membrane rupture"
+      - name: ronhmaad37
+        description: "Time of membrane rupture"
+      - name: ronhmaad38
+        description: "Ruptured liquor colour"
+      - name: ronhmaad40
+        description: "Date of examination"
+      - name: ronhmaad41
+        description: "Time of examination"
+      - name: ronhmaad42
+        description: "Examiner"
+      - name: ronhmaad43
+        description: "Cervix state"
+      - name: ronhmaad44
+        description: "Cervix position"
+      - name: ronhmaad45
+        description: "Cervix effacement"
+      - name: ronhmaad46
+        description: "Cervical dilatation (cm)"
+      - name: ronhmaad47
+        description: "Presentation part"
+      - name: ronhmaad48
+        description: "Station"
+      - name: ronhmaad49
+        description: "Comments / Diagnosis"
+      - name: ronhmaad50
+        description: "Details of management plan"
+      - name: ronhmaad51
+        description: "Doctor informed (if necessary or urgent)"
+      - name: ronhmaad53
+        description: "Name of Doctor informed"
+      - name: ronhmaad54
+        description: "Date Doctor informed"
+      - name: ronhmaad55
+        description: "Time Doctor informed"
+      - name: ronhmaad56a
+        description: "Comments"

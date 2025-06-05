@@ -23,7 +23,7 @@ def get_surveys_from_deployment(project="demoland"):
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
         if not result or result.returncode != 0:
             if result:
-                cprint(f"Error running dbt command: {result.stderr}", "error")
+                cprint(f"Error running dbt command {cmd}:\n {result.stderr}", "error")
             return surveys
 
         for line in (result.stdout + result.stderr).split("\n"):
@@ -92,15 +92,15 @@ models:
     description: "Dataset containing responses for '{survey_name}' survey"
     columns:
       - name: encounter_id
-        description: '{{ doc("survey_responses__encounter_id") }}'
+        description: '{{{{ doc("survey_responses__encounter_id") }}}}'
       - name: response_id
-        description: '{{ doc("generic__id") }} in survey_responses.'
+        description: '{{{{ doc("generic__id") }}}} in survey_responses.'
       - name: patient_id
-        description: '{{ doc("encounters__patient_id") }}'
+        description: '{{{{ doc("encounters__patient_id") }}}}'
       - name: start_datetime
-        description: '{{ doc("survey_responses__start_time") }}'
+        description: '{{{{ doc("survey_responses__start_time") }}}}'
       - name: result_text
-        description: '{{ doc("survey_responses__result_text") }}'
+        description: '{{{{ doc("survey_responses__result_text") }}}}'
 """
     for code, name in columns:
         content += f"""      - name: {code}

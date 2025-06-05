@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: program-demo2diet-dietref
+    description: "Dataset containing responses for 'Diet Referral' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: dietphysio001
+        description: "Date"
+      - name: dietphysio002
+        description: "Age"
+      - name: dietphysio006
+        description: "Reason for Referral"
+      - name: dietphysio003
+        description: "Referral Source"
+      - name: dietphysio004
+        description: "Referral completed by"
+      - name: dietphysio005
+        description: "Diagnoses"

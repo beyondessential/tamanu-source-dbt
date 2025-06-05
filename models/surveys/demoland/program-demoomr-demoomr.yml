@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: program-demoomr-demoomr
+    description: "Dataset containing responses for 'Returning OMR' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: demoomr1
+        description: "Date of referral"
+      - name: demoomr2
+        description: "Referring Health Facility"
+      - name: demoomr3
+        description: "Referral completed by"
+      - name: demoomr4
+        description: "Referred to health facility"
+      - name: demoomr5
+        description: "Diagnosis"
+      - name: demoomr6
+        description: "Diagnosis certainty"
+      - name: demoomr7
+        description: "Reason for referral"

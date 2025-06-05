@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: program-hrsnscreeningtool-hrsnscreeningsurvey
+    description: "Dataset containing responses for 'HRSN Screening Tool' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: HRSN002
+        description: "1. What is your living situation today?"
+      - name: HRSN02
+        description: "1. What is your living situation today?"
+      - name: HRSN003
+        description: "2. Think about the place you live. Do you have problems with any of the following?"
+      - name: HRSN03
+        description: "2. Think about the place you live. Do you have problems with any of the following?"
+      - name: HRSN006
+        description: "3. Within the past 12 months, you worried that your food would run out before you got money to buy more."
+      - name: HRSN06
+        description: "3. Within the past 12 months, you worried that your food would run out before you got money to buy more."
+      - name: HRSN007
+        description: "4. Within the past 12 months, the food you bought just didn't last and you didn't have money to get more."
+      - name: HRSN07
+        description: "4. Within the past 12 months, the food you bought just didn't last and you didn't have money to get more."
+      - name: HRSN09
+        description: "5. In the past 12 months, has lack of reliable transportation kept you from medical appointments, meetings, work or from getting things needed for daily living?"
+      - name: HRSN009
+        description: "5. In the past 12 months, has lack of reliable transportation kept you from medical appointments, meetings, work or from getting things needed for daily living?"
+      - name: HRSN11
+        description: "6. In the past 12 months has the electric, gas, oil, or water company threatened to shut off services in your home?"
+      - name: HRSN011
+        description: "6. In the past 12 months has the electric, gas, oil, or water company threatened to shut off services in your home?"
+      - name: HRSN14
+        description: "7. How often does anyone, including family and friends, physically hurt you?"
+      - name: HRSN014
+        description: "7. How often does anyone, including family and friends, physically hurt you?"
+      - name: HRSN015
+        description: "8. How often does anyone, including family and friends, insult or talk down to you?"
+      - name: HRSN15
+        description: "8. How often does anyone, including family and friends, insult or talk down to you?"
+      - name: HRSN16
+        description: "9. How often does anyone, including family and friends, threaten you with harm?"
+      - name: HRSN016
+        description: "9. How often does anyone, including family and friends, threaten you with harm?"
+      - name: HRSN017
+        description: "10. How often does anyone, including family and friends, scream or curse at you?"
+      - name: HRSN17
+        description: "10. How often does anyone, including family and friends, scream or curse at you?"
+      - name: HRSN019
+        description: "11. How hard is it for you to pay for the very basics like food, housing, medical care, and heating? Would you say it is:"
+      - name: HRSN19
+        description: "11. How hard is it for you to pay for the very basics like food, housing, medical care, and heating? Would you say it is:"
+      - name: HRSN21
+        description: "12. Do you want help finding or keeping work or a job?"
+      - name: HRSN021
+        description: "12. Do you want help finding or keeping work or a job?"
+      - name: HRSN023
+        description: "13. If for any reason you need help with day-to-day activities such as bathing, preparing meals, shopping, managing finances, etc., do you get the help you need?"
+      - name: HRSN23
+        description: "13. If for any reason you need help with day-to-day activities such as bathing, preparing meals, shopping, managing finances, etc., do you get the help you need?"
+      - name: HRSN024
+        description: "14. How often do you feel lonely or isolated from those around you?"
+      - name: HRSN24
+        description: "14. How often do you feel lonely or isolated from those around you?"
+      - name: HRSN26
+        description: "15. Do you speak a language other than English at home?"
+      - name: HRSN026
+        description: "15. Do you speak a language other than English at home?"
+      - name: HRSN27
+        description: "16. Do you want help with school or training? For example, starting or completing job training or getting a high school diploma, GED or equivalent."
+      - name: HRSN027
+        description: "16. Do you want help with school or training? For example, starting or completing job training or getting a high school diploma, GED or equivalent."
+      - name: HRSN29
+        description: "17. In the last 30 days, other than the activities you did for work, on average, how many days per week did you engage in moderate exercise (like walking fast, running, jogging, dancing, swimming, biking, or other similar activities)?"
+      - name: HRSN029
+        description: "17. In the last 30 days, other than the activities you did for work, on average, how many days per week did you engage in moderate exercise (like walking fast, running, jogging, dancing, swimming, biking, or other similar activities)?"
+      - name: HRSN30
+        description: "18. On average, how many minutes did you usually spend exercising at this level on one of those days?"
+      - name: HRSN030
+        description: "18. On average, how many minutes did you usually spend exercising at this level on one of those days?"
+      - name: HRSN032
+        description: "19. How many times in the past 12 months have you had 5 or more drinks in a day (males) or 4 or more drinks in a day (females)? One drink is 12 ounces of beer, 5 ounces of wine, or 1.5 ounces of 80-proof spirits."
+      - name: HRSN32
+        description: "19. How many times in the past 12 months have you had 5 or more drinks in a day (males) or 4 or more drinks in a day (females)? One drink is 12 ounces of beer, 5 ounces of wine, or 1.5 ounces of 80-proof spirits."
+      - name: HRSN033
+        description: "20. How many times in the past 12 months have you used tobacco products (like cigarettes, cigars, snuff, chew, electronic cigarettes)?"
+      - name: HRSN33
+        description: "20. How many times in the past 12 months have you used tobacco products (like cigarettes, cigars, snuff, chew, electronic cigarettes)?"
+      - name: HRSN034
+        description: "21. How many times in the past year have you used prescription drugs for non-medical reasons?"
+      - name: HRSN34
+        description: "21. How many times in the past year have you used prescription drugs for non-medical reasons?"
+      - name: HRSN035
+        description: "22. How many times in the past year have you used illegal drugs?"
+      - name: HRSN35
+        description: "22. How many times in the past year have you used illegal drugs?"
+      - name: HRSN037
+        description: "23a. Over the past 2 weeks, how often have you been bothered by feelings of having little interest or pleasure in doing things?"
+      - name: HRSN038
+        description: "23b. Over the past 2 weeks, how often have you been bothered by feeling down, depressed, or hopeless?"
+      - name: HRSN38
+        description: "a. Little interest or pleasure in doing things?"
+      - name: HRSN039
+        description: "24. Stress means a situation in which a person feels tense, restless, nervous, or anxious, or is unable to sleep at night because his or her mind is troubled all the time. Do you feel this kind of stress these days?"
+      - name: HRSN39
+        description: "b. Feeling down, depressed, or hopeless?"
+      - name: HRSN40
+        description: "24. Stress means a situation in which a person feels tense, restless, nervous, or anxious, or is unable to sleep at night because his or her mind is troubled all the time. Do you feel this kind of stress these days?"
+      - name: HRSN041
+        description: "25. Because of a physical, mental, or emotional condition, do you have serious difficulty concentrating, remembering, or making decisions? (5 years old or older)"
+      - name: HRSN42
+        description: "25. Because of a physical, mental, or emotional condition, do you have serious difficulty concentrating, remembering, or making decisions? (5 years old or older)"
+      - name: HRSN44
+        description: "25. Because of a physical, mental, or emotional condition, do you have serious difficulty concentrating, remembering, or making decisions? (5 years old or older)"
+      - name: HRSN042
+        description: "26. Because of a physical, mental, or emotional condition, do you have difficulty doing errands alone such as visiting a doctor's office or shopping? (15 years old or older)"
+      - name: HRSN43
+        description: "26. Because of a physical, mental, or emotional condition, do you have difficulty doing errands alone such as visiting a doctor's office or shopping? (15 years old or older)"
+      - name: HRSN45
+        description: "26. Because of a physical, mental, or emotional condition, do you have difficulty doing errands alone such as visiting a doctor's office or shopping? (15 years old or older)"

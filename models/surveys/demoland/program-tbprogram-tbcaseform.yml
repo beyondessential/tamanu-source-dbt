@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: program-tbprogram-tbcaseform
+    description: "Dataset containing responses for 'Confirmed TB Form' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: PHTB001
+        description: "Registration date"
+      - name: PHTB001a
+        description: "Registration completed by"
+      - name: PHTB002
+        description: "Phone number"
+      - name: PHTB004
+        description: "Health facility where treatment card is kept"
+      - name: PHTB005
+        description: "Key affected populations"
+      - name: PHTB006
+        description: "Explain"
+      - name: PHTB007
+        description: "Date treatment started"
+      - name: PHTB008
+        description: "Treatment history"
+      - name: PHTB009
+        description: "Place of transfer"
+      - name: PHTB010
+        description: "TB infection classification"
+      - name: PHTB011
+        description: "Site of infection"
+      - name: PHTB012
+        description: "Treatment category"
+      - name: PHTB012a
+        description: "Reason patient refused treatment"
+      - name: PHTB012b
+        description: "Explain"
+      - name: PHTB013
+        description: "DM status"
+      - name: PHTB014
+        description: "If DM status is yes, then:"
+      - name: PHTB015
+        description: "HIV Status"
+      - name: PHTB016
+        description: "If HIV status is yes, then:"
+      - name: PHTB017
+        description: "TB/HIV co-infection"
+      - name: PHTB018
+        description: "TB drug resistance"
+      - name: PHTB018a
+        description: "Any overseas drug sensitivity testing?"
+      - name: PHTB018c
+        description: "Date of overseas result"
+      - name: PHTB018d
+        description: "Overseas result"
+      - name: PHTB019
+        description: "TB diagnosis method"
+      - name: PHTB020
+        description: "Smear date"
+      - name: PHTB021
+        description: "Smear results"
+      - name: PHTB022
+        description: "Culture date"
+      - name: PHTB023
+        description: "Culture results"
+      - name: PHTB024
+        description: "Explain"
+      - name: PHTB025
+        description: "GeneXpert date"
+      - name: PHTB026
+        description: "GeneXpert results"
+      - name: PHTB027
+        description: "Add description and notes (if required)"

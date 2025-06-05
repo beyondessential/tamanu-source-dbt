@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: program-covidcasemgmt-dlcovidpatientsurvey
+    description: "Dataset containing responses for 'COVID-19 Patient Survey' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: covcasemgmt001
+        description: "How is the patient feeling today"
+      - name: covcasemgmt002
+        description: "Symptoms"
+      - name: covcasemgmt003
+        description: "Contact with another person that is not in isolation with them"
+      - name: COVClinicalStatus
+        description: "Clinical status of patient"

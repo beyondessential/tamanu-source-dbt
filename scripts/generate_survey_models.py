@@ -14,13 +14,15 @@ def main():
         cprint(f"Generating survey models for project: {project}", "info")
 
         surveys = get_surveys_from_deployment(project)
+        total = len(surveys)
 
-        for survey_id, survey_name in surveys:
-            cprint(f"\n\nCreating: {survey_name}", "info")
+        for index, (survey_id, survey_name) in enumerate(surveys, 1):
+            cprint(f"\n\nProgress: [{index}/{total}]", "warning")
+            cprint(f"Creating: {survey_name}", "info")
             create_survey_model(project, survey_id)
             generate_survey_doc(project, survey_id, survey_name)
 
-        cprint(f"Successfully generated {len(surveys)} survey models!", "success")
+        cprint(f"Successfully generated {total} survey models!", "success")
 
     except Exception as e:
         cprint(f"Error generating survey models: {e}", "error")
