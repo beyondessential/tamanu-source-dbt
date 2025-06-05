@@ -29,7 +29,7 @@ def create_survey_model(project, survey_id):
     )
 }}}}
 
-{{{{ select * from ({{{{ get_survey('{survey_id}') }}}}) }}}}
+select * from ({{{{ get_survey('{survey_id}') }}}})
 """
     write_file(str(path), content)
     print(f"Created model: {path}")
