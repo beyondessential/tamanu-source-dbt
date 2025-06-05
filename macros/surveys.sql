@@ -11,26 +11,30 @@
     {%- set columns = dbt_utils.get_query_results_as_dict(sql_statement) -%}
     SELECT 
         sr.encounter_id,
-        sr.survey_response_id, 
-        sr.survey_response_submission_datetime,
-        sr.result_text,
-    {%- for id, code in zip(columns['id'], columns['code']) %}
-            MAX(CASE WHEN sra.data_element_id = '{{ id }}' THEN NULLIF(value,'') END) AS "{{ code }}"{{"," if not loop.last}}
-    {% endfor -%}
-    FROM {{ ref('stg_tamanu__survey_responses') }} sr 
-    JOIN {{ ref('stg_tamanu__survey_response_answers') }} sra 
-    ON sra.survey_response_id = sr.survey_response_id
-    WHERE survey_id = '{{ survey_id }}'
-    GROUP BY sr.survey_response_id, sr.encounter_id, sr.survey_response_submission_datetime, sr.result_text
+        sra.response_id, 
+        e.patient_id,
+        sr.start_datetime,
+        sr.result_text
+    {%- for id, code in zip(columns['id'], columns['code']) %},
+            MAX(CASE WHEN sra.data_element_id = '{{ id }}' THEN NULLIF(sra.body,'') END) AS "{{ code }}"
+    {% endfor %}
+    FROM {{ ref('survey_responses') }} sr 
+    JOIN {{ ref('survey_response_answers') }} sra 
+    ON sra.response_id = sr.id
+    JOIN {{ ref('encounters')}} e
+    ON e.id = sr.encounter_id
+    WHERE sr.survey_id = '{{ survey_id }}'
+    GROUP BY sra.response_id, sr.encounter_id, sr.start_datetime, sr.result_text, e.patient_id
 {% endmacro %}
 
 {% macro get_surveys_list() %}
     {% set query %}
-        select 
+        SELECT 
             id,
             name
-        from {{ source('tamanu', 'surveys') }}
-        order by name
+        FROM {{ source('tamanu', 'surveys') }}
+        WHERE deleted_at IS NULL
+        AND visibility_status = 'current'
     {% endset %}
     
     {% set results = run_query(query) %}

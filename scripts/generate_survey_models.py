@@ -19,7 +19,7 @@ def create_survey_model(project, survey_id):
     project_dir = SURVEYS_DIR / project
     ensure_directory_exists(str(project_dir))
 
-    model = f"survey_{project}__{survey_id}.sql"
+    model = f"{survey_id}.sql"
     path = project_dir / model
 
     content = f"""{{{{
