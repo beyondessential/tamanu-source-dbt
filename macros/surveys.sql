@@ -1,8 +1,8 @@
 {% macro get_survey(survey_id) %}
     {% set sql_statement %}
         SELECT pde.id, pde.name, pde.code
-        FROM {{ source(target.name, 'survey_screen_components') }} ssc
-        JOIN {{ source(target.name, 'program_data_elements') }} pde
+        FROM {{ source('tamanu', 'survey_screen_components') }} ssc
+        JOIN {{ source('tamanu', 'program_data_elements') }} pde
         ON ssc.data_element_id = pde.id
         WHERE ssc.survey_id = '{{survey_id}}'
         AND ssc.deleted_at IS null
@@ -29,9 +29,7 @@
         select 
             id,
             name
-        from {{ ref('surveys') }}
-        where deleted_at is null
-        and visibility_status = 'current'
+        from {{ source('tamanu', 'surveys') }}
         order by name
     {% endset %}
     
@@ -39,7 +37,7 @@
     
     {% if execute %}
         {% for row in results %}
-            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=false) }}
+            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=true) }}
         {% endfor %}
     {% endif %}
 {% endmacro %} 

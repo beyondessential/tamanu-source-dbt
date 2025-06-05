@@ -27,7 +27,9 @@ def execute_command_with_output(command, cwd=None):
     """
     try:
         print(f"\nRunning: {command}\n")
-        return subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+        return subprocess.run(
+            command, cwd=cwd, capture_output=True, text=True, shell=True
+        )
     except Exception as e:
         print(f"Error while running command:\n{e}\n")
         sys.exit(1)
