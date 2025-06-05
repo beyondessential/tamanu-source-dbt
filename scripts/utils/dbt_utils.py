@@ -137,14 +137,6 @@ def get_surveys_from_dbt(profile="demoland"):
                 print(f"Error running dbt command: {result.stderr}")
             return surveys
 
-        # Debug: Print the raw output
-        print("=== DBT OUTPUT DEBUG ===")
-        print("STDOUT:")
-        print(result.stdout)
-        print("STDERR:")
-        print(result.stderr)
-        print("=== END DEBUG ===")
-
         for line in (result.stdout + result.stderr).split("\n"):
             if "SURVEY_DATA:" in line:
                 parts = line.split("SURVEY_DATA:")[1].split("|")
