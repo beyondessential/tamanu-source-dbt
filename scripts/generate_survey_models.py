@@ -1,55 +1,29 @@
 import sys
-from pathlib import Path
 
-from utils import ensure_directory_exists, get_surveys_from_dbt, write_file
-from utils.system_utils import get_arg_value
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-SURVEYS_DIR = BASE_DIR / "models" / "surveys"
-
-
-def create_survey_model(project, survey_id):
-    """
-    Create an individual survey model file using the existing get_survey macro.
-
-    Args:
-        project (str): The project name
-        survey_id (str): The survey identifier
-    """
-    project_dir = SURVEYS_DIR / project
-    ensure_directory_exists(str(project_dir))
-
-    model = f"{survey_id}.sql"
-    path = project_dir / model
-
-    content = f"""{{{{
-    config(
-        materialized='view',
-        tags=['survey', '{project}']
-    )
-}}}}
-
-select * from ({{{{ get_survey('{survey_id}') }}}})
-"""
-    write_file(str(path), content)
-    print(f"Created model: {path}")
-    return str(path)
+from utils.survey_utils import (
+    create_survey_model,
+    generate_survey_doc,
+    get_surveys_from_deployment,
+)
+from utils.system_utils import cprint, get_arg_value
 
 
 def main():
     try:
         project = get_arg_value(sys.argv, "--project", "-p")
-        print(f"Generating survey models for project: {project}")
-        surveys = get_surveys_from_dbt(project)
-        models = []
+        cprint(f"Generating survey models for project: {project}", "info")
+
+        surveys = get_surveys_from_deployment(project)
+
         for survey_id, survey_name in surveys:
-            print(f"Creating: {survey_name}")
-            model_path = create_survey_model(project, survey_id)
-            models.append(model_path)
-        print(f"\nSuccessfully generated {len(models)} survey models!")
+            cprint(f"\n\nCreating: {survey_name}", "info")
+            create_survey_model(project, survey_id)
+            generate_survey_doc(project, survey_id, survey_name)
+
+        cprint(f"Successfully generated {len(surveys)} survey models!", "success")
 
     except Exception as e:
-        print(f"Error generating survey models: {e}")
+        cprint(f"Error generating survey models: {e}", "error")
         sys.exit(1)
 
 

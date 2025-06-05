@@ -1,6 +1,5 @@
 from .dbt_utils import (
     get_deployment_version,
-    get_surveys_from_dbt,
     hide_macros_from_docs,
     hide_tests_from_docs,
 )
@@ -16,4 +15,5 @@ from .report_utils import (
     generate_project_reports,
     generate_reporting_schema_script,
 )
-from .system_utils import execute_command
+from .survey_utils import create_survey_model, generate_survey_doc
+from .system_utils import cprint, execute_command

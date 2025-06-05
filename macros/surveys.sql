@@ -1,14 +1,17 @@
+{% macro get_survey_columns(survey_id) %}
+    SELECT pde.id, pde.name, pde.code
+    FROM {{ source('tamanu', 'survey_screen_components') }} ssc
+    JOIN {{ source('tamanu', 'program_data_elements') }} pde
+    ON ssc.data_element_id = pde.id
+    WHERE ssc.survey_id = '{{ survey_id }}'
+    AND ssc.deleted_at IS null
+    AND pde.type != 'Instruction'
+    ORDER BY ssc.screen_index, ssc.component_index
+{% endmacro %}
+
 {% macro get_survey(survey_id) %}
-    {% set sql_statement %}
-        SELECT pde.id, pde.name, pde.code
-        FROM {{ source('tamanu', 'survey_screen_components') }} ssc
-        JOIN {{ source('tamanu', 'program_data_elements') }} pde
-        ON ssc.data_element_id = pde.id
-        WHERE ssc.survey_id = '{{survey_id}}'
-        AND ssc.deleted_at IS null
-        AND pde.type != 'Instruction'
-    {% endset %}
-    {%- set columns = dbt_utils.get_query_results_as_dict(sql_statement) -%}
+    {%- set query = get_survey_columns(survey_id) -%}
+    {%- set columns = dbt_utils.get_query_results_as_dict(query) -%}
     SELECT 
         sr.encounter_id,
         sra.response_id, 
@@ -45,3 +48,14 @@
         {% endfor %}
     {% endif %}
 {% endmacro %} 
+
+{% macro get_survey_docs(survey_id) %}
+    {%- set query = get_survey_columns(survey_id) -%}
+    {% set results = run_query(query) %}
+    
+    {% if execute %}
+        {% for row in results %}
+            {{ log("COLUMN_DATA:" ~ row[2] ~ "|" ~ row[1], info=true) }}
+        {% endfor %}
+    {% endif %}
+{% endmacro %}

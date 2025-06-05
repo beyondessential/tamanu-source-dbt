@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 from utils.dbt_utils import get_dbt_project_vars, get_deployment_version
 from utils.file_utils import ensure_directory_exists, read_file, upload_to_s3
+from utils.system_utils import cprint
 
 BASE_DIR = Path(__file__).parent.parent
 SQL_DIR = BASE_DIR / "models" / "reports" / "sql"
@@ -18,7 +19,7 @@ def main():
     try:
         ensure_directory_exists(SQL_DIR)
         sql_files = list(SQL_DIR.rglob("*.sql"))
-        print(f"Found {len(sql_files)} SQL files in {SQL_DIR}")
+        cprint(f"Found {len(sql_files)} SQL files in {SQL_DIR}", "info")
 
         translation_prefix = get_dbt_project_vars("translation_prefix")
         translations = []
@@ -31,10 +32,10 @@ def main():
                     (f"{translation_prefix}.{match[0]}", match[1]) for match in matches
                 )
             except Exception as e:
-                print(f"Error processing {sql_file}: {e}")
+                cprint(f"Error processing {sql_file}: {e}", "error")
 
         if not translations:
-            print("No translations found in any SQL files")
+            cprint("No translations found in any SQL files", "error")
             return
 
         df = pd.DataFrame(
@@ -46,7 +47,7 @@ def main():
         version = get_deployment_version()
         output_file = TRANSLATION_DIR / f"report_translations_v{version}.csv"
         df.to_csv(output_file, index=False)
-        print(f"Translations saved to {output_file}")
+        cprint(f"Translations saved to {output_file}", "success")
 
         if os.getenv("GITHUB_ACTIONS"):
             bucket = os.getenv("BUCKET", "").replace("s3://", "")
@@ -56,7 +57,7 @@ def main():
             upload_to_s3(output_file, bucket, key)
 
     except Exception as e:
-        print(f"Error: {e}")
+        cprint(f"Error: {e}", "error")
 
 
 if __name__ == "__main__":
