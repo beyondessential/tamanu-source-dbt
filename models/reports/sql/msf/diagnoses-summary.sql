@@ -29,7 +29,7 @@ where case
     and case
         when {{ parameter('ageCategory', default_value='null', data_type='text') }} is null
             then true
-        else age_group = {{ parameter('ageCategory', default_value='null', data_type='text') }}
+        else age_category = {{ parameter('ageCategory', default_value='null', data_type='text') }}
     end
     and case
         when {{ parameter('diagnosisId', default_value='null', data_type='text') }} is null
