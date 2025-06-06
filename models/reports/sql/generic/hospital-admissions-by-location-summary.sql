@@ -50,9 +50,9 @@ location_summary as (
 
 select
     to_char(ls.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
-    ls.facility as "{{ translate_label('facilityName', 'Facility') }}",
-    ls.location_group as "{{ translate_label('locationGroupName', 'Area') }}",
-    ls.location as "{{ translate_label('locationName', 'Location') }}",
+    ls.facility as "{{ translate_label('facility', 'Facility') }}",
+    ls.location_group as "{{ translate_label('locationGroup', 'Area') }}",
+    ls.location as "{{ translate_label('location', 'Location') }}",
     coalesce(ls.admissions, 0) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",
     coalesce(ls.discharges, 0) as "{{ translate_label('hospitalDischargeCount', 'Number of discharges') }}",
     coalesce(ls.deaths, 0) as "{{ translate_label('hospitalDeathCount', 'Number of deaths') }}",

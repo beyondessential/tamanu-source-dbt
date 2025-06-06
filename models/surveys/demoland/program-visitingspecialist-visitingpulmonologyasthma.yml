@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: program-visitingspecialist-visitingpulmonologyasthma
+    description: "Dataset containing responses for 'Asthma Control Test' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: SKHPulmonologyA0003
+        description: "During the past 4 weeks, how often did your asthma prevent you from getting as much done at work, school or home?"
+      - name: SKHPulmonologyA0005
+        description: "During the past 4 weeks, how often have you had shortness of breath?"
+      - name: SKHPulmonologyA0007
+        description: "During the past 4 weeks, how often did your asthma symptoms (Wheezing, couging, chest tightness, shortness of breath) wake you up at night or earlier than usual in the morning?"
+      - name: SKHPulmonologyA0009
+        description: "During the past 4 weeks, how often have you used your reliever inhaler (usually blue)?"
+      - name: SKHPulmonologyA0011
+        description: "How would you rate your asthma control during the past 4 weeks?"
+      - name: SKHPulmonologyA0012
+        description: "Total Score:"
+      - name: SKHPulmonologyA0013
+        description: "Your asthma apears to hae been UNDER CONTROL over the last 4 weeks. However, if you are experiencing any problems with your asthma, you should see your doctor or nurse."
+      - name: SKHPulmonologyA0014
+        description: "Your asthma apears to have been REASONABLY WELL CONTROLLED during the past 4 weeks. However, if you are experiencing symptoms your doctor or nurse may be able to help you."
+      - name: SKHPulmonologyA0015
+        description: "Your asthma NOT HAVE BEEN CONTOLLED during the past 4 weeks. Your doctor or nurse can recommend an asthma action plan to help improve your asthma control."

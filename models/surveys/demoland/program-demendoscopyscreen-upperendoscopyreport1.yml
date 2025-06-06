@@ -1,0 +1,1892 @@
+version: 2
+
+models:
+  - name: program-demendoscopyscreen-upperendoscopyreport1
+    description: "Dataset containing responses for '(Demo Land) Upper endoscopy report - full version' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: upperendoscr02
+        description: "Scope indication"
+      - name: upperendoscr03
+        description: "Abdominal pain location"
+      - name: upperendoscr04
+        description: "Altered bowel habits details"
+      - name: upperendoscr05
+        description: "Bleeding details"
+      - name: upperendoscr06
+        description: "Laryngeal symptoms details"
+      - name: upperendoscr07
+        description: "Laryngeal symptoms other"
+      - name: upperendoscr08
+        description: "Screening details"
+      - name: upperendoscr08a
+        description: "Screening details - Other description"
+      - name: upperendoscr09
+        description: "Screening details - Family history details"
+      - name: upperendoscr10
+        description: "Screening details - Family history cancer details"
+      - name: upperendoscr10-01
+        description: "Screening details - Family history cancer details - Other description"
+      - name: upperendoscr11
+        description: "Surveillance details"
+      - name: upperendoscr11a
+        description: "If other selected, please describe"
+      - name: upperendoscr13-01
+        description: "Surveillance details - Cancer details"
+      - name: upperendoscr13-02
+        description: "Surveillance details - Site of polyps"
+      - name: upperendoscr13-03
+        description: "Surveillance details - Site of ulcer"
+      - name: upperendoscr12
+        description: "Polyposis/Familial cancer syndromes"
+      - name: upperendoscr13
+        description: "Planned procedures"
+      - name: upperendoscr13-04
+        description: "Description of other"
+      - name: upperendoscr14
+        description: "Other indication details"
+      - name: upperendoscr16
+        description: "Distance of scope insertion"
+      - name: upperendoscr16-01
+        description: "Oesophagus distance details"
+      - name: upperendoscr17
+        description: "Duodenum distance details"
+      - name: upperendoscr17-01
+        description: "Other duodenum distance detail"
+      - name: upperendoscr16-02
+        description: "Stomach distance details"
+      - name: upperendoscr16-03
+        description: "Jejenum distance details"
+      - name: upperendoscr16-04
+        description: "Other distance details"
+      - name: upperendoscr18
+        description: "Ease of insertion"
+      - name: upperendoscr18-01
+        description: "Other ease of insertion details"
+      - name: upperendoscr20
+        description: "Consent"
+      - name: upperendoscr21
+        description: "Anticoagulation"
+      - name: upperendoscr22
+        description: "Anticoagulant name"
+      - name: upperendoscr23
+        description: "Last anticoagulant date"
+      - name: upperendoscr24
+        description: "Perioperative oxygen"
+      - name: upperendoscr25
+        description: "Perioperative O2 type"
+      - name: upperendoscr26
+        description: "Nil orally"
+      - name: upperendoscr27
+        description: "Anaesthetic used"
+      - name: upperendoscr28
+        description: "Anaesthetic administration"
+      - name: upperendoscr29
+        description: "Anaesthetic type"
+      - name: upperendoscr30
+        description: "Throat spray type"
+      - name: upperendoscr29-01
+        description: "Dose of throat spray"
+      - name: upperendoscr29-02
+        description: "Dose of Midazolam"
+      - name: upperendoscr29-03
+        description: "Dose of Propofol"
+      - name: upperendoscr29-04
+        description: "Dose of Fentanyl"
+      - name: upperendoscr29-05
+        description: "Dose of general anaesthetic"
+      - name: upperendoscr29-06
+        description: "Type of other anaesthetic"
+      - name: upperendoscr29-07
+        description: "Dose of other anaesthetic"
+      - name: upperendoscr33
+        description: "Oesophagus-common"
+      - name: upperendoscr34
+        description: "Oesophagus-common - GOJ (cm) - GOJ (cm)"
+      - name: upperendoscr35
+        description: "Oesophagus-common - Oesophageal biopsy - Site"
+      - name: upperendoscr35-01
+        description: "Other details"
+      - name: upperendoscr36
+        description: "Oesophagus-common - Oesophageal biopsy - Method"
+      - name: upperendoscr37
+        description: "Oesophagus-common - Oesophageal biopsy - Purpose"
+      - name: upperendoscr37-01
+        description: "Other details"
+      - name: upperendoscr42-01
+        description: "Inspection detail"
+      - name: upperendoscr39
+        description: "Oesophagus-common - Barrett's oesophagus - GOJ at (cm)"
+      - name: upperendoscr40
+        description: "Oesophagus-common - Barrett's oesophagus - Length (cm)"
+      - name: upperendoscr41
+        description: "Oesophagus-common - Barrett's oesophagus - Prague criteria"
+      - name: upperendoscr42
+        description: "Oesophagus-common - Barrett's oesophagus - Inspection (white and blue light)"
+      - name: upperendoscr42-001
+        description: "Oesophagus-common - Barrett's oesophagus - Mucosal inspection description"
+      - name: upperendoscr43
+        description: "Oesophagus-common - Barrett's oesophagus - Biopsy"
+      - name: upperendoscr43-01
+        description: "Oesophagus-common - Barrett's oesophagus - Other biopsy details"
+      - name: upperendoscr43a
+        description: "Oesophagus-common - Barrett's oesophagus - Seattle protocol biopsy details"
+      - name: upperendoscr43-02
+        description: "Oesophagus-common - Hiatus hernia - Site of GOJ (squamocolumnar mucosa to top of gastric folds) (cm)"
+      - name: upperendoscr44
+        description: "Oesophagus-common - Hiatus hernia - Site of hiatal narrowing in stomach (cm)"
+      - name: upperendoscr45
+        description: "Oesophagus-common - Hiatus hernia - Size of hernia"
+      - name: upperendoscr46
+        description: "Oesophagus-common - Hiatus hernia - Type"
+      - name: upperendoscr47
+        description: "Oesophagus-common - Hiatus hernia - Cameron's ulcers?"
+      - name: upperendoscr48
+        description: "Oesophagus-common - Reflux oesophagitis - Reflux oesophagitis site"
+      - name: upperendoscr49
+        description: "Oesophagus-common - Reflux oesophagitis - Reflux oesophagitis severity"
+      - name: upperendoscr49-01
+        description: "Oesophagus-common - Reflux oesophagitis - Reflux oesophagitis grading (Los Angeles, Savary Miller, Hill, other)"
+      - name: upperendoscr50
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal stricture site"
+      - name: upperendoscr50-01
+        description: "Oesophagus-common - Oesophageal stricture - Describe other oesophageal stricture site"
+      - name: upperendoscr51
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal stricture appearance type"
+      - name: upperendoscr54
+        description: "Oesophagus-common - Oesophageal stricture - Other type"
+      - name: upperendoscr54-01
+        description: "Oesophagus-common - Oesophageal stricture - Description"
+      - name: upperendoscr52
+        description: "Oesophagus-common - Oesophageal stricture - Traversed by scope initially"
+      - name: upperendoscr53
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal stricture length (cm)"
+      - name: upperendoscr55
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal dilatation"
+      - name: upperendoscr55-01
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal dilatation - Size of dilator (mm) (Balloon Dilator)"
+      - name: upperendoscr55-02
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal dilatation - Size of dilator (mm) (Savary Gilliard)"
+      - name: upperendoscr55-05-01
+        description: "Oesophagus-common - Oesophageal stricture - stricture traversed post-dilation"
+      - name: upperendoscr55-03
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal dilatation - Size of dilator (mm) (Traversed by scope post dilatation)"
+      - name: upperendoscr57
+        description: "Oesophagus-common - Oesophageal stricture - Injection solution"
+      - name: upperendoscr56
+        description: "Oesophagus-common - Oesophageal stricture - Injection volume (mL)"
+      - name: upperendoscr55-06
+        description: "Oesophagus-common - Oesophageal stricture - Oesophageal dilatation - Other description"
+      - name: upperendoscr56-001
+        description: "Oesophagus-common - Oesophageal stricture - Stent"
+      - name: upperendoscr58
+        description: "Oesophagus-common - Oesophageal stricture - Outcome"
+      - name: upperendoscr60
+        description: "Oesophagus-common - Oesophageal varices-active - Site"
+      - name: upperendoscr60-01
+        description: "Oesophagus-common - Oesophageal varices-active - Describe other site"
+      - name: upperendoscr61
+        description: "Oesophagus-common - Oesophageal varices-active - Size"
+      - name: upperendoscr6101
+        description: "Oesophagus-common - Oesophageal varices-active - Description of varices"
+      - name: upperendoscr62
+        description: "Oesophagus-common - Oesophageal varices-active - Banding?"
+      - name: upperendoscr63
+        description: "Oesophagus-common - Oesophageal varices-active - Banding device"
+      - name: upperendoscr64
+        description: "Oesophagus-common - Oesophageal varices-active - Number of bands"
+      - name: upperendoscr65
+        description: "Oesophagus-common - Oesophageal varices-active - Sclerotherapy"
+      - name: upperendoscr66
+        description: "Oesophagus-common - Oesophageal varices-active - Sclerotherapy solution"
+      - name: upperendoscr67
+        description: "Oesophagus-common - Oesophageal varices-active - Volume injected"
+      - name: upperendoscr68
+        description: "Oesophagus-common - varices-inactive - Oesophageal varices-inactive"
+      - name: upperendoscr70
+        description: "Oesophagus-uncommon"
+      - name: upperendoscr71
+        description: "Oesophagus-uncommon - Anastamosis - Type"
+      - name: upperendoscr71-01
+        description: "Oesophagus-uncommon - Anastamosis - Type - Other description"
+      - name: upperendoscr72
+        description: "Oesophagus-uncommon - Anastamosis - Level distal oesophageal mucosa (cm)"
+      - name: upperendoscr73
+        description: "Oesophagus-uncommon - Anastamosis - Contents of lumen"
+      - name: upperendoscr74
+        description: "Oesophagus-uncommon - Anastamosis - Appearance of anastamosis"
+      - name: upperendoscr75
+        description: "Oesophagus-uncommon - Anastamosis - Biopsy"
+      - name: upperendoscr75-01
+        description: "Oesophagus-uncommon - Anastamosis - Biopsy - Where?"
+      - name: upperendoscr77
+        description: "Oesophagus-uncommon - Anastamosis - Balloon dilatation (mm)"
+      - name: upperendoscr78
+        description: "Oesophagus-uncommon - Anastamosis - Savary-Gilliard dilator (mm)"
+      - name: upperendoscr79
+        description: "Oesophagus-uncommon - Diverticulum/pouch - Diverticulum/pouch"
+      - name: upperendoscr80
+        description: "Oesophagus-uncommon - Foreign Body - Description"
+      - name: upperendoscr80-01
+        description: "Oesophagus-uncommon - Foreign Body - Method of removal"
+      - name: upperendoscr80-02
+        description: "Oesophagus-uncommon - Foreign Body - Description of other method of removal"
+      - name: upperendoscr80-03
+        description: "Oesophagus-uncommon - Foreign Body - Retrieval"
+      - name: upperendoscr81
+        description: "Oesophagus-uncommon - Inlet patch length - Site of inlet patch (cm)"
+      - name: upperendoscr82
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Site"
+      - name: upperendoscr82-01
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Describe other site"
+      - name: upperendoscr83
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Size"
+      - name: upperendoscr84
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Bleeding"
+      - name: upperendoscr85
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Therapy"
+      - name: upperendoscr86
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Type"
+      - name: upperendoscr87
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Number"
+      - name: upperendoscr89
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Solution injected"
+      - name: upperendoscr89-01
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Solution injected - Other description"
+      - name: upperendoscr88
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Volume injected (mL)"
+      - name: upperendoscr90
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Thermal therapy"
+      - name: upperendoscr90-01
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Thermal therapy - Other description"
+      - name: upperendoscr91
+        description: "Oesophagus-uncommon - Mallory-Weiss tear - Haemostasis"
+      - name: upperendoscr92
+        description: "Oesophagus-uncommon - Motility disorders - Motility disorders description"
+      - name: upperendoscr93
+        description: "Oesophagus-uncommon - Oesophageal mucosa - Site"
+      - name: upperendoscr94
+        description: "Oesophagus-uncommon - Oesophageal mucosa - Appearance"
+      - name: upperendoscr95
+        description: "Oesophagus-uncommon - Oesophagitis-other - Site"
+      - name: upperendoscr97
+        description: "Oesophagus-uncommon - Oesophagitis-other - Type, suggestive of"
+      - name: upperendoscr96
+        description: "Oesophagus-uncommon - Oesophagitis-other - Severity"
+      - name: upperendoscr98
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Site"
+      - name: upperendoscr99
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Size (mm)"
+      - name: upperendoscr100
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Description"
+      - name: upperendoscr100-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Describe other polypoid lesion"
+      - name: upperendoscr101
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Biopsy"
+      - name: upperendoscr102
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Polypectomy performed using"
+      - name: upperendoscr104
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - EMR"
+      - name: upperendoscr106
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Solution EMR"
+      - name: upperendoscr112-100
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Describe other injection solution"
+      - name: upperendoscr105
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Volume (mL) EMR"
+      - name: upperendoscr107
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Lifted"
+      - name: upperendoscr107-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Describe other lifted"
+      - name: upperendoscr107-02
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Type of snare/device"
+      - name: upperendoscr108
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - APC"
+      - name: upperendoscr108-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Post polypectomy therapy"
+      - name: upperendoscr108-02
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Post polypectomy intervention - other"
+      - name: upperendoscr109-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Reason for clips"
+      - name: upperendoscr109
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Type of clips"
+      - name: upperendoscr110
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Number of clips"
+      - name: upperendoscr112-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Tattoo"
+      - name: upperendoscr115
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Tattoo site"
+      - name: upperendoscr116
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Distance from polyp (cm)"
+      - name: upperendoscr114
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Tattoo solution"
+      - name: upperendoscr114-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Tattoo solution - other description"
+      - name: upperendoscr113
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Tattoo volume (mL)"
+      - name: upperendoscr113-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Number of injection sites"
+      - name: upperendoscr117
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Mucosal appearance post polypectomy"
+      - name: upperendoscr117-01
+        description: "Oesophagus-uncommon - Oesophageal polypoid lesion - Describe other appearance post polypectomy"
+      - name: upperendoscr118
+        description: "Oesophagus-uncommon - Oesophageal Polyps-histology - Tissue retrieved for histology"
+      - name: upperendoscr119
+        description: "Oesophagus-uncommon - Schatzki Ring - Site"
+      - name: upperendoscr120
+        description: "Oesophagus-uncommon - Schatzki Ring - Severity"
+      - name: upperendoscr122
+        description: "Oesophagus-uncommon - Schatzki Ring - Balloon Dilator (mm)"
+      - name: upperendoscr123
+        description: "Oesophagus-uncommon - Schatzki Ring - Savary-Gilliard dilator (mm)"
+      - name: upperendoscr124
+        description: "Oesophagus-uncommon - Schatzki Ring - Other"
+      - name: upperendoscr125
+        description: "Oesophagus-uncommon - Schatzki Ring - Traversed"
+      - name: upperendoscr126
+        description: "Oesophagus-uncommon - Oesophageal tumour - Site"
+      - name: upperendoscr126-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Other"
+      - name: upperendoscr127
+        description: "Oesophagus-uncommon - Oesophageal tumour - Size"
+      - name: upperendoscr127-02
+        description: "Oesophagus-uncommon - Oesophageal tumour - Description"
+      - name: upperendoscr128
+        description: "Oesophagus-uncommon - Oesophageal tumour - Dilatation"
+      - name: upperendoscr129
+        description: "Oesophagus-uncommon - Oesophageal tumour - Balloon Dilator (mm)"
+      - name: upperendoscr130
+        description: "Oesophagus-uncommon - Oesophageal tumour - Savary-Gilliard dilator (mm)"
+      - name: upperendoscr131
+        description: "Oesophagus-uncommon - Oesophageal tumour - Other"
+      - name: upperendoscr132
+        description: "Oesophagus-uncommon - Oesophageal tumour - Traversed"
+      - name: upperendoscr-132a
+        description: "Oesophagus-uncommon - Oesophageal tumour - Polypectomy"
+      - name: upperendoscr-132aa
+        description: "Oesophagus-uncommon - Oesophageal tumour - Polypectomy - Type of snare"
+      - name: upperendoscr-x104
+        description: "Oesophagus-uncommon - Oesophageal tumour - EMR"
+      - name: upperendoscr-x104-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Injection EMR"
+      - name: upperendoscr-x106
+        description: "Oesophagus-uncommon - Oesophageal tumour - Solution EMR"
+      - name: upperendoscr-x112-100
+        description: "Oesophagus-uncommon - Oesophageal tumour - Describe other injection solution"
+      - name: upperendoscr-x105
+        description: "Oesophagus-uncommon - Oesophageal tumour - Volume (mL) EMR"
+      - name: upperendoscr-x107
+        description: "Oesophagus-uncommon - Oesophageal tumour - Lifted post EMR injection"
+      - name: upperendoscr-x107-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Describe other lifted"
+      - name: upperendoscr-x107-02
+        description: "Oesophagus-uncommon - Oesophageal tumour - Type of snare/device"
+      - name: upperendoscr-x108-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Post polypectomy therapy"
+      - name: upperendoscr-x108-02
+        description: "Oesophagus-uncommon - Oesophageal tumour - Post polypectomy therapy - other description"
+      - name: upperendoscr-x109-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Reason for clips"
+      - name: upperendoscr-x109
+        description: "Oesophagus-uncommon - Oesophageal tumour - Type of clips"
+      - name: upperendoscr-x110
+        description: "Oesophagus-uncommon - Oesophageal tumour - Number of clips"
+      - name: upperendoscr145
+        description: "Oesophagus-uncommon - Oesophageal tumour - Retrieved for histology"
+      - name: upperendoscr-x117
+        description: "Oesophagus-uncommon - Oesophageal tumour - Mucosal appearance post polypectomy"
+      - name: upperendoscr-x117-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Describe other appearance post polypectomy"
+      - name: upperendoscr145-001
+        description: "Oesophagus-uncommon - Oesophageal tumour - Stent"
+      - name: upperendoscr-x112-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Tattoo"
+      - name: upperendoscr-x115
+        description: "Oesophagus-uncommon - Oesophageal tumour - Tattoo site"
+      - name: upperendoscr-x116
+        description: "Oesophagus-uncommon - Oesophageal tumour - Distance from polyp (cm)"
+      - name: upperendoscr-x114
+        description: "Oesophagus-uncommon - Oesophageal tumour - Tattoo solution"
+      - name: upperendoscr-x114-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Tattoo solution - other description"
+      - name: upperendoscr-x113
+        description: "Oesophagus-uncommon - Oesophageal tumour - Tattoo volume (mL)"
+      - name: upperendoscr-x113-01
+        description: "Oesophagus-uncommon - Oesophageal tumour - Number of injection sites"
+      - name: upperendoscr146
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Site"
+      - name: upperendoscr146-001
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Site (scope insertion)"
+      - name: upperendoscr147
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Size (mm)"
+      - name: upperendoscr148
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Description"
+      - name: upperendoscr149
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Bleeding"
+      - name: upperendoscr150
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Intervention"
+      - name: upperendoscr152
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Type of clips"
+      - name: upperendoscr151
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Number of clips"
+      - name: upperendoscr154
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Type of solution injected"
+      - name: upperendoscr154-001
+        description: "Oesophageal ulcer-single - Type of solution injected - other description"
+      - name: upperendoscr153
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Volume injected (mL)"
+      - name: upperendoscr155
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Thermal device"
+      - name: upperendoscr155-001
+        description: "Oesophageal ulcer-single - Thermal device - other description"
+      - name: upperendoscr156
+        description: "Oesophagus-uncommon - Oesophageal ulcer-single - Haemostasis"
+      - name: upperendoscr157
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Site"
+      - name: upperendoscr158
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Size of largest (mm)"
+      - name: upperendoscr159
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Number (x)"
+      - name: upperendoscr160
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Description"
+      - name: upperendoscr161
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Bleeding"
+      - name: upperendoscr162
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Intervention"
+      - name: upperendoscr164
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Type of clips"
+      - name: upperendoscr163
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Number of clips"
+      - name: upperendoscr166
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Type of solution injected"
+      - name: upperendoscr165
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Volume injected (mL)"
+      - name: upperendoscr167
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Thermal device"
+      - name: upperendoscr167-01
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Thermal therapy - Other description"
+      - name: upperendoscr168
+        description: "Oesophagus-uncommon - Oesophageal ulcers-multiple - Biopsy description"
+      - name: upperendoscr168-01
+        description: "Oesophageal ulcers-multiple - Haemostasis"
+      - name: upperendoscr169
+        description: "Oesophagus-uncommon - Oesophageal web - Site"
+      - name: upperendoscr169-001
+        description: "Oesophagus-uncommon - Oesophageal web - Site (scope insertion cms)"
+      - name: upperendoscr170
+        description: "Oesophagus-uncommon - Oesophageal web - Severity"
+      - name: upperendoscr171
+        description: "Oesophagus-uncommon - Oesophageal web - Description"
+      - name: upperendoscr172
+        description: "Oesophagus-uncommon - Oesophageal web - Dilatation"
+      - name: upperendoscr173
+        description: "Oesophagus-uncommon - Oesophageal web - Balloon dilator (mm)"
+      - name: upperendoscr174
+        description: "Oesophagus-uncommon - Oesophageal web - Savary-Gilliard dilator (mm)"
+      - name: upperendoscr175
+        description: "Oesophagus-uncommon - Oesophageal web - Other"
+      - name: upperendoscr-g332-01
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Site"
+      - name: upperendoscr-g333-01
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Size of largest (mm)"
+      - name: upperendoscr-g332
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Number (x)"
+      - name: upperendoscr-g333
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Type"
+      - name: upperendoscr-g333-02
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Description of other type"
+      - name: upperendoscr-g334
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Intervention"
+      - name: upperendoscr-g335
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Thermal therapy"
+      - name: upperendoscr-g335-01
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Thermal therapy - Other description"
+      - name: upperendoscr-g336
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Type of clips"
+      - name: upperendoscr-g336-01
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Number of clips"
+      - name: upperendoscr-g338
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Injected solution"
+      - name: upperendoscr-g338-01
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Description of other injected solution"
+      - name: upperendoscr-g337
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Injection volume (mL)"
+      - name: upperendoscr-g339
+        description: "Oesophagus-uncommon - Oesophageal vascular lesion(s) - Intervention description and outcome"
+      - name: upperendoscr176
+        description: "Oesophagus-uncommon - Other - Other"
+      - name: upperendoscr178-01
+        description: "Stomach-common"
+      - name: upperendoscr179
+        description: "Stomach-common - Gastric biopsy - Site"
+      - name: upperendoscr179-01
+        description: "Stomach-common - Gastric biopsy - Other site description"
+      - name: upperendoscr180
+        description: "Stomach-common - Gastric biopsy - Number (x)"
+      - name: upperendoscr181
+        description: "Stomach-common - Gastric biopsy - Method"
+      - name: upperendoscr182
+        description: "Stomach-common - Gastric biopsy - Purpose"
+      - name: upperendoscr182-01
+        description: "Stomach-common - Gastric biopsy - Other purpose description"
+      - name: upperendoscr183
+        description: "Stomach-common - Gastritis - Site"
+      - name: upperendoscr183-01
+        description: "Stomach-common - Gastritis - Other site description"
+      - name: upperendoscr184
+        description: "Stomach-common - Gastritis - Severity"
+      - name: upperendoscr185
+        description: "Stomach-common - Gastritis - Type"
+      - name: upperendoscr186
+        description: "Stomach-common - Gastritis - Other type description"
+      - name: upperendoscr187
+        description: "Stomach-common - Gastritis - Bleeding"
+      - name: upperendoscr187-01
+        description: "Stomach-common - Gastritis - Other bleeding description"
+      - name: upperendoscr188
+        description: "Stomach-common - Gastric mucosa - Site"
+      - name: upperendoscr188-01
+        description: "Stomach-common - Gastric mucosa - Other site description"
+      - name: upperendoscr189
+        description: "Stomach-common - Gastric mucosa - Description"
+      - name: upperendoscr189-01
+        description: "Stomach-common - Gastric mucosa - Other description description"
+      - name: upperendoscr189-02
+        description: "Stomach-common - Gastric mucosa - Gastrointestinal metaplasia description"
+      - name: upperendoscr190
+        description: "Stomach-common - Gastric mucosa - Gastric folds"
+      - name: upperendoscr190-01
+        description: "Stomach-common - Gastric mucosa - Other description of gastric folds"
+      - name: upperendoscr191
+        description: "Stomach-common - Gastric polyp-single - Site"
+      - name: upperendoscr191-01
+        description: "Stomach-common - Gastric polyp-single - Other site description"
+      - name: upperendoscr192
+        description: "Stomach-common - Gastric polyp-single - Size (mm)"
+      - name: upperendoscr193
+        description: "Stomach-common - Gastric polyp-single - Description"
+      - name: upperendoscr193-01
+        description: "Stomach-common - Gastric polyp-single - Description - other description"
+      - name: upperendoscr193a
+        description: "Stomach-common - Gastric polyp-single - Biopsied for histology"
+      - name: upperendoscr194-02
+        description: "Stomach-common - Gastric polyp-single - Polypectomy"
+      - name: upperendoscr194
+        description: "Stomach-common - Gastric polyp-single - Polypectomy device"
+      - name: upperendoscr194-01
+        description: "Stomach-common - Gastric polyp-single - Type of snare used in polypectomy"
+      - name: upperendoscr-y104
+        description: "Stomach-common - Gastric polyp-single - EMR"
+      - name: upperendoscr-y104-01
+        description: "Stomach-common - Gastric polyp-single - Injection EMR"
+      - name: upperendoscr-y106
+        description: "Stomach-common - Gastric polyp-single - Solution EMR"
+      - name: upperendoscr-y106-01
+        description: "Stomach-common - Gastric polyp-single - Solution EMR - Other description"
+      - name: upperendoscr-y105
+        description: "Stomach-common - Gastric polyp-single - Volume (mL) EMR"
+      - name: upperendoscr-y107
+        description: "Stomach-common - Gastric polyp-single - Lifted"
+      - name: upperendoscr-y107-01
+        description: "Stomach-common - Gastric polyp-single - Describe other lifted"
+      - name: upperendoscr-y107-02
+        description: "Stomach-common - Gastric polyp-single - Type of snare/device"
+      - name: upperendoscr-y108
+        description: "Stomach-common - Gastric polyp-single - APC"
+      - name: upperendoscr-y108-01
+        description: "Stomach-common - Gastric polyp-single - Post polypectomy therapy"
+      - name: upperendoscr-y108-02
+        description: "Stomach-common - Gastric polyp-single - Post polypectomy intervention - Other description"
+      - name: upperendoscr-y109-01
+        description: "Stomach-common - Gastric polyp-single - Reason for clips"
+      - name: upperendoscr-y109
+        description: "Stomach-common - Gastric polyp-single - Type of clips"
+      - name: upperendoscr-y110
+        description: "Stomach-common - Gastric polyp-single - Number of clips"
+      - name: upperendoscr-y112-01
+        description: "Stomach-common - Gastric polyp-single - Tattoo"
+      - name: upperendoscr-y115
+        description: "Stomach-common - Gastric polyp-single - Tattoo site"
+      - name: upperendoscr-y116
+        description: "Stomach-common - Gastric polyp-single - Distance from polyp (cm)"
+      - name: upperendoscr-y114
+        description: "Stomach-common - Gastric polyp-single - Tattoo solution"
+      - name: upperendoscr-y114-01
+        description: "Stomach-common - Gastric polyp-single - Tattoo solution - Other description"
+      - name: upperendoscr-y113
+        description: "Stomach-common - Gastric polyp-single - Tattoo volume (mL)"
+      - name: upperendoscr-y113-01
+        description: "Stomach-common - Gastric polyp-single - Number of tattoo injection sites"
+      - name: upperendoscr-y117
+        description: "Stomach-common - Gastric polyp-single - Mucosal appearance post polypectomy"
+      - name: upperendoscr-y117-01
+        description: "Stomach-common - Gastric polyp-single - Describe other appearance post polypectomy"
+      - name: upperendoscr210
+        description: "Stomach-common - Gastric polyps-multiple - Site"
+      - name: upperendoscr211
+        description: "Stomach-common - Gastric polyps-multiple - Number (x)"
+      - name: upperendoscr212
+        description: "Stomach-common - Gastric polyps-multiple - Size of largest polyp (mm)"
+      - name: upperendoscr213
+        description: "Stomach-common - Gastric polyps-multiple - Description"
+      - name: upperendoscr213a
+        description: "Stomach-common - Gastric polyps-multiple - Biopsied for histology"
+      - name: upperendoscr214a
+        description: "Stomach-common - Gastric polyps-multiple - Polypectomy"
+      - name: upperendoscr214
+        description: "Stomach-common - Gastric polyps-multiple - Polypectomy"
+      - name: upperendoscr214b
+        description: "Stomach-common - Gastric polyps-multiple - Polypectomy devie"
+      - name: upperendoscr-z104
+        description: "Stomach-common - Gastric polyps-multiple - EMR"
+      - name: upperendoscr-z104-01
+        description: "Stomach-common - Gastric polyps-multiple - Injection EMR"
+      - name: upperendoscr-z106
+        description: "Stomach-common - Gastric polyps-multiple - Solution EMR"
+      - name: upperendoscr-z112-100
+        description: "Stomach-common - Gastric polyps-multiple - Describe other injection solution"
+      - name: upperendoscr-z105
+        description: "Stomach-common - Gastric polyps-multiple - Volume (mL) EMR"
+      - name: upperendoscr-z107
+        description: "Stomach-common - Gastric polyps-multiple - Lifted"
+      - name: upperendoscr-z107-01
+        description: "Stomach-common - Gastric polyps-multiple - Describe other lifted"
+      - name: upperendoscr-z107-02
+        description: "Stomach-common - Gastric polyps-multiple - Type of snare/device"
+      - name: upperendoscr-z108
+        description: "Stomach-common - Gastric polyps-multiple - APC"
+      - name: upperendoscr-z108-01
+        description: "Stomach-common - Gastric polyps-multiple - Post polypectomy therapy"
+      - name: upperendoscr-z108-02
+        description: "Stomach-common - Gastric polyps-multiple - Post polypectomy intervention - Other description"
+      - name: upperendoscr-z109-01
+        description: "Stomach-common - Gastric polyps-multiple - Reason for clips"
+      - name: upperendoscr-z109
+        description: "Stomach-common - Gastric polyps-multiple - Type of clips"
+      - name: upperendoscr-z110
+        description: "Stomach-common - Gastric polyps-multiple - Number of clips"
+      - name: upperendoscr-z110a
+        description: "Stomach-common - Gastric polyps-multiple - Thermal"
+      - name: upperendoscr-z112-01
+        description: "Stomach-common - Gastric polyps-multiple - Tattoo"
+      - name: upperendoscr-z115
+        description: "Stomach-common - Gastric polyps-multiple - Tattoo site"
+      - name: upperendoscr-z116
+        description: "Stomach-common - Gastric polyps-multiple - Distance from polyp (cm)"
+      - name: upperendoscr-z114
+        description: "Stomach-common - Gastric polyps-multiple - Tattoo solution"
+      - name: upperendoscr-z114-01
+        description: "Gastric polyps-multiple - Tattoo solution - other description"
+      - name: upperendoscr-z113
+        description: "Stomach-common - Gastric polyps-multiple - Tattoo volume (mL)"
+      - name: upperendoscr-z113-01
+        description: "Stomach-common - Gastric polyps-multiple - Number oftattoo injection sites"
+      - name: upperendoscr-z117
+        description: "Stomach-common - Gastric polyps-multiple - Mucosal appearance post polypectomy"
+      - name: upperendoscr-z117-02
+        description: "Stomach-common - Gastric polyps-multiple - Mucosal appearance post polypectomy - other description"
+      - name: upperendoscr230
+        description: "Stomach-common - Polyps-histology - Tissue retrieved for histology"
+      - name: upperendoscr243
+        description: "Stomach-common - Gastric ulcer(s) - Number"
+      - name: upperendoscr244
+        description: "Stomach-common - Gastric ulcer(s) - Site"
+      - name: upperendoscr244-01
+        description: "Stomach-common - Gastric ulcer(s) - Other description of site"
+      - name: upperendoscr245
+        description: "Stomach-common - Gastric ulcer(s) - Size (mm)"
+      - name: upperendoscr246
+        description: "Stomach-common - Gastric ulcer(s) - Description"
+      - name: upperendoscr246-01
+        description: "Stomach-common - Gastric ulcer(s) - Other description"
+      - name: upperendoscr247
+        description: "Stomach-common - Gastric ulcer(s) - Biopsy"
+      - name: upperendoscr247-01
+        description: "Stomach-common - Gastric ulcer(s) - Other description of biopsy"
+      - name: upperendoscr248
+        description: "Stomach-common - Gastric ulcer(s) - Bleeding"
+      - name: upperendoscr249
+        description: "Stomach-common - Gastric ulcer(s) - Intervention"
+      - name: upperendoscr251
+        description: "Stomach-common - Gastric ulcer(s) - Type of clips"
+      - name: upperendoscr250
+        description: "Stomach-common - Gastric ulcer(s) - Number of clips"
+      - name: upperendoscr253
+        description: "Stomach-common - Gastric ulcer(s) - Type of solution injected"
+      - name: upperendoscr253-01
+        description: "Stomach-common - Gastric ulcer(s) - Type of solution injected - Other description"
+      - name: upperendoscr252
+        description: "Stomach-common - Gastric ulcer(s) - Volume injected (mL)"
+      - name: upperendoscr254
+        description: "Stomach-common - Gastric ulcer(s) - Thermal device"
+      - name: upperendoscr254-02
+        description: "Stomach-common - Gastric ulcer(s) - Thermal device - Other description"
+      - name: upperendoscr254-01
+        description: "Stomach-common - Gastric ulcer(s) - Post intervention description"
+      - name: upperendoscr256
+        description: "Stomach-uncommon"
+      - name: upperendoscr257
+        description: "Stomach-uncommon - Foreign Body - Description"
+      - name: upperendoscr258
+        description: "Stomach-uncommon - Foreign Body - Method of removal"
+      - name: upperendoscr258-01
+        description: "Stomach-uncommon - Foreign Body - Description of other method of removal"
+      - name: upperendoscr259
+        description: "Stomach-uncommon - Foreign Body - Retrieval"
+      - name: upperendoscr260
+        description: "Stomach-uncommon - Foreign Body - Description of no retrieval"
+      - name: upperendoscr261
+        description: "Stomach-uncommon - Gastric Contents - Bile"
+      - name: upperendoscr262
+        description: "Stomach-uncommon - Gastric Contents - Blood"
+      - name: upperendoscr263
+        description: "Stomach-uncommon - Gastric Contents - Fluid"
+      - name: upperendoscr264
+        description: "Stomach-uncommon - Gastric Contents - Food"
+      - name: upperendoscr265
+        description: "Stomach-uncommon - Gastric Contents - Other"
+      - name: upperendoscr266-01
+        description: "Stomach-uncommon - GAVE - Site"
+      - name: upperendoscr266-02
+        description: "Stomach-uncommon - GAVE - Description of other site"
+      - name: upperendoscr266
+        description: "Stomach-uncommon - GAVE - Severity"
+      - name: upperendoscr267
+        description: "Stomach-uncommon - GAVE - Therapy"
+      - name: upperendoscr267-01
+        description: "Stomach-uncommon - GAVE - Description of other therapy"
+      - name: upperendoscr268
+        description: "Stomach-uncommon - GAVE - Number of bands"
+      - name: upperendoscr268-01
+        description: "Stomach-uncommon - PEG Change - Reason for removal"
+      - name: upperendoscr272
+        description: "Stomach-uncommon - PEG Change - Type of PEG device"
+      - name: upperendoscr272-01
+        description: "Stomach-uncommon - PEG Change - PEG removal - PEG abdominal wall exit site"
+      - name: upperendoscr272-02
+        description: "Stomach-uncommon - PEG Change - Describe unsatisfactory PEG site"
+      - name: upperendoscr272-03
+        description: "Stomach-uncommon - PEG Change - PEG removal"
+      - name: upperendoscr272-04
+        description: "Stomach-uncommon - PEG Change - Describe other PEG removal"
+      - name: upperendoscr272-05
+        description: "Stomach-uncommon - PEG Change - Route of removal of PEG"
+      - name: upperendoscr272-05-01
+        description: "Stomach-uncommon - PEG Change - PEG Change - Route  of PEG reinsertion"
+      - name: upperendoscr272-06
+        description: "Stomach-uncommon - PEG Change - Ease of PEG reinsertion"
+      - name: upperendoscr272-06-01
+        description: "Stomach-uncommon - PEG Change - PEG insertion - Type of New PEG device inserted"
+      - name: upperendoscr272-07
+        description: "Stomach-uncommon - PEG Change - PEG anchoring device"
+      - name: upperendoscr272-07-01
+        description: "PEG Change - PEG re-insertion - PEG anchoring device - other description"
+      - name: upperendoscr272-08
+        description: "Stomach-uncommon - PEG Change -  Balloon inflation (mL)"
+      - name: upperendoscr272-09
+        description: "Stomach-uncommon - PEG Change - PEG tubing length skin to distal fitting (cm)"
+      - name: upperendoscr272-09a
+        description: "Stomach-uncommon - PEG Change - comments"
+      - name: upperendoscr275
+        description: "Stomach-uncommon - PEG Insertion - Type of PEG device"
+      - name: upperendoscr275-01
+        description: "Stomach-uncommon - PEG Insertion - Route of insertion"
+      - name: upperendoscr274
+        description: "Stomach-uncommon - PEG Insertion - Ease of insertion"
+      - name: upperendoscr276
+        description: "Stomach-uncommon - PEG Insertion - Balloon inflation (mL)"
+      - name: upperendoscr277
+        description: "Stomach-uncommon - PEG Insertion - Site of PEG in stomach"
+      - name: upperendoscr278
+        description: "Stomach-uncommon - PEG Insertion - Other"
+      - name: upperendoscr279
+        description: "Stomach-uncommon - Post Surgical - Type"
+      - name: upperendoscr280
+        description: "Stomach-uncommon - Post Surgical - Description of other type"
+      - name: upperendoscr281
+        description: "Stomach-uncommon - Post Surgical - description"
+      - name: upperendoscr282
+        description: "Stomach-uncommon - Post Surgical - Dilatation required"
+      - name: upperendoscr283
+        description: "Stomach-uncommon - Post Surgical - Balloon Dilator (mm)"
+      - name: upperendoscr284
+        description: "Stomach-uncommon - Post Surgical - Other"
+      - name: upperendoscr286
+        description: "Stomach-uncommon - Gastric stricture - Site"
+      - name: upperendoscr280-01
+        description: "Stomach-uncommon - Gastric stricture - Description of other site"
+      - name: upperendoscr288
+        description: "Stomach-uncommon - Gastric stricture - Type"
+      - name: upperendoscr289
+        description: "Stomach-uncommon - Gastric stricture - Appearance"
+      - name: upperendoscr290
+        description: "Stomach-uncommon - Gastric stricture - Traversed"
+      - name: upperendoscr291
+        description: "Stomach-uncommon - Gastric stricture - Length (cm)"
+      - name: upperendoscr291-02
+        description: "Stomach-uncommon - Gastric stricture - Gastric dilatation"
+      - name: upperendoscr291-03
+        description: "Stomach-uncommon - Gastric stricture - Gastric dilatation - Size of dilator (mm) (Balloon Dilator)"
+      - name: upperendoscr291-04
+        description: "Stomach-uncommon - Gastric stricture - Gastric dilatation - Size of dilator (mm) (Savary Gilliard)"
+      - name: upperendoscr291-05
+        description: "Stomach-uncommon - Gastric stricture - stricture traversed post-dilation"
+      - name: upperendoscr291-08
+        description: "Stomach-uncommon - Gastric stricture - Gastric dilatation - Size of dilator (mm) (Sclerosing stricture for injection)"
+      - name: upperendoscr291-09
+        description: "Stomach-uncommon - Gastric stricture - Injection solution"
+      - name: upperendoscr291-10
+        description: "Stomach-uncommon - Gastric stricture - Injection volume (mL)"
+      - name: upperendoscr291-10a
+        description: "Stomach-uncommon - Gastric stricture - Dilatation - Other description"
+      - name: upperendoscr291-11
+        description: "Stomach-uncommon - Gastric stricture - Stent"
+      - name: upperendoscr291-12
+        description: "Stomach-uncommon - Gastric stricture - Outcome"
+      - name: upperendoscr299
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Site"
+      - name: upperendoscr299-01
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Describe other site"
+      - name: upperendoscr291a
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Number"
+      - name: upperendoscr300
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Size of largest diameter (mm)"
+      - name: upperendoscr299-02
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Appearance"
+      - name: upperendoscr300-01
+        description: "Stomach-uncommon - Gastric submucosal nodule(s) - Other"
+      - name: upperendoscr301
+        description: "Stomach-uncommon - Gastric tumour - Site"
+      - name: upperendoscr301-01
+        description: "Stomach-uncommon - Gastric tumour - Site - Other"
+      - name: upperendoscr301-02
+        description: "Gastric tumour - Site (cm scope insertion)"
+      - name: upperendoscr302
+        description: "Stomach-uncommon - Gastric tumour - Size"
+      - name: upperendoscr303-01
+        description: "Stomach-uncommon - Gastric tumour - Description"
+      - name: upperendoscr303-02
+        description: "Stomach-uncommon - Gastric tumour - Dilatation"
+      - name: upperendoscr305
+        description: "Stomach-uncommon - Gastric tumour - Balloon dilator (mm)"
+      - name: upperendoscr306
+        description: "Stomach-uncommon - Gastric tumour - Savary-Gilliard (mm)"
+      - name: upperendoscr308
+        description: "Stomach-uncommon - Gastric tumour - Traversed?"
+      - name: upperendoscr307
+        description: "Stomach-uncommon - Gastric tumour - Other"
+      - name: upperendoscr307-001
+        description: "Stomach-uncommon - Gastric tumour - Biopsied"
+      - name: upperendoscr307-002
+        description: "Stomach-uncommon - Gastric tumour - Biopsy accessory and site"
+      - name: upperendoscr-a104
+        description: "Stomach-uncommon - Gastric tumour - EMR"
+      - name: upperendoscr-a106
+        description: "Stomach-uncommon - Gastric tumour - Injected Solution"
+      - name: upperendoscr-a112-100
+        description: "Stomach-uncommon - Gastric tumour - Describe other injection solution"
+      - name: upperendoscr-a105
+        description: "Stomach-uncommon - Gastric tumour - Volume (mL) EMR"
+      - name: upperendoscr-a107
+        description: "Stomach-uncommon - Gastric tumour - Lifted"
+      - name: upperendoscr-a107-01
+        description: "Stomach-uncommon - Gastric tumour - Describe other lifted"
+      - name: upperendoscr-a107-03
+        description: "Stomach-uncommon - Gastric tumour - EMR device"
+      - name: upperendoscr-a107-02
+        description: "Stomach-uncommon - Gastric tumour - Type of snare/device"
+      - name: upperendoscr-a108
+        description: "Stomach-uncommon - Gastric tumour - APC"
+      - name: upperendoscr-a108-01
+        description: "Stomach-uncommon - Gastric tumour - Post polypectomy intervention"
+      - name: upperendoscr-a108-02
+        description: "Stomach-uncommon - Gastric tumour - Post polypectomy intervention - Other description"
+      - name: upperendoscr-a109-01
+        description: "Stomach-uncommon - Gastric tumour - Reason for clips"
+      - name: upperendoscr-a109
+        description: "Stomach-uncommon - Gastric tumour - Type of clips"
+      - name: upperendoscr-a110
+        description: "Stomach-uncommon - Gastric tumour - Number of clips"
+      - name: upperendoscr-a117
+        description: "Stomach-uncommon - Gastric tumour - Mucosal appearance post polypectomy"
+      - name: upperendoscr-a117-01
+        description: "Stomach-uncommon - Gastric tumour - Describe other appearance post polypectomy"
+      - name: upperendoscr316
+        description: "Stomach-uncommon - Gastric tumour - Outcome"
+      - name: upperendoscr317
+        description: "Stomach-uncommon - Gastric tumour - Retrieval of Gastric tumour  for histology"
+      - name: upperendoscr322-001
+        description: "Stomach-uncommon - Gastric tumour - Stent"
+      - name: upperendoscr-a112-01
+        description: "Stomach-uncommon - Gastric tumour - Tattoo"
+      - name: upperendoscr-a115
+        description: "Stomach-uncommon - Gastric tumour - Tattoo site"
+      - name: upperendoscr-a116
+        description: "Stomach-uncommon - Gastric tumour - Distance from polyp (cm)"
+      - name: upperendoscr-a114
+        description: "Stomach-uncommon - Gastric tumour - Tattoo solution"
+      - name: upperendoscr-a114-01
+        description: "Stomach-uncommon - Gastric tumour - Tattoo solution - other description"
+      - name: upperendoscr-a113
+        description: "Stomach-uncommon - Gastric tumour - Tattoo volume (mL)"
+      - name: upperendoscr-a113-01
+        description: "Stomach-uncommon - Gastric tumour - Number of injection sites"
+      - name: upperendoscr324-01
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Site"
+      - name: upperendoscr324
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Size (mm)"
+      - name: upperendoscr324-02
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Bleeding"
+      - name: upperendoscr325
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Type"
+      - name: upperendoscr325-01
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Description of other type"
+      - name: upperendoscr326
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Intervention"
+      - name: upperendoscr327
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Thermal therapy"
+      - name: upperendoscr327-01
+        description: "Gastric vascular lesion-single - Thermal therapy - Other description"
+      - name: upperendoscr327-02
+        description: "Gastric vascular lesion-single - Reason for clips"
+      - name: upperendoscr328
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Type of clips"
+      - name: upperendoscr328-01
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Number of clips"
+      - name: upperendoscr330
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Injected solution"
+      - name: upperendoscr330-01
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Description of other injected solution"
+      - name: upperendoscr329
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Injection volume (mL)"
+      - name: upperendoscr329-01
+        description: "Gastric vascular lesion-single - Intervention - Other description"
+      - name: upperendoscr331
+        description: "Stomach-uncommon - Gastric vascular lesion-single - Outcome of intervention"
+      - name: upperendoscr332-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Site"
+      - name: upperendoscr333-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Size of largest (mm)"
+      - name: upperendoscr332
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Number (x)"
+      - name: upperendoscr332-02
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Bleeding"
+      - name: upperendoscr333
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Type"
+      - name: upperendoscr333-02
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Description of other type"
+      - name: upperendoscr334
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Intervention"
+      - name: upperendoscr334-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Intervention - Other description"
+      - name: upperendoscr335
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Thermal therapy"
+      - name: upperendoscr335-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Thermal therapy - Other description"
+      - name: upperendoscr336
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Type of clips"
+      - name: upperendoscr336-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Number of clips"
+      - name: upperendoscr338
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Injected solution"
+      - name: upperendoscr338-01
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Description of other injected solution"
+      - name: upperendoscr337
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Injection volume (mL)"
+      - name: upperendoscr338-02
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Intervention - Other description"
+      - name: upperendoscr339
+        description: "Stomach-uncommon - Gastric vascular lesions-multiple - Intervention description and outcome"
+      - name: upperendoscr340
+        description: "Stomach-uncommon - Gastric varices - Type"
+      - name: upperendoscr341
+        description: "Stomach-uncommon - Gastric varices - Size"
+      - name: upperendoscr342
+        description: "Stomach-uncommon - Gastric varices - Bleeding"
+      - name: upperendoscr342-01
+        description: "Stomach-uncommon - Gastric varices - Description of other bleeding"
+      - name: upperendoscr343
+        description: "Stomach-uncommon - Gastric varices - ulceration"
+      - name: upperendoscr343-01
+        description: "Stomach-uncommon - Gastric varices - Description of other ulceration"
+      - name: upperendoscr344
+        description: "Stomach-uncommon - Gastric varices - Intervention"
+      - name: upperendoscr346
+        description: "Stomach-uncommon - Gastric varices - Device"
+      - name: upperendoscr345
+        description: "Stomach-uncommon - Gastric varices - Number of bands (x)"
+      - name: upperendoscr348
+        description: "Stomach-uncommon - Gastric varices - Solution"
+      - name: upperendoscr348-01
+        description: "Stomach-uncommon - Gastric varices - Description of other solution"
+      - name: upperendoscr347
+        description: "Stomach-uncommon - Gastric varices - Volume (mL)"
+      - name: upperendoscr347-01
+        description: "Stomach-uncommon - Gastric varices - Outcome of Intervention"
+      - name: upperendoscr349
+        description: "Stomach-uncommon - Gastric - Other"
+      - name: upperendoscr351-03
+        description: "Duodenum-common"
+      - name: upperendoscr353
+        description: "Duodenum-common - Normal - Ampullae of Vater"
+      - name: upperendoscr354-01
+        description: "Duodenum-common - Normal - Description of abnormal description of Ampulla"
+      - name: upperendoscr356
+        description: "Duodenum-common - Duodenal biopsy - Site"
+      - name: upperendoscr357
+        description: "Duodenum-common - Duodenal biopsy - Describe other"
+      - name: upperendoscr358
+        description: "Duodenum-common - Duodenal biopsy - Number (x)"
+      - name: upperendoscr359
+        description: "Duodenum-common - Duodenal biopsy - Method"
+      - name: upperendoscr360
+        description: "Duodenum-common - Duodenal biopsy - Purpose"
+      - name: upperendoscr360-001
+        description: "Duodenum-common - Duodenal biopsy - Describe other"
+      - name: upperendoscr362-01
+        description: "Duodenum-common - Duodenitis - Site"
+      - name: upperendoscr364-01
+        description: "Duodenum-common - Duodenitis - Severity"
+      - name: upperendoscr365-01
+        description: "Duodenum-common - Duodenitis - Type"
+      - name: upperendoscr365-02
+        description: "Duodenum-common - Duodenitis - Describe other"
+      - name: upperendoscr367
+        description: "Duodenum-common - Duodenal mucosa - Site"
+      - name: upperendoscr369
+        description: "Duodenum-common - Duodenal mucosa - Description"
+      - name: upperendoscr368
+        description: "Duodenum-common - Duodenal mucosa - Describe other"
+      - name: upperendoscr372
+        description: "Duodenum-common - Duodenal diverticulae - Site"
+      - name: upperendoscr371
+        description: "Duodenum-common - Duodenal diverticulae - Number (x)"
+      - name: upperendoscr373
+        description: "Duodenum-common - Duodenal diverticulae - Size of largest"
+      - name: upperendoscr374
+        description: "Duodenum-common - Duodenal diverticulae - Description"
+      - name: upperendoscr376
+        description: "Duodenum-common - Duodenal ulcer-single - Site"
+      - name: upperendoscr377
+        description: "Duodenum-common - Duodenal ulcer-single - Size (mm)"
+      - name: upperendoscr378
+        description: "Duodenum-common - Duodenal ulcer-single - Description"
+      - name: upperendoscr379
+        description: "Duodenum-common - Duodenal ulcer-single - Describe other"
+      - name: upperendoscr380
+        description: "Duodenum-common - Duodenal ulcer-single - Biopsy"
+      - name: upperendoscr380-01
+        description: "Duodenum-common - Duodenal ulcer-single - Description of other biopsy"
+      - name: upperendoscr381
+        description: "Duodenum-common - Duodenal ulcer-single - Bleeding"
+      - name: upperendoscr382
+        description: "Duodenum-common - Duodenal ulcer-single - Intervention"
+      - name: upperendoscr382-01
+        description: "Duodenum-common - Duodenal ulcer-single - Intervention - Other description"
+      - name: upperendoscr384
+        description: "Duodenum-common - Duodenal ulcer-single - Type of clips"
+      - name: upperendoscr383
+        description: "Duodenum-common - Duodenal ulcer-single - Number of clips"
+      - name: upperendoscr386
+        description: "Duodenum-common - Duodenal ulcer-single - Type of solution injected"
+      - name: upperendoscr386-01
+        description: "Duodenum-common - Duodenal ulcer-single - Type of solution injected - Other description"
+      - name: upperendoscr385
+        description: "Duodenum-common - Duodenal ulcer-single - Volume (ml) injected"
+      - name: upperendoscr387
+        description: "Duodenum-common - Duodenal ulcer-single - Thermal therapy"
+      - name: upperendoscr387-01
+        description: "Duodenum-common - Duodenal ulcer-single - Thermal therapy - Other description"
+      - name: upperendoscr388
+        description: "Duodenum-common - Duodenal ulcer-single - Haemostasis"
+      - name: upperendoscr388-01
+        description: "Duodenum-common - Duodenal ulcer-single - Description of incomplete haemostasis"
+      - name: upperendoscr388-02
+        description: "Duodenum-common - Duodenal ulcer-single - Intervention outcome"
+      - name: upperendoscr391
+        description: "Duodenum-common - Duodenal ulcer-multiple - Site"
+      - name: upperendoscr391-001
+        description: "Duodenum-common - Duodenal ulcer-multiple - Site other description"
+      - name: upperendoscr390
+        description: "Duodenum-common - Duodenal ulcer-multiple - Number (x)"
+      - name: upperendoscr392
+        description: "Duodenum-common - Duodenal ulcer-multiple - Size of largest (mm)"
+      - name: upperendoscr393
+        description: "Duodenum-common - Duodenal ulcer-multiple - Description"
+      - name: upperendoscr393-01
+        description: "Duodenum-common - Duodenal ulcer-multiple - Other description"
+      - name: upperendoscr394
+        description: "Duodenum-common - Duodenal ulcer-multiple - Biopsy"
+      - name: upperendoscr394-01
+        description: "Duodenum-common - Duodenal ulcer-multiple - Biopsy - Other description"
+      - name: upperendoscr395
+        description: "Duodenum-common - Duodenal ulcer-multiple - Bleeding"
+      - name: upperendoscr396
+        description: "Duodenum-common - Duodenal ulcer-multiple - Intervention"
+      - name: upperendoscr398
+        description: "Duodenum-common - Duodenal ulcer-multiple - Type of clips"
+      - name: upperendoscr397
+        description: "Duodenum-common - Duodenal ulcer-multiple - Number of clips"
+      - name: upperendoscr400
+        description: "Duodenum-common - Duodenal ulcer-multiple - Type of solution injected"
+      - name: upperendoscr400-01
+        description: "Duodenum-common - Duodenal ulcer-multiple - Type of solution injected - Other description"
+      - name: upperendoscr399
+        description: "Duodenum-common - Duodenal ulcer-multiple - Volume (ml) injected"
+      - name: upperendoscr401
+        description: "Duodenum-common - Duodenal ulcer-multiple - Thermal therapy"
+      - name: upperendoscr401-01
+        description: "Duodenum-common - Duodenal ulcer-multiple - Thermal therapy - Other description"
+      - name: upperendoscr402
+        description: "Duodenum-common - Duodenal ulcer-multiple - Haemostasis"
+      - name: upperendoscr402-01
+        description: "Duodenum-common - Duodenal ulcer-multiple - Description of incomplete haemostasis"
+      - name: upperendoscr402-03
+        description: "Duodenum-common - Duodenal ulcer-multiple - Intervention outcome"
+      - name: upperendoscr403
+        description: "Duodenum-uncommon"
+      - name: upperendoscr405
+        description: "Duodenum-uncommon - Duodenal polyp-single - Site"
+      - name: upperendoscr405-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Description of other site"
+      - name: upperendoscr406
+        description: "Duodenum-uncommon - Duodenal polyp-single - Size (mm)"
+      - name: upperendoscr407
+        description: "Duodenum-uncommon - Duodenal polyp-single - Size description"
+      - name: upperendoscr408
+        description: "Duodenum-uncommon - Duodenal polyp-single - Description"
+      - name: upperendoscr408-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Other size description"
+      - name: upperendoscr408-02
+        description: "Duodenum-uncommon - Duodenal polyp-single - Classification"
+      - name: upperendoscr410
+        description: "Duodenum-uncommon - Duodenal polyp-single - Kudo (texture)"
+      - name: upperendoscr411
+        description: "Duodenum-uncommon - Duodenal polyp-single - Nice (nbi imaging)"
+      - name: upperendoscr412
+        description: "Duodenum-uncommon - Duodenal polyp-single - Paris (shape)"
+      - name: upperendoscr414
+        description: "Duodenum-uncommon - Duodenal polyp-single - Biopsied for histology"
+      - name: upperendoscr413
+        description: "Duodenum-uncommon - Duodenal polyp-single - Polypectomy"
+      - name: upperendoscr413-01
+        description: "Duodenal polyp-single - Polypectomy device"
+      - name: upperendoscr-b104
+        description: "Duodenum-uncommon - Duodenal polyp-single - EMR"
+      - name: upperendoscr-b104-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Injection EMR"
+      - name: upperendoscr-b106
+        description: "Duodenum-uncommon - Duodenal polyp-single - Solution EMR"
+      - name: upperendoscr-b112-100
+        description: "Duodenum-uncommon - Duodenal polyp-single - Describe other injection solution"
+      - name: upperendoscr-b105
+        description: "Duodenum-uncommon - Duodenal polyp-single - Volume (mL) EMR"
+      - name: upperendoscr-b107
+        description: "Duodenum-uncommon - Duodenal polyp-single - Lifted"
+      - name: upperendoscr-b107-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Describe other lifted"
+      - name: upperendoscr-b107-02
+        description: "Duodenum-uncommon - Duodenal polyp-single - Type of snare/device"
+      - name: upperendoscr-b108
+        description: "Duodenum-uncommon - Duodenal polyp-single - APC"
+      - name: upperendoscr-b108-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Post polypectomy therapy"
+      - name: upperendoscr-b108-02
+        description: "Duodenum-uncommon - Duodenal polyp-single - Post polypectomy intervention - description of other"
+      - name: upperendoscr-b109-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Reason for clips"
+      - name: upperendoscr-b109
+        description: "Duodenum-uncommon - Duodenal polyp-single - Type of clips"
+      - name: upperendoscr-b110
+        description: "Duodenum-uncommon - Duodenal polyp-single - Number of clips"
+      - name: upperendoscr-b112-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Tattoo"
+      - name: upperendoscr-b115
+        description: "Duodenum-uncommon - Duodenal polyp-single - Tattoo site"
+      - name: upperendoscr-b116
+        description: "Duodenum-uncommon - Duodenal polyp-single - Distance from polyp (cm)"
+      - name: upperendoscr-b114
+        description: "Duodenum-uncommon - Duodenal polyp-single - Tattoo solution"
+      - name: upperendoscr-b114-001
+        description: "Duodenum-uncommon - Duodenal polyp-single - Tattoo solution - description of other"
+      - name: upperendoscr-b113
+        description: "Duodenum-uncommon - Duodenal polyp-single - Tattoo volume (mL)"
+      - name: upperendoscr-b113-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Number of Tattoo injection sites"
+      - name: upperendoscr-b117
+        description: "Duodenum-uncommon - Duodenal polyp-single - Mucosal appearance post polypectomy"
+      - name: upperendoscr-b117-01
+        description: "Duodenum-uncommon - Duodenal polyp-single - Describe other appearance post polypectomy"
+      - name: upperendoscr-b117-02
+        description: "Duodenum-uncommon - Duodenal polyp-single - Polypectomy outcome"
+      - name: upperendoscr430
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Site"
+      - name: upperendoscr430-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Describe other site"
+      - name: upperendoscr431-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Size of largest (mm)"
+      - name: upperendoscr432
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Size description"
+      - name: upperendoscr433
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Description"
+      - name: upperendoscr434
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Classification"
+      - name: upperendoscr435
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Kudo (texture)"
+      - name: upperendoscr436
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - NICE classification using NBI imaging (colour, vascularity, mucosal regularity)"
+      - name: upperendoscr437
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Paris (shape)"
+      - name: upperendoscr439
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Biopsied for histology"
+      - name: upperendoscr438
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Polypectomy"
+      - name: upperendoscr438-01
+        description: "Duodenum-uncommon - Duodenalpolyps-multiple - Polypectomy device"
+      - name: upperendoscr-c104
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - EMR"
+      - name: upperendoscr-c104-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Injection EMR"
+      - name: upperendoscr-c106
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Solution EMR"
+      - name: upperendoscr-c112-100
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Describe other injection solution"
+      - name: upperendoscr-c105
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Volume (mL) EMR"
+      - name: upperendoscr-c107
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Lifted"
+      - name: upperendoscr-c107-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Describe other lifted"
+      - name: upperendoscr-c107-02
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Type of snare/device"
+      - name: upperendoscr-c108
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - APC"
+      - name: upperendoscr-c108-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Post polypectomy intervention"
+      - name: upperendoscr-c109-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Reason for clips"
+      - name: upperendoscr-c109
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Type of clips"
+      - name: upperendoscr-c110
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Number of clips"
+      - name: upperendoscr-c112-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Tattoo"
+      - name: upperendoscr-c115
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Tattoo site"
+      - name: upperendoscr-c116
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Distance from polyp (cm)"
+      - name: upperendoscr-c114
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Tattoo solution"
+      - name: upperendoscr-c114-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Tattoo solution - Other description"
+      - name: upperendoscr-c113
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Tattoo volume (mL)"
+      - name: upperendoscr-c113-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Number of injection sites"
+      - name: upperendoscr-c117
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Mucosal appearance post polypectomy"
+      - name: upperendoscr-c117-01
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Describe other appearance post polypectomy"
+      - name: upperendoscr-c117-02
+        description: "Duodenum-uncommon - Duodenal polyps-multiple - Polypectomy outcome"
+      - name: upperendoscr455
+        description: "Duodenum-uncommon - Duodenal polyps-histology - Tissue retrieved for histology"
+      - name: upperendoscr457
+        description: "Duodenum-uncommon - Duodenal stricture - Site"
+      - name: upperendoscr458
+        description: "Duodenum-uncommon - Duodenal stricture - Describe other"
+      - name: upperendoscr460
+        description: "Duodenum-uncommon - Duodenal stricture - Type"
+      - name: upperendoscr461
+        description: "Duodenum-uncommon - Duodenal stricture - Appearance"
+      - name: upperendoscr463
+        description: "Duodenum-uncommon - Duodenal stricture - Traversed"
+      - name: upperendoscr462
+        description: "Duodenum-uncommon - Duodenal stricture - Length (cm)"
+      - name: upperendoscr464
+        description: "Duodenum-uncommon - Duodenal stricture - Dilatation"
+      - name: upperendoscr46401
+        description: "Duodenum-uncommon - Duodenal stricture - Balloon dilator (mm)"
+      - name: upperendoscr46402
+        description: "Duodenum-uncommon - Duodenal stricture - Savary Gilliard (mm)"
+      - name: upperendoscr46403
+        description: "Duodenum-uncommon - Duodenal stricture - Traversed"
+      - name: upperendoscr46404
+        description: "Duodenal stricture - Intervention - other"
+      - name: upperendoscr46402-01
+        description: "Duodenum-uncommon - Duodenal stricture - STENT"
+      - name: upperendoscr467
+        description: "Duodenum-uncommon - Duodenal stricture - Outcome"
+      - name: upperendoscr469
+        description: "Duodenum-uncommon - Duodenal tumour - Site"
+      - name: upperendoscr469-01
+        description: "Duodenum-uncommon - Duodenal tumour - Other site description"
+      - name: upperendoscr471-01
+        description: "Duodenum-uncommon - Duodenal tumour - Size"
+      - name: upperendoscr472
+        description: "Duodenum-uncommon - Duodenal tumour - Describe other"
+      - name: upperendoscr473
+        description: "Duodenum-uncommon - Duodenal tumour - Description"
+      - name: upperendoscr473-01
+        description: "Duodenum-uncommon - Duodenal tumour - Description other"
+      - name: upperendoscr474
+        description: "Duodenum-uncommon - Duodenal tumour - Severe stricturing lumen"
+      - name: upperendoscr475
+        description: "Duodenum-uncommon - Duodenal tumour - Length (cm)"
+      - name: upperendoscr476
+        description: "Duodenum-uncommon - Duodenal tumour - Other"
+      - name: upperendoscr476-01
+        description: "Duodenum-uncommon - Duodenal tumour - Dilatation"
+      - name: upperendoscr477
+        description: "Duodenum-uncommon - Duodenal tumour - Dilatation device"
+      - name: upperendoscr477-02
+        description: "Duodenum-uncommon - Duodenal tumour - Balloon dilator (type and size"
+      - name: upperendoscr477-01
+        description: "Duodenum-uncommon - Duodenal tumour - Other dilatation device description"
+      - name: upperendoscr478
+        description: "Duodenum-uncommon - Duodenal tumour - Dilatation result"
+      - name: upperendoscr-h104
+        description: "Duodenum-uncommon - Duodenal tumour - EMR"
+      - name: upperendoscr-h104-01
+        description: "Duodenum-uncommon - Duodenal tumour - Injection EMR"
+      - name: upperendoscr-h106
+        description: "Duodenum-uncommon - Duodenal tumour - Solution EMR"
+      - name: upperendoscr-h112-100
+        description: "Duodenum-uncommon - Duodenal tumour - Describe other injection solution"
+      - name: upperendoscr-h105
+        description: "Duodenum-uncommon - Duodenal tumour - Volume (mL) EMR"
+      - name: upperendoscr-h107
+        description: "Duodenum-uncommon - Duodenal tumour - Lifted"
+      - name: upperendoscr-h107-01
+        description: "Duodenum-uncommon - Duodenal tumour - Describe other lifted"
+      - name: upperendoscr-h107-02
+        description: "Duodenum-uncommon - Duodenal tumour - Type of snare/device"
+      - name: upperendoscr-h108
+        description: "Duodenum-uncommon - Duodenal tumour - APC"
+      - name: upperendoscr-h108-01
+        description: "Duodenum-uncommon - Duodenal tumour - Post polypectomy intervention"
+      - name: upperendoscr-h108-02
+        description: "Duodenum-uncommon - Duodenal tumour - Post polypectomy intervention - Other description"
+      - name: upperendoscr-h109-01
+        description: "Duodenum-uncommon - Duodenal tumour - Reason for clips"
+      - name: upperendoscr-h109
+        description: "Duodenum-uncommon - Duodenal tumour - Type of clips"
+      - name: upperendoscr-h110
+        description: "Duodenum-uncommon - Duodenal tumour - Number of clips"
+      - name: upperendoscr-h117-02
+        description: "Duodenum-uncommon - Duodenal tumour - Polypectomy outcome"
+      - name: upperendoscr-h117-02-01
+        description: "Duodenum-uncommon - Duodenal tumour - Tissue retrieved for histology"
+      - name: upperendoscr-h117-03
+        description: "Duodenum-uncommon - Duodenal tumour - Stent"
+      - name: upperendoscr-h112-01
+        description: "Duodenum-uncommon - Duodenal tumour - Tattoo"
+      - name: upperendoscr-h115
+        description: "Duodenum-uncommon - Duodenal tumour - Tattoo site"
+      - name: upperendoscr-h116
+        description: "Duodenum-uncommon - Duodenal tumour - Distance from polyp (cm)"
+      - name: upperendoscr-h114
+        description: "Duodenum-uncommon - Duodenal tumour - Tattoo solution"
+      - name: upperendoscr-h114-01
+        description: "Duodenum-uncommon - Duodenal tumour - Tattoo solution - description of other"
+      - name: upperendoscr-h113
+        description: "Duodenum-uncommon - Duodenal tumour - Tattoo volume (mL)"
+      - name: upperendoscr-h113-01
+        description: "Duodenum-uncommon - Duodenal tumour - Number of injection sites"
+      - name: upperendoscr-h117
+        description: "Duodenum-uncommon - Duodenal tumour - Mucosal appearance post polypectomy"
+      - name: upperendoscr-h117-01
+        description: "Duodenum-uncommon - Duodenal tumour - Describe other appearance post polypectomy"
+      - name: upperendoscr491
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Site"
+      - name: upperendoscr492
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Size (mm)"
+      - name: upperendoscr492-01
+        description: "Duodenum-uncommon - vascular lesion-single - Bleeding"
+      - name: upperendoscr493
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Type"
+      - name: upperendoscr493-01
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Other type"
+      - name: upperendoscr494
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Intervention"
+      - name: upperendoscr496
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Type of clips"
+      - name: upperendoscr495
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Number of clips"
+      - name: upperendoscr498
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Type of solution injected"
+      - name: upperendoscr498-01
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Other type of solution injected"
+      - name: upperendoscr497
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Volume (ml) injected"
+      - name: upperendoscr498-02
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Thermal device"
+      - name: upperendoscr498-03
+        description: "Duodenum-uncommon - vascular lesion-single - Thermal device - description of other"
+      - name: upperendoscr498-04
+        description: "Duodenum-uncommon - vascular lesion-single - Intervention - description of other"
+      - name: upperendoscr499
+        description: "Duodenum-uncommon - Duodenal vascular lesion-single - Outcome"
+      - name: upperendoscr501
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Site"
+      - name: upperendoscr501-01
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Other site"
+      - name: upperendoscr502
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Size of largest (mm)"
+      - name: upperendoscr502-01
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Number"
+      - name: upperendoscr502-02
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Bleeding"
+      - name: upperendoscr503
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Type"
+      - name: upperendoscr503-01
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Other type"
+      - name: upperendoscr504
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Intervention"
+      - name: upperendoscr506
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Type of clips"
+      - name: upperendoscr505
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Number of clips"
+      - name: upperendoscr508
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Type of solution injected"
+      - name: upperendoscr508-01
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Other type of solution injected"
+      - name: upperendoscr507
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Volume (ml) injected"
+      - name: upperendoscr507-01
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Thermal device"
+      - name: upperendoscr507-02
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Thermal device - description of other"
+      - name: upperendoscr507-03
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Intervention - description of other"
+      - name: upperendoscr509
+        description: "Duodenum-uncommon - Duodenal vascular lesions-multiple - Outcome"
+      - name: upperendoscr511
+        description: "Duodenum-uncommon - Other - Other description"
+      - name: upperendoscr513
+        description: "Jejunum-common"
+      - name: upperendoscr515
+        description: "Jejunum-common - Jejunal biopsy - Site"
+      - name: upperendoscr515-01
+        description: "Jejunum-common - Jejunal biopsy - Description of other site"
+      - name: upperendoscr516
+        description: "Jejunum-common - Jejunal biopsy - Number (x)"
+      - name: upperendoscr517
+        description: "Jejunum-common - Jejunal biopsy - Method"
+      - name: upperendoscr518
+        description: "Jejunum-common - Jejunal biopsy - Purpose"
+      - name: upperendoscr518-01
+        description: "Jejunum-common - Jejunal biopsy - Description of other purpose"
+      - name: upperendoscr520
+        description: "Jejunum-common - Jejunitis - Site"
+      - name: upperendoscr520-01
+        description: "Jejunum-common - Jejunitis - Description of other site"
+      - name: upperendoscr521
+        description: "Jejunum-common - Jejunitis - Severity"
+      - name: upperendoscr522
+        description: "Jejunum-common - Jejunitis - Type"
+      - name: upperendoscr522-01
+        description: "Jejunum-common - Jejunitis - Other type"
+      - name: upperendoscr524
+        description: "Jejunum-common - Jejunal mucosa - Site"
+      - name: upperendoscr524-01
+        description: "Jejunum-common - Jejunal mucosa - Description of other site"
+      - name: upperendoscr525
+        description: "Jejunum-common - Jejunal mucosa - Description"
+      - name: upperendoscr525-01
+        description: "Jejunum-common - Jejunal mucosa - Description of other description"
+      - name: upperendoscr528
+        description: "Jejunum-common - Jejunal diverticulae - Site"
+      - name: upperendoscr528-01
+        description: "Jejunum-common - Jejunal diverticulae - Description of other site"
+      - name: upperendoscr529
+        description: "Jejunum-common - Jejunal diverticulae - Size of largest (mm)"
+      - name: upperendoscr531
+        description: "Jejunum-common - Jejunal diverticulae - Description"
+      - name: upperendoscr532
+        description: "Jejunum-uncommon"
+      - name: upperendoscr532-01
+        description: "Jejunum-uncommon - Gastrojejunal tube placement"
+      - name: upperendoscr533
+        description: "Jejunum-uncommon - Jejunal polyp-single - Site"
+      - name: upperendoscr533-01
+        description: "Jejunal polyp-single - Site - Other description"
+      - name: upperendoscr534
+        description: "Jejunum-uncommon - Jejunal polyp-single - Size (mm)"
+      - name: upperendoscr535
+        description: "Jejunum-uncommon - Jejunal polyp-single - Size description"
+      - name: upperendoscr536
+        description: "Jejunum-uncommon - Jejunal polyp-single - Description"
+      - name: upperendoscr537
+        description: "Jejunum-uncommon - Jejunal polyp-single - Classification"
+      - name: upperendoscr539
+        description: "Jejunum-uncommon - Jejunal polyp-single - NICE classification using NBI imaging (colour, vascularity, mucosal regularity)"
+      - name: upperendoscr540
+        description: "Jejunum-uncommon - Jejunal polyp-single - Paris (shape)"
+      - name: upperendoscr541
+        description: "Jejunum-uncommon - Jejunal polyp-single - Polypectomy"
+      - name: upperendoscr542
+        description: "Jejunum-uncommon - Jejunal polyp-single - Biopsied for histology"
+      - name: upperendoscr543
+        description: "Jejunum-uncommon - Jejunal polyp-single - EMR"
+      - name: upperendoscr543-04
+        description: "Jejunum-uncommon - Jejunal polyp-single - EMR Injection"
+      - name: upperendoscr545
+        description: "Jejunum-uncommon - Jejunal polyp-single - Solution EMR"
+      - name: upperendoscr545-01
+        description: "Jejunum-uncommon - Jejunal polyp-single - Solution EMR - description of other"
+      - name: upperendoscr544
+        description: "Jejunum-uncommon - Jejunal polyp-single - Volume (mL)"
+      - name: upperendoscr546
+        description: "Jejunum-uncommon - Jejunal polyp-single - Lifted"
+      - name: upperendoscr546-01
+        description: "Jejunum-uncommon - Jejunal polyp-single - Other lifted"
+      - name: upperendoscr543-01
+        description: "Jejunum-uncommon - Jejunal polyp-single - post polypectomy intervention"
+      - name: upperendoscr543-02
+        description: "Jejunum-uncommon - Jejunal polyp-single - thermal therapy"
+      - name: upperendoscr543-03
+        description: "Jejunum-uncommon - Jejunal polyp-single - thermal therapy - other"
+      - name: upperendoscr548
+        description: "Jejunum-uncommon - Jejunal polyp-single - Type of clips"
+      - name: upperendoscr549
+        description: "Jejunum-uncommon - Jejunal polyp-single - Number of clips"
+      - name: upperendoscr551
+        description: "Jejunum-uncommon - Jejunal polyp-single - Injection solution"
+      - name: upperendoscr550
+        description: "Jejunum-uncommon - Jejunal polyp-single - Injection volume (mL)"
+      - name: upperendoscr550-02
+        description: "Jejunum-uncommon - Jejunal polyp-single - Tissue retrieved for histology"
+      - name: upperendoscr550-01
+        description: "Jejunum-uncommon - Jejunal polyp-single- Tattoo"
+      - name: upperendoscr554
+        description: "Jejunum-uncommon - Jejunal polyp-single - Site"
+      - name: upperendoscr555
+        description: "Jejunum-uncommon - Jejunal polyp-single - Distance from polyp (cm)"
+      - name: upperendoscr553
+        description: "Jejunum-uncommon - Jejunal polyp-single - Tattoo Solution"
+      - name: upperendoscr553-01
+        description: "Jejunum-uncommon - Jejunal polyp-single - Tattoo solution - other"
+      - name: upperendoscr552
+        description: "Jejunum-uncommon - Jejunal polyp-single - Tattoo volume (mL)"
+      - name: upperendoscr552-01
+        description: "Jejunum-uncommon - Jejunal polyp-single - Number of tattoo injections"
+      - name: upperendoscr556
+        description: "Jejunum-uncommon - Jejunal polyp-single - Outcome"
+      - name: upperendoscr558
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Number (x)"
+      - name: upperendoscr559
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Site"
+      - name: upperendoscr559-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Site - Other description"
+      - name: upperendoscr560
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Size of largest polyp (mm)"
+      - name: upperendoscr562
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Description"
+      - name: upperendoscr562-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Other description"
+      - name: upperendoscr562-02
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Classification"
+      - name: upperendoscr564
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Kudo (texture)"
+      - name: upperendoscr565
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Nice (NBI imaging)"
+      - name: upperendoscr566
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Paris (shape)"
+      - name: upperendoscr568
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Biopsied for histology"
+      - name: upperendoscr567
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Polypectomy"
+      - name: upperendoscr567-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Polypectomy - Type of snare"
+      - name: upperendoscr569-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - EMR"
+      - name: upperendoscr569
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - EMR"
+      - name: upperendoscr571
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Solution EMR"
+      - name: upperendoscr570
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Volume (mL)"
+      - name: upperendoscr571-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Other Solution (EMR)"
+      - name: upperendoscr572
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Lifted"
+      - name: upperendoscr572-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Other lifted"
+      - name: upperendoscr572-02
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - post polypectomy therapy"
+      - name: upperendoscr574
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Type of clips"
+      - name: upperendoscr575
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Number of clips"
+      - name: upperendoscr575-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Thermal therapy"
+      - name: upperendoscr575-02
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Thermal therapy - other"
+      - name: upperendoscr577
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Injection solution"
+      - name: upperendoscr576
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Injection volume (mL)"
+      - name: upperendoscr572-03
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Post polypectomy intervention - Other description"
+      - name: upperendoscr573
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - APC"
+      - name: upperendoscr581-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Tattoo"
+      - name: upperendoscr580
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Site"
+      - name: upperendoscr581
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Distance from polyp (cm)"
+      - name: upperendoscr579
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Tattoo Solution"
+      - name: upperendoscr579-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Tattoo solution - other"
+      - name: upperendoscr578
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Tattoo volume (mL)"
+      - name: upperendoscr578-01
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Number of tattoo injections"
+      - name: upperendoscr582
+        description: "Jejunum-uncommon - Jejunal polyps-multiple - Outcome"
+      - name: upperendoscr584
+        description: "Jejunum-uncommon - Jejunal polyps-histology - Tissue retrieved for histology"
+      - name: upperendoscr586
+        description: "Jejunum-uncommon -  Jejunal stricture - Site"
+      - name: upperendoscr587
+        description: "Jejunum-uncommon -  Jejunal stricture - Describe other"
+      - name: upperendoscr589
+        description: "Jejunum-uncommon -  Jejunal stricture - Type"
+      - name: upperendoscr590
+        description: "Jejunum-uncommon -  Jejunal stricture - Appearance"
+      - name: upperendoscr592
+        description: "Jejunum-uncommon -  Jejunal stricture - Traversed"
+      - name: upperendoscr591
+        description: "Jejunum-uncommon -  Jejunal stricture - Length (cm)"
+      - name: upperendoscr593
+        description: "Jejunum-uncommon -  Jejunal stricture - Dilatation"
+      - name: upperendoscr59301
+        description: "Jejunum-uncommon -  Jejunal stricture - Balloon Dilator (mm)"
+      - name: upperendoscr59302
+        description: "Jejunum-uncommon -  Jejunal stricture - Savary Gilliard (mm)"
+      - name: upperendoscr595
+        description: "Jejunum-uncommon -  Jejunal stricture - Injection solution"
+      - name: upperendoscr594
+        description: "Jejunum-uncommon -  Jejunal stricture - Injection volume (mL)"
+      - name: upperendoscr594-01
+        description: "Jejunum-uncommon -  Jejunal stricture - Stent"
+      - name: upperendoscr596
+        description: "Jejunum-uncommon -  Jejunal stricture - Outcome"
+      - name: upperendoscr598
+        description: "Jejunum-uncommon - Jejunal tumour - Site"
+      - name: upperendoscr600
+        description: "Jejunum-uncommon - Jejunal tumour - Size"
+      - name: upperendoscr602
+        description: "Jejunum-uncommon - Jejunal tumour - Description"
+      - name: upperendoscr605
+        description: "Jejunum-uncommon - Jejunal tumour - Other"
+      - name: upperendoscr604
+        description: "Jejunum-uncommon - Jejunal tumour - Length (cm)"
+      - name: upperendoscr611-02
+        description: "Jejunum-uncommon - Jejunal tumour - Biopsied"
+      - name: upperendoscr606
+        description: "Jejunum-uncommon - Jejunal tumour - Dilatation device"
+      - name: upperendoscr606-02
+        description: "Jejunum-uncommon - Jejunal tumour - Dilatation device - Balloon dilator (Type and size mm)"
+      - name: upperendoscr606-01
+        description: "Jejunum-uncommon - Jejunal tumour - Dilatation device - other"
+      - name: upperendoscr607
+        description: "Jejunum-uncommon - Jejunal tumour - Dilatation result"
+      - name: upperendoscr608
+        description: "Jejunum-uncommon - Jejunal tumour - EMR"
+      - name: upperendoscr608-01
+        description: "Jejunum-uncommon - Jejunal tumour - EMR injected"
+      - name: upperendoscr609
+        description: "Jejunum-uncommon - Jejunal tumour - injected Solution (EMR)"
+      - name: upperendoscr609-01
+        description: "Jejunum-uncommon - Jejunal tumour - injected Solution (EMR) - other"
+      - name: upperendoscr609-02
+        description: "Jejunum-uncommon - Jejunal tumour - Volume injection - EMR (mL)"
+      - name: upperendoscr610
+        description: "Jejunum-uncommon - Jejunal tumour - Lift"
+      - name: upperendoscr610-01
+        description: "Jejunum-uncommon - Jejunal tumour - Lift - Other"
+      - name: upperendoscr610-02
+        description: "Jejunum-uncommon - Jejunal tumour - EMR snare/device"
+      - name: upperendoscr612
+        description: "Jejunum-uncommon - Jejunal tumour - Retrieval of tissue for histology"
+      - name: upperendoscr611-01
+        description: "Jejunum-uncommon - Jejunal tumour - Stent"
+      - name: upperendoscr611
+        description: "Jejunum-uncommon - Jejunal tumour - Outcome"
+      - name: upperendoscr613
+        description: "Jejunum-uncommon - Jejunal tumour - Tattoo"
+      - name: upperendoscr617
+        description: "Jejunum-uncommon - Jejunal tumour - Site"
+      - name: upperendoscr618
+        description: "Jejunum-uncommon - Jejunal tumour - Distance from tumour (cm)"
+      - name: upperendoscr616
+        description: "Jejunum-uncommon - Jejunal tumour - Solution"
+      - name: upperendoscr615
+        description: "Jejunum-uncommon - Jejunal tumour - Volume (ml)"
+      - name: upperendoscr614
+        description: "Jejunum-uncommon - Jejunal tumour - Number (x)"
+      - name: upperendoscr621
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Site"
+      - name: upperendoscr621-01
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Site - other"
+      - name: upperendoscr622
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Size of largest (mm)"
+      - name: upperendoscr620
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Number (x)"
+      - name: upperendoscr623
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Type"
+      - name: upperendoscr623-01
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Description - other"
+      - name: upperendoscr623-02
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Biopsy"
+      - name: upperendoscr623-03
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Biopsy - Other"
+      - name: upperendoscr623-04
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Bleeding"
+      - name: upperendoscr624
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Intervention"
+      - name: upperendoscr626
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Type of clips"
+      - name: upperendoscr625
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Number of clips"
+      - name: upperendoscr628
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Type of solution injected"
+      - name: upperendoscr628-01
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Type of solution injected - Other description"
+      - name: upperendoscr627
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Volume (ml) injected"
+      - name: upperendoscr627-01
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Thermal therapy"
+      - name: upperendoscr627-02
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Thermal therapy - other"
+      - name: upperendoscr627-03
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Intervention - Other"
+      - name: upperendoscr629
+        description: "Jejunum-uncommon - Jejunal ulcer-single/multiple - Outcome"
+      - name: upperendoscr631
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Site"
+      - name: upperendoscr632
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Size (mm)"
+      - name: upperendoscr632-01
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Number (x)"
+      - name: upperendoscr632-01x
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Bleeding"
+      - name: upperendoscr633
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Type"
+      - name: upperendoscr633-01
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Type - Other"
+      - name: upperendoscr634
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Intervention"
+      - name: upperendoscr634-01
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Intervention - Other"
+      - name: upperendoscr634-02
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple-Description of intervention"
+      - name: upperendoscr636
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Type of clips"
+      - name: upperendoscr635
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Number of clips"
+      - name: upperendoscr638
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Type of solution injected"
+      - name: upperendoscr637
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Volume (ml) injected"
+      - name: upperendoscr637-01
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Thermal therapy"
+      - name: upperendoscr637-02
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Thermal device - description of other"
+      - name: upperendoscr637-03
+        description: "Jejunal vascular lesion-single/multiple - Other description"
+      - name: upperendoscr639
+        description: "Jejunum-uncommon - Jejunal vascular lesion-single/multiple - Outcome"
+      - name: upperendoscr651
+        description: "Jejunum-uncommon - Other - Other"
+      - name: upperendoscr664
+        description: "Pharynx"
+      - name: upperendoscr666
+        description: "Pharynx - Vocal cords"
+      - name: upperendoscr667
+        description: "Pharynx - Abnormal description"
+      - name: upperendoscr667-01
+        description: "Pharynx - Site (cm)"
+      - name: upperendoscr667-02
+        description: "Pharynx - Size (mm)"
+      - name: upperendoscr667-03
+        description: "Pharynx - Appearance"
+      - name: upperendoscr669
+        description: "Pharynx - Dilatation"
+      - name: upperendoscr670
+        description: "Pharynx - Balloon dilator (mm)"
+      - name: upperendoscr671
+        description: "Pharynx - Savary Gilliard (mm)"
+      - name: upperendoscr672
+        description: "Pharynx - Other dilatation device"
+      - name: upperendoscr675
+        description: "Pharynx - Solution injected"
+      - name: upperendoscr674
+        description: "Pharynx - Volume injected"
+      - name: upperendoscr677
+        description: "Pharynx - Other"
+      - name: upperendoscr680
+        description: "Summary - Main endoscopic findings"
+      - name: upperendoscr680-01
+        description: "Summary - Other comments"
+      - name: upperendoscr680-02
+        description: "If other selected, please describe"
+      - name: upperendoscr680-03
+        description: "Summary - Biopsy"
+      - name: upperendoscr680-04
+        description: "Summary-Hp"
+      - name: upperendoscr680-05
+        description: "Other description"
+      - name: upperendoscr683-01
+        description: "Summary - Interventions"
+      - name: upperendoscr683
+        description: "Summary - Post-procedure - Feeding instructions"
+      - name: upperendoscr684
+        description: "Summary - Post-procedure - START medication (name, dose, frequency)"
+      - name: upperendoscr684-01
+        description: "Summary - Post-procedure - STOP medication (name, dose, frequency)"
+      - name: upperendoscr685
+        description: "Summary - Post-procedure - Recommence anticoagulant (name, dose, time)"
+      - name: upperendoscr691
+        description: "Summary - Follow up - Summary - Follow up"
+      - name: upperendoscr692
+        description: "Summary - Follow up - Local doctor (name, time)"
+      - name: upperendoscr693
+        description: "Summary - Follow up - Hospital clinical (name, time)"
+      - name: upperendoscr694
+        description: "Summary - Follow up - Private doctor (name, time)"
+      - name: upperendoscr683-03
+        description: "Summary - Follow up - Follow up colonoscopy - Days (x)"
+      - name: upperendoscr683-04
+        description: "Summary - Follow up - Follow up colonoscopy - Months (x)"
+      - name: upperendoscr683-05
+        description: "Summary - Follow up - Follow up colonoscopy - Years (x)"
+      - name: upperendoscr696
+        description: "Summary - Follow up - Repeat procedure-gastroscopy - Days (x)"
+      - name: upperendoscr697
+        description: "Summary - Follow up - Repeat procedure-gastroscopy - Months (x)"
+      - name: upperendoscr698
+        description: "Summary - Follow up - Repeat procedure-gastroscopy - Years (x)"
+      - name: upperendoscr699
+        description: "Summary - Follow up - Referral details"
+      - name: upperendoscr700
+        description: "Summary - Follow up - Other"
+      - name: upperendoscr701
+        description: "Generate report"
+      - name: upperendoscr702
+        description: "Digital copy to"
+      - name: upperendoscr703
+        description: "Number of copies"

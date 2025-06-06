@@ -2,11 +2,11 @@ select
     display_id as "{{ translate_label('patientDisplayId','Patient ID') }}",
     first_name as "{{ translate_label('patientFirstName','First name') }}",
     last_name as "{{ translate_label('patientLastName','Last name') }}",
-    diagnoses as "{{ translate_label('diagnosisName', 'Diagnoses') }}",
+    diagnoses as "{{ translate_label('diagnoses', 'Diagnoses') }}",
     referral_type as "{{ translate_label('referralType', 'Referral name') }}",
     referring_doctor_name as "{{ translate_label('referralCompletedBy', 'Referring doctor') }}",
     referral_datetime as "{{ translate_label('referralDate', 'Referral date') }}",
-    department as "{{ translate_label('departmentName', 'Department') }}"
+    department as "{{ translate_label('department', 'Department') }}"
 from {{ ref('ds__referrals') }}
 where status in ('pending', 'cancelled')
     and case

@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: program-hrsnscreeningtool-hrsnscreeningtool
+    description: "Dataset containing responses for 'HRSN Screening Tool' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: AHCMHRSN065
+        description: "Screening date"
+      - name: AHCMHRSN066
+        description: "Age"
+      - name: AHCMHRSN067
+        description: "Name of person conducting screen"
+      - name: AHCMHRSN002
+        description: "Current living situation"
+      - name: AHCMHRSN043
+        description: "Living situation problems"
+      - name: AHCMHRSN006
+        description: "Worried that your food would run out?"
+      - name: AHCMHRSN007
+        description: "Food didn't last?"
+      - name: AHCMHRSN009
+        description: "Lack of reliable transport"
+      - name: AHCMHRSN011
+        description: "Utilities shut off?"
+      - name: AHCMHRSN014
+        description: "Physical abuse"
+      - name: AHCMHRSN015
+        description: "Emotional abuse/insults"
+      - name: AHCMHRSN016
+        description: "Threats of harm"
+      - name: AHCMHRSN017
+        description: "Verbal abuse"
+      - name: AHCMHRSN048
+        description: "Safety calculation"
+      - name: AHCMHRSN019
+        description: "Finances for basics"
+      - name: AHCMHRSN021
+        description: "Finding or keeping jobs"
+      - name: AHCMHRSN023
+        description: "Helps with ADLs"
+      - name: AHCMHRSN024
+        description: "Loneliness and isolation"
+      - name: AHCMHRSN026
+        description: "Language other than English"
+      - name: AHCMHRSN027
+        description: "School or training help"
+      - name: AHCMHRSN029
+        description: "Days per week exercise"
+      - name: AHCMHRSN030
+        description: "Minutes per session of exercise"
+      - name: AHCMHRSN054
+        description: "Minutes exercise per week"
+      - name: AHCMHRSN032
+        description: "Alcohol use"
+      - name: AHCMHRSN033
+        description: "Tobacco use"
+      - name: AHCMHRSN034
+        description: "Prescription drug use"
+      - name: AHCMHRSN035
+        description: "Illegal drug use"
+      - name: AHCMHRSN037
+        description: "Interest and pleasure"
+      - name: AHCMHRSN038
+        description: "Depression and hopelessness"
+      - name: AHCMHRSN057
+        description: "Mental health calculation"
+      - name: AHCMHRSN039
+        description: "Stress"
+      - name: AHCMHRSN041
+        description: "Concentration and decision making"
+      - name: AHCMHRSN042
+        description: "Independence"
+      - name: HRSNRISK001
+        description: "Health Related Social Need Risk Assessment Outcome:"
+      - name: HRSNRISK002
+        description: "Health Related Social Need Risk Assessment Outcome:"
+      - name: HRSNRISK003
+        description: "Health Related Social Need Risk Assessment Outcome:"

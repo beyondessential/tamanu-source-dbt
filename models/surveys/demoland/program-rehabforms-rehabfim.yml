@@ -1,0 +1,496 @@
+version: 2
+
+models:
+  - name: program-rehabforms-rehabfim
+    description: "Dataset containing responses for '(Demo2) Functional Independence Measure' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: FIM001
+        description: "Type of assessment"
+      - name: FIM004
+        description: "Eating"
+      - name: FIM005
+        description: "Grooming"
+      - name: FIM006
+        description: "Bathing"
+      - name: FIM007
+        description: "Dressing- Upper Body"
+      - name: FIM008
+        description: "Dressing- Lower Body"
+      - name: FIM009
+        description: "Toileting"
+      - name: FIM103
+        description: "Total score for this section"
+      - name: FIM011
+        description: "Bladder Management"
+      - name: FIM012
+        description: "Bowel Management"
+      - name: FIM110
+        description: "Total score for this section"
+      - name: FIM014
+        description: "Walk, W/C"
+      - name: FIM015
+        description: "Stairs"
+      - name: FIM113
+        description: "Total score for this section"
+      - name: FIM017
+        description: "Bed, Chair, W/C"
+      - name: FIM018
+        description: "Toilet"
+      - name: FIM019
+        description: "Tub, Shower"
+      - name: FIM116
+        description: "Total score for this section"
+      - name: FIM021
+        description: "Comprehension"
+      - name: FIM022
+        description: "Expression"
+      - name: FIM120
+        description: "Total score for this section"
+      - name: FIM024
+        description: "Social Interaction"
+      - name: FIM025
+        description: "Problem Solving"
+      - name: FIM026
+        description: "Memory"
+      - name: FIM123
+        description: "Total score for this section"
+      - name: FIM029
+        description: "Total motor subscale"
+      - name: FIM030
+        description: "Total cognition subscale"
+      - name: FIM031
+        description: "Total FIM"
+      - name: FIM032
+        description: "Total FIM Result"
+      - name: FIM900
+        description: "Total FIM Result: 18"
+      - name: FIM901
+        description: "Total FIM Result: 19"
+      - name: FIM033
+        description: "Total FIM Result: 19"
+      - name: FIM034
+        description: "Total FIM Result: 20"
+      - name: FIM902
+        description: "Total FIM Result: 20"
+      - name: FIM903
+        description: "Total FIM Result: 21"
+      - name: FIM035
+        description: "Total FIM Result: 21"
+      - name: FIM036
+        description: "Total FIM Result: 22"
+      - name: FIM904
+        description: "Total FIM Result: 22"
+      - name: FIM905
+        description: "Total FIM Result: 23"
+      - name: FIM037
+        description: "Total FIM Result: 23"
+      - name: FIM906
+        description: "Total FIM Result: 24"
+      - name: FIM038
+        description: "Total FIM Result: 24"
+      - name: FIM907
+        description: "Total FIM Result: 25"
+      - name: FIM039
+        description: "Total FIM Result: 25"
+      - name: FIM040
+        description: "Total FIM Result: 26"
+      - name: FIM908
+        description: "Total FIM Result: 26"
+      - name: FIM041
+        description: "Total FIM Result: 27"
+      - name: FIM909
+        description: "Total FIM Result: 27"
+      - name: FIM042
+        description: "Total FIM Result: 28"
+      - name: FIM910
+        description: "Total FIM Result: 28"
+      - name: FIM911
+        description: "Total FIM Result: 29"
+      - name: FIM043
+        description: "Total FIM Result: 29"
+      - name: FIM912
+        description: "Total FIM Result: 30"
+      - name: FIM044
+        description: "Total FIM Result: 30"
+      - name: FIM913
+        description: "Total FIM Result: 31"
+      - name: FIM045
+        description: "Total FIM Result: 31"
+      - name: FIM046
+        description: "Total FIM Result: 32"
+      - name: FIM914
+        description: "Total FIM Result: 32"
+      - name: FIM915
+        description: "Total FIM Result: 33"
+      - name: FIM047
+        description: "Total FIM Result: 33"
+      - name: FIM916
+        description: "Total FIM Result: 34"
+      - name: FIM048
+        description: "Total FIM Result: 34"
+      - name: FIM049
+        description: "Total FIM Result: 35"
+      - name: FIM917
+        description: "Total FIM Result: 35"
+      - name: FIM050
+        description: "Total FIM Result: 36"
+      - name: FIM918
+        description: "Total FIM Result: 36"
+      - name: FIM919
+        description: "Total FIM Result: 37"
+      - name: FIM051
+        description: "Total FIM Result: 37"
+      - name: FIM920
+        description: "Total FIM Result: 38"
+      - name: FIM052
+        description: "Total FIM Result: 38"
+      - name: FIM053
+        description: "Total FIM Result: 39"
+      - name: FIM921
+        description: "Total FIM Result: 39"
+      - name: FIM922
+        description: "Total FIM Result: 40"
+      - name: FIM054
+        description: "Total FIM Result: 40"
+      - name: FIM923
+        description: "Total FIM Result: 41"
+      - name: FIM055
+        description: "Total FIM Result: 41"
+      - name: FIM924
+        description: "Total FIM Result: 42"
+      - name: FIM056
+        description: "Total FIM Result: 42"
+      - name: FIM925
+        description: "Total FIM Result: 43"
+      - name: FIM057
+        description: "Total FIM Result: 43"
+      - name: FIM058
+        description: "Total FIM Result: 44"
+      - name: FIM926
+        description: "Total FIM Result: 44"
+      - name: FIM059
+        description: "Total FIM Result: 45"
+      - name: FIM927
+        description: "Total FIM Result: 45"
+      - name: FIM928
+        description: "Total FIM Result: 46"
+      - name: FIM060
+        description: "Total FIM Result: 46"
+      - name: FIM061
+        description: "Total FIM Result: 47"
+      - name: FIM929
+        description: "Total FIM Result: 47"
+      - name: FIM930
+        description: "Total FIM Result: 48"
+      - name: FIM062
+        description: "Total FIM Result: 48"
+      - name: FIM931
+        description: "Total FIM Result: 49"
+      - name: FIM063
+        description: "Total FIM Result: 49"
+      - name: FIM932
+        description: "Total FIM Result: 50"
+      - name: FIM064
+        description: "Total FIM Result: 50"
+      - name: FIM065
+        description: "Total FIM Result: 51"
+      - name: FIM933
+        description: "Total FIM Result: 51"
+      - name: FIM066
+        description: "Total FIM Result: 52"
+      - name: FIM934
+        description: "Total FIM Result: 52"
+      - name: FIM935
+        description: "Total FIM Result: 53"
+      - name: FIM067
+        description: "Total FIM Result: 53"
+      - name: FIM068
+        description: "Total FIM Result: 54"
+      - name: FIM936
+        description: "Total FIM Result: 54"
+      - name: FIM069
+        description: "Total FIM Result: 55"
+      - name: FIM937
+        description: "Total FIM Result: 55"
+      - name: FIM938
+        description: "Total FIM Result: 56"
+      - name: FIM070
+        description: "Total FIM Result: 56"
+      - name: FIM071
+        description: "Total FIM Result: 57"
+      - name: FIM939
+        description: "Total FIM Result: 57"
+      - name: FIM940
+        description: "Total FIM Result: 58"
+      - name: FIM072
+        description: "Total FIM Result: 58"
+      - name: FIM073
+        description: "Total FIM Result: 59"
+      - name: FIM941
+        description: "Total FIM Result: 59"
+      - name: FIM942
+        description: "Total FIM Result: 60"
+      - name: FIM074
+        description: "Total FIM Result: 60"
+      - name: FIM075
+        description: "Total FIM Result: 61"
+      - name: FIM943
+        description: "Total FIM Result: 61"
+      - name: FIM944
+        description: "Total FIM Result: 62"
+      - name: FIM076
+        description: "Total FIM Result: 62"
+      - name: FIM077
+        description: "Total FIM Result: 63"
+      - name: FIM945
+        description: "Total FIM Result: 63"
+      - name: FIM946
+        description: "Total FIM Result: 64"
+      - name: FIM078
+        description: "Total FIM Result: 64"
+      - name: FIM079
+        description: "Total FIM Result: 65"
+      - name: FIM947
+        description: "Total FIM Result: 65"
+      - name: FIM080
+        description: "Total FIM Result: 66"
+      - name: FIM948
+        description: "Total FIM Result: 66"
+      - name: FIM949
+        description: "Total FIM Result: 67"
+      - name: FIM081
+        description: "Total FIM Result: 67"
+      - name: FIM082
+        description: "Total FIM Result: 68"
+      - name: FIM950
+        description: "Total FIM Result: 68"
+      - name: FIM083
+        description: "Total FIM Result: 69"
+      - name: FIM951
+        description: "Total FIM Result: 69"
+      - name: FIM952
+        description: "Total FIM Result: 70"
+      - name: FIM084
+        description: "Total FIM Result: 70"
+      - name: FIM085
+        description: "Total FIM Result: 71"
+      - name: FIM953
+        description: "Total FIM Result: 71"
+      - name: FIM086
+        description: "Total FIM Result: 72"
+      - name: FIM954
+        description: "Total FIM Result: 72"
+      - name: FIM955
+        description: "Total FIM Result: 73"
+      - name: FIM087
+        description: "Total FIM Result: 73"
+      - name: FIM956
+        description: "Total FIM Result: 74"
+      - name: FIM088
+        description: "Total FIM Result: 74"
+      - name: FIM089
+        description: "Total FIM Result: 75"
+      - name: FIM957
+        description: "Total FIM Result: 75"
+      - name: FIM090
+        description: "Total FIM Result: 76"
+      - name: FIM958
+        description: "Total FIM Result: 76"
+      - name: FIM091
+        description: "Total FIM Result: 77"
+      - name: FIM959
+        description: "Total FIM Result: 77"
+      - name: FIM960
+        description: "Total FIM Result: 78"
+      - name: FIM092
+        description: "Total FIM Result: 78"
+      - name: FIM093
+        description: "Total FIM Result: 79"
+      - name: FIM961
+        description: "Total FIM Result: 79"
+      - name: FIM962
+        description: "Total FIM Result: 80"
+      - name: FIM094
+        description: "Total FIM Result: 80"
+      - name: FIM963
+        description: "Total FIM Result: 81"
+      - name: FIM095
+        description: "Total FIM Result: 81"
+      - name: FIM096
+        description: "Total FIM Result: 82"
+      - name: FIM964
+        description: "Total FIM Result: 82"
+      - name: FIM965
+        description: "Total FIM Result: 83"
+      - name: FIM097
+        description: "Total FIM Result: 83"
+      - name: FIM098
+        description: "Total FIM Result: 84"
+      - name: FIM966
+        description: "Total FIM Result: 84"
+      - name: FIM967
+        description: "Total FIM Result: 85"
+      - name: FIM099
+        description: "Total FIM Result: 85"
+      - name: FIM968
+        description: "Total FIM Result: 86"
+      - name: FIM100
+        description: "Total FIM Result: 86"
+      - name: FIM101
+        description: "Total FIM Result: 87"
+      - name: FIM969
+        description: "Total FIM Result: 87"
+      - name: FIM970
+        description: "Total FIM Result: 88"
+      - name: FIM102
+        description: "Total FIM Result: 88"
+      - name: FIM971
+        description: "Total FIM Result: 89"
+      - name: FIM972
+        description: "Total FIM Result: 90"
+      - name: FIM104
+        description: "Total FIM Result: 90"
+      - name: FIM973
+        description: "Total FIM Result: 91"
+      - name: FIM105
+        description: "Total FIM Result: 91"
+      - name: FIM106
+        description: "Total FIM Result: 92"
+      - name: FIM974
+        description: "Total FIM Result: 92"
+      - name: FIM107
+        description: "Total FIM Result: 93"
+      - name: FIM975
+        description: "Total FIM Result: 93"
+      - name: FIM108
+        description: "Total FIM Result: 94"
+      - name: FIM976
+        description: "Total FIM Result: 94"
+      - name: FIM109
+        description: "Total FIM Result: 95"
+      - name: FIM977
+        description: "Total FIM Result: 95"
+      - name: FIM978
+        description: "Total FIM Result: 96"
+      - name: FIM979
+        description: "Total FIM Result: 97"
+      - name: FIM111
+        description: "Total FIM Result: 97"
+      - name: FIM980
+        description: "Total FIM Result: 98"
+      - name: FIM112
+        description: "Total FIM Result: 98"
+      - name: FIM981
+        description: "Total FIM Result: 99"
+      - name: FIM114
+        description: "Total FIM Result: 100"
+      - name: FIM982
+        description: "Total FIM Result: 100"
+      - name: FIM115
+        description: "Total FIM Result: 101"
+      - name: FIM983
+        description: "Total FIM Result: 101"
+      - name: FIM984
+        description: "Total FIM Result: 102"
+      - name: FIM985
+        description: "Total FIM Result: 103"
+      - name: FIM117
+        description: "Total FIM Result: 103"
+      - name: FIM986
+        description: "Total FIM Result: 104"
+      - name: FIM118
+        description: "Total FIM Result: 104"
+      - name: FIM987
+        description: "Total FIM Result: 105"
+      - name: FIM119
+        description: "Total FIM Result: 105"
+      - name: FIM988
+        description: "Total FIM Result: 106"
+      - name: FIM989
+        description: "Total FIM Result: 107"
+      - name: FIM121
+        description: "Total FIM Result: 107"
+      - name: FIM122
+        description: "Total FIM Result: 108"
+      - name: FIM990
+        description: "Total FIM Result: 108"
+      - name: FIM991
+        description: "Total FIM Result: 109"
+      - name: FIM992
+        description: "Total FIM Result: 110"
+      - name: FIM124
+        description: "Total FIM Result: 110"
+      - name: FIM993
+        description: "Total FIM Result: 111"
+      - name: FIM125
+        description: "Total FIM Result: 111"
+      - name: FIM126
+        description: "Total FIM Result: 112"
+      - name: FIM994
+        description: "Total FIM Result: 112"
+      - name: FIM995
+        description: "Total FIM Result: 113"
+      - name: FIM127
+        description: "Total FIM Result: 113"
+      - name: FIM128
+        description: "Total FIM Result: 114"
+      - name: FIM996
+        description: "Total FIM Result: 114"
+      - name: FIM997
+        description: "Total FIM Result: 115"
+      - name: FIM129
+        description: "Total FIM Result: 115"
+      - name: FIM130
+        description: "Total FIM Result: 116"
+      - name: FIM998
+        description: "Total FIM Result: 116"
+      - name: FIM131
+        description: "Total FIM Result: 117"
+      - name: FIM999
+        description: "Total FIM Result: 117"
+      - name: FIM1000
+        description: "Total FIM Result: 118"
+      - name: FIM132
+        description: "Total FIM Result: 118"
+      - name: FIM133
+        description: "Total FIM Result: 119"
+      - name: FIM1001
+        description: "Total FIM Result: 119"
+      - name: FIM1002
+        description: "Total FIM Result: 120"
+      - name: FIM134
+        description: "Total FIM Result: 120"
+      - name: FIM135
+        description: "Total FIM Result: 121"
+      - name: FIM1003
+        description: "Total FIM Result: 121"
+      - name: FIM1004
+        description: "Total FIM Result: 122"
+      - name: FIM136
+        description: "Total FIM Result: 122"
+      - name: FIM1005
+        description: "Total FIM Result: 123"
+      - name: FIM137
+        description: "Total FIM Result: 123"
+      - name: FIM1006
+        description: "Total FIM Result: 124"
+      - name: FIM138
+        description: "Total FIM Result: 124"
+      - name: FIM1007
+        description: "Total FIM Result: 125"
+      - name: FIM139
+        description: "Total FIM Result: 125"
+      - name: FIM1008
+        description: "Total FIM Result: 126"
+      - name: FIM140
+        description: "Total FIM Result: 126"

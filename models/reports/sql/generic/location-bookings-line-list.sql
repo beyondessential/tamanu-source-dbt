@@ -16,7 +16,7 @@ select
             then extract(hour from age(booking_end_datetime, booking_start_datetime)) || ' hours'
         else extract(minute from age(booking_end_datetime, booking_start_datetime)) || ' minutes'
     end as "{{ translate_label('bookingDuration', 'Booking duration') }}",
-    location_group as "{{ translate_label('bookingArea', 'Area') }}",
+    location_group as "{{ translate_label('bookingLocationGroup', 'Area') }}",
     location as "{{ translate_label('bookingLocation', 'Location') }}",
     clinician as "{{ translate_label('bookingClinician', 'Clinician') }}",
     booking_type as "{{ translate_label('bookingType', 'Booking type') }}",
