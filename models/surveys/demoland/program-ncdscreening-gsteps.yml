@@ -1,0 +1,418 @@
+version: 2
+
+models:
+  - name: program-ncdscreening-gsteps
+    description: "Dataset containing responses for '(Demo 2) Generic STEPS' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: genericstepsI1
+        description: "Screening village"
+      - name: genericstepsI2
+        description: "Interviewer"
+      - name: genericstepsI3
+        description: "Date of survey completion"
+      - name: genericstepsI4
+        description: "Patient consent obtained"
+      - name: genericstepsI5
+        description: "Patient contact phone number (patient details)"
+      - name: genericstepsC1
+        description: "Sex"
+      - name: genericstepsC2
+        description: "DOB (patient details)"
+      - name: genericstepsC3
+        description: "Age (patient details)"
+      - name: genericstepsC4
+        description: "Years have you spent at school & in full time study"
+      - name: genericstepsC5
+        description: "Highest level of education completed"
+      - name: genericstepsC6
+        description: "Cultural background"
+      - name: genericstepsC7
+        description: "Marital status"
+      - name: genericstepsC8
+        description: "Which of the following best describes your main work status over the past 12 months?"
+      - name: genericstepsC9
+        description: "How many people older than 18 years, including yourself, live in your household?"
+      - name: genericstepsC10
+        description: "Average household earnings - amount 'per' week/month/year (please choose one)"
+      - name: genericstepsC11
+        description: "Average household earnings in the past year"
+      - name: genericstepsT1
+        description: "Do you currently smoke any tobacco products, such as cigarettes, cigars or pipes?"
+      - name: genericstepsT2
+        description: "Do you currently smoke tobacco products daily?"
+      - name: genericstepsT2A
+        description: "Do you know how old you were when you first started smoking?"
+      - name: genericstepsT3
+        description: "How old were you when you first started smoking?"
+      - name: genericstepsT4a
+        description: "How long ago did you start smoking in years?"
+      - name: genericstepsT4b
+        description: "How long ago did you start smoking in months?"
+      - name: genericstepsT4c
+        description: "How long ago did you start smoking in weeks?"
+      - name: genericstepsT5a
+        description: "Manufactured cigarettes (daily average)"
+      - name: genericstepsT5aw
+        description: "Manufactured cigarettes (weekly average)"
+      - name: genericstepsT5b
+        description: "Hand-rolled cigarettes (daily average)"
+      - name: genericstepsT5bw
+        description: "Hand-rolled cigarettes (weekly average)"
+      - name: genericstepsT5c
+        description: "Pipes full of tobacco (daily average)"
+      - name: genericstepsT5cw
+        description: "Pipes full of tobacco (weekly average)"
+      - name: genericstepsT5d
+        description: "Cigars, cheroots, cigarillos (daily average)"
+      - name: genericstepsT5dw
+        description: "Cigars, cheroots, cigarillos (weekly average)"
+      - name: genericstepsT5e
+        description: "Number of Shisha sessions (daily average)"
+      - name: genericstepsT5ew
+        description: "Number of Shisha sessions (weekly average)"
+      - name: genericstepsTZE
+        description: "Other tobacco product field required?"
+      - name: genericstepsT5other
+        description: "Specify other tobacco product name"
+      - name: genericstepsT5f
+        description: "Other tobacco product (daily average)"
+      - name: genericstepsT5fw
+        description: "Other tobacco product (weekly average)"
+      - name: genericstepsT6
+        description: "During the past 12 months, have you tried to stop smoking?"
+      - name: genericstepsT7
+        description: "During any visit to a health worker in the past 12 months, were you advised to quit smoking tobacco?"
+      - name: genericstepsT8
+        description: "In the past, did you ever smoke any tobacco products?"
+      - name: genericstepsT9
+        description: "In the past, did you ever smoke daily?"
+      - name: genericstepsT10A
+        description: "Do you know how old you were when you stopped smoking?"
+      - name: genericstepsT10
+        description: "How old were you when you stopped smoking?"
+      - name: genericstepsT11
+        description: "How long ago did you stop smoking (one answer will be completed below if they remember in years/months/weeks)"
+      - name: genericstepsT11a
+        description: "How long ago did you stop smoking in years?"
+      - name: genericstepsT11b
+        description: "How long ago did you stop smoking in months?"
+      - name: genericstepsT11c
+        description: "How long ago did you stop smoking in weeks?"
+      - name: genericstepsT12
+        description: "Do you currently use any smokeless tobacco products?"
+      - name: genericstepsT13
+        description: "Do you currently use smokeless tobacco products daily?"
+      - name: genericstepsT14a
+        description: "Snuff, by mouth (times used per day)"
+      - name: genericstepsT14aw
+        description: "Snuff, by mouth (times used per week)"
+      - name: genericstepsT14b
+        description: "Snuff, by nose (times used per day)"
+      - name: genericstepsT14bw
+        description: "Snuff, by nose (times used per week)"
+      - name: genericstepsT14c
+        description: "Chewing tobacco (times used per day)"
+      - name: genericstepsT14cw
+        description: "Chewing tobacco (times used per week)"
+      - name: genericstepsT14d
+        description: "Betel, quid (times used per day)"
+      - name: genericstepsT14dw
+        description: "Betel, quid (times used per week)"
+      - name: genericstepsTZH
+        description: "Other smokeless tobacco product field required?"
+      - name: genericstepsT14other
+        description: "Specify other tobacco product name"
+      - name: genericstepsT14e
+        description: "Other tobacco product (daily average)"
+      - name: genericstepsT14ew
+        description: "Other tobacco product (weekly average)"
+      - name: genericstepsT15
+        description: "In the past, did you ever use smokeless tobacco products?"
+      - name: genericstepsT16
+        description: "In the past, did you ever use smokeless tobacco products daily?"
+      - name: genericstepsT17
+        description: "During the past 30 days, did someone smoke in your home?"
+      - name: genericstepsT18
+        description: "During the past 30 days, did someone smoke in closed areas in your workplace?"
+      - name: genericstepsA1
+        description: "Have you ever consumed any alcohol?"
+      - name: genericstepsA2
+        description: "Have you consumed any alcohol within the past 12 months?"
+      - name: genericstepsA3
+        description: "Have you stopped drinking due to health reasons>"
+      - name: genericstepsA4
+        description: "During the past 12 months, how frequently have you had at least one standard alcoholic drink?"
+      - name: genericstepsA5
+        description: "Have you consumed any alcohol within the past 30 days?"
+      - name: genericstepsA6
+        description: "During the past 30 days, on how many occasions did you have at least one standard alcoholic drink?"
+      - name: genericstepsA7
+        description: "During the past 30 days, when you drank alcohol, how many standard drinks on average did you have during one drinking occasion?"
+      - name: genericstepsA8
+        description: "During the past 30 days, what was the largest number of standard drinks you had on a single occasion, counting all types of alcoholic drinks together?"
+      - name: genericstepsA9
+        description: "During the past 30 days, how many times did you have six or more standard drinks in a single drinking occasion?"
+      - name: genericstepsA10a
+        description: "No. of drinks this past Monday"
+      - name: genericstepsA10b
+        description: "No. of drinks this past Tuesday"
+      - name: genericstepsA10c
+        description: "No. of drinks this past Wednesday"
+      - name: genericstepsA10d
+        description: "No. of drinks this past Thursday"
+      - name: genericstepsA10e
+        description: "No. of drinks this past Friday"
+      - name: genericstepsA10f
+        description: "No. of drinks this past Saturday"
+      - name: genericstepsA10g
+        description: "No. of drinks this past Sunday"
+      - name: genericstepsA11
+        description: "During the past 7 days, did you consume any homebrewed alcohol, any alcohol brought over the border/from another country, any alcohol not intended for drinking or other untaxed alcohol?"
+      - name: genericstepsA12a
+        description: "Homebrewed spirits, e.g. moonshine"
+      - name: genericstepsA12b
+        description: "Homebrewed beer or wine, e.g. beer, palm or fruit wine"
+      - name: genericstepsA12c
+        description: "Alcohol brought over the border/from another country"
+      - name: genericstepsA12d
+        description: "Alcohol not intended for drinking, e.g. alcohol-based medicines, perfumes, after shaves"
+      - name: genericstepsA12e
+        description: "Other untaxed alcohol in the country"
+      - name: genericstepsA13
+        description: "During the past 12 months, how often have you found that you were not able to stop drinking once you had started?"
+      - name: genericstepsA14
+        description: "During the past 12 months, how often have you failed to do what was normally expected from you because of drinking?"
+      - name: genericstepsA15
+        description: "During the past 12 months, how often have you needed a first drink in the morning to get yourself going after a heavy drinking session?"
+      - name: genericstepsA16
+        description: "During the past 12 months, have you had family problems or problems with your partner due to someone else’s drinking?"
+      - name: genericstepsD1
+        description: "In a typical week, on how many days do you eat fruit?"
+      - name: genericstepsD2
+        description: "How many servings of fruit do you eat on one of those days?"
+      - name: genericstepsD3
+        description: "In a typical week, on how many days do you eat vegetables?"
+      - name: genericstepsD4
+        description: "How many servings of vegetables do you eat on one of those days?"
+      - name: genericstepsD5
+        description: "How often do you add salt or a salty sauce such as soy sauce to your food right before you eat it or as you are eating it?"
+      - name: genericstepsD6
+        description: "How often is salt, salty seasoning or a salty sauce added in cooking or preparing foods in your household?"
+      - name: genericstepsD7
+        description: "How often do you eat processed food high in salt?"
+      - name: genericstepsD8
+        description: "How much salt or salty sauce do you think you consume?"
+      - name: genericstepsD9
+        description: "How important to you is lowering the salt in your diet?"
+      - name: genericstepsD10
+        description: "Do you think that too much salt or salty sauce in your diet could cause a health problem?"
+      - name: genericstepsD11a
+        description: "Limit consumption of processed foods"
+      - name: genericstepsD11b
+        description: "Look at the salt or sodium content on food labels"
+      - name: genericstepsD11c
+        description: "Buy low salt/sodium alternatives"
+      - name: genericstepsD11d
+        description: "Use spices other than salt when cooking"
+      - name: genericstepsD11e
+        description: "Avoid eating foods prepared outside of a home"
+      - name: genericstepsD11f
+        description: "Do other things specifically to control your salt intake"
+      - name: genericstepsD11g
+        description: "Do you follow any other salt limiting steps?"
+      - name: genericstepsD11other
+        description: "Other salt limiting steps specified"
+      - name: genericstepsP1
+        description: "Does your work involve vigorous-intensity activity that causes large increases in breathing or heart rate?"
+      - name: genericstepsP2
+        description: "In a typical week, on how many days do you do vigorous-intensity activities as part of your work?"
+      - name: genericstepsP3a
+        description: "Hours spent doing vigorous-intensity activities"
+      - name: genericstepsP3b
+        description: "Minutes spent doing vigorous-intensity activities"
+      - name: genericstepsP4
+        description: "Does your work involve moderate-intensity activity, that causes small increases in breathing or heart rate?"
+      - name: genericstepsP5
+        description: "In a typical week, on how many days do you do moderate-intensity activities as part of your work?"
+      - name: genericstepsP6a
+        description: "Hours spent doing moderate-intensity activities"
+      - name: genericstepsP6b
+        description: "Minutes spent doing moderate-intensity activities"
+      - name: genericstepsP7
+        description: "Do you walk or use a bicycle (pedal cycle) to get to and from places?"
+      - name: genericstepsP8
+        description: "In a typical week, on how many days do you walk or bicycle to get to and from places?"
+      - name: genericstepsP9a
+        description: "Hours spent walking or bike riding for travel on a typical day"
+      - name: genericstepsP9b
+        description: "Minutes spent walking or bike riding for travel on a typical day"
+      - name: genericstepsP10
+        description: "Do you do any vigorous-intensity sports, fitness or recreational (leisure) activities that cause large increases in breathing or heart rate like [running or football]?"
+      - name: genericstepsP11
+        description: "In a typical week, on how many days do you do vigorous-intensity sports, fitness or recreational (leisure) activities?"
+      - name: genericstepsP12a
+        description: "Hours spent doing vigorous-intensity sports, fitness or recreational activities on a typical day"
+      - name: genericstepsP12b
+        description: "Minutes spent doing vigorous-intensity sports, fitness or recreational activities on a typical day"
+      - name: genericstepsP13
+        description: "Do you do any moderate-intensity sports, fitness or recreational (leisure) activities that cause a small increase in breathing or heart rate such as brisk walking [cycling, volleyball, basketball]?"
+      - name: genericstepsP14
+        description: "In a typical week, on how many days do you do moderate-intensity sports, fitness or recreational (leisure) activities?"
+      - name: genericstepsP15a
+        description: "Hours spent doing moderate-intensity sports, fitness or recreational (leisure) activities on a typical day?"
+      - name: genericstepsP15b
+        description: "Minutes spent doing moderate-intensity sports, fitness or recreational (leisure) activities on a typical day?"
+      - name: genericstepsP16a
+        description: "Hours spent sitting or reclining on a typical day?"
+      - name: genericstepsP16b
+        description: "Minutes spent sitting or reclining on a typical day?"
+      - name: genericstepsH1
+        description: "Have you ever had your blood pressure measured by a doctor or other health worker?"
+      - name: genericstepsH2a
+        description: "Have you ever been told by a doctor or other health worker that you have raised blood pressure or hypertension?"
+      - name: genericstepsH2b
+        description: "Were you first told about having raised blood pressure in the past 12 months?"
+      - name: genericstepsH3
+        description: "In the past two weeks, have you taken medication for raised blood pressure prescribed by a health worker?"
+      - name: genericstepsH4
+        description: "Have you ever seen a traditional healer for raised blood pressure or hypertension?"
+      - name: genericstepsH5
+        description: "Are you currently taking any herbal or traditional remedy for your raised blood pressure?"
+      - name: genericstepsH6
+        description: "Have you ever had your blood sugar measured by a doctor or other health worker?"
+      - name: genericstepsH7a
+        description: "Have you ever been told by a doctor or other health worker that you have raised blood sugar or diabetes?"
+      - name: genericstepsH7b
+        description: "Were you first told about having diabetes in the past 12 months?"
+      - name: genericstepsH8
+        description: "In the past two weeks, have you taken any medication for diabetes prescribed by a health worker?"
+      - name: genericstepsH9
+        description: "Are you currently taking insulin for diabetes prescribed by a health worker?"
+      - name: genericstepsH10
+        description: "Have you ever seen a traditional healer for diabetes or raised blood sugar?"
+      - name: genericstepsH11
+        description: "Are you currently taking any herbal or traditional remedy for your diabetes?"
+      - name: genericstepsH12
+        description: "Have you ever had your cholesterol measured by a health worker?"
+      - name: genericstepsH13a
+        description: "Have you ever been told by a doctor or other health worker that you have raised cholesterol?"
+      - name: genericstepsH13b
+        description: "Were you first told about  raised cholesterol in the past 12 months?"
+      - name: genericstepsH14
+        description: "In the past two weeks, have you taken any medication for raised total cholesterol prescribed by a health worker?"
+      - name: genericstepsH15
+        description: "Have you ever seen a traditional healer for raised cholesterol?"
+      - name: genericstepsH16
+        description: "Are you currently taking any herbal or traditional remedy for your raised cholesterol?"
+      - name: genericstepsH17
+        description: "Have you ever had a heart attack or chest pain from heart disease or a stroke?"
+      - name: genericstepsH18
+        description: "Are you currently taking aspirin regularly to prevent or treat heart disease?"
+      - name: genericstepsH19
+        description: "Are you currently taking statins regularly to prevent or treat heart disease?"
+      - name: genericstepsH20
+        description: "During the past 12 months, have you visited a doctor or other health worker?"
+      - name: genericstepsH20a
+        description: "Quit using tobacco or don’t start"
+      - name: genericstepsH20b
+        description: "Reduce salt in your diet"
+      - name: genericstepsH20c
+        description: "Eat at least five servings of fruit and/or vegetables each day"
+      - name: genericstepsH20d
+        description: "Reduce fat in your diet"
+      - name: genericstepsH20e
+        description: "Start or do more physical activity"
+      - name: genericstepsH20f
+        description: "Maintain a healthy body weight or lose weight"
+      - name: genericstepsH20g
+        description: "Reduce sugary beverages in your diet"
+      - name: genericstepsCX1
+        description: "Have you ever had a screening test for cervical cancer, using any of these methods described above?"
+      - name: genericstepsM2
+        description: "Device ID for blood pressure"
+      - name: genericstepsM3
+        description: "BP cuff size used"
+      - name: genericstepsM4a
+        description: "Reading 1 systolic (mmHg)"
+      - name: genericstepsM4b
+        description: "Reading 1 diastolic (mmHg)"
+      - name: genericstepsM5a
+        description: "Reading 2 systolic (mmHg)"
+      - name: genericstepsM5b
+        description: "Reading 2 diastolic (mmHg)"
+      - name: genericstepsM6a
+        description: "Reading 3 systolic (mmHg)"
+      - name: genericstepsM6b
+        description: "Reading 3 diastolic (mmHg)"
+      - name: genericstepsM7
+        description: "During the past two weeks, have you been treated for raised blood pressure with medication prescribed by a health worker?"
+      - name: genericstepsM8
+        description: "Are you pregnant?"
+      - name: genericstepsM10a
+        description: "Device ID for height"
+      - name: genericstepsM10b
+        description: "Device ID for weight"
+      - name: genericstepsM11
+        description: "Height (cm)"
+      - name: genericstepsM12
+        description: "Weight (Kg)"
+      - name: genericstepsM13
+        description: "Device ID for waist"
+      - name: genericstepsM14
+        description: "Waist circumference (cm)"
+      - name: genericstepsM15
+        description: "Hip circumference (cm)"
+      - name: genericstepsM16a
+        description: "Heart rate reading 1 (bpm)"
+      - name: genericstepsM16b
+        description: "Heart rate reading 2 (bpm)"
+      - name: genericstepsM16c
+        description: "Heart rate reading 3 (bpm)"
+      - name: genericstepsB1
+        description: "During the past 12 hours have you had anything to eat or drink, other than water?"
+      - name: genericstepsB3
+        description: "Blood glucose device ID"
+      - name: genericstepsB4
+        description: "Time of day blood specimen taken (24 hour clock)"
+      - name: genericstepsB5a
+        description: "Fasting blood glucose (mmol/l)"
+      - name: genericstepsB5b
+        description: "Fasting blood glucose (mg/dl)"
+      - name: genericstepsB6
+        description: "Today, have you taken insulin or other medication that have been prescribed by a health worker for raised blood glucose?"
+      - name: genericstepsB7
+        description: "Cholesterol device ID"
+      - name: genericstepsB8a
+        description: "Total cholesterol (mmol/l)"
+      - name: genericstepsB8b
+        description: "Total cholesterol (mg/dl)"
+      - name: genericstepsB9
+        description: "During the past two weeks, have you been treated for raised cholesterol with medication prescribed by a health worker?"
+      - name: genericstepsB10
+        description: "Had you been fasting prior to the urine collection?"
+      - name: genericstepsB12
+        description: "Urinary device ID"
+      - name: genericstepsB13
+        description: "Time of day urine sample taken (24 hour clock)"
+      - name: genericstepsB14
+        description: "Urinary sodium (mmol/l)"
+      - name: genericstepsB15
+        description: "Urinary creatinine (mmol/l)"
+      - name: genericstepsB16a
+        description: "Triglycerides (mmol/l)"
+      - name: genericstepsB16b
+        description: "Triglycerides (mg/dl)"
+      - name: genericstepsB17a
+        description: "HDL Cholesterol (mmol/l)"
+      - name: genericstepsB17b
+        description: "HDL Cholesterol (mg/dl)"

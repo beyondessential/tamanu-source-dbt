@@ -1,0 +1,174 @@
+version: 2
+
+models:
+  - name: program-maternityregistry-delivery
+    description: "Dataset containing responses for 'Delivery summary' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: delivery000
+        description: "Mother's Name"
+      - name: delivery002
+        description: "Pre 28 weeks"
+      - name: delivery003
+        description: "Post 28 weeks"
+      - name: delivery004
+        description: "Special notes"
+      - name: delivery005
+        description: "LMP"
+      - name: delivery006
+        description: "EDD"
+      - name: delivery007
+        description: "Blood group"
+      - name: delivery008
+        description: "Admission to D.S. date"
+      - name: delivery009
+        description: "Admission to D.S. time (24hr)"
+      - name: delivery010
+        description: "Doctor notified date"
+      - name: delivery011
+        description: "Doctor notified time (24hrs)"
+      - name: delivery012
+        description: "Membranes ruptured date"
+      - name: delivery013
+        description: "Membranes ruptured time (24hrs)"
+      - name: delivery014
+        description: "Onset contractions date"
+      - name: delivery015
+        description: "Onset contractions time (24hrs)"
+      - name: delivery016
+        description: "Full dilation date"
+      - name: delivery017
+        description: "Full dilation time (24hrs)"
+      - name: delivery018
+        description: "Baby delivered date"
+      - name: delivery019
+        description: "Baby delivered time (24hrs)"
+      - name: delivery020
+        description: "Placenta delivered date"
+      - name: delivery021
+        description: "Placenta delivered time (24hrs)"
+      - name: delivery022
+        description: "Gestation (weeks)"
+      - name: delivery023
+        description: "Gestation (days)"
+      - name: delivery024
+        description: "M.R./Del (hrs)"
+      - name: delivery025
+        description: "1st stage (hrs)"
+      - name: delivery026
+        description: "2nd stage (mins)"
+      - name: delivery027
+        description: "3rd stage (mins)"
+      - name: delivery028
+        description: "Method of delivery"
+      - name: delivery029
+        description: "Delivered by"
+      - name: delivery030
+        description: "Senior person present"
+      - name: delivery031
+        description: "Also present"
+      - name: delivery032
+        description: "Analgesia by"
+      - name: delivery033
+        description: "Anaesthesia by"
+      - name: delivery034
+        description: "Presentation at delivery"
+      - name: delivery035
+        description: "Episiotomy Laceration"
+      - name: delivery037
+        description: "Mode of delivery"
+      - name: delivery038
+        description: "Complete/Incomplete"
+      - name: delivery039
+        description: "Blood loss (mls)"
+      - name: delivery041
+        description: "Sex"
+      - name: delivery042
+        description: "Weight (kg)"
+      - name: delivery043
+        description: "Type"
+      - name: delivery044
+        description: "Resperation established (mins)"
+      - name: delivery045
+        description: "Apgar 1 min"
+      - name: delivery046
+        description: "Apgar 5 min"
+      - name: delivery047
+        description: "Husband present for delivery"
+      - name: delivery048
+        description: "Vitamin K"
+      - name: delivery049
+        description: "Cord blood"
+      - name: delivery050
+        description: "Cord specimen"
+      - name: delivery051
+        description: "Oxytocic first dose"
+      - name: delivery052
+        description: "Before/After baby"
+      - name: delivery053
+        description: "IM/IV"
+      - name: delivery054
+        description: "Post partum drugs"
+      - name: delivery055
+        description: "Post partum urine (mls)"
+      - name: delivery057
+        description: "Required sections"
+      - name: delivery059
+        description: "Forceps indication"
+      - name: delivery060
+        description: "Initial position"
+      - name: delivery061
+        description: "Station (cms)"
+      - name: delivery062
+        description: "Rotation"
+      - name: delivery063
+        description: "Difficulty"
+      - name: delivery065
+        description: "Induction indication"
+      - name: delivery066
+        description: "LARM/High"
+      - name: delivery067
+        description: "Syntocinon"
+      - name: delivery069
+        description: "Ventouse indication"
+      - name: delivery070
+        description: "Initial dilation (cms)"
+      - name: delivery071
+        description: "Initial position"
+      - name: delivery072
+        description: "Initial station (cms)"
+      - name: delivery073
+        description: "Final dilation (cms)"
+      - name: delivery074
+        description: "Final position"
+      - name: delivery075
+        description: "Final station (cms)"
+      - name: delivery077
+        description: "PPH Source"
+      - name: delivery078
+        description: "PPH Infusion"
+      - name: delivery079
+        description: "Remarks"
+      - name: delivery081
+        description: "Manual removal Indication"
+      - name: delivery083
+        description: "Anaesthesia type"
+      - name: delivery084
+        description: "Epidural type"
+      - name: delivery085
+        description: "Open GA"
+      - name: delivery086
+        description: "Endotracheal GA"
+      - name: delivery087
+        description: "IV analgesia"
+      - name: delivery088
+        description: "Anaesthesia given by"

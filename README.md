@@ -34,6 +34,15 @@ This command generates views, reports, and an import script for deployment in th
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 
+## Generate survey models
+To automatically generate dbt models and documentation for surveys from database, execute the following command:
+```
+python scripts/generate_survey_models.py --project <project_name>
+```
+Replace `<project_name>` with the target deployment (e.g., demoland, fiji, palau). Defaults to demoland if not specified.
+
+This will generate models and documentation for all surveys in the demoland deployment.
+
 ## Script to list Tamanu reports
 
 This script generates a list of all reports in the repository grouped by deployment, and outputs the result in a Markdown file.

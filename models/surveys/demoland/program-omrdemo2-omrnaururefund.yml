@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: program-omrdemo2-omrnaururefund
+    description: "Dataset containing responses for 'OMR Patient Reimbursements' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: omrnaururefund2
+        description: "1) Invoice date"
+      - name: omrnaururefund3
+        description: "1) Invoice description"
+      - name: omrnaururefund4
+        description: "1) Invoice amount ($)"
+      - name: omrnaururefund5
+        description: "2) Invoice date"
+      - name: omrnaururefund6
+        description: "2) Invoice description"
+      - name: omrnaururefund7
+        description: "2) Invoice amount ($)"
+      - name: omrnaururefund8
+        description: "3) Invoice date"
+      - name: omrnaururefund9
+        description: "3) Invoice description"
+      - name: omrnaururefund10
+        description: "3) Invoice amount ($)"
+      - name: omrnaururefund11
+        description: "4) Invoice date"
+      - name: omrnaururefund12
+        description: "4) Invoice description"
+      - name: omrnaururefund13
+        description: "4) Invoice amount ($)"
+      - name: omrnaururefund14
+        description: "5) Invoice date"
+      - name: omrnaururefund15
+        description: "5) Invoice description"
+      - name: omrnaururefund16
+        description: "5) Invoice amount ($)"
+      - name: omrnaururefund17
+        description: "6) Invoice date"
+      - name: omrnaururefund18
+        description: "6) Invoice description"
+      - name: omrnaururefund19
+        description: "6) Invoice amount ($)"
+      - name: omrnaururefund20
+        description: "7) Invoice date"
+      - name: omrnaururefund21
+        description: "7) Invoice description"
+      - name: omrnaururefund22
+        description: "7) Invoice amount ($)"
+      - name: omrnaururefund23
+        description: "8) Invoice date"
+      - name: omrnaururefund24
+        description: "8) Invoice description"
+      - name: omrnaururefund25
+        description: "8) Invoice amount ($)"
+      - name: omrnaururefund26
+        description: "9) Invoice date"
+      - name: omrnaururefund27
+        description: "9) Invoice description"
+      - name: omrnaururefund28
+        description: "9) Invoice amount ($)"
+      - name: omrnaururefund29
+        description: "10) Invoice date"
+      - name: omrnaururefund30
+        description: "10) Invoice description"
+      - name: omrnaururefund31
+        description: "10) Invoice amount ($)"
+      - name: omrnaururefund32
+        description: "Additional comments"
