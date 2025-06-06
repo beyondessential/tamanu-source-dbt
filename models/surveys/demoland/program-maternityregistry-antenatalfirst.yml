@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: program-maternityregistry-antenatalfirst
+    description: "Dataset containing responses for 'Antenatal 1st visit' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: antenatalfirst001
+        description: "Date"
+      - name: antenatalfirst002
+        description: "Height (cm)"
+      - name: antenatalfirst003
+        description: "Weight (kg)"
+      - name: antenatalfirst004
+        description: "Blood group"
+      - name: antenatalfirst005
+        description: "Is this your first pregnancy?"
+      - name: antenatalfirst006
+        description: "How many pregnancies have you had?"
+      - name: antenatalfirst007
+        description: "Gestational age"
+      - name: antenatalfirst008
+        description: "Previous pregnancy complications"
+      - name: antenatalfirst009
+        description: "Endocrine"
+      - name: antenatalfirst011
+        description: "Pelvic examinations"
+      - name: antenatalfirst010
+        description: "Varicose veins"
+      - name: antenatalfirst012
+        description: "First visit"
+      - name: antenatalfirst016
+        description: "Td Booster given & recorded?"
+      - name: antenatalfirst017
+        description: "Azithromycin given?"
+      - name: antenatalfirst018
+        description: "Iron tablets given?"
+      - name: antenatalfirst013
+        description: "Cervix"
+      - name: antenatalfirst019
+        description: "Blood tests done?"
+      - name: antenatalfirst014
+        description: "Size"
+      - name: antenatalfirst015
+        description: "Tumors"

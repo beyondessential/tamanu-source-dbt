@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: program-disabilitydatacollection-wgss
+    description: "Dataset containing responses for '(Demo 2) The Washington Group Short Set on Functioning' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: WGSS002
+        description: "Do you have difficulty seeing, even if wearing glasses?"
+      - name: WGSS003
+        description: "Do you have difficulty hearing, even if using a hearing aid(s)?"
+      - name: WGSS004
+        description: "Do you have difficulty walking or climbing steps?"
+      - name: WGSS005
+        description: "Do you have difficulty remembering or concentrating?"
+      - name: WGSS006
+        description: "So you have difficulty with self-care, such as washing all over or dressing?"
+      - name: WGSS007
+        description: "Using your usual language, do you have difficulty communicating, for example understanding or being understood?"

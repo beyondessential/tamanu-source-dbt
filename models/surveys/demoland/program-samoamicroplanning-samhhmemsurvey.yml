@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: program-samoamicroplanning-samhhmemsurvey
+    description: "Dataset containing responses for 'Household Member Survey' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: samHHmem001
+        description: "Date of Survey"
+      - name: samHHmem002
+        description: "House #"
+      - name: samHHmem003
+        description: "House #"
+      - name: samHHmem004
+        description: "First Name"
+      - name: samHHmem005
+        description: "First Name (updated)"
+      - name: samHHmem006
+        description: "Last Name"
+      - name: samHHmem007
+        description: "Last Name (updated)"
+      - name: samHHmem008
+        description: "Name of Father"
+      - name: samHHmem009
+        description: "Father's Name (updated)"
+      - name: samHHmem010
+        description: "Name of Mother"
+      - name: samHHmem011
+        description: "Mother's Name (updated)"
+      - name: samHHmem012
+        description: "Name of Caregiver"
+      - name: samHHmem013
+        description: "Primary Contact Number"
+      - name: samHHmem014
+        description: "Contact # (updated)"
+      - name: samHHmem015
+        description: "Date of Birth"
+      - name: samHHmem016
+        description: "Age"
+      - name: samHHmem017
+        description: "Date of Birth (updated)"
+      - name: samHHmem018
+        description: "Place of birth"
+      - name: samHHmem019
+        description: "Place of birth (updated)"
+      - name: samHHmem020
+        description: "Gender"
+      - name: samHHmem021
+        description: "Gender (updated)"
+      - name: samHHmem022
+        description: "Disability"
+      - name: samHHmem023
+        description: "Studying in school"
+      - name: samHHmem024
+        description: "Where is the child studying"
+      - name: samHHmem025
+        description: "School on record"
+      - name: samHHmem026
+        description: "Name of School (updated)"
+      - name: samHHmem027
+        description: "Church"
+      - name: samHHmem028
+        description: "Excluded from main village"
+      - name: samHHmem029
+        description: "Availability of Child Health Book"
+      - name: samHHmem030
+        description: "Pregnancy"
+      - name: samHHmem031
+        description: "Month of Pregnancy"
