@@ -351,7 +351,7 @@ combined_attributes as (
                     or lab_test_type_id not in ('labTestType-ALT',
                                                 'labTestType-Calcium',
                                                 'labTestType-Creatinine',
-                                                'labTestType-Haemoglobin'
+                                                'labTestType-Haemoglobin',
                                                 'labTestType-GlucoseFasting',
                                                 'labTestType-GlucoseRandom',
                                                 'labTestType-HbA1c',
