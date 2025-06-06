@@ -1,6 +1,6 @@
 {
   "query": "replace this",
-  "name": "Diagnosis Summary",
+  "name": "Diagnoses Summary",
   "notes": "This report provides a summary of primary diagnoses disaggregated by legal status, age category and visit type.",
   "status": "published",
   "dbSchema": "reporting",
@@ -54,7 +54,7 @@
       },
       {
         "parameterField": "DiagnosisField",
-        "label": "Diagnosis",
+        "label": "Diagnoses",
         "name": "diagnosisId"
       },
       {
