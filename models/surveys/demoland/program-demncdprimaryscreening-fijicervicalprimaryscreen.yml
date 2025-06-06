@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: program-demncdprimaryscreening-fijicervicalprimaryscreen
+    description: "Dataset containing responses for 'Cervical Cancer Primary Screening Form' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: FijCC02
+        description: "Screening date"
+      - name: FijCC03
+        description: "Age of individual being screened"
+      - name: FijCC04
+        description: "Location of screening service (freetext or geo coordinates from google maps)"
+      - name: FijCC05
+        description: "Individual counselled on the purpose of screening and gave informed consent to conduct the screen"
+      - name: FijCC06
+        description: "Name of person conducting screen"
+      - name: FijCC07
+        description: "Name of health facility"
+      - name: FijCC10
+        description: "Name of CSO"
+      - name: FijCC08
+        description: "Contact number of person conducting screen"
+      - name: FijCC09
+        description: "Email of person conducting screen"
+      - name: FijCC12
+        description: "Aged between 21 and 69"
+      - name: FijCC13
+        description: "Screened in the last 3 years with normal result"
+      - name: FijCC14
+        description: "History of cervical cancer"
+      - name: FijCC16
+        description: "Screening eligibility"
+      - name: FijCC19
+        description: "Mode of screening"
+      - name: FijCC20
+        description: "ThinPrep collected and submitted to laboratory"
+      - name: FijCC21
+        description: "ThinPrep requested"
+      - name: FijCC22
+        description: "Comments"
+      - name: FijCC23
+        description: "VIA assessment"
+      - name: FijCC24
+        description: "Image of VIA"
+      - name: FijCC25
+        description: "Comments"

@@ -1,0 +1,108 @@
+version: 2
+
+models:
+  - name: program-nauruschoolhealth-naushsearly
+    description: "Dataset containing responses for 'Early Intervention Screening' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: nauint004
+        description: "Date of Assessment"
+      - name: nauint005
+        description: "School"
+      - name: ptscrn004
+        description: "Date of Birth"
+      - name: naushsage000
+        description: "Child Age"
+      - name: nauint006
+        description: "District"
+      - name: nauint008
+        description: "Social/Emotional (6 month old)"
+      - name: nauint009
+        description: "Social/Emotional (9 month old)"
+      - name: nauint010
+        description: "Social/Emotional (12 month old)"
+      - name: nauint011
+        description: "Social/Emotional (18 month old)"
+      - name: nauint012
+        description: "Social/Emotional (2 years)"
+      - name: nauint013
+        description: "Social/Emotional (3 years)"
+      - name: nauint014
+        description: "Social/Emotional (4 years)"
+      - name: nauint015
+        description: "Social/Emotional (5 years)"
+      - name: nauint017
+        description: "Communication (6 month old)"
+      - name: nauint018
+        description: "Communication (9 month old)"
+      - name: nauint019
+        description: "Communication (12 month old)"
+      - name: nauint020
+        description: "Communication (18 month old)"
+      - name: nauint021
+        description: "Communication (2 years)"
+      - name: nauint022
+        description: "Communication (3 years)"
+      - name: nauint023
+        description: "Communication (4 years)"
+      - name: nauint024
+        description: "Communication (5 years)"
+      - name: nauint026
+        description: "Fine Motor and Cognition (6 month old)"
+      - name: nauint027
+        description: "Fine Motor and Cognition (9 month old)"
+      - name: nauint028
+        description: "Fine Motor and Cognition (12 month old)"
+      - name: nauint029
+        description: "Fine Motor and Cognition (18 month old)"
+      - name: nauint030
+        description: "Fine Motor and Cognition (2 years)"
+      - name: nauint031
+        description: "Fine Motor and Cognition (3 years)"
+      - name: nauint032
+        description: "Fine Motor and Cognition (4 years)"
+      - name: nauint033
+        description: "Fine Motor and Cognition (5 years)"
+      - name: nauint035
+        description: "Gross Motor (6 month old)"
+      - name: nauint036
+        description: "Gross Motor (9 month old)"
+      - name: nauint037
+        description: "Gross Motor (12 month old)"
+      - name: nauint038
+        description: "Gross Motor (18 month old)"
+      - name: nauint039
+        description: "Gross Motor (2 years)"
+      - name: nauint040
+        description: "Gross Motor (3 years)"
+      - name: nauint041
+        description: "Gross Motor (4 years)"
+      - name: nauint042
+        description: "Gross Motor (5 years)"
+      - name: nauint044
+        description: "Not achieving indicated developmental milestones"
+      - name: nauint045
+        description: "Strong parent concerns; significant loss of skills"
+      - name: nauint046
+        description: "Lack of response to sound or visual stimuli"
+      - name: nauint047
+        description: "Poor interaction with adults or other children"
+      - name: nauint048
+        description: "Difference between right and left sides of body in strength, movement or tone"
+      - name: nauint049
+        description: "Loose and floppy movements (low tone) or stiff and tense (high tone)"
+      - name: nauint049a
+        description: "Have you identified 1 or more Red Flags?"
+      - name: nauint049b
+        description: "If yes, action taken:"
+      - name: nauint050
+        description: "Name of person conducting screen"

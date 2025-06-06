@@ -1,0 +1,418 @@
+version: 2
+
+models:
+  - name: program-demncdprimaryscreening-demcvdprimaryscreen
+    description: "Dataset containing responses for 'CVD Primary Screening Form' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: FijCVDRisk002
+        description: "Gender"
+      - name: FijCVDRisk003
+        description: "Smoker"
+      - name: FijCVDRisk004
+        description: "Age"
+      - name: FijCVDRisk005
+        description: "Average systolic blood pressure"
+      - name: FijCVDRisk007
+        description: "Total cholesterol"
+      - name: FijCVDRisk008
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk009
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk010
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk011
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk012
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk013
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk014
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk015
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk016
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk017
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk018
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk019
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk020
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk021
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk022
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk023
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk024
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk025
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk026
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk027
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk028
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk029
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk030
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk031
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk032
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk033
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk034
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk035
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk036
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk037
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk038
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk039
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk040
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk041
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk042
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk043
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk044
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk045
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk046
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk047
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk048
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk049
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk050
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk051
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk052
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk053
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk054
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk055
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk056
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk057
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk058
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk059
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk060
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk061
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk062
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk063
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk064
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk065
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk066
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk067
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk068
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk069
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk070
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk071
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk072
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk073
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk074
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk075
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk076
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk077
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk078
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk079
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk080
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk081
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk082
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk083
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk084
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk085
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk086
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk087
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk088
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk089
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk090
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk091
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk092
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk093
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk094
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk095
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk096
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk097
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk098
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk099
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk100
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk101
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk102
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk103
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk104
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk105
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk106
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk107
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk108
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk109
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk110
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk111
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk112
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk113
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk114
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk115
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk116
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk117
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk118
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk119
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk120
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk121
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk122
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk123
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk124
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk125
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk126
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk127
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk128
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk129
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk130
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk131
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk132
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk133
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk134
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk135
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk136
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk137
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk138
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk139
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk140
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk141
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk142
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk143
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk144
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk145
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk146
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk147
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk148
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk149
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk150
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk151
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk152
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk153
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk154
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk155
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk156
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk157
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk158
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk159
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk160
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk161
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk162
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk163
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk164
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk165
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk166
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk167
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk168
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk169
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk170
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk171
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk172
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk173
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk174
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk175
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk176
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk177
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk178
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk179
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk180
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk181
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk182
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk183
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk184
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk185
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk186
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk187
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk188
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk189
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk190
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk191
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk192
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk193
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk194
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk195
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk196
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk197
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk198
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk199
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk200
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk201
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk202
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: FijCVDRisk203
+        description: "This individual's calculated 10 year CVD risk level is:"

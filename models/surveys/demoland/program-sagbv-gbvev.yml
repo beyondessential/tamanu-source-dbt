@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: program-sagbv-gbvev
+    description: "Dataset containing responses for '(Nauru) Medical evidence' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: GBVEV2
+        description: "Evidence type"
+      - name: GBVEV3
+        description: "Time collected"
+      - name: GBVEV4
+        description: "Collected by"
+      - name: GBVEV5
+        description: "Evidence stored location"
+      - name: GBVEV6
+        description: "Evidence stored time"
+      - name: GBVEV7
+        description: "Any further evidence collection?"
+      - name: GBVEV8
+        description: "Evidence type"
+      - name: GBVEV9
+        description: "Date collected"
+      - name: GBVEV10
+        description: "Time collected"
+      - name: GBVEV11
+        description: "Collected by"
+      - name: GBVEV12
+        description: "Evidence stored location"
+      - name: GBVEV13
+        description: "Evidence stored time"
+      - name: GBVEV14
+        description: "Any further evidence collection?"
+      - name: GBVEV15
+        description: "Evidence type"
+      - name: GBVEV16
+        description: "Date collected"
+      - name: GBVEV17
+        description: "Time collected"
+      - name: GBVEV18
+        description: "Collected by"
+      - name: GBVEV19
+        description: "Evidence stored location"
+      - name: GBVEV20
+        description: "Evidence stored time"
+      - name: GBVEV21
+        description: "Any further evidence collection?"
+      - name: GBVEV22
+        description: "Evidence type"
+      - name: GBVEV23
+        description: "Date collected"
+      - name: GBVEV24
+        description: "Time collected"
+      - name: GBVEV25
+        description: "Collected by"
+      - name: GBVEV26
+        description: "Evidence stored location"
+      - name: GBVEV27
+        description: "Evidence stored time"
+      - name: GBVEV28
+        description: "Any further evidence collection?"
+      - name: GBVEV29
+        description: "Evidence type"
+      - name: GBVEV30
+        description: "Date collected"
+      - name: GBVEV31
+        description: "Time collected"
+      - name: GBVEV32
+        description: "Collected by"
+      - name: GBVEV33
+        description: "Evidence stored location"
+      - name: GBVEV34
+        description: "Evidence stored time"
