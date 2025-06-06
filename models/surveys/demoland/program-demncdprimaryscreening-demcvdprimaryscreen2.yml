@@ -1,0 +1,374 @@
+version: 2
+
+models:
+  - name: program-demncdprimaryscreening-demcvdprimaryscreen2
+    description: "Dataset containing responses for 'CVD Primary Screening Form' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: DemCVD05a
+        description: "Current facility"
+      - name: DemCVD02
+        description: "Exercise in an average week"
+      - name: DemCVD03
+        description: "Alcohol intake"
+      - name: DemCVD04
+        description: "More than five drinks in one occasion in the past month"
+      - name: DemCVD05
+        description: "Proportion of serving plate filled with vegetables"
+      - name: DemCVD06a
+        description: "Recorded by"
+      - name: DemCVD08
+        description: "Height (cm)"
+      - name: DemCVD09
+        description: "Weight (kg)"
+      - name: DemCVD10
+        description: "BMI"
+      - name: DemCVD17
+        description: "Systolic 1st reading (mmHg)"
+      - name: DemCVD18
+        description: "Systolic 2nd reading (mmHg)"
+      - name: DemCVD19
+        description: "Systolic average (mmHg)"
+      - name: DemCVD20
+        description: "Diastolic 1st reading (mmHg)"
+      - name: DemCVD21
+        description: "Diastolic 2nd reading (mmHg)"
+      - name: DemCVD22
+        description: "Diastolic average (mmHg)"
+      - name: DemCVD24
+        description: "Blood sugar test type"
+      - name: DemCVD25
+        description: "Fasting blood sugar (mmol/L)"
+      - name: DemCVD26
+        description: "Random blood sugar (mmol/L)"
+      - name: DemCVD28
+        description: "Total cholesterol (mmol/L)"
+      - name: pde-PatientVitalsTemperature
+        description: "Temperature"
+      - name: PatientVitalsSPO2
+        description: "SpO2"
+      - name: DemCVDRisk002
+        description: "Gender"
+      - name: DemCVDRisk003
+        description: "Smoker"
+      - name: DemCVDRisk004
+        description: "Age"
+      - name: DemCVDRisk004a
+        description: "Systolic average (mmHg)"
+      - name: DemCVDRisk005
+        description: "Average systolic blood pressure"
+      - name: DemCVDRisk006
+        description: "Total cholesterol"
+      - name: DemCVDRisk007
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk008
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk009
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk010
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk011
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk012
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk013
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk014
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk015
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk016
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk017
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk018
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk019
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk020
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk021
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk022
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk023
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk024
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk025
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk026
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk027
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk028
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk029
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk030
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk031
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk032
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk033
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk034
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk035
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk036
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk037
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk038
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk039
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk040
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk041
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk042
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk043
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk044
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk045
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk046
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk047
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk048
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk049
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk050
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk051
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk052
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk053
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk054
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk055
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk056
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk057
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk058
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk059
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk060
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk061
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk062
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk063
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk064
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk065
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk066
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk067
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk068
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk069
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk070
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk071
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk072
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk073
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk074
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk075
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk076
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk077
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk078
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk079
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk080
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk081
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk082
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk083
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk084
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk085
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk086
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk087
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk088
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk089
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk090
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk091
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk092
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk093
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk094
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk095
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk096
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk097
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk098
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk099
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk100
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk101
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk102
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk103
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk104
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk105
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk106
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk107
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk108
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk109
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk110
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk111
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk112
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk113
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk114
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk115
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk116
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk117
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk118
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk119
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk120
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk121
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk122
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk123
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk124
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk125
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk126
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk127
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk128
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk129
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk130
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk131
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk132
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk133
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk134
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk135
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk136
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk137
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk138
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk139
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk140
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk141
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk142
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk143
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk144
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk145
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk146
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk147
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk148
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk149
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk150
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk151
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk152
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk153
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk154
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk155
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk156
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk157
+        description: "This individual's calculated 10 year CVD risk level is:"
+      - name: DemCVDRisk158
+        description: "This individual's calculated 10 year CVD risk level is:"
