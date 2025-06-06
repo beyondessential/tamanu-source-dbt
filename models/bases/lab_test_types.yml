@@ -8,6 +8,9 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in lab_test_types."
+        data_tests:
+          - not_null
+          - unique
         meta:
           metrics:
             total_lab_test_types_count:
@@ -54,3 +57,5 @@ models:
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in lab_test_types."
+        data_tests:
+          - valid_visibility_status

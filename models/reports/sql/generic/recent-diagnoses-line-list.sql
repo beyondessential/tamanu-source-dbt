@@ -1,6 +1,6 @@
 select
     diagnosis_datetime as "{{ translate_label('diagnosisDateTime', 'Date & time') }}",
-    diagnosis as "{{ translate_label('diagnosisName', 'Diagnoses') }}",
+    diagnosis as "{{ translate_label('diagnoses', 'Diagnoses') }}",
     first_name as "{{ translate_label('patientFirstName', 'First name') }}",
     last_name as "{{ translate_label('patientLastName', 'Last name') }}",
     display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
@@ -9,7 +9,7 @@ select
     contact_number as "{{ translate_label('patientPrimaryContactNumber', 'Primary contact number') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
     clinician as "{{ translate_label('encounterClinician', 'Clinician') }}",
-    department as "{{ translate_label('departmentName', 'Department') }}",
+    department as "{{ translate_label('department', 'Department') }}",
     certainty as "{{ translate_label('diagnosisCertainty', 'Certainty') }}",
     is_primary as "{{ translate_label('diagnosisIsPrimary', 'Is primary') }}"
 from {{ ref('ds__diagnoses') }}

@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: program-demo2diet-dietlist
+    description: "Dataset containing responses for 'Diet List' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: diet001
+        description: "Ward Name"
+      - name: diet002
+        description: "Bed Number"
+      - name: diet003
+        description: "Ethnicity"
+      - name: diet004
+        description: "Diet"
+      - name: diet005
+        description: "Special Nutrition Requirements"
+      - name: diet006
+        description: "Preference"
+      - name: diet007
+        description: "Fluid List"

@@ -59,7 +59,7 @@ select
     category.id as category_id,
     category.name as category,
     ltp.name as lab_test_panel,
-    lta.non_sensitive_tests as non_sensitive_tests,
+    lta.non_sensitive_tests,
     lta.sensitive_tests,
     lr.collected_datetime,
     collector.display_name as collected_by,

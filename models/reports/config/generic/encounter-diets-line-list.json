@@ -1,0 +1,31 @@
+{
+  "query": "replace this",
+  "name": "Current encounters diets line list",
+  "notes": "This report generates a list of all active encounters with their associated dietary requirements. The report includes:\n- Patient details and current location\n- Dietary requirements and restrictions.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter encounter start dates (or leave it blank for all)",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "name": "facilityId",
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "filterBySelectedFacility": true
+      },
+      {
+        "name": "locationGroupId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      }
+    ]
+  }
+}
