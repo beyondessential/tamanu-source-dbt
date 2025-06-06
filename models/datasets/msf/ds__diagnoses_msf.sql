@@ -20,9 +20,10 @@ from {{ ref('encounter_diagnoses') }} ed
 join {{ ref('reference_data') }} diagnosis on diagnosis.id = ed.diagnosis_id
 join {{ ref('encounters') }} e on e.id = ed.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-left join {{ ref('facilities') }} f on f.id = e.facility_id
-left join {{ ref('appointments') }} a on a.encounter_id = e.id
-left join {{ ref('reference_data') }} apt on apt.id = a.appointment_type_id
+join {{ ref('locations') }} l on l.id = e.location_id
+left join {{ ref('facilities') }} f on f.id = l.facility_id
+left join {{ ref('outpatient_appointments') }} oa on oa.encounter_id = e.id
+left join {{ ref('reference_data') }} apt on apt.id = oa.appointment_type_id
 left join {{ ref('reference_data') }} rs on rs.id = e.referral_source_id
 left join {{ ref('patient_field_values') }} pfv on pfv.patient_id = p.id
     and pfv.definition_id = 'fieldCategory-legalstatus'
