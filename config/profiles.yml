@@ -76,9 +76,9 @@ tamanu_source_dbt:
     msf:
       type: postgres
       threads: 1
-      host: "{{ env_var('MSF_DB_URL') }}"
+      host: "{{ env_var('TAMANU_MSF_DB_URL') }}"
       port: 5432
-      user: "{{ env_var('MSF_DB_USER') }}"
-      pass: "{{ env_var('MSF_DB_PASSWORD') }}"
-      dbname: "{{ env_var('MSF_DB_DATABASE') }}"
+      user: "{{ env_var('TAMANU_MSF_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_MSF_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_MSF_DB_DATABASE') }}"
       schema: reporting
