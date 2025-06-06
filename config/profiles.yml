@@ -73,3 +73,12 @@ tamanu_source_dbt:
       pass: "{{ env_var('TAMANU_TV_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_TV_DB_DATABASE') }}"
       schema: reporting
+    msf:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('MSF_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('MSF_DB_USER') }}"
+      pass: "{{ env_var('MSF_DB_PASSWORD') }}"
+      dbname: "{{ env_var('MSF_DB_DATABASE') }}"
+      schema: reporting

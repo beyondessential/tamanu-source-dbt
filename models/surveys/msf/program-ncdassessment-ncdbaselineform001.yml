@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: program-ncdassessment-ncdbaselineform001
+    description: "Dataset containing responses for 'NCD Baseline المعلومات الطبية الأساسية' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: NCDBase001
+        description: "Visit date - تاريخ الزيارة"
+      - name: NCDBase002
+        description: "Provider - المعيل"
+      - name: NCDBase003
+        description: "Carer - مقدم الرعاية"
+      - name: NCDBase004
+        description: "Impaired mobility - ضعف الحركة"
+      - name: NCDBase004a
+        description: "Number of people living with patient - عدد الأشخاص الذين يعيشون مع المريض"
+      - name: NCDBase005
+        description: "Shisha smoker - مدخن أركيلة"
+      - name: NCDBase006
+        description: "Shisha/ day - أركيلة / في اليوم"
+      - name: NCDBase007
+        description: "Number of years smoke shisha - عدد سنوات تدخينه للأركيلة"
+      - name: NCDBase008
+        description: "Cigarette smoker - مدخن سجائر"
+      - name: NCDBase009
+        description: "Cigarettes/ day - سجائر / في اليوم"
+      - name: NCDBase010
+        description: "Number of years - عدد السنوات"
+      - name: NCDBase011
+        description: "Alcohol - الخمر"
+      - name: NCDBase012
+        description: "Year started alcohol - عدد سنوات شربه للخمر"
+      - name: NCDBase014
+        description: "Units alcohol/ week - عدد وحدات الخمر / في الأسبوع"
+      - name: NCDBase015
+        description: "Other substance use - تعاطي ممنوعات أخرى"
+      - name: NCDBase016
+        description: "Physical activity - نشاط بدني"
+      - name: NCDBase017
+        description: "Physical activity (minutes) - نشاط بدني ( دقائق)"
+      - name: NCDBase018
+        description: "Physical activity (frequency) - نشاط بدني ( عدد المرات)"
+      - name: NCDBase019
+        description: "Diabetes 1 - سكري نمط 1"
+      - name: NCDBase020
+        description: "Diabetes 2 - سكري نمط 2"
+      - name: NCDBase021
+        description: "Hypertension - ارتفاع ضغط"
+      - name: NCDBase022
+        description: "Cardiovascular disease - أمراض القلب و الأوعية الدموية"
+      - name: NCDBase023
+        description: "Asthma - ربو"
+      - name: NCDBase024
+        description: "COPD - انسداد الرئوي المزمن"
+      - name: NCDBase025
+        description: "Anaemia - فقر الدم"
+      - name: NCDBase026
+        description: "CVD - مرض القلب و الأوعية الدموية"
+      - name: NCDBase027
+        description: "Cancer - سرطان"
+      - name: NCDBase028
+        description: "Stroke - جلطة دماغية"
+      - name: NCDBase029
+        description: "Hypercholesterolemia - ارتفاع نسبة الكوليسترول في الدم"
+      - name: NCDBase030
+        description: "Thyroid disease - مرض الغدة الدرقية"
+      - name: NCDBase031
+        description: "Mental health disorder - اضطراب الصحة النفسية"
+      - name: NCDBase032
+        description: "Other - أخرى"
+      - name: NCDBase037
+        description: "CV risk assessment - existing cardiovascular disease - تقييم مخاطر القلب و الأوعية الدموية - أمراض القلب و الأوعية الدموية الموجودة"
+      - name: NCDBase038
+        description: "CV risk assessment - diabetes >40 years old - تقييم مخاطر القلب و الأوعية الموية - سكري و العمر> 40 عاما"
+      - name: NCDBase039
+        description: "CV risk assessment - chronic kidney disease and >40 years old - تقييم مخاطر السيرة الذاتية - أمراض الكلى المزمنة و العمر > 40 عاماً"
+      - name: NCDBase040
+        description: "BP target - هدف ضغط الدم"
+      - name: NCDBase041
+        description: "HbA1c target - هدف السكري التراكمي"
+      - name: NCDBase043
+        description: "Number of pregnancies - عدد حالات الحمل"
+      - name: NCDBase044
+        description: "Number of living children - عدد الأطفال الأحياء"
+      - name: NCDBase046
+        description: "Medical history - التاريخ الطبي"
+      - name: NCDBase047
+        description: "Other - أخرى"
+      - name: NCDBase048
+        description: "Appearance - المظهر"
+      - name: NCDBase049
+        description: "Abnormal appearance - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase050
+        description: "Heart - القلب"
+      - name: NCDBase051
+        description: "Abnormal heart - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase052
+        description: "Lungs - الرئتين"
+      - name: NCDBase053
+        description: "Abnormal lungs - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase054
+        description: "Abdomen - البطن"
+      - name: NCDBase055
+        description: "Abnormal abdomen - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase056
+        description: "Neurological - العصبية"
+      - name: NCDBase057
+        description: "Abnormal neurological - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase058
+        description: "Eyes - العيون"
+      - name: NCDBase059
+        description: "Abnormal eyes - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase060
+        description: "Feet - الأقدام"
+      - name: NCDBase061
+        description: "Abnormal feet - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDBase062
+        description: "Others - أخرى"

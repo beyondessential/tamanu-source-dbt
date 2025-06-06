@@ -1,0 +1,24 @@
+{
+  "query": "msf/survey-medication-dispensing",
+  "name": "Medication Dispensing Survey - استطلاع صرف الأدوية",
+  "notes": "This report shows count of patients and doses dispensed for a given drug within a specified date range.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilitySelectField",
+        "label": "Facility - المرفق",
+        "name": "facilityId"
+      },
+      {
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Drug - الدواء",
+        "name": "drugId",
+        "endpoint": "drug"
+      }
+    ]
+  }
+} 
