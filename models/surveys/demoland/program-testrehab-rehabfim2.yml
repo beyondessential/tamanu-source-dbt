@@ -14,3 +14,263 @@ models:
         description: '{{ doc("survey_responses__start_time") }}'
       - name: result_text
         description: '{{ doc("survey_responses__result_text") }}'
+      - name: fim2006
+        description: "Eating"
+      - name: fim2007
+        description: "Grooming"
+      - name: fim2008
+        description: "Bathing"
+      - name: fim2009
+        description: "Dressing- Upper Body"
+      - name: fim2010
+        description: "Dressing- Lower Body"
+      - name: fim2011
+        description: "Toileting"
+      - name: fim2013
+        description: "Bladder Management"
+      - name: fim2014
+        description: "Bowel Management"
+      - name: fim2016
+        description: "Walk, W/C"
+      - name: fim2017
+        description: "Stairs"
+      - name: fim2019
+        description: "Bed, Chair, W/C"
+      - name: fim2020
+        description: "Toilet"
+      - name: fim2021
+        description: "Tub, Shower"
+      - name: fim2023
+        description: "Comprehension"
+      - name: fim2024
+        description: "Expression"
+      - name: fim2026
+        description: "Social Interaction"
+      - name: fim2027
+        description: "Problem Solving"
+      - name: fim2028
+        description: "Memory"
+      - name: fim2031
+        description: "Total motor subscale"
+      - name: fim2032
+        description: "Total cognition subscale"
+      - name: fim2033
+        description: "Total FIM"
+      - name: fim2034
+        description: "Total FIM Result: 18"
+      - name: fim2036
+        description: "Total FIM Result: 19"
+      - name: fim2037
+        description: "Total FIM Result: 20"
+      - name: fim2038
+        description: "Total FIM Result: 21"
+      - name: fim2039
+        description: "Total FIM Result: 22"
+      - name: fim2040
+        description: "Total FIM Result: 23"
+      - name: fim2041
+        description: "Total FIM Result: 24"
+      - name: fim2042
+        description: "Total FIM Result: 25"
+      - name: fim2043
+        description: "Total FIM Result: 26"
+      - name: fim2044
+        description: "Total FIM Result: 27"
+      - name: fim2045
+        description: "Total FIM Result: 28"
+      - name: fim2046
+        description: "Total FIM Result: 29"
+      - name: fim2047
+        description: "Total FIM Result: 30"
+      - name: fim2048
+        description: "Total FIM Result: 31"
+      - name: fim2049
+        description: "Total FIM Result: 32"
+      - name: fim2050
+        description: "Total FIM Result: 33"
+      - name: fim2051
+        description: "Total FIM Result: 34"
+      - name: fim2052
+        description: "Total FIM Result: 35"
+      - name: fim2053
+        description: "Total FIM Result: 36"
+      - name: fim2054
+        description: "Total FIM Result: 37"
+      - name: fim2055
+        description: "Total FIM Result: 38"
+      - name: fim2056
+        description: "Total FIM Result: 39"
+      - name: fim2057
+        description: "Total FIM Result: 40"
+      - name: fim2058
+        description: "Total FIM Result: 41"
+      - name: fim2059
+        description: "Total FIM Result: 42"
+      - name: fim2060
+        description: "Total FIM Result: 43"
+      - name: fim2061
+        description: "Total FIM Result: 44"
+      - name: fim2062
+        description: "Total FIM Result: 45"
+      - name: fim2063
+        description: "Total FIM Result: 46"
+      - name: fim2064
+        description: "Total FIM Result: 47"
+      - name: fim2065
+        description: "Total FIM Result: 48"
+      - name: fim2066
+        description: "Total FIM Result: 49"
+      - name: fim2067
+        description: "Total FIM Result: 50"
+      - name: fim2068
+        description: "Total FIM Result: 51"
+      - name: fim2069
+        description: "Total FIM Result: 52"
+      - name: fim2070
+        description: "Total FIM Result: 53"
+      - name: fim2071
+        description: "Total FIM Result: 54"
+      - name: fim2072
+        description: "Total FIM Result: 55"
+      - name: fim2073
+        description: "Total FIM Result: 56"
+      - name: fim2074
+        description: "Total FIM Result: 57"
+      - name: fim2075
+        description: "Total FIM Result: 58"
+      - name: fim2076
+        description: "Total FIM Result: 59"
+      - name: fim2077
+        description: "Total FIM Result: 60"
+      - name: fim2078
+        description: "Total FIM Result: 61"
+      - name: fim2079
+        description: "Total FIM Result: 62"
+      - name: fim2080
+        description: "Total FIM Result: 63"
+      - name: fim2081
+        description: "Total FIM Result: 64"
+      - name: fim2082
+        description: "Total FIM Result: 65"
+      - name: fim2083
+        description: "Total FIM Result: 66"
+      - name: fim2084
+        description: "Total FIM Result: 67"
+      - name: fim2085
+        description: "Total FIM Result: 68"
+      - name: fim2086
+        description: "Total FIM Result: 69"
+      - name: fim2087
+        description: "Total FIM Result: 70"
+      - name: fim2088
+        description: "Total FIM Result: 71"
+      - name: fim2089
+        description: "Total FIM Result: 72"
+      - name: fim2090
+        description: "Total FIM Result: 73"
+      - name: fim2091
+        description: "Total FIM Result: 74"
+      - name: fim2092
+        description: "Total FIM Result: 75"
+      - name: fim2093
+        description: "Total FIM Result: 76"
+      - name: fim2094
+        description: "Total FIM Result: 77"
+      - name: fim2095
+        description: "Total FIM Result: 78"
+      - name: fim2096
+        description: "Total FIM Result: 79"
+      - name: fim2097
+        description: "Total FIM Result: 80"
+      - name: fim2098
+        description: "Total FIM Result: 81"
+      - name: fim2099
+        description: "Total FIM Result: 82"
+      - name: fim2100
+        description: "Total FIM Result: 83"
+      - name: fim2101
+        description: "Total FIM Result: 84"
+      - name: fim2102
+        description: "Total FIM Result: 85"
+      - name: fim2103
+        description: "Total FIM Result: 86"
+      - name: fim2104
+        description: "Total FIM Result: 87"
+      - name: fim2105
+        description: "Total FIM Result: 88"
+      - name: fim2106
+        description: "Total FIM Result: 89"
+      - name: fim2107
+        description: "Total FIM Result: 90"
+      - name: fim2108
+        description: "Total FIM Result: 91"
+      - name: fim2109
+        description: "Total FIM Result: 92"
+      - name: fim2110
+        description: "Total FIM Result: 93"
+      - name: fim2111
+        description: "Total FIM Result: 94"
+      - name: fim2112
+        description: "Total FIM Result: 95"
+      - name: fim2113
+        description: "Total FIM Result: 96"
+      - name: fim2114
+        description: "Total FIM Result: 97"
+      - name: fim2115
+        description: "Total FIM Result: 98"
+      - name: fim2116
+        description: "Total FIM Result: 99"
+      - name: fim2117
+        description: "Total FIM Result: 100"
+      - name: fim2118
+        description: "Total FIM Result: 101"
+      - name: fim2119
+        description: "Total FIM Result: 102"
+      - name: fim2120
+        description: "Total FIM Result: 103"
+      - name: fim2121
+        description: "Total FIM Result: 104"
+      - name: fim2122
+        description: "Total FIM Result: 105"
+      - name: fim2123
+        description: "Total FIM Result: 106"
+      - name: fim2124
+        description: "Total FIM Result: 107"
+      - name: fim2125
+        description: "Total FIM Result: 108"
+      - name: fim2126
+        description: "Total FIM Result: 109"
+      - name: fim2127
+        description: "Total FIM Result: 110"
+      - name: fim2128
+        description: "Total FIM Result: 111"
+      - name: fim2129
+        description: "Total FIM Result: 112"
+      - name: fim2130
+        description: "Total FIM Result: 113"
+      - name: fim2131
+        description: "Total FIM Result: 114"
+      - name: fim2132
+        description: "Total FIM Result: 115"
+      - name: fim2133
+        description: "Total FIM Result: 116"
+      - name: fim2134
+        description: "Total FIM Result: 117"
+      - name: fim2135
+        description: "Total FIM Result: 118"
+      - name: fim2136
+        description: "Total FIM Result: 119"
+      - name: fim2137
+        description: "Total FIM Result: 120"
+      - name: fim2138
+        description: "Total FIM Result: 121"
+      - name: fim2139
+        description: "Total FIM Result: 122"
+      - name: fim2140
+        description: "Total FIM Result: 123"
+      - name: fim2141
+        description: "Total FIM Result: 124"
+      - name: fim2142
+        description: "Total FIM Result: 125"
+      - name: fim2143
+        description: "Total FIM Result: 126"

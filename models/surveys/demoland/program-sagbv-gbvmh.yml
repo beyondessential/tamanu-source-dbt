@@ -14,3 +14,69 @@ models:
         description: '{{ doc("survey_responses__start_time") }}'
       - name: result_text
         description: '{{ doc("survey_responses__result_text") }}'
+      - name: GBVMH2
+        description: "First name"
+      - name: GBVMH3
+        description: "Surname"
+      - name: GBVMH4
+        description: "Date of birth"
+      - name: GBVMH5
+        description: "Age"
+      - name: GBVMH6
+        description: "Gender"
+      - name: GBVMH7
+        description: "Ethnicity"
+      - name: GBVMH8
+        description: "Marital Status"
+      - name: GBVMH9
+        description: "District"
+      - name: GBVMH10
+        description: "Phone number"
+      - name: GBVMH11
+        description: "Alternative contact details if required"
+      - name: GBVMH13
+        description: "Do you have any ongoing health problems?"
+      - name: GBVMH14
+        description: "Details of health problems"
+      - name: GBVMH15
+        description: "Do you have any allergies?"
+      - name: GBVMH16
+        description: "Details of allergies"
+      - name: GBVMH17
+        description: "Are you taking any medicines, herbs or potions?"
+      - name: GBVMH18
+        description: "Details of medicines, herbs or potions"
+      - name: GBVMH20
+        description: "Have you been vaccinated for tetanus?"
+      - name: GBVMH21
+        description: "Date vaccine given"
+      - name: GBVMH22
+        description: "Have you been vaccinated for hepatitus B?"
+      - name: GBVMH23
+        description: "Date vaccine given"
+      - name: GBVMH25
+        description: "Have you had an HIV test?"
+      - name: GBVMH26
+        description: "Date vaccine given"
+      - name: GBVMH27
+        description: "May I ask the result?"
+      - name: GBVMH29
+        description: "When did your last menstrual bleeding start?"
+      - name: GBVMH30
+        description: "Were you menstruating at the time of event?"
+      - name: GBVMH31
+        description: "Do you think you might be pregnant?"
+      - name: GBVMH32
+        description: "Number of weeks pregnant:"
+      - name: GBVMH33
+        description: "Have you ever been pregnant?"
+      - name: GBVMH34
+        description: "If “yes”, how many times?"
+      - name: GBVMH36
+        description: "Clinician Name"
+      - name: GBVMH37
+        description: "Speciality"
+      - name: GBVMH38
+        description: "Phone number"
+      - name: GBVMH39
+        description: "Facility"

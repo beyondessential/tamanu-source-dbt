@@ -14,3 +14,15 @@ models:
         description: '{{ doc("survey_responses__start_time") }}'
       - name: result_text
         description: '{{ doc("survey_responses__result_text") }}'
+      - name: ExaTam02001a
+        description: "Patient sex"
+      - name: ExaTam02003
+        description: "What is your phone number?"
+      - name: ExaTam02004
+        description: "Did you watch the 2024 Paris Olympics at all?"
+      - name: ExaTam02005
+        description: "What was your favourite sport to watch?"
+      - name: ExaTam02006
+        description: "Did you watch the swimming?"
+      - name: ExaTam02007
+        description: "Which swimming event?"

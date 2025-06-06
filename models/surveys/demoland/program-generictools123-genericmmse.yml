@@ -57,13 +57,13 @@ models:
       - name: GenSMMSE029
         description: "Recall the 3 objects from earlier"
       - name: GenSMMSE031
-        description: "Show a wristwatch. Ask "What is this called?""
+        description: "Show a wristwatch. Ask 'What is this called?'"
       - name: GenSMMSE033
-        description: "Show a pencil. Ask "What is this called?""
+        description: "Show a pencil. Ask 'What is this called?'"
       - name: GenSMMSE998
         description: "Interim score"
       - name: GenSMMSE035
-        description: "Repeat the phrase "No ifs, ands, or buts""
+        description: "Repeat the phrase 'No ifs, ands, or buts'"
       - name: GenSMMSE038
         description: "Did the patient close their eyes in response to reading these words on the page?"
       - name: GenSMMSE040

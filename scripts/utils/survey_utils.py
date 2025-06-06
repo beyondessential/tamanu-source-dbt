@@ -104,7 +104,7 @@ models:
 """
     for code, name in columns:
         content += f"""      - name: {code}
-        description: "{name}"
+        description: "{name.replace('"', "'")}"
 """
 
     project_dir = SURVEYS_DIR / project

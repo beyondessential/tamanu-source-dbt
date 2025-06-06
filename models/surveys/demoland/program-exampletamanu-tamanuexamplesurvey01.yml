@@ -14,3 +14,61 @@ models:
         description: '{{ doc("survey_responses__start_time") }}'
       - name: result_text
         description: '{{ doc("survey_responses__result_text") }}'
+      - name: ExTam002
+        description: "Favourite colour"
+      - name: ExTam003
+        description: "Preference of savoury or sweet?"
+      - name: ExTam005
+        description: "Flying"
+      - name: ExTam006
+        description: "Super strength"
+      - name: ExTam007
+        description: "See through walls"
+      - name: ExTam008
+        description: "See the future"
+      - name: ExTam009
+        description: "Read minds"
+      - name: ExTam010
+        description: "Ability to talk to animals"
+      - name: ExTam011
+        description: "How many siblings do you have?"
+      - name: ExTam012
+        description: "Age category"
+      - name: ExTam013
+        description: "Stranger Things fan?"
+      - name: ExTam014
+        description: "Succession fan?"
+      - name: ExTam015
+        description: "Game of Thrones fan?"
+      - name: ExTam016
+        description: "The West Wing fan?"
+      - name: ExTam017
+        description: "3 favourite fruits"
+      - name: ExTam018
+        description: "Preferred pet"
+      - name: ExTam019
+        description: "Date survey completed"
+      - name: ExTam020
+        description: "Date of next birthday"
+      - name: ExTam021
+        description: "Current place of residence"
+      - name: ExTam022
+        description: "How many vowels are there in your first name?"
+      - name: ExTam023
+        description: "How many consonants are there in your first name?"
+      - name: ExTam024
+        description: "Total number of letters in your first name"
+      - name: ExTam025
+        description: "Name length 2-4 characters: short name"
+      - name: ExTam026
+        description: "Name length 5-10 characters: medium name"
+      - name: ExTam027
+        description: "Name length 11-15 characters: long name"
+      - name: ExTam028
+        description: "Name length >16 characters: woa!!"
+      - name: ExTam029
+        description: "Is tooth 1 sound or not sound?"
+      - name: ExTam030
+        description: "Is tooth 2 sound or not sound?"
+      - name: ExTam031
+        description: "Is tooth 3 sound or not sound?"
