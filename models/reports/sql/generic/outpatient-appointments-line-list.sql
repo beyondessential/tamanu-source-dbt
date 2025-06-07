@@ -8,17 +8,18 @@ select
     village as "{{ translate_label('patientVillage', 'Village') }}",
     billing_type as "{{ translate_label('patientBillingType', 'Patient billing type') }}",
     appointment_start_datetime as "{{ translate_label('appointmentDateTime', 'Appointment date and time') }}",
+    appointment_end_datetime as "{{ translate_label('appointmentEndDateTime', 'Appointment end date and time') }}",
     appointment_type as "{{ translate_label('appointmentType', 'Appointment type') }}",
     appointment_status as "{{ translate_label('appointmentStatus', 'Appointment status') }}",
     clinician as "{{ translate_label('appointmentClinician', 'Clinician') }}",
     location_group as "{{ translate_label('appointmentLocationGroup', 'Area') }}",
-    priority as "{{ translate_label('appointmentPriority', 'Priority appointment') }}",
+    is_high_priority as "{{ translate_label('appointmentPriority', 'Priority appointment') }}",
     case
-        when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
+        when schedule_id notnull then {{ get_recurrence_description('schedule_interval', 'schedule_frequency', 'schedule_days_of_week', 'schedule_nth_weekday') }}
         else 'No'
     end as "{{ translate_label('appointmentIsRepeating', 'Repeating appointment') }}",
     until_date as "{{ translate_label('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
-from {{ ref('ds__appointments') }}
+from {{ ref('ds__outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else appointment_start_datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
@@ -42,4 +43,9 @@ where case
     case
         when {{ parameter('clinicianId') }} is null then true
         else clinician_id = {{ parameter('clinicianId') }}
+    end
+    and
+    case
+        when {{ parameter('appointmentTypeId') }} is null then true
+        else appointment_type_id = {{ parameter('appointmentTypeId') }}
     end

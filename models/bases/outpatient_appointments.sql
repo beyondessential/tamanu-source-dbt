@@ -20,6 +20,6 @@ select
     s.generated_until_date,
     s.cancelled_at_date
 from {{ source("tamanu", "appointments") }} a
-join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
+left join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
