@@ -34,7 +34,7 @@
       {
         "parameterField": "AppointmentTypeField",
         "label": "Appointment type",
-        "name": "AppointmentTypeId"
+        "name": "appointmentTypeId"
       },
       {
         "parameterField": "ParameterSelectField",
