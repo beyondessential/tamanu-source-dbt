@@ -1,0 +1,236 @@
+version: 2
+
+models:
+  - name: lab-test-summary-msf
+    description: "MSF Lab Summary report aggregating lab test data by epidemiological week with facility-specific metrics"
+    columns:
+      - name: "Attribute"
+        description: "The metric being measured (e.g., number of new patients tested, test counts by type)"
+      - name: "1"
+        description: "Week 1 values"
+      - name: "2"
+        description: "Week 2 values"
+      - name: "3"
+        description: "Week 3 values"
+      - name: "4"
+        description: "Week 4 values"
+      - name: "5"
+        description: "Week 5 values"
+      - name: "6"
+        description: "Week 6 values"
+      - name: "7"
+        description: "Week 7 values"
+      - name: "8"
+        description: "Week 8 values"
+      - name: "9"
+        description: "Week 9 values"
+      - name: "10"
+        description: "Week 10 values"
+      - name: "11"
+        description: "Week 11 values"
+      - name: "12"
+        description: "Week 12 values"
+      - name: "13"
+        description: "Week 13 values"
+      - name: "14"
+        description: "Week 14 values"
+      - name: "15"
+        description: "Week 15 values"
+      - name: "16"
+        description: "Week 16 values"
+      - name: "17"
+        description: "Week 17 values"
+      - name: "18"
+        description: "Week 18 values"
+      - name: "19"
+        description: "Week 19 values"
+      - name: "20"
+        description: "Week 20 values"
+      - name: "21"
+        description: "Week 21 values"
+      - name: "22"
+        description: "Week 22 values"
+      - name: "23"
+        description: "Week 23 values"
+      - name: "24"
+        description: "Week 24 values"
+      - name: "25"
+        description: "Week 25 values"
+      - name: "26"
+        description: "Week 26 values"
+      - name: "27"
+        description: "Week 27 values"
+      - name: "28"
+        description: "Week 28 values"
+      - name: "29"
+        description: "Week 29 values"
+      - name: "30"
+        description: "Week 30 values"
+      - name: "31"
+        description: "Week 31 values"
+      - name: "32"
+        description: "Week 32 values"
+      - name: "33"
+        description: "Week 33 values"
+      - name: "34"
+        description: "Week 34 values"
+      - name: "35"
+        description: "Week 35 values"
+      - name: "36"
+        description: "Week 36 values"
+      - name: "37"
+        description: "Week 37 values"
+      - name: "38"
+        description: "Week 38 values"
+      - name: "39"
+        description: "Week 39 values"
+      - name: "40"
+        description: "Week 40 values"
+      - name: "41"
+        description: "Week 41 values"
+      - name: "42"
+        description: "Week 42 values"
+      - name: "43"
+        description: "Week 43 values"
+      - name: "44"
+        description: "Week 44 values"
+      - name: "45"
+        description: "Week 45 values"
+      - name: "46"
+        description: "Week 46 values"
+      - name: "47"
+        description: "Week 47 values"
+      - name: "48"
+        description: "Week 48 values"
+      - name: "49"
+        description: "Week 49 values"
+      - name: "50"
+        description: "Week 50 values"
+      - name: "51"
+        description: "Week 51 values"
+      - name: "52"
+        description: "Week 52 values"
+      - name: "53"
+        description: "Week 53 values"
+
+unit_tests:
+  - name: test_lab_test_summary_msf_basic_functionality
+    model: lab-test-summary-msf
+    description: "Basic test for lab test summary functionality focusing on key metrics"
+    given:
+      - input: ref('ds__lab_tests_msf')
+        format: sql
+        rows: |
+          select 2025 as epi_year, 1 as epi_week, 'patient_001' as patient_id, 'department-medicalnorth' as department_id, 'published' as status, 'req_001' as lab_request_id, null as lab_test_panel_id, 'labTestType-Haemoglobin' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 1 as epi_week, 'patient_002' as patient_id, 'department-medicalnorth' as department_id, 'sample-not-collected' as status, 'req_002' as lab_request_id, null as lab_test_panel_id, 'labTestType-PregnancyTest' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 2 as epi_week, 'patient_003' as patient_id, 'department-medicalsouth' as department_id, 'cancelled' as status, 'req_003' as lab_request_id, null as lab_test_panel_id, 'labTestType-GlucoseFasting' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'invalidated' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-Magnesium' as test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 4 as epi_week, 'patient_005' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_005' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 5 as epi_week, 'patient_006' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_006' as lab_request_id, 'labTestPanel-Urinealysis' as lab_test_panel_id, null as test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 6 as epi_week, 'patient_007' as patient_id, 'department-medicalsouth' as department_id, 'results_pending' as status, 'req_007' as lab_request_id, 'labTestPanel-CBC' as lab_test_panel_id, null as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 6 as epi_week, 'patient_007' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_007' as lab_request_id, null as lab_test_panel_id, 'labTestType-Triglycerides' as lab_test_type_id, 1 as visit_rank
+    expect:
+      format: sql
+      rows: |
+        select 'Number of new patients tested (North facility)' as attribute, 2 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of new patients tested (South facility)' as attribute, 0 as "1", 1 as "2", 1 as "3", 1 as "4", 1 as "5", 1 as "6"
+        union all
+        select 'Number of tests cancelled (South facility)' as attribute, 0 as "1", 1 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of tests pending without sample collected (North facility)' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of tests pending (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 1 as "6"
+        union all
+        select 'Number of invalidated tests (South facility)' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of test results published (North facility)' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of test results published (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 1 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of unique patients (North facility)' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Number of unique patients (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 1 as "5", 0 as "6"
+        union all
+        select 'Hemoglobin' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Urineanalysis' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 1 as "5", 0 as "6"
+        union all
+        select 'HbA1c' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 0 as "5", 0 as "6"
+        union all
+        select 'Triglyceride' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+  
+  - name: test_lab_test_summary_msf_edge_cases
+    model: lab-test-summary-msf
+    description: "Test edge cases including different statuses and test types"
+    given:
+      - input: ref('ds__lab_tests_msf')
+        format: sql
+        rows: |
+          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalnorth' as department_id, 'sample-not-collected' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-GlucoseRandom' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 4 as epi_week, 'patient_005' as patient_id, 'department-medicalsouth' as department_id, 'interim_results' as status, 'req_005' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 5 as epi_week, 'patient_006' as patient_id, 'department-medicalnorth' as department_id, 'invalidated' as status, 'req_006' as lab_request_id, null as lab_test_panel_id, 'labTestType-Triglycerides' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 8 as epi_week, 'patient_009' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_009' as lab_request_id, null as lab_test_panel_id, 'labTestType-UnknownTest' as lab_test_type_id, 1 as visit_rank
+    expect:
+      format: sql
+      rows: |
+        select 'Number of new patients tested (North facility)' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 1 as "5", 0 as "6", 0 as "7", 0 as "8"
+        union all
+        select 'Number of new patients tested (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 1 as "4", 0 as "5", 0 as "6", 0 as "7", 1 as "8"
+        union all
+        select 'Number of test results published (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 1 as "8"
+        union all
+        select 'Number of tests pending without sample collected (North facility)' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8"
+        union all
+        select 'Number of tests pending (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 1 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8"
+        union all
+        select 'Number of invalidated tests (North facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 1 as "5", 0 as "6", 0 as "7", 0 as "8"
+        union all
+        select 'Number of unique patients (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 1 as "8"
+        union all
+        select 'Other' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 1 as "8"
+
+  - name: test_lab_test_summary_msf_panel_tests
+    model: lab-test-summary-msf
+    description: "Test panel-based lab tests like CBC and Urinalysis"
+    given:
+      - input: ref('ds__lab_tests_msf')
+        format: sql
+        rows: |
+          select 2025 as epi_year, 7 as epi_week, 'patient_008' as patient_id, 'department-medicalnorth' as department_id, 'published' as status, 'req_008' as lab_request_id, 'labTestPanel-Urinealysis' as lab_test_panel_id, 'labTestType-UrineProtein' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 10 as epi_week, 'patient_010' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_010' as lab_request_id, 'labTestPanel-CBC' as lab_test_panel_id, 'labTestType-WBC' as lab_test_type_id, 1 as visit_rank
+          union all
+          select 2025 as epi_year, 10 as epi_week, 'patient_011' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_011' as lab_request_id, 'labTestPanel-CBC' as lab_test_panel_id, 'labTestType-RBC' as lab_test_type_id, 1 as visit_rank
+    expect:
+      format: sql
+      rows: |
+        select 'Number of new patients tested (North facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 1 as "7", 0 as "8", 0 as "9", 0 as "10"
+        union all
+        select 'Number of new patients tested (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8", 0 as "9", 2 as "10"
+        union all
+        select 'Number of test results published (North facility)' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 1 as "7", 0 as "8", 0 as "9", 0 as "10"
+        union all
+        select 'Number of test results published (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 1 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8", 0 as "9", 2 as "10"
+        union all
+        select 'Number of unique patients (North facility)' as attribute, 1 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 1 as "7", 0 as "8", 0 as "9", 0 as "10"
+        union all
+        select 'Number of unique patients (South facility)' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 1 as "5", 0 as "6", 0 as "7", 0 as "8", 0 as "9", 2 as "10"
+        union all
+        select 'Urineanalysis' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 1 as "7", 0 as "8", 0 as "9", 0 as "10"
+        union all
+        select 'CBC' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8", 0 as "9", 2 as "10"
+        union all
+        select 'Other' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6", 0 as "7", 0 as "8", 0 as "9", 0 as "10"

@@ -363,7 +363,7 @@ combined_attributes as (
         ) 
     }}
 )
-select attribute as "Attribute",
+select attribute,
 {{ generate_sum_case('epi_week', 'value', range(1, 54)) }}
 from combined_attributes
 group by attribute_order, attribute
