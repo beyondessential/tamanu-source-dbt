@@ -197,15 +197,18 @@ def generate_reporting_schema_script(target):
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-
+    
     for node in ordered:
         model = manifest["nodes"][node]
+        if model["compiled_path"] is None:
+            cprint(f"Model {model['name']} has no compiled path, skipping.", "warning")
+            continue
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-
+    
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
