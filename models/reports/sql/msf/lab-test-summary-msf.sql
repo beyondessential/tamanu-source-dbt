@@ -1,11 +1,12 @@
 with filtered_ds as (
-	select *
-	from {{ ref("ds__lab_tests_msf") }}
-	where
-		case when {{ parameter('toDate', default_value='2025-01-31', data_type='text') }} is null then true
-			else epi_year = extract('year' from {{ parameter('toDate', default_value='2025-01-31', data_type='text') }}::date)
-		end
+    select *
+    from {{ ref("ds__lab_tests_msf") }}
+    where
+        case when {{ parameter('toDate', default_value='2025-01-31', data_type='text') }} is null then true
+            else epi_year = extract('year' from {{ parameter('toDate', default_value='2025-01-31', data_type='text') }}::date)
+        end
 ),
+
 combined_attributes as (
     {{ 
         generate_select_attribute_values(
@@ -363,8 +364,10 @@ combined_attributes as (
         ) 
     }}
 )
-select attribute,
-{{ generate_sum_case('epi_week', 'value', range(1, 54)) }}
+
+select
+    attribute,
+    {{ generate_sum_case('epi_week', 'value', range(1, 54)) }}
 from combined_attributes
 group by attribute_order, attribute
 order by attribute_order, attribute
