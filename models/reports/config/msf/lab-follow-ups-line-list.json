@@ -1,0 +1,106 @@
+{
+  "query": "replace this",
+  "name": "Lab Follow-ups",
+  "notes": "This report provides a list of lab follow-up schedules for patients with non-communicable diseases (NCDs).",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Follow-up Status",
+        "name": "followUpStatus",
+        "options": [
+          {
+            "label": "Over due",
+            "value": "Over due"
+          },
+          {
+            "label": "Upcoming",
+            "value": "Upcoming"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Test Type",
+        "name": "testType",
+        "options": [
+          {
+            "label": "HbA1c",
+            "value": "labTestType-HbA1c"
+          },
+          {
+            "label": "Creatinine",
+            "value": "labTestType-Creatinine"
+          },
+          {
+            "label": "Sodium",
+            "value": "labTestType-Sodium"
+          },
+          {
+            "label": "Potassium",
+            "value": "labTestType-Potassium"
+          },
+          {
+            "label": "TSH",
+            "value": "labTestType-TSH"
+          },
+          {
+            "label": "Glucose Fasting",
+            "value": "labTestType-GlucoseFasting"
+          },
+          {
+            "label": "Triglycerides",
+            "value": "labTestType-Triglycerides"
+          },
+          {
+            "label": "Total Cholesterol",
+            "value": "labTestType-TotalCholesterol"
+          },
+          {
+            "label": "ALT",
+            "value": "labTestType-ALT"
+          },
+          {
+            "label": "Urine Analysis",
+            "value": "labTestPanel-Urinealysis"
+          },
+          {
+            "label": "CBC",
+            "value": "labTestPanel-CBC"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "NCD",
+        "name": "condition",
+        "options": [
+          {
+            "label": "Diabetes",
+            "value": "Diabetes"
+          },
+          {
+            "label": "Hypertension",
+            "value": "Hypertension"
+          },
+          {
+            "label": "CVD",
+            "value": "CVD"
+          },
+          {
+            "label": "CCF",
+            "value": "CCF"
+          },
+          {
+            "label": "Hypothyroidism",
+            "value": "Hypothyroidism"
+          }
+        ]
+      }
+    ]
+  }
+} 
