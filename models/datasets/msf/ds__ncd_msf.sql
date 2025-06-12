@@ -1,38 +1,41 @@
-with active_ncd_patients as (
+with ncd_patients as (
+    select 
+        patient_id,
+        clinical_status_id,
+        datetime,
+        lag(clinical_status_id) over (
+            partition by patient_id 
+            order by datetime
+        ) as previous_status,
+        lead(clinical_status_id) over (
+            partition by patient_id 
+            order by datetime
+        ) as next_status
+    from {{ ref('patient_program_registrations')}}
+    where program_registry_id = 'programRegistry-activeregistry'
+        and registration_status = 'active'
+),
+
+active_ncd_patients as (
     select 
         patient_id,
         max(datetime) as datetime
-    from (
-        select 
-            patient_id,
-            clinical_status_id,
-            datetime,
-            lag(clinical_status_id) over (
-                partition by patient_id 
-                order by datetime
-            ) as previous_status
-        from {{ ref('patient_program_registrations')}}
-        where program_registry_id = 'programRegistry-activeregistry'
-            and registration_status = 'active'
-    ) status_changes
-    where clinical_status_id = 'prClinicalStatus-ncdactive'
-        and (previous_status is null or previous_status != 'prClinicalStatus-ncdactive')
+    from ncd_patients np
+    where np.clinical_status_id = 'prClinicalStatus-ncdactive'
+        and (np.previous_status is null or np.previous_status != 'prClinicalStatus-ncdactive')
     group by patient_id
 ),
 
 all_ncd_patients as (
     select 
-        ppr.patient_id,
-        coalesce(anp.datetime, ppr.datetime) as datetime,
+        np.patient_id,
+        coalesce(anp.datetime, np.datetime) as datetime,
         prcs.name as patient_status
-    from {{ ref('patient_program_registrations')}} ppr
-    join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id
-    left join active_ncd_patients anp on anp.patient_id = ppr.patient_id
-    where ppr.program_registry_id = 'programRegistry-activeregistry'
-        and ppr.registration_status = 'active'
-        and ppr.is_most_recent = true
+    from ncd_patients np
+    left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = np.clinical_status_id
+    left join active_ncd_patients anp on anp.patient_id = np.patient_id
+    where np.next_status is null
 ),
-
 latest_survey_data as (
     select 
         patient_id,
