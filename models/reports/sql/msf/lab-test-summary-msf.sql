@@ -253,7 +253,7 @@ combined_attributes as (
     {{ 
         generate_select_attribute_values(
             "epi_week", 
-            "Triglyceride", 
+            "Triglycerides", 
             23,
             "count(*)", 
             "status = 'published'

@@ -167,7 +167,7 @@ unit_tests:
         union all
         select 'HbA1c' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 0 as "5", 0 as "6"
         union all
-        select 'Triglyceride' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 0 as "6"
+        select 'Triglycerides' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 1 as "6"
   
   - name: test_lab_test_summary_msf_edge_cases
     model: lab-test-summary-msf
