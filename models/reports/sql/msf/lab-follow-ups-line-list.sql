@@ -6,7 +6,7 @@ select
     sex as "{{ translate_label('patientSex', 'Sex') }}",
     conditions as "{{ translate_label('patientNCDConditions', 'NCD') }}",
     test_name as "{{ translate_label('labTestName', 'Lab test') }}",
-    requested_datetime::date as "{{ translate_label('labTestDate', 'Date of last lab test') }}",
+    requested_datetime::date as "{{ translate_label('labTestLastDate', 'Date of last lab test') }}",
     follow_up_frequency as "{{ translate_label('labTestFollowUpFrequency', 'Required frequency of lab test') }}",
     follow_up_due_date::date as "{{ translate_label('labTestFollowUpDueDate', 'Next lab test due by') }}",
     follow_up_status as "{{ translate_label('labTestFollowUpStatus', 'Status') }}"

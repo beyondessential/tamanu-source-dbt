@@ -17,3 +17,7 @@ Due date for the next follow-up test based on most recent test
 {% docs msf__follow_up_status %}
 Status of follow-up: 'Over due' or 'Upcoming'
 {% enddocs %}
+
+{% docs msf__ncd_conditions %}
+List of the underlying NCD conditions (Diabetes, Hypertension, CVD, CCF, Hypothyroidism)
+{% enddocs %}
