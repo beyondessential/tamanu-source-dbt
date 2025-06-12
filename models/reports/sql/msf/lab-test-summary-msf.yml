@@ -127,13 +127,13 @@ unit_tests:
           union all
           select 2025 as epi_year, 2 as epi_week, 'patient_003' as patient_id, 'department-medicalsouth' as department_id, 'cancelled' as status, 'req_003' as lab_request_id, null as lab_test_panel_id, 'labTestType-GlucoseFasting' as lab_test_type_id, 1 as visit_rank
           union all
-          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'invalidated' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-Magnesium' as test_type_id, 1 as visit_rank
+          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'invalidated' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-Magnesium' as lab_test_type_id, 1 as visit_rank
           union all
-          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as test_type_id, 1 as visit_rank
+          select 2025 as epi_year, 3 as epi_week, 'patient_004' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_004' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as lab_test_type_id, 1 as visit_rank
           union all
-          select 2025 as epi_year, 4 as epi_week, 'patient_005' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_005' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as test_type_id, 1 as visit_rank
+          select 2025 as epi_year, 4 as epi_week, 'patient_005' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_005' as lab_request_id, null as lab_test_panel_id, 'labTestType-HbA1c' as lab_test_type_id, 1 as visit_rank
           union all
-          select 2025 as epi_year, 5 as epi_week, 'patient_006' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_006' as lab_request_id, 'labTestPanel-Urinealysis' as lab_test_panel_id, null as test_type_id, 1 as visit_rank
+          select 2025 as epi_year, 5 as epi_week, 'patient_006' as patient_id, 'department-medicalsouth' as department_id, 'published' as status, 'req_006' as lab_request_id, 'labTestPanel-Urinealysis' as lab_test_panel_id, null as lab_test_type_id, 1 as visit_rank
           union all
           select 2025 as epi_year, 6 as epi_week, 'patient_007' as patient_id, 'department-medicalsouth' as department_id, 'results_pending' as status, 'req_007' as lab_request_id, 'labTestPanel-CBC' as lab_test_panel_id, null as lab_test_type_id, 1 as visit_rank
           union all
@@ -165,7 +165,7 @@ unit_tests:
         union all
         select 'Urineanalysis' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 1 as "5", 0 as "6"
         union all
-        select 'HbA1c' as attribute, 0 as "1", 0 as "2", 1 as "3", 0 as "4", 0 as "5", 0 as "6"
+        select 'HbA1c' as attribute, 0 as "1", 0 as "2", 1 as "3", 1 as "4", 0 as "5", 0 as "6"
         union all
         select 'Triglycerides' as attribute, 0 as "1", 0 as "2", 0 as "3", 0 as "4", 0 as "5", 1 as "6"
   
