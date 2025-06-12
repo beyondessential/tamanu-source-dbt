@@ -157,7 +157,6 @@ select
     sex,
     conditions,
     test_name,
-    test_id,
     requested_datetime,
     follow_up_frequency,
     requested_datetime + (follow_up_months || ' months')::interval as follow_up_due_date,
