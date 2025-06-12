@@ -5,7 +5,7 @@
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
-    "defaultDateRange": "30days",
+    "defaultDateRange": "allTime",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {
