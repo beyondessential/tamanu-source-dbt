@@ -39,22 +39,22 @@ lab_test_results as (
         pca.has_diabetes,
         lr.requested_datetime,
         coalesce(ltp.name, ltt.name) as test_name,
-        coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id) as test_id,
+        coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id) as test_id,
         lt.result::numeric,
         case 
-            when coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id) = 'labTestType-Creatinine'
+            when coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id) = 'labTestType-Creatinine'
                 then (p.sex = 'male' and lt.result::numeric between 0.6 and 1.1) or 
                      (p.sex = 'female' and lt.result::numeric between 0.4 and 0.8)
-            when coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id) = 'labTestType-Sodium'
+            when coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id) = 'labTestType-Sodium'
                 then lt.result::numeric between 136 and 149
-            when coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id) = 'labTestType-Potassium'
+            when coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id) = 'labTestType-Potassium'
                 then lt.result::numeric between 3.8 and 5
-            when coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id) = 'labTestType-TSH'
+            when coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id) = 'labTestType-TSH'
                 then lt.result::numeric between 0.4 and 4
             else false
         end as is_normal,
         row_number() over (
-            partition by p.id, coalesce(lr.lab_test_panel_request_id::text, lt.lab_test_type_id)
+            partition by p.id, coalesce(ltpr.lab_test_panel_id::text, lt.lab_test_type_id)
             order by lr.requested_datetime desc
         ) as rn     
     from patient_with_ncd_conditions pca
@@ -68,7 +68,7 @@ lab_test_results as (
     where lt.completed_datetime is not null
         and pca.conditions is not null
         and (
-            lr.lab_test_panel_request_id::text in ('labTestPanel-Urinealysis', 'labTestPanel-CBC')
+            ltpr.lab_test_panel_id::text in ('labTestPanel-Urinealysis', 'labTestPanel-CBC')
             or lt.lab_test_type_id in (
                 'labTestType-HbA1c', 
                 'labTestType-Creatinine', 
