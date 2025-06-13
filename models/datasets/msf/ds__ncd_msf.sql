@@ -36,6 +36,45 @@ all_ncd_patients as (
     left join active_ncd_patients anp on anp.patient_id = np.patient_id
     where np.next_status is null
 ),
+
+ncd_diagnoses as (
+    select distinct on (patient_id)
+        patient_id,
+        diagnosis
+    from (
+        select 
+            pc.patient_id,
+            array_agg(c.name) as diagnosis,
+            max(pc.recorded_datetime) as datetime
+        from {{ ref('patient_conditions') }} pc
+        join {{ ref('reference_data') }} c on c.id = pc.condition_id
+        join all_ncd_patients anp on anp.patient_id = pc.patient_id
+        where is_resolved = false
+        group by pc.patient_id
+        union
+        select 
+            pprc.patient_id,
+            array_agg(prc.name) as diagnosis,
+            max(pprc.datetime) as datetime
+        from {{ ref('patient_program_registration_conditions') }} pprc
+        join {{ ref('program_registry_conditions') }} prc on prc.id = pprc.program_registry_condition_id
+        join all_ncd_patients anp on anp.patient_id = pprc.patient_id
+        group by pprc.patient_id
+        union
+        select 
+            e.patient_id,
+            string_to_array(max(sra.body), ',') as diagnosis,
+            max(sr.start_datetime) as datetime
+        from {{ ref('survey_responses') }} sr
+        join {{ ref('encounters') }} e on e.id = sr.encounter_id
+        join {{ ref('survey_response_answers') }} sra on sra.response_id = sr.id
+        join all_ncd_patients anp on anp.patient_id = e.patient_id
+        where sra.data_element_id = 'pde-WaScrn013a'
+        group by e.patient_id
+    ) all_diagnoses
+    order by patient_id, datetime desc
+),
+
 latest_survey_data as (
     select 
         patient_id,
@@ -171,6 +210,18 @@ select
     sv.bmi,
     anp.datetime,
     e.name as ethnicity,
+    case when array_position(nd.diagnosis, 'HTN') is not null then 1 else 0 end as htn,
+    case when array_position(nd.diagnosis, 'DM1') is not null then 1 else 0 end as dm1,
+    case when array_position(nd.diagnosis, 'DM2') is not null then 1 else 0 end as dm2,
+    case when array_position(nd.diagnosis, 'CVD') is not null then 1 else 0 end as cvd,
+    case when array_position(nd.diagnosis, 'Asthma') is not null then 1 else 0 end as asthma,
+    case when array_position(nd.diagnosis, 'COPD') is not null then 1 else 0 end as copd,
+    case when array_position(nd.diagnosis, 'Epilepsy') is not null then 1 else 0 end as epilepsy,
+    case when array_position(nd.diagnosis, 'Hypothyroidism') is not null then 1 else 0 end as hypothyroidism,
+    case when array_position(nd.diagnosis, 'Hyperthyroidism') is not null then 1 else 0 end as hyperthyroidism,
+    case when array_position(nd.diagnosis, 'Stroke') is not null then 1 else 0 end as stroke,
+    case when array_position(nd.diagnosis, 'Other chronic') is not null then 1 else 0 end as other_chronic,
+    cardinality(nd.diagnosis) as number_of_conditions,
     concat_ws(' / ', nullif(sv.dbp, ''), nullif(sv.sbp, '')) as bp,
     coalesce(sv.bsl_fasting, sv.bsl_nonfast) as glu,
     {% for i in range(1, 39) %}
@@ -207,6 +258,7 @@ select
     anp.patient_status
 from all_ncd_patients anp
 join {{ ref('patients')}} p on anp.patient_id = p.id
+left join ncd_diagnoses nd on nd.patient_id = anp.patient_id
 left join {{ ref('patient_additional_data')}} pd on pd.patient_id = p.id
 left join {{ ref('reference_data')}} d on d.id = pd.division_id
 left join {{ ref('reference_data')}} s on s.id = pd.subdivision_id
