@@ -3,38 +3,32 @@ with ncd_patients as (
         patient_id,
         clinical_status_id,
         datetime,
-        lag(clinical_status_id) over (
-            partition by patient_id 
-            order by datetime
-        ) as previous_status,
-        lead(clinical_status_id) over (
-            partition by patient_id 
-            order by datetime
-        ) as next_status
-    from {{ ref('patient_program_registrations')}}
+        lag(clinical_status_id) over (partition by patient_id order by datetime) as previous_status,
+        lead(clinical_status_id) over (partition by patient_id order by datetime) as next_status,
+        case 
+            when clinical_status_id = 'prClinicalStatus-ncdactive' 
+                 and (lag(clinical_status_id) over (partition by patient_id order by datetime) is null 
+                      or lag(clinical_status_id) over (partition by patient_id order by datetime) != 'prClinicalStatus-ncdactive') 
+            then 1 else 0 
+        end as is_new_active
+    from {{ ref('patient_program_registrations') }}
     where program_registry_id = 'programRegistry-activeregistry'
-        and registration_status = 'active'
-),
-
-active_ncd_patients as (
-    select 
-        patient_id,
-        max(datetime) as datetime
-    from ncd_patients np
-    where np.clinical_status_id = 'prClinicalStatus-ncdactive'
-        and (np.previous_status is null or np.previous_status != 'prClinicalStatus-ncdactive')
-    group by patient_id
+      and registration_status = 'active'
 ),
 
 all_ncd_patients as (
     select 
         np.patient_id,
-        coalesce(anp.datetime, np.datetime) as datetime,
-        prcs.name as patient_status
+        coalesce(
+            max(np.datetime) filter (where np.is_new_active = 1),
+            max(np.datetime)
+        ) as datetime,
+        max(prcs.name) as patient_status
     from ncd_patients np
-    left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = np.clinical_status_id
-    left join active_ncd_patients anp on anp.patient_id = np.patient_id
+    left join {{ ref('program_registry_clinical_statuses') }} prcs 
+        on prcs.id = np.clinical_status_id
     where np.next_status is null
+    group by np.patient_id
 ),
 
 ncd_diagnoses as (
