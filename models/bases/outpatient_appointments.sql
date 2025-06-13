@@ -23,3 +23,4 @@ from {{ source("tamanu", "appointments") }} a
 left join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
+    and a.appointment_type_id notnull
