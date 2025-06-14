@@ -37,11 +37,9 @@ This command generates views, reports, and an import script for deployment in th
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:
 ```
-python scripts/generate_survey_models.py --project <project_name>
+python scripts/generate_survey_models.py
 ```
-Replace `<project_name>` with the target deployment (e.g., demoland, fiji, palau). Defaults to demoland if not specified.
-
-This will generate models and documentation for all surveys in the demoland deployment.
+This will generate models and documentation for all surveys in the Tamanu database.
 
 ## Script to list Tamanu reports
 
