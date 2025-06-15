@@ -43,6 +43,21 @@
         "suggesterOptions": {
           "baseQueryParameters": { "filterByFacility": true }
         }
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Admission status",
+        "name": "admissionStatus",
+        "options": [
+          {
+            "label": "Active",
+            "value": "active"
+          },
+          {
+            "label": "Discharged",
+            "value": "discharged"
+          }
+        ]
       }
     ]
   }

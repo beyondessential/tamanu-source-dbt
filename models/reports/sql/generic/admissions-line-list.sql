@@ -43,4 +43,7 @@ where
     and case when {{ parameter('clinicianId') }} is null then true
         else admitting_clinician_id = {{ parameter('clinicianId') }}
     end
+    and case when coalesce({{ parameter('admissionStatus') }}) is null then true
+        else admission_status in ({{ parameter('admissionStatus') }})
+    end
 order by admission_datetime desc
