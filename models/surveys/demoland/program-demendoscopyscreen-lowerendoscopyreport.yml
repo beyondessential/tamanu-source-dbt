@@ -1,0 +1,1128 @@
+version: 2
+
+models:
+  - name: program-demendoscopyscreen-lowerendoscopyreport
+    description: "Dataset containing responses for '(Demo Land) Lower endoscopy report - full version' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: lowerendorep02
+        description: "Symptoms"
+      - name: lowerendorep03
+        description: "Abdominal pain - LOCATION"
+      - name: lowerendorep05
+        description: "Abdominal mass - LOCATION"
+      - name: lowerendorep06
+        description: "Altered Bowel habits"
+      - name: lowerendorep0601
+        description: "Other description"
+      - name: lowerendorep07
+        description: "PR Bleeding"
+      - name: lowerendorep1301
+        description: "Indication for screening"
+      - name: lowerendorep1401
+        description: "Describe family history of bowel cancer"
+      - name: lowerendorep1501
+        description: "Describe family history - other cancer"
+      - name: lowerendorep1601
+        description: "Desribe family history - pre-malignant polyps"
+      - name: lowerendorep1700
+        description: "Type of cancer syndrome"
+      - name: lowerendorep170a
+        description: "Description of other"
+      - name: lowerendorep20
+        description: "SURVEILLANCE/FOLLOWUP"
+      - name: lowerendorep21
+        description: "Abnormal imaging"
+      - name: lowerendorep22
+        description: "Details of Angioectasia(s)"
+      - name: lowerendorep23
+        description: "Colorectal cancer"
+      - name: lowerendorep24
+        description: "Diverticular disease"
+      - name: lowerendorep25
+        description: "EMR polypectomy"
+      - name: lowerendorep26
+        description: "IBD-previous history"
+      - name: lowerendorep27
+        description: "Polyps"
+      - name: lowerendorep29
+        description: "Type of polyposis/familial cancer syndrome"
+      - name: lowerendorep30
+        description: "Polyposis /Lynch syndrome-description of Other"
+      - name: lowerendorep31
+        description: "Type of surgery"
+      - name: lowerendorep32
+        description: "Segmental colectomy description"
+      - name: lowerendorep33
+        description: "Other description"
+      - name: lowerendorep34
+        description: "PLANNED PROCEDURES"
+      - name: lowerendorep35
+        description: "Banding-haemorrhoids"
+      - name: lowerendorep36
+        description: "Chromoendoscopy"
+      - name: lowerendorep37
+        description: "EMR-polypectomy"
+      - name: lowerendorep38
+        description: "Polypectomy"
+      - name: lowerendorep39
+        description: "Polypectomies"
+      - name: lowerendorep40
+        description: "Stent insertion"
+      - name: lowerendorep45
+        description: "Other"
+      - name: lowerendorep49
+        description: "First colonoscopy today?"
+      - name: lowerendorep50
+        description: "How many years ago was previous colonscopy performed?"
+      - name: lowerendorep52
+        description: "Site"
+      - name: lowerendorep53
+        description: "Scope insertion – terminal ileal depth (cms)"
+      - name: lowerendorep54
+        description: "Scope insertion-caecal identification"
+      - name: lowerendorep55
+        description: "Scope insertion-anastamosis"
+      - name: lowerendorep5501
+        description: "Site-Scope insertion-distance(s) to anastomosis scar (cm)"
+      - name: lowerendorep56
+        description: "Scope insertion-other"
+      - name: lowerendorep57
+        description: "Degree of difficulty"
+      - name: lowerendorep5701
+        description: "Cause of difficulty"
+      - name: lowerendorep5702
+        description: "Description of other cause of difficulty"
+      - name: lowerendorep59
+        description: "Retroflexion"
+      - name: lowerendorep61
+        description: "Consent"
+      - name: lowerendorep63
+        description: "Name of anticoagulant"
+      - name: lowerendorep64
+        description: "Last dose taken of anticoagulant"
+      - name: lowerendorep66
+        description: "Peri-operative oxygen"
+      - name: lowerendorep67
+        description: "Preparation-nil orally"
+      - name: lowerendorep68
+        description: "Anaesthetic given by"
+      - name: lowerendorep69
+        description: "Anaesthetic medication(s)"
+      - name: lowerendorep70
+        description: "Throat spray"
+      - name: lowerendorep70a
+        description: "Dose of throat spray"
+      - name: lowerendorep70b
+        description: "Dose of Midazolam"
+      - name: lowerendorep70c
+        description: "Dose of Alfentanyl"
+      - name: lowerendorep70d
+        description: "Dose of Propofol"
+      - name: lowerendorep70e
+        description: "Dose of Fentanyl"
+      - name: lowerendorep70f
+        description: "Dose of general anaesthetic"
+      - name: lowerendorep70g
+        description: "Type of other anaesthetic"
+      - name: lowerendorep70h
+        description: "Dose of other anaesthetic"
+      - name: lowerendorep72
+        description: "Timing"
+      - name: lowerendorep73
+        description: "Type"
+      - name: lowerendorep74
+        description: "Extra prep required"
+      - name: lowerendorep76
+        description: "Quality of bowel preparation seen at endoscopy"
+      - name: lowerendorep77
+        description: "Distal cap used"
+      - name: lowerendorep78
+        description: "Other"
+      - name: lowerendorep81
+        description: "Perineum appearance"
+      - name: lowerendorep82
+        description: "Prolapsing tissue"
+      - name: lowerendorep83
+        description: "Other"
+      - name: lowerendorep84
+        description: "Digital rectal examination"
+      - name: lowerendorep8401
+        description: "Description of prostate gland"
+      - name: lowerendorep85
+        description: "Other"
+      - name: lowerendorep88
+        description: "Ileum-Common"
+      - name: lowerendorep91
+        description: "Number (x)"
+      - name: lowerendorep92
+        description: "Method"
+      - name: lowerendorep93
+        description: "Purpose"
+      - name: lowerendorep94
+        description: "Site"
+      - name: lowerendorep94a
+        description: "Other"
+      - name: lowerendorep96
+        description: "Number (x)"
+      - name: lowerendorep97
+        description: "Size"
+      - name: lowerendorep98
+        description: "Type"
+      - name: lowerendorep98a
+        description: "Other"
+      - name: lowerendorep99
+        description: "Bleeding"
+      - name: lowerendorep99a
+        description: "Other"
+      - name: lowerendorep101
+        description: "Site"
+      - name: lowerendorep102
+        description: "Severity"
+      - name: lowerendorep103
+        description: "Description"
+      - name: lowerendorep104
+        description: "Bleeding"
+      - name: lowerendorep104a
+        description: "Other"
+      - name: lowerendorep106
+        description: "Site"
+      - name: lowerendorep107
+        description: "Ileum cm from IC valve"
+      - name: lowerendorep108
+        description: "Ileo-caecal valve appearance"
+      - name: lowerendorep109
+        description: "Appearance"
+      - name: lowerendorep111
+        description: "Ileum-Uncommon"
+      - name: lowerendorep11100
+        description: "Description of other"
+      - name: lowerendorep584001
+        description: "Normal Colonoscopy"
+      - name: lowerendorep112
+        description: "Type of anastamosis"
+      - name: lowerendorep112a
+        description: "Other"
+      - name: lowerendorep113
+        description: "Assessment"
+      - name: lowerendorep584003
+        description: "Incomplete colonoscopy performed"
+      - name: lowerendorep11301
+        description: "Description of other"
+      - name: lowerendorep584004
+        description: "Routine gastric and duodenal biopsies not taken"
+      - name: lowerendorep584005
+        description: "Patient exhibits clinical signs of obstructive sleep apnea"
+      - name: lowerendorep114
+        description: "Dilation"
+      - name: lowerendorep115
+        description: "Dilatation device and size (mm)"
+      - name: lowerendorep116
+        description: "Traversed"
+      - name: lowerendorep118
+        description: "Number"
+      - name: lowerendorep119
+        description: "Size of largest (mm)"
+      - name: lowerendorep120
+        description: "Bleeding"
+      - name: lowerendorep12001
+        description: "Description of other"
+      - name: lowerendorep121
+        description: "Intervention"
+      - name: lowerendorep123
+        description: "Type"
+      - name: lowerendorep124
+        description: "Number"
+      - name: lowerendorep127
+        description: "Solution"
+      - name: lowerendorep126
+        description: "Volume (mL)"
+      - name: lowerendorep128
+        description: "Thermal therapy"
+      - name: lowerendorep12801
+        description: "Description of other"
+      - name: lowerendorep129
+        description: "Outcome after intervention"
+      - name: lowerendorep130
+        description: "Blood/bleeding unidentified source description"
+      - name: lowerendorep131
+        description: "Ileal lumen dilated description"
+      - name: lowerendorep132
+        description: "Ileal Lymphoid hyperplasia"
+      - name: lowerendorep135
+        description: "Ileum (cm) from valve"
+      - name: lowerendorep137
+        description: "X mm"
+      - name: lowerendorep139
+        description: "Description"
+      - name: lowerendorep140
+        description: "Bleeding"
+      - name: lowerendorep14001
+        description: "Description of other"
+      - name: lowerendorep141
+        description: "Macroscopic appearance"
+      - name: lowerendorep14101
+        description: "Description of other"
+      - name: lowerendorep142
+        description: "Classification of polyp"
+      - name: lowerendorep143
+        description: "Kudo classification (mucosal texture)"
+      - name: lowerendorep144
+        description: "NICE classification using NBI imaging (colour, vascularity, mucosal regularity)"
+      - name: lowerendorep145
+        description: "Paris classification (contour)"
+      - name: lowerendorep146
+        description: "Polypectomy"
+      - name: lowerendorep147
+        description: "EMR polypectomy"
+      - name: lowerendorep150
+        description: "Injected"
+      - name: lowerendorep152
+        description: "EMR solution"
+      - name: lowerendorep151
+        description: "Volume (mL)"
+      - name: lowerendorep153
+        description: "Lifted"
+      - name: lowerendorep15301
+        description: "Description of other"
+      - name: lowerendorep15302
+        description: "Type of device"
+      - name: lowerendorep15304
+        description: "APC"
+      - name: lowerendorep15305
+        description: "Post-polypectomy intervention"
+      - name: lowerendorep15307
+        description: "Tattoo"
+      - name: lowerendorep15306
+        description: "Description of other intervention"
+      - name: lowerendorep15306a
+        description: "Indication for clips"
+      - name: lowerendorep15306b
+        description: "Other"
+      - name: lowerendorep15306c
+        description: "Type of clips"
+      - name: lowerendorep15306d
+        description: "Number of clips"
+      - name: lowerendorep15307e
+        description: "Tattoo"
+      - name: lowerendorep15308
+        description: "Tattoo site"
+      - name: lowerendorep15309
+        description: "Tattoo distance from polyp (cm)"
+      - name: lowerendorep15310
+        description: "Tattoo solution"
+      - name: lowerendorep15311
+        description: "Description of other solution"
+      - name: lowerendorep15312
+        description: "Tattoo volume (mL)"
+      - name: lowerendorep15313
+        description: "Number of tattoo injection sites"
+      - name: lowerendorep15314
+        description: "Polypectomy outcome"
+      - name: lowerendorep173
+        description: "Tissue retrieved for histology"
+      - name: lowerendorep214
+        description: "Pre-pouch ileum description"
+      - name: lowerendorep21501
+        description: "Ileal stricture - Type"
+      - name: lowerendorep21502
+        description: "Description of other"
+      - name: lowerendorep216
+        description: "Description"
+      - name: lowerendorep217
+        description: "Length (cm)"
+      - name: lowerendorep218
+        description: "Traversed?"
+      - name: lowerendorep219
+        description: "Dilation"
+      - name: lowerendorep220
+        description: "Dilatation device"
+      - name: lowerendorep221
+        description: "Balloon dilator type and size (mm)"
+      - name: lowerendorep22101
+        description: "Description of Other and size (mm)"
+      - name: lowerendorep222
+        description: "Ileal stricture traversed post-dilatation"
+      - name: lowerendorep22301
+        description: "Site (distance from ileocaecal valve in cm)"
+      - name: lowerendorep22302
+        description: "Size"
+      - name: lowerendorep22303
+        description: "Description"
+      - name: lowerendorep22304
+        description: "Description of other"
+      - name: lowerendorep22305
+        description: "Dilatation"
+      - name: lowerendorep22306
+        description: "Balloon dilator type and size (mm)"
+      - name: lowerendorep22307
+        description: "Other dilatation"
+      - name: lowerendorep22308
+        description: "Polypectomy"
+      - name: lowerendorep22309
+        description: "Type of snare"
+      - name: lowerendorep22310
+        description: "EMR"
+      - name: lowerendorep22311
+        description: "EMR solution"
+      - name: lowerendorep22312
+        description: "Volume of EMR solution (mL)"
+      - name: lowerendorep22313
+        description: "Lifted"
+      - name: lowerendorep22314
+        description: "Description of other"
+      - name: lowerendorep22315
+        description: "Type of EMR snare/device"
+      - name: lowerendorep22316
+        description: "Post polypectomy intervention"
+      - name: lowerendorep22317
+        description: "Mucosal appearance post polypectomy"
+      - name: lowerendorep22318
+        description: "Ileal Tumour-Tissue retrieved for histology"
+      - name: lowerendorep22319
+        description: "Tattoo"
+      - name: lowerendorep22320
+        description: "Site"
+      - name: lowerendorep22321
+        description: "Solution"
+      - name: lowerendorep22322
+        description: "Description of other"
+      - name: lowerendorep22323
+        description: "Volume of injection (mL)"
+      - name: lowerendorep22324
+        description: "Number of tattoo injection sites"
+      - name: lowerendorep22325
+        description: "Stent (Type, diameter mm, Length cm)"
+      - name: lowerendorep24601
+        description: "Ileal ulcer(s)-single/multiple-Site (distance from ileocaecal valve cm)"
+      - name: lowerendorep247
+        description: "Number"
+      - name: lowerendorep248
+        description: "Site"
+      - name: lowerendorep250
+        description: "Size of largest (mm)"
+      - name: lowerendorep251
+        description: "Description"
+      - name: lowerendorep252
+        description: "Description of other"
+      - name: lowerendorep254
+        description: "Bleeding"
+      - name: lowerendorep253
+        description: "Biopsy"
+      - name: lowerendorep25301
+        description: "Description of other"
+      - name: lowerendorep255
+        description: "Intervention"
+      - name: lowerendorep25501
+        description: "Description of other"
+      - name: lowerendorep257
+        description: "Type"
+      - name: lowerendorep258
+        description: "Number"
+      - name: lowerendorep261
+        description: "Solution"
+      - name: lowerendorep26101
+        description: "Description of other solution"
+      - name: lowerendorep260
+        description: "Volume (mL)"
+      - name: lowerendorep262
+        description: "Thermal therapy"
+      - name: lowerendorep263
+        description: "Description of other"
+      - name: lowerendorep265
+        description: "Ileum-Other finding"
+      - name: lowerendorep266
+        description: "COLON-Common"
+      - name: lowerendorep268
+        description: "Site"
+      - name: lowerendorep269
+        description: "Number"
+      - name: lowerendorep270
+        description: "Method"
+      - name: lowerendorep271
+        description: "Purpose"
+      - name: lowerendorep27100
+        description: "Description of other biopsy purpose"
+      - name: lowerendorep27102
+        description: "Description"
+      - name: lowerendorep275
+        description: "Site"
+      - name: lowerendorep276
+        description: "Severity"
+      - name: lowerendorep277
+        description: "Features"
+      - name: lowerendorep27701
+        description: "Description of other"
+      - name: lowerendorep279
+        description: "Site"
+      - name: lowerendorep280
+        description: "Description"
+      - name: lowerendorep28001
+        description: "Description of other"
+      - name: lowerendorep281
+        description: "Severity"
+      - name: lowerendorep283
+        description: "Vascular pattern"
+      - name: lowerendorep285
+        description: "Inflammatory changes suggestive of"
+      - name: lowerendorep284
+        description: "Bleeding"
+      - name: lowerendorep284a
+        description: "Description of other"
+      - name: lowerendorep287
+        description: "Site"
+      - name: lowerendorep28701
+        description: "Description of other"
+      - name: lowerendorep288
+        description: "Rectum X cm from anus"
+      - name: lowerendorep28801
+        description: "Rectum X cm from anorectal folds"
+      - name: lowerendorep290
+        description: "Description"
+      - name: lowerendorep289
+        description: "Extent of disease"
+      - name: lowerendorep28901
+        description: "Severity of ulceration/inflammation"
+      - name: lowerendorep291
+        description: "Stricturing"
+      - name: lowerendorep292
+        description: "Site of stricture"
+      - name: lowerendorep293
+        description: "Severity of Stricture"
+      - name: lowerendorep29301
+        description: "Stricture intervention"
+      - name: lowerendorep29301a
+        description: "Description of other"
+      - name: lowerendorep29302
+        description: "Description of dilatation"
+      - name: lowerendorep29303
+        description: "Details of injection"
+      - name: lowerendorep294
+        description: "Mucosal atypia"
+      - name: lowerendorep29401
+        description: "Chromoendoscopy details"
+      - name: lowerendorep295
+        description: "Site"
+      - name: lowerendorep296
+        description: "Description"
+      - name: lowerendorep297
+        description: "Severity"
+      - name: lowerendorep299
+        description: "Site"
+      - name: lowerendorep29900
+        description: "Description of other"
+      - name: lowerendorep29901
+        description: "Rectum X cm from anorectal folds"
+      - name: lowerendorep301
+        description: "Description"
+      - name: lowerendorep300
+        description: "Extent of disease"
+      - name: lowerendorep30001
+        description: "Severity"
+      - name: lowerendorep302
+        description: "Stricturing"
+      - name: lowerendorep303
+        description: "Site"
+      - name: lowerendorep30401
+        description: "Stricture intervention"
+      - name: lowerendorep30401a
+        description: "Description of other"
+      - name: lowerendorep30402
+        description: "Description of dilatation"
+      - name: lowerendorep30403
+        description: "Details of injection"
+      - name: lowerendorep305
+        description: "Mucosal atypia"
+      - name: lowerendorep30501
+        description: "Chromoendoscopy details"
+      - name: lowerendorep306
+        description: "Site"
+      - name: lowerendorep307
+        description: "Description"
+      - name: lowerendorep308
+        description: "Severity"
+      - name: lowerendorep310
+        description: "Site"
+      - name: lowerendorep311
+        description: "Insertion distance (cm)"
+      - name: lowerendorep312
+        description: "Size (mm)"
+      - name: lowerendorep314
+        description: "Size description"
+      - name: lowerendorep315
+        description: "Description"
+      - name: lowerendorep31501
+        description: "Description of other"
+      - name: lowerendorep319
+        description: "Classification"
+      - name: lowerendorep31901
+        description: "Kudo classification (mucosal texture)"
+      - name: lowerendorep31902
+        description: "NICE classification using NBI imaging (colour, vascularity, mucosal regularity)"
+      - name: lowerendorep31903
+        description: "Paris classification (contour)"
+      - name: lowerendorep32201
+        description: "Biopsy of polyp"
+      - name: lowerendorep323
+        description: "Polypectomy device"
+      - name: lowerendorep324
+        description: "EMR"
+      - name: lowerendorep326
+        description: "Injection EMR"
+      - name: lowerendorep329
+        description: "Solution EMR"
+      - name: lowerendorep328
+        description: "Volume (mL) EMR solution"
+      - name: lowerendorep330
+        description: "Lifted"
+      - name: lowerendorep327
+        description: "Description of other"
+      - name: lowerendorep32701
+        description: "Type of snare/device"
+      - name: lowerendorep32703
+        description: "Post polypectomy Intervention"
+      - name: lowerendorep32703a
+        description: "APC details"
+      - name: lowerendorep32703b
+        description: "Snare tip soft coagulation details"
+      - name: lowerendorep338
+        description: "Reason for clips"
+      - name: lowerendorep338a
+        description: "Type of clips"
+      - name: lowerendorep32704
+        description: "Description of other"
+      - name: lowerendorep336
+        description: "Number of clips"
+      - name: lowerendorep343
+        description: "Tattoo"
+      - name: lowerendorep346
+        description: "Site of Tattoo"
+      - name: lowerendorep347
+        description: "Distance from polyp edge (cm)"
+      - name: lowerendorep345
+        description: "Tattoo solution"
+      - name: lowerendorep34501
+        description: "Description of other"
+      - name: lowerendorep344
+        description: "Volume (mL)"
+      - name: lowerendorep348
+        description: "Post polypectomy outcome"
+      - name: lowerendorep349
+        description: "Description of other"
+      - name: lowerendorep350
+        description: "Polyp retrieved for histology"
+      - name: lowerendorep35101
+        description: "Site"
+      - name: lowerendorep35102
+        description: "Insertion distance (cm)"
+      - name: lowerendorep35103
+        description: "Size of largest (mm)"
+      - name: lowerendorep35104
+        description: "Size description"
+      - name: lowerendorep35105
+        description: "Description"
+      - name: lowerendorep35106
+        description: "Description of other"
+      - name: lowerendorep35107
+        description: "Bleeding"
+      - name: lowerendorep35108
+        description: "Other"
+      - name: lowerendorep35109
+        description: "Macroscopic Appearance"
+      - name: lowerendorep35110
+        description: "Classification"
+      - name: lowerendorep35111
+        description: "Kudo classification (mucosal texture)"
+      - name: lowerendorep35112
+        description: "NICE classification using NBI imaging (colour, vascularity, mucosal regularity)"
+      - name: lowerendorep35113
+        description: "Paris classification (contour)"
+      - name: lowerendorep35117
+        description: "Biopsy of polyp"
+      - name: lowerendorep35118
+        description: "Polypectomy device"
+      - name: lowerendorep35119
+        description: "EMR"
+      - name: lowerendorep35121
+        description: "Injection EMR"
+      - name: lowerendorep35122
+        description: "Solution EMR"
+      - name: lowerendorep35123
+        description: "Volume (mL) EMR solution"
+      - name: lowerendorep35124
+        description: "Lifted"
+      - name: lowerendorep35125
+        description: "Description of other"
+      - name: lowerendorep35126
+        description: "Type of snare/device"
+      - name: lowerendorep35127
+        description: "APC"
+      - name: lowerendorep35128
+        description: "Post polypectomy Intervention"
+      - name: lowerendorep35128a
+        description: "APC details"
+      - name: lowerendorep35128b
+        description: "Snare tip soft coagulation details"
+      - name: lowerendorep35129
+        description: "Reason for clips"
+      - name: lowerendorep35129a
+        description: "Type of clips"
+      - name: lowerendorep35130
+        description: "Description of other"
+      - name: lowerendorep35131
+        description: "Number of clips"
+      - name: lowerendorep35142
+        description: "Tattoo"
+      - name: lowerendorep35142a
+        description: "Site of Tattoo"
+      - name: lowerendorep35142b
+        description: "Distance from polyp edge (cm)"
+      - name: lowerendorep35143
+        description: "Tattoo solution"
+      - name: lowerendorep35144
+        description: "Description of other"
+      - name: lowerendorep35145
+        description: "Volume (mL)"
+      - name: lowerendorep35148
+        description: "Post polypectomy outcome"
+      - name: lowerendorep35149
+        description: "Description of other"
+      - name: lowerendorep35150
+        description: "Polyp retrieved for histology"
+      - name: lowerendorep394
+        description: "Site"
+      - name: lowerendorep395
+        description: "Dye"
+      - name: lowerendorep395a
+        description: "Comments"
+      - name: lowerendorep397
+        description: "Colon-Uncommon"
+      - name: lowerendorep399
+        description: "Type"
+      - name: lowerendorep39901
+        description: "Description of other"
+      - name: lowerendorep400
+        description: "Assessment"
+      - name: lowerendorep401
+        description: "Dilatation"
+      - name: lowerendorep402
+        description: "Dilatation device and size (mm)"
+      - name: lowerendorep403
+        description: "Traversed"
+      - name: lowerendorep405
+        description: "Type"
+      - name: lowerendorep40501
+        description: "Description of other"
+      - name: lowerendorep406
+        description: "Site(s)"
+      - name: lowerendorep407
+        description: "Number"
+      - name: lowerendorep408
+        description: "Size of largest (mm)"
+      - name: lowerendorep409
+        description: "Bleeding"
+      - name: lowerendorep40901
+        description: "Description of other"
+      - name: lowerendorep410
+        description: "Colonic Vascular lesion(s) Intervention"
+      - name: lowerendorep41001
+        description: "Description of other"
+      - name: lowerendorep412
+        description: "Type"
+      - name: lowerendorep413
+        description: "Number"
+      - name: lowerendorep416
+        description: "Type of solution"
+      - name: lowerendorep41601
+        description: "Description of other"
+      - name: lowerendorep415
+        description: "Volume (mL)"
+      - name: lowerendorep417
+        description: "Thermal therapy"
+      - name: lowerendorep418
+        description: "Other comment"
+      - name: lowerendorep421
+        description: "Type"
+      - name: lowerendorep422
+        description: "Amount"
+      - name: lowerendorep423
+        description: "Source"
+      - name: lowerendorep429
+        description: "Site(s)"
+      - name: lowerendorep431
+        description: "Site"
+      - name: lowerendorep432
+        description: "Description"
+      - name: lowerendorep433
+        description: "Removal technique"
+      - name: lowerendorep434
+        description: "Success"
+      - name: lowerendorep435
+        description: "Post-removal problems?"
+      - name: lowerendorep436
+        description: "Melanosis coli"
+      - name: lowerendorep438
+        description: "Type"
+      - name: lowerendorep439
+        description: "Description"
+      - name: lowerendorep441
+        description: "Stenosis"
+      - name: lowerendorep442
+        description: "Dilatation"
+      - name: lowerendorep443
+        description: "Dilatation device type and size(mm)"
+      - name: lowerendorep444
+        description: "Traversed"
+      - name: lowerendorep44501
+        description: "Site"
+      - name: lowerendorep44502
+        description: "Site (cm of scope insertion)"
+      - name: lowerendorep446
+        description: "Type"
+      - name: lowerendorep44601
+        description: "Description"
+      - name: lowerendorep44602
+        description: "Description of other"
+      - name: lowerendorep447
+        description: "Stricture length (cm)"
+      - name: lowerendorep448
+        description: "Stricture dilated"
+      - name: lowerendorep449
+        description: "Stricture dilatation device"
+      - name: lowerendorep450
+        description: "Balloon dilator type and size (mm)"
+      - name: lowerendorep45001
+        description: "Description of other"
+      - name: lowerendorep45002
+        description: "Stent (Type, diameter mm, length cm)"
+      - name: lowerendorep45201
+        description: "Colonic tumour site"
+      - name: lowerendorep45202
+        description: "Colonic tumour site (cm scope insertion)"
+      - name: lowerendorep453
+        description: "Size"
+      - name: lowerendorep457
+        description: "Circumferential"
+      - name: lowerendorep454
+        description: "Description"
+      - name: lowerendorep454a
+        description: "Description of other"
+      - name: lowerendorep456
+        description: "Bleeding"
+      - name: lowerendorep45601
+        description: "Description of other"
+      - name: lowerendorep455
+        description: "Malignant looking"
+      - name: lowerendorep458
+        description: "Obstructing"
+      - name: lowerendorep459
+        description: "Traversed"
+      - name: lowerendorep45901
+        description: "Biopsy"
+      - name: lowerendorep45902
+        description: "EMR resection"
+      - name: lowerendorep45903
+        description: "EMR injection"
+      - name: lowerendorep460
+        description: "EMR solution"
+      - name: lowerendorep460a
+        description: "Description of other"
+      - name: lowerendorep46001
+        description: "Volume of solution (mL)"
+      - name: lowerendorep461
+        description: "Lifted"
+      - name: lowerendorep462
+        description: "Description of other"
+      - name: lowerendorep465
+        description: "Type"
+      - name: lowerendorep466
+        description: "Size"
+      - name: lowerendorep463
+        description: "Resection description"
+      - name: lowerendorep46301
+        description: "Resection site intervention"
+      - name: lowerendorep46302
+        description: "Retrieval of tissue for histology"
+      - name: lowerendorep469
+        description: "Tattoo"
+      - name: lowerendorep473
+        description: "Site"
+      - name: lowerendorep474
+        description: "Distance from tumour (cm)"
+      - name: lowerendorep470
+        description: "Number of tattoo sites"
+      - name: lowerendorep472
+        description: "Solution"
+      - name: lowerendorep47201
+        description: "Description of other"
+      - name: lowerendorep471
+        description: "Volume of solution (mL)"
+      - name: lowerendorep476
+        description: "Type"
+      - name: lowerendorep47601
+        description: "Diameter (mm)"
+      - name: lowerendorep477
+        description: "Length (cm)"
+      - name: lowerendorep480
+        description: "Site"
+      - name: lowerendorep481
+        description: "Description of other"
+      - name: lowerendorep482
+        description: "Size of largest (mm)"
+      - name: lowerendorep483
+        description: "Description"
+      - name: lowerendorep484
+        description: "Description of other"
+      - name: lowerendorep485
+        description: "Biopsy"
+      - name: lowerendorep48501
+        description: "Description of other"
+      - name: lowerendorep486
+        description: "Bleeding"
+      - name: lowerendorep487
+        description: "Therapy"
+      - name: lowerendorep489
+        description: "Type"
+      - name: lowerendorep490
+        description: "Number"
+      - name: lowerendorep493
+        description: "Type of injectate"
+      - name: lowerendorep49301
+        description: "Description of other"
+      - name: lowerendorep492
+        description: "Volume (mL)"
+      - name: lowerendorep494
+        description: "Thermal therapy"
+      - name: lowerendorep495
+        description: "Description of other"
+      - name: lowerendorep497
+        description: "Other"
+      - name: lowerendorep499
+        description: "Anorectal-Common"
+      - name: lowerendorep500
+        description: "Rigid proctoscopy performed"
+      - name: lowerendorep501
+        description: "Normal anus"
+      - name: lowerendorep502
+        description: "Prostate examination"
+      - name: lowerendorep503
+        description: "Prostate examination comments"
+      - name: lowerendorep506
+        description: "Size of haemorrhoids"
+      - name: lowerendorep507
+        description: "Grade of haemorrhoids"
+      - name: lowerendorep509
+        description: "Ulceration"
+      - name: lowerendorep508
+        description: "Bleeding"
+      - name: lowerendorep51601
+        description: "Grade of rectal prolapse"
+      - name: lowerendorep51602
+        description: "Ulceration"
+      - name: lowerendorep523
+        description: "Site (o'clock, anterior is 12)"
+      - name: lowerendorep52301
+        description: "Description of other"
+      - name: lowerendorep524
+        description: "Size"
+      - name: lowerendorep525
+        description: "Description"
+      - name: lowerendorep525a
+        description: "Description of other"
+      - name: lowerendorep52501
+        description: "Intervention"
+      - name: lowerendorep52502
+        description: "Description of other intervention"
+      - name: lowerendorep52503
+        description: "Type of injectate"
+      - name: lowerendorep52504
+        description: "Concentration"
+      - name: lowerendorep52505
+        description: "Volume (mL)"
+      - name: lowerendorep528
+        description: "Dilatation"
+      - name: lowerendorep529
+        description: "Description of other dilatation"
+      - name: lowerendorep53701
+        description: "Size"
+      - name: lowerendorep538
+        description: "Number"
+      - name: lowerendorep539
+        description: "Tags excised"
+      - name: lowerendorep539a
+        description: "Details of excision"
+      - name: lowerendorep536
+        description: "Anorectal-Uncommon"
+      - name: lowerendorep543
+        description: "Number"
+      - name: lowerendorep544
+        description: "Description"
+      - name: lowerendorep545
+        description: "Injection"
+      - name: lowerendorep546
+        description: "Other"
+      - name: lowerendorep548
+        description: "Number"
+      - name: lowerendorep549
+        description: "Site"
+      - name: lowerendorep54901
+        description: "Intervention"
+      - name: lowerendorep550
+        description: "Anal stenosis description"
+      - name: lowerendorep551
+        description: "Length (cm)"
+      - name: lowerendorep552
+        description: "Severity"
+      - name: lowerendorep553
+        description: "Intervention"
+      - name: lowerendorep554
+        description: "Dilatation"
+      - name: lowerendorep555
+        description: "Description of other intervention"
+      - name: lowerendorep557
+        description: "Size of tumour"
+      - name: lowerendorep561
+        description: "Size of tumour (% of circumference)"
+      - name: lowerendorep558
+        description: "Description"
+      - name: lowerendorep55801
+        description: "Description of other"
+      - name: lowerendorep559
+        description: "Malignant looking"
+      - name: lowerendorep560
+        description: "Bleeding"
+      - name: lowerendorep562
+        description: "Obstructing"
+      - name: lowerendorep563
+        description: "Traversed"
+      - name: lowerendorep56301
+        description: "EMR"
+      - name: lowerendorep56302
+        description: "Injected"
+      - name: lowerendorep564
+        description: "Type of injectate"
+      - name: lowerendorep56303
+        description: "Description of other"
+      - name: lowerendorep56304
+        description: "Volume (mL)"
+      - name: lowerendorep565
+        description: "Lifted"
+      - name: lowerendorep566
+        description: "Description of lift"
+      - name: lowerendorep567
+        description: "Resection"
+      - name: lowerendorep569
+        description: "Type"
+      - name: lowerendorep570
+        description: "Size"
+      - name: lowerendorep571
+        description: "Result"
+      - name: lowerendorep572
+        description: "Retrieval of tumour"
+      - name: lowerendorep577
+        description: "Site"
+      - name: lowerendorep578
+        description: "Distance from tumour (cm)"
+      - name: lowerendorep576
+        description: "Solution"
+      - name: lowerendorep57601
+        description: "Description of other solution"
+      - name: lowerendorep575
+        description: "Volume (mL)"
+      - name: lowerendorep574
+        description: "Number of tattoo sites"
+      - name: lowerendorep580
+        description: "Withdrawal"
+      - name: lowerendorep581
+        description: "> 20 minutes"
+      - name: lowerendorep583
+        description: ">60 mins"
+      - name: lowerendorep58401
+        description: "Description"
+      - name: lowerendorep58402
+        description: "Main endoscopic findings"
+      - name: lowerendorep58403
+        description: "Other comments"
+      - name: lowerendorep58404
+        description: "Description of other"
+      - name: lowerendorep58405
+        description: "Biopsy taken for"
+      - name: lowerendorep58406
+        description: "Description of other biopsy"
+      - name: lowerendorep58407
+        description: "Procedures performed"
+      - name: lowerendorep586
+        description: "Normal Colonoscopy"
+      - name: lowerendorep587
+        description: "Colonoscopy Findings, gather from report"
+      - name: lowerendorep588
+        description: "Incomplete colonoscopy performed"
+      - name: lowerendorep589
+        description: "Routine gastric and duodenal biopsies not taken"
+      - name: lowerendorep590
+        description: "Patient exhibits clinical signs of obstructive sleep apnea"
+      - name: lowerendorep592
+        description: "Post-procedure feeding instructions"
+      - name: lowerendorep592a
+        description: "Description of other"
+      - name: lowerendorep59201
+        description: "Post-procedure-START medication (name, dose, frequency)"
+      - name: lowerendorep59202
+        description: "Post-procedure-STOP medication (name, dose, frequency)"
+      - name: lowerendorep59203
+        description: "Post-procedure-Recommence anticoagulant (name, dose , time)"
+      - name: lowerendorep59204
+        description: "Post-procedure information"
+      - name: lowerendorep59205
+        description: "Information leaflet"
+      - name: lowerendorep59206
+        description: "Specific diet"
+      - name: lowerendorep605
+        description: "FOLLOW-UP"
+      - name: lowerendorep607a
+        description: "When?"
+      - name: lowerendorep607b
+        description: "Number of"
+      - name: lowerendorep607c
+        description: "When?"
+      - name: lowerendorep607d
+        description: "Number of"
+      - name: lowerendorep608
+        description: "Local doctor (name, time)"
+      - name: lowerendorep609
+        description: "Hosptital outpatient clinic (name, time)"
+      - name: lowerendorep610
+        description: "Private rooms (name, time)"
+      - name: lowerendorep612a
+        description: "Surveillance recommended"
+      - name: lowerendorep612b
+        description: "When?"
+      - name: lowerendorep612c
+        description: "Description of other"
+      - name: lowerendorep61001
+        description: "Generate a report"
+      - name: lowerendorep61002
+        description: "Digital copy to"
+      - name: lowerendorep61003
+        description: "How many copies"
+      - name: lowerendorep61003a
+        description: "Document with procedural photos created"
+      - name: lowerendorep618
+        description: "Hospital procedure code"
+      - name: lowerendorep614
+        description: "Referral"
+      - name: lowerendorep615
+        description: "Two yearly FOB to start"
+      - name: lowerendorep616
+        description: "Gene testing recommended"
+      - name: lowerendorep617
+        description: "Other"

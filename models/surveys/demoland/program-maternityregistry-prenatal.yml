@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: program-maternityregistry-prenatal
+    description: "Dataset containing responses for 'Prenatal screening' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: prenatal001
+        description: "Marital status"
+      - name: prenatal002
+        description: "Next of kin name"
+      - name: prenatal003
+        description: "Next of kin address"
+      - name: prenatal004
+        description: "Non pregnant smoking status"
+      - name: prenatal005
+        description: "Pregnant smoking status"
+      - name: prenatal006
+        description: "Mother's paid work in pregnancy"
+      - name: prenatal007
+        description: "Mother gave up work"
+      - name: prenatal008
+        description: "Mother's age at delivery (years)"
+      - name: prenatal009
+        description: "Father's age at delivery (years)"
+      - name: prenatal010
+        description: "Mother's occupation"
+      - name: prenatal011
+        description: "Father's occupation"
+      - name: prenatal012
+        description: "Booking / antenatal care"
+      - name: prenatal013
+        description: "First week seen NH"
+      - name: prenatal014
+        description: "Past surgery"
+      - name: prenatal021a
+        description: "Previous pregnancy/ies"
+      - name: prenatal022
+        description: "Months (under 2 years)"
+      - name: prenatal023
+        description: "or Years (2 years and over)"
+      - name: prenatal025
+        description: "Number of lines"

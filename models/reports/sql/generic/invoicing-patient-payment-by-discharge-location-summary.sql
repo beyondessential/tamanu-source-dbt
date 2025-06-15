@@ -2,7 +2,7 @@ select
     i.discharge_datetime as "{{ translate_label('dischargeDate','Discharged date') }}",
     i.invoice_number as "{{ translate_label('invoiceNumber','Invoice number') }}",
     i.patient_name as "{{ translate_label('patientName','Patient name') }}",
-    i.discharge_area as "{{ translate_label('dischargeArea','Area (at time of discharge)') }}",
+    i.discharge_area as "{{ translate_label('dischargeLocationGroup','Area (at time of discharge)') }}",
     i.total_invoice_amount as "{{ translate_label('invoiceTotalAmount','Total invoice amount') }}",
     i.total_insurer_amount as "{{ translate_label('invoiceInsurerAmount','Total insurer amount') }}",
     i.total_patient_discount as "{{ translate_label('invoicePatientDiscount','Total patient discount') }}",

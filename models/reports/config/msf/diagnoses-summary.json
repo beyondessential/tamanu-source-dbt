@@ -1,0 +1,67 @@
+{
+  "query": "replace this",
+  "name": "Diagnoses Summary",
+  "notes": "This report provides a summary of primary diagnoses disaggregated by legal status, age category and visit type.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Legal Status",
+        "name": "legalStatus",
+        "options": [
+          {
+            "label": "Host",
+            "value": "Host"
+          },
+          {
+            "label": "IPD",
+            "value": "IPD"
+          },
+          {
+            "label": "Refugee",
+            "value": "Refugee"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Age Category",
+        "name": "ageCategory",
+        "options": [
+          {
+            "label": "< 5 years",
+            "value": "< 5 years"
+          },
+          {
+            "label": "5-14 years",
+            "value": "5-14 years"
+          },
+          {
+            "label": "15+ years",
+            "value": "15+ years"
+          }
+        ]
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Diagnoses",
+        "name": "diagnosisId"
+      },
+      {
+        "parameterField": "AppointmentTypeField",
+        "label": "Appointment Type",
+        "name": "appointmentTypeId"
+      }
+    ]
+  }
+}

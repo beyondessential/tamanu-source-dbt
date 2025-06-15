@@ -1,0 +1,15 @@
+{
+  "query": "query here",
+  "notes": "Pending Invoicing Line List. This report generates a list of all encounters that have not been invoiced.",
+  "status": "published",
+  "dbSchema": "reporting  ",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter discharge dates (or leave it blank for all completed encounters)",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": []
+  }
+}

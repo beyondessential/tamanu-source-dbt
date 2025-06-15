@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: program-cancerregistrydemotwo-cancerregform1
+    description: "Dataset containing responses for 'Cancer Registration Form' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: demotwocancerregistryform001
+        description: "Primary cancer site"
+      - name: demotwocancerregistryform002
+        description: "Type of cancer"
+      - name: demotwocancerregistryform003
+        description: "Metastasis notes, if known"
+      - name: demotwocancerregistryform005
+        description: "Date of first diagnosis"
+      - name: demotwocancerregistryform006
+        description: "Method of diagnosis"
+      - name: demotwocancerregistryform007
+        description: "Registering clinician"
+      - name: demotwocancerregistryform008
+        description: "Treating clinician"
+      - name: demotwocancerregistryform009
+        description: "Current Cancer Registry status"
+      - name: demotwocancerregistryform011
+        description: "Will patient require chemotherapy?"
+      - name: demotwocancerregistryform012
+        description: "Date chemotherapy is scheduled to commence (if known)"
+      - name: demotwocancerregistryform013
+        description: "Will the patient require surgery?"
+      - name: demotwocancerregistryform014
+        description: "Date surgery is surgery scheduled for (if known)"
+      - name: demotwocancerregistryform015
+        description: "Will the patient require radiotherapy?"
+      - name: demotwocancerregistryform016
+        description: "Other treatment notes"
+      - name: demotwocancerregistryform017
+        description: "Is the patient a candidate for overseas medical referral?"
+      - name: demotwocancerregistryform018
+        description: "Other known treatment plans"
+      - name: demotwocancerregistryform019
+        description: "Facility patient will attend for treatment / follow up"

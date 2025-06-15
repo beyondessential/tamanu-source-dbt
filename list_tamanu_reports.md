@@ -24,6 +24,23 @@ Facility, Patient billing type, Admitting clinician, Area, Department
 
 ---
 
+### Encounter diets line list
+
+**Report Description**
+
+This report generates a list of all active encounters with their associated dietary requirements. The report includes:
+- Patient details and current location
+- Dietary requirements and restrictions.
+
+**Filters**
+
+Facility, Area
+
+**Default date range**: allTime
+
+
+---
+
 ### Hospital admissions by area summary
 
 **Report Description**
@@ -192,6 +209,17 @@ Payment method
 
 ---
 
+### Invoicing pending line list
+
+**Report Description**
+
+Pending Invoicing Line List. This report generates a list of all encounters that have not been invoiced.
+
+**Default date range**: allTime
+
+
+---
+
 ### Invoicing summary
 
 **Report Description**
@@ -216,6 +244,21 @@ The report includes lab requests for all statuses and if a request has been canc
 Requesting clinician, Test category, Status
 
 **Default date range**: 7days
+
+
+---
+
+### Lab requests summary
+
+**Report Description**
+
+This report provides a statistical summary of lab requests by date, department and lab test category.
+
+**Filters**
+
+Facility, Department, Category
+
+**Default date range**: allTime
 
 
 ---
@@ -337,6 +380,17 @@ This report generates a list of all registered births for the selected parameter
 **Filters**
 
 Facility, Village
+
+**Default date range**: 7days
+
+
+---
+
+### Registered patients by dob line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
 
 **Default date range**: 7days
 

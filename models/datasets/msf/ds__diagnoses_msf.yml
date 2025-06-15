@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: ds__diagnoses_msf
+    description: MSF's diagnoses dataset
+    tags:
+      - clinical
+    columns:
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('encounter_diagnoses__encounter_id') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: diagnosis_id
+        data_type: character varying(255)
+        description: "{{ doc('encounter_diagnoses__diagnosis_id') }}"
+      - name: diagnosis
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the diagnosis"
+      - name: diagnosis_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__date') }} in encounter_diagnoses."
+      - name: legal_status
+        data_type: character varying(255)
+        description: "{{ doc('msf__legal_status') }}"
+      - name: age_category
+        data_type: character varying(255)
+        description: "{{ doc('msf__age_category') }}"
+      - name: referral_source_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__referral_source_id') }}"
+      - name: referral_source
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the referral source"
+      - name: appointment_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__appointment_type_id') }}"
+      - name: appointment_type
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the appointment type"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} where the encounter is currently active or has ended."
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
+      

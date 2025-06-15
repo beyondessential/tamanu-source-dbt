@@ -11,7 +11,7 @@ select
     appointment_type as "{{ translate_label('appointmentType', 'Appointment type') }}",
     appointment_status as "{{ translate_label('appointmentStatus', 'Appointment status') }}",
     clinician as "{{ translate_label('appointmentClinician', 'Clinician') }}",
-    location_group as "{{ translate_label('appointmentArea', 'Area') }}",
+    location_group as "{{ translate_label('appointmentLocationGroup', 'Area') }}",
     priority as "{{ translate_label('appointmentPriority', 'Priority appointment') }}",
     case
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}

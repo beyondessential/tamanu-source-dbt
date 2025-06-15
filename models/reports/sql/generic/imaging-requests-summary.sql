@@ -8,9 +8,9 @@ with reporting_dates as (
 )
 
 select
-    rd.date as "{{ translate_label('reportDate', 'Date') }}",
-    ir.facility as "{{ translate_label('facilityName', 'Facility') }}",
-    ir.department as "{{ translate_label('departmentName', 'Department') }}",
+    rd.date as "{{ translate_label('reportingDate', 'Date') }}",
+    ir.facility as "{{ translate_label('facility', 'Facility') }}",
+    ir.department as "{{ translate_label('department', 'Department') }}",
     ir.imaging_type as "{{ translate_label('imagingType', 'Imaging type') }}",
     count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests', 'Total new requests') }}",
     count(distinct ir.request_id) filter (
