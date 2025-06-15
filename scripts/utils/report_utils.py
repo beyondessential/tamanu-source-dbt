@@ -56,11 +56,10 @@ def generate_project_reports(target):
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
-        and target in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        cprint(f"No report models found for target: {target}", "error")
+        cprint(f"No report models found", "error")
         return
 
     ensure_directory_exists(REPORTS_DIR)
