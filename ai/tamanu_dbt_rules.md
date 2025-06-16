@@ -1,4 +1,4 @@
-# Cline Rules for tamanu-source-dbt
+# AI Rules for tamanu-source-dbt
 
 ## Project Overview
 tamanu-source-dbt is used to transform data to create datasets in a reporting schema that is optimised for performance as views. This is a dbt (data build tool) project that processes Tamanu healthcare system data.
