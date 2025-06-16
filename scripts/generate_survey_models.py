@@ -5,22 +5,21 @@ from utils.survey_utils import (
     generate_survey_doc,
     get_surveys_from_deployment,
 )
-from utils.system_utils import cprint, get_arg_value
+from utils.system_utils import cprint
 
 
 def main():
     try:
-        project = get_arg_value(sys.argv, "--project", "-p")
-        cprint(f"Generating survey models for project: {project}", "info")
+        cprint(f"Generating survey models", "info")
 
-        surveys = get_surveys_from_deployment(project)
+        surveys = get_surveys_from_deployment()
         total = len(surveys)
 
         for index, (survey_id, survey_name) in enumerate(surveys, 1):
             cprint(f"\n\nProgress: [{index}/{total}]", "warning")
             cprint(f"Creating: {survey_name}", "info")
-            create_survey_model(project, survey_id)
-            generate_survey_doc(project, survey_id, survey_name)
+            create_survey_model(survey_id)
+            generate_survey_doc(survey_id, survey_name)
 
         cprint(f"Successfully generated {total} survey models!", "success")
 
