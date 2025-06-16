@@ -16,9 +16,9 @@ models:
         constraints:
           - type: not_null
           - type: unique
-      - name: record_updated_at
+      - name: logged_at
         data_type: timestamp
-        description: "Timestamp when the patient program registration record was last updated."
+        description: "{{ doc('logs__changes__logged_at') }} in patient_program registrations history."
         constraints:
           - type: not_null
       - name: datetime
