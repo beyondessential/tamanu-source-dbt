@@ -1,7 +1,6 @@
 with related_conditions as (
     select
-        ppr.patient_id,
-        ppr.program_registry_id,
+        ppr.id as patient_program_registration_id,
         string_agg(
             prc.name, '; '
             order by pprc.datetime
@@ -13,7 +12,7 @@ with related_conditions as (
     from {{ ref('patient_program_registration_conditions') }} pprc
     join {{ ref('patient_program_registrations') }} ppr on ppr.id = pprc.patient_program_registration_id
     left join {{ ref('program_registry_conditions') }} prc on prc.id = pprc.program_registry_condition_id
-    group by ppr.patient_id, ppr.program_registry_id
+    group by ppr.id
 )
 
 select
@@ -51,7 +50,7 @@ join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('facilities') }} currently_at_facility on currently_at_facility.id = ppr.facility_id
 left join {{ ref('reference_data') }} currently_at_village on currently_at_village.id = ppr.village_id
-left join related_conditions c on (c.patient_id, c.program_registry_id) = (ppr.patient_id, ppr.program_registry_id)
+left join related_conditions c on c.patient_program_registration_id = ppr.id
 left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id
 left join {{ ref('users') }} deactivated_by on deactivated_by.id = ppr.deactivated_by_id
 order by ppr.datetime desc
