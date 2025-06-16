@@ -3,17 +3,17 @@ with ncd_patients as (
         patient_id,
         clinical_status_id,
         datetime,
-        lag(clinical_status_id) over (partition by patient_id order by datetime) as previous_status,
-        lead(clinical_status_id) over (partition by patient_id order by datetime) as next_status,
+        lead(clinical_status_id) over w as next_status,
         case 
             when clinical_status_id = 'prClinicalStatus-ncdactive' 
-                 and (lag(clinical_status_id) over (partition by patient_id order by datetime) is null 
-                      or lag(clinical_status_id) over (partition by patient_id order by datetime) != 'prClinicalStatus-ncdactive') 
+                 and (lag(clinical_status_id) over w is null 
+                      or lag(clinical_status_id) over w != 'prClinicalStatus-ncdactive') 
             then 1 else 0 
         end as is_new_active
     from {{ ref('patient_program_registrations') }}
     where program_registry_id = 'programRegistry-activeregistry'
       and registration_status = 'active'
+    window w as (partition by patient_id order by datetime)
 ),
 
 all_ncd_patients as (
