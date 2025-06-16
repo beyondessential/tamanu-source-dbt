@@ -9,7 +9,8 @@ select
     registering_facility_id,
     facility_id,
     village_id,
-    is_most_recent
+    deactivated_clinician_id as deactivated_by_id,
+    deactivated_date::timestamp as deactivated_datetime
 from {{ source("tamanu", "patient_program_registrations") }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

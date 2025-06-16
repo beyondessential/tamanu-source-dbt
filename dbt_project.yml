@@ -33,7 +33,7 @@ models:
       
     datasets:
       +docs:
-        show: false
+        show: true
       +materialized: view
       
     reports:
