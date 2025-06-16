@@ -4,16 +4,13 @@ from pathlib import Path
 from .file_utils import ensure_directory_exists, write_file
 from .system_utils import cprint, execute_command_with_output
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
 
 
-def get_surveys_from_deployment(project="demoland"):
+def get_surveys_from_deployment():
     """
     Get all surveys from the database using dbt using the get_surveys_list macro.
-    Args:
-        project (str): The dbt project target to use
-
     Returns:
         list: List of tuples containing (id, name) for each survey
     """
@@ -38,19 +35,18 @@ def get_surveys_from_deployment(project="demoland"):
         cprint(f"Error getting surveys from dbt: {e}", "error")
         return surveys
 
-
-def get_survey_columns_from_deployment(survey_id, project="demoland"):
+def get_survey_columns_from_deployment(survey_id):
     """
     Get survey column information from the database using dbt using the get_survey_docs macro.
     Args:
         survey_id (str): The survey identifier
-        project (str): The dbt project target to use
 
     Returns:
         list: List of tuples containing (code, name) for each survey column
     """
     columns = []
-    cmd = f'dbt run-operation get_survey_docs --args \'{{"survey_id": "{survey_id}"}}\' --target {project} --profiles-dir config'
+    cmd = ["dbt", "run-operation", "get_survey_docs", '--args', '{"survey_id": "' + f'{survey_id}' + '"}',
+           "--profiles-dir", "config"]
 
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
@@ -73,7 +69,7 @@ def get_survey_columns_from_deployment(survey_id, project="demoland"):
         return columns
 
 
-def generate_survey_doc(project, survey_id, survey_name):
+def generate_survey_doc(survey_id, survey_name):
     """
     Create a YML documentation file for a survey.
     Args:
@@ -84,7 +80,7 @@ def generate_survey_doc(project, survey_id, survey_name):
         str: Path to the created documentation file
     """
 
-    columns = get_survey_columns_from_deployment(survey_id, project)
+    columns = get_survey_columns_from_deployment(survey_id)
     content = f"""version: 2
 
 models:
@@ -107,38 +103,35 @@ models:
         description: "{name.replace('"', "'")}"
 """
 
-    project_dir = SURVEYS_DIR / project
-    ensure_directory_exists(str(project_dir))
+    ensure_directory_exists(str(SURVEYS_DIR))
 
     doc = f"{survey_id}.yml"
-    path = project_dir / doc
+    path = SURVEYS_DIR / doc
 
     write_file(str(path), content)
     cprint(f"Created documentation: {path}", "success")
     return str(path)
 
 
-def create_survey_model(project, survey_id):
+def create_survey_model(survey_id):
     """
     Create an individual survey model file using the existing get_survey macro.
     Args:
-        project (str): The project name
         survey_id (str): The survey identifier
     """
-    project_dir = SURVEYS_DIR / project
-    ensure_directory_exists(str(project_dir))
+    ensure_directory_exists(str(SURVEYS_DIR))
 
     model = f"{survey_id}.sql"
-    path = project_dir / model
+    path = SURVEYS_DIR / model
 
     content = f"""{{{{
     config(
         materialized='view',
-        tags=['survey', '{project}']
+        tags=['survey']
     )
 }}}}
 
-select * from ({{{{ get_survey('{survey_id}') }}}})
+({{{{ get_survey('{survey_id}') }}}})
 """
     write_file(str(path), content)
     cprint(f"Created model: {path}", "success")

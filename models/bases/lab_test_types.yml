@@ -58,4 +58,9 @@ models:
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in lab_test_types."
         data_tests:
-          - valid_visibility_status
+          - accepted_values:
+              values:
+                - current
+                - historical
+                - merged
+                - panelOnly
