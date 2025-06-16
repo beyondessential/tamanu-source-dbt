@@ -10,17 +10,18 @@ models:
         - clinical
         - history
     columns:
-      - name: id
+      - name: changelog_id
         data_type: uuid
-        description: "Unique identifier for the change log entry."
-        constraints:
-          - type: not_null
-          - type: unique
+        description: "{{ doc('logs__changes__id') }}"
       - name: logged_at
         data_type: timestamp
         description: "{{ doc('logs__changes__logged_at') }} in patient_program registrations history."
-        constraints:
-          - type: not_null
+      - name: updated_by_user_id
+        data_type: text
+        description: "{{ doc('logs__changes__updated_by_user_id') }} in patient_program registrations history."
+      - name: id
+        data_type: text
+        description: "{{ doc('generic__id') }} in patient_program_registrations."
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in patient_program_registrations history."
