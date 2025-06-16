@@ -37,41 +37,20 @@ This command generates views, reports, and an import script for deployment in th
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:
 ```
-python scripts/generate_survey_models.py --project <project_name>
+python scripts/generate_survey_models.py
 ```
-Replace `<project_name>` with the target deployment (e.g., demoland, fiji, palau). Defaults to demoland if not specified.
-
-This will generate models and documentation for all surveys in the demoland deployment.
+This will generate models and documentation for all surveys in the Tamanu database.
 
 ## Script to list Tamanu reports
 
-This script generates a list of all reports in the repository grouped by deployment, and outputs the result in a Markdown file.
+This script generates a list of all reports in the repository and outputs the result in a Markdown file.
 
 ### Usage
-The script accepts two optional command-line arguments:
-
-base_path (optional): The base path to start extracting the folder structure. Defaults to ./models/reports/config.
-output_file (optional): The path to the output Markdown file. Defaults to ./output/list_tamanu_reports.md.
-
-### Command-Line Arguments
-base_path: The directory where the script will look for JSON report files. If not provided, it defaults to ./reports/config.
-output_file: The file path where the generated Markdown report will be saved. If not provided, it defaults to ./output/list_tamanu_reports.md.
-
-### Example
-To generate a report list using the default paths:
+To generate a report list:
 
 ```
 python list_tamanu_reports.py
 ```
-
-To specify a custom base path and output file:
-
-```
-python list_tamanu_reports.py ./custom/reports ./custom/output/reports_list.md
-```
-
-The output will be a Markdown file containing a structured list of reports, grouped by deployment, with details such as report description, filters, and default date range.
-
 
 ## Versioning
 
