@@ -6,7 +6,7 @@ tamanu-source-dbt is used to transform data to create datasets in a reporting sc
 ## Core Principles
 - Always follow the established data flow: sources → bases → datasets → reports
 - Maintain data integrity and quality at each transformation layer
-- Prioritize performance and readability in SQL code
+- Prioritise performance and readability in SQL code
 - Ensure comprehensive documentation for all models
 
 ## Model Layer Requirements
@@ -25,7 +25,7 @@ When working with models, always respect the following hierarchy:
 ### `models/datasets`
 - Builds on top of `bases` models
 - De-normalises data for easy reporting consumption
-- **Focus on creating user-friendly, denormalized views**
+- **Focus on creating user-friendly, denormalised views**
 
 ### `models/reports`
 - Based on `datasets` models with customised translations applied
@@ -49,6 +49,7 @@ When working with models, always respect the following hierarchy:
 - Follow consistent indentation and formatting patterns
 - Use meaningful aliases and avoid ambiguous column references
 - **Always test SQL syntax before committing**
+- **Use Australian English spelling** in all documentation, comments, and text (e.g., "optimise" not "optimize", "colour" not "color", "centre" not "center")
 
 ## History model pattern
 When creating `*_history` models in `models/bases/`:
@@ -87,7 +88,7 @@ where c.table_name = 'target_table_name'
 - **Required**: Implement integrity tests using dbt built-in tests for all models
 - **Required**: Unit tests for business logic using dbt built-in tests or dbt-utils
 - Test critical relationships and constraints
-- **Always run `dbt test` before finalizing changes**
+- **Always run `dbt test` before finalising changes**
 - Document test failures and resolution steps
 
 ## File Management Guidelines
