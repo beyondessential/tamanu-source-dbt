@@ -15,7 +15,7 @@ def get_surveys_from_deployment():
         list: List of tuples containing (id, name) for each survey
     """
     surveys = []
-    cmd = f"dbt run-operation get_surveys_list --target {project} --profiles-dir config"
+    cmd = f"dbt run-operation get_surveys_list --profiles-dir config"
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
         if not result or result.returncode != 0:
