@@ -14,7 +14,7 @@ def extract_and_write_to_md(base_path, output_file, report_type):
         output_file (str): The path to the output Markdown file.
         report_type (str): The report_type being listed ('Standard' or 'Custom').
     """
-    if report_type == 'standard':
+    if report_type == 'Standard':
         file_mode = "w"
     else:
         file_mode = "a"
@@ -63,21 +63,21 @@ def main():
     # Check if the pre-existing list_tamanu_reports.md exists in dbt_packages
     standard_md_file = "dbt_packages/tamanu_source_dbt/list_tamanu_reports.md"
     output_file = "list_tamanu_reports.md"
-    model_type = "Standard"
+    report_type = "Standard"
     
     if os.path.exists(standard_md_file):
         # Copy the existing file to the current directory
         shutil.copy2(standard_md_file, output_file)
         cprint(f"Copied existing report list from {standard_md_file} to {output_file}", "success")
-        model_type = "Custom"
+        report_type = "Custom"
         return
         
     path = "models/reports/config"
     
     # Extract data and write to Markdown
-    extract_and_write_to_md(path, output_file, model_type)
+    extract_and_write_to_md(path, output_file, report_type)
     
-    cprint(f"{model_type} report list has been written to {output_file}", "success")
+    cprint(f"{report_type} report list has been written to {output_file}", "success")
 
 
 if __name__ == "__main__":
