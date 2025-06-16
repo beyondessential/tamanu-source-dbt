@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: "2.32.0"
+version: "2.33.0"
 config-version: 2
 
 profile: tamanu_source_dbt
@@ -37,7 +37,7 @@ models:
 
     datasets:
       +docs:
-        show: false
+        show: true
       +materialized: view
       fiji:
         +tags: [fiji]
