@@ -14,7 +14,7 @@ from utils.system_utils import cprint
 def main():
     args = sys.argv[1:]
     target_index = args.index("--target") + 1 if "--target" in args else -1
-    target = args[target_index] if target_index > 0 else "demoland"
+    target = args[target_index] if target_index > 0 else "demo"
 
     cprint(f"Generating build script for target: {target}", "info")
 
@@ -22,13 +22,13 @@ def main():
     execute_command("dbt clean")
     execute_command("dbt deps")
     execute_command(
-        f"dbt run --target {target} --profiles-dir config --select tag:{target}"
+        f"dbt run --target {target} --profiles-dir config"
     )
     execute_command(
-        f"dbt docs generate --target {target} --profiles-dir config --select tag:{target}"
+        f"dbt docs generate --target {target} --profiles-dir config"
     )
     execute_command(
-        f"dbt compile --target {target} --profiles-dir config --select tag:{target}"
+        f"dbt compile --target {target} --profiles-dir config"
     )
 
     # Hide macros and tests from documentation

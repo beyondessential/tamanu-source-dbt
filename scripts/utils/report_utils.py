@@ -7,7 +7,7 @@ from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+BASE_DIR = os.getcwd()
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -31,8 +31,7 @@ def compile_report(database, sql_file, config_file, output_file):
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
         config["query"] = re.sub(f'"{database}"\\.', "", query)
-        config["db_schema"] = SCHEMA
-
+        
         write_file(output_file, config, "json")
     except Exception as e:
         cprint(f"Error processing files: {e}", "error")
@@ -57,11 +56,10 @@ def generate_project_reports(target):
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
-        and target in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        cprint(f"No report models found for target: {target}", "error")
+        cprint(f"No report models found", "error")
         return
 
     ensure_directory_exists(REPORTS_DIR)
@@ -197,15 +195,18 @@ def generate_reporting_schema_script(target):
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-
+    
     for node in ordered:
         model = manifest["nodes"][node]
+        if model["compiled_path"] is None:
+            cprint(f"Model {model['name']} has no compiled path, skipping.", "warning")
+            continue
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-
+    
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
