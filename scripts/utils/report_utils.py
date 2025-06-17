@@ -5,8 +5,8 @@ from .dbt_utils import get_deployment_version
 from .file_utils import ensure_directory_exists, read_file, write_file
 
 SCHEMA = "reporting"
-ROLE = "tamanu_reporting_user"
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ROLE = "reporting"
+BASE_DIR = os.getcwd()
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -56,11 +56,10 @@ def generate_project_reports(target):
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
-        and target in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        print(f"No report models found for target: {target}")
+        cprint(f"No report models found", "error")
         return
 
     ensure_directory_exists(REPORTS_DIR)

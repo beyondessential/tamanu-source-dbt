@@ -3,7 +3,7 @@ import re
 
 from .file_utils import read_file, write_file
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+BASE_DIR = os.getcwd()
 
 
 def hide_macros_from_docs():

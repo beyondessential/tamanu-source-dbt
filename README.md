@@ -42,6 +42,24 @@ This command generates views, reports, and an import script for deployment in th
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 
+## Generate survey models
+To automatically generate dbt models and documentation for surveys from database, execute the following command:
+```
+python scripts/generate_survey_models.py
+```
+This will generate models and documentation for all surveys in the Tamanu database.
+
+## Script to list Tamanu reports
+
+This script generates a list of all reports in the repository and outputs the result in a Markdown file.
+
+### Usage
+To generate a report list:
+
+```
+python list_tamanu_reports.py
+```
+
 ## Versioning
 
 We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number will mirror Tamanu's release
