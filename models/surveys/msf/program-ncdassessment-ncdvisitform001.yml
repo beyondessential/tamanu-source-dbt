@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: program-ncdassessment-ncdvisitform001
+    description: "Dataset containing responses for 'NCD Visit تفاصيل الزيارة' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: NCDVisit001
+        description: "Visit date - تاريخ الزيارة (يوم/ شهر / سنة )"
+      - name: NCDVisit002
+        description: "Visit type - نوع الزيارة"
+      - name: NCDVisit003
+        description: "Provider - المزود"
+      - name: NCDVisit004
+        description: "Status - الحالة"
+      - name: NCDVisit005
+        description: "Adherence to treatment - الالتزام بالعلاج"
+      - name: NCDVisit006
+        description: "Side effects of treatment - الآثار الجانبية للعلاج"
+      - name: NCDVisit007
+        description: "Side effects of treatment (details) - الآثار الجانبية للعلاج"
+      - name: NCDVisit008
+        description: "Complication - مضاعفات"
+      - name: NCDVisit009
+        description: "Seizures frequency - معدل النوبات"
+      - name: NCDVisit010
+        description: "Other - أخرى"
+      - name: NCDVisit011
+        description: "PSEC - الاستشارة و التثقيف النفسي الاجتماعي"
+      - name: NCDVisit012
+        description: "Wound dressing - تضميد الجروح"
+      - name: NCDVisit013
+        description: "Wound dressing details - تفاصيل عن تضميد الجروح"
+      - name: NCDVisit014
+        description: "Hospitalised since last visit - تم استشفائه منذ الزيارةالأخيرة"
+      - name: NCDVisit015
+        description: "Currently pregnant - حالياً هي حامل"
+      - name: NCDVisit016
+        description: "Appearance - المظهر"
+      - name: NCDVisit017
+        description: "Abnormal appearance - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit018
+        description: "Heart - القلب"
+      - name: NCDVisit019
+        description: "Abnormal heart - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit020
+        description: "Lungs - الرئتين"
+      - name: NCDVisit021
+        description: "Abnormal lungs - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit022
+        description: "Abdomen - البطن"
+      - name: NCDVisit023
+        description: "Abnormal abdomen - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit024
+        description: "Neurological - العصبية"
+      - name: NCDVisit025
+        description: "Abnormal neurological - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit026
+        description: "Eyes - العيون"
+      - name: NCDVisit027
+        description: "Abnormal eyes - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit028
+        description: "Feet - الأقدام"
+      - name: NCDVisit029
+        description: "Abnormal feet - إذا كانت غير طبيعية، يرجى التحديد"
+      - name: NCDVisit030
+        description: "Others - أخرى"
+      - name: NCDVisit031
+        description: "Referral - الإحالة"
+      - name: NCDVisit032
+        description: "Referral to other - أخرى"

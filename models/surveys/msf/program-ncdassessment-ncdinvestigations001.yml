@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: program-ncdassessment-ncdinvestigations001
+    description: "Dataset containing responses for 'NCD Investigations تحقيقات المرضى' survey"
+    columns:
+      - name: encounter_id
+        description: '{{ doc("survey_responses__encounter_id") }}'
+      - name: response_id
+        description: '{{ doc("generic__id") }} in survey_responses.'
+      - name: patient_id
+        description: '{{ doc("encounters__patient_id") }}'
+      - name: start_datetime
+        description: '{{ doc("survey_responses__start_time") }}'
+      - name: result_text
+        description: '{{ doc("survey_responses__result_text") }}'
+      - name: NCDInvest001
+        description: "Date - تاريخ الزيارة"
+      - name: NCDInvest003
+        description: "FEV1 % predicted (pre)"
+      - name: NCDInvest004
+        description: "FEV1/FVC (pre) (%)"
+      - name: NCDInvest005
+        description: "FVC (pre) (L)"
+      - name: NCDInvest006
+        description: "PEFR (pre) (L/min)"
+      - name: NCDInvest007
+        description: "PEFR (post) (L/min)"
+      - name: NCDInvest008
+        description: "FEV1 % predicted (post)"
+      - name: NCDInvest009
+        description: "FEV1/FVC (post) (%)"
+      - name: NCDInvest010
+        description: "FVC (post) (L)"
+      - name: NCDInvest011
+        description: "PEFR (post) (L/min)"
+      - name: NCDInvest013
+        description: "PHQ-2 score"
+      - name: NCDInvest014
+        description: "PHQ-9 score"
+      - name: NCDInvest015
+        description: "GAD-2 score"
+      - name: NCDInvest016
+        description: "GAD-7 score"
+      - name: NCDInvest018
+        description: "eGFR"
+      - name: NCDInvest019
+        description: "Visual acuity - حدة البصر"
+      - name: NCDInvest020
+        description: "Foot exam performed - تم إجراء فحص للقدم"
+      - name: NCDInvest021
+        description: "Polyneuropathy screening - فحص اعتلال الأعصاب المتعدد"
