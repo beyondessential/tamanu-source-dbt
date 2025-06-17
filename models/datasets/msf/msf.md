@@ -25,3 +25,19 @@ The legal status of the patient: Host, IPD, Refugee
 {% docs msf__visit_rank %}
 The patient's visit ranking
 {% enddocs %}
+
+{% docs msf__follow_up_frequency %}
+Follow-up frequency description based on test results and patient conditions
+{% enddocs %}
+
+{% docs msf__follow_up_due_date %}
+Due date for the next follow-up test based on most recent test
+{% enddocs %}
+
+{% docs msf__follow_up_status %}
+Status of follow-up: 'Over due' or 'Upcoming'
+{% enddocs %}
+
+{% docs msf__ncd_conditions %}
+List of the underlying NCD conditions (Diabetes, Hypertension, CVD, CCF, Hypothyroidism)
+{% enddocs %}

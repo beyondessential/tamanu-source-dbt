@@ -1,6 +1,5 @@
 # List of Tamanu reports
-## Generic
-
+## Standard
 ### Deceased patients line list
 
 **Report Description**

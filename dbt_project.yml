@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: "2.32.0"
+version: "2.33.0"
 config-version: 2
 
 profile: tamanu_source_dbt
@@ -37,10 +37,13 @@ models:
           [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
       msf:
         +tags: [msf]
-
+      
+    intermediate:
+      +materialized: ephemeral
+      
     datasets:
       +docs:
-        show: false
+        show: true
       +materialized: view
       fiji:
         +tags: [fiji]
@@ -49,7 +52,7 @@ models:
           [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
       msf:
         +tags: [msf]
-
+        
     reports:
       +docs:
         show: false
@@ -72,6 +75,7 @@ models:
           +tags: [samoa]
         tuvalu:
           +tags: [tuvalu]
+          
 data_tests:
   +docs:
     show: false
