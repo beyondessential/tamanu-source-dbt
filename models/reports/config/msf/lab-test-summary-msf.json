@@ -1,0 +1,14 @@
+{
+  "query": "replace this",
+  "name": "Lab Test Summary MSF",
+  "notes": "This report provides a summary of lab test data aggregated by epidemiological week with facility-specific metrics including new patients tested, test counts by type, and status breakdowns for North and South facilities.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Leave blank for current year otherwise select a date in the year of interest in the To date field",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+    ]
+  }
+}

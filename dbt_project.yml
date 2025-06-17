@@ -27,6 +27,16 @@ models:
       +docs:
         show: true
       +materialized: view
+      +tags:
+        [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
+
+    intermediate:
+      +materialized: ephemeral
+      generic:
+        +tags:
+          [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
+      msf:
+        +tags: [msf]
       
     intermediate:
       +materialized: ephemeral
@@ -35,12 +45,37 @@ models:
       +docs:
         show: true
       +materialized: view
-      
+      fiji:
+        +tags: [fiji]
+      generic:
+        +tags:
+          [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
+      msf:
+        +tags: [msf]
+        
     reports:
       +docs:
         show: false
       +tags: [reports]
-      
+      sql:
+        aspen:
+          +tags: [aspen]
+        fiji:
+          +tags: [fiji]
+        generic:
+          +tags:
+            [aspen, demoland, fiji, kiribati, msf, nauru, palau, samoa, tonga, tuvalu]
+        msf:
+          +tags: [msf]
+        nauru:
+          +tags: [nauru]
+        palau:
+          +tags: [palau]
+        samoa:
+          +tags: [samoa]
+        tuvalu:
+          +tags: [tuvalu]
+          
 data_tests:
   +docs:
     show: false

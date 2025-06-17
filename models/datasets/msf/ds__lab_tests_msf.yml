@@ -1,0 +1,110 @@
+version: 2
+
+models:
+  - name: ds__lab_tests_msf
+    description: "MSF lab tests dataset with lab test panels or individual lab test types."
+    columns:
+      - name: epi_year
+        data_type: integer
+        description: "{{ doc('msf__epi_year') }}"
+        data_tests:
+          - not_null
+      - name: epi_week
+        data_type: integer
+        description: "{{ doc('msf__epi_week') }}"
+        data_tests:
+          - not_null
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - not_null
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__department_id') }} where the lab request is requested"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__status') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values:
+                - cancelled
+                - deleted
+                - entered-in-error
+                - interim_results
+                - invalidated
+                - published
+                - reception_pending
+                - results_pending
+                - sample-not-collected
+                - to_be_verified
+                - verified
+      - name: lab_request_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__display_id') }}"
+        data_tests:
+          - not_null
+      - name: lab_test_panel_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__lab_test_panel_request_id') }}"
+      - name: lab_test_type_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_tests__lab_test_type_id') }}"
+      - name: visit_rank
+        data_type: integer
+        description: "Patient visit ranking"
+        data_tests:
+          - not_null
+
+unit_tests:
+  - name: test_ds__lab_tests_msf__test_panel_or_type_and_unique_req
+    description: "Unit test to verify each row has either lab_test_panel_id or lab_test_type_id and lab_test_panel_request_id is unique"
+    model: ds__lab_tests_msf
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 1 as id, 1 as encounter_id, 'dept1' as department_id, 'completed' as status, '1' as display_id, 1 as lab_test_panel_request_id
+          union all
+          select 2 as id, 2 as encounter_id, 'dept1' as department_id, 'completed' as status, '2' as display_id, 2 as lab_test_panel_request_id
+          union all
+          select 3 as id, 3 as encounter_id, 'dept2' as department_id, 'completed' as status, '3' as display_id, null as lab_test_panel_request_id
+          union all
+          select 4 as id, 2 as encounter_id, 'dept1' as department_id, 'cancelled' as status, '2' as display_id, 2 as lab_test_panel_request_id
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 1 as id, 'patient1' as patient_id
+          union all
+          select 2 as id, 'patient2' as patient_id
+          union all
+          select 3 as id, 'patient3' as patient_id
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 1 as id, 1 as lab_request_id, 'type1' as lab_test_type_id, '2024-01-15'::timestamp as date
+          union all
+          select 2 as id, 2 as lab_request_id, 'type2' as lab_test_type_id, '2024-01-17'::timestamp as date
+          union all
+          select 3 as id, 3 as lab_request_id, 'type3' as lab_test_type_id, '2024-01-18'::timestamp as date
+          union all
+          select 2 as id, 2 as lab_request_id, 'type5' as lab_test_type_id, '2024-01-17'::timestamp as date
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select 1 as id, 'panel1' as lab_test_panel_id
+          union all
+          select 2 as id, 'panel2' as lab_test_panel_id
+      - input: ref('int__epi_dates_msf')
+        format: sql
+        rows: |
+          select 2024 as epi_year, '2024-01-01'::timestamp as epi_date_from, '2024-12-31'::timestamp as epi_date_to
+    expect:
+      format: sql
+      rows: |
+        select 2024 as epi_year, 2 as epi_week, 'patient1' as patient_id, 'dept1' as department_id, 'completed' as status, '1' as lab_request_id, 'panel1' as lab_test_panel_id, null as lab_test_type_id, 1 as visit_rank
+        union all
+        select 2024 as epi_year, 2 as epi_week, 'patient2' as patient_id, 'dept1' as department_id, 'completed' as status, '2' as lab_request_id, 'panel2' as lab_test_panel_id, null as lab_test_type_id, 1 as visit_rank
+        union all
+        select 2024 as epi_year, 2 as epi_week, 'patient3' as patient_id, 'dept2' as department_id, 'completed' as status, '3' as lab_request_id, null as lab_test_panel_id, 'type3' as lab_test_type_id, 1 as visit_rank
