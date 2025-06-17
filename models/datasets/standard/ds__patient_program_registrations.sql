@@ -1,6 +1,7 @@
 with related_conditions as (
     select
-        ppr.id as patient_program_registration_id,
+        pprc.patient_id,
+        pprc.program_registry_id,
         string_agg(
             prc.name, '; '
             order by pprc.datetime
@@ -10,9 +11,8 @@ with related_conditions as (
             order by pprc.datetime
         ) as condition_ids
     from {{ ref('patient_program_registration_conditions') }} pprc
-    join {{ ref('patient_program_registrations') }} ppr on ppr.id = pprc.patient_program_registration_id
     left join {{ ref('program_registry_conditions') }} prc on prc.id = pprc.program_registry_condition_id
-    group by ppr.id
+    group by pprc.program_registry_id, pprc.patient_id
 )
 
 select
@@ -36,12 +36,10 @@ select
     c.conditions as related_conditions,
     prcs.id as clinical_status_id,
     prcs.name as clinical_status,
+    ppr.is_most_recent,
     ppr.registration_status,
     ppr.program_registry_id,
-    ppr.datetime as registration_datetime,
-    ppr.deactivated_by_id,
-    deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime
+    ppr.datetime as registration_datetime
 from {{ ref('patient_program_registrations') }} ppr
 join {{ ref('program_registries') }} pr on pr.id = ppr.program_registry_id
 join {{ ref('patients') }} p on p.id = ppr.patient_id
@@ -50,7 +48,6 @@ join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('facilities') }} currently_at_facility on currently_at_facility.id = ppr.facility_id
 left join {{ ref('reference_data') }} currently_at_village on currently_at_village.id = ppr.village_id
-left join related_conditions c on c.patient_program_registration_id = ppr.id
+left join related_conditions c on (c.patient_id, c.program_registry_id) = (ppr.patient_id, ppr.program_registry_id)
 left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id
-left join {{ ref('users') }} deactivated_by on deactivated_by.id = ppr.deactivated_by_id
 order by ppr.datetime desc

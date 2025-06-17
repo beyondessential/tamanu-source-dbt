@@ -21,13 +21,13 @@ with drugs_dispensed as (
         select
             ppm.patient_id,
             l.facility_id,
-            coalesce(ppm.MEDDIS00::timestamp, ppm.start_datetime) as datetime_dispensed,
-            {{ drug.drug }} as drug,
-            {{ drug.dose }} as dose
+            coalesce(ppm."MEDDIS00"::timestamp, ppm.start_datetime) as datetime_dispensed,
+            "{{ drug.drug }}" as drug,
+            "{{ drug.dose }}"::numeric as dose
         from {{ ref("program-pharmacy-meddisp001") }} ppm
-        join {{ ref("encounter")}} e on e.id = ppm.encounter_id
-        join {{ ref("location")}} l on l.id = e.location_id
-        where {{ drug.drug }} is not null
+        join {{ ref("encounters")}} e on e.id = ppm.encounter_id
+        join {{ ref("locations")}} l on l.id = e.location_id
+        where "{{ drug.drug }}" is not null
         {% if not loop.last %}
         union all
         {% endif %}
@@ -35,9 +35,9 @@ with drugs_dispensed as (
 )
 
 select 
-    dg.name as {{ translate_label('surveyMedicationDispensingDrug', 'Drug')}},
-    count(distinct dd.patient_id) as {{ translate_label('surveyMedicationDispensingPatientCount', 'Number of Unique Patients')}},
-    sum(dd.dose) as {{ translate_label('surveyMedicationDispensingDoseCount', 'Number of Doses')}}
+    dg.name as "{{ translate_label('surveyMedicationDispensingDrug', 'Drug')}}",
+    count(distinct dd.patient_id) as "{{ translate_label('surveyMedicationDispensingPatientCount', 'Number of Unique Patients')}}",
+    sum(dd.dose) as "{{ translate_label('surveyMedicationDispensingDoseCount', 'Number of Doses')}}"
 from drugs_dispensed dd
 join {{ ref('reference_data')}} dg on dg.id = dd.drug
 where case

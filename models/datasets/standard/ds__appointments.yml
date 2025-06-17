@@ -39,7 +39,7 @@ models:
         description: "{{ doc('generic__reference_data') }} of the patient's village."
       - name: billing_type_id
         data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__patient_billing_type_id') }}"
+        description: "{{ doc('appointments__booking_type_id') }}"
       - name: billing_type
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the billing type."
