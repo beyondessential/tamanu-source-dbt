@@ -39,6 +39,9 @@ models:
       - name: village_id
         data_type: character varying(255)
         description: "{{ doc('patient_program_registrations__village_id') }}"
-      - name: is_most_recent
-        data_type: boolean
-        description: "{{ doc('patient_program_registrations__is_most_recent') }}"
+      - name: deactivated_by_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_program_registrations__deactivated_clinician_id') }}"
+      - name: deactivated_datetime
+        data_type: timestamp
+        description: "{{ doc('patient_program_registrations__deactivated_date') }}"

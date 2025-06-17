@@ -1,6 +1,5 @@
 # List of Tamanu reports
-## Generic
-
+## Standard
 ### Admissions line list
 
 **Report Description**

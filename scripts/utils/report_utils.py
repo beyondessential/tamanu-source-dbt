@@ -7,7 +7,7 @@ from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+BASE_DIR = os.getcwd()
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -38,7 +38,7 @@ def compile_report(database, sql_file, config_file, output_file):
         exit(1)
 
 
-def generate_project_reports(target):
+def generate_project_reports():
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
@@ -56,11 +56,10 @@ def generate_project_reports(target):
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
-        and target in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        cprint(f"No report models found for target: {target}", "error")
+        cprint(f"No report models found", "error")
         return
 
     ensure_directory_exists(REPORTS_DIR)
@@ -141,7 +140,7 @@ fs.readdir(folderPath, async (err, files) => {
     cprint(f"Script created successfully at: {output_path}", "success")
 
 
-def generate_reporting_schema_script(target):
+def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
@@ -166,7 +165,7 @@ def generate_reporting_schema_script(target):
     ]
 
     if not nodes:
-        cprint(f"No models found with the target: {target}", "error")
+        cprint(f"No models found", "error")
         return
 
     processed = set()
