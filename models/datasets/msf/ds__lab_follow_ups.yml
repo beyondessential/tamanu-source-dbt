@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: ds__lab_follow_ups
+    description: MSF's lab follow-up schedule dataset for patients with non-communicable diseases (NCDs) conditions.
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: age
+        data_type: double precision
+        description: "{{ doc('generic__patients_age') }}"
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: conditions
+        data_type: text
+        description: "{{ doc('msf__ncd_conditions') }}"
+      - name: test_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of the test or test panel"
+      - name: test_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the test or test panel"
+      - name: requested_datetime
+        data_type: timestamp
+        description: "{{ doc('lab_requests__requested_date') }}"
+      - name: follow_up_frequency
+        data_type: text
+        description: "{{ doc('msf__follow_up_frequency') }}"
+      - name: follow_up_due_date
+        data_type: timestamp
+        description: "{{ doc('msf__follow_up_due_date') }}"
+      - name: follow_up_status
+        data_type: character varying(255)
+        description: "{{ doc('msf__follow_up_status') }}"
