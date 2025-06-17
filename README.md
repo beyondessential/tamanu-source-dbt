@@ -24,13 +24,11 @@ This command pulls the source model information from the Tamanu repository based
 ## Generate the build script for deployments
 
 Execute the following command:
-`python ./scripts/build_reporting_assets.py --target <target_environment>`
-
-Replace <target_environment> with the desired deployment environment (e.g., fiji, palau). By default, it targets demoland.
+`python ./scripts/build_reporting_assets.py
 
 This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
 
-- Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script_<target_version>.sql.
+- Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script.sql.
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 
