@@ -1,22 +1,30 @@
 import argparse
 import json
 import os
+import shutil
 
 from utils.system_utils import cprint
 
 
-def extract_and_write_to_md(base_path, output_file):
+def extract_and_write_to_md(base_path, output_file, report_type):
     """
     Extracts data from JSON files in the specified base path and writes it to a Markdown file.
     Args:
         base_path (str): The base path to start extracting the folder structure.
         output_file (str): The path to the output Markdown file.
+        report_type (str): The report_type being listed ('Standard' or 'Custom').
     """
-    with open(output_file, "w", encoding="utf-8") as file:
-        current_deployment = None
+    if report_type == 'Standard':
+        file_mode = "w"
+    else:
+        file_mode = "a"
 
-        file.write(f"# List of Tamanu reports\n")
+    with open(output_file, file_mode, encoding="utf-8") as file:
+        if report_type == "Standard":
+            file.write(f"# List of Tamanu reports\n")
 
+        file.write(f"## {report_type}\n")
+        
         for root, _, files in os.walk(base_path):
             for file_name in files:
                 if file_name.endswith(".json"):
@@ -26,7 +34,6 @@ def extract_and_write_to_md(base_path, output_file):
                         data = json.load(json_file)
 
                     # Extract data
-                    deployment = os.path.basename(root)
                     report_id = os.path.basename(json_file_path)
                     report_description = data.get("notes", "")
                     default_date_range = data.get("queryOptions", {}).get(
@@ -38,11 +45,6 @@ def extract_and_write_to_md(base_path, output_file):
                     )
 
                     # Write to Markdown
-                    deployment_title = deployment.title()
-                    if deployment_title != current_deployment:
-                        current_deployment = deployment_title
-                        file.write(f"## {current_deployment}\n\n")
-
                     file.write(
                         f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}\n\n"
                     )
@@ -55,39 +57,27 @@ def extract_and_write_to_md(base_path, output_file):
 def main():
     """
     Main function to generate a list of reports in Markdown format.
-    This function parses command-line arguments to determine the base path for extracting
-    the folder structure and the output file path for the generated Markdown file. It then
-    processes the JSON report files and writes the results to the specified Markdown file.
-    Command-Line Arguments:
-        base_path (str, optional): The base path to start extracting the folder structure.
-                                   Defaults to 'bases'.
-        output_file (str, optional): The path to the output Markdown file.
-                                     Defaults to 'list_tamanu_reports.md'.
     Example Usage:
         python list_tamanu_reports.py
-        python list_tamanu_reports.py ./custom/reports ./custom/output/reports_list.md
     """
-    parser = argparse.ArgumentParser(
-        description="Generate a report list in Markdown format."
-    )
-    parser.add_argument(
-        "base_path",
-        nargs="?",
-        default="models/reports/config",
-        help="The base path to start the folder structure extraction. Defaults to bases",
-    )
-    parser.add_argument(
-        "output_file",
-        nargs="?",
-        default="list_tamanu_reports.md",
-        help="The path to the output Markdown file. Defaults to list_tamanu_reports.md",
-    )
-    args = parser.parse_args()
-
+    # Check if the pre-existing list_tamanu_reports.md exists in dbt_packages
+    standard_md_file = "dbt_packages/tamanu_source_dbt/list_tamanu_reports.md"
+    output_file = "list_tamanu_reports.md"
+    report_type = "Standard"
+    
+    if os.path.exists(standard_md_file):
+        # Copy the existing file to the current directory
+        shutil.copy2(standard_md_file, output_file)
+        cprint(f"Copied existing report list from {standard_md_file} to {output_file}", "success")
+        report_type = "Custom"
+        return
+        
+    path = "models/reports/config"
+    
     # Extract data and write to Markdown
-    extract_and_write_to_md(args.base_path, args.output_file)
-
-    cprint(f"Report list has been written to {args.output_file}", "success")
+    extract_and_write_to_md(path, output_file, report_type)
+    
+    cprint(f"{report_type} report list has been written to {output_file}", "success")
 
 
 if __name__ == "__main__":
