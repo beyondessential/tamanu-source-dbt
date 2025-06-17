@@ -1,6 +1,11 @@
 import json
 import os
 import shutil
+from pathlib import Path
+
+import boto3
+
+from .system_utils import cprint
 
 
 def ensure_file_exists(file_path):
@@ -13,7 +18,7 @@ def ensure_file_exists(file_path):
     Exits the program if the file does not exist.
     """
     if not os.path.isfile(file_path):
-        print(f"Error: File not found: {file_path}")
+        cprint(f"Error: File not found: {file_path}", "error")
         exit(1)
 
 
@@ -44,7 +49,7 @@ def read_file(file_path, file_type="text"):
             else:
                 raise ValueError(f"Unsupported file_type: {file_type}")
     except Exception as e:
-        print(f"Error reading file {file_path}: {e}")
+        cprint(f"Error reading file {file_path}: {e}", "error")
         raise Exception(f"Error reading file {file_path}: {e}")
 
 
@@ -72,7 +77,7 @@ def write_file(file_path, data, file_type="text"):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
     except Exception as e:
-        print(f"Error writing file {file_path}: {e}")
+        cprint(f"Error writing file {file_path}: {e}", "error")
         raise Exception(f"Error writing file {file_path}: {e}")
 
 
@@ -105,7 +110,9 @@ def copy_files_from_directory(source_dir, destination_dir):
             if os.path.isfile(source_file):
                 shutil.copy2(source_file, dest_file)
     except Exception as e:
-        print(f"Error copying files from {source_dir} to {destination_dir}: {e}")
+        cprint(
+            f"Error copying files from {source_dir} to {destination_dir}: {e}", "error"
+        )
         exit(1)
 
 
@@ -122,7 +129,24 @@ def remove_directory(dir_path):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
         else:
-            print(f"Error: Directory not found: {dir_path}")
+            cprint(f"Error: Directory not found: {dir_path}", "error")
     except Exception as e:
-        print(f"Error removing directory {dir_path}: {e}")
+        cprint(f"Error removing directory {dir_path}: {e}", "error")
         exit(1)
+
+
+def upload_to_s3(file_path: Path, bucket: str, key: str) -> None:
+    """Upload a file to S3 bucket."""
+    try:
+        s3_client = boto3.client("s3")
+        s3_client.upload_file(
+            str(file_path),
+            bucket,
+            key,
+            ExtraArgs={
+                "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+        )
+        cprint(f"Successfully uploaded to s3://{bucket}/{key}", "success")
+    except Exception as e:
+        cprint(f"Error uploading to S3: {e}", "error")

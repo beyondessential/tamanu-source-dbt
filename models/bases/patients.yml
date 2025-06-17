@@ -8,6 +8,9 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in patients."
+        data_tests:
+          - not_null
+          - unique
         meta:
           metrics:
             total_patients_count:

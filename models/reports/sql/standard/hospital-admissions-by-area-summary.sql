@@ -53,31 +53,32 @@ area_summary as (
 )
 
 select
-    to_char(lg.month, '{{ var("monthyear_format") }}') as "{{ translate_string('reportMonth', 'Month') }}",
-    lg.facility as "{{ translate_string('facilityName', 'Facility') }}",
-    lg.location_group as "{{ translate_string('locationGroupName', 'Area') }}",
-    coalesce(lg.admissions, 0) as "{{ translate_string('admissionCount', 'Number of admissions') }}",
-    coalesce(lg.discharges, 0) as "{{ translate_string('dischargeCount', 'Number of discharges') }}",
-    coalesce(lg.deaths, 0) as "{{ translate_string('deathCount', 'Number of deaths') }}",
-    coalesce(lg.transfer_ins, 0) as "{{ translate_string('transfersIntoLocationCount', 'Number of transfers into location') }}",
-    coalesce(lg.transfer_outs, 0) as "{{ translate_string('transfersOutOfLocationCount', 'Number of transfers out of location') }}",
-    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_string('averageLengthOfStay', 'Average length of stay') }}",
-    coalesce(lg.occupancy, 0) as "{{ translate_string('patientDayCount', 'Number of patient days') }}",
+    to_char(lg.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
+    lg.facility as "{{ translate_label('facility', 'Facility') }}",
+    lg.location_group as "{{ translate_label('locationGroup', 'Area') }}",
+    coalesce(lg.admissions, 0) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",
+    coalesce(lg.discharges, 0) as "{{ translate_label('hospitalDischargeCount', 'Number of discharges') }}",
+    coalesce(lg.deaths, 0) as "{{ translate_label('hospitalDeathCount', 'Number of deaths') }}",
+    coalesce(lg.transfer_ins, 0) as "{{ translate_label('hospitalTransfersIntoLocationCount', 'Number of transfers into location') }}",
+    coalesce(lg.transfer_outs, 0) as "{{ translate_label('hospitalTransfersOutOfLocationCount', 'Number of transfers out of location') }}",
+    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_label('hospitalAverageLengthOfStay', 'Average length of stay') }}",
+    coalesce(lg.occupancy, 0) as "{{ translate_label('hospitalPatientDayCount', 'Number of patient days') }}",
     case
-        when lg.occupancy notnull and lg.capacity notnull then
-            concat(
-                round(
-                    lg.occupancy / (
-                        lg.capacity * case
-                            when lg.month > (current_date - '1 month'::interval)
-                                then (current_date - lg.month) + 1
-                            else (lg.month + '1 month'::interval)::date - lg.month
-                        end
-                    ) * 100, 1
-                )::text, '%'
-            )
+        when lg.occupancy notnull and lg.capacity notnull
+            then
+                concat(
+                    round(
+                        lg.occupancy / (
+                            lg.capacity * case
+                                when lg.month > (current_date - '1 month'::interval)
+                                    then (current_date - lg.month) + 1
+                                else (lg.month + '1 month'::interval)::date - lg.month
+                            end
+                        ) * 100, 1
+                    )::text, '%'
+                )
         else 'N/A'
-    end as "{{ translate_string('bedOccupancyPercent', 'Bed occupancy (%)') }}"
+    end as "{{ translate_label('hospitalBedOccupancyPercent', 'Bed occupancy (%)') }}"
 from area_summary lg
 where
     case

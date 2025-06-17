@@ -1,28 +1,28 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_string('patientRegistrationDate', 'Registration date') }}",
-    registered_by as "{{ translate_string('patientRegisteredBy', 'Registered by') }}",
-    first_name as "{{ translate_string('patientFirstName', 'First name') }}",
-    middle_name as "{{ translate_string('patientMiddleName', 'Middle name') }}",
-    last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    cultural_name as "{{ translate_string('patientCulturalName', 'Cultural name') }}",
-    display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
-    sex as "{{ translate_string('sex', 'patientSex') }}",
-    village as "{{ translate_string('villageId', 'patientVillage') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_string('patientDateOfBirth', 'Date of birth') }}",
-    birth_certificate as "{{ translate_string('patientBirthCertificate', 'Birth certificate') }}",
-    driving_license as "{{ translate_string('patientDrivingLicense', 'Driving license') }}",
-    passport as "{{ translate_string('patientPassport', 'Passport') }}",
-    blood_type as "{{ translate_string('patientBloodType', 'Blood type') }}",
-    title as "{{ translate_string('patientTitle', 'Title') }}",
-    marital_status as "{{ translate_string('patientMaritalStatus', 'Marital status') }}",
-    primary_contact_number as "{{ translate_string('patientPrimaryContactNumber', 'Primary contact number') }}",   -- noqa:disable=LT05
-    secondary_contact_number as "{{ translate_string('patientSecondaryContactNumber', 'Secondary contact number') }}",   -- noqa:disable=LT05
-    country_of_birth as "{{ translate_string('patientCountryOfBirth', 'Country of birth') }}",
-    nationality as "{{ translate_string('patientNationality', 'Nationality') }}",
-    ethnicity as "{{ translate_string('patientEthnicity', 'Ethnicity') }}",
-    occupation as "{{ translate_string('patientOccupation', 'Occupation') }}",
-    religion as "{{ translate_string('patientReligion', 'Religion') }}",
-    patient_billing_type as "{{ translate_string('patientBillingType', 'Patient billing type') }}"
+    registration_date as "{{ translate_label('patientRegistrationDate', 'Registration date') }}",
+    registered_by as "{{ translate_label('patientRegisteredBy', 'Registered by') }}",
+    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
+    middle_name as "{{ translate_label('patientMiddleName', 'Middle name') }}",
+    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
+    cultural_name as "{{ translate_label('patientCulturalName', 'Cultural name') }}",
+    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
+    sex as "{{ translate_label('patientSex', 'Sex') }}",
+    village as "{{ translate_label('patientVillage', 'village' ) }}",
+    date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    birth_certificate as "{{ translate_label('patientBirthCertificate', 'Birth certificate') }}",
+    driving_license as "{{ translate_label('patientDrivingLicense', 'Driving license') }}",
+    passport as "{{ translate_label('patientPassport', 'Passport') }}",
+    blood_type as "{{ translate_label('patientBloodType', 'Blood type') }}",
+    title as "{{ translate_label('patientTitle', 'Title') }}",
+    marital_status as "{{ translate_label('patientMaritalStatus', 'Marital status') }}",
+    primary_contact_number as "{{ translate_label('patientPrimaryContactNumber', 'Primary contact number') }}",   -- noqa:disable=LT05
+    secondary_contact_number as "{{ translate_label('patientSecondaryContactNumber', 'Secondary contact number') }}",   -- noqa:disable=LT05
+    country_of_birth as "{{ translate_label('patientCountryOfBirth', 'Country of birth') }}",
+    nationality as "{{ translate_label('patientNationality', 'Nationality') }}",
+    ethnicity as "{{ translate_label('patientEthnicity', 'Ethnicity') }}",
+    occupation as "{{ translate_label('patientOccupation', 'Occupation') }}",
+    religion as "{{ translate_label('patientReligion', 'Religion') }}",
+    patient_billing_type as "{{ translate_label('patientBillingType', 'Patient billing type') }}"
 from {{ ref("ds__patients") }}
 where
     case

@@ -1,17 +1,17 @@
 select
-    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_string('diagnosisDateTime', 'Date & time') }}",
-    diagnosis as "{{ translate_string('diagnosisName', 'Diagnosis') }}",
-    first_name as "{{ translate_string('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_string('patientLastName', 'Last name') }}",
-    display_id as "{{ translate_string('patientDisplayId', 'Patient ID') }}",
-    age as "{{ translate_string('patientAge', 'Age') }}",
-    sex as "{{ translate_string('patientSex', 'Sex') }}",
-    contact_number as "{{ translate_string('patientPrimaryContactNumber', 'Contact number') }}",
-    village as "{{ translate_string('patientVillage', 'Village') }}",
-    clinician as "{{ translate_string('encounterClinician', 'Clinician') }}",
-    department as "{{ translate_string('departmentName', 'Department') }}",
-    certainty as "{{ translate_string('diagnosisCertainty', 'Certainty') }}",
-    is_primary as "{{ translate_string('diagnosisIsPrimary', 'Is primary') }}"
+    diagnosis_datetime as "{{ translate_label('diagnosisDateTime', 'Date & time') }}",
+    diagnosis as "{{ translate_label('diagnoses', 'Diagnoses') }}",
+    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
+    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
+    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
+    age as "{{ translate_label('patientAge', 'Age') }}",
+    sex as "{{ translate_label('patientSex', 'Sex') }}",
+    contact_number as "{{ translate_label('patientPrimaryContactNumber', 'Primary contact number') }}",
+    village as "{{ translate_label('patientVillage', 'Village') }}",
+    clinician as "{{ translate_label('encounterClinician', 'Clinician') }}",
+    department as "{{ translate_label('department', 'Department') }}",
+    certainty as "{{ translate_label('diagnosisCertainty', 'Certainty') }}",
+    is_primary as "{{ translate_label('diagnosisIsPrimary', 'Is primary') }}"
 from {{ ref('ds__diagnoses') }}
 where
     case
@@ -45,10 +45,10 @@ where
             coalesce({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}) is null
             then true
         else diagnosis_id in (
-            {{ parameter('diagnosisId') }},
-            {{ parameter('diagnosis2Id') }},
-            {{ parameter('diagnosis3Id') }},
-            {{ parameter('diagnosis4Id') }},
-            {{ parameter('diagnosis5Id') }}
-        )
+                {{ parameter('diagnosisId') }},
+                {{ parameter('diagnosis2Id') }},
+                {{ parameter('diagnosis3Id') }},
+                {{ parameter('diagnosis4Id') }},
+                {{ parameter('diagnosis5Id') }}
+            )
     end

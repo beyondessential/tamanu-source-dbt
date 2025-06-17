@@ -2,17 +2,9 @@
 
 A dbt project of Tamanu's standard models. This includes:
 
-- raw (or source) schema (incomplete documentation and validation test)
-- reporting schema (incomplete documentation)
+- raw (or source) schema
+- reporting schema
 - analytics schema (upcoming)
-
-## Generating a .yml documentation file for tables
-
-The codegen package has a macro `generate_source` that will create a skeleton .yml file.
-
-Run `dbt run-operation generate_source --args '{"schema_name": "public", "table_names": ["table_name1", "table_name2"], "generate_columns": True, "include_descriptions": True, include_data_types: True}'`
-
-Replace "table_name1" and "table_name2" with the names of the new tables.
 
 ## SQL linting
 

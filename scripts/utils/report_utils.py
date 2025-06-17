@@ -3,6 +3,7 @@ import re
 
 from .dbt_utils import get_deployment_version
 from .file_utils import ensure_directory_exists, read_file, write_file
+from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
@@ -30,15 +31,14 @@ def compile_report(database, sql_file, config_file, output_file):
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
         config["query"] = re.sub(f'"{database}"\\.', "", query)
-        config["db_schema"] = SCHEMA
-
+        
         write_file(output_file, config, "json")
     except Exception as e:
-        print(f"Error processing files: {e}")
+        cprint(f"Error processing files: {e}", "error")
         exit(1)
 
 
-def generate_project_reports(target):
+def generate_project_reports():
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
@@ -75,7 +75,7 @@ def generate_project_reports(target):
         output_file = os.path.join(REPORTS_DIR, f"{report['name']}.json")
 
         compile_report(report["database"], sql_file, config_file, output_file)
-        print(f"Compiled report: {report['name']}.sql")
+        cprint(f"Compiled report: {report['name']}.sql", "success")
 
 
 def generate_import_report_script():
@@ -137,10 +137,10 @@ fs.readdir(folderPath, async (err, files) => {
     output_path = os.path.join(REPORTS_DIR, "import_reports.js")
     write_file(output_path, script)
 
-    print(f"Script created successfully at: {output_path}")
+    cprint(f"Script created successfully at: {output_path}", "success")
 
 
-def generate_reporting_schema_script(target):
+def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
@@ -165,7 +165,7 @@ def generate_reporting_schema_script(target):
     ]
 
     if not nodes:
-        print(f"No models found with the target: {target}")
+        cprint(f"No models found", "error")
         return
 
     processed = set()
@@ -182,7 +182,7 @@ def generate_reporting_schema_script(target):
             )
         ]
         if not current:
-            print("Error: Circular dependency or missing dependency.")
+            cprint("Error: Circular dependency or missing dependency.", "error")
             exit(1)
 
         for node in current:
@@ -195,15 +195,18 @@ def generate_reporting_schema_script(target):
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-
+    
     for node in ordered:
         model = manifest["nodes"][node]
+        if model["compiled_path"] is None:
+            cprint(f"Model {model['name']} has no compiled path, skipping.", "warning")
+            continue
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-
+    
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"

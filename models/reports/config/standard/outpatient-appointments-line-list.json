@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Outpatient appointments line list",
-  "notes": "Outpatient appointments line list\nThis report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment",
+  "notes": "This report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

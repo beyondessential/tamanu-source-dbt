@@ -10,6 +10,7 @@ from utils import (
     get_deployment_version,
     remove_directory,
 )
+from utils.system_utils import cprint
 
 REPO_URL = "https://github.com/beyondessential/tamanu.git"
 
@@ -22,8 +23,8 @@ REPO_SOURCE_DIR = TEMP_DIR / "database" / "model" / "public"
 def main():
     version = get_deployment_version()
     branch_name = f"release/{'.'.join(version.split('.')[:2])}"
-    print(f"\n\nDetected version: {version}")
-    print(f"Cloning branch '{branch_name}' from repository '{REPO_URL}'")
+    cprint(f"\n\nDetected version: {version}", "info")
+    cprint(f"Cloning branch '{branch_name}' from repository '{REPO_URL}'", "info")
 
     execute_command(f"git clone --branch {branch_name} --depth 1 {REPO_URL} {TEMP_DIR}")
     copy_files_from_directory(REPO_SOURCE_DIR, DBT_SOURCE_DIR)
@@ -32,15 +33,15 @@ def main():
     overview_file = DBT_SOURCE_DIR / "overview.md"
     if overview_file.exists():
         overview_file.unlink()
-        print("Deleted overview.md from the sources directory.")
-    
+        cprint("Deleted overview.md from the sources directory.", "success")
+
     remove_directory(TEMP_DIR)
-    print("\nFiles copied successfully!")
+    cprint("\nFiles copied successfully!", "success")
 
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as err:
-        print(f"Error: {err}", file=sys.stderr)
+        cprint(f"Error: {err}", "error")
         sys.exit(1)
