@@ -38,7 +38,7 @@ def compile_report(database, sql_file, config_file, output_file):
         exit(1)
 
 
-def generate_project_reports(target):
+def generate_project_reports():
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
@@ -140,7 +140,7 @@ fs.readdir(folderPath, async (err, files) => {
     cprint(f"Script created successfully at: {output_path}", "success")
 
 
-def generate_reporting_schema_script(target):
+def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
@@ -165,7 +165,7 @@ def generate_reporting_schema_script(target):
     ]
 
     if not nodes:
-        cprint(f"No models found with the target: {target}", "error")
+        cprint(f"No models found", "error")
         return
 
     processed = set()
