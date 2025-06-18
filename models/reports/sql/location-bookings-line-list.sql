@@ -49,5 +49,5 @@ where case
     and
     case
         when {{ parameter('bookingTypeId') }} is null then true
-        else appointment_type_id = {{ parameter('bookingTypeId') }}
+        else booking_type_id = {{ parameter('bookingTypeId') }}
     end
