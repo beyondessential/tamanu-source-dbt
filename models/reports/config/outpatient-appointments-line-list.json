@@ -32,6 +32,11 @@
         "suggesterEndpoint": "practitioner"
       },
       {
+        "parameterField": "AppointmentTypeField",
+        "label": "Appointment type",
+        "name": "appointmentTypeId"
+      },
+      {
         "parameterField": "ParameterSelectField",
         "label": "Status",
         "name": "appointmentStatus",
