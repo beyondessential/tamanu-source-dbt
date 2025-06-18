@@ -15,21 +15,21 @@ def main():
     cprint(f"Generating build script", "info")
 
     # Execute DBT commands
-    # execute_command("dbt clean")
-    # execute_command("dbt deps")
-    # execute_command(
-    #     f"dbt run --profiles-dir config"
-    # )
-    # execute_command(
-    #     f"dbt docs generate --profiles-dir config"
-    # )
-    # execute_command(
-    #     f"dbt compile --profiles-dir config"
-    # )
-# 
-    # # Hide macros and tests from documentation
-    # hide_macros_from_docs()
-    # hide_tests_from_docs()
+    execute_command("dbt clean")
+    execute_command("dbt deps")
+    execute_command(
+        f"dbt run --profiles-dir config"
+    )
+    execute_command(
+        f"dbt docs generate --profiles-dir config"
+    )
+    execute_command(
+        f"dbt compile --profiles-dir config"
+    )
+
+    # Hide macros and tests from documentation
+    hide_macros_from_docs()
+    hide_tests_from_docs()
 
     # Generate scripts and reports
     generate_reporting_schema_script()
