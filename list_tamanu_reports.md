@@ -327,7 +327,7 @@ This report generates a list of all patients with a scheduled appointment for th
 
 **Filters**
 
-Facility, Area, Clinician, Status
+Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
 
