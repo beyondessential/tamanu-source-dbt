@@ -1,0 +1,51 @@
+version: 2
+models:
+  - name: patient_program_registration_conditions_history
+    description: 'Historical changes to patient program registration conditions extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
+    latest_version: 1
+    config:
+      contract:
+        enforced: true
+      tags:
+        - clinical
+        - history
+    columns:
+      - name: changelog_id
+        data_type: uuid
+        description: "{{ doc('logs__changes__id') }}"
+      - name: logged_at
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at') }} in patient program registration condition record."
+      - name: updated_by_user_id
+        data_type: text
+        description: "{{ doc('logs__changes__updated_by_user_id') }} in patient program registration condition record."
+      - name: id
+        data_type: text
+        description: "{{ doc('generic__id') }} in patient_program_registration_conditions."
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('generic__date') }} in patient_program_registration_conditions history."
+      - name: program_registry_condition_id
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__program_registry_condition_id') }} from history."
+      - name: patient_program_registration_id
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__patient_program_registration_id') }} from history."
+      - name: condition_category
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__condition_category') }} from history."
+      - name: reason_for_change
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__reason_for_change') }} from history."
+      - name: recorded_by_id
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__clinician_id') }} from history."
+      - name: deleted_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__deletion_date') }} in patient_program_registration_conditions history."
+      - name: deleted_by_id
+        data_type: text
+        description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id') }} from history."
+    versions:
+      - v: 1
+        # Initial version - matches the columns defined above
