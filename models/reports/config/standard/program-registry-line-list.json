@@ -1,0 +1,19 @@
+{
+  "query": "replace this",
+  "name": "Program registry line list",
+  "notes": "This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).\nHome village: Per patient details\nCurrently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.\nRelated conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)\nStatus: Current status of the patient per the 'status' function within the register.\nDate of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.\nRegistered by: Name of Tamanu user who added the patient to this registry\nRegistering facility: Facility selected when patient is first added to the registry",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "name": "registryId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Registry",
+        "suggesterEndpoint": "programRegistry"
+      }
+    ]
+  }
+}

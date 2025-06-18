@@ -1,0 +1,49 @@
+{
+  "query": "replace this",
+  "name": "Vaccine audit line list",
+  "notes": "This report generates a list of all patients that have a vaccination record deleted or updated from 'Not given' to 'Given'. Patients are listed alphabetically by last name and date of vaccination in chronological order. \n\nThe report includes the following information in addition to the vaccination date and name:\nVaccination status: Where 'Recorded in error' is the status of a deleted record and 'Historical' is the status of a vaccine recorded as 'Not given' that is now recorded as 'Given'\nVaccine recorded by: The username associated with the person logged into Tamanu at the time the vaccine record was originally created\nGiven by: The healthcare worker that was recorded as administering the now deleted vaccination record \nRecord modified by: The username associated with the person logged into Tamanu at the time the vaccine record was deleted\nRecord modification date: The date the vaccination record was deleted from Tamanu \n ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "VillageField",
+        "label": "Village",
+        "name": "villageId"
+      },
+      {
+        "parameterField": "VaccineCategoryField",
+        "label": "Category",
+        "name": "category"
+      },
+      {
+        "parameterField": "VaccineField",
+        "label": "Vaccine",
+        "name": "vaccine"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "status",
+        "options": [
+          {
+            "label": "Recorded in error",
+            "value": "RECORDED_IN_ERROR"
+          },
+          {
+            "label": "Historical",
+            "value": "HISTORICAL"
+          }
+        ]
+      }
+    ]
+  }
+}

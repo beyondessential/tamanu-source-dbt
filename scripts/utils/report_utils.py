@@ -31,7 +31,7 @@ def compile_report(database, sql_file, config_file, output_file):
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
         config["query"] = re.sub(f'"{database}"\\.', "", query)
-        
+
         write_file(output_file, config, "json")
     except Exception as e:
         cprint(f"Error processing files: {e}", "error")
