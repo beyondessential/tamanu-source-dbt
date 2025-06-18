@@ -1,10 +1,33 @@
 # List of Tamanu reports
 ## Standard
+### Admissions line list
+
+**Report Description**
+
+This report generates a list of all patients with a hospital admission started within the selected date range. The report includes both active and discharged admissions. Patients are listed in order of most recent admission by admission date and time. The discharge date is displayed if the patient has been discharged, 
+otherwise if the encounter is active this column will appear blank. 
+
+The below information is included for each hospital admission:
+- List of all assigned departments and the date and time a patient was assigned to each department.
+- List of all assigned areas and the date and time a patient was assigned to each area.
+- List of all assigned locations and the date and time a patient was assigned to each location.
+- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed' and 'Suspected'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
+
+
+**Filters**
+
+Facility, Patient billing type, Admitting clinician, Area, Department, Admission status
+
+**Default date range**: 7days
+
+
+---
+
 ### Deceased patients line list
 
 **Report Description**
 
-This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronologocal order by date and time of death. 
+This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
 The report includes all details documented in the patient death record. 
 
 **Filters**
