@@ -2,16 +2,13 @@ version: 2
 models:
   - name: encounter_diagnoses
     description: "{{ doc('table__encounter_diagnoses') }}"
-    tags: 
-      - clinical
+    config:
+      tags: 
+        - clinical
     columns:
       - name: id
         data_type: character varying
         description: "{{ doc('generic__id') }} in encounter_diagnoses."
-        meta:
-          metrics:
-            total_diagnoses_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in encounter_diagnoses."
@@ -21,10 +18,6 @@ models:
       - name: encounter_id
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__encounter_id') }}"
-        meta:
-          metrics:
-            total_encounters_distinct_count:
-              type: count_distinct
       - name: diagnosis_id
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__diagnosis_id') }}"

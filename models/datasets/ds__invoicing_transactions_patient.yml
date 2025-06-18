@@ -3,12 +3,14 @@ version: 2
 models:
   - name: ds__invoicing_transactions_patient
     description: Invoicing transactions patient
-    tags:
-      - administration
+    config:
+      tags:
+        - administration
     columns:
       - name: date
         data_type: date
         description: "{{ doc('generic__date') }}"
+      - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
       - name: invoice_id

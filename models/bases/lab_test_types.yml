@@ -2,8 +2,9 @@ version: 2
 models:
   - name: lab_test_types
     description: '{{ doc("table__lab_test_types") }}'
-    tags:
-      - reference
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying(255)
@@ -11,10 +12,6 @@ models:
         data_tests:
           - not_null
           - unique
-        meta:
-          metrics:
-            total_lab_test_types_count:
-              type: count
       - name: code
         data_type: character varying(255)
         description: "{{ doc('lab_test_types__code') }}"

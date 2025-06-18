@@ -2,16 +2,13 @@ version: 2
 models:
   - name: imaging_area_external_codes
     description: '{{ doc("table__imaging_area_external_codes") }}'
-    tags:
-      - reference
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in imaging_area_external_codes."
-        meta:
-          metrics:
-            total_imaging_areas_external_codes_count:
-              type: count
       - name: area_id
         data_type: character varying(255)
         description: "{{ doc('imaging_area_external_codes__area_id') }}"

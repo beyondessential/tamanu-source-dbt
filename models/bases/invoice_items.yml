@@ -1,23 +1,16 @@
 models:
   - name: invoice_items
     description: '{{ doc("table__invoice_items") }}'
-    tags:
-      - administration
+    config:
+      tags:
+        - administration
     columns:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in invoice_items."
-        meta:
-          metrics:
-            total_invoice_items_count:
-              type: count
       - name: invoice_id
         data_type: uuid
         description: "{{ doc('invoice_items__invoice_id') }}"
-        meta:
-          metrics:
-            total_invoice_distinct_count:
-              type: count_distinct
       - name: date
         data_type: date
         description: "{{ doc('invoice_items__order_date') }}"

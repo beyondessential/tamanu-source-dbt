@@ -2,16 +2,13 @@ version: 2
 models:
   - name: procedures
     description: '{{ doc("table__procedures") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in procedures."
-        meta:
-          metrics:
-            total_procedures_count:
-              type: count
       - name: date
         data_type: date
         description: "{{ doc('generic__date') }} in procedures."
@@ -33,10 +30,6 @@ models:
       - name: encounter_id
         data_type: character varying(255)
         description: "{{ doc('procedures__encounter_id') }}"
-        meta:
-          metrics:
-            total_encounters_distinct_count:
-              type: count_distinct
       - name: location_id
         data_type: character varying(255)
         description: "{{ doc('procedures__location_id') }}"

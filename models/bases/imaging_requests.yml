@@ -2,16 +2,13 @@ version: 2
 models:
   - name: imaging_requests
     description: '{{ doc("table__imaging_requests") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying
         description: "{{ doc('generic__id') }} in imaging_requests."
-        meta:
-          metrics:
-            total_imaging_requests_count:
-              type: count
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('imaging_requests__display_id') }}"
@@ -30,10 +27,6 @@ models:
       - name: encounter_id
         data_type: character varying(255)
         description: "{{ doc('imaging_requests__encounter_id') }}"
-        meta:
-          metrics:
-            total_encounters_distinct_count:
-              type: count_distinct
       - name: requested_by_id
         data_type: character varying(255)
         description: "{{ doc('imaging_requests__requested_by_id') }}"
