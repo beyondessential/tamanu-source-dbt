@@ -1,7 +1,7 @@
 tamanu_source_dbt:
   target: release
   outputs:
-    demoland:
+    demo:
       type: postgres
       threads: 1
       host: "{{ env_var('TAMANU_DL_DB_URL') }}"
