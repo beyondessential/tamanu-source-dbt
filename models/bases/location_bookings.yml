@@ -1,0 +1,41 @@
+version: 2
+models:
+  - name: location_bookings
+    description: "{{ doc('table__appointments') }} (location bookings)"
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in appointments."
+      - name: start_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__start_time') }}"
+      - name: end_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__end_time') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__patient_id') }}"
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__clinician_id') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__encounter_id') }}"
+      - name: schedule_id
+        data_type: uuid
+        description: "{{ doc('appointments__schedule_id') }}"
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__location_id') }}"
+      - name: booking_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__booking_type_id') }}"
+      - name: is_high_priority
+        data_type: boolean
+        description: "{{ doc('appointments__is_high_priority') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('appointments__status') }}"
