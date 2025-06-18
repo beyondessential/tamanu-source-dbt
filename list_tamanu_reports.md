@@ -16,7 +16,7 @@ The below information is included for each hospital admission:
 
 **Filters**
 
-Facility, Patient billing type, Admitting clinician, Area, Department
+Facility, Patient billing type, Admitting clinician, Area, Department, Admission status
 
 **Default date range**: 7days
 
@@ -27,7 +27,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department
 
 **Report Description**
 
-This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronologocal order by date and time of death. 
+This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
 The report includes all details documented in the patient death record. 
 
 **Filters**
@@ -60,7 +60,6 @@ Facility, Area
 
 **Report Description**
 
-This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23-20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 This report provides a statistical summary of hospital admissions by area for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23-20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). 
 
 Details on how each indicator is calculated are provided below:
