@@ -1,11 +1,5 @@
 with filtered_changes as (
-    select 
-        id as changelog_id,
-        logged_at,
-        updated_by_user_id,
-        record_data
-    from {{ source("logs__tamanu", "changes") }}
-    where table_name = 'patient_program_registrations'
+    {{ base_history_from_log('patient_program_registrations') }}
         and (version = 'unknown'
             or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
