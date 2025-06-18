@@ -39,7 +39,7 @@ models:
     reports:
       +docs:
         show: false
-      +tags: [reports, standard]
+      +tags: [reports]
       
 data_tests:
   +docs:

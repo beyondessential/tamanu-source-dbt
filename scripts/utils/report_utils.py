@@ -1,14 +1,15 @@
 import os
 import re
 
-from .dbt_utils import get_deployment_version
+from .dbt_utils import get_deployment_version, get_project_name
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
 BASE_DIR = os.getcwd()
-STANDARD_BASE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
+PROJECT_NAME = get_project_name()
+DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -71,8 +72,8 @@ def generate_project_reports():
         config_file = (
             os.path.join(
                 (
-                    STANDARD_BASE_DIR
-                    if report["tags"] and "standard" in report["tags"]
+                    DBT_PACKAGE_DIR
+                    if report["package_name"] != PROJECT_NAME
                     else BASE_DIR
                 ),
                 report["original_file_path"],
