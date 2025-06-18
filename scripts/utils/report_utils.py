@@ -8,6 +8,7 @@ from .system_utils import cprint
 SCHEMA = "reporting"
 ROLE = "reporting"
 BASE_DIR = os.getcwd()
+STANDARD_BASE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -68,7 +69,14 @@ def generate_project_reports():
         report = manifest["nodes"][node]
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
-            os.path.join(BASE_DIR, report["original_file_path"])
+            os.path.join(
+                (
+                    STANDARD_BASE_DIR
+                    if report["tags"] and "standard" in report["tags"]
+                    else BASE_DIR
+                ),
+                report["original_file_path"],
+            )
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
@@ -195,7 +203,7 @@ def generate_reporting_schema_script():
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-    
+
     for node in ordered:
         model = manifest["nodes"][node]
         if model["compiled_path"] is None:
@@ -206,7 +214,7 @@ def generate_reporting_schema_script():
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-    
+
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
