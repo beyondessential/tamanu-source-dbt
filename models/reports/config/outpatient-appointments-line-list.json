@@ -32,14 +32,11 @@
         "suggesterEndpoint": "practitioner"
       },
       {
-<<<<<<< maui-5541-update-outpatient-appointments-line-list
         "parameterField": "AppointmentTypeField",
         "label": "Appointment type",
         "name": "appointmentTypeId"
       },
       {
-=======
->>>>>>> dev
         "parameterField": "ParameterSelectField",
         "label": "Status",
         "name": "appointmentStatus",
