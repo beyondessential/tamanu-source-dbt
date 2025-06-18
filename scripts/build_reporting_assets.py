@@ -26,7 +26,7 @@ def main():
     execute_command(
         f"dbt compile --profiles-dir config"
     )
-# 
+
     # # Hide macros and tests from documentation
     hide_macros_from_docs()
     hide_tests_from_docs()
