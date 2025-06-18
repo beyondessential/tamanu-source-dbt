@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: ds__lab_tests
+    description: Lab tests
+    tags:
+      - clinical
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+        meta:
+          metrics:
+            total_patients_count:
+              type: count
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: age
+        data_type: integer
+        description: "{{ doc('generic__patients_age') }} at the time of request"
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} where the encounter is currently active or has ended."
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__department_id') }} where the encounter is currently active or has ended."
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__department') }} where the encounter is currently active or has ended."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group_id') }} where the encounter is currently active or has ended."
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} where the encounter is currently active or has ended."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_id') }} where the encounter is currently active or has ended."
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} where the encounter is currently active or has ended."
+      - name: lab_request_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__display_id') }}"
+      - name: status_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__status') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__status') }}"
+      - name: lab_test_panel_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__lab_test_panel_request_id') }}"
+      - name: lab_test_panel
+        data_type: character varying(255)
+        description: "{{ doc('lab_test_panels__name') }}"
+      - name: lab_test_category_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_tests__category_id') }}"
+      - name: lab_test_category
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the lab test category."
+      - name: requested_datetime
+        data_type: timestamp
+        description: "{{ doc('lab_requests__requested_date') }}"
+      - name: requested_by_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_requests__requested_by_id') }}"
+      - name: requested_by
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who requested the lab test."
+      - name: lab_request_published_datetime
+        data_type: timestamp
+        description: "{{ doc('lab_requests__published_date') }}"
+      - name: lab_test_date
+        data_type: date
+        description: "{{ doc('generic__date') }} in lab_tests."
+      - name: result
+        data_type: character varying(255)
+        description: "{{ doc('lab_tests__result') }}"
+      - name: lab_test_type_id
+        data_type: character varying(255)
+        description: "{{ doc('lab_tests__lab_test_type_id') }}"
+      - name: lab_test_type
+        data_type: character varying(255)
+        description: "{{ doc('lab_test_types__name') }}"
+      - name: lab_test_completed_datetime
+        data_type: timestamp
+        description: "{{ doc('lab_tests__completed_date') }}"
+      
+      
+      

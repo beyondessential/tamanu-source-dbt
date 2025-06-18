@@ -195,7 +195,7 @@ def generate_reporting_schema_script():
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-
+    
     for node in ordered:
         model = manifest["nodes"][node]
         if model["compiled_path"] is None:
@@ -206,7 +206,7 @@ def generate_reporting_schema_script():
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-
+    
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"

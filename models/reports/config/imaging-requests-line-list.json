@@ -1,0 +1,61 @@
+{
+  "query": "place query here",
+  "name": "Imaging requests line list",
+  "notes": "This report generates a list of all patients that have had an imaging request created and details of that imaging request for the selected parameters. Patients are listed in chronological order based on the lab request date and time. \n\nIf an imaging request has more than one area to be imaged than the request will be reported across multiple lines. The report includes imaging requests with all statuses and if a request has been cancelled will display the reason for cancellation.  ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Requesting clinician",
+        "name": "requestedById",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "statusId",
+        "options": [
+          {
+            "label": "Pending",
+            "value": "pending"
+          },
+          {
+            "label": "In progress",
+            "value": "in_progress"
+          },
+          {
+            "label": "Completed",
+            "value": "completed"
+          },
+          {
+            "label": "Cancelled",
+            "value": "cancelled"
+          },
+          {
+            "label": "Deleted",
+            "value": "deleted"
+          },
+          {
+            "label": "Entered in error",
+            "value": "entered_in_error"
+          }
+        ]
+      },
+      {
+        "parameterField": "ImagingTypeField",
+        "label": "Imaging type",
+        "name": "imagingType"
+      }
+    ]
+  }
+}
