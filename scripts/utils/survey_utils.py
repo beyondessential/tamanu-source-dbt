@@ -4,7 +4,7 @@ from pathlib import Path
 from .file_utils import ensure_directory_exists, write_file
 from .system_utils import cprint, execute_command_with_output
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
+BASE_DIR = Path.cwd()
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
 
 
@@ -35,6 +35,7 @@ def get_surveys_from_deployment():
         cprint(f"Error getting surveys from dbt: {e}", "error")
         return surveys
 
+
 def get_survey_columns_from_deployment(survey_id):
     """
     Get survey column information from the database using dbt using the get_survey_docs macro.
@@ -45,8 +46,7 @@ def get_survey_columns_from_deployment(survey_id):
         list: List of tuples containing (code, name) for each survey column
     """
     columns = []
-    cmd = ["dbt", "run-operation", "get_survey_docs", '--args', '{"survey_id": "' + f'{survey_id}' + '"}',
-           "--profiles-dir", "config"]
+    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
 
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
