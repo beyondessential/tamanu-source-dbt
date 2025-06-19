@@ -46,15 +46,7 @@ def get_survey_columns_from_deployment(survey_id):
         list: List of tuples containing (code, name) for each survey column
     """
     columns = []
-    cmd = [
-        "dbt",
-        "run-operation",
-        "get_survey_docs",
-        "--args",
-        '{"survey_id": "' + f"{survey_id}" + '"}',
-        "--profiles-dir",
-        "config",
-    ]
+    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
 
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
