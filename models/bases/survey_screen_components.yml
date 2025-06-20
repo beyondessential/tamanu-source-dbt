@@ -2,16 +2,13 @@ version: 2
 models:
   - name: survey_screen_components
     description: '{{ doc("table__survey_screen_components") }}'
-    tags:
-      - reference
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in survey_screen_components."
-        meta:
-          metrics:
-            total_survey_screen_components_count:
-              type: count
       - name: screen_index
         data_type: integer
         description: "{{ doc('survey_screen_components__screen_index') }}"

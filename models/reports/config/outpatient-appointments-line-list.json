@@ -1,0 +1,72 @@
+{
+  "query": "replace this",
+  "name": "Outpatient appointments line list",
+  "notes": "This report generates a list of all patients with a scheduled appointment for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "next30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "AppointmentTypeField",
+        "label": "Appointment type",
+        "name": "appointmentTypeId"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "appointmentStatus",
+        "options": [
+          {
+            "label": "Confirmed",
+            "value": "Confirmed"
+          },
+          {
+            "label": "Arrived",
+            "value": "Arrived"
+          },
+          {
+            "label": "Assessed",
+            "value": "Assessed"
+          },
+          {
+            "label": "Seen",
+            "value": "Seen"
+          },
+          {
+            "label": "No show",
+            "value": "No-show"
+          },
+          {
+            "label": "Cancelled",
+            "value": "Cancelled"
+          }
+        ]
+      }
+    ]
+  }
+}

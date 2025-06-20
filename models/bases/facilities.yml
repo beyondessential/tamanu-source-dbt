@@ -2,7 +2,9 @@ version: 2
 models:
   - name: facilities
     description: "{{ doc('table__facilities') }}"
-    tags: ['reference']
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying
@@ -10,10 +12,6 @@ models:
         data_tests:
           - not_null
           - unique
-        meta:
-          metrics:
-            total_facilities_count:
-              type: count
       - name: code
         data_type:  character varying
         description: "{{ doc('facilities__code') }}"

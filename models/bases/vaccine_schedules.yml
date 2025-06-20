@@ -2,14 +2,13 @@ version: 2
 models:
   - name: vaccine_schedules
     description: "{{ doc('table__scheduled_vaccines') }}"
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in vaccine_schedules."
-        meta:
-          metrics:
-            total_vaccine_schedules_count:
-              type: count
       - name: category
         data_type: character varying(255)
         description: "{{ doc('scheduled_vaccines__category') }}"

@@ -1,0 +1,166 @@
+version: 2
+
+models:
+  - name: ds__deaths
+    description: Deaths
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__patient_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: age
+        data_type: integer
+        description: "{{ doc('generic__patients_age') }} at the time of diagnosis."
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: nationality_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__nationality_id') }}"
+      - name: nationality
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's nationality."
+      - name: place_of_death
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__outside_health_facility') }}"
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__department_id') }}"
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the department where death occurred."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('locations__location_group_id') }}"
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the location group where death occurred."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__location_id') }}"
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the location where death occurred."
+      - name: date_of_death
+        data_type: timestamp
+        description: "{{ doc('patients__date_of_death') }}"
+      - name: attending_clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__clinician_id') }}"
+      - name: attending_clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the clinician who attended the death."
+      - name: primary_cause_condition_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__primary_cause_condition_id') }}"
+      - name: primary_cause_condition
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the primary cause of death."
+      - name: time_between_onset_and_death
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__primary_cause_time_after_onset') }}"
+      - name: antecedent_cause_1_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__antecedent_cause1_condition_id') }}"
+      - name: antecedent_cause_1
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the first antecedent cause of death."
+      - name: antecedent_cause_2_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__antecedent_cause2_condition_id') }}"
+      - name: antecedent_cause_2
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the second antecedent cause of death."
+      - name: other_condition_1_id
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__condition_id') }}"
+      - name: other_condition_1
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the first other contributing condition."
+      - name: other_condition_2_id
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__condition_id') }}"
+      - name: other_condition_2
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the second other contributing condition."
+      - name: other_condition_3_id
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__condition_id') }}"
+      - name: other_condition_3
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the third other contributing condition."
+      - name: other_condition_4_id
+        data_type: character varying(255)
+        description: "{{ doc('contributing_death_causes__condition_id') }}"
+      - name: other_condition_4
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the fourth other contributing condition."
+      - name: had_recent_surgery
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__recent_surgery') }}"
+      - name: last_surgery_date
+        data_type: timestamp
+        description: "{{ doc('patient_death_data__last_surgery_date') }}"
+      - name: reason_for_surgery_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__last_surgery_reason_id') }}"
+      - name: reason_for_surgery
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the reason for last surgery."
+      - name: manner_of_death
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__manner') }}"
+      - name: external_cause_date
+        data_type: date
+        description: "{{ doc('patient_death_data__external_cause_date') }}"
+      - name: external_cause_location
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__external_cause_location') }}"
+      - name: was_pregnant
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__was_pregnant') }}"
+      - name: pregnancy_contributed
+        data_type: boolean
+        description: "{{ doc('patient_death_data__pregnancy_contributed') }}"
+      - name: was_fetal_or_infant
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__fetal_or_infant') }}"
+      - name: was_stillborn
+        data_type: character varying(255)
+        description: "{{ doc('patient_death_data__stillborn') }}"
+      - name: birth_weight
+        data_type: numeric
+        description: "{{ doc('patient_death_data__birth_weight') }}"
+      - name: completed_weeks_of_pregnancy
+        data_type: integer
+        description: "{{ doc('patient_death_data__carrier_pregnancy_weeks') }}"
+      - name: age_of_mother
+        data_type: integer
+        description: "{{ doc('patient_death_data__carrier_age') }}"
+      - name: condition_in_mother_affecting_fetus_or_newborn
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of condition in mother affecting fetus or newborn."
+      - name: death_within_day_of_birth
+        data_type: character varying(255)
+        description:  "{{ doc('patient_death_data__within_day_of_birth') }}"
+      - name: hours_survived_since_birth
+        data_type: integer
+        description: "{{ doc('patient_death_data__hours_survived_since_birth') }}"
+     

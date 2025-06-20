@@ -2,16 +2,13 @@ version: 2
 models:
   - name: imaging_results
     description: '{{ doc("table__imaging_results") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in imaging_results."
-        meta:
-          metrics:
-            total_imaging_results_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('imaging_results__completed_at') }}"

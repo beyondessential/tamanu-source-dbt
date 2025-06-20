@@ -2,8 +2,9 @@ version: 2
 models:
   - name: notes
     description: '{{ doc("table__notes") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: uuid
@@ -11,10 +12,6 @@ models:
         data_tests:
           - not_null
           - unique
-        meta:
-          metrics:
-            total_notes_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in notes."
@@ -30,10 +27,6 @@ models:
       - name: record_id
         data_type: character varying(255)
         description: "{{ doc('notes__record_id') }}"
-        meta:
-          metrics:
-            total_records_distinct_count:
-              type: count_distinct
       - name: authored_by_id
         data_type: character varying(255)
         description: "{{ doc('notes__author_id') }}"

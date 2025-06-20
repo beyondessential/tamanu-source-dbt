@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: ds__ongoing_conditions
+    description: Ongoing conditions
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age
+        data_type: integer
+        description: "{{ doc('generic__patients_age') }} when the condition was recorded."
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: condition
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the condition."
+      - name: condition_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_conditions__condition_id') }}"
+      - name: recorded_datetime
+        data_type: timestamp
+        description: "{{ doc('patient_conditions__recorded_date') }}"
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_conditions__examiner_id') }}"
+      - name: clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} diagnosing/recording this condition."
+      - name: date_resolved
+        data_type: date
+        description: "{{ doc('patient_conditions__resolution_date') }}"
+      - name: clinician_resolving
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who resolved the condition."

@@ -2,16 +2,13 @@ version: 2
 models:
   - name: patient_program_registrations
     description: '{{ doc("table__patient_program_registrations") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in patient_program_registrations."
-        meta:
-          metrics:
-            total_patient_program_registrations_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in patient_program_registrations."

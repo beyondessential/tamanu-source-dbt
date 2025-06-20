@@ -1,0 +1,60 @@
+version: 2
+models:
+  - name: patient_program_registrations_history
+    description: 'Historical changes to patient program registrations extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
+    latest_version: 1
+    config:
+      contract:
+        enforced: true
+      tags:
+        - clinical
+        - history
+    columns:
+      - name: changelog_id
+        data_type: uuid
+        description: "{{ doc('logs__changes__id') }}"
+      - name: logged_at
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at') }} in patient_program registrations history."
+      - name: updated_by_user_id
+        data_type: text
+        description: "{{ doc('logs__changes__updated_by_user_id') }} in patient_program registrations history."
+      - name: id
+        data_type: text
+        description: "{{ doc('generic__id') }} in patient_program_registrations."
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('generic__date') }} in patient_program_registrations history."
+      - name: registration_status
+        data_type: text
+        description: "{{ doc('patient_program_registrations__registration_status') }} from history."
+      - name: patient_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__patient_id') }} from history."
+      - name: program_registry_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__program_registry_id') }} from history."
+      - name: clinical_status_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__clinical_status_id') }} from history."
+      - name: registered_by_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__clinician_id') }} from history."
+      - name: registering_facility_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__registering_facility_id') }} from history."
+      - name: facility_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__facility_id') }} from history."
+      - name: village_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__village_id') }} from history."
+      - name: deactivated_by_id
+        data_type: text
+        description: "{{ doc('patient_program_registrations__deactivated_clinician_id') }} from history."
+      - name: deactivated_datetime
+        data_type: timestamp
+        description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
+    versions:
+      - v: 1
+        # Initial version - matches the columns defined above

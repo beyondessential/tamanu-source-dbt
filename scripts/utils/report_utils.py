@@ -1,13 +1,15 @@
 import os
 import re
 
-from .dbt_utils import get_deployment_version
+from .dbt_utils import get_deployment_version, get_project_name
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
 BASE_DIR = os.getcwd()
+PROJECT_NAME = get_project_name()
+DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
@@ -31,14 +33,14 @@ def compile_report(database, sql_file, config_file, output_file):
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
         config["query"] = re.sub(f'"{database}"\\.', "", query)
-        
+
         write_file(output_file, config, "json")
     except Exception as e:
         cprint(f"Error processing files: {e}", "error")
         exit(1)
 
 
-def generate_project_reports(target):
+def generate_project_reports():
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
@@ -68,7 +70,14 @@ def generate_project_reports(target):
         report = manifest["nodes"][node]
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
-            os.path.join(BASE_DIR, report["original_file_path"])
+            os.path.join(
+                (
+                    DBT_PACKAGE_DIR
+                    if report["package_name"] != PROJECT_NAME
+                    else BASE_DIR
+                ),
+                report["original_file_path"],
+            )
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
@@ -140,7 +149,7 @@ fs.readdir(folderPath, async (err, files) => {
     cprint(f"Script created successfully at: {output_path}", "success")
 
 
-def generate_reporting_schema_script(target):
+def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
@@ -165,7 +174,7 @@ def generate_reporting_schema_script(target):
     ]
 
     if not nodes:
-        cprint(f"No models found with the target: {target}", "error")
+        cprint(f"No models found", "error")
         return
 
     processed = set()
@@ -195,7 +204,7 @@ def generate_reporting_schema_script(target):
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
-    
+
     for node in ordered:
         model = manifest["nodes"][node]
         if model["compiled_path"] is None:
@@ -206,7 +215,7 @@ def generate_reporting_schema_script(target):
         scripts.append(
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
-    
+
     ensure_directory_exists(VIEWS_DIR)
     output_file = os.path.join(
         VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"

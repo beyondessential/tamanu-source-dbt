@@ -2,16 +2,13 @@ version: 2
 models:
   - name: patient_conditions
     description: '{{ doc("table__patient_conditions") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in patient_conditions."
-        meta:
-          metrics:
-            total_patient_conditions_count:
-              type: count
       - name: recorded_datetime
         data_type: timestamp
         description: "{{ doc('patient_conditions__recorded_date') }}"
@@ -24,10 +21,6 @@ models:
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('patient_conditions__patient_id') }}"
-        meta:
-          metrics:
-            total_patients_distinct_count:
-              type: count_distinct
       - name: recorded_by_id
         data_type: character varying(255)
         description: "{{ doc('patient_conditions__examiner_id') }}"

@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: ds__imaging_requests
+    description: Imaging requests
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: age
+        data_type: integer
+        description: "{{ doc('generic__patients_age') }} at the time of imaging."
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} where the encounter is currently active or has ended."
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the encounter is currently active or has ended."
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('administered_vaccines__department_id') }}"
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__department') }} where the encounter is currently active or has ended."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group_id') }} where the encounter is currently active or has ended."
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} where the encounter is currently active or has ended."
+      - name: request_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__requested_by_id') }}"
+      - name: requested_datetime
+        data_type: date
+        description: "{{ doc('imaging_requests__requested_date') }}"
+      - name: supervising_clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__examiner_id') }}"
+      - name: supervising_clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} where the encounter is currently active or has ended."
+      - name: requesting_clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__requested_by_id') }}"
+      - name: requesting_clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who requested the imaging."
+      - name: priority
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__priority') }}"
+      - name: imaging_type_id
+        data_type: character varying(31)
+        description: "{{ doc('imaging_requests__imaging_type') }}"
+      - name: imaging_type
+        data_type: character varying(31)
+        description: "{{ doc('imaging_requests__imaging_type') }}"
+      - name: imaging_area
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the imaging area."
+      - name: status_id
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__status') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('imaging_requests__status') }}"
+      - name: completed_datetime
+        data_type: timestamp
+        description: "{{ doc('imaging_results__completed_at') }}"
+      - name: reason_for_cancellation
+        data_type: character varying(1024)
+        description: "{{ doc('imaging_requests__reason_for_cancellation') }}"

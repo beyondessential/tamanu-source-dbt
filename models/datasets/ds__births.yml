@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: ds__births
+    description: Births
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }}"
+      - name: registered_by
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who registered the patient in Tamanu."
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: nationality
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the nationality."
+      - name: ethnicity
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the ethnicity."
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: mother
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__mother_id') }}"
+      - name: father
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__father_id') }}"
+      - name: birth_time
+        data_type: time
+        description: "{{ doc('patient_birth_data__time_of_birth') }}"
+      - name: gestational_age_estimate
+        data_type: double precision
+        description: "{{ doc('patient_birth_data__gestational_age_estimate') }}"
+      - name: registered_birth_place
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__registered_birth_place') }}"
+      - name: birth_facility_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__birth_facility_id') }}"
+      - name: birth_facility
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility') }} where the birth was recorded at."
+      - name: attendant_at_birth
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__attendant_at_birth') }}"
+      - name: name_of_attendant_at_birth
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__name_of_attendant_at_birth') }}"
+      - name: birth_delivery_type
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__birth_delivery_type') }}"
+      - name: birth_type
+        data_type: character varying(255)
+        description: "{{ doc('patient_birth_data__birth_type') }}"
+      - name: birth_weight
+        data_type: numeric
+        description: "{{ doc('patient_birth_data__birth_weight') }}"
+      - name: birth_length
+        data_type: numeric
+        description: "{{ doc('patient_birth_data__birth_length') }}"
+      - name: apgar_score_one_minute
+        data_type: integer
+        description: "{{ doc('patient_birth_data__apgar_score_one_minute') }}"
+      - name: apgar_score_five_minutes
+        data_type: integer
+        description: "{{ doc('patient_birth_data__apgar_score_five_minutes') }}"
+      - name: apgar_score_ten_minutes
+        data_type: integer
+        description: "{{ doc('patient_birth_data__apgar_score_ten_minutes') }}"
