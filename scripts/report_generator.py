@@ -25,7 +25,7 @@ def main():
     args = sys.argv[1:]
     project = get_arg_value(args, "--project", "-p", "generic")
     report_name = get_arg_value(
-        args, "--name", "-n", f"report-{datetime.now().strftime("%Y%m%d_%H%M%S")}"
+        args, "--name", "-n", f"report-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     )
 
     print(f"\nGenerating files for '{report_name}' in '{project}'")
