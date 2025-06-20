@@ -2,16 +2,13 @@ version: 2
 models:
   - name: patient_program_registrations
     description: '{{ doc("table__patient_program_registrations") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in patient_program_registrations."
-        meta:
-          metrics:
-            total_patient_program_registrations_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in patient_program_registrations."
@@ -39,6 +36,9 @@ models:
       - name: village_id
         data_type: character varying(255)
         description: "{{ doc('patient_program_registrations__village_id') }}"
-      - name: is_most_recent
-        data_type: boolean
-        description: "{{ doc('patient_program_registrations__is_most_recent') }}"
+      - name: deactivated_by_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_program_registrations__deactivated_clinician_id') }}"
+      - name: deactivated_datetime
+        data_type: timestamp
+        description: "{{ doc('patient_program_registrations__deactivated_date') }}"

@@ -12,6 +12,8 @@ select
     f.name as facility,
     d.id as department_id,
     d.name as department,
+    req_dept.id as requesting_department_id,
+    req_dept.name as requesting_department,
     lg.id as location_group_id,
     lg.name as location_group,
     l.id as location_id,
@@ -40,6 +42,7 @@ select
     lr.published_datetime as lab_request_published_datetime,
     lt.date as lab_test_date,
     lt.result,
+    lt.verification,
     ltt.id as lab_test_type_id,
     ltt.name as lab_test_type,
     lt.completed_datetime as lab_test_completed_datetime
@@ -50,6 +53,7 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('departments') }} d on d.id = e.department_id
+left join {{ ref('departments') }} req_dept on req_dept.id = lr.department_id
 left join {{ ref('facilities') }} f on f.id = l.facility_id
 left join {{ ref('users') }} requester on requester.id = lr.requested_by_id
 left join {{ ref('lab_test_panel_requests') }} ltpr on ltpr.id = lr.lab_test_panel_request_id

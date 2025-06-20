@@ -8,6 +8,7 @@ select
     village as "{{ translate_label('patientVillage', 'Village') }}",
     facility as "{{ translate_label('facility', 'Facility') }}",
     department as "{{ translate_label('department', 'Department') }}",
+    requesting_department as "{{ translate_label('requestingDepartment', 'Requesting department') }}",
     concat_ws(', ', location_group, location) as "{{ translate_label('location', 'Location') }}",
     lab_request_id as "{{ translate_label('labRequestId', 'Request ID') }}",
     status as "{{ translate_label('labRequestStatus', 'Status') }}",
@@ -18,6 +19,7 @@ select
     lab_request_published_datetime as "{{ translate_label('labRequestPublishedDateTime', 'Lab request published date and time') }}",
     lab_test_date as "{{ translate_label('labTestDate', 'Lab test date') }}",
     result as "{{ translate_label('labTestResults', 'Result') }}",
+    verification as "{{ translate_label('labTestVerification', 'Verification') }}",
     lab_test_type as "{{ translate_label('labTestType', 'Lab test type') }}",
     lab_test_completed_datetime as "{{ translate_label('labTestCompletedDateTime', 'Lab test completed date and time') }}"
 from {{ ref('ds__lab_tests') }}

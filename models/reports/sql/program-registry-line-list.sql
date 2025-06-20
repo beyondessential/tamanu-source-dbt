@@ -13,7 +13,6 @@ select
     registration_datetime as "{{ translate_label('registryRegisteredDate', 'Date of registration') }}"
 from {{ ref('ds__patient_program_registrations') }}
 where registration_status = 'active'
-    and is_most_recent
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

@@ -1,10 +1,12 @@
+.clinerules
 .idea
 .vscode
 .DS_Store
 __pycache__
 compiled/
 dbt_packages/
-logs/
+/logs/
+models/surveys/
 target/
 package-lock.yml
 .user.yml
