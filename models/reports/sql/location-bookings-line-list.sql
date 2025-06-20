@@ -46,3 +46,8 @@ where case
         when {{ parameter('clinicianId') }} is null then true
         else clinician_id = {{ parameter('clinicianId') }}
     end
+    and
+    case
+        when {{ parameter('bookingTypeId') }} is null then true
+        else booking_type_id = {{ parameter('bookingTypeId') }}
+    end
