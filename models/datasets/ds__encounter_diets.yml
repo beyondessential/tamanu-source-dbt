@@ -3,8 +3,9 @@ version: 2
 models:
   - name: ds__encounter_diets
     description: Active encounters with their associated dietary requirements
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: encounter_id
         data_type: character varying(255)
@@ -15,10 +16,6 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
       - name: patient_name
         data_type: character varying(255)
         description: "{{ doc('generic__patients_name') }}"

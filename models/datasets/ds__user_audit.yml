@@ -3,16 +3,13 @@ version: 2
 models:
   - name: ds__user_audit
     description: User audit
-    tags:
-      - administration
+    config:
+      tags:
+        - administration
     columns:
       - name: user_id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in users."
-        meta:
-          metrics:
-            total_users_count:
-              type: count
       - name: user_name
         data_type: character varying(255)
         description: "{{ doc('users__display_id') }}"
@@ -25,10 +22,6 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
       - name: patient_category
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the billing type."

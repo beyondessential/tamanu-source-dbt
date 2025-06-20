@@ -2,6 +2,9 @@ version: 2
 models:
   - name: ds__patients
     description: Patients
+    config:
+      tags:
+        - patient
     columns:
       - name: registration_date
         data_type: date

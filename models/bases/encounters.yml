@@ -2,8 +2,9 @@ version: 2
 models:
   - name: encounters
     description: '{{ doc("table__encounters") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
@@ -11,10 +12,6 @@ models:
         data_tests:
           - not_null
           - unique
-        meta:
-          metrics:
-            total_encounters_count:
-              type: count
       - name: start_datetime
         data_type: timestamp
         description: "{{ doc('encounters__start_date') }}"
@@ -38,10 +35,6 @@ models:
           - relationships:
               to: ref('patients')
               field: id
-        meta:
-          metrics:
-            total_patients_distinct_count:
-              type: count_distinct
       - name: department_id
         data_type: character varying(255)
         description: "{{ doc('encounters__department_id') }}"
@@ -51,10 +44,6 @@ models:
       - name: clinician_id
         data_type: character varying(255)
         description: "{{ doc('encounters__examiner_id') }}"
-        meta:
-          metrics:
-            total_clinicians_distinct_count:
-              type: count_distinct
       - name: patient_billing_type_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_billing_type_id') }}"

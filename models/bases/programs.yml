@@ -2,16 +2,13 @@ version: 2
 models:
   - name: programs
     description: '{{ doc("table__programs") }}'
-    tags:
-      - reference
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in programs."
-        meta:
-          metrics:
-            total_programs_count:
-              type: count
       - name: code
         data_type: character varying(255)
         description: "{{ doc('programs__code') }}"

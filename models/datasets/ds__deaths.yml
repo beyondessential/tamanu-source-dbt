@@ -3,8 +3,9 @@ version: 2
 models:
   - name: ds__deaths
     description: Deaths
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: patient_id
         data_type: character varying(255)
@@ -18,10 +19,6 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
       - name: age
         data_type: integer
         description: "{{ doc('generic__patients_age') }} at the time of diagnosis."

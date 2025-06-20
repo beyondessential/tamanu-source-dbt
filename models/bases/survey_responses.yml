@@ -2,16 +2,13 @@ version: 2
 models:
   - name: survey_responses
     description: '{{ doc("table__survey_responses") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in survey_responses."
-        meta:
-          metrics:
-            total_survey_responses_count:
-              type: count
       - name: start_datetime
         data_type: timestamp
         description: "{{ doc('survey_responses__start_time') }}"
