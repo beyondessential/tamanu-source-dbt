@@ -10,7 +10,7 @@ ROLE = "reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
 DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
-REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
+REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports", f"reports_v{get_deployment_version()}")
 VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
 
 
