@@ -50,6 +50,17 @@ To generate a report list:
 python list_tamanu_reports.py
 ```
 
+## Generate file of translation strings
+
+This script generates a file of all the translation strings for reports.
+
+### Usage
+To generate the translation file:
+
+```
+python generate_translation_file.py
+```
+
 ## Versioning
 
 We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number will mirror Tamanu's release
