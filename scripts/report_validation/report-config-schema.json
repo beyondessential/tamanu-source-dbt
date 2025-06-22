@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tamanu.io/schemas/report-config.json",
+  "title": "Tamanu Report Configuration Schema",
+  "description": "JSON Schema for validating Tamanu report configuration files",
+  "type": "object",
+  "required": [
+    "query",
+    "status",
+    "dbSchema",
+    "queryOptions"
+  ],
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "SQL query or placeholder for the report",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Publication status of the report",
+      "enum": [
+        "draft",
+        "published"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "description": "Detailed description and notes about the report"
+    },
+    "dbSchema": {
+      "type": "string",
+      "description": "Database schema to use for the report",
+      "enum": [
+        "raw",
+        "reporting"
+      ]
+    },
+    "queryOptions": {
+      "type": "object",
+      "description": "Configuration options for the report query",
+      "required": [
+        "dataSources",
+        "defaultDateRange",
+        "parameters"
+      ],
+      "properties": {
+        "dataSources": {
+          "type": "array",
+          "description": "Available data sources for the report",
+          "items": {
+            "type": "string",
+            "enum": ["thisFacility", "allFacilities"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "defaultDateRange": {
+          "type": "string",
+          "description": "Default date range for the report",
+          "enum": [
+            "allTime",
+            "24hours",
+            "7days",
+            "30days",
+            "18years",
+            "next30days"
+          ]
+        },
+        "dateRangeLabel": {
+          "type": "string",
+          "description": "Custom label for the date range input"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the report"
+        },
+        "parameters": {
+          "type": "array",
+          "description": "List of parameters for the report",
+          "items": {
+            "$ref": "#/definitions/parameter"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "reportDefinitionId": {
+      "type": "string",
+      "description": "ID for the report definition"
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "parameter": {
+      "type": "object",
+      "description": "A report parameter configuration",
+      "required": [
+        "parameterField",
+        "label",
+        "name"
+      ],
+      "properties": {
+        "parameterField": {
+          "type": "string",
+          "description": "Type of parameter field",
+          "enum": [
+            "AppointmentTypeField",
+            "BookingTypeField",
+            "DiagnosisField",
+            "EmptyField",
+            "FacilityField",
+            "ImagingTypeField",
+            "LabTestCategoryField",
+            "LabTestLaboratoryField",
+            "ParameterAutocompleteField",
+            "ParameterMultiselectField",
+            "ParameterSelectField",
+            "PractitionerField",
+            "SensitiveLabTestCategoryField",
+            "VaccineField",
+            "VaccineCategoryField",
+            "VillageField"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label for the parameter",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "description": "Internal name/identifier for the parameter",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+        },
+        "filterBySelectedFacility": {
+          "type": "boolean",
+          "description": "Whether to filter by the selected facility"
+        },
+        "suggesterEndpoint": {
+          "type": "string",
+          "description": "API endpoint for autocomplete suggestions",
+          "enum": [
+            "department",
+            "facility",
+            "facilityLocationGroup",
+            "labTestCategory",
+            "location",
+            "locationGroup",
+            "patient",
+            "patientBillingType",
+            "paymentMethod",
+            "practitioner",
+            "programRegistry",
+            "village"
+          ]
+        },
+        "suggesterOptions": {
+          "type": "object",
+          "description": "Additional options for the suggester endpoint",
+          "properties": {
+            "baseQueryParameters": {
+              "type": "object",
+              "description": "Base query parameters for the suggester",
+              "properties": {
+                "filterByFacility": {
+                  "type": "boolean",
+                  "description": "Whether to filter suggestions by facility"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "options": {
+          "type": "array",
+          "description": "Static options for multiselect fields",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "Display label for the option",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "description": "Value for the option",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "parameterField": {
+                "const": "FacilityField"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "filterBySelectedFacility": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "parameterField": {
+                "const": "ParameterAutocompleteField"
+              }
+            }
+          },
+          "then": {
+            "required": ["suggesterEndpoint"],
+            "properties": {
+              "suggesterEndpoint": {
+                "type": "string"
+              },
+              "suggesterOptions": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "parameterField": {
+                "const": "ParameterMultiselectField"
+              }
+            }
+          },
+          "then": {
+            "required": ["options"],
+            "properties": {
+              "options": {
+                "type": "array"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "parameterField": {
+                "const": "ParameterSelectField"
+              }
+            }
+          },
+          "then": {
+            "required": ["options"],
+            "properties": {
+              "options": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
