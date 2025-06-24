@@ -69,18 +69,95 @@ The schema supports multiple types of parameters:
 ```
 
 Supported suggester endpoints:
+- `additionalInvoiceProduct`
+- `allergy`
+- `angiogramImagingArea`
+- `appointmentType`
+- `arrivalMode`
+- `bookableLocationGroup`
+- `carePlan`
+- `catchment`
+- `colonoscopyImagingArea`
+- `condition`
+- `contactRelationship`
+- `country`
+- `ctScanImagingArea`
 - `department`
+- `designation`
+- `diagnosis`
+- `diet`
+- `dischargeDisposition`
+- `diseaseCoding`
+- `division`
+- `drug`
+- `ecgImagingArea`
+- `echocardiogramImagingArea`
+- `endoscopyImagingArea`
+- `ethnicity`
 - `facility`
 - `facilityLocationGroup`
+- `familyRelation`
+- `fluroscoptyImagingArea`
+- `holterMonitorImagingArea`
+- `imagingType`
+- `insurer`
+- `invoiceProducts`
+- `labSampleSite`
 - `labTestCategory`
+- `labTestLaboratory`
+- `labTestMethod`
+- `labTestPanel`
+- `labTestPriority`
+- `labTestType`
 - `location`
 - `locationGroup`
+- `mammogramDiagImagingArea`
+- `mamogramImagingArea`
+- `mamogramScreenImagingArea`
+- `manufacturer`
+- `medicalArea`
+- `mriImagingArea`
+- `multiReferenceData`
+- `nationality`
+- `nonSensitiveLabTestCategory`
+- `nursingZone`
+- `occupation`
+- `orthopantomographyImagingArea`
 - `patient`
 - `patientBillingType`
+- `patientLabTestCategories`
+- `patientLabTestPanelTypes`
+- `patientType`
 - `paymentMethod`
+- `placeOfBirth`
 - `practitioner`
+- `procedureType`
 - `programRegistry`
+- `programRegistryClinicalStatus`
+- `programRegistryCondition`
+- `reaction`
+- `referralSource`
+- `religion`
+- `secondaryIdType`
+- `sensitiveLabTestCategory`
+- `settlement`
+- `specimenTest`
+- `stressTestImagingArea`
+- `subdivision`
+- `survey`
+- `taskDeletionReason`
+- `taskNotCompletedReason`
+- `taskSet`
+- `taskTemplate`
+- `template`
+- `triageReason`
+- `ultrasoundImagingArea`
+- `vaccine`
+- `vaccineCircumstance`
+- `vaccineNotGivenReason`
+- `vascularStudyImagingArea`
 - `village`
+- `xRayImagingArea`
 
 #### 3. ParameterMultiselectField
 ```json
@@ -120,19 +197,24 @@ Supported suggester endpoints:
 }
 ```
 
-#### 5. Specialized Field Types
+#### 5. Specialised Field Types
 The schema also supports specialized field types that don't require additional configuration:
+
 - `AppointmentTypeField` - For appointment type selection
 - `BookingTypeField` - For booking type selection
 - `DiagnosisField` - For diagnosis selection
 - `EmptyField` - For empty/placeholder fields
 - `ImagingTypeField` - For imaging type selection
 - `LabTestCategoryField` - For lab test category selection
+- `LabTestCategorySensitiveField` - For sensitive lab test category selection
 - `LabTestLaboratoryField` - For lab test laboratory selection
+- `LabTestTypeField` - For lab test type selection
+- `LocationField` - For location selection
+- `ParameterSuggesterSelectField` - For suggester-based select fields
+- `PatientField` - For patient selection
 - `PractitionerField` - For practitioner selection
-- `SensitiveLabTestCategoryField` - For sensitive lab test category selection
-- `VaccineField` - For vaccine selection
 - `VaccineCategoryField` - For vaccine category selection
+- `VaccineField` - For vaccine selection
 - `VillageField` - For village selection
 
 ## Validation
@@ -158,16 +240,6 @@ The script will:
 3. Validate each file against the schema
 4. Report validation results and errors
 
-### Manual Validation
-
-You can also validate individual files using any JSON schema validator that supports Draft 7 schemas.
-
-**Example using ajv-cli:**
-```bash
-npm install -g ajv-cli
-ajv validate -s scripts/report_validation/report-config-schema.json -d "models/reports/config/*.json"
-```
-
 ## Schema Rules
 
 1. **Required Fields**: All required fields must be present
@@ -177,19 +249,19 @@ ajv validate -s scripts/report_validation/report-config-schema.json -d "models/r
 5. **Unique Data Sources**: Data sources array cannot contain duplicates
 6. **Conditional Requirements**: 
    - `ParameterAutocompleteField` requires `suggesterEndpoint`
-   - `ParameterMultiselectField` requires `options` array
-7. **No Additional Properties**: Extra fields not defined in the schema are not allowed
+   - `ParameterMultiselectField` and `ParameterSelectField` require `options` array
+7. **No Additional Properties**: Extra fields not defined in the parameter schema are not allowed (report level allows additional properties)
 
 ## Example Configuration
 
 ```json
 {
   "query": "SELECT * FROM patients WHERE created_at >= :startDate",
-  "name": "Patient Registration Report",
   "status": "published",
   "notes": "Lists all patients registered within the selected date range",
   "dbSchema": "reporting",
   "queryOptions": {
+    "name": "Patient Registration Report",
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
@@ -198,6 +270,17 @@ ajv validate -s scripts/report_validation/report-config-schema.json -d "models/r
         "label": "Facility",
         "name": "facilityId",
         "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
       }
     ]
   }
