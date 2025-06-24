@@ -3,7 +3,6 @@ with filtered_changes as (
         and (version = 'unknown'
             or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
-        and record_deleted_at is null
         and record_data->>'patient_id' != '{{ var("test_patient") }}'
 )
 
@@ -11,7 +10,7 @@ select
     fc.changelog_id,
     fc.logged_at::timestamp,
     fc.updated_by_user_id,
-    fc.record_data->>'id' as id,
+    fc.record_id as id,
     (fc.record_data->>'date')::timestamp as datetime,
     fc.record_data->>'registration_status' as registration_status,
     fc.record_data->>'patient_id' as patient_id,

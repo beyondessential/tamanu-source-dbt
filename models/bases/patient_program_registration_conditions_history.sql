@@ -3,7 +3,6 @@ with filtered_changes as (
         and (version = 'unknown'
             or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
-        and record_deleted_at is null
 )
 
 select
