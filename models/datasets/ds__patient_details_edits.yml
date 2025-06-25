@@ -27,7 +27,7 @@ models:
         description: "{{ doc('patients__sex') }} at the time of edit."
       - name: village_id
         data_type: text
-        description: "{{ doc('patients__village') }} at the time of edit."
+        description: "{{ doc('patients__village_id') }} at the time of edit."
       - name: village
         data_type: text
         description: "Village name where the patient resides at the time of edit."
