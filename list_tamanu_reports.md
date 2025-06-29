@@ -301,7 +301,7 @@ This report generates a list of all location bookings for the selected parameter
 
 **Filters**
 
-Facility, Area, Clinician, Status
+Facility, Area, Clinician, Booking type, Status
 
 **Default date range**: next30days
 
@@ -330,6 +330,36 @@ This report generates a list of all patients with a scheduled appointment for th
 Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
+
+
+---
+
+### Patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Patient views line list
+
+**Report Description**
+
+This report lists all of the users that have viewed the selected patient's record for the selected date range and when the view occurred. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. Each individual access by a user will create a new row within the report. Views are listed in chronological order for the selected date range.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
 
 
 ---
