@@ -301,7 +301,7 @@ This report generates a list of all location bookings for the selected parameter
 
 **Filters**
 
-Facility, Area, Clinician, Status
+Facility, Area, Clinician, Booking type, Status
 
 **Default date range**: next30days
 
@@ -334,6 +334,36 @@ Facility, Area, Clinician, Appointment type, Status
 
 ---
 
+### Patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Patient views line list
+
+**Report Description**
+
+This report lists all of the users that have viewed the selected patient's record for the selected date range and when the view occurred. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. Each individual access by a user will create a new row within the report. Views are listed in chronological order for the selected date range.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
 ### Procedures line list
 
 **Report Description**
@@ -361,6 +391,30 @@ Status: Current status of the patient per the 'status' function within the regis
 Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
 Registered by: Name of Tamanu user who added the patient to this registry
 Registering facility: Facility selected when patient is first added to the registry
+
+**Filters**
+
+Registry
+
+**Default date range**: allTime
+
+
+---
+
+### Program registry removed patients line list
+
+**Report Description**
+
+Program registry removed patients line list v2.3
+This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register should not be included in this report.
+Home village: Per patient details
+Registering facility: Facility selected when patient is first added to the registry
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
+Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
+Registered by: Name of user who added the patient to the registry
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
+Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list this as 2 separate lines)
+Removed by: Name of user who removed the patient from the registry
 
 **Filters**
 
