@@ -23,7 +23,7 @@ select
     lab_test_type as "{{ translate_label('labTestType', 'Lab test type') }}",
     lab_test_completed_datetime as "{{ translate_label('labTestCompletedDateTime', 'Lab test completed date and time') }}"
 from {{ ref('ds__lab_tests') }}
-where is_sensitive = true
+where is_sensitive
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
