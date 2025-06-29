@@ -63,6 +63,7 @@ When working with models, always respect the following hierarchy:
 - Place files in appropriate directories based on model layer
 - **Never delete files without understanding downstream dependencies**
 - Use `dbt deps` to manage package dependencies
+- **Never manually edit `list_tamanu_reports.md`** - this file is auto-generated from report configuration files in `models/reports/config/`
 
 ## Development Workflow
 1. Understand the data flow and existing model dependencies
