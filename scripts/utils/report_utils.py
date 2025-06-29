@@ -10,8 +10,8 @@ ROLE = "reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
 DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
-REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports", f"reports_v{get_deployment_version()}")
-VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
+VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{get_deployment_version()}")
+REPORTS_DIR = os.path.join(VERSION_DIR, "reports")
 
 
 def compile_report(database, sql_file, config_file, output_file):
@@ -216,8 +216,8 @@ def generate_reporting_schema_script():
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
 
-    ensure_directory_exists(VIEWS_DIR)
+    ensure_directory_exists(VERSION_DIR)
     output_file = os.path.join(
-        VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
+        VERSION_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
     )
     write_file(output_file, "\n".join(scripts))
