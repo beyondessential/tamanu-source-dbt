@@ -45,6 +45,7 @@ select
     lt.verification,
     ltt.id as lab_test_type_id,
     ltt.name as lab_test_type,
+    ltt.is_sensitive,
     lt.completed_datetime as lab_test_completed_datetime
 from {{ ref('lab_requests') }} lr
 join {{ ref('encounters') }} e on e.id = lr.encounter_id
