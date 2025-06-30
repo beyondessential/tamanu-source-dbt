@@ -64,6 +64,14 @@ When working with models, always respect the following hierarchy:
 - **Never delete files without understanding downstream dependencies**
 - Use `dbt deps` to manage package dependencies
 
+## Report Configuration Validation
+- **Required**: Validate all report configuration files using `scripts/validate_report_configs.py`
+- Report configurations must conform to the JSON schema defined in `scripts/report_validation/report-config-schema.json`
+- **Always run validation before committing changes** to report configurations
+- Configuration files are located in `models/reports/config/` and must be valid JSON
+- The validation script checks all `.json` files in the config directory against the schema
+- **Fix all validation errors** before proceeding with deployment
+
 ## Development Workflow
 1. Understand the data flow and existing model dependencies
 2. Create or modify models following layer-appropriate patterns
@@ -71,4 +79,5 @@ When working with models, always respect the following hierarchy:
 4. Implement appropriate tests
 5. Run `sqlfluff fix` for code formatting
 6. Execute `dbt test` to validate changes
-7. Use `dbt run` to build and verify models
+7. **Validate report configurations** using `python scripts/validate_report_configs.py`
+8. Use `dbt run` to build and verify models
