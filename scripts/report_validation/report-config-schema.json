@@ -147,7 +147,7 @@
           "description": "API endpoint for autocomplete suggestions",
           "enum": [
             "additionalInvoiceProduct",
-            "allergy"
+            "allergy",
             "angiogramImagingArea",
             "appointmentType",
             "arrivalMode",

@@ -65,23 +65,22 @@ def find_config_files(config_dir: str) -> List[str]:
 def main():
     """Main validation function."""
     # Set up paths
-    script_dir = Path(__file__).parent
-    project_root = script_dir.parent
-    config_dir = project_root / "models" / "reports" / "config"
-    schema_path = script_dir / "report_validation" / "report-config-schema.json"
+    BASE_DIR = Path(os.getcwd())
+    CONFIG_DIR = BASE_DIR / "models" / "reports" / "config"
+    SCHEMA_PATH = BASE_DIR / "scripts" / "report_validation" / "report-config-schema.json"
     
     print("Tamanu Report Configuration Validator")
     print("=" * 40)
-    print(f"Schema: {schema_path}")
-    print(f"Config directory: {config_dir}")
+    print(f"Schema: {SCHEMA_PATH}")
+    print(f"Config directory: {CONFIG_DIR}")
     print()
     
     # Load schema
-    schema = load_schema(str(schema_path))
+    schema = load_schema(SCHEMA_PATH)
     print(f"✓ Schema loaded successfully")
     
     # Find configuration files
-    config_files = find_config_files(str(config_dir))
+    config_files = find_config_files(str(CONFIG_DIR))
     if not config_files:
         print("No configuration files found to validate.")
         return
