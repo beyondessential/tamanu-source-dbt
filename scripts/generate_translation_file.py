@@ -7,11 +7,11 @@ from utils.dbt_utils import get_dbt_project_vars, get_deployment_version
 from utils.file_utils import ensure_directory_exists, read_file, upload_to_s3
 from utils.system_utils import cprint
 
-BASE_DIR = Path(os.getcwd())
-PKG_BASE_DIR = BASE_DIR / "dbt_packages" / "tamanu_source_dbt"
-BASE_SQL_DIR = BASE_DIR / "models" / "reports" / "sql"
-PKG_BASE_SQL_DIR = PKG_BASE_DIR / "models" / "reports" / "sql"
-TRANSLATION_DIR = BASE_DIR / "compiled" / "translations"
+BASE_DIR = os.getcwd()
+PKG_BASE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
+BASE_SQL_DIR = os.path.join(BASE_DIR, "models", "reports", "sql")
+PKG_BASE_SQL_DIR = os.path.join(PKG_BASE_DIR, "models", "reports", "sql")
+TRANSLATION_DIR = os.path.join(BASE_DIR, "compiled", "translations")
 TRANSLATION_PATTERN = (
     r"\{\{\s*translate_label\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]+)['\"]\)\s*\}\}"
 )
@@ -66,7 +66,7 @@ def main():
 
         ensure_directory_exists(TRANSLATION_DIR)
         version = get_deployment_version()
-        output_file = TRANSLATION_DIR / f"report_translations_v{version}.csv"
+        output_file = os.path.join(TRANSLATION_DIR, f"report_translations_v{version}.csv")
         df.to_csv(output_file, index=False)
         cprint(f"Translations saved to {output_file}", "success")
 
