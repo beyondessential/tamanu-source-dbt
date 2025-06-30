@@ -1,6 +1,6 @@
 select
     i.patient_name as "{{ translate_label('patientName','Patient name') }}",
-    i.display_id as "{{ translate_label('patientDisplayId','Hospital ID') }}",
+    i.display_id as "{{ translate_label('patientDisplayId','Patient ID') }}",
     i.social_security_number as "{{ translate_label('patientSocialSecurityNumber','Social security number') }}",
     i.invoice_number as "{{ translate_label('invoiceNumber','Invoice number') }}",
     i.admission_datetime::date as "{{ translate_label('admissionDate','Admission date') }}",
@@ -10,7 +10,7 @@ select
     i.insurer_name as "{{ translate_label('insurerName','Name of insurer') }}",
     i.total_invoice_amount as "{{ translate_label('invoiceTotalAmount','Total invoice amount') }}",
     i.insurer_total_amount as "{{ translate_label('invoiceInsurerTotal','Insurer total') }}",
-    i.remaining_insurer_balance as "{{ translate_label('invoiceRemainingInsurerBalance','Remaining Balance (insurer payments)') }}"
+    i.remaining_insurer_balance as "{{ translate_label('invoiceRemainingInsurerBalance','Remaining balance (insurer payments)') }}"
 from {{ ref("ds__invoicing_transactions_insurer") }} i
 where i.remaining_insurer_balance > 0
     and case

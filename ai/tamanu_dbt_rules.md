@@ -42,6 +42,7 @@ When working with models, always respect the following hierarchy:
 - Keep translation string lists concise and avoid duplication
 - **Always check for existing translations before creating new ones**
 - Follow established naming conventions for translation keys
+- **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
 
 ## Code Style Standards
 - **Mandatory**: Use `.sqlfluff` for SQL code style enforcement
