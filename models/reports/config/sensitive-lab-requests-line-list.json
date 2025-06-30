@@ -14,7 +14,7 @@
         "name": "requestedById"
       },
       {
-        "parameterField": "SensitiveLabTestCategoryField",
+        "parameterField": "LabTestCategorySensitiveField",
         "label": "Test category",
         "name": "testCategoryId"
       },
