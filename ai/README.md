@@ -12,39 +12,51 @@ To use these AI rules with Cline or Cursor, you need to create a symbolic link (
 
 ### For Cline
 
-Cline looks for rules in the `.clinerules` directory. Create a symbolic link as follows:
+Cline looks for rules in the `.clinerules` directory. Create a junction/symbolic link to the entire `ai` directory as follows:
 
-#### On Windows (PowerShell)
+#### On Windows (Command Prompt)
+
+```cmd
+# Create a junction link (doesn't require admin privileges)
+mklink /J .clinerules ai
+```
+
+#### On Windows (PowerShell - Alternative method)
 
 ```powershell
-# Create the .clinerules directory if it doesn't exist
+# Create individual hard links if junction is not preferred
 New-Item -ItemType Directory -Path ".clinerules" -Force
-
-# Create a hard link (since symbolic links require admin privileges on Windows)
 New-Item -ItemType HardLink -Path ".clinerules\tamanu_source_dbt_rules.md" -Target "ai\tamanu_source_dbt_rules.md"
 ```
 
 #### On macOS/Linux
 
 ```bash
-# Create the .clinerules directory if it doesn't exist
-mkdir -p .clinerules
-
-# Create a symbolic link
-ln -s ../ai/tamanu_source_dbt_rules.md .clinerules/tamanu_source_dbt_rules.md
+# Create a symbolic link to the entire ai directory
+ln -s ai .clinerules
 ```
 
 ### For Cursor
 
-Cursor looks for rules in the `.cursor/rules` directory. Create a symbolic link as follows:
+Cursor looks for rules in the `.cursor/rules` directory. Create a junction/symbolic link as follows:
 
-#### On Windows (PowerShell)
+#### On Windows (Command Prompt)
+
+```cmd
+# Create the .cursor/rules directory if it doesn't exist
+mkdir .cursor\rules
+
+# Create a junction link (doesn't require admin privileges)
+mklink /J .cursor\rules ai
+```
+
+#### On Windows (PowerShell - Alternative method)
 
 ```powershell
 # Create the .cursor/rules directory if it doesn't exist
 New-Item -ItemType Directory -Path ".cursor\rules" -Force
 
-# Create a hard link (since symbolic links require admin privileges on Windows)
+# Create individual hard links if junction is not preferred
 New-Item -ItemType HardLink -Path ".cursor\rules\tamanu_source_dbt_rules.md" -Target "ai\tamanu_source_dbt_rules.md"
 ```
 
@@ -54,8 +66,8 @@ New-Item -ItemType HardLink -Path ".cursor\rules\tamanu_source_dbt_rules.md" -Ta
 # Create the .cursor/rules directory if it doesn't exist
 mkdir -p .cursor/rules
 
-# Create a symbolic link
-ln -s ../../ai/tamanu_source_dbt_rules.md .cursor/rules/tamanu_source_dbt_rules.md
+# Create a symbolic link to the entire ai directory
+ln -s ../../ai .cursor/rules
 ```
 
 ## Benefits of Using Links
@@ -95,10 +107,3 @@ Ensure the paths are correct relative to your current working directory:
 - The target path should point to the actual location of `ai/tamanu_source_dbt_rules.md`
 - Use forward slashes (`/`) on macOS/Linux and backslashes (`\`) on Windows PowerShell
 
-## Current Setup
-
-This repository already has the Cline rules set up:
-- Original rules file: `ai/tamanu_source_dbt_rules.md`
-- Cline rules link: `.clinerules/tamanu_source_dbt_rules.md`
-
-The link is already created and ready to use with Cline.
