@@ -4,7 +4,7 @@
 tamanu-source-dbt is used to transform data to create datasets in a reporting schema that is optimised for performance as views. This is a dbt (data build tool) project that processes Tamanu healthcare system data.
 
 ## Core Principles
-- Always follow the established data flow: sources → bases → datasets → reports
+- Always follow the established data flow: sources (including logs) → bases → datasets → reports
 - Maintain data integrity and quality at each transformation layer
 - Prioritise performance and readability in SQL code
 - Ensure comprehensive documentation for all models
@@ -17,10 +17,23 @@ When working with models, always respect the following hierarchy:
 - Origin point for most documentation blocks
 - **Never modify source definitions as this is defined in another repository.**
 
+### `models/logs`
+- **Logs are a specialised type of sources** that capture system activity and audit trails
+- Use `logs__tamanu` as the source name and `logs` schema (different from regular sources)
+- Follow the same source principles: data integrity checks and comprehensive documentation
+- Origin point for log-related data transformations and audit reporting
+- **Never modify log source definitions as this is defined in another repository.**
+
 ### `models/bases` 
 - Strips out deleted data and metadata from tables
 - Shared with the data warehouse as the `staging` model
 - **Always filter out soft-deleted records and test patients using appropriate conditions**
+
+### `models/surveys`
+- **Surveys are a specialised type of bases** that handle form-based data collection and responses
+- Include survey definitions, responses, and component structures
+- Follow the same bases principles: filter out soft-deleted records and test patients
+- Handle complex survey data structures and relationships between surveys, responses, and answers
 
 ### `models/datasets`
 - Builds on top of `bases` models
@@ -45,6 +58,7 @@ When working with models, always respect the following hierarchy:
 - **Always check for existing translations before creating new ones**
 - Follow established naming conventions for translation keys
 - **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
+- **Translation labels must be prefixed with a concept** (e.g., patient, user, encounter) to maintain organisation and avoid conflicts
 
 ## Code Style Standards
 - **Mandatory**: Use `.sqlfluff` for SQL code style enforcement
