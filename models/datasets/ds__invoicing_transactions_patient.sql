@@ -9,7 +9,7 @@ select
     rd_method.name as payment_method,
     ip.receipt_number,
     ip.amount,
-    u.display_name as recieved_by
+    u.display_name as received_by
 from {{ ref('invoice_payments') }} ip
 join {{ ref('invoice_patient_payments') }} ipp on ipp.invoice_payment_id = ip.id
 join {{ ref('invoices') }} i on i.id = ip.invoice_id

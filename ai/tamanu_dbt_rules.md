@@ -42,6 +42,7 @@ When working with models, always respect the following hierarchy:
 - Keep translation string lists concise and avoid duplication
 - **Always check for existing translations before creating new ones**
 - Follow established naming conventions for translation keys
+- **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
 
 ## Code Style Standards
 - **Mandatory**: Use `.sqlfluff` for SQL code style enforcement
@@ -63,6 +64,7 @@ When working with models, always respect the following hierarchy:
 - Place files in appropriate directories based on model layer
 - **Never delete files without understanding downstream dependencies**
 - Use `dbt deps` to manage package dependencies
+- **Never manually edit `list_tamanu_reports.md`** - this file is auto-generated from report configuration files in `models/reports/config/`
 
 ## Report Configuration Validation
 - **Required**: Validate all report configuration files using `scripts/validate_report_configs.py`

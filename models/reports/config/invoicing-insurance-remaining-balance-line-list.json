@@ -1,0 +1,20 @@
+{
+  "query": "replace this",
+  "name": "Insurance remaining balance line list",
+  "notes": "This report generates a list of all invoices with outstanding insurer balances. Each row represents a single invoice-insurer combination showing the amount covered by each insurer, payments received, and remaining balance. The report includes patient details, invoice information, and insurer-specific payment status. Results are ordered chronologically by discharge date.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter discharge dates (or leave it blank for all)",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Insurer",
+        "name": "insurerId",
+        "suggesterEndpoint": "insurer"
+      }
+    ]
+  }
+}
