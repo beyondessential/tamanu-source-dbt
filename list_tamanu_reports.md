@@ -496,6 +496,23 @@ Requesting clinician, Test category, Status
 
 ---
 
+### Sensitive lab tests line list
+
+**Report Description**
+
+This report generates a list of all patients that have had sensitive lab tests performed for the selected parameters. Patients are listed in chronological order based on the lab request date and time. Only lab tests marked as sensitive in the system are included in this report.
+
+The report includes detailed test results, verification status, and completion information for sensitive tests only.
+
+**Filters**
+
+Status, Test category
+
+**Default date range**: 7days
+
+
+---
+
 ### Upcoming vaccinations line list
 
 **Report Description**
