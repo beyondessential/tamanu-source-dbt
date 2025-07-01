@@ -183,6 +183,21 @@ Village, Doctor/Nurse
 
 ---
 
+### Invoicing insurance remaining balance line list
+
+**Report Description**
+
+This report generates a list of all invoices with outstanding insurer balances. Each row represents a single invoice-insurer combination showing the amount covered by each insurer, payments received, and remaining balance. The report includes patient details, invoice information, and insurer-specific payment status. Results are ordered chronologically by discharge date.
+
+**Filters**
+
+Insurer
+
+**Default date range**: allTime
+
+
+---
+
 ### Invoicing patient payment by discharge location summary
 
 **Report Description**
@@ -499,6 +514,23 @@ The report includes lab requests for all statuses and if a request has been canc
 **Filters**
 
 Requesting clinician, Test category, Status
+
+**Default date range**: 7days
+
+
+---
+
+### Sensitive lab tests line list
+
+**Report Description**
+
+This report generates a list of all patients that have had sensitive lab tests performed for the selected parameters. Patients are listed in chronological order based on the lab request date and time. Only lab tests marked as sensitive in the system are included in this report.
+
+The report includes detailed test results, verification status, and completion information for sensitive tests only.
+
+**Filters**
+
+Status, Test category
 
 **Default date range**: 7days
 
