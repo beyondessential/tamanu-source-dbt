@@ -14,14 +14,14 @@ select
     facility as "{{ translate_label('facilityName', 'Facility') }}",
     departments as "{{ translate_label('departmentNames', 'Departments') }}",
     department_datetimes as "{{ translate_label('departmentChangeDateTimes', 'Department change date and times') }}",
-    location_groups as "{{ translate_label('locationGroupNames', 'Location groups') }}",
+    location_groups as "{{ translate_label('locationGroups', 'Areas') }}",
     location_group_datetimes as "{{ translate_label('locationGroupChangeDateTimes', 'Location group change date and times') }}",
-    locations as "{{ translate_label('locationNames', 'Locations') }}",
+    locations as "{{ translate_label('locations', 'Locations') }}",
     location_datetimes as "{{ translate_label('locationChangeDateTimes', 'Location change date and times') }}",
     primary_diagnoses as "{{ translate_label('diagnosesPrimary', 'Primary diagnoses') }}",
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary', 'Secondary diagnoses') }}"
 from {{ ref('ds__admissions') }}
-where 
+where
     case when {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }} is null then true
         else admission_datetime::text >= {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }}
     end

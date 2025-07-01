@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: "2.33.0"
+version: "2.33.1"
 config-version: 2
 
 profile: tamanu_source_dbt
@@ -41,7 +41,7 @@ models:
         show: false
       +tags: [reports]
       
-data_tests:
+tests:
   +docs:
     show: false
   +severity: warn

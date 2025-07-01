@@ -60,13 +60,6 @@ Local date and time of the event being recorded
 Date field which is a timestamp of record being deleted
 {% enddocs %}
 
-{% docs generic__admission_status %}
-The discharge status of the record.
-
-- `active` indicates the patient is currently an admitted patient.
-- `discharged` indicates the patient has been discharged.
-{% enddocs %}
-
 {% docs generic__visibility_status %}
 The visibility status of the record.
 

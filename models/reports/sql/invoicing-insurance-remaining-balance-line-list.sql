@@ -1,7 +1,7 @@
 select
     i.patient_name as "{{ translate_label('patientName','Patient name') }}",
     i.display_id as "{{ translate_label('patientDisplayId','Patient ID') }}",
-    i.social_security_number as "{{ translate_label('patientSocialSecurityNumber','Social security number') }}",
+    i.social_security_number as "{{ translate_label('patientSSN','Social security number') }}",
     i.invoice_number as "{{ translate_label('invoiceNumber','Invoice number') }}",
     i.admission_datetime::date as "{{ translate_label('admissionDate','Admission date') }}",
     i.discharge_datetime::date as "{{ translate_label('dischargeDate','Discharged date') }}",

@@ -22,7 +22,7 @@ select
     ethnicity as "{{ translate_label('patientEthnicity', 'Ethnicity') }}",
     occupation as "{{ translate_label('patientOccupation', 'Occupation') }}",
     religion as "{{ translate_label('patientReligion', 'Religion') }}",
-    patient_billing_type as "{{ translate_label('patientBillingType', 'Patient billing type') }}"
+    patient_billing_type as "{{ translate_label('patientBillingType', 'Billing type') }}"
 from {{ ref("ds__patients") }}
 where
     case
