@@ -30,6 +30,8 @@ When working with models, always respect the following hierarchy:
 ### `models/reports`
 - Based on `datasets` models with customised translations applied
 - **Apply translations consistently using established patterns**
+- **Each report must have a corresponding config file in `models/reports/config/`** with the same filename but `.json` extension
+- Config files contain report metadata, parameters, and integration settings for the reporting system
 
 ## Documentation Requirements
 - **Mandatory**: Each model except those in `reports` must have a corresponding .yml file
