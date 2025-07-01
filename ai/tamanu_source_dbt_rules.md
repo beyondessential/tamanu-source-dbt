@@ -29,6 +29,12 @@ When working with models, always respect the following hierarchy:
 - Shared with the data warehouse as the `staging` model
 - **Always filter out soft-deleted records and test patients using appropriate conditions**
 
+### `models/surveys`
+- **Surveys are a specialised type of bases** that handle form-based data collection and responses
+- Include survey definitions, responses, and component structures
+- Follow the same bases principles: filter out soft-deleted records and test patients
+- Handle complex survey data structures and relationships between surveys, responses, and answers
+
 ### `models/datasets`
 - Builds on top of `bases` models
 - De-normalises data for easy reporting consumption
