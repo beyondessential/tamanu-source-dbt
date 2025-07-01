@@ -21,14 +21,24 @@
 ### 4. Validate and Test Release
 - **Required**: Run comprehensive validation and testing before release
 - Execute the following commands in sequence:
-  1. `sqlfluff fix` - Fix SQL code style issues
-  2. `dbt test` - Run all data integrity and business logic tests
-  3. `python scripts/validate_report_configs.py` - Validate report configuration files
+  1. `dbt test --profiles-dir config` - Run all data integrity and business logic tests
+  2. `python scripts/validate_report_configs.py` - Validate report configuration files
+  3. `sqlfluff lint models` - Check SQL code style compliance
 - **All validation steps must pass** before proceeding with release
 - Address any test failures or validation errors before continuing
 - Verify that all models in the data flow (sources → bases → datasets → reports) are functioning correctly
 - Ensure documentation is up-to-date for any new or modified models
 
-### 5. List Tamanu Reports
+### 5. Generate Translation File and Check for Duplicates
+- Run `python scripts/generate_translation_file.py` to generate the translation file for the current version
+- Run `python scripts/check_translation_duplicates.py` to check for duplicate stringIds in the translation file
+- **Address any duplicate stringIds found** - these must be resolved before release
+- Duplicate default values are acceptable but should be reviewed for consistency
+
+### 6. List Tamanu Reports
 - Run `python scripts/list_tamanu_reports.py` to generate an updated list of available reports
 - This creates or updates the report inventory for the release
+
+### 7. Build All Models
+- Run `dbt run --profiles-dir config` to build all models and ensure they compile and run successfully
+- This final step confirms that all changes work together correctly
