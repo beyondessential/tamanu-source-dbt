@@ -6,7 +6,7 @@ select
     date_part('year', age(current_date, date_of_birth))::integer as "{{ translate_label('patientAge', 'Age') }}",
     sex as "{{ translate_label('patientSex', 'Sex') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
-    viewed_by_user as "{{ translate_label('logAccessByUser', 'Viewed by user') }}",
+    viewed_by_user as "{{ translate_label('logAccessBy', 'Viewed by user') }}",
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
     viewed_at_facility as "{{ translate_label('logAccessAtFacility', 'Viewed at facility') }}",

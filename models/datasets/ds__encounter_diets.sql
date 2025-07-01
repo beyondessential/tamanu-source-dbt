@@ -1,7 +1,10 @@
 with diets as (
     select
         ed.encounter_id,
-        string_agg(rd.name, ', ' order by rd.name) as diets
+        string_agg(
+            rd.name, ', '
+            order by rd.name
+        ) as diets
     from {{ ref('encounter_diets') }} ed
     join {{ ref('reference_data') }} rd
         on rd.id = ed.diet_id

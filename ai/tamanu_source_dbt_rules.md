@@ -43,6 +43,8 @@ When working with models, always respect the following hierarchy:
 ### `models/reports`
 - Based on `datasets` models with customised translations applied
 - **Apply translations consistently using established patterns**
+- **Each report must have a corresponding config file in `models/reports/config/`** with the same filename but `.json` extension
+- Config files contain report metadata, parameters, and integration settings for the reporting system
 
 ## Documentation Requirements
 - **Mandatory**: Each model except those in `reports` must have a corresponding .yml file
@@ -55,6 +57,7 @@ When working with models, always respect the following hierarchy:
 - Keep translation string lists concise and avoid duplication
 - **Always check for existing translations before creating new ones**
 - Follow established naming conventions for translation keys
+- **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
 - **Translation labels must be prefixed with a concept** (e.g., patient, user, encounter) to maintain organisation and avoid conflicts
 
 ## Code Style Standards
@@ -77,6 +80,7 @@ When working with models, always respect the following hierarchy:
 - Place files in appropriate directories based on model layer
 - **Never delete files without understanding downstream dependencies**
 - Use `dbt deps` to manage package dependencies
+- **Never manually edit `list_tamanu_reports.md`** - this file is auto-generated from report configuration files in `models/reports/config/`
 
 ## Report Configuration Validation
 - **Required**: Validate all report configuration files using `scripts/validate_report_configs.py`

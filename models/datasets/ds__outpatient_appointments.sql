@@ -21,7 +21,7 @@ select
     lg.id as location_group_id,
     lg.name as location_group,
     a.schedule_id,
-    a.until_date as until_date,
+    a.until_date,
     a.interval as schedule_interval,
     a.days_of_week as schedule_days_of_week,
     a.frequency as schedule_frequency,
