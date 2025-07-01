@@ -2,11 +2,7 @@
 
 This directory contains AI rules and guidelines for working with the tamanu-source-dbt project.
 
-## Files
-
-- `tamanu_source_dbt_rules.md` - Comprehensive AI rules for the tamanu-source-dbt project
-
-## Setting up AI Rules for Cline or Cursor
+## Setting up AI Rules for Cline
 
 To use these AI rules with Cline or Cursor, you need to create a symbolic link (or hard link on Windows) to make the rules accessible to your AI assistant.
 
@@ -34,40 +30,6 @@ New-Item -ItemType HardLink -Path ".clinerules\tamanu_source_dbt_rules.md" -Targ
 ```bash
 # Create a symbolic link to the entire ai directory
 ln -s ai .clinerules
-```
-
-### For Cursor
-
-Cursor looks for rules in the `.cursor/rules` directory. Create a junction/symbolic link as follows:
-
-#### On Windows (Command Prompt)
-
-```cmd
-# Create the .cursor/rules directory if it doesn't exist
-mkdir .cursor\rules
-
-# Create a junction link (doesn't require admin privileges)
-mklink /J .cursor\rules ai
-```
-
-#### On Windows (PowerShell - Alternative method)
-
-```powershell
-# Create the .cursor/rules directory if it doesn't exist
-New-Item -ItemType Directory -Path ".cursor\rules" -Force
-
-# Create individual hard links if junction is not preferred
-New-Item -ItemType HardLink -Path ".cursor\rules\tamanu_source_dbt_rules.md" -Target "ai\tamanu_source_dbt_rules.md"
-```
-
-#### On macOS/Linux
-
-```bash
-# Create the .cursor/rules directory if it doesn't exist
-mkdir -p .cursor/rules
-
-# Create a symbolic link to the entire ai directory
-ln -s ../../ai .cursor/rules
 ```
 
 ## Benefits of Using Links
