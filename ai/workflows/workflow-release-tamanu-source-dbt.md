@@ -1,4 +1,4 @@
-# Release Workflow
+# Release Workflow - tamanu-source-dbt
 
 ## Pre-Release Steps
 
