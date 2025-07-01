@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ds__invoicing_transactions_insurer
-    description: Invoicing insurer transactions with remaining balances
+  - name: ds__invoicing_summary_insurer
+    description: Invoicing insurer summary with remaining balances
     config:
       tags:
         - administration

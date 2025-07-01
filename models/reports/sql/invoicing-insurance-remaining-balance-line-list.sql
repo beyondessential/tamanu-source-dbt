@@ -11,7 +11,7 @@ select
     i.total_invoice_amount as "{{ translate_label('invoiceTotalAmount','Total invoice amount') }}",
     i.insurer_total_amount as "{{ translate_label('invoiceInsurerTotal','Insurer total') }}",
     i.remaining_insurer_balance as "{{ translate_label('invoiceRemainingInsurerBalance','Remaining balance (insurer payments)') }}"
-from {{ ref("ds__invoicing_transactions_insurer") }} i
+from {{ ref("ds__invoicing_summary_insurer") }} i
 where i.remaining_insurer_balance > 0
     and case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is not null
