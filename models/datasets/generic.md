@@ -137,3 +137,10 @@ Social security number of the patient.
 {% docs generic__user %}
 Display identifier for the user
 {% enddocs %}
+
+{% docs generic__admission_status %}
+The current status of the admission.
+
+- `active` indicates the patient is currently admitted
+- `discharged` indicates the patient has been discharged
+{% enddocs %}

@@ -11,5 +11,5 @@ select
     a.status
 from {{ source("tamanu", "appointments") }} a
 where a.booking_type_id notnull
-    and a.deleted_at is null 
+    and a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'

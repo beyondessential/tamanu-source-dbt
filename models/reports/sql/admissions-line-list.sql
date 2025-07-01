@@ -21,7 +21,7 @@ select
     primary_diagnoses as "{{ translate_label('diagnosesPrimary', 'Primary diagnoses') }}",
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary', 'Secondary diagnoses') }}"
 from {{ ref('ds__admissions') }}
-where 
+where
     case when {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }} is null then true
         else admission_datetime::text >= {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }}
     end
