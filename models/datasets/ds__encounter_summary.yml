@@ -2,12 +2,20 @@ version: 2
 
 models:
   - name: ds__encounter_summary
-    description: Comprehensive encounter summary with patient details, clinical information, and encounter history
+    description: Encounter summary with patient details and encounter history
     config:
       tags:
         - clinical
-        - encounter
     columns:
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in encounters."
+      - name: start_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__start_date') }}"
+      - name: end_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__end_date') }}"
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
@@ -35,60 +43,72 @@ models:
       - name: patient_billing_type
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the patient billing type."
-      - name: encounter_id
-        data_type: character varying(255)
-        description: "{{ doc('generic__encounter_id') }}"
-      - name: encounter_start_date
-        data_type: timestamp
-        description: "{{ doc('encounters__start_date') }}"
-      - name: encounter_end_date
-        data_type: timestamp
-        description: "{{ doc('encounters__end_date') }}"
       - name: length_of_stay
         data_type: integer
-        description: "Length of stay in days for the encounter."
+        description: "{{ doc('generic__length_of_stay') }}"
       - name: facility_id
         data_type: character varying(255)
         description: "{{ doc('generic__facility_id') }} where the encounter took place."
       - name: facility
         data_type: character varying(255)
         description: "{{ doc('generic__facility') }} where the encounter took place."
-      - name: emergency_encounter
+      - name: encounter_type_emergency
         data_type: character varying(255)
-        description: "Emergency encounter types (Triage, Active ED care, Emergency short stay)."
-      - name: inpatient_encounter
+        description: "{{ doc('generic__encounter_types') }} (Triage, Active ED care, Emergency short stay)"
+      - name: encounter_type_inpatient
         data_type: character varying(255)
-        description: "Inpatient encounter types (Hospital admission)."
-      - name: outpatient_encounter
+        description: "{{ doc('generic__encounter_types') }} (Hospital admission)"
+      - name: encounter_type_outpatient
         data_type: character varying(255)
-        description: "Outpatient encounter types (Clinic, Imaging, Survey response, Vaccination)."
+        description: "{{ doc('generic__encounter_types') }} (Clinic, Imaging, Survey response, Vaccination)"
+      - name: discharge_disposition_id
+        data_type: character varying(255)
+        description: "{{ doc('discharges__disposition_id') }}"
+      - name: discharge_disposition
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the discharge disposition."
       - name: triage_score
         data_type: integer
         description: "{{ doc('triages__score') }}"
+      - name: arrival_mode_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__arrival_mode_id') }}"
       - name: arrival_mode
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the arrival mode."
       - name: triage_wait_time
         data_type: character varying(255)
-        description: "Time between triage and being seen (HH:MM:SS format)."
-      - name: discharged_department_id
+        description: "{{ doc('generic__triage_wait_time') }}"
+      - name: encountered_by_id
         data_type: character varying(255)
-        description: "{{ doc('generic__department_id') }} where the patient was discharged from."
-      - name: discharged_department
+        description: "{{ doc('generic__user_id') }}"
+      - name: encountered_by
         data_type: character varying(255)
-        description: "{{ doc('generic__department') }} where the patient was discharged from."
-      - name: discharged_location_group_id
+        description: "{{ doc('generic__user') }} of the user who first encountered the patient."
+      - name: discharged_by_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group_id') }} where the patient was discharged from."
-      - name: discharged_location_group
+        description: "{{ doc('generic__user_id') }}"
+      - name: discharged_by
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group') }} where the patient was discharged from."
-      - name: discharged_location_id
+        description: "{{ doc('generic__user') }} of the user who discharged the patient."
+      - name: discharging_department_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_id') }} where the patient was discharged from."
-      - name: discharged_location
+        description: "{{ doc('generic__department_id') }} where the patient is being discharged from."
+      - name: discharging_department
         data_type: character varying(255)
-        description: "{{ doc('generic__location') }} where the patient was discharged from."
+        description: "{{ doc('generic__department') }} where the patient is being discharged from."
+      - name: discharging_location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group_id') }} where the patient is being discharged from."
+      - name: discharging_location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} where the patient is being discharged from."
+      - name: discharging_location_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_id') }} where the patient is being discharged from."
+      - name: discharging_location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} where the patient is being discharged from."
       - name: time_assigned_to_discharging_department
         data_type: character varying(255)
         description: "{{ doc('generic__date') }} when assigned to the discharging department."
@@ -98,45 +118,54 @@ models:
       - name: time_assigned_to_discharging_location
         data_type: character varying(255)
         description: "{{ doc('generic__date') }} when assigned to the discharging location."
-      - name: department_history
-        data_type: text
-        description: "History of all departments visited during the encounter."
-      - name: department_datetime_history
-        data_type: text
-        description: "History of date/times for all department changes."
-      - name: area_history
-        data_type: text
-        description: "History of all location groups (areas) visited during the encounter."
-      - name: area_datetime_history
-        data_type: text
-        description: "History of date/times for all area changes."
-      - name: location_history
-        data_type: text
-        description: "History of all locations visited during the encounter."
-      - name: location_datetime_history
-        data_type: text
-        description: "History of date/times for all location changes."
+      - name: department_ids
+        data_type: array
+        description: "{{ doc('generic__department_ids') }} the encounter is associated with."
+      - name: departments
+        data_type: character varying(255)
+        description: "{{ doc('generic__departments') }} the encounter is associated with."
+      - name: department_datetimes
+        data_type: character varying(255)
+        description: "{{ doc('generic__datetimes') }} of the departments associated with the encounter."
+      - name: location_group_ids
+        data_type: array
+        description: "{{ doc('generic__location_group_ids') }} the encounter is associated with."
+      - name: location_groups
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_groups') }} the encounter is associated with."
+      - name: location_group_datetimes
+        data_type: character varying(255)
+        description: "{{ doc('generic__datetimes') }} of the location groups associated with the encounter."
+      - name: location_ids
+        data_type: array
+        description: "{{ doc('generic__location_ids') }} the encounter is associated with."
+      - name: locations
+        data_type: character varying(255)
+        description: "{{ doc('generic__locations') }} the encounter is associated with."
+      - name: location_datetimes
+        data_type: character varying(255)
+        description: "{{ doc('generic__datetimes') }} of the locations associated with the encounter."
       - name: reason_for_encounter
         data_type: text
         description: "{{ doc('encounters__reason_for_encounter') }}"
       - name: diagnoses
         data_type: text
-        description: "All diagnoses associated with the encounter including name, code, primary status, and certainty."
+        description: "{{ doc('generic__diagnoses') }}"
       - name: medications
         data_type: text
-        description: "All medications prescribed during the encounter including discontinuation status and reasons."
+        description: "{{ doc('generic__medications') }}"
       - name: vaccinations
         data_type: text
-        description: "All vaccinations administered during the encounter including vaccine name, label, and schedule."
+        description: "{{ doc('generic__vaccinations') }}"
       - name: procedures
         data_type: text
-        description: "All procedures performed during the encounter including name, date, location, and notes."
+        description: "{{ doc('generic__procedures') }}"
       - name: lab_requests
         data_type: text
-        description: "All lab requests made during the encounter including test names and panels."
+        description: "{{ doc('generic__lab_requests') }}"
       - name: imaging_requests
         data_type: text
-        description: "All imaging requests made during the encounter including type, areas to be imaged, and notes."
+        description: "{{ doc('generic__imaging_requests') }}"
       - name: notes
         data_type: text
-        description: "All clinical notes associated with the encounter including note type, content, and date. Note: Cropped if exceeds 32,000 characters."
+        description: "{{ doc('generic__notes') }}"

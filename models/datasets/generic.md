@@ -22,6 +22,34 @@ A comma separated list of dates and times
 Full list of diagnoses
 {% enddocs %}
 
+{% docs generic__medications %}
+Full list of medications
+{% enddocs %}
+
+{% docs generic__vaccinations %}
+Full list of vaccinations
+{% enddocs %}
+
+{% docs generic__procedures %}
+Full list of procedures
+{% enddocs %}
+
+{% docs generic__lab_requests %}
+Full list of lab requests
+{% enddocs %}
+
+{% docs generic__imaging_requests %}
+Full list of imaging requests
+{% enddocs %}
+
+{% docs generic__notes %}
+Full list of notes (cropped if exceeds 32,000 characters)
+{% enddocs %}
+
+{% docs generic__encounter_types %}
+Full list of encounter types an encounter has been
+{% enddocs %}
+
 {% docs generic__duration %}
 Duration
 {% enddocs %}
@@ -134,6 +162,11 @@ Full list of sensitive tests
 Social security number of the patient.
 {% enddocs %}
 
+{% docs generic__user_id %}
+Reference to the [user](#!/source/tamanu-source-dbt.tamanu.users)
+{% enddocs %}
+
+
 {% docs generic__user %}
 Display identifier for the user
 {% enddocs %}
@@ -144,3 +177,13 @@ The current status of the admission.
 - `active` indicates the patient is currently admitted
 - `discharged` indicates the patient has been discharged
 {% enddocs %}
+
+{% docs generic__length_of_stay %}
+Length of stay in days for the encounter (null if encounter is still active)
+{% enddocs %}
+
+{% docs generic__triage_wait_time %}
+Time between triage and being seen (HH:MM:SS format)
+{% enddocs %}
+
+

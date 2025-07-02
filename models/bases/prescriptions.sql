@@ -1,5 +1,5 @@
 select
-    p.id as prescription_id,
+    p.id,
     p.date::timestamp as datetime,
     p.start_date::timestamp as start_datetime,
     p.end_date::timestamp as end_datetime,
