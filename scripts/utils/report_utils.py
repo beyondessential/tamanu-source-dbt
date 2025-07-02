@@ -76,18 +76,16 @@ def generate_project_reports():
     for node in nodes:
         report = manifest["nodes"][node]
 
-        if report["package_name"] == PROJECT_NAME:
-            
-            sql_file = os.path.join(BASE_DIR, report["compiled_path"])
-            config_file = (
-                os.path.join(BASE_DIR, report["original_file_path"])
-                    .replace(".sql", ".json")
-                    .replace("sql", "config")
-            )
-            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
+        sql_file = os.path.join(BASE_DIR, report["compiled_path"])
+        config_file = (
+            os.path.join(BASE_DIR, report["original_file_path"])
+                .replace(".sql", ".json")
+                .replace("sql", "config")
+        )
+        output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
 
-            compile_report(report["database"], sql_file, config_file, output_file)
-            cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
+        compile_report(report["database"], sql_file, config_file, output_file)
+        cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
 
 
 def generate_import_report_script():
