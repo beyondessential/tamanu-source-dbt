@@ -34,7 +34,6 @@ def main():
     # Generate scripts and reports
     generate_reporting_schema_script()
     generate_project_reports()
-    generate_import_report_script()
 
 
 if __name__ == "__main__":
