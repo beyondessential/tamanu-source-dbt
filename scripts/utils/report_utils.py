@@ -12,7 +12,6 @@ PROJECT_NAME = get_project_name()
 VERSION = get_deployment_version()
 DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
-REPORTS_DIR = os.path.join(VERSION_DIR, "reports")
 
 if PROJECT_NAME == 'tamanu_source_dbt':
     DEPLOYMENT = 'standard'
@@ -71,7 +70,7 @@ def generate_project_reports():
         cprint(f"No report models found", "error")
         return
 
-    ensure_directory_exists(REPORTS_DIR)
+    ensure_directory_exists(VERSION_DIR)
 
     for node in nodes:
         report = manifest["nodes"][node]
@@ -84,7 +83,7 @@ def generate_project_reports():
                     .replace(".sql", ".json")
                     .replace("sql", "config")
             )
-            output_file = os.path.join(REPORTS_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
+            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
 
             compile_report(report["database"], sql_file, config_file, output_file)
             cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
@@ -145,8 +144,8 @@ fs.readdir(folderPath, async (err, files) => {
 });
 """
 
-    ensure_directory_exists(REPORTS_DIR)
-    output_path = os.path.join(REPORTS_DIR, "import_reports.js")
+    ensure_directory_exists(VERSION_DIR)
+    output_path = os.path.join(VERSION_DIR, "import_reports.js")
     write_file(output_path, script)
 
     cprint(f"Script created successfully at: {output_path}", "success")
