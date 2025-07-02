@@ -421,14 +421,14 @@ Registry
 **Report Description**
 
 Program registry removed patients line list v2.3
-This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register should not be included in this report.
+This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
 Home village: Per patient details
 Registering facility: Facility selected when patient is first added to the registry
 Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
 Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
 Registered by: Name of user who added the patient to the registry
-Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
-Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list this as 2 separate lines)
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the first addition to the register.
+Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list the most recent removal)
 Removed by: Name of user who removed the patient from the registry
 
 **Filters**
