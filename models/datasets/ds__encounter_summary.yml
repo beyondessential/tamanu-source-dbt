@@ -79,16 +79,16 @@ models:
       - name: triage_wait_time
         data_type: character varying(255)
         description: "{{ doc('generic__triage_wait_time') }}"
-      - name: encountered_by_id
+      - name: encountering_clinician_id
         data_type: character varying(255)
         description: "{{ doc('generic__user_id') }}"
-      - name: encountered_by
+      - name: encountering_clinician
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} of the user who first encountered the patient."
-      - name: discharged_by_id
+      - name: supervising_clinician_id
         data_type: character varying(255)
         description: "{{ doc('generic__user_id') }}"
-      - name: discharged_by
+      - name: supervising_clinician
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} of the user who discharged the patient."
       - name: discharging_department_id
@@ -112,9 +112,9 @@ models:
       - name: time_assigned_to_discharging_department
         data_type: character varying(255)
         description: "{{ doc('generic__date') }} when assigned to the discharging department."
-      - name: time_assigned_to_discharging_area
+      - name: time_assigned_to_discharging_location_group
         data_type: character varying(255)
-        description: "{{ doc('generic__date') }} when assigned to the discharging area."
+        description: "{{ doc('generic__date') }} when assigned to the discharging location group."
       - name: time_assigned_to_discharging_location
         data_type: character varying(255)
         description: "{{ doc('generic__date') }} when assigned to the discharging location."

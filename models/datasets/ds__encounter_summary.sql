@@ -362,10 +362,10 @@ select
                     )
                 )
     end as triage_wait_time,
-    ehc.updated_by_id as encountered_by_id,
-    ehc.updated_by_name as encountered_by,
-    u.id as discharged_by_id,
-    u.display_name as discharged_by,
+    ehc.updated_by_id as encountering_clinician_id,
+    ehc.updated_by_name as encountering_clinician,
+    c.id as supervising_clinician_id,
+    c.display_name as supervising_clinician,
     dp.id as discharging_department_id,
     dp.name as discharging_department,
     lg.id as discharging_location_group_id,
@@ -373,7 +373,7 @@ select
     l.id as discharging_location_id,
     l.name as discharging_location,
     dc.department_datetimes[array_upper(dc.department_datetimes, 1)] as time_assigned_to_discharging_department,
-    lgc.location_group_datetimes[array_upper(lgc.location_group_datetimes, 1)] as time_assigned_to_discharging_area,
+    lgc.location_group_datetimes[array_upper(lgc.location_group_datetimes, 1)] as time_assigned_to_discharging_location_group,
     lc.location_datetimes[array_upper(lc.location_datetimes, 1)] as time_assigned_to_discharging_location,
     dc.department_ids,
     dc.departments,
@@ -403,6 +403,7 @@ from {{ ref('encounters') }} e
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('locations') }} l on l.id = e.location_id
 join {{ ref('facilities') }} f on f.id = l.facility_id
+left join {{ ref('users') }} c on c.id = e.clinician_id
 join {{ ref('departments') }} dp on dp.id = e.department_id
 join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 join encounter_type_changes etc on etc.encounter_id = e.id
@@ -412,7 +413,6 @@ join location_changes lc on lc.encounter_id = e.id
 join encounter_history_consolidated ehc on ehc.encounter_id = e.id and ehc.change_type is null
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 left join {{ ref('discharges') }} d on d.encounter_id = e.id
-left join {{ ref('users') }} u on u.id = d.discharged_by_id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = e.patient_id
 left join {{ ref('reference_data') }} eth on eth.id = pd.ethnicity_id
 left join {{ ref('reference_data') }} bt on bt.id = e.patient_billing_type_id
@@ -425,4 +425,5 @@ left join encounter_procedures epr on epr.encounter_id = e.id
 left join encounter_lab_requests elr on elr.encounter_id = e.id
 left join encounter_imaging_requests eir on eir.encounter_id = e.id
 left join encounter_notes en on en.encounter_id = e.id
+where e.end_datetime is not null
 order by e.start_datetime desc
