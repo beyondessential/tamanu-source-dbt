@@ -6,9 +6,8 @@ sources:
     tables:
       - name: users
         description: '{{ doc("table__users") }}'
-        config:
-          tags:
-            - administration
+        tags:
+          - administration
         columns:
           - name: id
             data_type: character varying(255)
