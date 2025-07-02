@@ -1,16 +1,8 @@
-with filtered_changes_2_33 as (
+with filtered_changes as (
     {{ base_history_from_log('patient_program_registration_conditions') }}
         and (
             version = 'unknown'
-            or (string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
-                and string_to_array(version, '.'):: int[] < string_to_array('2.35.0', '.')::int[]
-            )
-        )
-),
-filtered_changes_2_35 as (
-    {{ base_history_from_log('patient_program_registration_conditions') }}
-        and (
-            string_to_array(version, '.')::int[] >= string_to_array('2.35.0', '.')::int[]
+            or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
 )
 
@@ -27,21 +19,4 @@ select
     fc.record_data ->> 'clinician_id' as recorded_by_id,
     (fc.record_data ->> 'deletion_date')::timestamp as deleted_datetime,
     fc.record_data ->> 'deletion_clinician_id' as deleted_by_id
-from filtered_changes_2_33 fc
-
-union
-
-select
-    fc.changelog_id,
-    fc.logged_at::timestamp,
-    fc.updated_by_user_id,
-    fc.record_data ->> 'id' as id,
-    (fc.record_data ->> 'date')::timestamp as datetime,
-    fc.record_data ->> 'program_registry_condition_id' as program_registry_condition_id,
-    fc.record_data ->> 'patient_program_registration_id' as patient_program_registration_id,
-    fc.record_data ->> 'program_registry_condition_category_id' as program_registry_condition_category_id,
-    fc.record_data ->> 'reason_for_change' as reason_for_change,
-    fc.record_data ->> 'clinician_id' as recorded_by_id,
-    (fc.record_data ->> 'deletion_date')::timestamp as deleted_datetime,
-    fc.record_data ->> 'deletion_clinician_id' as deleted_by_id
-from filtered_changes_2_35 fc
+from filtered_changes fc
