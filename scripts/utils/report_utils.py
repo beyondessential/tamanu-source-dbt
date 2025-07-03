@@ -78,9 +78,16 @@ def generate_project_reports():
 
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
-            os.path.join(BASE_DIR, report["original_file_path"])
-                .replace(".sql", ".json")
-                .replace("sql", "config")
+            os.path.join(
+                (
+                    DBT_PACKAGE_DIR
+                    if report["package_name"] != PROJECT_NAME
+                    else BASE_DIR
+                ),
+                report["original_file_path"],
+            )
+            .replace(".sql", ".json")
+            .replace("sql", "config")
         )
         output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
 
