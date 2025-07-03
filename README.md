@@ -6,6 +6,10 @@ A dbt project of Tamanu's standard models. This includes:
 - reporting schema
 - analytics schema (upcoming)
 
+## AI Rules
+
+To use the AI rules with Cline or Cursor, you need to create a symbolic link to make the rules accessible to your AI assistant.
+
 ## SQL linting
 
 We use SQLFluff and the configuration file is located in the root folder and is named `.sqlfluff`.
