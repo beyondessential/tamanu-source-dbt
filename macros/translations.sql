@@ -97,3 +97,8 @@
     {%- endif -%}
 {%- endmacro -%}
 
+{%- macro translate_column_value(prefix_key, column_name, alias='ts') -%}
+    left join {{ source('tamanu', 'translated_strings') }} {{ alias }}
+        on {{ alias }}.string_id = '{{ get_translation_prefix(prefix_key) }}.' || {{ column_name }}
+        and {{ alias }}.language = '{{ var("language") }}'
+{%- endmacro -%}

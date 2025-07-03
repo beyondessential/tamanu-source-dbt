@@ -293,30 +293,14 @@ encounter_notes as (
         n.record_id as encounter_id,
         string_agg(concat(
             'Note type: ',
-            case
-                when n.note_type = 'treatmentPlan' then 'Treatment plan'
-                when n.note_type = 'admission' then 'Admission'
-                when n.note_type = 'medical' then 'Medical'
-                when n.note_type = 'surgical' then 'Surgical'
-                when n.note_type = 'nursing' then 'Nursing'
-                when n.note_type = 'dietary' then 'Dietary'
-                when n.note_type = 'pharmacy' then 'Pharmacy'
-                when n.note_type = 'physiotherapy' then 'Physiotherapy'
-                when n.note_type = 'social' then 'Social'
-                when n.note_type = 'discharge' then 'Discharge'
-                when n.note_type = 'areaToBeImaged' then 'Area to be imaged'
-                when n.note_type = 'resultDescription' then 'Result description'
-                when n.note_type = 'other' then 'Other'
-                when n.note_type = 'clinicalMobile' then 'Clinical mobile'
-                when n.note_type = 'handover' then 'Handover'
-                else n.note_type
-            end,
+            coalesce(ts.text, n.note_type),
             ', Content: ', n.content,
             ', Note date: ', to_char(n.datetime, 'DD/MM/YYYY HH12:MI AM')
         ),
         E'\n'
         order by n.datetime) as notes
     from {{ ref('notes') }} n
+    {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
     where n.record_type = 'Encounter' and n.note_type != 'system'
     group by n.record_id
 )
@@ -426,4 +410,4 @@ left join encounter_lab_requests elr on elr.encounter_id = e.id
 left join encounter_imaging_requests eir on eir.encounter_id = e.id
 left join encounter_notes en on en.encounter_id = e.id
 where e.end_datetime is not null
-order by e.start_datetime desc
+order by e.end_datetime desc

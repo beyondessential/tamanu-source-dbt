@@ -162,11 +162,6 @@ Full list of sensitive tests
 Social security number of the patient.
 {% enddocs %}
 
-{% docs generic__user_id %}
-Reference to the [user](#!/source/tamanu-source-dbt.tamanu.users)
-{% enddocs %}
-
-
 {% docs generic__user %}
 Display identifier for the user
 {% enddocs %}
