@@ -8,7 +8,9 @@ A dbt project of Tamanu's standard models. This includes:
 
 ## AI Rules
 
-To use the AI rules with Cline or Cursor, you need to create a symbolic link to make the rules accessible to your AI assistant.
+This project includes AI rules for AI assistants located in the `ai/` directory.
+
+To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
 
 ## SQL linting
 
@@ -28,7 +30,7 @@ This command pulls the source model information from the Tamanu repository based
 ## Generate the build script for deployments
 
 Execute the following command:
-`python ./scripts/build_reporting_assets.py
+`python ./scripts/build_reporting_assets.py`
 
 This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
 
@@ -43,6 +45,17 @@ python scripts/generate_survey_models.py
 ```
 This will generate models and documentation for all surveys in the Tamanu database.
 
+## Generate translated strings model
+To generate the `translated_strings_default.sql` model from the `report_translation_strings.csv` file, execute the following command:
+
+```
+python scripts/generate_translated_strings_sql.py
+```
+
+This script dynamically reads the CSV file and creates a SQL view containing all default translation strings. After running the script, execute `dbt run --profiles-dir config --select translated_strings_default` to create the model in the database.
+
+The translation system provides fallback English translations when language-specific translations are not available, ensuring reports always display readable labels.
+
 ## Script to list Tamanu reports
 
 This script generates a list of all reports in the repository and outputs the result in a Markdown file.
@@ -52,17 +65,6 @@ To generate a report list:
 
 ```
 python list_tamanu_reports.py
-```
-
-## Generate file of translation strings
-
-This script generates a file of all the translation strings for reports.
-
-### Usage
-To generate the translation file:
-
-```
-python generate_translation_file.py
 ```
 
 ## Versioning

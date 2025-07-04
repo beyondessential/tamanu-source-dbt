@@ -1,101 +1,73 @@
-# AI Rules for tamanu-source-dbt
+# AI Assistant Rules for tamanu-source-dbt
 
 ## Project Overview
-tamanu-source-dbt is used to transform data to create datasets in a reporting schema that is optimised for performance as views. This is a dbt (data build tool) project that processes Tamanu healthcare system data.
+A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets following the data flow: sources/logs → bases/surveys → datasets → reports.
 
-## Core Principles
-- Always follow the established data flow: sources (including logs) → bases → datasets → reports
-- Maintain data integrity and quality at each transformation layer
-- Prioritise performance and readability in SQL code
-- Ensure comprehensive documentation for all models
+## Model Layer Hierarchy
 
-## Model Layer Requirements
-When working with models, always respect the following hierarchy:
+### `models/sources` & `models/logs`
+- **Read-only**: Never modify source/log definitions (managed externally)
+- Sources use `public` schema, logs use `logs__tamanu` source and `logs` schema
+- Origin point for documentation blocks
 
-### `models/sources`
-- Describes Tamanu's schema and performs data integrity checks
-- Origin point for most documentation blocks
-- **Never modify source definitions as this is defined in another repository.**
-
-### `models/logs`
-- **Logs are a specialised type of sources** that capture system activity and audit trails
-- Use `logs__tamanu` as the source name and `logs` schema (different from regular sources)
-- Follow the same source principles: data integrity checks and comprehensive documentation
-- Origin point for log-related data transformations and audit reporting
-- **Never modify log source definitions as this is defined in another repository.**
-
-### `models/bases` 
-- Strips out deleted data and metadata from tables
-- Shared with the data warehouse as the `staging` model
-- **Always filter out soft-deleted records and test patients using appropriate conditions**
-
-### `models/surveys`
-- **Surveys are a specialised type of bases** that handle form-based data collection and responses
-- Include survey definitions, responses, and component structures
-- Follow the same bases principles: filter out soft-deleted records and test patients
-- Handle complex survey data structures and relationships between surveys, responses, and answers
+### `models/bases` & `models/surveys`
+- Filter out soft-deleted records and test patients
+- Bases shared as `staging` models in data warehouse
+- Surveys handle form-based data collection
 
 ### `models/datasets`
-- Builds on top of `bases` models
-- De-normalises data for easy reporting consumption
-- **Focus on creating user-friendly, denormalised views**
+- Build on bases models
+- Create denormalised, user-friendly views
 
 ### `models/reports`
-- Based on `datasets` models with customised translations applied
-- **Apply translations consistently using established patterns**
-- **Each report must have a corresponding config file in `models/reports/config/`** with the same filename but `.json` extension
-- Config files contain report metadata, parameters, and integration settings for the reporting system
+- Apply translations using established patterns
+- **Required**: Each report needs corresponding `.json` config file in `models/reports/config/`
 
-## Documentation Requirements
-- **Mandatory**: Each model except those in `reports` must have a corresponding .yml file
-- Include comprehensive name and description for both the model and all columns
-- Maintain professional, clear, and respectful tone in all documentation
-- Reference existing doc blocks when possible to maintain consistency
-- **Always document new columns when adding them to existing models**
+## Essential Requirements
 
-## Translation Management
-- Keep translation string lists concise and avoid duplication
-- **Always check for existing translations before creating new ones**
-- Follow established naming conventions for translation keys
-- **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
-- **Translation labels must be prefixed with a concept** (e.g., patient, user, encounter) to maintain organisation and avoid conflicts
+### Documentation
+- **Mandatory**: `.yml` file for each model (except reports)
+- Include comprehensive name/description for model and all columns
+- Document new columns when adding to existing models
+- Use Australian English spelling
 
-## Code Style Standards
-- **Mandatory**: Use `.sqlfluff` for SQL code style enforcement
-- Run `sqlfluff fix` before committing changes
-- Follow consistent indentation and formatting patterns
-- Use meaningful aliases and avoid ambiguous column references
-- **Always test SQL syntax before committing**
-- **Use Australian English spelling** in all documentation, comments, and text (e.g., "optimise" not "optimize", "colour" not "color", "centre" not "center")
+### Translations
+- Check existing translations before creating new ones
+- Prefix labels with entity (e.g., patient, user, encounter)
+- Format: `translate_label('entityStringId')` following `report.reporting.{specificField}`
+- **Required**: Ensure entityStringId exists in `seeds/report_translation_strings.csv`
+- Maintain alphabetical order
 
-## Testing Standards
-- **Required**: Implement integrity tests using dbt built-in tests for all models
-- **Required**: Unit tests for business logic using dbt built-in tests or dbt-utils
-- Test critical relationships and constraints
-- **Always run `dbt test` before finalising changes**
-- Document test failures and resolution steps
+### Code Quality
+- **Mandatory**: Run `sqlfluff fix` before committing
+- Use meaningful aliases, avoid ambiguous references
+- Test SQL syntax before committing
 
-## File Management Guidelines
-- Follow established naming conventions: `{table_name}.sql` and `{table_name}.yml`
-- Place files in appropriate directories based on model layer
-- **Never delete files without understanding downstream dependencies**
-- Use `dbt deps` to manage package dependencies
-- **Never manually edit `list_tamanu_reports.md`** - this file is auto-generated from report configuration files in `models/reports/config/`
+### Testing & Validation
+- **Required**: Implement dbt built-in tests for all models
+- Run `dbt test` before finalising changes
+- **Required**: Validate report configs with `python scripts/validate_report_configs.py`
 
-## Report Configuration Validation
-- **Required**: Validate all report configuration files using `scripts/validate_report_configs.py`
-- Report configurations must conform to the JSON schema defined in `scripts/report_validation/report-config-schema.json`
-- **Always run validation before committing changes** to report configurations
-- Configuration files are located in `models/reports/config/` and must be valid JSON
-- The validation script checks all `.json` files in the config directory against the schema
-- **Fix all validation errors** before proceeding with deployment
+## File Management
+- Follow naming: `{table_name}.sql` and `{table_name}.yml`
+- Place in appropriate layer directories
+- Never delete without checking dependencies
+- **Never manually edit** `list_tamanu_reports.md` (auto-generated)
 
 ## Development Workflow
-1. Understand the data flow and existing model dependencies
-2. Create or modify models following layer-appropriate patterns
-3. Add comprehensive documentation in .yml files
-4. Implement appropriate tests
-5. Run `sqlfluff fix` for code formatting
-6. Execute `dbt test` to validate changes
-7. **Validate report configurations** using `python scripts/validate_report_configs.py`
-8. Use `dbt run` to build and verify models
+1. Understand data flow and dependencies
+2. Create/modify models following layer patterns
+3. Add comprehensive documentation
+4. Implement tests
+5. **If adding new translation strings**: Add to `report_translation_strings.csv`, run `python scripts/generate_translated_strings_sql.py`, then `dbt run --select translated_strings_default`
+6. Run `sqlfluff fix`
+7. Execute `dbt test --profiles-dir config`
+8. Validate report configurations
+9. Use `dbt run` to verify
+
+## Translation System
+- **Dynamic Generation**: Use `python scripts/generate_translated_strings_sql.py` to generate `translated_strings_default.sql` from `report_translation_strings.csv`
+- **Fallback Hierarchy**: Translation system checks database translations first, then falls back to default model, then string ID
+- **Adding Translations**: Add new entries to CSV file, run generation script, then `dbt run --select translated_strings_default`
+- **Usage**: Use `translate_label('fieldName')` in reports - automatically references `report.reporting.fieldName` format
+- **Testing**: Run `dbt test --select translated_strings_default` to validate translation data quality

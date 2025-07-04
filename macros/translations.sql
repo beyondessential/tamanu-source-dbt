@@ -1,21 +1,31 @@
-{%- macro translate_label(string_id, default_column_name=null) -%}
+{%- macro translate_label(string_id) -%}
     {%- set language = var('language') -%}
     {%- set full_string_id = 'report.reporting.' ~ string_id -%}
     
-    {%- set query -%}
+    {%- set query_db -%}
         select text 
         from {{ source('tamanu', 'translated_strings') }}
         where string_id = '{{ full_string_id }}' 
         and language = '{{ language }}'
     {%- endset -%}
     
-    {%- set result = run_query(query) -%}
+    {%- set result_db = run_query(query_db) -%}
+
+    {%- set query_default -%}
+        select text 
+        from {{ ref('translated_strings_default') }}
+        where string_id = '{{ full_string_id }}' 
+    {%- endset -%}
+    
+    {%- set result_default = run_query(query_default) -%}
     
     {%- if execute -%}
-        {%- if result.rows | length > 0 -%}
-            {{- result.columns[0].values()[0] -}}
+        {%- if result_db.rows | length > 0 -%}
+            {{- result_db.columns[0].values()[0] -}}
+        {%- elif result_default.rows | length > 0 -%}
+            {{- result_default.columns[0].values()[0] -}}
         {%- else -%}
-            {{- default_column_name -}}
+            {{- string_id -}}
         {%- endif -%}
     {%- endif -%}
 {%- endmacro -%}
@@ -96,4 +106,3 @@
         {%- endif -%}
     {%- endif -%}
 {%- endmacro -%}
-

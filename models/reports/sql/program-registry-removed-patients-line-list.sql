@@ -1,17 +1,17 @@
 select
-    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
-    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    date_of_birth::date as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
-    initcap(sex::text) as "{{ translate_label('patientSex', 'Sex') }}",
-    village as "{{ translate_label('patientVillage', 'Village') }}",
-    registering_facility as "{{ translate_label('registryRegisteringFacility', 'Registering facility') }}",
-    related_conditions as "{{ translate_label('registryConditions', 'Related conditions') }}",
-    clinical_status as "{{ translate_label('registryClinicalStatus', 'Status') }}",
-    registered_by as "{{ translate_label('registryRegisteredBy', 'Registered by') }}",
-    registration_datetime::date as "{{ translate_label('registryRegisteredDate', 'Date of registration') }}",
-    removal_datetime::date as "{{ translate_label('registryRemovedDate', 'Date of removal') }}",
-    removed_by as "{{ translate_label('registryRemovedBy', 'Removed by') }}"
+    display_id as "{{ translate_label('patientDisplayId') }}",
+    first_name as "{{ translate_label('patientFirstName') }}",
+    last_name as "{{ translate_label('patientLastName') }}",
+    date_of_birth::date as "{{ translate_label('patientDateOfBirth') }}",
+    initcap(sex::text) as "{{ translate_label('patientSex') }}",
+    village as "{{ translate_label('patientVillage') }}",
+    registering_facility as "{{ translate_label('registryRegisteringFacility') }}",
+    related_conditions as "{{ translate_label('registryConditions') }}",
+    clinical_status as "{{ translate_label('registryClinicalStatus') }}",
+    registered_by as "{{ translate_label('registryRegisteredBy') }}",
+    registration_datetime::date as "{{ translate_label('registryRegisteredDate') }}",
+    removal_datetime::date as "{{ translate_label('registryRemovedDate') }}",
+    removed_by as "{{ translate_label('registryRemovedBy') }}"
 from {{ ref('ds__program_registry_removed_patients') }}
 where
     case

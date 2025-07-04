@@ -1,17 +1,17 @@
 select
-    diagnosis_datetime as "{{ translate_label('diagnosisDateTime', 'Date & time') }}",
-    diagnosis as "{{ translate_label('diagnoses', 'Diagnoses') }}",
-    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
-    age as "{{ translate_label('patientAge', 'Age') }}",
-    sex as "{{ translate_label('patientSex', 'Sex') }}",
-    contact_number as "{{ translate_label('patientPrimaryContactNumber', 'Primary contact number') }}",
-    village as "{{ translate_label('patientVillage', 'Village') }}",
-    clinician as "{{ translate_label('encounterClinician', 'Clinician') }}",
-    department as "{{ translate_label('department', 'Department') }}",
-    certainty as "{{ translate_label('diagnosisCertainty', 'Certainty') }}",
-    is_primary as "{{ translate_label('diagnosisIsPrimary', 'Is primary') }}"
+    diagnosis_datetime as "{{ translate_label('diagnosisDateTime') }}",
+    diagnosis as "{{ translate_label('diagnoses') }}",
+    first_name as "{{ translate_label('patientFirstName') }}",
+    last_name as "{{ translate_label('patientLastName') }}",
+    display_id as "{{ translate_label('patientDisplayId') }}",
+    age as "{{ translate_label('patientAge') }}",
+    sex as "{{ translate_label('patientSex') }}",
+    contact_number as "{{ translate_label('patientPrimaryContactNumber') }}",
+    village as "{{ translate_label('patientVillage') }}",
+    clinician as "{{ translate_label('encounterClinician') }}",
+    department as "{{ translate_label('department') }}",
+    certainty as "{{ translate_label('diagnosisCertainty') }}",
+    is_primary as "{{ translate_label('diagnosisIsPrimary') }}"
 from {{ ref('ds__diagnoses') }}
 where
     case

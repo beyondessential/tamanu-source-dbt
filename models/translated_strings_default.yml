@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: translated_strings_default
+    description: >
+      Default translation strings for reporting labels. This model dynamically reads from the 
+      report_translation_strings.csv file and converts it into a structured format that can be 
+      used for translations when no specific language translation is available.
+    columns:
+      - name: string_id
+        description: >
+          Unique identifier for the translation string, following the format 'report.reporting.{field}'.
+          This corresponds to the stringId column in the CSV file.
+        tests:
+          - not_null
+          - unique
+      - name: language
+        description: >
+          Language code for the translation. This model always returns 'default' as it provides 
+          the fallback English translations.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['default']
+      - name: text
+        description: >
+          The translated text/label in English. This is the human-readable label that will be 
+          displayed in reports when no specific language translation is available.
+        tests:
+          - not_null

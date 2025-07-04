@@ -22,6 +22,10 @@ A comma separated list of dates and times
 Full list of diagnoses
 {% enddocs %}
 
+{% docs generic__diagnosis %}
+Diagnosis
+{% enddocs %}
+
 {% docs generic__duration %}
 Duration
 {% enddocs %}
