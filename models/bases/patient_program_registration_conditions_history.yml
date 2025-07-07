@@ -5,7 +5,6 @@ models:
     latest_version: 2
     
     versions:
-      # Replace condition_category with program_registry_condition_category_id
       - v: 2 
         config:
           alias: patient_program_registration_conditions_history
