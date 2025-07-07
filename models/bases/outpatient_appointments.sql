@@ -8,7 +8,9 @@ select
     a.schedule_id,
     a.location_group_id,
     a.appointment_type_id,
-    a.is_high_priority,
+    case
+        when a.is_high_priority then 'Yes' else 'No'
+    end as priority,
     a.status,
     s.until_date::date as until_date,
     s.interval,
