@@ -8,7 +8,9 @@ select
     a.schedule_id,
     a.location_group_id,
     a.appointment_type_id,
-    a.is_high_priority,
+    case
+        when a.is_high_priority then 'Yes' else 'No'
+    end as priority,
     a.status,
     s.until_date::date as until_date,
     s.interval,
@@ -20,6 +22,7 @@ select
     s.generated_until_date,
     s.cancelled_at_date
 from {{ source("tamanu", "appointments") }} a
-join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
+left join {{ source("tamanu", "appointment_schedules") }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
+    and a.appointment_type_id notnull

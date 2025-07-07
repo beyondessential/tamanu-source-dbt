@@ -19,29 +19,13 @@ select
     u.display_name as clinician,
     lg.id as location_group_id,
     lg.name as location_group,
-    case 
-        when a.is_high_priority then 'Yes' else 'No' 
-    end as priority,
+    a.priority,
     a.schedule_id,
-    case
-        when a.schedule_id notnull and a.occurrence_count notnull 
-        then (
-            first_value(a.start_datetime::date) over (partition by a.schedule_id order by a.start_datetime) 
-            + (a.occurrence_count * 
-                case 
-                    when a.frequency = 'DAILY' then interval '1 day'
-                    when a.frequency = 'WEEKLY' then interval '1 week'
-                    when a.frequency = 'MONTHLY' then interval '1 month'
-                    when a.frequency = 'YEARLY' then interval '1 year'
-                end * a.interval
-            )
-        ) 
-        else a.until_date
-    end as until_date,
+    a.until_date,
     a.interval,
+    a.days_of_week,
     a.frequency,
-    a.nth_weekday,
-    a.days_of_week
+    a.nth_weekday
 from {{ ref('outpatient_appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
