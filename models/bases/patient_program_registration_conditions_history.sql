@@ -14,7 +14,7 @@ select
     (fc.record_data ->> 'date')::timestamp as datetime,
     fc.record_data ->> 'program_registry_condition_id' as program_registry_condition_id,
     fc.record_data ->> 'patient_program_registration_id' as patient_program_registration_id,
-    fc.record_data ->> 'condition_category' as condition_category,
+    fc.record_data ->> 'program_registry_condition_category_id' as program_registry_condition_category_id,
     fc.record_data ->> 'reason_for_change' as reason_for_change,
     fc.record_data ->> 'clinician_id' as recorded_by_id,
     (fc.record_data ->> 'deletion_date')::timestamp as deleted_datetime,
