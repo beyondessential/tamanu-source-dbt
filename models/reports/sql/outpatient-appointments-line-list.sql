@@ -43,3 +43,4 @@ where case
         when {{ parameter('clinicianId') }} is null then true
         else clinician_id = {{ parameter('clinicianId') }}
     end
+order by appointment_start_datetime

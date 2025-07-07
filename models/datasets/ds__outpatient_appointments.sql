@@ -35,4 +35,3 @@ left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
 left join {{ ref('reference_data') }} apt on apt.id = a.appointment_type_id
 where a.appointment_type_id notnull
-order by a.start_datetime
