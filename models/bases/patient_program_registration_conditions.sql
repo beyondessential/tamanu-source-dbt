@@ -3,7 +3,7 @@ select
     pprc.date::timestamp as datetime,
     pprc.program_registry_condition_id,
     pprc.patient_program_registration_id,
-    pprc.condition_category,
+    pprc.program_registry_condition_category_id,
     pprc.reason_for_change,
     pprc.clinician_id as recorded_by_id,
     pprc.deletion_date::timestamp as deleted_datetime,
