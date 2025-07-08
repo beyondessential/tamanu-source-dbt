@@ -320,8 +320,8 @@ select
     bt.name as patient_billing_type,
     case when e.end_datetime is not null then
             case
-                when extract(day from (e.end_datetime - e.start_datetime)) < 1 then 1
-                else extract(day from (e.end_datetime - e.start_datetime))
+                when e.end_datetime::date - e.start_datetime::date < 1 then 1
+                else e.end_datetime::date - e.start_datetime::date
             end
     end as length_of_stay,
     f.id as facility_id,
@@ -410,4 +410,3 @@ left join encounter_lab_requests elr on elr.encounter_id = e.id
 left join encounter_imaging_requests eir on eir.encounter_id = e.id
 left join encounter_notes en on en.encounter_id = e.id
 where e.end_datetime is not null
-order by e.end_datetime desc

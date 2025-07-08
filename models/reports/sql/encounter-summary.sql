@@ -62,3 +62,4 @@ where case when {{ parameter('fromDate', default_value='2024-01-01', data_type='
     and case when {{ parameter('supervisingClinicianId') }} is null then true
         else supervising_clinician_id = {{ parameter('supervisingClinicianId') }}
     end
+order by end_datetime desc
