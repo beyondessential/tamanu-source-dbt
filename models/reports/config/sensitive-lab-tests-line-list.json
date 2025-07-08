@@ -1,23 +1,13 @@
 {
   "query": "replace this",
-  "name": "Sensitive lab requests line list",
-  "notes": "This report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  \n\nThe report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. ",
+  "name": "Sensitive lab tests line list",
+  "notes": "This report generates a list of all patients that have had sensitive lab tests performed for the selected parameters. Patients are listed in chronological order based on the lab request date and time. Only lab tests marked as sensitive in the system are included in this report.\n\nThe report includes detailed test results, verification status, and completion information for sensitive tests only.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
-      {
-        "parameterField": "PractitionerField",
-        "label": "Requesting clinician",
-        "name": "requestedById"
-      },
-      {
-        "parameterField": "LabTestCategorySensitiveField",
-        "label": "Test category",
-        "name": "testCategoryId"
-      },
       {
         "parameterField": "ParameterSelectField",
         "label": "Status",
@@ -60,6 +50,11 @@
             "value": "entered-in-error"
           }
         ]
+      },
+      {
+        "parameterField": "LabTestCategorySensitiveField",
+        "label": "Test category",
+        "name": "testCategoryId"
       }
     ]
   }
