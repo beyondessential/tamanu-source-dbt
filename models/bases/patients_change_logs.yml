@@ -2,7 +2,6 @@ version: 2
 models:
   - name: patients_change_logs
     description: 'Historical changes to patients extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
-    latest_version: 1
     config:
       contract:
         enforced: true
@@ -55,6 +54,3 @@ models:
       - name: registration_date
         data_type: date
         description: "{{ doc('generic__created_at') }} in patients history which is used as a best estimate of registration date."
-    versions:
-      - v: 1
-        # Initial version - matches the columns defined above
