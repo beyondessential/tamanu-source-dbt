@@ -32,7 +32,6 @@
       "type": "string",
       "description": "Database schema to use for the report",
       "enum": [
-        "raw",
         "reporting"
       ]
     },
