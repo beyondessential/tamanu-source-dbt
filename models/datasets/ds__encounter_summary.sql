@@ -194,7 +194,7 @@ encounter_procedures as (
         string_agg(
             concat(
                 'Name: ', proc.name,
-                ', Date: ', to_char(p.date::timestamp, 'DD-MM-YYYY'),
+                ', Date: ', to_char(p.date, 'DD-MM-YYYY'),
                 ', Location: ', loc.name,
                 ', Notes: ', p.note,
                 ', Completed notes: ', p.completed_note
@@ -320,8 +320,8 @@ select
     bt.name as patient_billing_type,
     case when e.end_datetime is not null then
             case
-                when e.end_datetime::date - e.start_datetime::date < 1 then 1
-                else e.end_datetime::date - e.start_datetime::date
+                when extract(day from (e.end_datetime - e.start_datetime)) < 1 then 1
+                else extract(day from (e.end_datetime - e.start_datetime))
             end
     end as length_of_stay,
     f.id as facility_id,
@@ -337,12 +337,12 @@ select
     case when t.closed_datetime notnull and t.triage_datetime notnull and t.closed_datetime > t.triage_datetime
             then concat(
                     lpad((
-                        extract(day from (t.closed_datetime::timestamp - t.triage_datetime::timestamp)) * 24
-                        + extract(hour from (t.closed_datetime::timestamp - t.triage_datetime::timestamp))
+                        extract(day from (t.closed_datetime - t.triage_datetime)) * 24
+                        + extract(hour from (t.closed_datetime - t.triage_datetime))
                     )::text, 2, '0'), ':',
-                    lpad(extract(minute from (t.closed_datetime::timestamp - t.triage_datetime::timestamp))::text, 2, '0'), ':',
+                    lpad(extract(minute from (t.closed_datetime - t.triage_datetime))::text, 2, '0'), ':',
                     lpad(
-                        (extract(second from (t.closed_datetime::timestamp - t.triage_datetime::timestamp))::int)::text, 2, '0'
+                        (extract(second from (t.closed_datetime - t.triage_datetime))::int)::text, 2, '0'
                     )
                 )
     end as triage_wait_time,
