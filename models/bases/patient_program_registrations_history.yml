@@ -2,7 +2,6 @@ version: 2
 models:
   - name: patient_program_registrations_history
     description: 'Historical changes to patient program registrations extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
-    latest_version: 1
     config:
       contract:
         enforced: true
@@ -55,9 +54,6 @@ models:
       - name: deactivated_datetime
         data_type: timestamp
         description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
-    versions:
-      - v: 1
-        # Initial version - matches the columns defined above
 
 unit_tests:
   - name: test_patient_program_registrations_history__v2_33
