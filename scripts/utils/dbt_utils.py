@@ -137,3 +137,18 @@ def get_project_name() -> str:
     except Exception as e:
         cprint(f"Error reading name: {e}", "error")
         exit(1)
+
+
+def get_deployment_name() -> str:
+    """
+    Returns the deployment name from the dbt_project.yml file.
+    """
+    try:
+        project_name = get_project_name()
+        if project_name == "tamanu_source_dbt":
+            return "standard"
+        else:
+            return project_name.split("_")[-1]
+    except Exception as e:
+        cprint(f"Error getting deployment name: {e}", "error")
+        exit(1)

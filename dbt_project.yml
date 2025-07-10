@@ -17,7 +17,6 @@ macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
 clean-targets:
-  - compiled
   - dbt_packages
   - target
 
