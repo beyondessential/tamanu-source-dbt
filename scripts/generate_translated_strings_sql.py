@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+Keep this script until default translations are part of the automated import process.
+
 Script to generate translated_strings_default.sql from report_translation_strings.csv
 This creates a SQL view that can be used as a dbt model.
 """
@@ -9,7 +11,7 @@ import os
 
 def generate_sql_view():
     """Generate the SQL view content from the CSV file."""
-    csv_path = 'report_translation_strings.csv'
+    csv_path = 'report_translations.csv'
     sql_path = 'models/translated_strings_default.sql'
     
     if not os.path.exists(csv_path):

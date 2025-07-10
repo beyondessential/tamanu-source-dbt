@@ -1,3 +1,4 @@
+-- Keep this file until default translations are part of the automated import process.
 select
     string_id,
     'default' as language,
