@@ -41,6 +41,7 @@ The `queryOptions` object defines how the report behaves and what parameters it 
   - `"30days"` - Last 30 days
   - `"18years"` - Last 18 years (typically for paediatric reports)
   - `"next30days"` - Next 30 days (for future appointments/schedules)
+- **`parameters`** (array): List of parameter configurations that define user inputs for the report
 
 #### Default Date Range Examples
 
@@ -52,7 +53,6 @@ For a report generated on **2025-07-01 12:00:00**, the default date ranges would
 - **`"30days"`**: From 2025-06-01 00:00:00 to 2025-07-01 12:00:00
 - **`"18years"`**: From 2007-07-01 00:00:00 to 2025-07-01 12:00:00
 - **`"next30days"`**: From 2025-07-02 00:00:00 to 2025-07-31 23:59:59
-- **`parameters`** (array): List of parameter configurations that define user inputs for the report
 
 #### Optional Properties
 
