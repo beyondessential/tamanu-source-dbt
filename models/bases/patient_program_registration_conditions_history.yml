@@ -2,7 +2,6 @@ version: 2
 models:
   - name: patient_program_registration_conditions_history
     description: 'Historical changes to patient program registration conditions extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
-    latest_version: 1
     config:
       contract:
         enforced: true
@@ -31,9 +30,9 @@ models:
       - name: patient_program_registration_id
         data_type: text
         description: "{{ doc('patient_program_registration_conditions__patient_program_registration_id') }} from history."
-      - name: condition_category
+      - name: program_registry_condition_category_id
         data_type: text
-        description: "{{ doc('patient_program_registration_conditions__condition_category') }} from history."
+        description: "{{ doc('patient_program_registration_conditions__program_registry_condition_category_id') }} from history."
       - name: reason_for_change
         data_type: text
         description: "{{ doc('patient_program_registration_conditions__reason_for_change') }} from history."
@@ -46,9 +45,7 @@ models:
       - name: deleted_by_id
         data_type: text
         description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id') }} from history."
-    versions:
-      - v: 1
-        # Initial version - matches the columns defined above
+        
 
 unit_tests:
   - name: test_patient_program_registration_conditions_history__v2_33

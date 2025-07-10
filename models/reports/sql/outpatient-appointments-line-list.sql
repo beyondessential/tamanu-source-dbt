@@ -13,14 +13,13 @@ select
     appointment_status as "{{ translate_label('appointmentStatus') }}",
     clinician as "{{ translate_label('appointmentClinician') }}",
     location_group as "{{ translate_label('appointmentLocationGroup') }}",
-
     priority as "{{ translate_label('appointmentPriority') }}",
     case
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
     end as "{{ translate_label('appointmentIsRepeating') }}",
     until_date as "{{ translate_label('appointmentRepeatingEndDate') }}"
-from {{ ref('ds__appointments') }}
+from {{ ref('ds__outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
         else appointment_start_datetime >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
@@ -50,3 +49,4 @@ where case
         when {{ parameter('appointmentTypeId') }} is null then true
         else appointment_type_id = {{ parameter('appointmentTypeId') }}
     end
+order by appointment_start_datetime

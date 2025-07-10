@@ -18,9 +18,9 @@ models:
       - name: patient_program_registration_id
         data_type: uuid
         description: "{{ doc('patient_program_registration_conditions__patient_program_registration_id') }}"
-      - name: condition_category
+      - name: program_registry_condition_category_id
         data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__condition_category') }}"
+        description: "{{ doc('patient_program_registration_conditions__program_registry_condition_category_id') }}"
       - name: reason_for_change
         data_type: character varying(255)
         description: "{{ doc('patient_program_registration_conditions__reason_for_change') }}"
