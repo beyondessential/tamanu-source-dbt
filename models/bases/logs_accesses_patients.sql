@@ -3,7 +3,7 @@ select
     user_id,
     record_id as patient_id,
     facility_id,
-    logged_at,
+    logged_at at time zone '{{ var("timezone") }}' as logged_at,
     session_id,
     device_id,
     is_mobile,

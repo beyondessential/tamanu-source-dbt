@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: patients_access_logs
+  - name: logs_accesses_patients
     description: Patient record access logs from the audit system
     config:
       tags:

@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: ds__patient_views
+  - name: ds__audit_patient_views
     description: Patient record views tracking which users accessed patient records and when
     config:
       tags:
@@ -47,7 +47,7 @@ models:
         data_type: character varying(255)
         description: "{{ doc('facilities__name') }} where the user was logged in when viewing the record."
       - name: date_time_viewed
-        data_type: timestamp with time zone
+        data_type: timestamp
         description: "{{ doc('generic__datetime') }} when the patient record was accessed."
       - name: facility_id
         data_type: text
