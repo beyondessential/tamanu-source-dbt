@@ -23,6 +23,21 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
+### Audit patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
 ### Audit patient views line list
 
 **Report Description**
@@ -75,7 +90,6 @@ Facility, Area
 
 **Report Description**
 
-Encounter summary
 This report generates a list of all patients that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. 
 
 The below information is included for each encounter: 
@@ -394,21 +408,6 @@ This report generates a list of all patients with a scheduled appointment for th
 Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
-
-
----
-
-### Patient details edits line list
-
-**Report Description**
-
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
 
 
 ---
