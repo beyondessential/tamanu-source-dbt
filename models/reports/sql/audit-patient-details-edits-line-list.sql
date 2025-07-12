@@ -8,7 +8,7 @@ select
     edited_by_user as "{{ translate_label('logChangeBy', 'Edited by user') }}",
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
-    to_char(edited_datetime, 'YYYY-MM-DD HH:MI:SS') as "{{ translate_label('logChangeDateTime', 'Date and time edited') }}"
+    to_char(edited_datetime, 'YYYY-MM-DD HH24:MI:SS') as "{{ translate_label('logChangeDateTime', 'Date and time edited') }}"
 from {{ ref('ds__audit_patient_details_edits') }}
 where
     case
