@@ -13,5 +13,3 @@ select
 from {{ source("logs__tamanu", "accesses") }}
 where deleted_at is null
     and record_type = 'Patient'
-    and record_id is not null
-    and user_id is not null
