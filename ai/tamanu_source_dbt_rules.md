@@ -47,6 +47,7 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 - **Required**: Implement dbt built-in tests for all models
 - Run `dbt test` before finalising changes
 - **Required**: Validate report configs with `python scripts/validate_report_configs.py`
+- **Required**: Validate translation consistency with `python scripts/check_translations.py`
 
 ## File Management
 - Follow naming: `{table_name}.sql` and `{table_name}.yml`
@@ -63,7 +64,8 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 6. Run `sqlfluff fix`
 7. Execute `dbt test --profiles-dir config`
 8. Validate report configurations
-9. Use `dbt run` to verify
+9. **Validate translation consistency**: Run `python scripts/check_translations.py` to ensure all translate_label calls have corresponding CSV entries
+10. Use `dbt run` to verify
 
 ## Translation System
 - **Dynamic Generation**: Use `python scripts/generate_translated_strings_sql.py` to generate `translated_strings_default.sql` from `report_translation_strings.csv`
@@ -71,3 +73,4 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 - **Adding Translations**: Add new entries to CSV file, run generation script, then `dbt run --select translated_strings_default`
 - **Usage**: Use `translate_label('fieldName')` in reports - automatically references `report.reporting.fieldName` format
 - **Testing**: Run `dbt test --select translated_strings_default` to validate translation data quality
+- **Validation**: Use `python scripts/check_translations.py` to ensure all `translate_label` calls have corresponding entries in CSV file - identifies missing translations and provides file-by-file analysis
