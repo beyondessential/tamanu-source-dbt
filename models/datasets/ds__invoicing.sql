@@ -150,4 +150,3 @@ left join total_patient_amount tpa
 left join total_patient_payments tpp
     on tpp.invoice_id = i.id
 left join patient_additional_fields paf on paf.patient_id = p.id
-order by e.end_datetime

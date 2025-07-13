@@ -32,4 +32,3 @@ left join {{ ref('users') }} clinician on clinician.id = e.clinician_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('facilities') }} f on f.id = l.facility_id
-order by ed.datetime desc

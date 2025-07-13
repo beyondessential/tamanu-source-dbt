@@ -22,4 +22,3 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('users') }} clinician on clinician.id = pc.recorded_by_id
 left join {{ ref('users') }} resolving_clinician
     on resolving_clinician.id = pc.resolved_by_id
-order by pc.recorded_datetime

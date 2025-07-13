@@ -23,3 +23,4 @@ where case
         else recorded_datetime::date
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
+order by recorded_datetime
