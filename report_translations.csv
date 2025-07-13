@@ -75,16 +75,30 @@ report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
 report.reporting.dischargeDate,Discharged date
 report.reporting.dischargeDateTime,Discharge date and time
-report.reporting.dischargeLocationGroup,Area (at time of discharge)
+report.reporting.dischargeDepartment,Discharging department
+report.reporting.dischargeDisposition,Discharge disposition
+report.reporting.dischargeLocation,Discharging location
+report.reporting.dischargeLocationGroup,Discharging area
 report.reporting.encounterClinician,Clinician
+report.reporting.encounterDepartmentHistory,Department history
+report.reporting.encounterDepartmentHistoryDateTimes,Department history date and times
 report.reporting.encounterDiet,Diet
 report.reporting.encounterEndDateTime,Encounter end date and time
+report.reporting.encounterLengthOfStay,Length of stay (days)
+report.reporting.encounterLocationHistory,Location history
+report.reporting.encounterLocationHistoryDateTimes,Location history date and times
+report.reporting.encounterLocationGroupHistory,Area history
+report.reporting.encounterLocationGroupHistoryDateTimes,Area history date and times
 report.reporting.encounterIsDischarged,Discharges (has the patient been discharged)
 report.reporting.encounterNonDischargeClinician,Non-discharge by clinicians
+report.reporting.encounterReasonForEncounter,Reason for encounter
 report.reporting.encounterStartDateTime,Encounter start date and time
+report.reporting.encounterSupervisingClinician,Supervising clinician
 report.reporting.encounterType,Type
+report.reporting.encounterTypeEmergency,Emergency encounter type
+report.reporting.encounterTypeInpatient,Inpatient encounter type
+report.reporting.encounterTypeOutpatient,Outpatient encounter type
 report.reporting.facility,Facility
-report.reporting.facilityName,Facility
 report.reporting.hospitalAdmissionCount,Number of admissions
 report.reporting.hospitalAverageLengthOfStay,Average length of stay
 report.reporting.hospitalBedOccupancyPercent,Bed occupancy (%)
@@ -104,6 +118,7 @@ report.reporting.imagingPriority,Priority
 report.reporting.imagingRequestDateTime,Request date and time
 report.reporting.imagingRequestId,Request ID
 report.reporting.imagingRequestingClinician,Requesting clinician
+report.reporting.imagingRequests,Imaging requests
 report.reporting.imagingStatus,Status
 report.reporting.imagingSupervisingClinician,Supervising clinician
 report.reporting.imagingTotalRequests,Total new requests
@@ -131,6 +146,7 @@ report.reporting.labRequestPendingCount,Total requests with a status of results 
 report.reporting.labRequestPriority,Priority
 report.reporting.labRequestPublishedCount,Total requests published
 report.reporting.labRequestPublishedDateTime,Lab request published date and time
+report.reporting.labRequests,Lab requests
 report.reporting.labRequestSampleCollectedBy,Sample collected by
 report.reporting.labRequestSampleCollectionDateTime,Sample collection date and time
 report.reporting.labRequestSampleSite,Site
@@ -155,7 +171,9 @@ report.reporting.logAccessBy,Viewed by user
 report.reporting.logAccessDatetime,Date and time viewed
 report.reporting.logChangeBy,Edited by user
 report.reporting.logChangeDateTime,Date and time edited
+report.reporting.medications,Medications
 report.reporting.noteEndDateTime,Notes end date and time
+report.reporting.notes,Notes
 report.reporting.noteStartDateTime,Notes start date and time
 report.reporting.patientAge,Age
 report.reporting.patientBillingType,Billing type
@@ -209,6 +227,7 @@ report.reporting.procedureFacility,Procedure facility
 report.reporting.procedureIsCompleted,Procedure marked as completed
 report.reporting.procedureLocation,Procedure location
 report.reporting.procedureLocationGroup,Procedure area
+report.reporting.procedures,Procedures
 report.reporting.procedureStartDateTime,Procedure start (date and time)
 report.reporting.referralCompletedBy,Referring doctor
 report.reporting.referralDate,Referral date
@@ -224,7 +243,9 @@ report.reporting.registryRemovedDate,Date of removal
 report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
+report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
+report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
 report.reporting.userEmail,User email
 report.reporting.userName,User name
 report.reporting.userRole,User role
@@ -239,6 +260,7 @@ report.reporting.vaccinationModifiedDate,Record modification date
 report.reporting.vaccinationNotGivenClinician,"If not given, Supervising clinician"
 report.reporting.vaccinationNotGivenReason,"If not given, Reason not given"
 report.reporting.vaccinationRecordedBy,Recorded by
+report.reporting.vaccinations,Vaccinations
 report.reporting.vaccinationStatus,Vaccine status
 report.reporting.vaccineBrand,"If category of Other, Vaccine brand"
 report.reporting.vaccineCategory,Vaccine category
