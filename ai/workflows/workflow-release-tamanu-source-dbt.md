@@ -16,6 +16,7 @@ Execute in order:
 4. **Validate everything**:
    - `dbt test`
    - `python scripts/validate_report_configs.py`
+   - `python scripts/check_translations.py`
    - `sqlfluff lint models`
 5. **Update report list**: `python scripts/list_tamanu_reports.py`
 6. **Final build**: `dbt run`

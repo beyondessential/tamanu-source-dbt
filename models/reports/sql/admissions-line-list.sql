@@ -11,13 +11,13 @@ select
     admission_datetime as "{{ translate_label('admissionDateTime') }}",
     admission_status as "{{ translate_label('admissionStatus') }}",
     discharge_datetime as "{{ translate_label('dischargeDateTime') }}",
-    facility as "{{ translate_label('facilityName') }}",
-    departments as "{{ translate_label('departmentNames') }}",
-    department_datetimes as "{{ translate_label('departmentChangeDateTimes') }}",
+    facility as "{{ translate_label('facility') }}",
+    departments as "{{ translate_label('departments') }}",
+    department_datetimes as "{{ translate_label('encounterDepartmentHistoryDateTimes') }}",
     location_groups as "{{ translate_label('locationGroups') }}",
-    location_group_datetimes as "{{ translate_label('locationGroupChangeDateTimes') }}",
+    location_group_datetimes as "{{ translate_label('encounterLocationGroupHistoryDateTimes') }}",
     locations as "{{ translate_label('locations') }}",
-    location_datetimes as "{{ translate_label('locationChangeDateTimes') }}",
+    location_datetimes as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     primary_diagnoses as "{{ translate_label('diagnosesPrimary') }}",
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}"
 from {{ ref('ds__admissions') }}

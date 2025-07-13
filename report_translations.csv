@@ -65,8 +65,7 @@ report.reporting.deathWasPregnant,Was pregnant
 report.reporting.deathWasStillborn,Was stillborn
 report.reporting.deathWithinDayOfBirth,Death within day of birth
 report.reporting.department,Department
-report.reporting.departmentChangeDateTimes,Department change date and times
-report.reporting.departmentNames,Departments
+report.reporting.departments,Departments
 report.reporting.diagnoses,Diagnoses
 report.reporting.diagnosesPrimary,Primary diagnoses
 report.reporting.diagnosesSecondary,Secondary diagnoses
@@ -161,9 +160,7 @@ report.reporting.labTestResults,Result
 report.reporting.labTestType,Lab test type
 report.reporting.labTestVerification,Verification
 report.reporting.location,Location
-report.reporting.locationChangeDateTimes,Location change date and times
 report.reporting.locationGroup,Area
-report.reporting.locationGroupChangeDateTimes,Location group change date and times
 report.reporting.locationGroups,Areas
 report.reporting.locations,Locations
 report.reporting.logAccessAtFacility,Viewed at facility
