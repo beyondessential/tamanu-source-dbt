@@ -1,6 +1,6 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
-        and record_data ->> 'id' != '{{ var("patient_id") }}'
+        and record_data ->> 'id' != '{{ var("test_patient") }}'
 )
 
 select
