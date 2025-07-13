@@ -124,7 +124,7 @@ def create_survey_model(survey_id):
     model = f"{survey_id}.sql"
     path = SURVEYS_DIR / model
 
-    content = f"""({{{{ get_survey('{survey_id}') }}}})"""
+    content = f"({{{{ get_survey('{survey_id}') }}}})"
     
     write_file(str(path), content)
     cprint(f"Created model: {path}", "success")
