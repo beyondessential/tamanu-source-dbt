@@ -1,15 +1,11 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
-        and (
-            version = 'unknown'
-            or string_to_array(version, '.')::int [] >= string_to_array('2.33.0', '.')::int []
-        )
         and record_data ->> 'id' != '{{ var("test_patient") }}'
 )
 
 select
     fc.changelog_id,
-    fc.logged_at::timestamp,
+    fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     fc.updated_by_user_id,
     fc.record_data ->> 'id' as id,
     fc.record_data ->> 'display_id' as display_id,

@@ -7,7 +7,7 @@
         record_data
     from {{ source("logs__tamanu", "changes") }}
     where table_name = '{{ table_name }}'
-        and record_id != any(
+        and record_id not in (
             select id::text
             from {{ table_name }} t 
             where t.deleted_at notnull
