@@ -78,4 +78,3 @@ left join {{ ref("users") }} u on u.id = av.recorded_by_id
 left join {{ ref("reference_data") }} rd_vil on rd_vil.id = p.village_id
 left join {{ ref("reference_data") }} rd_reason on rd_reason.id = av.not_given_reason_id
 left join administered_circumstances ac on ac.id = av.id
-order by av.datetime

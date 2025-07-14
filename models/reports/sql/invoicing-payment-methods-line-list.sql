@@ -19,3 +19,4 @@ where case
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('methodId') }} is not null then itp.payment_method_id = {{ parameter('methodId') }} else true end
+order by itp.date

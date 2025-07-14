@@ -53,4 +53,3 @@ left join {{ ref('reference_data') }} currently_at_village on currently_at_villa
 left join related_conditions c on c.patient_program_registration_id = ppr.id
 left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id
 left join {{ ref('users') }} deactivated_by on deactivated_by.id = ppr.deactivated_by_id
-order by ppr.datetime desc

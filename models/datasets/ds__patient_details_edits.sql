@@ -15,4 +15,3 @@ select
 from {{ ref('patients_change_logs') }} pcl
 left join {{ ref('users') }} u on u.id = pcl.updated_by_user_id
 left join {{ ref('reference_data') }} village on village.id = pcl.village_id and village.type = 'village'
-order by pcl.logged_at desc

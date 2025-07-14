@@ -28,4 +28,3 @@ join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('users') }} u on u.id = e.clinician_id
 join {{ ref('departments') }} d on d.id = e.department_id
 left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
-order by sr.end_datetime
