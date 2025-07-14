@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: logs_changes_patient_additional_data
-    description: 'Historical changes to patient additional data extracted from the changes log table. Contains records for version >= 2.33 where the schema in record_data is available.'
+  - name: patient_additional_data_change_logs
+    description: Historical changes to patient additional data extracted from the changes log table.
     config:
       contract:
         enforced: true

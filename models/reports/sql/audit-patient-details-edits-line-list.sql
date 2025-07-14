@@ -9,7 +9,7 @@ select
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
     to_char(edited_datetime, 'YYYY-MM-DD HH24:MI:SS') as "{{ translate_label('logChangeDateTime', 'Date and time edited') }}"
-from {{ ref('ds__audit_patient_details_edits') }}
+from {{ ref('ds__patient_change_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

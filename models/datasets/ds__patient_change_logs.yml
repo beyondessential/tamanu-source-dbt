@@ -1,7 +1,7 @@
 version: 2
 models:
   - name: ds__audit_patient_details_edits
-    description: Patient details edits tracking - lists all users that have edited patient personal details or additional data with timestamps. Includes edits from both patients and patient additional data tables.
+    description: Patient details edits tracking - lists all users that have edited patient personal details or additional data with timestamps.
     config:
       tags:
         - patient

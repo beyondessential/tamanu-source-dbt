@@ -10,7 +10,7 @@ with patient_edits as (
         lcp.village_id,
         lcp.updated_by_user_id,
         lcp.logged_at
-    from {{ ref('logs_changes_patients') }} lcp
+    from {{ ref('patient_change_logs') }} lcp
 
     union all
 
@@ -25,7 +25,7 @@ with patient_edits as (
         p.village_id,
         lcpad.updated_by_user_id,
         lcpad.logged_at
-    from {{ ref('logs_changes_patient_additional_data') }} lcpad
+    from {{ ref('patient_additional_data_change_logs') }} lcpad
     left join {{ ref('patients') }} p on p.id = lcpad.patient_id
 )
 
@@ -45,4 +45,4 @@ select
     pe.logged_at as edited_datetime
 from patient_edits pe
 left join {{ ref('users') }} u on u.id = pe.updated_by_user_id
-left join {{ ref('reference_data') }} village on village.id = pe.village_id and village.type = 'village'
+left join {{ ref('reference_data') }} village on village.id = pe.village_id

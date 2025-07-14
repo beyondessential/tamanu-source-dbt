@@ -23,6 +23,20 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
+### Audit patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
 
 ### Audit patient views line list
 
