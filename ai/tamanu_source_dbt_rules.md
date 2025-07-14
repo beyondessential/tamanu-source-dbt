@@ -67,6 +67,7 @@ When working with models, always respect the following hierarchy:
 - Use meaningful aliases and avoid ambiguous column references
 - **Always test SQL syntax before committing**
 - **Use Australian English spelling** in all documentation, comments, and text (e.g., "optimise" not "optimize", "colour" not "color", "centre" not "center")
+- **Sort order should only be applied in `models/reports`** - Do not use ORDER BY clauses in `models/bases`, `models/surveys`, or `models/datasets` as these are intermediate transformations
 
 ## Testing Standards
 - **Required**: Implement integrity tests using dbt built-in tests for all models

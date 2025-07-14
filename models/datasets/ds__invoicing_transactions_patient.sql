@@ -17,4 +17,3 @@ join {{ ref('encounters') }} e on e.id = i.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('reference_data') }} rd_method on rd_method.id = ipp.method_id
 left join {{ ref('users') }} u on u.id = ip.updated_by_id
-order by ip.date

@@ -39,4 +39,3 @@ left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id 
 left join
     {{ ref("reference_data") }} billing
     on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
-order by p.registration_date

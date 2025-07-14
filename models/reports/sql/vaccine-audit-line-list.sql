@@ -56,3 +56,4 @@ where
         when {{ parameter('status') }} is null then true
         else vaccine_status = {{ parameter('status') }}
     end
+order by vaccination_date, last_name, first_name

@@ -30,3 +30,4 @@ where status in ('pending', 'cancelled')
         when {{ parameter('villageId') }} is null then true
         else village_id = {{ parameter('villageId') }}
     end
+order by referral_datetime, last_name, first_name
