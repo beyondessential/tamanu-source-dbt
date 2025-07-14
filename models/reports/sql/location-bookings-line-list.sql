@@ -51,3 +51,4 @@ where case
         when {{ parameter('bookingTypeId') }} is null then true
         else booking_type_id = {{ parameter('bookingTypeId') }}
     end
+order by booking_start_datetime

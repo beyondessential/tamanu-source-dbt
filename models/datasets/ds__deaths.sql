@@ -145,4 +145,3 @@ left join {{ ref("users") }} clinician
     on clinician.id = pdd.recorded_by_id
 where pdd.visibility_status = 'current'
     and pdd.is_final
-order by p.date_of_death

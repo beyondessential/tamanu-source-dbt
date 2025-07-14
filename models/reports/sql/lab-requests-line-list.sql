@@ -53,3 +53,4 @@ where non_sensitive_tests is not null
         else requested_datetime::date
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
+order by requested_datetime

@@ -9,7 +9,7 @@ select
     user_email as "{{ translate_label('userEmail') }}",
     user_role as "{{ translate_label('userRole') }}",
     edited_datetime as "{{ translate_label('logChangeDateTime') }}"
-from {{ ref('ds__patient_details_edits') }}
+from {{ ref('ds__patient_change_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
@@ -30,4 +30,4 @@ where
         when {{ parameter('userId') }} is null then true
         else edited_by_user = {{ parameter('userId') }}
     end
-order by edited_datetime
+order by edited_datetime desc

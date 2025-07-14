@@ -23,6 +23,36 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
+### Audit patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Audit patient views line list
+
+**Report Description**
+
+This report lists all of the users that have viewed the selected patient's record for the selected date range and when the view occurred. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. Each individual access by a user will create a new row within the report. Views are listed in chronological order for the selected date range.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
 ### Deceased patients line list
 
 **Report Description**
@@ -52,6 +82,39 @@ This report generates a list of all active encounters with their associated diet
 Facility, Area
 
 **Default date range**: allTime
+
+
+---
+
+### Encounter summary
+
+**Report Description**
+
+This report generates a list of all patients that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. 
+
+The below information is included for each encounter: 
+- Encounter start and end dates and times with length of stay. 
+- Facility at which the encounter occurred. 
+- List of encounter types assigned during each encounter. Triage encounters include details of the triage category, arrival mode and wait time. 
+- Encountering and discharging clinicians.
+- Discharge information including disposition, discharging department, area, and location with timestamps.
+- Complete history of all assigned departments, areas, and locations with date and time assignments.
+
+All clinical data is listed chronologically within each cell. The below is a summary of the clinical information included for each encounter: 
+- List of diagnoses. Diagnoses with a status of Disproven or Recorded in error are excluded from the report. 
+- List of medications prescribed. 
+- List of vaccinations recorded. 
+- List of procedures performed.
+- List of lab requests. Lab requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- List of imaging requests. Imaging requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- All clinical notes recorded throughout the encounter.
+- Reason for encounter as documented.
+
+**Filters**
+
+Facility, Department, Area, Patient billing type, Encountered by
+
+**Default date range**: 7days
 
 
 ---
@@ -345,36 +408,6 @@ This report generates a list of all patients with a scheduled appointment for th
 Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
-
-
----
-
-### Patient details edits line list
-
-**Report Description**
-
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
-
-
----
-
-### Patient views line list
-
-**Report Description**
-
-This report lists all of the users that have viewed the selected patient's record for the selected date range and when the view occurred. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. Each individual access by a user will create a new row within the report. Views are listed in chronological order for the selected date range.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
 
 
 ---

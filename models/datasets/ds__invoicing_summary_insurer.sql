@@ -93,4 +93,3 @@ join {{ ref("reference_data") }} rd_insurer
     on rd_insurer.id = tia.insurer_id
 where i.status = 'finalised'
     and (tia.cover - coalesce(tip.total_amount_paid, 0)) > 0
-order by e.end_datetime, p.display_id

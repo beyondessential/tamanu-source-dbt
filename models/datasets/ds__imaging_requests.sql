@@ -94,4 +94,3 @@ left join {{ ref('imaging_request_areas') }} ira on ira.imaging_request_id = ir.
 left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
 left join {{ ref('reference_data') }} v on v.id = p.village_id
 left join results irs on irs.imaging_request_id = ir.id
-order by ir.datetime

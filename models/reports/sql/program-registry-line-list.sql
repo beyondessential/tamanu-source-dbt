@@ -30,3 +30,4 @@ where registration_status = 'active'
         when {{ parameter('registryId') }} is null then true
         else program_registry_id = {{ parameter('registryId') }}
     end
+order by registration_datetime desc

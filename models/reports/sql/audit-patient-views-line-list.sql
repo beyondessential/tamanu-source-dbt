@@ -11,7 +11,7 @@ select
     user_role as "{{ translate_label('userRole') }}",
     viewed_at_facility as "{{ translate_label('logAccessAtFacility') }}",
     date_time_viewed as "{{ translate_label('logAccessDatetime') }}"
-from {{ ref('ds__patient_views') }}
+from {{ ref('ds__patient_access_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

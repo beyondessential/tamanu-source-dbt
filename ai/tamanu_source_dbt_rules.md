@@ -21,6 +21,7 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 
 ### `models/reports`
 - Apply translations using established patterns
+- Apply date formatting
 - **Required**: Each report needs corresponding `.json` config file in `models/reports/config/`
 
 ## Essential Requirements
@@ -31,17 +32,12 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 - Document new columns when adding to existing models
 - Use Australian English spelling
 
-### Translations
-- Check existing translations before creating new ones
-- Prefix labels with entity (e.g., patient, user, encounter)
-- Format: `translate_label('entityStringId')` following `report.reporting.{specificField}`
-- **Required**: Ensure entityStringId exists in `seeds/report_translation_strings.csv`
-- Maintain alphabetical order
-
 ### Code Quality
 - **Mandatory**: Run `sqlfluff fix` before committing
 - Use meaningful aliases, avoid ambiguous references
 - Test SQL syntax before committing
+- **Sort order should only be applied in `models/reports`** - Do not use ORDER BY clauses in `models/bases`, `models/surveys`, or `models/datasets` as these are intermediate transformations
+
 
 ### Testing & Validation
 - **Required**: Implement dbt built-in tests for all models

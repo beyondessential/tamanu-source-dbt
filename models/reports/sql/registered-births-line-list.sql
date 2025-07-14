@@ -45,3 +45,4 @@ where
         when {{ parameter('facilityId') }} is null then true
         else birth_facility_id = {{ parameter('facilityId') }}
     end
+order by date_of_birth, birth_time

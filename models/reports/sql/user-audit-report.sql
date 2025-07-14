@@ -25,3 +25,4 @@ where
         when {{ parameter('locationGroupId') }} is null then true
         else location_group_id = {{ parameter('locationGroupId') }}
     end
+order by encounter_start_datetime
