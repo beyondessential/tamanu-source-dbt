@@ -51,3 +51,4 @@ where case
         when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
     end
+order by requested_datetime

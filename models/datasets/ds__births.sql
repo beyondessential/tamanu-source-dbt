@@ -66,4 +66,3 @@ left join {{ ref("patients") }} p_mother on p_mother.id = pad.mother_id
 left join {{ ref("patients") }} p_father on p_father.id = pad.father_id
 left join {{ ref("facilities") }} f on f.id = pbd.birth_facility_id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
-order by p.date_of_birth, pbd.birth_time

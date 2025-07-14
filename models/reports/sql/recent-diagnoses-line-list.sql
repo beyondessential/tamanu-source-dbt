@@ -52,3 +52,4 @@ where
                 {{ parameter('diagnosis5Id') }}
             )
     end
+order by diagnosis_datetime desc

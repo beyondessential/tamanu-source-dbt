@@ -46,3 +46,8 @@ where not is_sensitive
         when {{ parameter('testCategoryId') }} is null then true
         else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
+order by requested_datetime,
+    lab_test_panel,
+    lab_request_published_datetime,
+    lab_test_completed_datetime,
+    lab_test_type
