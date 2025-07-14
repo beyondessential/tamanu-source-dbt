@@ -1,5 +1,5 @@
 tamanu_source_dbt:
-  target: release
+  target: demo
   outputs:
     demo:
       type: postgres
@@ -9,7 +9,7 @@ tamanu_source_dbt:
       user: "{{ env_var('TAMANU_DL_DB_USER') }}"
       pass: "{{ env_var('TAMANU_DL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_DL_DB_DATABASE') }}"
-      schema: reporting
+      schema: juliana
     release:
       type: postgres
       threads: 1
