@@ -8,7 +8,7 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
+    to_char(rm.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth', 'Month') }}",
     adh.facility as "{{ translate_label('facility', 'Facility') }}",
     adh.department as "{{ translate_label('department', 'Department') }}",
     count(*) filter (where adh.admission) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",

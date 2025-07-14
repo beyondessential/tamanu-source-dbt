@@ -68,6 +68,7 @@ When working with models, always respect the following hierarchy:
 - **Always test SQL syntax before committing**
 - **Use Australian English spelling** in all documentation, comments, and text (e.g., "optimise" not "optimize", "colour" not "color", "centre" not "center")
 - **Sort order should only be applied in `models/reports`** - Do not use ORDER BY clauses in `models/bases`, `models/surveys`, or `models/datasets` as these are intermediate transformations
+- **Use centralised date/time formatting variables** from `dbt_project.yml` in all reports: `to_char(field, '{{ var("date_format") }}')` for dates, `to_char(field, '{{ var("datetime_format") }}')` for datetimes, etc.
 
 ## Testing Standards
 - **Required**: Implement integrity tests using dbt built-in tests for all models
