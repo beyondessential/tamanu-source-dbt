@@ -1,29 +1,13 @@
 {%- macro translate_label(string_id) -%}
-    {%- set language = var('language') -%}
     {%- set full_string_id = 'report.reporting.' ~ string_id -%}
     
     {%- set query -%}
-        with all_translations as (
-            -- Get translations from database (including future default language)
-            select string_id, language, text
-            from {{ source('tamanu', 'translated_strings') }}
-            where string_id = '{{ full_string_id }}'
-            and language in ('{{ language }}', 'default')
-            
-            union all
-            
-            -- Get current default translations from view.
-            -- To be removed once defaults are loaded into the translated_strings table.
-            select string_id, language, text
-            from {{ ref('translated_strings_default') }}
-            where string_id = '{{ full_string_id }}'
-        )
         select 
-            coalesce(
-                max(case when language = '{{ language }}' then text end),
-                max(case when language = 'default' then text end)
-            ) as text
-        from all_translations
+            coalesce(ts.text, tsd.text) as text
+        from {{ ref('translated_strings_default') }} tsd
+        left join {{ source('tamanu', 'translated_strings') }} ts
+            on ts.string_id = '{{ full_string_id }}' and ts.language = '{{ var("language") }}'
+        where tsd.string_id = '{{ full_string_id }}'
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
@@ -100,9 +84,10 @@
         select 
             coalesce(
                 max(case when language = '{{ language }}' then text end),
-                max(case when language = 'default' then text end)
+                max(case when language = 'default' then text end),
+                '{{ value }}'
             ) as text
-        from {{ source('tamanu', 'translated_strings') }}
+        from {{ source('tamanu', 'translated_strings') }} ts
         where string_id ilike '{{ string_id }}'
         and language in ('{{ language }}', 'default')
     {%- endset -%}
@@ -124,7 +109,8 @@
             string_id,
             coalesce(
                 max(case when language = '{{ var("language") }}' then text end),
-                max(case when language = 'default' then text end)
+                max(case when language = 'default' then text end),
+                string_id
             ) as text
         from {{ source('tamanu', 'translated_strings') }}
         where language in ('{{ var("language") }}', 'default')
