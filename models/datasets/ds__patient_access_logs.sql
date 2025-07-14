@@ -17,7 +17,7 @@ select
     lap.is_mobile,
     lap.session_id,
     lap.device_id
-from {{ ref('logs_accesses_patients') }} lap
+from {{ ref('patient_access_logs') }} lap
 join {{ ref('patients') }} p on p.id = lap.patient_id
 left join {{ ref('users') }} u on u.id = lap.user_id
 left join {{ ref('facilities') }} f on f.id = lap.facility_id

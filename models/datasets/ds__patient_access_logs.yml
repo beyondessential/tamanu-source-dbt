@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ds__audit_patient_views
-    description: Patient record views tracking which users accessed patient records and when
+  - name: ds__patient_access_logs
+    description: Patient record views tracking which users accessed patient records. If the user's details is blank, it indicates that the user has been deleted from Tamanu.
     config:
       tags:
         - administration
