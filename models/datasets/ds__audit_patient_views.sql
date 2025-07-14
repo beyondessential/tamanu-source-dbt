@@ -21,4 +21,4 @@ from {{ ref('logs_accesses_patients') }} lap
 join {{ ref('patients') }} p on p.id = lap.patient_id
 left join {{ ref('users') }} u on u.id = lap.user_id
 left join {{ ref('facilities') }} f on f.id = lap.facility_id
-left join {{ ref('reference_data') }} village on village.id = p.village_id and village.type = 'village'
+left join {{ ref('reference_data') }} village on village.id = p.village_id
