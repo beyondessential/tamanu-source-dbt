@@ -30,4 +30,4 @@ where
         when {{ parameter('userId') }} is null then true
         else edited_by_user = {{ parameter('userId') }}
     end
-order by edited_datetime desc
+order by edited_datetime

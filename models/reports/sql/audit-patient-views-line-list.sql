@@ -9,7 +9,6 @@ select
     viewed_by_user as "{{ translate_label('logAccessBy', 'Viewed by user') }}",
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
-    viewed_at_facility as "{{ translate_label('logAccessAtFacility', 'Viewed at facility') }}",
     to_char(date_time_viewed, '{{ var("datetime_format") }}') as "{{ translate_label('logAccessDatetime', 'Date and time viewed') }}"
 from {{ ref('ds__patient_access_logs') }}
 where
@@ -32,4 +31,4 @@ where
         when {{ parameter('userId') }} is null then true
         else viewed_by_user_id = {{ parameter('userId') }}
     end
-order by date_time_viewed desc
+order by date_time_viewed
