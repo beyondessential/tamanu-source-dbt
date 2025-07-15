@@ -8,7 +8,7 @@ select
     edited_by_user as "{{ translate_label('logChangeBy', 'Edited by user') }}",
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
-    to_char(edited_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('logChangeDateTime', 'Date and time edited') }}"
+    to_char(edited_datetime, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logChangeDateTime', 'Date and time edited') }}"
 from {{ ref('ds__patient_change_logs') }}
 where
     case
