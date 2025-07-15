@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from utils.dbt_utils import get_dbt_project_vars, get_deployment_version
+from utils.dbt_utils import get_dbt_project_vars, get_deployment_version, get_project_name
 from utils.file_utils import ensure_directory_exists, read_file, upload_to_s3
 from utils.system_utils import cprint
 
@@ -11,10 +11,16 @@ BASE_DIR = Path(os.getcwd())
 PKG_BASE_DIR = BASE_DIR / "dbt_packages" / "tamanu_source_dbt"
 BASE_SQL_DIR = BASE_DIR / "models" / "reports" / "sql"
 PKG_BASE_SQL_DIR = PKG_BASE_DIR / "models" / "reports" / "sql"
-VERSION_DIR = BASE_DIR / "compiled" / f"v{get_deployment_version()}"
+PROJECT_NAME = get_project_name()
+VERSION = get_deployment_version()
+VERSION_DIR = BASE_DIR / "compiled" / f"v{VERSION}"
 TRANSLATION_PATTERN = (
     r"\{\{\s*translate_label\(['\"]([^'\"]+)['\"],\s*['\"]([^'\"]+)['\"]\)\s*\}\}"
 )
+if PROJECT_NAME == 'tamanu_source_dbt':
+    DEPLOYMENT = 'standard'
+else:
+    DEPLOYMENT = PROJECT_NAME.replace("tamanu_dbt_", "")
 
 
 def main():
@@ -63,8 +69,8 @@ def main():
         ).sort_values("stringId")
 
         ensure_directory_exists(str(VERSION_DIR))
-        version = get_deployment_version()
-        output_file = VERSION_DIR / f"report_translations_v{version}.csv"
+        
+        output_file = VERSION_DIR / f"report-translations-v{VERSION}-{DEPLOYMENT}.csv"
         df.to_csv(output_file, index=False)
         cprint(f"Translations saved to {output_file}", "success")
 
@@ -72,7 +78,7 @@ def main():
             bucket = os.getenv("BUCKET", "").replace("s3://", "")
             if not bucket:
                 raise ValueError("BUCKET environment variable is not set")
-            key = f"{version}/report_translations_v{version}.csv"
+            key = f"{VERSION}/report-translations-v{VERSION}-{DEPLOYMENT}.csv"
             upload_to_s3(output_file, bucket, key)
 
     except Exception as e:

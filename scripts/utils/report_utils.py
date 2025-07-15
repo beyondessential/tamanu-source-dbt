@@ -16,7 +16,7 @@ VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 if PROJECT_NAME == 'tamanu_source_dbt':
     DEPLOYMENT = 'standard'
 else:
-    DEPLOYMENT = PROJECT_NAME.split("_")[-1]
+    DEPLOYMENT = PROJECT_NAME.replace("tamanu_dbt_", "")
 
 
 def compile_report(database, sql_file, config_file, output_file):
