@@ -9,7 +9,7 @@ select
     viewed_by_user as "{{ translate_label('logAccessBy', 'Viewed by user') }}",
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
-    to_char(date_time_viewed, '{{ var("datetime_format") }}') as "{{ translate_label('logAccessDatetime', 'Date and time viewed') }}"
+    to_char(date_time_viewed, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime', 'Date and time viewed') }}"
 from {{ ref('ds__patient_access_logs') }}
 where
     case
