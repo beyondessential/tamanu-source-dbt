@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_label('patientFirstName', 'First name') }}",
     last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_label('patientAge', 'Age') }}",
     sex as "{{ translate_label('patientSex', 'Sex') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
@@ -14,14 +14,14 @@ select
     status as "{{ translate_label('labRequestStatus', 'Status') }}",
     lab_test_panel as "{{ translate_label('labTestPanel', 'Lab test panel') }}",
     lab_test_category as "{{ translate_label('labTestCategory', 'Test category') }}",
-    requested_datetime as "{{ translate_label('labRequestDateTime', 'Lab request date and time') }}",
+    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime', 'Lab request date and time') }}",
     requested_by as "{{ translate_label('labRequestClinician', 'Requesting clinician') }}",
-    lab_request_published_datetime as "{{ translate_label('labRequestPublishedDateTime', 'Lab request published date and time') }}",
-    lab_test_date as "{{ translate_label('labTestDate', 'Lab test date') }}",
+    to_char(lab_request_published_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestPublishedDateTime', 'Lab request published date and time') }}",
+    to_char(lab_test_date, '{{ var("date_format") }}') as "{{ translate_label('labTestDate', 'Lab test date') }}",
     result as "{{ translate_label('labTestResults', 'Result') }}",
     verification as "{{ translate_label('labTestVerification', 'Verification') }}",
     lab_test_type as "{{ translate_label('labTestType', 'Lab test type') }}",
-    lab_test_completed_datetime as "{{ translate_label('labTestCompletedDateTime', 'Lab test completed date and time') }}"
+    to_char(lab_test_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime', 'Lab test completed date and time') }}"
 from {{ ref('ds__lab_tests') }}
 where not is_sensitive
     and

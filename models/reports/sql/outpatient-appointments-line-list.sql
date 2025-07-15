@@ -2,13 +2,13 @@ select
     display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_label('patientFirstName', 'First name') }}",
     last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_label('patientAge', 'Age') }}",
     sex as "{{ translate_label('patientSex', 'Sex') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
     billing_type as "{{ translate_label('patientBillingType', 'Billing type') }}",
-    appointment_start_datetime as "{{ translate_label('appointmentDateTime', 'Appointment date and time') }}",
-    appointment_end_datetime as "{{ translate_label('appointmentEndDateTime', 'Appointment end date and time') }}",
+    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime', 'Appointment date and time') }}",
+    to_char(appointment_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentEndDateTime', 'Appointment end date and time') }}",
     appointment_type as "{{ translate_label('appointmentType', 'Appointment type') }}",
     appointment_status as "{{ translate_label('appointmentStatus', 'Appointment status') }}",
     clinician as "{{ translate_label('appointmentClinician', 'Clinician') }}",
@@ -18,7 +18,7 @@ select
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
     end as "{{ translate_label('appointmentIsRepeating', 'Repeating appointment') }}",
-    until_date as "{{ translate_label('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
+    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate', 'Repeating appointment end date') }}"
 from {{ ref('ds__outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true

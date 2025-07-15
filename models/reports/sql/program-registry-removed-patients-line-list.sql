@@ -2,15 +2,15 @@ select
     display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
     first_name as "{{ translate_label('patientFirstName', 'First name') }}",
     last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    date_of_birth::date as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    to_char(date_of_birth::date, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
     initcap(sex::text) as "{{ translate_label('patientSex', 'Sex') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
     registering_facility as "{{ translate_label('registryRegisteringFacility', 'Registering facility') }}",
     related_conditions as "{{ translate_label('registryConditions', 'Related conditions') }}",
     clinical_status as "{{ translate_label('registryClinicalStatus', 'Status') }}",
     registered_by as "{{ translate_label('registryRegisteredBy', 'Registered by') }}",
-    registration_datetime::date as "{{ translate_label('registryRegisteredDate', 'Date of registration') }}",
-    removal_datetime::date as "{{ translate_label('registryRemovedDate', 'Date of removal') }}",
+    to_char(registration_datetime::date, '{{ var("date_format") }}') as "{{ translate_label('registryRegisteredDate', 'Date of registration') }}",
+    to_char(removal_datetime::date, '{{ var("date_format") }}') as "{{ translate_label('registryRemovedDate', 'Date of removal') }}",
     removed_by as "{{ translate_label('registryRemovedBy', 'Removed by') }}"
 from {{ ref('ds__program_registry_removed_patients') }}
 where

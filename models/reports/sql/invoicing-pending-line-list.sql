@@ -1,5 +1,5 @@
 select
-    discharge_datetime as "{{ translate_label('dischargeDate','Discharged date') }}",
+    to_char(discharge_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDate','Discharged date') }}",
     patient_name as "{{ translate_label('patientName','Patient name') }}",
     display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}"
 from {{ ref('ds__invoicing_pending') }} 
