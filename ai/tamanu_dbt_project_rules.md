@@ -88,7 +88,7 @@ When working with models, always respect the following hierarchy:
 - Use `dbt deps` to manage package dependencies
 
 ## Report Configuration Validation
-- **Required**: Validate all report configuration files using package validation script
+- **Required**: Validate all report configuration files using the package validation script: `python dbt_packages/tamanu_source_dbt/scripts/validate_report_configs.py`
 - Report configurations must conform to the JSON schema defined in package
 - **Always run validation before committing changes** to report configurations
 - Configuration files are located in `models/reports/config/` and must be valid JSON
