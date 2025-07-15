@@ -19,4 +19,4 @@ where i.status = 'finalised'
         else i.discharge_datetime::date
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
-order by discharge_datetime
+order by i.discharge_datetime
