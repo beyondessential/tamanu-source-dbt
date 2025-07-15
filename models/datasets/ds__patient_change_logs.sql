@@ -42,7 +42,21 @@ select
     u.display_name as edited_by_user,
     u.email as user_email,
     u.role as user_role,
-    pe.logged_at as edited_datetime
+    date_trunc('minute', pe.logged_at) as edited_datetime
 from patient_edits pe
 left join {{ ref('users') }} u on u.id = pe.updated_by_user_id
 left join {{ ref('reference_data') }} village on village.id = pe.village_id
+group by
+    pe.patient_id,
+    pe.display_id,
+    pe.first_name,
+    pe.last_name,
+    pe.date_of_birth,
+    pe.sex,
+    pe.village_id,
+    village.name,
+    pe.updated_by_user_id,
+    u.display_name,
+    u.email,
+    u.role,
+    date_trunc('minute', pe.logged_at)
