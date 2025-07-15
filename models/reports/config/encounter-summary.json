@@ -40,8 +40,8 @@
       },
       {
         "parameterField": "ParameterAutocompleteField",
-        "label": "Encountered by",
-        "name": "encounteredById",
+        "label": "Supervising clinician",
+        "name": "supervisingClinicianId",
         "suggesterEndpoint": "practitioner"
       }
     ]

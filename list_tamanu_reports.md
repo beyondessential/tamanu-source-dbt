@@ -112,7 +112,7 @@ All clinical data is listed chronologically within each cell. The below is a sum
 
 **Filters**
 
-Facility, Department, Area, Patient billing type, Encountered by
+Facility, Department, Area, Patient billing type, Supervising clinician
 
 **Default date range**: 7days
 
