@@ -1,7 +1,7 @@
 import os
 import re
 
-from .dbt_utils import get_deployment_version, get_project_name
+from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint
 
@@ -9,14 +9,10 @@ SCHEMA = "reporting"
 ROLE = "reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
+DEPLOYMENT = get_deployment_name()
 VERSION = get_deployment_version()
 DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
-
-if PROJECT_NAME == 'tamanu_source_dbt':
-    DEPLOYMENT = 'standard'
-else:
-    DEPLOYMENT = PROJECT_NAME.replace("tamanu_dbt_", "")
 
 
 def compile_report(database, sql_file, config_file, output_file):
