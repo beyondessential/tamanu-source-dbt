@@ -5,7 +5,7 @@ select
     diagnoses as "{{ translate_label('diagnoses') }}",
     referral_type as "{{ translate_label('referralType') }}",
     referring_doctor_name as "{{ translate_label('referralCompletedBy') }}",
-    referral_datetime as "{{ translate_label('referralDate') }}",
+    to_char(referral_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('referralDate') }}",
     department as "{{ translate_label('department') }}"
 from {{ ref('ds__referrals') }}
 where status in ('pending', 'cancelled')

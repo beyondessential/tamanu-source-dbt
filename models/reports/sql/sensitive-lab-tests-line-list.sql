@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
@@ -14,14 +14,14 @@ select
     status as "{{ translate_label('labRequestStatus') }}",
     lab_test_panel as "{{ translate_label('labTestPanel') }}",
     lab_test_category as "{{ translate_label('labTestCategory') }}",
-    requested_datetime as "{{ translate_label('labRequestDateTime') }}",
+    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
     requested_by as "{{ translate_label('labRequestClinician') }}",
-    lab_request_published_datetime as "{{ translate_label('labRequestPublishedDateTime') }}",
-    lab_test_date as "{{ translate_label('labTestDate') }}",
+    to_char(lab_request_published_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestPublishedDateTime') }}",
+    to_char(lab_test_date, '{{ var("date_format") }}') as "{{ translate_label('labTestDate') }}",
     result as "{{ translate_label('labTestResults') }}",
     verification as "{{ translate_label('labTestVerification') }}",
     lab_test_type as "{{ translate_label('labTestType') }}",
-    lab_test_completed_datetime as "{{ translate_label('labTestCompletedDateTime') }}"
+    to_char(lab_test_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
 from {{ ref('ds__lab_tests') }}
 where is_sensitive
     and

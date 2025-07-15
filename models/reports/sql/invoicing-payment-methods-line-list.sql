@@ -1,5 +1,5 @@
 select
-    itp.date as "{{ translate_label('paymentDate') }}",
+    to_char(itp.date, '{{ var("date_format") }}') as "{{ translate_label('paymentDate') }}",
     itp.invoice_number as "{{ translate_label('invoiceNumber') }}",
     itp.patient_name as "{{ translate_label('patientName') }}",
     itp.payment_method as "{{ translate_label('paymentMethod') }}",

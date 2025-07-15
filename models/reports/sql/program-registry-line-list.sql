@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     registering_facility as "{{ translate_label('registryRegisteringFacility') }}",
@@ -10,7 +10,7 @@ select
     currently_at as "{{ translate_label('registryCurrentlyAt') }}",
     related_conditions as "{{ translate_label('registryConditions') }}",
     clinical_status as "{{ translate_label('registryClinicalStatus') }}",
-    registration_datetime as "{{ translate_label('registryRegisteredDate') }}"
+    to_char(registration_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('registryRegisteredDate') }}"
 from {{ ref('ds__patient_program_registrations') }}
 where registration_status = 'active'
     and

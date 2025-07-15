@@ -95,7 +95,7 @@ department_changes as (
     select
         encounter_id,
         string_agg(
-            to_char(datetime, 'YYYY-MM-DD HH24:MI'),
+            to_char(datetime, '{{ var("datetime_without_seconds_format") }}'),
             '; '
             order by datetime
         ) as department_datetimes,
@@ -117,7 +117,7 @@ location_changes as (
     select
         encounter_id,
         string_agg(
-            to_char(datetime, 'YYYY-MM-DD HH24:MI'),
+            to_char(datetime, '{{ var("datetime_without_seconds_format") }}'),
             '; '
             order by datetime
         ) as location_datetimes,
@@ -139,7 +139,7 @@ location_group_changes as (
     select
         encounter_id,
         string_agg(
-            to_char(datetime, 'YYYY-MM-DD HH24:MI'),
+            to_char(datetime, '{{ var("datetime_without_seconds_format") }}'),
             '; '
             order by datetime
         ) as location_group_datetimes,

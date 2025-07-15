@@ -2,10 +2,10 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
-    due_date as "{{ translate_label('vaccinationDueDate') }}",
+    to_char(due_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDueDate') }}",
     vaccine_name as "{{ translate_label('vaccineName') }}",
     vaccine_schedule as "{{ translate_label('vaccineSchedule') }}",
     vaccine_status as "{{ translate_label('vaccinationStatus') }}"

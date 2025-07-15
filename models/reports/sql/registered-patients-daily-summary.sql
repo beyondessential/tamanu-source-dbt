@@ -1,5 +1,5 @@
 select
-    registration_date as "{{ translate_label('patientRegistrationDate') }}",
+    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_label('patientRegistrationDate') }}",
     count(
         case when sex = 'Male' then 1 end
     ) as "{{ translate_label('patientMaleCount') }}",

@@ -1,6 +1,6 @@
 select
-    i.admission_datetime as "{{ translate_label('admissionDate') }}",
-    i.discharge_datetime as "{{ translate_label('dischargeDate') }}",
+    to_char(i.admission_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('admissionDate') }}",
+    to_char(i.discharge_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDate') }}",
     i.invoice_number as "{{ translate_label('invoiceNumber') }}",
     i.patient_name as "{{ translate_label('patientName') }}",
     i.display_id as "{{ translate_label('patientDisplayId') }}",
@@ -12,7 +12,7 @@ select
     i.total_patient_discount as "{{ translate_label('invoicePatientDiscount') }}",
     i.total_patient_amount as "{{ translate_label('invoicePatientAmount') }}",
     i.is_deceased as "{{ translate_label('patientDeceasedOrActive') }}",
-    i.date_of_death as "{{ translate_label('patientDateOfDeath') }}"
+    to_char(i.date_of_death, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfDeath') }}"
 from {{ ref("ds__invoicing") }} i
 where i.status = 'finalised'
     and case

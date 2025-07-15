@@ -2,13 +2,13 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     billing_type as "{{ translate_label('patientBillingType') }}",
-    booking_start_datetime as "{{ translate_label('bookingStartDateTime') }}",
-    booking_end_datetime as "{{ translate_label('bookingEndDateTime') }}",
+    to_char(booking_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('bookingStartDateTime') }}",
+    to_char(booking_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('bookingEndDateTime') }}",
     case
         when extract(day from age(booking_end_datetime, booking_start_datetime)) >= 1
             then extract(day from age(booking_end_datetime, booking_start_datetime)) || ' nights'

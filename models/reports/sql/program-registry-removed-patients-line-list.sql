@@ -2,15 +2,15 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth::date as "{{ translate_label('patientDateOfBirth') }}",
-    initcap(sex::text) as "{{ translate_label('patientSex') }}",
+    to_char(date_of_birth::date, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
+    sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     registering_facility as "{{ translate_label('registryRegisteringFacility') }}",
     related_conditions as "{{ translate_label('registryConditions') }}",
     clinical_status as "{{ translate_label('registryClinicalStatus') }}",
     registered_by as "{{ translate_label('registryRegisteredBy') }}",
-    registration_datetime::date as "{{ translate_label('registryRegisteredDate') }}",
-    removal_datetime::date as "{{ translate_label('registryRemovedDate') }}",
+    to_char(registration_datetime::date, '{{ var("date_format") }}') as "{{ translate_label('registryRegisteredDate') }}",
+    to_char(removal_datetime::date, '{{ var("date_format") }}') as "{{ translate_label('registryRemovedDate') }}",
     removed_by as "{{ translate_label('registryRemovedBy') }}"
 from {{ ref('ds__program_registry_removed_patients') }}
 where

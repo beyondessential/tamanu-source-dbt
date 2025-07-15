@@ -8,7 +8,7 @@ with reporting_dates as (
 )
 
 select
-    rd.date as "{{ translate_label('reportingDate') }}",
+    to_char(rd.date, '{{ var("date_format") }}') as "{{ translate_label('reportingDate') }}",
     ir.facility as "{{ translate_label('facility') }}",
     ir.department as "{{ translate_label('department') }}",
     ir.imaging_type as "{{ translate_label('imagingType') }}",

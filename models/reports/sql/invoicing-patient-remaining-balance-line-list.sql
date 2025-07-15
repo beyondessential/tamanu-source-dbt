@@ -1,5 +1,5 @@
 select
-    i.discharge_datetime as "{{ translate_label('dischargeDate') }}",
+    to_char(i.discharge_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDate') }}",
     i.invoice_number as "{{ translate_label('invoiceNumber') }}",
     i.patient_name as "{{ translate_label('patientName') }}",
     i.display_id as "{{ translate_label('patientDisplayId') }}",

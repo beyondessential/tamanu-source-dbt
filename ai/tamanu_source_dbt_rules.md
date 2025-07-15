@@ -37,6 +37,7 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 - Use meaningful aliases, avoid ambiguous references
 - Test SQL syntax before committing
 - **Sort order should only be applied in `models/reports`** - Do not use ORDER BY clauses in `models/bases`, `models/surveys`, or `models/datasets` as these are intermediate transformations
+- **Use centralised date/time formatting variables** from `dbt_project.yml` in all reports: `to_char(field, '{{ var("date_format") }}')` for dates, `to_char(field, '{{ var("datetime_format") }}')` for datetimes, `to_char(field, '{{ var("datetime_without_seconds_format") }}')` for datetimes without seconds, `to_char(field, '{{ var("time_format") }}')` for times, and `to_char(field, '{{ var("yearmonth_format") }}')` for year-month values.
 
 
 ### Testing & Validation

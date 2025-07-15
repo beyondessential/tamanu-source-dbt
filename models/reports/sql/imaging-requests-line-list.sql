@@ -2,7 +2,7 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
@@ -10,14 +10,14 @@ select
     department as "{{ translate_label('department') }}",
     location_group as "{{ translate_label('locationGroup') }}",
     request_id as "{{ translate_label('imagingRequestId') }}",
-    requested_datetime as "{{ translate_label('imagingRequestDateTime') }}",
+    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('imagingRequestDateTime') }}",
     supervising_clinician as "{{ translate_label('imagingSupervisingClinician') }}",
     requesting_clinician as "{{ translate_label('imagingRequestingClinician') }}",
     priority as "{{ translate_label('imagingPriority') }}",
     imaging_type as "{{ translate_label('imagingType') }}",
     imaging_area as "{{ translate_label('imagingArea') }}",
     status as "{{ translate_label('imagingStatus') }}",
-    completed_datetime as "{{ translate_label('imagingCompletedDateTime') }}",
+    to_char(completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('imagingCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('imagingCancellationReason') }}"
 from {{ ref('ds__imaging_requests') }}
 where case

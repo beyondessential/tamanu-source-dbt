@@ -27,7 +27,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 **Report Description**
 
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and when the edits were made. Edits are listed in chronological order.
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details. Edits are listed in chronological order.
 
 **Filters**
 
@@ -42,7 +42,7 @@ Patient, User
 
 **Report Description**
 
-This report lists all of the users that have viewed the selected patient's record for the selected date range and when the view occurred. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. Each individual access by a user will create a new row within the report. Views are listed in chronological order for the selected date range.
+This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module.
 
 **Filters**
 
@@ -112,7 +112,7 @@ All clinical data is listed chronologically within each cell. The below is a sum
 
 **Filters**
 
-Facility, Department, Area, Patient billing type, Encountered by
+Facility, Department, Area, Patient billing type, Supervising clinician
 
 **Default date range**: 7days
 

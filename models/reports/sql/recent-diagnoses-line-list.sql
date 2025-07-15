@@ -1,5 +1,5 @@
 select
-    diagnosis_datetime as "{{ translate_label('diagnosisDateTime') }}",
+    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('diagnosisDateTime') }}",
     diagnosis as "{{ translate_label('diagnoses') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",

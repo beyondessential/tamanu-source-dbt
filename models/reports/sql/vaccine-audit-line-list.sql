@@ -2,11 +2,11 @@ select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
-    date_of_birth as "{{ translate_label('patientDateOfBirth') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
-    vaccination_date as "{{ translate_label('vaccinationDate') }}",
+    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
     vaccine_name as "{{ translate_label('vaccineName') }}",
     vaccine_brand as "{{ translate_label('vaccineBrand') }}",
     disease as "{{ translate_label('vaccineDisease') }}",
@@ -15,7 +15,7 @@ select
     given_by as "{{ translate_label('vaccinationGivenBy') }}",
     recorded_by as "{{ translate_label('vaccinationRecordedBy') }}",
     modified_by as "{{ translate_label('vaccinationModifiedBy') }}",
-    modification_datetime as "{{ translate_label('vaccinationModifiedDate') }}"
+    to_char(modification_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('vaccinationModifiedDate') }}"
 from {{ ref("ds__vaccinations") }}
 where
     vaccine_status in ('Recorded in error', 'Historical')
