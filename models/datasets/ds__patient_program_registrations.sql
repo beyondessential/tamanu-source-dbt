@@ -8,14 +8,24 @@ with related_conditions as (
         array_agg(
             pprc.program_registry_condition_id
             order by pprc.datetime
-        ) as condition_ids
+        ) as condition_ids,
+        string_agg(
+            prcc.name, '; '
+            order by pprc.datetime
+        ) as condition_categories,
+        array_agg(
+            pprc.program_registry_condition_category_id
+            order by pprc.datetime
+        ) as condition_category_ids
     from {{ ref('patient_program_registration_conditions') }} pprc
     join {{ ref('patient_program_registrations') }} ppr on ppr.id = pprc.patient_program_registration_id
     left join {{ ref('program_registry_conditions') }} prc on prc.id = pprc.program_registry_condition_id
+    left join {{ ref('program_registry_condition_categories') }} prcc on prcc.id = pprc.program_registry_condition_category_id
     group by ppr.id
 )
 
 select
+    ppr.id as patient_program_registration_id,
     p.id as patient_id,
     p.display_id,
     p.first_name,
@@ -33,7 +43,10 @@ select
         when pr.currently_at_type = 'village' then currently_at_village.name
     end as currently_at,
     pr.currently_at_type,
+    c.condition_ids as related_condition_ids,
     c.conditions as related_conditions,
+    c.condition_category_ids as related_condition_category_ids,
+    c.condition_categories as related_condition_categories,
     prcs.id as clinical_status_id,
     prcs.name as clinical_status,
     ppr.registration_status,
