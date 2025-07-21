@@ -58,8 +58,8 @@ select
 from {{ ref('patient_program_registrations') }} ppr
 join {{ ref('program_registries') }} pr on pr.id = ppr.program_registry_id
 join {{ ref('patients') }} p on p.id = ppr.patient_id
-join {{ ref('facilities') }} registering_facility on registering_facility.id = ppr.registering_facility_id
-join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
+left join {{ ref('facilities') }} registering_facility on registering_facility.id = ppr.registering_facility_id
+left join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('facilities') }} currently_at_facility on currently_at_facility.id = ppr.facility_id
 left join {{ ref('reference_data') }} currently_at_village on currently_at_village.id = ppr.village_id
