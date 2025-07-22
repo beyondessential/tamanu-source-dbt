@@ -33,7 +33,7 @@ select
         'year',
         age(
             coalesce(p.date_of_death::date, current_date),
-            p.date_of_birth::date
+            p.date_of_birth
         )
     ) as age,
     case
