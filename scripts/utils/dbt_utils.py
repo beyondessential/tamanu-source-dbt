@@ -147,7 +147,7 @@ def get_deployment_name() -> str:
         if project_name == 'tamanu_source_dbt':
             return 'standard'
         else:
-            return project_name().replace("tamanu_dbt_", "")
+            return project_name.replace("tamanu_dbt_", "")
     except Exception as e:
         cprint(f"Error extracting deployment name: {e}", "error")
         exit(1)
