@@ -31,7 +31,10 @@ select
     end as registration_type,
     date_part(
         'year',
-        age(p.date_of_birth)
+        age(
+            coalesce(p.date_of_death::date, current_date),
+            p.date_of_birth::date
+        )
     ) as age,
     case
         when p.date_of_death is not null then 'Deceased'
