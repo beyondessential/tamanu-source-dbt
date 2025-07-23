@@ -1,7 +1,7 @@
 import os
 import re
 
-from .dbt_utils import get_deployment_version, get_project_name
+from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint
 
@@ -9,9 +9,10 @@ SCHEMA = "reporting"
 ROLE = "reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
+DEPLOYMENT = get_deployment_name()
+VERSION = get_deployment_version()
 DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
-REPORTS_DIR = os.path.join(BASE_DIR, "compiled", "reports")
-VIEWS_DIR = os.path.join(BASE_DIR, "compiled", "views")
+VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
 def compile_report(database, sql_file, config_file, output_file):
@@ -33,6 +34,8 @@ def compile_report(database, sql_file, config_file, output_file):
 
         query = re.sub(r"\r?\n\s+", "\n", sql)
         config["query"] = re.sub(f'"{database}"\\.', "", query)
+        version = ".".join(VERSION.split(".")[:2])
+        config["tamanuVersion"] = f"~{version}.0"
 
         write_file(output_file, config, "json")
     except Exception as e:
@@ -64,10 +67,11 @@ def generate_project_reports():
         cprint(f"No report models found", "error")
         return
 
-    ensure_directory_exists(REPORTS_DIR)
+    ensure_directory_exists(VERSION_DIR)
 
     for node in nodes:
         report = manifest["nodes"][node]
+
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
             os.path.join(
@@ -81,10 +85,10 @@ def generate_project_reports():
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
-        output_file = os.path.join(REPORTS_DIR, f"{report['name']}.json")
+        output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
 
         compile_report(report["database"], sql_file, config_file, output_file)
-        cprint(f"Compiled report: {report['name']}.sql", "success")
+        cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
 
 
 def generate_import_report_script():
@@ -142,8 +146,8 @@ fs.readdir(folderPath, async (err, files) => {
 });
 """
 
-    ensure_directory_exists(REPORTS_DIR)
-    output_path = os.path.join(REPORTS_DIR, "import_reports.js")
+    ensure_directory_exists(VERSION_DIR)
+    output_path = os.path.join(VERSION_DIR, "import_reports.js")
     write_file(output_path, script)
 
     cprint(f"Script created successfully at: {output_path}", "success")
@@ -216,8 +220,8 @@ def generate_reporting_schema_script():
             f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
         )
 
-    ensure_directory_exists(VIEWS_DIR)
+    ensure_directory_exists(VERSION_DIR)
     output_file = os.path.join(
-        VIEWS_DIR, f"reporting_schema_build_script_v{get_deployment_version()}.sql"
+        VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
     )
     write_file(output_file, "\n".join(scripts))

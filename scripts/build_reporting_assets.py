@@ -17,9 +17,15 @@ def main():
     # Execute DBT commands
     execute_command("dbt clean")
     execute_command("dbt deps")
-    execute_command(f"dbt run --profiles-dir config")
-    execute_command(f"dbt docs generate --profiles-dir config")
-    execute_command(f"dbt compile --profiles-dir config")
+    execute_command(
+        f"dbt run --profiles-dir config"
+    )
+    execute_command(
+        f"dbt docs generate --profiles-dir config"
+    )
+    execute_command(
+        f"dbt compile --profiles-dir config"
+    )
 
     # Hide macros and tests from documentation
     hide_macros_from_docs()
@@ -28,7 +34,6 @@ def main():
     # Generate scripts and reports
     generate_reporting_schema_script()
     generate_project_reports()
-    generate_import_report_script()
 
 
 if __name__ == "__main__":
