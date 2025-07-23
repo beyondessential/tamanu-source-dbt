@@ -80,6 +80,6 @@ from location_summary ls
 where
     case
         when {{ parameter('locationId') }} is null then true
-        else ls.location_id::text = {{ parameter('locationId') }}
+        else ls.location_id = {{ parameter('locationId') }}
     end
 order by ls.month, ls.facility, ls.location_group, ls.location

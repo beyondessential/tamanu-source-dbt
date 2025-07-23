@@ -44,13 +44,13 @@ where non_sensitive_tests is not null
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else requested_datetime::date
+        else requested_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else requested_datetime::date
+        else requested_datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
 order by requested_datetime
