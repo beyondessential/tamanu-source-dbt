@@ -231,6 +231,7 @@ report.reporting.referralDate,Referral date
 report.reporting.referralType,Referral name
 report.reporting.registryClinicalStatus,Status
 report.reporting.registryConditions,Related conditions
+report.reporting.registryConditionCategories,Related condition categories
 report.reporting.registryCurrentlyAt,Currently at
 report.reporting.registryRegisteredBy,Registered by
 report.reporting.registryRegisteredDate,Date of registration

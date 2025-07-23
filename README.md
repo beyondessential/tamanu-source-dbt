@@ -45,17 +45,6 @@ python scripts/generate_survey_models.py
 ```
 This will generate models and documentation for all surveys in the Tamanu database.
 
-## Generate translated strings model
-To generate the `translated_strings_default.sql` model from the `report_translation_strings.csv` file, execute the following command:
-
-```
-python scripts/generate_translated_strings_sql.py
-```
-
-This script dynamically reads the CSV file and creates a SQL view containing all default translation strings. After running the script, execute `dbt run --profiles-dir config --select translated_strings_default` to create the model in the database.
-
-The translation system provides fallback English translations when language-specific translations are not available, ensuring reports always display readable labels.
-
 ## Script to list Tamanu reports
 
 This script generates a list of all reports in the repository and outputs the result in a Markdown file.
