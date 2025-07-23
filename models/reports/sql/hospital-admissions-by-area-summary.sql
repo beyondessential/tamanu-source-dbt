@@ -83,6 +83,6 @@ from area_summary lg
 where
     case
         when {{ parameter('locationGroupId') }} is null then true
-        else lg.location_group = {{ parameter('locationGroupId') }}
+        else lg.location_group_id = {{ parameter('locationGroupId') }}
     end
 order by lg.month, lg.facility, lg.location_group
