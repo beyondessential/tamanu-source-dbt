@@ -15,6 +15,7 @@ select
     procedure_area as "{{ translate_label('procedureLocationGroup', 'Procedure area') }}",
     procedure_location as "{{ translate_label('procedureLocation', 'Procedure location') }}",
     procedure_type as "{{ translate_label('procedure', 'Procedure') }}",
+    to_char(procedure_date, '{{ var("date_format") }}') as "{{ translate_label('procedureDate', 'Procedure date') }}",
     to_char(procedure_start_time, '{{ var("time_format") }}') as "{{ translate_label('procedureStartDateTime', 'Procedure start (date and time)') }}",
     to_char(procedure_end_time, '{{ var("time_format") }}') as "{{ translate_label('procedureEndDateTime', 'Procedure end (date and time)') }}",
     procedure_duration as "{{ translate_label('procedureDuration', 'Procedure duration') }}",
@@ -23,7 +24,20 @@ select
     procedure_assistant as "{{ translate_label('procedureAssistant', 'Procedure assistant') }}",
     is_completed as "{{ translate_label('procedureIsCompleted', 'Procedure marked as completed') }}"
 from {{ ref('ds__procedures') }}
-where case
+where 
+    case
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
+        else procedure_date
+            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    end
+    and
+    case
+        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
+        else procedure_date
+            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    end
+    and
+    case
         when {{ parameter('facilityId') }} is null then true
         else procedure_facility_id ={{ parameter('facilityId') }}
     end
@@ -47,3 +61,4 @@ where case
         when {{ parameter('clinicianId') }} is null then true
         else procedure_clinician_id ={{ parameter('clinicianId') }}
     end
+order by procedure_start_time

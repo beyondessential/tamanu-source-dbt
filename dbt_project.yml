@@ -1,12 +1,12 @@
 name: tamanu_source_dbt
-version: "2.36.0"
+version: "2.36.1"
 config-version: 2
 
 profile: tamanu_source_dbt
 
 vars:
   language: default
-  timezone: Pacific/Fiji
+  timezone: Australia/Sydney
   date_format: YYYY-MM-DD
   time_format: HH24:MI
   datetime_format: YYYY-MM-DD HH24:MI:SS

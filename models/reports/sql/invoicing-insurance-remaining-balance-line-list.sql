@@ -15,12 +15,12 @@ from {{ ref("ds__invoicing_summary_insurer") }} i
 where i.remaining_insurer_balance > 0
     and case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is not null
-            then i.discharge_datetime::date >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+            then i.discharge_datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
         else true
     end
     and case
         when {{ parameter('toDate', default_value='2024-12-31', data_type='date') }} is not null
-            then i.discharge_datetime::date <= {{ parameter('toDate', default_value='2024-12-31', data_type='date') }}
+            then i.discharge_datetime <= {{ parameter('toDate', default_value='2024-12-31', data_type='date') }}
         else true
     end
     and case

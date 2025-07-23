@@ -41,6 +41,7 @@ select
     procedure_location.name as procedure_location,
     procedure_type.id as procedure_type_id,
     procedure_type.name as procedure_type,
+    pc.date as procedure_date,
     pc.start_time as procedure_start_time,
     pc.end_time as procedure_end_time,
     case
