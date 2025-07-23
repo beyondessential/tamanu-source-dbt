@@ -31,17 +31,17 @@ join {{ ref('int__lab_requests_history') }} lrh
 where case
         when {{ parameter('departmentId', default_value='null', data_type='text') }} is null
             then true
-        else lrh.department_id::text = {{ parameter('departmentId', default_value='null', data_type='text') }}
+        else lrh.department_id = {{ parameter('departmentId', default_value='null', data_type='text') }}
     end
     and case
         when {{ parameter('facilityId', default_value='null', data_type='text') }} is null
             then true
-        else lrh.facility_id::text = {{ parameter('facilityId', default_value='null', data_type='text') }}
+        else lrh.facility_id = {{ parameter('facilityId', default_value='null', data_type='text') }}
     end
     and case
         when {{ parameter('labTestCategoryId', default_value='null', data_type='text') }} is null
             then true
-        else lrh.lab_test_category_id::text = {{ parameter('labTestCategoryId', default_value='null', data_type='text') }}
+        else lrh.lab_test_category_id = {{ parameter('labTestCategoryId', default_value='null', data_type='text') }}
     end
 group by
     rd.reporting_date,

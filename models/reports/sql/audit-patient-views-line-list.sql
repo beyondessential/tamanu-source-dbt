@@ -15,12 +15,12 @@ from {{ ref('ds__patient_access_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else date_time_viewed::date >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else date_time_viewed >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else date_time_viewed::date <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else date_time_viewed <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case

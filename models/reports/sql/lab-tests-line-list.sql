@@ -27,13 +27,13 @@ where not is_sensitive
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else requested_datetime::date
+        else requested_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else requested_datetime::date
+        else requested_datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
@@ -46,7 +46,8 @@ where not is_sensitive
         when {{ parameter('testCategoryId') }} is null then true
         else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
-order by requested_datetime,
+order by
+    requested_datetime,
     lab_test_panel,
     lab_request_published_datetime,
     lab_test_completed_datetime,

@@ -9,13 +9,13 @@ select
 from {{ ref("ds__invoicing_transactions_patient") }} itp
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else itp.date::date
+        else itp.date
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else itp.date::date
+        else itp.date
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('methodId') }} is not null then itp.payment_method_id = {{ parameter('methodId') }} else true end

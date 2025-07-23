@@ -13,12 +13,12 @@ from {{ ref("ds__patient_vaccinations_upcoming") }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else date_of_birth::date >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else date_of_birth >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else date_of_birth::date <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else date_of_birth <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case

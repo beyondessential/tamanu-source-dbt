@@ -453,7 +453,6 @@ Registry
 
 **Report Description**
 
-Program registry removed patients line list v2.3
 This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
 Home village: Per patient details
 Registering facility: Facility selected when patient is first added to the registry
