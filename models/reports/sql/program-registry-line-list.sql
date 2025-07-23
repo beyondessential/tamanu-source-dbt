@@ -9,6 +9,7 @@ select
     registered_by as "{{ translate_label('registryRegisteredBy') }}",
     currently_at as "{{ translate_label('registryCurrentlyAt') }}",
     related_conditions as "{{ translate_label('registryConditions') }}",
+    related_condition_categories as "{{ translate_label('registryConditionCategories') }}",
     clinical_status as "{{ translate_label('registryClinicalStatus') }}",
     to_char(registration_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('registryRegisteredDate') }}"
 from {{ ref('ds__patient_program_registrations') }}
