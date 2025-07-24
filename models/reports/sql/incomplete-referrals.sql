@@ -1,23 +1,23 @@
 select
-    display_id as "{{ translate_label('patientDisplayId','Patient ID') }}",
-    first_name as "{{ translate_label('patientFirstName','First name') }}",
-    last_name as "{{ translate_label('patientLastName','Last name') }}",
-    diagnoses as "{{ translate_label('diagnoses', 'Diagnoses') }}",
-    referral_type as "{{ translate_label('referralType', 'Referral name') }}",
-    referring_doctor_name as "{{ translate_label('referralCompletedBy', 'Referring doctor') }}",
-    to_char(referral_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('referralDate', 'Referral date') }}",
-    department as "{{ translate_label('department', 'Department') }}"
+    display_id as "{{ translate_label('patientDisplayId') }}",
+    first_name as "{{ translate_label('patientFirstName') }}",
+    last_name as "{{ translate_label('patientLastName') }}",
+    diagnoses as "{{ translate_label('diagnoses') }}",
+    referral_type as "{{ translate_label('referralType') }}",
+    referring_doctor_name as "{{ translate_label('referralCompletedBy') }}",
+    to_char(referral_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('referralDate') }}",
+    department as "{{ translate_label('department') }}"
 from {{ ref('ds__referrals') }}
 where status in ('pending', 'cancelled')
     and case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else referral_datetime::date
+        else referral_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else referral_datetime::date
+        else referral_datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and

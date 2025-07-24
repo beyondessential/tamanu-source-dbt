@@ -22,17 +22,17 @@ select
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary', 'Secondary diagnoses') }}"
 from {{ ref('ds__admissions') }}
 where
-    case when {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }} is null then true
-        else admission_datetime::text >= {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }}
+    case when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
+        else admission_datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
-    and case when {{ parameter('toDate', default_value='2024-01-31', data_type='text') }} is null then true
-        else admission_datetime::text <= {{ parameter('toDate', default_value='2024-01-31', data_type='text') }}
+    and case when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
+        else admission_datetime <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('locationGroupId') }} is null then true
         else {{ parameter('locationGroupId') }} = any(location_group_ids::text [])
     end
     and case when {{ parameter('facilityId') }} is null then true
-        else {{ parameter('facilityId') }} = facility_id::text
+        else {{ parameter('facilityId') }} = facility_id
     end
     and case when {{ parameter('departmentId') }} is null then true
         else {{ parameter('departmentId') }} = any(department_ids::text [])
