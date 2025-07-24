@@ -12,7 +12,7 @@
 
 ### 2. Virtual Environment Setup
 - Create virtual environment: `python -m venv .venv`
-- **Required**: Upgrade pip after creating virtual environment: `python.exe -m pip install --upgrade pip`
+- **Required**: Upgrade pip after creating virtual environment: `.venv/Scripts/python -m pip install --upgrade pip`
 - **Required**: Enhance virtual environment activation script to automatically load .env file:
   - Add .env file loading functionality to `.venv/Scripts/Activate.ps1`
   - This ensures environment variables are automatically available when activating the virtual environment
