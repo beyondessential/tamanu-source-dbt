@@ -317,6 +317,7 @@ select
     date_part('year', age(e.start_datetime, p.date_of_birth)) as age,
     p.sex,
     eth.name as ethnicity,
+    e.patient_billing_type_id
     bt.name as patient_billing_type,
     case when e.end_datetime is not null then
             case

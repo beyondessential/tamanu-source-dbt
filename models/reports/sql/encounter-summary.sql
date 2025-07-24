@@ -57,7 +57,7 @@ where case when {{ parameter('fromDate', default_value='2024-01-01', data_type='
         else {{ parameter('locationGroupId') }} = any(location_group_ids::text[])
     end
     and case when {{ parameter('patientBillingTypeId') }} is null then true
-        else patient_billing_type = {{ parameter('patientBillingTypeId') }}
+        else patient_billing_type_id = {{ parameter('patientBillingTypeId') }}
     end
     and case when {{ parameter('supervisingClinicianId') }} is null then true
         else supervising_clinician_id = {{ parameter('supervisingClinicianId') }}
