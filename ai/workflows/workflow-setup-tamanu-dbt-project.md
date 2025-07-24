@@ -14,8 +14,7 @@
 - Create virtual environment: `python -m venv .venv`
 - **Required**: Upgrade pip after creating virtual environment: `.venv/Scripts/python -m pip install --upgrade pip`
 - **Required**: Enhance virtual environment activation script to automatically load .env file:
-  - Add .env file loading functionality to `.venv/Scripts/Activate.ps1`
-  - This ensures environment variables are automatically available when activating the virtual environment
+  - Add logic to `.venv/Scripts/Activate.ps1` to parse the project's `.env` file and load the key-value pairs as environment variables.
 - Activate virtual environment: `.venv/Scripts/Activate.ps1`
 - Install Python dependencies: `pip install -r requirements.txt`
 ### 3. Environment Configuration
