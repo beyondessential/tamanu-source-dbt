@@ -12,13 +12,18 @@
 
 ### 2. Virtual Environment Setup
 - Create virtual environment: `python -m venv .venv`
+- **Required**: Upgrade pip after creating virtual environment: `python.exe -m pip install --upgrade pip`
+- **Required**: Enhance virtual environment activation script to automatically load .env file:
+  - Add .env file loading functionality to `.venv/Scripts/Activate.ps1`
+  - This ensures environment variables are automatically available when activating the virtual environment
 - Activate virtual environment: `.venv/Scripts/Activate.ps1`
 - Install Python dependencies: `pip install -r requirements.txt`
-- **Always activate virtual environment before any development work**
-
 ### 3. Environment Configuration
 - Copy environment template: `Copy-Item .env.example .env`
-- Edit `.env` file with database credentials:
+- **Required**: Update .env.example file with country-specific environment variable names
+  - Use 2-letter country code format (e.g., TAMANU_FJ_* for Fiji, TAMANU_AU_* for Australia)
+  - Include all environment types: demo, clone, replica, prod
+- **Required**: Human must manually update .env file with actual database credentials:
   - Database host, port, username, password
   - Database name for Tamanu instance
   - Any additional environment-specific variables
@@ -38,7 +43,10 @@
   - `yearmonth_format: 'YYYY-MM'`
 
 #### Update `config/profiles.yml`:
-- Update profile name to match project
+- Update profile name to match project (e.g., tamanu_dbt_fiji)
+- **Required**: Update environment variable names to match country-specific format
+  - Use 2-letter country code (e.g., TAMANU_FJ_* for Fiji)
+  - Update all environment types: demo, clone, replica
 - Configure target environments (replica, demo, clone, prod)
 - Ensure database connection details reference environment variables
 - **Test connection configuration**
@@ -66,6 +74,8 @@
 ### 7. Initial Build and Validation
 - **Required**: Test model compilation: `dbt compile --profiles-dir config`
 - **Required**: Run base models to verify setup: `dbt run --select bases --profiles-dir config`
+- **Critical**: If base models fail, address database schema issues before proceeding
+- **Required**: Run full build: `dbt run --profiles-dir config`
 - **Required**: Run all tests: `dbt test --profiles-dir config`
 - **All tests must pass** before proceeding with development
 - Address any compilation or test failures immediately
@@ -80,8 +90,10 @@
 
 ### 9. Code Style Setup
 - **Required**: Verify `.sqlfluff` configuration is present
-- Run `sqlfluff lint models` to check code style compliance
-- **Required**: Run `sqlfluff fix models` to format existing code
+- **Optional**: Code style validation can be skipped during initial setup
+- For development work: Set DBT_PROFILES_DIR environment variable before running sqlfluff
+- Run `sqlfluff lint models` to check code style compliance (if needed)
+- **Required**: Run `sqlfluff fix models` to format existing code (if needed)
 - Ensure all SQL files pass linting before development begins
 
 ### 10. Documentation Generation
