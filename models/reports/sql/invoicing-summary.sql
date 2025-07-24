@@ -17,13 +17,13 @@ from {{ ref("ds__invoicing") }} i
 where i.status = 'finalised'
     and case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else i.discharge_datetime::date
+        else i.discharge_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else i.discharge_datetime::date
+        else i.discharge_datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
 order by discharge_datetime

@@ -23,7 +23,7 @@ left join {{ ref('int__admission_history_department') }} adh
 where adh.facility_id notnull
     and case
         when {{ parameter('departmentId') }} is null then true
-        else adh.department_id::text = {{ parameter('departmentId') }}
+        else adh.department_id = {{ parameter('departmentId') }}
     end
 group by
     rm.month,

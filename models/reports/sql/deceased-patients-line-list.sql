@@ -41,12 +41,12 @@ from {{ ref('ds__deaths') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null
             then true
-        else date_of_death::date >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else date_of_death >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null
             then true
-        else date_of_death::date <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else date_of_death <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case
         when {{ parameter('causeOfDeath') }} is null

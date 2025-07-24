@@ -48,7 +48,7 @@ where case when {{ parameter('fromDate', default_value='2024-01-01', data_type='
         else end_datetime <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('facilityId') }} is null then true
-        else facility_id::text = {{ parameter('facilityId') }}
+        else facility_id = {{ parameter('facilityId') }}
     end
     and case when {{ parameter('departmentId') }} is null then true
         else {{ parameter('departmentId') }} = any(department_ids::text[])
