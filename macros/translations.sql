@@ -4,10 +4,10 @@
     {%- set query -%}
         select 
             coalesce(ts.text, tsd.text) as text
-        from {{ ref('translated_strings_default') }} tsd
+        from {{ source('tamanu', 'translated_strings') }} tsd
         left join {{ source('tamanu', 'translated_strings') }} ts
             on ts.string_id = '{{ full_string_id }}' and ts.language = '{{ var("language") }}'
-        where tsd.string_id = '{{ full_string_id }}'
+        where tsd.string_id = '{{ full_string_id }}' and ts.language = 'default'
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
