@@ -7,7 +7,7 @@
         from {{ source('tamanu', 'translated_strings') }} tsd
         left join {{ source('tamanu', 'translated_strings') }} ts
             on ts.string_id = '{{ full_string_id }}' and ts.language = '{{ var("language") }}'
-        where tsd.string_id = '{{ full_string_id }}' and ts.language = 'default'
+        where tsd.string_id = '{{ full_string_id }}' and tsd.language = 'default'
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
