@@ -218,6 +218,7 @@ report.reporting.procedure,Procedure
 report.reporting.procedureAnaesthetist,Procedure anaesthetist
 report.reporting.procedureAssistant,Procedure assistant
 report.reporting.procedureClinician,Procedure clinician
+report.reporting.procedureDate,Procedure date
 report.reporting.procedureDuration,Procedure duration
 report.reporting.procedureEndDateTime,Procedure end (date and time)
 report.reporting.procedureFacility,Procedure facility
@@ -236,8 +237,8 @@ report.reporting.registryCurrentlyAt,Currently at
 report.reporting.registryRegisteredBy,Registered by
 report.reporting.registryRegisteredDate,Date of registration
 report.reporting.registryRegisteringFacility,Registering facility
-report.reporting.registryRemovedBy,Removed by
-report.reporting.registryRemovedDate,Date of removal
+report.reporting.registryDeactivatedBy,Deactivated by
+report.reporting.registryDeactivatedDate,Date of deactivation
 report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
