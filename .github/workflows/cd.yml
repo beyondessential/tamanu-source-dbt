@@ -1,8 +1,9 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - '**'
 
 jobs:
   list-reports:
@@ -26,10 +27,18 @@ jobs:
       - name: List Tamanu Reports
         run: python scripts/list_tamanu_reports.py
 
-  publish:
+  publish-translations:
     name: Publish to report translations
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write 
+    env:
+      BUCKET: s3://bes-data-tamanu-translations
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
