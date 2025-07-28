@@ -24,21 +24,12 @@ jobs:
           pip install pandas openpyxl boto3 PyYAML
 
       - name: List Tamanu Reports
-        run: python scripts/list_tamanu_reports.py 
+        run: python scripts/list_tamanu_reports.py
 
-  generate:
-    name: Generate translations
+  publish:
+    name: Publish to report translations
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write 
-    env:
-      BUCKET: s3://bes-data-tamanu-translations
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -46,33 +37,22 @@ jobs:
           role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
           role-session-name: GithubActionsTamanuSourceDBT
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pandas openpyxl boto3 PyYAML
-
-      - name: Generate translations
-        run: python scripts/generate_translation_file.py
-
-  publish:
-    name: Publish to meta server
-    needs: generate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Publish
+      - name: Publish translations to S3
         run: |
           set -x
           VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
+          aws s3 cp report_translations.csv s3://bes-data-tamanu-translations/report_translations_v$VERSION_WITH_ZERO_PATCH.csv
+
+      - name: Publish to meta-server
+        run: |
+          set -x
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
           
           echo "${{ secrets.META_CERT }}" > meta.crt
           echo "${{ secrets.META_KEY }}" > meta.key
           
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION/report-translations/any" \
+          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/report-translations/any" \
             --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION/report_translations_v$VERSION.csv"
+            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/report_translations_v$VERSION_WITH_ZERO_PATCH.csv"
