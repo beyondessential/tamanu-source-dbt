@@ -45,6 +45,7 @@ jobs:
           aws-region: ap-southeast-2
           role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
           role-session-name: GithubActionsTamanuSourceDBT
+          audience: sts.amazonaws.com
           
       - name: Publish translations to S3
         run: |
