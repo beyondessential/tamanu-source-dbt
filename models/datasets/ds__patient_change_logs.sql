@@ -39,7 +39,7 @@ grouped_edits as (
         pe.sex,
         pe.village_id,
         pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at) as edited_datetime
+        date_trunc('minute', min(pe.logged_at)) as edited_datetime
     from patient_edits pe
     group by
         pe.patient_id,
@@ -49,8 +49,7 @@ grouped_edits as (
         pe.date_of_birth,
         pe.sex,
         pe.village_id,
-        pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at)
+        pe.updated_by_user_id
 )
 
 select
