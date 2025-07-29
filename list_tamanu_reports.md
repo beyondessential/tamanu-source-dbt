@@ -27,7 +27,8 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 **Report Description**
 
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details. Edits are listed in chronological order.
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
+Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
 
 **Filters**
 
@@ -42,7 +43,8 @@ Patient, User
 
 **Report Description**
 
-This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module.
+This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. 
+Views are listed in chronological order. If multiple views are made to a patient's record within a logged session, these views will be grouped together and displayed as a single view in the report.
 
 **Filters**
 
