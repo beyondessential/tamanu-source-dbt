@@ -28,7 +28,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 **Report Description**
 
 This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
-Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a logged session, these changes will be grouped together and displayed as a single edit in the report.
+Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
 
 **Filters**
 
