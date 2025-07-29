@@ -1,9 +1,7 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - '**'
+  pull_request:
 
 jobs:
   list-reports:
@@ -46,6 +44,8 @@ jobs:
           role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
           role-session-name: GithubActionsTamanuSourceDBT
           audience: sts.amazonaws.com
+        env:
+          BUCKET: s3://bes-data-tamanu-translations
           
       - name: Publish translations to S3
         run: |
