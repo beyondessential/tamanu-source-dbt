@@ -3,11 +3,14 @@
     
     {%- set query -%}
         select 
-            coalesce(ts.text, tsd.text) as text
-        from {{ ref('translated_strings_default') }} tsd
-        left join {{ source('tamanu', 'translated_strings') }} ts
-            on ts.string_id = '{{ full_string_id }}' and ts.language = '{{ var("language") }}'
-        where tsd.string_id = '{{ full_string_id }}'
+            coalesce(
+                max(case when language = '{{ var("language") }}' then text end),
+                max(case when language = 'default' then text end),
+                '{{ string_id }}'
+            ) as text
+        from {{ source('tamanu', 'translated_strings') }}
+        where string_id = '{{ full_string_id }}'
+        and language in ('{{ var("language") }}', 'default')
     {%- endset -%}
     
     {%- set result = run_query(query) -%}

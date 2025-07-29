@@ -3,7 +3,7 @@ with grouped_access_logs as (
         lap.patient_id,
         lap.user_id,
         lap.facility_id,
-        date_trunc('minute', lap.logged_at) as date_time_viewed,
+        date_trunc('minute', min(lap.logged_at)) as date_time_viewed,
         -- Take the first values for fields that might vary within the same minute
         lap.is_mobile,
         lap.session_id,
@@ -13,7 +13,6 @@ with grouped_access_logs as (
         lap.patient_id,
         lap.user_id,
         lap.facility_id,
-        date_trunc('minute', lap.logged_at),
         lap.is_mobile,
         lap.session_id,
         lap.device_id
