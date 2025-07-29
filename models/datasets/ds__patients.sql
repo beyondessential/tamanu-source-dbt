@@ -25,12 +25,26 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
-    case when pbd.patient_id is null then 'Patient' else 'Birth' end as registration_type
+    case
+        when pbd.patient_id is null then 'Patient'
+        else 'Birth'
+    end as registration_type,
+    date_part(
+        'year',
+        age(
+            coalesce(p.date_of_death::date, current_date),
+            p.date_of_birth
+        )
+    ) as age,
+    case
+        when p.date_of_death is not null then 'Deceased'
+        else 'Alive'
+    end as status
 from {{ ref("patients") }} p
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref("patient_birth_data") }} pbd on pbd.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
-join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
+left join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
 left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
 left join {{ ref("reference_data") }} nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
 left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
@@ -39,4 +53,3 @@ left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id 
 left join
     {{ ref("reference_data") }} billing
     on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
-order by p.registration_date

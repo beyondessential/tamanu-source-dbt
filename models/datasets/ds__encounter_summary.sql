@@ -39,7 +39,7 @@ location_changes as (
     select
         encounter_id,
         array_agg(
-            to_char(datetime, 'dd/mm/yyyy hh12:mi:ss AM')
+            to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
         ) as location_datetimes,
         array_agg(
@@ -59,7 +59,7 @@ location_group_changes as (
     select
         encounter_id,
         array_agg(
-            to_char(datetime, 'dd/mm/yyyy hh12:mi:ss AM')
+            to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
         ) as location_group_datetimes,
         array_agg(
@@ -80,7 +80,7 @@ department_changes as (
     select
         encounter_id,
         array_agg(
-            to_char(datetime, 'dd/mm/yyyy hh12:mi:ss AM')
+            to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
         ) as department_datetimes,
         array_agg(
@@ -194,7 +194,7 @@ encounter_procedures as (
         string_agg(
             concat(
                 'Name: ', proc.name,
-                ', Date: ', to_char(p.date, 'DD-MM-YYYY'),
+                ', Date: ', to_char(p.date, '{{ var("date_format") }}'),
                 ', Location: ', loc.name,
                 ', Notes: ', p.note,
                 ', Completed notes: ', p.completed_note
@@ -295,7 +295,7 @@ encounter_notes as (
             'Note type: ',
             coalesce(ts.text, n.note_type),
             ', Content: ', n.content,
-            ', Note date: ', to_char(n.datetime, 'DD/MM/YYYY HH12:MI AM')
+            ', Note date: ', to_char(n.datetime, '{{ var("datetime_format") }}')
         ),
         E'\n'
         order by n.datetime) as notes
@@ -317,6 +317,7 @@ select
     date_part('year', age(e.start_datetime, p.date_of_birth)) as age,
     p.sex,
     eth.name as ethnicity,
+    e.patient_billing_type_id,
     bt.name as patient_billing_type,
     case when e.end_datetime is not null then
             case

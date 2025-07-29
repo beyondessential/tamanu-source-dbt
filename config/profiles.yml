@@ -1,14 +1,14 @@
 tamanu_source_dbt:
-  target: release
+  target: demo
   outputs:
     demo:
       type: postgres
       threads: 1
-      host: "{{ env_var('TAMANU_DL_DB_URL') }}"
+      host: "{{ env_var('TAMANU_DEMO_DB_URL') }}"
       port: 5432
-      user: "{{ env_var('TAMANU_DL_DB_USER') }}"
-      pass: "{{ env_var('TAMANU_DL_DB_PASSWORD') }}"
-      dbname: "{{ env_var('TAMANU_DL_DB_DATABASE') }}"
+      user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
       schema: reporting
     release:
       type: postgres
