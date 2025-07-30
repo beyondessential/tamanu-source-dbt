@@ -1,0 +1,43 @@
+{
+  "query": "replace this",
+  "name": "Program registry patient conditions line list",
+  "notes": "This report lists all patients with conditions registered in a program registry, filtered by registry, registration status, medical area, sub-division, division, condition category, and condition. The report includes patient demographic information, condition details, and registration status for the selected parameters.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "name": "registryId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Registry",
+        "suggesterEndpoint": "programRegistry"
+      },
+      {
+        "name": "medicalAreaId",
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Medical area",
+        "suggesterEndpoint": "medicalArea"
+      },
+      {
+        "name": "subDivisionId",
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Sub-division",
+        "suggesterEndpoint": "subdivision"
+      },
+      {
+        "name": "divisionId",
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Division",
+        "suggesterEndpoint": "division"
+      },
+      {
+        "name": "conditionId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Condition",
+        "suggesterEndpoint": "programRegistryCondition"
+      }
+    ]
+  }
+}
