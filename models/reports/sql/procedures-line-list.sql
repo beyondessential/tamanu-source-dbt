@@ -24,7 +24,7 @@ select
     procedure_assistant as "{{ translate_label('procedureAssistant') }}",
     is_completed as "{{ translate_label('procedureIsCompleted') }}"
 from {{ ref('ds__procedures') }}
-where 
+where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else procedure_date
