@@ -37,3 +37,6 @@ models:
       - name: diets
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of dietary requirements for the patient during this encounter, comma-separated."
+      - name: allergies
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of allergies for the patient during this encounter, comma-separated."

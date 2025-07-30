@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: patient_allergies
+    description: '{{ doc("table__patient_allergies") }}'
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in patient_allergies."
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_allergies__patient_id') }}"
+      - name: allergy_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_allergies__allergy_id') }}"
+      - name: recorded_date
+        data_type: date
+        description: "{{ doc('patient_allergies__recorded_date') }}"
+      - name: recorded_by
+        data_type: character varying(255)
+        description: "{{ doc('patient_allergies__practitioner_id') }}"
