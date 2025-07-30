@@ -47,5 +47,5 @@ models:
         show: false
       +tags: [reports]
       
-tests:
+data_tests:
   +severity: warn
