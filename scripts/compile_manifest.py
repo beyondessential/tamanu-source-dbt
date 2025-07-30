@@ -26,7 +26,7 @@ def main():
 
     version = ".".join(VERSION.split(".")[:2])
     schema = f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
-    reports = [f.name for f in VERSION_DIR.glob("*.json")]
+    reports = [f"./{VERSION}/{file.name}" for file in VERSION_DIR.glob("*.json")]
 
     entry = {
         "tamanu": f"~{version}.0",
@@ -39,6 +39,11 @@ def main():
     else:
         manifest = {"deploymentName": DEPLOYMENT, "versions": []}
 
+    manifest["versions"] = [
+        versions
+        for versions in manifest["versions"]
+        if versions["tamanu"] != entry["tamanu"]
+    ]
     manifest["versions"].append(entry)
     manifest["versions"].sort(key=lambda x: x["tamanu"], reverse=True)
 
