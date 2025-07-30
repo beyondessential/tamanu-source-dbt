@@ -39,26 +39,26 @@ where
     and
     case
         when {{ parameter('facilityId') }} is null then true
-        else procedure_facility_id ={{ parameter('facilityId') }}
+        else procedure_facility_id = {{ parameter('facilityId') }}
     end
     and
     case
         when {{ parameter('departmentId') }} is null then true
-        else encounter_department_id ={{ parameter('departmentId') }}
+        else encounter_department_id = {{ parameter('departmentId') }}
     end
     and
     case
         when {{ parameter('locationGroupId') }} is null then true
-        else procedure_area_id ={{ parameter('locationGroupId') }}
+        else procedure_area_id = {{ parameter('locationGroupId') }}
     end
     and
     case
         when {{ parameter('locationId') }} is null then true
-        else procedure_location_id ={{ parameter('locationId') }}
+        else procedure_location_id = {{ parameter('locationId') }}
     end
     and
     case
         when {{ parameter('clinicianId') }} is null then true
-        else procedure_clinician_id ={{ parameter('clinicianId') }}
+        else procedure_clinician_id = {{ parameter('clinicianId') }}
     end
 order by procedure_start_time
