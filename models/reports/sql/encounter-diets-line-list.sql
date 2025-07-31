@@ -1,5 +1,6 @@
 select
-    to_char(ed.start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime', 'Encounter start date and time') }}",
+    to_char(ed.start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDate', 'Encounter start date') }}",
+    to_char(ed.start_datetime, '{{ var("time_format") }}') as "{{ translate_label('encounterStartTime', 'Encounter start time') }}",
     ed.display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
     ed.patient_name as "{{ translate_label('patientName', 'Patient name') }}",
     ed.age as "{{ translate_label('patientAge', 'Age') }}",
