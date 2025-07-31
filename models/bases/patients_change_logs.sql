@@ -1,13 +1,13 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
-        and record_data ->> 'id' != '{{ var("test_patient") }}'
+        and record_id != '{{ var("test_patient") }}'
 )
 
 select
     fc.changelog_id,
     fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     fc.updated_by_user_id,
-    fc.record_data ->> 'id' as id,
+    fc.record_id as id,
     fc.record_data ->> 'display_id' as display_id,
     fc.record_data ->> 'first_name' as first_name,
     fc.record_data ->> 'middle_name' as middle_name,

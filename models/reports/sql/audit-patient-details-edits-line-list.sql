@@ -9,7 +9,7 @@ select
     user_email as "{{ translate_label('userEmail') }}",
     user_role as "{{ translate_label('userRole') }}",
     to_char(edited_datetime, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logChangeDateTime') }}"
-from {{ ref('ds__patient_change_logs') }}
+from {{ ref('ds__patients_change_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
