@@ -10,7 +10,7 @@ select
     user_email as "{{ translate_label('userEmail', 'User email') }}",
     user_role as "{{ translate_label('userRole', 'User role') }}",
     to_char(date_time_viewed, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime', 'Date and time viewed') }}"
-from {{ ref('ds__patient_access_logs') }}
+from {{ ref('ds__patients_access_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
