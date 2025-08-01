@@ -10,7 +10,7 @@ with patient_edits as (
         lcp.village_id,
         lcp.updated_by_user_id,
         lcp.logged_at
-    from {{ ref('patient_change_logs') }} lcp
+    from {{ ref('patients_change_logs') }} lcp
 
     union all
 

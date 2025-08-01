@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: patient_change_logs
+  - name: patients_change_logs
     description: Historical changes to patients extracted from the changes log table.
     config:
       contract:
