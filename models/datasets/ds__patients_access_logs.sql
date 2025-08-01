@@ -8,7 +8,7 @@ with grouped_access_logs as (
         lap.is_mobile,
         lap.session_id,
         lap.device_id
-    from {{ ref('patient_access_logs') }} lap
+    from {{ ref('patients_access_logs') }} lap
     group by
         lap.patient_id,
         lap.user_id,
