@@ -16,11 +16,11 @@ Models included in this documentation:
 The models in the "sources" folder represents the models in the operational database. Tags are used to classify the data and operational status of the models.
 
 Data type tag:
-- administration - System operation data that changes during normal use (e.g. user passwords, email addresses)
-- clinical - Patient medical records. Always attached to a Patient, often via an Encounter. Always considered sensitive
-- patient - Patient demographic information. Can be masked or aggregated for privacy in reporting
-- reference - System-wide configuration and lists (diagnoses, facilities, locations, surveys, vaccination schedules). Populated centrally, synced to all facilities. Never sensitive/restricted
-- system - Internal Tamanu operation data (configuration, sync status, task queues). Usually invisible to clinicians. Sometimes sensitive. Not available for reporting
+- administration - Thematically pretty close to reference data, but distinct in that adminisstration data is expected to change as part of normal day-to-day system operation (e.g. a user can change their password and email address outside of a project manager or admin reconfiguring the system).
+- clinical - Patient medical records. Always attached to a Patient, often via an Encounter (almost all records with a `patientId` or an `encounterId` will be clinical data). Always considered sensitive.
+- patient - Patient demographic information. These can be masked or aggregated where appropriate for patient privacy in reporting.
+- reference - System-wide configuration, lists (e.g. diagnoses, facilities, locations). Also includes surveys and their questions, vaccination schedules. Populated centrally, synced down to all facilities and mobile devices. Never considered senstive/restricted.
+- system - Data that is internal to Tamanu operation. Local configuration, sync status, task queues etc. Usually invisible to clinicians and PMs. Sometimes sensitive (e.g. a queued email to a patient notifying them of a test result). These models will not be available for reporting.
 
 Operational status tag:
 - deprecated - Models that are no longer in use, data from these models are usually migrated to another part of the database. These models will not be available for reporting.

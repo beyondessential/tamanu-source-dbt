@@ -14,7 +14,7 @@ select
     fc.record_data ->> 'last_name' as last_name,
     fc.record_data ->> 'cultural_name' as cultural_name,
     fc.record_data ->> 'email' as email,
-    initcap(fc.record_data ->> 'sex') as sex,
+    initcap((fc.record_data ->> 'sex')::text) as sex,
     (fc.record_data ->> 'date_of_birth')::date as date_of_birth,
     (fc.record_data ->> 'date_of_death')::timestamp as date_of_death,
     fc.record_data ->> 'village_id' as village_id,

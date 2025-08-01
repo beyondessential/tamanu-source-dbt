@@ -1,11 +1,11 @@
 select
-    to_char(itp.date, '{{ var("date_format") }}') as "{{ translate_label('paymentDate') }}",
-    itp.invoice_number as "{{ translate_label('invoiceNumber') }}",
-    itp.patient_name as "{{ translate_label('patientName') }}",
-    itp.payment_method as "{{ translate_label('paymentMethod') }}",
-    itp.receipt_number as "{{ translate_label('paymentReceiptNumber') }}",
-    itp.amount as "{{ translate_label('paymentAmount') }}",
-    itp.received_by as "{{ translate_label('paymentReceivedBy') }}"
+    to_char(itp.date, '{{ var("date_format") }}') as "{{ translate_label('paymentDate','Payment date') }}",
+    itp.invoice_number as "{{ translate_label('invoiceNumber','Invoice number') }}",
+    itp.patient_name as "{{ translate_label('patientName','Patient name') }}",
+    itp.payment_method as "{{ translate_label('paymentMethod','Method') }}",
+    itp.receipt_number as "{{ translate_label('paymentReceiptNumber','Receipt number') }}",
+    itp.amount as "{{ translate_label('paymentAmount','Applied payment (amount)') }}",
+    itp.received_by as "{{ translate_label('paymentReceivedBy','Tamanu user name') }}"
 from {{ ref("ds__invoicing_transactions_patient") }} itp
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

@@ -1,25 +1,21 @@
-{%- macro translate_label(string_id) -%}
+{%- macro translate_label(string_id, default_column_name=null) -%}
+    {%- set language = var('language') -%}
     {%- set full_string_id = 'report.reporting.' ~ string_id -%}
     
     {%- set query -%}
-        select 
-            coalesce(
-                max(case when language = '{{ var("language") }}' then text end),
-                max(case when language = 'default' then text end),
-                '{{ string_id }}'
-            ) as text
+        select text 
         from {{ source('tamanu', 'translated_strings') }}
-        where string_id = '{{ full_string_id }}'
-        and language in ('{{ var("language") }}', 'default')
+        where string_id = '{{ full_string_id }}' 
+        and language = '{{ language }}'
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
     
     {%- if execute -%}
-        {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
+        {%- if result.rows | length > 0 -%}
             {{- result.columns[0].values()[0] -}}
         {%- else -%}
-            {{- string_id -}}
+            {{- default_column_name -}}
         {%- endif -%}
     {%- endif -%}
 {%- endmacro -%}
@@ -84,21 +80,16 @@
     {%- set string_id = prefix ~ '.' ~ value -%}
     
     {%- set query -%}
-        select 
-            coalesce(
-                max(case when language = '{{ language }}' then text end),
-                max(case when language = 'default' then text end),
-                '{{ value }}'
-            ) as text
-        from {{ source('tamanu', 'translated_strings') }} ts
-        where string_id ilike '{{ string_id }}'
-        and language in ('{{ language }}', 'default')
+        select text 
+        from {{ source('tamanu', 'translated_strings') }}
+        where string_id ilike '{{ string_id }}' 
+        and language = '{{ language }}'
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
     
     {%- if execute -%}
-        {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
+        {%- if result.rows | length > 0 -%}
             {{- result.columns[0].values()[0] -}}
         {%- else -%}
             {{- value -}}
@@ -107,17 +98,7 @@
 {%- endmacro -%}
 
 {%- macro translate_column_value(prefix_key, column_name, alias='ts') -%}
-    left join (
-        select 
-            string_id,
-            coalesce(
-                max(case when language = '{{ var("language") }}' then text end),
-                max(case when language = 'default' then text end),
-                string_id
-            ) as text
-        from {{ source('tamanu', 'translated_strings') }}
-        where language in ('{{ var("language") }}', 'default')
-        group by string_id
-    ) {{ alias }}
+    left join {{ source('tamanu', 'translated_strings') }} {{ alias }}
         on {{ alias }}.string_id = '{{ get_translation_prefix(prefix_key) }}.' || {{ column_name }}
+        and {{ alias }}.language = '{{ var("language") }}'
 {%- endmacro -%}

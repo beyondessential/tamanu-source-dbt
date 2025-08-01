@@ -1,6 +1,6 @@
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}
-        and record_data ->> 'id' != '{{ var("test_patient") }}' -- noqa: ST10
+        and record_data ->> 'id' != '{{ var("test_patient") }}'
 )
 
 select

@@ -1,29 +1,29 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_label('patientRegistrationDate') }}",
-    registered_by as "{{ translate_label('patientRegisteredBy') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    middle_name as "{{ translate_label('patientMiddleName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    cultural_name as "{{ translate_label('patientCulturalName') }}",
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    registration_type as "{{ translate_label('patientRegistrationType') }}",
-    birth_certificate as "{{ translate_label('patientBirthCertificate') }}",
-    driving_license as "{{ translate_label('patientDrivingLicense') }}",
-    passport as "{{ translate_label('patientPassport') }}",
-    blood_type as "{{ translate_label('patientBloodType') }}",
-    title as "{{ translate_label('patientTitle') }}",
-    marital_status as "{{ translate_label('patientMaritalStatus') }}",
-    primary_contact_number as "{{ translate_label('patientPrimaryContactNumber') }}",   -- noqa:disable=LT05
-    secondary_contact_number as "{{ translate_label('patientSecondaryContactNumber') }}",   -- noqa:disable=LT05
-    country_of_birth as "{{ translate_label('patientCountryOfBirth') }}",
-    nationality as "{{ translate_label('patientNationality') }}",
-    ethnicity as "{{ translate_label('patientEthnicity') }}",
-    occupation as "{{ translate_label('patientOccupation') }}",
-    religion as "{{ translate_label('patientReligion') }}",
-    patient_billing_type as "{{ translate_label('patientBillingType') }}"
+    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_label('patientRegistrationDate', 'Registration date') }}",
+    registered_by as "{{ translate_label('patientRegisteredBy', 'Registered by') }}",
+    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
+    middle_name as "{{ translate_label('patientMiddleName', 'Middle name') }}",
+    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
+    cultural_name as "{{ translate_label('patientCulturalName', 'Cultural name') }}",
+    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
+    sex as "{{ translate_label('patientSex', 'Sex') }}",
+    village as "{{ translate_label('patientVillage', 'village' ) }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
+    registration_type as "{{ translate_label('patientRegistrationType', 'Registration type') }}",
+    birth_certificate as "{{ translate_label('patientBirthCertificate', 'Birth certificate') }}",
+    driving_license as "{{ translate_label('patientDrivingLicense', 'Driving license') }}",
+    passport as "{{ translate_label('patientPassport', 'Passport') }}",
+    blood_type as "{{ translate_label('patientBloodType', 'Blood type') }}",
+    title as "{{ translate_label('patientTitle', 'Title') }}",
+    marital_status as "{{ translate_label('patientMaritalStatus', 'Marital status') }}",
+    primary_contact_number as "{{ translate_label('patientPrimaryContactNumber', 'Primary contact number') }}",   -- noqa:disable=LT05
+    secondary_contact_number as "{{ translate_label('patientSecondaryContactNumber', 'Secondary contact number') }}",   -- noqa:disable=LT05
+    country_of_birth as "{{ translate_label('patientCountryOfBirth', 'Country of birth') }}",
+    nationality as "{{ translate_label('patientNationality', 'Nationality') }}",
+    ethnicity as "{{ translate_label('patientEthnicity', 'Ethnicity') }}",
+    occupation as "{{ translate_label('patientOccupation', 'Occupation') }}",
+    religion as "{{ translate_label('patientReligion', 'Religion') }}",
+    patient_billing_type as "{{ translate_label('patientBillingType', 'Billing type') }}"
 from {{ ref("ds__patients") }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

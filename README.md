@@ -8,9 +8,7 @@ A dbt project of Tamanu's standard models. This includes:
 
 ## AI Rules
 
-This project includes AI rules for AI assistants located in the `ai/` directory.
-
-To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
+To use the AI rules with Cline or Cursor, you need to create a symbolic link to make the rules accessible to your AI assistant.
 
 ## SQL linting
 
@@ -30,7 +28,7 @@ This command pulls the source model information from the Tamanu repository based
 ## Generate the build script for deployments
 
 Execute the following command:
-`python ./scripts/build_reporting_assets.py`
+`python ./scripts/build_reporting_assets.py
 
 This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
 
@@ -54,6 +52,17 @@ To generate a report list:
 
 ```
 python list_tamanu_reports.py
+```
+
+## Generate file of translation strings
+
+This script generates a file of all the translation strings for reports.
+
+### Usage
+To generate the translation file:
+
+```
+python generate_translation_file.py
 ```
 
 ## Versioning

@@ -58,7 +58,7 @@ models:
       - name: remaining_insurer_balance
         data_type: double precision
         description: Outstanding balance owed by this insurer (insurer total minus payments received)
-    data_tests:
+    tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
             - invoice_id
