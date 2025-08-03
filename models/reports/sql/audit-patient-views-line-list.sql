@@ -1,15 +1,16 @@
 select
-    display_id as "{{ translate_label('patientDisplayId', 'Patient ID') }}",
-    first_name as "{{ translate_label('patientFirstName', 'First name') }}",
-    last_name as "{{ translate_label('patientLastName', 'Last name') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
-    date_part('year', age(current_date, date_of_birth))::integer as "{{ translate_label('patientAge', 'Age') }}",
-    sex as "{{ translate_label('patientSex', 'Sex') }}",
-    village as "{{ translate_label('patientVillage', 'Village') }}",
-    viewed_by_user as "{{ translate_label('logAccessBy', 'Viewed by user') }}",
-    user_email as "{{ translate_label('userEmail', 'User email') }}",
-    user_role as "{{ translate_label('userRole', 'User role') }}",
-    to_char(date_time_viewed, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime', 'Date and time viewed') }}"
+    display_id as "{{ translate_label('patientDisplayId') }}",
+    first_name as "{{ translate_label('patientFirstName') }}",
+    last_name as "{{ translate_label('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
+    date_part('year', age(current_date, date_of_birth))::integer as "{{ translate_label('patientAge') }}",
+    sex as "{{ translate_label('patientSex') }}",
+    village as "{{ translate_label('patientVillage') }}",
+    viewed_by_user as "{{ translate_label('logAccessBy') }}",
+    user_email as "{{ translate_label('userEmail') }}",
+    user_role as "{{ translate_label('userRole') }}",
+    viewed_at_facility as "{{ translate_label('logAccessAtFacility') }}",
+    to_char(date_time_viewed, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime') }}"
 from {{ ref('ds__patients_access_logs') }}
 where
     case
