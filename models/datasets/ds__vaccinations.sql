@@ -1,4 +1,12 @@
-with administered_circumstances as (
+with vaccine_administrations_metadata as (
+    select 
+        id,
+        max(modification_datetime) as modification_datetime
+    from {{ ref("vaccine_administrations_change_logs") }}
+    group by id
+),
+
+administered_circumstances as (
     select
         a.id,
         string_agg(rd_cir.name, '; ') as circumstance_name
@@ -65,10 +73,11 @@ select
     case
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
-    av.modification_datetime
+    vam.modification_datetime
 from {{ ref("vaccine_administrations") }} av
 join {{ ref("encounters") }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
+join vaccine_administrations_metadata vam on vam.id = av.id
 left join {{ ref("locations") }} l on l.id = av.location_id
 left join {{ ref("departments") }} d on d.id = av.department_id
 left join {{ ref("location_groups") }} lg on lg.id = l.location_group_id
