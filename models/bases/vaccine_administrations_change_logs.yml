@@ -15,10 +15,10 @@ models:
       - name: logged_at
         data_type: timestamp
         description: "{{ doc('logs__changes__logged_at') }} in vaccine administrations history."
-      - name: creation_datetime
+      - name: created_at
         data_type: timestamp
         description: "{{ doc('generic__created_at') }} in vaccine_administrations from history."
-      - name: modification_datetime
+      - name: updated_at
         data_type: timestamp
         description: "{{ doc('generic__updated_at') }} in vaccine_administrations from history."
       - name: updated_by_user_id

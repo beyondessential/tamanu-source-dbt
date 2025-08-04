@@ -1,7 +1,7 @@
 with vaccine_administrations_metadata as (
     select 
         id,
-        max(modification_datetime) as modification_datetime
+        max(updated_at) as updated_at
     from {{ ref("vaccine_administrations_change_logs") }}
     group by id
 ),
@@ -73,7 +73,7 @@ select
     case
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
-    vam.modification_datetime
+    vam.updated_at
 from {{ ref("vaccine_administrations") }} av
 join {{ ref("encounters") }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
