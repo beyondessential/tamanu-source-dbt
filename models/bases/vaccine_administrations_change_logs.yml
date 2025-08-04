@@ -28,13 +28,13 @@ models:
         data_type: text
         description: "{{ doc('generic__id') }} in vaccine_administrations from history."
       - name: datetime
-        data_type: text
+        data_type: timestamp
         description: "{{ doc('generic__date') }} in vaccine_administrations from history."
       - name: batch
         data_type: text
         description: "{{ doc('administered_vaccines__batch') }} from history."
       - name: is_consented
-        data_type: text
+        data_type: boolean
         description: "{{ doc('administered_vaccines__consent') }} from history."
       - name: disease
         data_type: text
@@ -43,7 +43,7 @@ models:
         data_type: text
         description: "{{ doc('administered_vaccines__given_by') }} from history."
       - name: is_given_elsewhere
-        data_type: text
+        data_type: boolean
         description: "{{ doc('administered_vaccines__given_elsewhere') }} from history."
       - name: circumstance_ids
         data_type: text
