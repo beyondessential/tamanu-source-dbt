@@ -69,3 +69,6 @@ models:
       - name: modification_datetime
         data_type: timestamp
         description: "{{ doc('generic__updated_at') }} in administered_vaccines which is used as a best estimate of modification datetime."
+      - name: creation_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in administered_vaccines which is used as a best estimate of creation datetime."
