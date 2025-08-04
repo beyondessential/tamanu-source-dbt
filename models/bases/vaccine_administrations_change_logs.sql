@@ -1,9 +1,14 @@
 with filtered_changes as (
     select 
-        av.*
+        av.changelog_id,
+        av.logged_at,
+        av.updated_by_user_id,
+        av.record_created_at,
+        av.record_updated_at,
+        av.record_id,
+        av.record_data
     from ({{ base_history_from_log('administered_vaccines') }}) av
     join {{ ref("encounters") }} e on e.id = av.record_data ->> 'encounter_id'
-    where e.patient_id != '{{ var("test_patient") }}'
 )
 
 select
