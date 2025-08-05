@@ -1,12 +1,11 @@
 import re
 from pathlib import Path
 
-from utils.dbt_utils import get_deployment_name, get_project_name
+from utils.dbt_utils import get_deployment_name
 from utils.file_utils import read_file
 from utils.system_utils import cprint
 
 DEPLOYMENT = get_deployment_name()
-PROJECT = get_project_name()
 
 
 def extract_translate_labels_from_file(file_path):
