@@ -15,12 +15,16 @@ def extract_translate_labels_from_file(file_path):
 
 
 def load_translations_from_file(file_path):
-    df = read_file(file_path, file_type="excel")
-    return {
-        sid[len("report.reporting.") :]
-        for sid in df["stringId"]
-        if sid.startswith("report.reporting.")
-    }
+    if file_path.exists():
+        df = read_file(file_path, file_type="excel")
+        return {
+            sid[len("report.reporting.") :]
+            for sid in df["stringId"]
+            if sid.startswith("report.reporting.")
+        }
+    else:
+        cprint(f"⚠️ File does not exist: {file_path}", "warning")
+        return set()
 
 
 def main():
@@ -36,12 +40,23 @@ def main():
         translations_deployment = load_translations_from_file(
             Path(f"report_translations_{DEPLOYMENT}.xlsx")
         )
-        duplicates = translations_standard & translations_deployment
-        if duplicates:
-            cprint(f"\n⚠️ DUPLICATE TRANSLATIONS FOUND ({len(duplicates)}):", "warning")
-            for duplicate in sorted(duplicates):
-                cprint(f"  - {duplicate}", "warning")
-            cprint(f"Using {DEPLOYMENT}-specific translations for duplicates.", "info")
+
+        if translations_deployment:
+            duplicates = translations_standard & translations_deployment
+            if duplicates:
+                cprint(
+                    f"\n⚠️ DUPLICATE TRANSLATIONS FOUND ({len(duplicates)}):", "warning"
+                )
+                for duplicate in sorted(duplicates):
+                    cprint(f"  - {duplicate}", "warning")
+                cprint(
+                    f"Using {DEPLOYMENT}-specific translations for duplicates.", "info"
+                )
+        else:
+            cprint(
+                f"\nℹ️ No deployment-specific translations file found for {DEPLOYMENT}, using standard translations only.",
+                "info",
+            )
 
         translations = translations_standard | translations_deployment
         sql_folders = [
