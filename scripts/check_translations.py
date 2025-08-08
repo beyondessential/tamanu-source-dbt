@@ -1,11 +1,11 @@
 import re
 from pathlib import Path
 
+from utils.dbt_utils import get_deployment_name
 from utils.file_utils import read_file
 from utils.system_utils import cprint
 
-REPORTS_SQL_FOLDER = Path("models/reports/sql")
-TRANSLATION_FILE = Path("report_translations.xlsx")
+DEPLOYMENT = get_deployment_name()
 
 
 def extract_translate_labels_from_file(file_path):
@@ -15,26 +15,65 @@ def extract_translate_labels_from_file(file_path):
 
 
 def load_translations_from_file(file_path):
-    df = read_file(file_path, file_type="excel")
-    return {
-        sid[len("report.reporting.") :]
-        for sid in df["stringId"]
-        if sid.startswith("report.reporting.")
-    }
+    if file_path.exists():
+        df = read_file(file_path, file_type="excel")
+        return {
+            sid[len("report.reporting.") :]
+            for sid in df["stringId"]
+            if sid.startswith("report.reporting.")
+        }
+    else:
+        cprint(f"⚠️ File does not exist: {file_path}", "warning")
+        return set()
 
 
 def main():
-    translations = load_translations_from_file(TRANSLATION_FILE)
-    cprint(f"Found {len(translations)} translations in {TRANSLATION_FILE}", "info")
+    if DEPLOYMENT == "standard":
+        translations = load_translations_from_file(
+            Path("report_translations_standard.xlsx")
+        )
+        sql_folders = [Path("models/reports/sql")]
+    else:
+        translations_standard = load_translations_from_file(
+            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.xlsx")
+        )
+        translations_deployment = load_translations_from_file(
+            Path(f"report_translations_{DEPLOYMENT}.xlsx")
+        )
+
+        if translations_deployment:
+            duplicates = translations_standard & translations_deployment
+            if duplicates:
+                cprint(
+                    f"\n⚠️ DUPLICATE TRANSLATIONS FOUND ({len(duplicates)}):", "warning"
+                )
+                for duplicate in sorted(duplicates):
+                    cprint(f"  - {duplicate}", "warning")
+                cprint(
+                    f"Using {DEPLOYMENT}-specific translations for duplicates.", "info"
+                )
+        else:
+            cprint(
+                f"\nℹ️ No deployment-specific translations file found for {DEPLOYMENT}, using standard translations only.",
+                "info",
+            )
+
+        translations = translations_standard | translations_deployment
+        sql_folders = [
+            Path("models/reports/sql"),
+            Path("dbt_packages/tamanu_source_dbt/models/reports/sql"),
+        ]
 
     referenced_translations = set()
     file_referencing_translations = {}
 
-    for sql_file in REPORTS_SQL_FOLDER.glob("*.sql"):
-        labels = extract_translate_labels_from_file(sql_file)
-        file_referencing_translations[sql_file.name] = labels
-        referenced_translations.update(labels)
+    for folder in sql_folders:
+        for sql_file in folder.glob("*.sql"):
+            labels = extract_translate_labels_from_file(sql_file)
+            file_referencing_translations[sql_file.name] = labels
+            referenced_translations.update(labels)
 
+    cprint(f"Found {len(translations)} translations", "info")
     cprint(
         f"Found {len(referenced_translations)} unique translate_label calls across all SQL files",
         "info",
@@ -42,10 +81,7 @@ def main():
 
     missing_translations = referenced_translations - translations
     if missing_translations:
-        cprint(
-            f"\n❌ MISSING TRANSLATIONS ({len(missing_translations)}):\nThe following translate_label calls do NOT have corresponding entries in the translation file:",
-            "error",
-        )
+        cprint(f"\n❌ MISSING TRANSLATIONS ({len(missing_translations)}):", "error")
         for missing_translation in sorted(missing_translations):
             files_referencing_missing_translation = [
                 file
@@ -57,9 +93,9 @@ def main():
                 "error",
             )
 
-        cprint(f"\nTo fix, add the following to {TRANSLATION_FILE}:", "warning")
+        cprint(f"\nTo fix, add the following to the translation file:", "warning")
         for missing_translation in sorted(missing_translations):
-            cprint(f"report.reporting.{missing_translation},<translation>", "warning")
+            cprint(f"report.reporting.{missing_translation}", "warning")
     else:
         cprint("\n✅ ALL TRANSLATIONS FOUND!", "success")
 
@@ -72,9 +108,7 @@ def main():
     cprint("\n📊 SUMMARY BY FILE:", "info")
     for file, translation_labels in sorted(file_referencing_translations.items()):
         missing_in_file = [
-            translation_label
-            for translation_label in translation_labels
-            if translation_label not in translations
+            label for label in translation_labels if label not in translations
         ]
         status = "❌" if missing_in_file else "✅"
         cprint(

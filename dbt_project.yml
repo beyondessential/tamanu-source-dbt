@@ -1,5 +1,6 @@
 name: tamanu_source_dbt
 version: "2.37.0"
+
 config-version: 2
 
 profile: tamanu_source_dbt
@@ -23,7 +24,6 @@ macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
 clean-targets:
-  - compiled
   - dbt_packages
   - target
 
@@ -47,5 +47,5 @@ models:
         show: false
       +tags: [reports]
       
-tests:
+data_tests:
   +severity: warn

@@ -1,9 +1,12 @@
 select
+    to_char(ed.start_datetime, '{{ var("date_format") }}') as "{{ translate_label('encounterStartDate') }}",
+    to_char(ed.start_datetime, '{{ var("time_format") }}') as "{{ translate_label('encounterStartTime') }}",
     ed.display_id as "{{ translate_label('patientDisplayId') }}",
     ed.patient_name as "{{ translate_label('patientName') }}",
     ed.age as "{{ translate_label('patientAge') }}",
     concat_ws(', ', ed.location_group, ed.location) as "{{ translate_label('location') }}",
-    ed.diets as "{{ translate_label('encounterDiet') }}"
+    ed.diets as "{{ translate_label('encounterDiet') }}",
+    ed.allergies as "{{ translate_label('patientAllergies') }}"
 from {{ ref('ds__encounter_diets') }} ed
 where
     case

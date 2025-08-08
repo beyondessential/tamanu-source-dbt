@@ -53,7 +53,7 @@ jobs:
           set -x
           VERSION=${GITHUB_REF#refs/tags/v}
           VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
-          aws s3 cp report_translations.xlsx s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/report-translations-v$VERSION_WITH_ZERO_PATCH-standard.xlsx
+          aws s3 cp report_translations_standard.xlsx s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/report-translations-v$VERSION_WITH_ZERO_PATCH-standard.xlsx
 
       - name: Publish to meta-server
         run: |

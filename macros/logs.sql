@@ -3,6 +3,8 @@
         id as changelog_id,
         logged_at,
         updated_by_user_id,
+        record_created_at,
+        record_updated_at,
         record_id,
         record_data
     from {{ source("logs__tamanu", "changes") }}
