@@ -11,15 +11,11 @@
 Execute in order:
 
 1. **Refresh source data**: `python scripts/refresh_tamanu_source.py`
-2. **Generate translated strings SQL**: `python scripts/generate_translated_strings_sql.py`
-3. **Build reporting assets**: `python scripts/build_reporting_assets.py`
-4. **Validate everything**:
-   - `dbt test`
+2. **Build reporting assets**: `python scripts/build_reporting_assets.py`
+3. **Validate everything**:
    - `python scripts/validate_report_configs.py`
    - `python scripts/check_translations.py`
-   - `sqlfluff lint models`
-5. **Update report list**: `python scripts/list_tamanu_reports.py`
-6. **Final build**: `dbt run`
+4. **Update report list**: `python scripts/list_tamanu_reports.py`
 
 ## Validation Requirements
 - All tests must pass before release

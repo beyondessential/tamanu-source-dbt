@@ -14,7 +14,7 @@ select
     status as "{{ translate_label('labRequestStatus') }}",
     lab_test_panel as "{{ translate_label('labTestPanel') }}",
     lab_test_category as "{{ translate_label('labTestCategory') }}",
-    to_char(requested_datetime, '{{ var("datetime_format") }}')  as "{{ translate_label('labRequestDateTime') }}",
+    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
     requested_by as "{{ translate_label('labRequestClinician') }}",
     to_char(lab_request_published_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestPublishedDateTime') }}",
     to_char(lab_test_date, '{{ var("date_format") }}') as "{{ translate_label('labTestDate') }}",
