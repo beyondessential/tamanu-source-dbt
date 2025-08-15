@@ -21,7 +21,7 @@ def main():
         f"dbt run --profiles-dir config"
     )
     execute_command(
-        f"dbt docs generate --profiles-dir config"
+        f"dbt docs generate --profiles-dir config --static"
     )
     execute_command(
         f"dbt compile --profiles-dir config"
