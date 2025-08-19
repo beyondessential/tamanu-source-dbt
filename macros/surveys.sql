@@ -34,6 +34,7 @@
     {% set query %}
         SELECT 
             id,
+            coalesce(code, replace(replace(id, 'program-', ''), '-', '_')) as code,
             name
         FROM {{ source('tamanu', 'surveys') }}
         WHERE deleted_at IS NULL
@@ -44,7 +45,7 @@
     
     {% if execute %}
         {% for row in results %}
-            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=true) }}
+            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1] ~ "|" ~ row[2], info=true) }}
         {% endfor %}
     {% endif %}
 {% endmacro %} 

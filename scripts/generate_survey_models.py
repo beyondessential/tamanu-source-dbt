@@ -15,11 +15,11 @@ def main():
         surveys = get_surveys_from_deployment()
         total = len(surveys)
 
-        for index, (survey_id, survey_name) in enumerate(surveys, 1):
+        for index, (survey_id, survey_code, survey_name) in enumerate(surveys, 1):
             cprint(f"\n\nProgress: [{index}/{total}]", "warning")
             cprint(f"Creating: {survey_name}", "info")
             create_survey_model(survey_id)
-            generate_survey_doc(survey_id, survey_name)
+            generate_survey_doc(survey_id, survey_code, survey_name)
 
         cprint(f"Successfully generated {total} survey models!", "success")
 
