@@ -17,6 +17,7 @@
         sra.response_id, 
         e.patient_id,
         sr.start_datetime,
+        sr.end_datetime,
         sr.result_text
     {%- for id, code in zip(columns['id'], columns['code']) %},
             MAX(CASE WHEN sra.data_element_id = '{{ id }}' THEN NULLIF(sra.body,'') END) AS "{{ code }}"
@@ -27,13 +28,14 @@
     JOIN {{ ref('encounters')}} e
     ON e.id = sr.encounter_id
     WHERE sr.survey_id = '{{ survey_id }}'
-    GROUP BY sra.response_id, sr.encounter_id, sr.start_datetime, sr.result_text, e.patient_id
+    GROUP BY sra.response_id, sr.encounter_id, sr.start_datetime, sr.end_datetime, sr.result_text, e.patient_id
 {% endmacro %}
 
 {% macro get_surveys_list() %}
     {% set query %}
         SELECT 
             id,
+            coalesce(code, replace(replace(id, 'program-', ''), '-', '_')) as code,
             name
         FROM {{ source('tamanu', 'surveys') }}
         WHERE deleted_at IS NULL
@@ -44,7 +46,7 @@
     
     {% if execute %}
         {% for row in results %}
-            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=true) }}
+            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1] ~ "|" ~ row[2], info=true) }}
         {% endfor %}
     {% endif %}
 {% endmacro %} 
