@@ -1,5 +1,5 @@
 {% macro get_survey_columns(survey_id) %}
-    SELECT pde.id, pde.name, pde.code
+    SELECT pde.id, pde.name, replace(pde.code,'-','_') as code
     FROM {{ source('tamanu', 'survey_screen_components') }} ssc
     JOIN {{ source('tamanu', 'program_data_elements') }} pde
     ON ssc.data_element_id = pde.id
