@@ -58,7 +58,7 @@ def get_survey_columns_from_deployment(survey_id):
         for line in (result.stdout + result.stderr).split("\n"):
             if "COLUMN_DATA:" in line:
                 parts = line.split("COLUMN_DATA:")[1].split("|")
-                if len(parts) == 2:
+                if len(parts) == 3:
                     columns.append(tuple(part.strip() for part in parts))
 
         return columns
@@ -99,15 +99,15 @@ models:
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
     doc = ""
-    for code, name in columns:
+    for id, code, name in columns:
         doc += f"""
-{{% docs survey_{survey_code}__{code} %}}
+{{% docs {id} %}}
 {name.replace('"', "'")}
 {{% enddocs %}}
 """
         yml += f"""
       - name: {code}
-        description: '{{{{ doc("survey_{survey_code}__{code}") }}}}'"""
+        description: '{{{{ doc("{id}") }}}}'"""
 
     md_file = SURVEYS_DIR / f"{survey_id}.md"
     write_file(str(md_file), doc.strip() + "\n")
