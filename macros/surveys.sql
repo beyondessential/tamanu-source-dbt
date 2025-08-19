@@ -1,11 +1,15 @@
 {% macro get_survey_columns(survey_id) %}
-    SELECT pde.id, pde.name, replace(pde.code,'-','_') as code
+    SELECT 
+        replace(concat(ssc.survey_id, '_', pde.code), '-', '_') as id, 
+        replace(pde.code,'-','_') as code,
+        pde.name 
     FROM {{ source('tamanu', 'survey_screen_components') }} ssc
     JOIN {{ source('tamanu', 'program_data_elements') }} pde
     ON ssc.data_element_id = pde.id
     WHERE ssc.survey_id = '{{ survey_id }}'
     AND ssc.deleted_at IS null
     AND pde.type != 'Instruction'
+    AND pde.deleted_at IS NULL
     ORDER BY ssc.screen_index, ssc.component_index
 {% endmacro %}
 
@@ -57,7 +61,7 @@
     
     {% if execute %}
         {% for row in results %}
-            {{ log("COLUMN_DATA:" ~ row[2] ~ "|" ~ row[1], info=true) }}
+            {{ log("COLUMN_DATA:" ~ row[0] ~ "|" ~ row[1] ~ "|" ~ row[2], info=true) }}
         {% endfor %}
     {% endif %}
 {% endmacro %}
