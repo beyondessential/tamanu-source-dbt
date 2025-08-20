@@ -25,7 +25,7 @@ def get_surveys_from_deployment():
         for line in (result.stdout + result.stderr).split("\n"):
             if "SURVEY_DATA:" in line:
                 parts = line.split("SURVEY_DATA:")[1].split("|")
-                if len(parts) == 3:
+                if len(parts) == 2:
                     surveys.append(tuple(part.strip() for part in parts))
 
         return surveys
@@ -68,7 +68,7 @@ def get_survey_columns_from_deployment(survey_id):
         return columns
 
 
-def generate_survey_doc(survey_id, survey_code, survey_name):
+def generate_survey_doc(survey_id, survey_name):
     """
     Create a YML documentation file and MD documentation file for a survey.
     Args:
@@ -80,6 +80,8 @@ def generate_survey_doc(survey_id, survey_code, survey_name):
     """
     ensure_directory_exists(str(SURVEYS_DIR))
     columns = get_survey_columns_from_deployment(survey_id)
+
+    survey_id = survey_id.replace("-", "_")
 
     yml = f"""version: 2
 
@@ -128,7 +130,7 @@ def create_survey_model(survey_id):
     """
     ensure_directory_exists(str(SURVEYS_DIR))
 
-    model = f"{survey_id}.sql"
+    model = f"{survey_id.replace('-', '_')}.sql"
     path = SURVEYS_DIR / model
 
     content = f"({{{{ get_survey('{survey_id}') }}}})"
