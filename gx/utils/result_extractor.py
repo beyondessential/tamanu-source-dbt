@@ -113,23 +113,3 @@ def save_validation_results(validation_results: Dict[str, Any], output_file: str
     except Exception as e:
         print(f"❌ Failed to save validation results: {e}")
         return False
-
-
-def run_validation_and_extract_results(context, checkpoint_name="tamanu_data_quality_checkpoint", 
-                                     save_to_file: bool = False, output_file: str = "validation_results.json") -> Dict[str, Any]:
-    """Run validations and extract results"""
-    print("🚀 Running validations and extracting results...")
-    try:
-        checkpoint = context.checkpoints.get(checkpoint_name)
-        checkpoint_result = checkpoint.run()
-        results = extract_validation_results(checkpoint_result)
-        print_validation_summary(results)
-        
-        if save_to_file:
-            save_validation_results(results, output_file)
-        
-        return results
-    except Exception as e:
-        error_result = {"error": str(e), "success": False, "run_time": datetime.now().isoformat()}
-        print_validation_summary(error_result)
-        return error_result
