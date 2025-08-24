@@ -11,7 +11,7 @@ def main():
     """Setup GX assets, suites, and validation definitions"""
     parser = argparse.ArgumentParser(description="GX setup - create assets, suites, and validation definitions")
     parser.add_argument("--refresh-batches", action="store_true", help="Refresh batch definitions")
-    parser.add_argument("--datasource", default="tamanu", help="Datasource name (default: tamanu_rl)")
+    parser.add_argument("--datasource", default="tamanu", help="Datasource name (default: tamanu)")
     args = parser.parse_args()
 
     root_dir = Path(__file__).parent.parent
