@@ -14,7 +14,7 @@ def create_validation_definition(context, data_source, asset_name, suite_name):
         
         try:
             context.validation_definitions.delete(validation_name)
-        except:
+        except Exception:
             pass
             
         context.validation_definitions.add(
