@@ -1,0 +1,143 @@
+{
+  "expectations": [
+    {
+      "id": "aeb05002-5524-4a6f-9bbd-dc9037a18717",
+      "kwargs": {
+        "base_query": "select count(*) from reporting.ds__sensitive_lab_requests",
+        "comparison_data_source_name": "tamanu_rl",
+        "comparison_query": "\n    select count(distinct lr.id)\n    from lab_requests lr\n    join lab_tests lt on lt.lab_request_id = lr.id\n    join lab_test_types ltt on ltt.id = lt.lab_test_type_id\n    where ltt.is_sensitive"
+      },
+      "meta": {
+        "description": "Lab requests dataset should equal the number of distinct request_id in base lab requests table"
+      },
+      "type": "expect_query_results_to_match_comparison"
+    },
+    {
+      "id": "173c14ad-30dc-48f4-86af-fe4e18f9716d",
+      "kwargs": {
+        "column": "patient_id"
+      },
+      "meta": {
+        "description": "Patient ID should not be null"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "00f19041-d074-4d72-8299-509dfec85d96",
+      "kwargs": {
+        "column": "status_id"
+      },
+      "meta": {
+        "description": "Status ID should not be null"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "35d58f0a-0bf9-4d30-ae6d-912c51460977",
+      "kwargs": {
+        "column": "status_id",
+        "value_set": [
+          "reception_pending",
+          "results_pending",
+          "to_be_verified",
+          "verified",
+          "published",
+          "cancelled",
+          "deleted",
+          "sample-not-collected",
+          "entered-in-error"
+        ]
+      },
+      "meta": {
+        "description": "Status ID should be one of the valid lab request statuses"
+      },
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "63f22f63-4390-4989-ba9f-7dbbe83c863a",
+      "kwargs": {
+        "column": "requested_datetime"
+      },
+      "meta": {
+        "description": "Requested datetime should not be null"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a88a967a-82b0-4376-91c0-44a7fa234952",
+      "kwargs": {
+        "unexpected_rows_query": "\nselect * \nfrom {batch} \nwhere (collected_datetime notnull and requested_datetime > collected_datetime)\n    or (completed_datetime notnull and requested_datetime > completed_datetime)\n    or (collected_datetime notnull and completed_datetime notnull and collected_datetime > completed_datetime)"
+      },
+      "meta": {
+        "description": "Workflow datetimes should be in correct order: requested <= collected <= completed"
+      },
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "3546a009-5044-4c52-936a-41350f127cc9",
+      "kwargs": {
+        "column": "requested_by_id"
+      },
+      "meta": {
+        "description": "Request by user ID should not be null"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "60bdbef7-2796-4cc5-b7fc-c1a2d1dd167f",
+      "kwargs": {
+        "column": "requesting_department_id"
+      },
+      "meta": {
+        "description": "Requesting department ID should not be null"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "165037fd-c752-4420-b795-a27e1f6b31b0",
+      "kwargs": {
+        "unexpected_rows_query": "\nselect * \nfrom {batch} lr\nleft join reporting.reference_data rd on rd.id = lr.priority_id\nwhere rd.id is null"
+      },
+      "meta": {
+        "description": "Priority ID should match a valid reference data entry"
+      },
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "e54641e8-c021-4cd3-9510-32e1d93b26d7",
+      "kwargs": {
+        "unexpected_rows_query": "\nselect * \nfrom {batch} lr\nleft join reporting.reference_data rd on rd.id = lr.lab_test_category_id\nwhere rd.id is null"
+      },
+      "meta": {
+        "description": "Lab test category ID should match a valid reference data entry"
+      },
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "dfbaa901-2418-449f-93b4-d42bc1268d64",
+      "kwargs": {
+        "column": "tests"
+      },
+      "meta": {
+        "description": "Tests should not be null - every lab request should have associated tests"
+      },
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "499f09c0-038e-465b-86f1-558baaa6ef69",
+      "kwargs": {
+        "unexpected_rows_query": "\nselect * \nfrom {batch}\nwhere not (collected_datetime is not null and collected_by_id is not null and specimen_type is not null and site is not null)\n    or not (collected_datetime is null and collected_by_id is null and specimen_type is null and site is null)"
+      },
+      "meta": {
+        "description": "Collection fields should be all present or all null together"
+      },
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "58381027-6821-400f-8f7e-ed8d593ec6fc",
+  "meta": {
+    "great_expectations_version": "1.5.9"
+  },
+  "name": "ds__sensitive_lab_requests_expectations",
+  "notes": null
+}

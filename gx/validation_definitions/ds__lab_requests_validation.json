@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "343457e8-230b-4d38-9558-1f9349e7d562",
+      "name": "ds__lab_requests"
+    },
+    "batch_definition": {
+      "id": "b5384ab5-8cae-4ab4-8a18-4faecf787474",
+      "name": "ds__lab_requests_batch_definition"
+    },
+    "datasource": {
+      "id": "00aaa17b-fb32-434a-a2a9-68dc4d946827",
+      "name": "tamanu"
+    }
+  },
+  "id": "1a95b027-8dea-4443-b4e2-75f6a39d3422",
+  "name": "ds__lab_requests_validation",
+  "suite": {
+    "id": "510f2bd0-f345-4330-bf42-209d69ccaa5c",
+    "name": "ds__lab_requests_expectations"
+  }
+}

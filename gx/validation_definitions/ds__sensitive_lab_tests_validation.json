@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "f13505e5-cdcf-4209-a559-9e334eafbac7",
+      "name": "ds__sensitive_lab_tests"
+    },
+    "batch_definition": {
+      "id": "57220508-bc03-47bd-9e77-335e48d1c6d0",
+      "name": "ds__sensitive_lab_tests_batch_definition"
+    },
+    "datasource": {
+      "id": "00aaa17b-fb32-434a-a2a9-68dc4d946827",
+      "name": "tamanu"
+    }
+  },
+  "id": "e64a5127-eceb-4469-a5d5-a60f7081debb",
+  "name": "ds__sensitive_lab_tests_validation",
+  "suite": {
+    "id": "ba7b01b2-27e5-4a88-be0c-8071f15c6c26",
+    "name": "ds__sensitive_lab_tests_expectations"
+  }
+}

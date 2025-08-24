@@ -1,0 +1,911 @@
+# Welcome to Great Expectations! Always know what to expect from your data.
+#
+# Here you can define datasources, batch kwargs generators, integrations and
+# more. This file is intended to be committed to your repo. For help with
+# configuration please:
+#   - Read our docs: https://docs.greatexpectations.io/docs/guides/connecting_to_your_data/connect_to_data_overview/#2-configure-your-datasource
+#   - Join our slack channel: http://greatexpectations.io/slack
+
+# config_version refers to the syntactic version of this config file, and is used in maintaining backwards compatibility
+# It is auto-generated and usually does not need to be changed.
+config_version: 4.0
+
+# This config file supports variable substitution which enables: 1) keeping
+# secrets out of source control & 2) environment-based configuration changes
+# such as staging vs prod.
+#
+# When GX encounters substitution syntax (like `my_key: ${my_value}` or
+# `my_key: $my_value`) in the great_expectations.yml file, it will attempt
+# to replace the value of `my_key` with the value from an environment
+# variable `my_value` or a corresponding key read from this config file,
+# which is defined through the `config_variables_file_path`.
+# Environment variables take precedence over variables defined here.
+#
+# Substitution values defined here can be a simple (non-nested) value,
+# nested value such as a dictionary, or an environment variable (i.e. ${ENV_VAR})
+#
+#
+# https://docs.greatexpectations.io/docs/guides/setup/configuring_data_contexts/how_to_configure_credentials
+
+
+config_variables_file_path: uncommitted/config_variables.yml
+
+# The plugins_directory will be added to your python path for custom modules
+# used to override and extend Great Expectations.
+plugins_directory: plugins/
+
+stores:
+# Stores are configurable places to store things like Expectations, Validations
+# Data Docs, and more. These are for advanced users only - most users can simply
+# leave this section alone.
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: expectations/
+
+  validation_results_store:
+    class_name: ValidationResultsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
+      base_directory: checkpoints/
+
+  validation_definition_store:
+    class_name: ValidationDefinitionStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: validation_definitions/
+
+expectations_store_name: expectations_store
+validation_results_store_name: validation_results_store
+checkpoint_store_name: checkpoint_store
+
+data_docs_sites:
+  # Data Docs make it simple to visualize data quality in your project. These
+  # include Expectations, Validations & Profiles. The are built for all
+  # Datasources from JSON artifacts in the local repo including validations &
+  # profiles from the uncommitted directory. Read more at https://docs.greatexpectations.io/docs/terms/data_docs
+  local_site:
+    class_name: SiteBuilder
+    show_how_to_buttons: true
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+fluent_datasources:
+  tamanu_release:
+    type: postgres
+    id: 9b80ff7a-8d87-48f6-9689-3f8e3c3642f3
+    assets:
+      ds__admissions:
+        type: table
+        id: 557380fd-8b37-4faa-b453-52f8ef2bd27b
+        batch_metadata: {}
+        batch_definitions:
+          ds__admissions_batch_definition:
+            id: 7892be48-6fa8-4ae9-ac29-b7fe4d4fe1c8
+            partitioner:
+        table_name: ds__admissions
+        schema_name: reporting
+      ds__births:
+        type: table
+        id: 882c31d6-cd72-4759-a8e7-4472fbdcae06
+        batch_metadata: {}
+        batch_definitions:
+          ds__births_batch_definition:
+            id: c009c7f7-4f86-41ea-b633-899e22fbf5ed
+            partitioner:
+        table_name: ds__births
+        schema_name: reporting
+      ds__deaths:
+        type: table
+        id: 6dbe01cf-34c6-4493-afba-035de6f22ece
+        batch_metadata: {}
+        batch_definitions:
+          ds__deaths_batch_definition:
+            id: 480c15b6-dfec-4503-9496-6ef31b8dc652
+            partitioner:
+        table_name: ds__deaths
+        schema_name: reporting
+      ds__diagnoses:
+        type: table
+        id: 85ed583d-93e7-4f75-b277-f2ac6e8f9fe7
+        batch_metadata: {}
+        batch_definitions:
+          ds__diagnoses_batch_definition:
+            id: 41acb3d6-1075-4be6-90cf-7682f4e70668
+            partitioner:
+        table_name: ds__diagnoses
+        schema_name: reporting
+      ds__encounter_diets:
+        type: table
+        id: a9aab91e-b7d2-43c6-a1e2-2822c81fd18c
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_diets_batch_definition:
+            id: 23cbe16b-54f7-40ca-af4f-ce2d600cc0f0
+            partitioner:
+        table_name: ds__encounter_diets
+        schema_name: reporting
+      ds__encounter_summary:
+        type: table
+        id: 29708a2a-7300-4293-91b7-f1b1e501679b
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_summary_batch_definition:
+            id: 8e47e059-6711-41db-b7be-d03ece66beb4
+            partitioner:
+        table_name: ds__encounter_summary
+        schema_name: reporting
+      ds__imaging_requests:
+        type: table
+        id: 88640bda-05cd-4458-b079-4bed596d0a72
+        batch_metadata: {}
+        batch_definitions:
+          ds__imaging_requests_batch_definition:
+            id: f50fcd17-d780-467b-9336-6daab6d60a13
+            partitioner:
+        table_name: ds__imaging_requests
+        schema_name: reporting
+      ds__invoicing:
+        type: table
+        id: 3ac583c6-8cb7-46e6-99a4-730ddae1ce6b
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_batch_definition:
+            id: 1289bbca-1b99-42e1-94bd-98292e120225
+            partitioner:
+        table_name: ds__invoicing
+        schema_name: reporting
+      ds__invoicing_pending:
+        type: table
+        id: 175c1d2c-2d9c-4051-ae9c-9c0773e7899d
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_pending_batch_definition:
+            id: 9559c1db-932b-41c5-9dd9-7cda09537d2f
+            partitioner:
+        table_name: ds__invoicing_pending
+        schema_name: reporting
+      ds__invoicing_summary_insurer:
+        type: table
+        id: b5308695-1f6a-41e9-af54-18b517d2c832
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_summary_insurer_batch_definition:
+            id: 874b38d9-6afc-4381-983e-6eae0d85f6a7
+            partitioner:
+        table_name: ds__invoicing_summary_insurer
+        schema_name: reporting
+      ds__invoicing_transactions_patient:
+        type: table
+        id: 5779387e-828e-442a-b202-a403a484e608
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_transactions_patient_batch_definition:
+            id: b958311d-7d13-4926-bbdc-50b2e64d1eeb
+            partitioner:
+        table_name: ds__invoicing_transactions_patient
+        schema_name: reporting
+      ds__lab_requests:
+        type: table
+        id: ce8c0a8e-c41c-471c-a27e-76826ff2cbb5
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_requests_batch_definition:
+            id: ec6e0227-c4ab-4cb1-905c-32610d77f3d4
+            partitioner:
+        table_name: ds__lab_requests
+        schema_name: reporting
+      ds__lab_tests:
+        type: table
+        id: ca096a4f-08aa-4b34-a6f4-e7b0cda5fcf8
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_tests_batch_definition:
+            id: 45af3c48-f226-48ca-9425-2840571b230b
+            partitioner:
+        table_name: ds__lab_tests
+        schema_name: reporting
+      ds__location_bookings:
+        type: table
+        id: 25313dfe-058c-4934-ba37-420f45f436b7
+        batch_metadata: {}
+        batch_definitions:
+          ds__location_bookings_batch_definition:
+            id: 356b7f9d-efdc-49e9-bd41-f032e65e4f87
+            partitioner:
+        table_name: ds__location_bookings
+        schema_name: reporting
+      ds__ongoing_conditions:
+        type: table
+        id: 9ae7316a-41f8-4ca6-af92-7303e123c370
+        batch_metadata: {}
+        batch_definitions:
+          ds__ongoing_conditions_batch_definition:
+            id: cd15b03d-b28b-4016-a37a-da3bc113ccc9
+            partitioner:
+        table_name: ds__ongoing_conditions
+        schema_name: reporting
+      ds__outpatient_appointments:
+        type: table
+        id: dcb4d229-4216-4594-9806-51e47accb452
+        batch_metadata: {}
+        batch_definitions:
+          ds__outpatient_appointments_batch_definition:
+            id: 6d38a02f-cf82-4302-97a8-7a63526265c0
+            partitioner:
+        table_name: ds__outpatient_appointments
+        schema_name: reporting
+      ds__patients:
+        type: table
+        id: 0a9291b7-6e66-4c89-9ed7-5ca55b75db64
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_batch_definition:
+            id: 70abdd13-5f9a-4957-807c-00f21cef527f
+            partitioner:
+        table_name: ds__patients
+        schema_name: reporting
+      ds__patients_access_logs:
+        type: table
+        id: 3e2c2b0e-5360-4d54-9cd7-222350fc86d4
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_access_logs_batch_definition:
+            id: 1e887882-fd25-456a-ac24-197188adca57
+            partitioner:
+        table_name: ds__patients_access_logs
+        schema_name: reporting
+      ds__patients_change_logs:
+        type: table
+        id: e1b3ef45-153a-4d0c-abc6-21c189633630
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_change_logs_batch_definition:
+            id: 5701952f-64a8-456a-b0a3-239bd01344e6
+            partitioner:
+        table_name: ds__patients_change_logs
+        schema_name: reporting
+      ds__patient_program_registrations:
+        type: table
+        id: bf85c109-d46d-4c59-aeaa-645b556a4049
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_program_registrations_batch_definition:
+            id: e3041ebf-17f1-4a43-a951-862fa0382782
+            partitioner:
+        table_name: ds__patient_program_registrations
+        schema_name: reporting
+      ds__patient_vaccinations_upcoming:
+        type: table
+        id: 78c3d700-3b8a-46c4-86d4-0bf34460f877
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_vaccinations_upcoming_batch_definition:
+            id: 22c95746-52d3-4371-9598-33237184ad0b
+            partitioner:
+        table_name: ds__patient_vaccinations_upcoming
+        schema_name: reporting
+      ds__procedures:
+        type: table
+        id: 77ff83fb-6616-462d-8be8-0b1aa1b0f77c
+        batch_metadata: {}
+        batch_definitions:
+          ds__procedures_batch_definition:
+            id: df9530bf-cc84-484c-820b-c23faa7f9d7a
+            partitioner:
+        table_name: ds__procedures
+        schema_name: reporting
+      ds__referrals:
+        type: table
+        id: 01cf9091-c03f-4abe-ab2d-1f6f351f653a
+        batch_metadata: {}
+        batch_definitions:
+          ds__referrals_batch_definition:
+            id: bd1e370b-9c06-4922-9e7e-c42cb68f2251
+            partitioner:
+        table_name: ds__referrals
+        schema_name: reporting
+      ds__sensitive_lab_requests:
+        type: table
+        id: 9d4eadee-324d-410c-9826-bd9744315635
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_requests_batch_definition:
+            id: f38f917c-5ea9-4afb-9d92-50f1c56dd4ab
+            partitioner:
+        table_name: ds__sensitive_lab_requests
+        schema_name: reporting
+      ds__sensitive_lab_tests:
+        type: table
+        id: d0dbc337-1ecc-4a86-8710-0b628dcbc557
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_tests_batch_definition:
+            id: 5da434db-f1f7-4b06-8106-01871eb42a37
+            partitioner:
+        table_name: ds__sensitive_lab_tests
+        schema_name: reporting
+      ds__user_audit:
+        type: table
+        id: d656afaf-8cbd-4846-b0d3-779997152e75
+        batch_metadata: {}
+        batch_definitions:
+          ds__user_audit_batch_definition:
+            id: eee8dd74-da46-47b6-8024-92e45e01cf4a
+            partitioner:
+        table_name: ds__user_audit
+        schema_name: reporting
+      ds__vaccinations:
+        type: table
+        id: b9ba3f50-d245-49e5-b208-b6d52c017544
+        batch_metadata: {}
+        batch_definitions:
+          ds__vaccinations_batch_definition:
+            id: b47309ed-dede-4fde-8a43-71d535e353b8
+            partitioner:
+        table_name: ds__vaccinations
+        schema_name: reporting
+    connection_string: ${TAMANU_RL_DB_CONNECTION_STRING}
+  tamanu:
+    type: postgres
+    id: 00aaa17b-fb32-434a-a2a9-68dc4d946827
+    assets:
+      ds__admissions:
+        type: table
+        id: 28a7527f-3993-4d18-9b3f-cf2e92934ff8
+        batch_metadata: {}
+        batch_definitions:
+          ds__admissions_batch_definition:
+            id: fe2c0b0b-07b5-4cd4-ae0a-9bb85aea2466
+            partitioner:
+        table_name: ds__admissions
+        schema_name: reporting
+      ds__births:
+        type: table
+        id: 893da2fd-3b04-4a87-9b00-e7db2b481219
+        batch_metadata: {}
+        batch_definitions:
+          ds__births_batch_definition:
+            id: 3d9aa1a2-235d-4fad-a1dd-cb8d4fa0fe44
+            partitioner:
+        table_name: ds__births
+        schema_name: reporting
+      ds__deaths:
+        type: table
+        id: e1c1244b-16b6-4527-870b-57debf7251da
+        batch_metadata: {}
+        batch_definitions:
+          ds__deaths_batch_definition:
+            id: fb49dcb0-24d9-43d1-9b3d-8f19e89d5be1
+            partitioner:
+        table_name: ds__deaths
+        schema_name: reporting
+      ds__diagnoses:
+        type: table
+        id: b4afc650-4a10-46c5-916e-53cfdf4d029a
+        batch_metadata: {}
+        batch_definitions:
+          ds__diagnoses_batch_definition:
+            id: 98d2beaa-0983-41a4-beec-6c8989c4910d
+            partitioner:
+        table_name: ds__diagnoses
+        schema_name: reporting
+      ds__encounter_diets:
+        type: table
+        id: b196f106-a019-403e-acbf-a7d9000513b8
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_diets_batch_definition:
+            id: e5bbfa3c-e573-4f31-ae4a-984d7597652c
+            partitioner:
+        table_name: ds__encounter_diets
+        schema_name: reporting
+      ds__encounter_summary:
+        type: table
+        id: ff4fe021-6242-4cc5-bcbb-c6926e436e4a
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_summary_batch_definition:
+            id: a2e753a2-1530-4373-aca0-ee9ebed09526
+            partitioner:
+        table_name: ds__encounter_summary
+        schema_name: reporting
+      ds__imaging_requests:
+        type: table
+        id: cd38ed14-5c34-4016-a5ca-39b305d8fbda
+        batch_metadata: {}
+        batch_definitions:
+          ds__imaging_requests_batch_definition:
+            id: 1cbba53f-3eff-4d28-a3bc-9e415018b26e
+            partitioner:
+        table_name: ds__imaging_requests
+        schema_name: reporting
+      ds__invoicing:
+        type: table
+        id: 5840b178-4fde-4d25-b5da-456029992653
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_batch_definition:
+            id: e0d58615-dfb3-44df-8cce-fc8073d0dc36
+            partitioner:
+        table_name: ds__invoicing
+        schema_name: reporting
+      ds__invoicing_pending:
+        type: table
+        id: 59bf1961-8d00-4c4a-bfdc-0e8277644631
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_pending_batch_definition:
+            id: 918f5692-a27b-43ec-aa55-6518b6ca3659
+            partitioner:
+        table_name: ds__invoicing_pending
+        schema_name: reporting
+      ds__invoicing_summary_insurer:
+        type: table
+        id: b24affde-4eab-4660-81c1-bd9e05ba5ded
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_summary_insurer_batch_definition:
+            id: ee1a458b-cb66-4f78-9ae2-a3e5a8a74645
+            partitioner:
+        table_name: ds__invoicing_summary_insurer
+        schema_name: reporting
+      ds__invoicing_transactions_patient:
+        type: table
+        id: e602f9d5-c177-418d-8d5b-68b19a1dac10
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_transactions_patient_batch_definition:
+            id: 9cdb9f91-b7ad-4d40-9c43-58fac4052cde
+            partitioner:
+        table_name: ds__invoicing_transactions_patient
+        schema_name: reporting
+      ds__lab_requests:
+        type: table
+        id: 343457e8-230b-4d38-9558-1f9349e7d562
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_requests_batch_definition:
+            id: b5384ab5-8cae-4ab4-8a18-4faecf787474
+            partitioner:
+        table_name: ds__lab_requests
+        schema_name: reporting
+      ds__lab_tests:
+        type: table
+        id: f62b6933-baeb-4bab-a92d-5f2d78f21629
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_tests_batch_definition:
+            id: f0bdc995-ad25-47c0-9f14-67b066d1d344
+            partitioner:
+        table_name: ds__lab_tests
+        schema_name: reporting
+      ds__location_bookings:
+        type: table
+        id: 62f9bfbb-851d-4090-b022-b24f6c954135
+        batch_metadata: {}
+        batch_definitions:
+          ds__location_bookings_batch_definition:
+            id: a20f855a-f89a-45e8-a7b1-389b03840634
+            partitioner:
+        table_name: ds__location_bookings
+        schema_name: reporting
+      ds__ongoing_conditions:
+        type: table
+        id: 6ebc3d16-3d8c-4613-957f-504509ad6524
+        batch_metadata: {}
+        batch_definitions:
+          ds__ongoing_conditions_batch_definition:
+            id: 885d77e9-3a17-4632-8f3f-d569f5188361
+            partitioner:
+        table_name: ds__ongoing_conditions
+        schema_name: reporting
+      ds__outpatient_appointments:
+        type: table
+        id: 3c228d59-6bf1-4844-a039-598ae9824d91
+        batch_metadata: {}
+        batch_definitions:
+          ds__outpatient_appointments_batch_definition:
+            id: d080600c-3dff-448c-8079-8cb9e73fc27c
+            partitioner:
+        table_name: ds__outpatient_appointments
+        schema_name: reporting
+      ds__patients:
+        type: table
+        id: e0bd378c-eeb1-4d24-9d01-b4bb897b9481
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_batch_definition:
+            id: d2c9224f-c399-429a-876f-7fb9ff43d6de
+            partitioner:
+        table_name: ds__patients
+        schema_name: reporting
+      ds__patients_access_logs:
+        type: table
+        id: 8346a8b6-dc3d-4305-ab34-d6089d470453
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_access_logs_batch_definition:
+            id: 23293cfe-07fa-4505-b055-857f568ebef2
+            partitioner:
+        table_name: ds__patients_access_logs
+        schema_name: reporting
+      ds__patients_change_logs:
+        type: table
+        id: 11d01d7e-2c1c-48af-bea0-65a5e2f6daea
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_change_logs_batch_definition:
+            id: 5f71616e-ea57-475a-be95-a09cd43245ad
+            partitioner:
+        table_name: ds__patients_change_logs
+        schema_name: reporting
+      ds__patient_program_registrations:
+        type: table
+        id: 70a531fc-d0ce-4aa1-b842-02840c6824cc
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_program_registrations_batch_definition:
+            id: 324924c2-05f1-4be3-96fc-34d3c1202282
+            partitioner:
+        table_name: ds__patient_program_registrations
+        schema_name: reporting
+      ds__patient_vaccinations_upcoming:
+        type: table
+        id: 0b31011b-efbc-41e7-9a4f-1e7eae6c988e
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_vaccinations_upcoming_batch_definition:
+            id: fd94f097-26ab-4217-a228-2e685e54b610
+            partitioner:
+        table_name: ds__patient_vaccinations_upcoming
+        schema_name: reporting
+      ds__procedures:
+        type: table
+        id: d5f3f583-6ab6-4f73-a301-0ea629391ffc
+        batch_metadata: {}
+        batch_definitions:
+          ds__procedures_batch_definition:
+            id: 9176a9c5-96fa-48b3-a098-7db4df8ba4f0
+            partitioner:
+        table_name: ds__procedures
+        schema_name: reporting
+      ds__referrals:
+        type: table
+        id: ae1bb902-c2c7-477d-88d6-352cbde76535
+        batch_metadata: {}
+        batch_definitions:
+          ds__referrals_batch_definition:
+            id: d1f92e16-72fd-426d-b020-b66a961b78a4
+            partitioner:
+        table_name: ds__referrals
+        schema_name: reporting
+      ds__sensitive_lab_requests:
+        type: table
+        id: 8a013e2f-7448-4009-a3ef-c0ed3e1294bc
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_requests_batch_definition:
+            id: a0f6f51c-5ff3-4e1f-afb0-7e4b37f73e05
+            partitioner:
+        table_name: ds__sensitive_lab_requests
+        schema_name: reporting
+      ds__sensitive_lab_tests:
+        type: table
+        id: f13505e5-cdcf-4209-a559-9e334eafbac7
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_tests_batch_definition:
+            id: 57220508-bc03-47bd-9e77-335e48d1c6d0
+            partitioner:
+        table_name: ds__sensitive_lab_tests
+        schema_name: reporting
+      ds__user_audit:
+        type: table
+        id: 7bbd40c7-7300-43ee-8f49-afbc94ebd6b8
+        batch_metadata: {}
+        batch_definitions:
+          ds__user_audit_batch_definition:
+            id: 94bb2cc3-6419-4067-848e-7e1571dfbf86
+            partitioner:
+        table_name: ds__user_audit
+        schema_name: reporting
+      ds__vaccinations:
+        type: table
+        id: 528f9b69-5b4e-4e4b-900e-158de24c0408
+        batch_metadata: {}
+        batch_definitions:
+          ds__vaccinations_batch_definition:
+            id: 4bf771bf-12dd-48e7-aa80-0ceba8688d4f
+            partitioner:
+        table_name: ds__vaccinations
+        schema_name: reporting
+    connection_string: ${TAMANU_DB_CONNECTION_STRING}
+  tamanu_rl:
+    type: postgres
+    id: 76422622-6032-4ab9-aa00-e68f41e04c40
+    assets:
+      ds__admissions:
+        type: table
+        id: e1e503cf-b319-4da7-9611-2327aa8c60ee
+        batch_metadata: {}
+        batch_definitions:
+          ds__admissions_batch_definition:
+            id: fa6ac4e7-d1fc-42aa-962f-6058657b8673
+            partitioner:
+        table_name: ds__admissions
+        schema_name: reporting
+      ds__births:
+        type: table
+        id: 9a641f52-6a4d-4ae6-9b99-88c6c7886ca2
+        batch_metadata: {}
+        batch_definitions:
+          ds__births_batch_definition:
+            id: ddfec87a-b42c-4de7-96e8-277bd8ea2b44
+            partitioner:
+        table_name: ds__births
+        schema_name: reporting
+      ds__deaths:
+        type: table
+        id: 13e2336f-21d5-46bb-8bef-e7139b9f95b5
+        batch_metadata: {}
+        batch_definitions:
+          ds__deaths_batch_definition:
+            id: bd681859-0ab7-4c66-9f58-e93445aec737
+            partitioner:
+        table_name: ds__deaths
+        schema_name: reporting
+      ds__diagnoses:
+        type: table
+        id: 63da5f8f-fce4-4999-b894-8e3afe5b2ad7
+        batch_metadata: {}
+        batch_definitions:
+          ds__diagnoses_batch_definition:
+            id: 693c3ad2-f3cd-44e5-91d1-e1658a2adc46
+            partitioner:
+        table_name: ds__diagnoses
+        schema_name: reporting
+      ds__encounter_diets:
+        type: table
+        id: a672760b-8fde-407a-a330-0820df4ad5d5
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_diets_batch_definition:
+            id: 2c7f7153-0387-4fa3-9b6a-0dfa9435f837
+            partitioner:
+        table_name: ds__encounter_diets
+        schema_name: reporting
+      ds__encounter_summary:
+        type: table
+        id: c696d23e-89c6-48bd-a3e5-d8b8ef54e527
+        batch_metadata: {}
+        batch_definitions:
+          ds__encounter_summary_batch_definition:
+            id: bdb8aca0-cc20-4bea-b87f-9ee20137b7c5
+            partitioner:
+        table_name: ds__encounter_summary
+        schema_name: reporting
+      ds__imaging_requests:
+        type: table
+        id: 2c01e652-5acc-4cf8-9574-e93fc2368f89
+        batch_metadata: {}
+        batch_definitions:
+          ds__imaging_requests_batch_definition:
+            id: a0031f72-5f1d-49e1-b85a-ff514d42d0b5
+            partitioner:
+        table_name: ds__imaging_requests
+        schema_name: reporting
+      ds__invoicing:
+        type: table
+        id: 953bd26c-43ee-4c1f-9b90-ee135949a61e
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_batch_definition:
+            id: b8155cad-79ea-496f-8424-beeb76c0c502
+            partitioner:
+        table_name: ds__invoicing
+        schema_name: reporting
+      ds__invoicing_pending:
+        type: table
+        id: 5f0a6dd8-f6d6-424a-8c16-09b2047de027
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_pending_batch_definition:
+            id: 8d83698b-0241-4900-9f5a-c58ba90351e4
+            partitioner:
+        table_name: ds__invoicing_pending
+        schema_name: reporting
+      ds__invoicing_summary_insurer:
+        type: table
+        id: a1fb5a6b-1826-495b-867a-63cfce3b9745
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_summary_insurer_batch_definition:
+            id: f1af39f8-f1fd-4b56-982a-b71c1ed2b927
+            partitioner:
+        table_name: ds__invoicing_summary_insurer
+        schema_name: reporting
+      ds__invoicing_transactions_patient:
+        type: table
+        id: 53e88667-7a9a-4941-9c3e-6b0e1bff47bc
+        batch_metadata: {}
+        batch_definitions:
+          ds__invoicing_transactions_patient_batch_definition:
+            id: d1f8ba81-b94e-415a-9399-bde01135d703
+            partitioner:
+        table_name: ds__invoicing_transactions_patient
+        schema_name: reporting
+      ds__lab_requests:
+        type: table
+        id: b5dcb223-818a-4dc6-bfd9-0b680e7c1ad5
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_requests_batch_definition:
+            id: e7783b72-ff40-4799-9769-59ba108d1442
+            partitioner:
+        table_name: ds__lab_requests
+        schema_name: reporting
+      ds__lab_tests:
+        type: table
+        id: 83f46c8e-e231-4a8b-874c-4248d44817a9
+        batch_metadata: {}
+        batch_definitions:
+          ds__lab_tests_batch_definition:
+            id: 119bf1c2-21c1-4c46-9635-37ff7c181808
+            partitioner:
+        table_name: ds__lab_tests
+        schema_name: reporting
+      ds__location_bookings:
+        type: table
+        id: 8af25661-a351-476c-8d30-c2b4b5881d7a
+        batch_metadata: {}
+        batch_definitions:
+          ds__location_bookings_batch_definition:
+            id: 3ff19674-8ea3-4079-9926-faef4fcba518
+            partitioner:
+        table_name: ds__location_bookings
+        schema_name: reporting
+      ds__ongoing_conditions:
+        type: table
+        id: 073b37c8-1a0e-483a-bd57-62261dc2f333
+        batch_metadata: {}
+        batch_definitions:
+          ds__ongoing_conditions_batch_definition:
+            id: 8b398d05-5cc4-4a4f-a262-a70446f269fb
+            partitioner:
+        table_name: ds__ongoing_conditions
+        schema_name: reporting
+      ds__outpatient_appointments:
+        type: table
+        id: cd8932a2-b987-475c-96c8-9b0cf96408ab
+        batch_metadata: {}
+        batch_definitions:
+          ds__outpatient_appointments_batch_definition:
+            id: b53e691a-9f18-410c-aba8-b87df26c2b91
+            partitioner:
+        table_name: ds__outpatient_appointments
+        schema_name: reporting
+      ds__patients:
+        type: table
+        id: 077c886d-2218-45c4-853f-47da0b8c3b2d
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_batch_definition:
+            id: 37401b9d-6c14-4f08-8f2b-34762767dedf
+            partitioner:
+        table_name: ds__patients
+        schema_name: reporting
+      ds__patients_access_logs:
+        type: table
+        id: 8ee80d15-5199-4694-ad40-7adba53a30cc
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_access_logs_batch_definition:
+            id: 51ad4524-1d5d-4436-aa3e-7e722f48e460
+            partitioner:
+        table_name: ds__patients_access_logs
+        schema_name: reporting
+      ds__patients_change_logs:
+        type: table
+        id: 5b2a3962-53fd-4738-b472-4054c631aa35
+        batch_metadata: {}
+        batch_definitions:
+          ds__patients_change_logs_batch_definition:
+            id: af0d7e41-1638-419b-8f49-a6973e0be716
+            partitioner:
+        table_name: ds__patients_change_logs
+        schema_name: reporting
+      ds__patient_program_registrations:
+        type: table
+        id: ed4d5e88-e130-4999-ab0b-d50087d04040
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_program_registrations_batch_definition:
+            id: 5598fd9b-3656-4486-87c5-dc07c93d7c07
+            partitioner:
+        table_name: ds__patient_program_registrations
+        schema_name: reporting
+      ds__patient_vaccinations_upcoming:
+        type: table
+        id: 6e1322ea-e64b-4c93-935d-b1109b1bd961
+        batch_metadata: {}
+        batch_definitions:
+          ds__patient_vaccinations_upcoming_batch_definition:
+            id: 4358646f-880a-440a-bf85-ff712fac6bc7
+            partitioner:
+        table_name: ds__patient_vaccinations_upcoming
+        schema_name: reporting
+      ds__procedures:
+        type: table
+        id: 34d83172-91b7-4a2a-b723-a8f690bd6221
+        batch_metadata: {}
+        batch_definitions:
+          ds__procedures_batch_definition:
+            id: ce0d61ef-4976-4be7-b955-d91d4c98e587
+            partitioner:
+        table_name: ds__procedures
+        schema_name: reporting
+      ds__referrals:
+        type: table
+        id: 5005cbfd-56a0-438a-99cb-f349dfe897d6
+        batch_metadata: {}
+        batch_definitions:
+          ds__referrals_batch_definition:
+            id: 82db0d6d-3188-4722-9f4e-5dcf111bfd62
+            partitioner:
+        table_name: ds__referrals
+        schema_name: reporting
+      ds__sensitive_lab_requests:
+        type: table
+        id: f35ac3a9-e06d-43ce-9ca3-06778bf540e0
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_requests_batch_definition:
+            id: bb0545be-cd8a-4ab6-b9c8-7e53b8cf9c2f
+            partitioner:
+        table_name: ds__sensitive_lab_requests
+        schema_name: reporting
+      ds__sensitive_lab_tests:
+        type: table
+        id: 5b1227f7-1e47-4adf-a3b3-9a9c2b9b75fe
+        batch_metadata: {}
+        batch_definitions:
+          ds__sensitive_lab_tests_batch_definition:
+            id: 01c59d0b-6196-4792-91db-f57f223e8846
+            partitioner:
+        table_name: ds__sensitive_lab_tests
+        schema_name: reporting
+      ds__user_audit:
+        type: table
+        id: ce5a9f28-f4d8-407e-8f3e-7b17f737eccc
+        batch_metadata: {}
+        batch_definitions:
+          ds__user_audit_batch_definition:
+            id: a1720016-5c9f-41db-aa95-9a6dcf2e2e41
+            partitioner:
+        table_name: ds__user_audit
+        schema_name: reporting
+      ds__vaccinations:
+        type: table
+        id: 1d8aae38-30d7-4fe8-8317-aebc15d349ce
+        batch_metadata: {}
+        batch_definitions:
+          ds__vaccinations_batch_definition:
+            id: 6fe3e966-a1b5-4cdc-a549-75d03ba093a3
+            partitioner:
+        table_name: ds__vaccinations
+        schema_name: reporting
+    connection_string: 
+      postgresql+psycopg2://app:YYUulWdg3OyDFd4lTiHPbpj5Hega2yRClCJEv7fD4FIxPvn2rgF9wOWM1HKTO9Qi@localhost:59380/app
+analytics_enabled:
+data_context_id: 51531609-e83a-4ac0-96da-397cf4d4126d

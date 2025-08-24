@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "f62b6933-baeb-4bab-a92d-5f2d78f21629",
+      "name": "ds__lab_tests"
+    },
+    "batch_definition": {
+      "id": "f0bdc995-ad25-47c0-9f14-67b066d1d344",
+      "name": "ds__lab_tests_batch_definition"
+    },
+    "datasource": {
+      "id": "00aaa17b-fb32-434a-a2a9-68dc4d946827",
+      "name": "tamanu"
+    }
+  },
+  "id": "eb9125cb-a610-4849-ad33-782aadd3ef5a",
+  "name": "ds__lab_tests_validation",
+  "suite": {
+    "id": "7ca1215f-5f31-4d11-9575-a5a357a99c71",
+    "name": "ds__lab_tests_expectations"
+  }
+}
