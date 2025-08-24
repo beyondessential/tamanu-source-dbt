@@ -18,18 +18,7 @@ def get_context(root_dir):
 def get_or_create_datasource(context, name="tamanu"):
     """Get existing or create new PostgreSQL datasource"""
     
-    # Build connection string from individual environment variables
-    connection_string = "postgresql+psycopg2://" + \
-        f"{os.environ.get(name.upper() + '_DB_USER')}:" + \
-        f"{os.environ.get(name.upper() + '_DB_PASSWORD')}@" + \
-        f"{os.environ.get(name.upper() + '_DB_URL')}:" + \
-        f"{os.environ.get(name.upper() + '_DB_PORT')}/" + \
-        f"{os.environ.get(name.upper() + '_DB_DATABASE')}"
-
-    # Set the connection string environment variable that GX config expects
-    connection_string_env_var = f"{name.upper()}_DB_CONNECTION_STRING"
-    os.environ[connection_string_env_var] = connection_string
-    print(f"✓ Set {connection_string_env_var} environment variable")
+    connection_string = os.environ.get(name.upper() + '_DB_CONNECTION_STRING')
 
     try:
         ds = context.data_sources.get(name)
@@ -59,7 +48,7 @@ def create_data_assets_and_batches(data_source, sql_files):
         try:
             asset = data_source.get_asset(table_name)
             counts["skipped_assets"] += 1
-        except:
+        except Exception as e:
             try:
                 asset = data_source.add_table_asset(name=table_name, table_name=table_name, schema_name="reporting")
                 print(f"✓ Added data asset: {table_name}")
@@ -73,7 +62,7 @@ def create_data_assets_and_batches(data_source, sql_files):
         try:
             asset.get_batch_definition(batch_name)
             counts["skipped_batches"] += 1
-        except:
+        except Exception as e:
             try:
                 asset.add_batch_definition_whole_table(name=batch_name)
                 counts["added_batches"] += 1

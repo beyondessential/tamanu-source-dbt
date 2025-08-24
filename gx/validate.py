@@ -8,22 +8,6 @@ from utils.docs_manager import *
 from utils.asset_manager import get_context
 
 
-def setup_environment_variables(datasource_name="tamanu"):
-    """Set up environment variables for datasource connection"""
-    # Build connection string from individual environment variables
-    connection_string = "postgresql+psycopg2://" + \
-        f"{os.environ.get(datasource_name.upper() + '_DB_USER')}:" + \
-        f"{os.environ.get(datasource_name.upper() + '_DB_PASSWORD')}@" + \
-        f"{os.environ.get(datasource_name.upper() + '_DB_URL')}:" + \
-        f"{os.environ.get(datasource_name.upper() + '_DB_PORT')}/" + \
-        f"{os.environ.get(datasource_name.upper() + '_DB_DATABASE')}"
-
-    # Set the connection string environment variable that GX config expects
-    connection_string_env_var = f"{datasource_name.upper()}_DB_CONNECTION_STRING"
-    os.environ[connection_string_env_var] = connection_string
-    print(f"✓ Set {connection_string_env_var} environment variable")
-
-
 def main():
     """Run GX validations and generate reports"""
     parser = argparse.ArgumentParser(description="GX validation - run validations and generate reports")
@@ -35,9 +19,6 @@ def main():
     args = parser.parse_args()
 
     root_dir = Path(__file__).parent.parent
-    
-    # Set up environment variables
-    setup_environment_variables(args.datasource)
     
     context = get_context(root_dir)
 

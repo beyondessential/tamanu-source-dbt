@@ -19,7 +19,7 @@ def main():
     suite.add_expectation(
         gx.expectations.ExpectQueryResultsToMatchComparison(
             base_query="select count(*) from reporting.ds__sensitive_lab_tests",
-            comparison_data_source_name="tamanu_release",
+            comparison_data_source_name="tamanu_rl",
             comparison_query="select count(*) from lab_tests lt join lab_test_types ltt on ltt.id = lt.lab_test_type_id where ltt.is_sensitive",
             mostly=1,
             meta={

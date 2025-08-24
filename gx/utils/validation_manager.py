@@ -31,11 +31,14 @@ def create_checkpoint(context, validation_definitions):
     """Create checkpoint with validation definitions"""
     name = "tamanu_data_quality_checkpoint"
     try:
+        # Delete existing checkpoint first
         try:
+            context.checkpoints.delete(name)
+            print(f"✓ Deleted existing checkpoint: {name}")
         except Exception:
-        except:
-            pass
+            pass  # Checkpoint doesn't exist, that's fine
             
+        # Create new checkpoint
         context.checkpoints.add(
             gx.Checkpoint(name=name, validation_definitions=validation_definitions, result_format="SUMMARY")
         )

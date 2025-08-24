@@ -1,2 +1,5 @@
+*.json
+*.txt
 expectations/.*
+expectations/*.json
 uncommitted/
