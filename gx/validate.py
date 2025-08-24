@@ -8,7 +8,7 @@ from utils.docs_manager import *
 from utils.asset_manager import get_context
 
 
-def setup_environment_variables(datasource_name="tamanu_rl"):
+def setup_environment_variables(datasource_name="tamanu"):
     """Set up environment variables for datasource connection"""
     # Build connection string from individual environment variables
     connection_string = "postgresql+psycopg2://" + \
