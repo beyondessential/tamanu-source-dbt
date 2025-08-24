@@ -61,4 +61,4 @@ left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
 join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
-where not ltt.is_sensitive
+where ltt.is_sensitive

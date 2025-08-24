@@ -8,7 +8,7 @@ with lab_test_data as (
     from {{ ref('lab_requests') }} lr
     join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
-    where not ltt.is_sensitive
+    where ltt.is_sensitive
     group by lr.id
 )
 

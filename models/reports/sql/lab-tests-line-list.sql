@@ -23,9 +23,7 @@ select
     lab_test_type as "{{ translate_label('labTestType') }}",
     to_char(lab_test_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
 from {{ ref('ds__lab_tests') }}
-where not is_sensitive
-    and
-    case
+where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else requested_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
