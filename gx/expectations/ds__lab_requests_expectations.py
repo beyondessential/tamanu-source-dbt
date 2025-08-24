@@ -9,7 +9,8 @@ def main():
     # Delete existing suite and create new one to ensure clean state
     try:
         context.suites.delete(suite_name)
-    except Exception:
+    except KeyError:
+
         pass  # Suite doesn't exist, that's fine
 
     # Create fresh expectation suite
