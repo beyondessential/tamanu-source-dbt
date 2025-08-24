@@ -106,20 +106,7 @@ def run_checkpoint(context, checkpoint_name="tamanu_data_quality_checkpoint"):
         checkpoint = context.checkpoints.get(checkpoint_name)
         print(f"\n🚀 Running checkpoint: {checkpoint_name}")
         result = checkpoint.run()
-        
-        success_count = total_count = 0
-        for validation_result in result.run_results.values():
-            if hasattr(validation_result, "statistics"):
-                total_count += validation_result.statistics.get("evaluated_expectations", 0)
-                success_count += validation_result.statistics.get("successful_expectations", 0)
-        
-        success_rate = (success_count / total_count * 100) if total_count > 0 else 0
-        print(f"\n📊 Checkpoint Results:")
-        print(f"  Total expectations: {total_count}")
-        print(f"  Successful: {success_count}")
-        print(f"  Failed: {total_count - success_count}")
-        print(f"  Success rate: {success_rate:.1f}%")
-        
+        print(f"✓ Checkpoint run completed. Success: {result.success}")
         return result
     except Exception as e:
         print(f"✗ Failed to run checkpoint: {e}")
