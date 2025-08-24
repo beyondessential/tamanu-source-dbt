@@ -32,7 +32,7 @@ def create_checkpoint(context, validation_definitions):
     name = "tamanu_data_quality_checkpoint"
     try:
         try:
-            context.checkpoints.delete(name)
+        except Exception:
         except:
             pass
             
