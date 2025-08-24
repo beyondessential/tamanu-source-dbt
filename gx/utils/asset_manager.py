@@ -1,5 +1,6 @@
 import great_expectations as gx
 import glob
+import os
 from pathlib import Path
 
 
@@ -14,14 +15,29 @@ def get_context(root_dir):
         return gx.get_context(mode="ephemeral")
 
 
-def get_or_create_datasource(context, name="tamanu", conn="${TAMANU_DB_CONNECTION_STRING}"):
+def get_or_create_datasource(context, name="tamanu"):
     """Get existing or create new PostgreSQL datasource"""
+    
+    # Build connection string from individual environment variables
+    connection_string = "postgresql+psycopg2://" + \
+        f"{os.environ.get(name.upper() + '_DB_USER')}:" + \
+        f"{os.environ.get(name.upper() + '_DB_PASSWORD')}@" + \
+        f"{os.environ.get(name.upper() + '_DB_URL')}:" + \
+        f"{os.environ.get(name.upper() + '_DB_PORT')}/" + \
+        f"{os.environ.get(name.upper() + '_DB_DATABASE')}"
+
+    # Set the connection string environment variable that GX config expects
+    connection_string_env_var = f"{name.upper()}_DB_CONNECTION_STRING"
+    os.environ[connection_string_env_var] = connection_string
+    print(f"✓ Set {connection_string_env_var} environment variable")
+
     try:
         ds = context.data_sources.get(name)
         print(f"✓ Using existing datasource: {name}")
         return ds
-    except:
-        ds = context.data_sources.add_postgres(name=name, connection_string=conn)
+    except Exception as e:
+        print(f"⚠ Could not get existing datasource ({e}), creating new one")
+        ds = context.data_sources.add_postgres(name=name, connection_string=connection_string)
         print(f"✓ Created datasource: {name}")
         return ds
 

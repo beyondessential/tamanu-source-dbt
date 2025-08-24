@@ -1,7 +1,7 @@
 {
   "expectations": [
     {
-      "id": "1ea6606f-1ac2-493c-bf1d-0792235d48af",
+      "id": "f68f1ff2-4d7c-45de-a9cc-700bcf20d01e",
       "kwargs": {
         "base_query": "select count(*) from reporting.ds__lab_tests",
         "comparison_data_source_name": "tamanu_release",
@@ -13,7 +13,7 @@
       "type": "expect_query_results_to_match_comparison"
     },
     {
-      "id": "15f1cfaa-5d8b-415c-92d2-43697d4c4cf3",
+      "id": "a8d05fa5-dac6-4f89-b230-41d293254890",
       "kwargs": {
         "column": "patient_id"
       },
@@ -23,7 +23,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "ebb7c823-31c2-48e9-8ede-ef67661bc17e",
+      "id": "4fd31a69-5f99-4a08-8f54-6b69fe9cdb25",
       "kwargs": {
         "column": "status_id"
       },
@@ -33,7 +33,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "fb94378b-eb26-47be-9eee-b885f9ede49d",
+      "id": "5ccd66d5-c124-4428-b183-5acf4d1e2ffd",
       "kwargs": {
         "column": "status_id",
         "value_set": [
@@ -54,7 +54,7 @@
       "type": "expect_column_values_to_be_in_set"
     },
     {
-      "id": "4125d326-7f9a-464c-b8d9-869921c8b201",
+      "id": "a92b7982-8ff1-4367-8c44-8fb292254cb7",
       "kwargs": {
         "column": "requested_datetime"
       },
@@ -64,7 +64,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "2bdbaedf-f17d-41d0-854f-51748024690d",
+      "id": "82ec7a88-ec62-4477-b4ed-15ce7937804e",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch} \nwhere lab_test_completed_datetime notnull \n    and requested_datetime > lab_test_completed_datetime"
       },
@@ -74,7 +74,7 @@
       "type": "unexpected_rows_expectation"
     },
     {
-      "id": "13f78df9-75b2-465f-ba8d-86ef626c07cd",
+      "id": "8f5ca09d-33f8-495a-a8e7-5b606accf9b8",
       "kwargs": {
         "column": "lab_request_id"
       },
@@ -84,7 +84,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "757cc58e-9f15-4cde-bfcc-0a82bdf76263",
+      "id": "9d551636-a99e-404c-ab87-cd02a5928343",
       "kwargs": {
         "column": "requested_by_id"
       },
@@ -94,7 +94,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "38c808b5-e388-4e40-9b60-f8eabbffc57a",
+      "id": "74f298b8-408c-4fea-b4de-39024cb28344",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch} lr\nleft join reporting.reference_data rd on rd.id = lr.lab_test_category_id\nwhere rd.id is null"
       },
@@ -104,7 +104,7 @@
       "type": "unexpected_rows_expectation"
     },
     {
-      "id": "b5f5375e-9b5b-4dae-a8a7-1adcf636e85e",
+      "id": "c92dddae-ac38-44d1-93b0-3303095a0d46",
       "kwargs": {
         "column": "lab_test_type_id"
       },
@@ -114,7 +114,7 @@
       "type": "expect_column_values_to_not_be_null"
     }
   ],
-  "id": "7ca1215f-5f31-4d11-9575-a5a357a99c71",
+  "id": "e1f140d0-a972-4549-b231-ea28a728ac44",
   "meta": {
     "great_expectations_version": "1.5.9"
   },

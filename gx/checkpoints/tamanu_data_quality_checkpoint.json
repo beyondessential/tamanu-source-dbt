@@ -1,23 +1,23 @@
 {
   "actions": [],
-  "id": "cbd1284d-a9d6-4c3f-846c-dca04e711eba",
+  "id": "9c2b93eb-35d1-42cb-8e95-ff56cd990a6b",
   "name": "tamanu_data_quality_checkpoint",
   "result_format": "SUMMARY",
   "validation_definitions": [
     {
-      "id": "1a95b027-8dea-4443-b4e2-75f6a39d3422",
+      "id": "7a99af73-4574-40bc-a54b-0899a3d3e8cb",
       "name": "ds__lab_requests_validation"
     },
     {
-      "id": "eb9125cb-a610-4849-ad33-782aadd3ef5a",
+      "id": "c372036a-d493-4302-8b81-ac762eee12b0",
       "name": "ds__lab_tests_validation"
     },
     {
-      "id": "a9f576b0-0434-46f8-9276-83e1af8f03dc",
+      "id": "ed731697-96e3-4681-86d3-c89fd9032f3b",
       "name": "ds__sensitive_lab_requests_validation"
     },
     {
-      "id": "e64a5127-eceb-4469-a5d5-a60f7081debb",
+      "id": "94fa4ab6-107b-4f34-b79b-fb4e1fdf3573",
       "name": "ds__sensitive_lab_tests_validation"
     }
   ]

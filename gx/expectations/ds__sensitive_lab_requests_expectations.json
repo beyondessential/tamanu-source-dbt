@@ -1,7 +1,7 @@
 {
   "expectations": [
     {
-      "id": "aeb05002-5524-4a6f-9bbd-dc9037a18717",
+      "id": "8ca1f176-df21-4a87-8020-b9a185b31085",
       "kwargs": {
         "base_query": "select count(*) from reporting.ds__sensitive_lab_requests",
         "comparison_data_source_name": "tamanu_rl",
@@ -13,7 +13,7 @@
       "type": "expect_query_results_to_match_comparison"
     },
     {
-      "id": "173c14ad-30dc-48f4-86af-fe4e18f9716d",
+      "id": "328becc5-332d-404a-8ec2-287c9965c811",
       "kwargs": {
         "column": "patient_id"
       },
@@ -23,7 +23,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "00f19041-d074-4d72-8299-509dfec85d96",
+      "id": "6e0bae66-d535-436a-8583-c81f36e8d530",
       "kwargs": {
         "column": "status_id"
       },
@@ -33,7 +33,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "35d58f0a-0bf9-4d30-ae6d-912c51460977",
+      "id": "b405548a-3cbb-4267-8190-0b8a9da49c2c",
       "kwargs": {
         "column": "status_id",
         "value_set": [
@@ -54,7 +54,7 @@
       "type": "expect_column_values_to_be_in_set"
     },
     {
-      "id": "63f22f63-4390-4989-ba9f-7dbbe83c863a",
+      "id": "6584af0b-1aa4-483f-828b-c845768c415d",
       "kwargs": {
         "column": "requested_datetime"
       },
@@ -64,7 +64,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "a88a967a-82b0-4376-91c0-44a7fa234952",
+      "id": "c8e145a1-3330-4f71-8a2a-d4ad295d60fb",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch} \nwhere (collected_datetime notnull and requested_datetime > collected_datetime)\n    or (completed_datetime notnull and requested_datetime > completed_datetime)\n    or (collected_datetime notnull and completed_datetime notnull and collected_datetime > completed_datetime)"
       },
@@ -74,7 +74,7 @@
       "type": "unexpected_rows_expectation"
     },
     {
-      "id": "3546a009-5044-4c52-936a-41350f127cc9",
+      "id": "9e9b83ba-1b8b-46c7-8ddb-9a2a01bff0f4",
       "kwargs": {
         "column": "requested_by_id"
       },
@@ -84,7 +84,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "60bdbef7-2796-4cc5-b7fc-c1a2d1dd167f",
+      "id": "1ab1ef11-81d9-4b86-9b04-c95a597721ca",
       "kwargs": {
         "column": "requesting_department_id"
       },
@@ -94,7 +94,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "165037fd-c752-4420-b795-a27e1f6b31b0",
+      "id": "3386f0dd-1618-430e-82dd-83047ba1e3be",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch} lr\nleft join reporting.reference_data rd on rd.id = lr.priority_id\nwhere rd.id is null"
       },
@@ -104,7 +104,7 @@
       "type": "unexpected_rows_expectation"
     },
     {
-      "id": "e54641e8-c021-4cd3-9510-32e1d93b26d7",
+      "id": "36753993-e9de-4f6f-afbe-b61ce87d374e",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch} lr\nleft join reporting.reference_data rd on rd.id = lr.lab_test_category_id\nwhere rd.id is null"
       },
@@ -114,7 +114,7 @@
       "type": "unexpected_rows_expectation"
     },
     {
-      "id": "dfbaa901-2418-449f-93b4-d42bc1268d64",
+      "id": "4f0e26d0-ff3a-49e0-b189-97f2fbe0a038",
       "kwargs": {
         "column": "tests"
       },
@@ -124,7 +124,7 @@
       "type": "expect_column_values_to_not_be_null"
     },
     {
-      "id": "499f09c0-038e-465b-86f1-558baaa6ef69",
+      "id": "5c0fa826-208c-4760-80fe-8ddb1d6a6aea",
       "kwargs": {
         "unexpected_rows_query": "\nselect * \nfrom {batch}\nwhere not (collected_datetime is not null and collected_by_id is not null and specimen_type is not null and site is not null)\n    or not (collected_datetime is null and collected_by_id is null and specimen_type is null and site is null)"
       },
@@ -134,7 +134,7 @@
       "type": "unexpected_rows_expectation"
     }
   ],
-  "id": "58381027-6821-400f-8f7e-ed8d593ec6fc",
+  "id": "afc71712-27c6-41f7-962c-9492a69c3098",
   "meta": {
     "great_expectations_version": "1.5.9"
   },

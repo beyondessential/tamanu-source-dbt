@@ -1,22 +1,22 @@
 {
   "data": {
     "asset": {
-      "id": "343457e8-230b-4d38-9558-1f9349e7d562",
+      "id": "ce8c0a8e-c41c-471c-a27e-76826ff2cbb5",
       "name": "ds__lab_requests"
     },
     "batch_definition": {
-      "id": "b5384ab5-8cae-4ab4-8a18-4faecf787474",
+      "id": "ec6e0227-c4ab-4cb1-905c-32610d77f3d4",
       "name": "ds__lab_requests_batch_definition"
     },
     "datasource": {
-      "id": "00aaa17b-fb32-434a-a2a9-68dc4d946827",
-      "name": "tamanu"
+      "id": "9b80ff7a-8d87-48f6-9689-3f8e3c3642f3",
+      "name": "tamanu_rl"
     }
   },
-  "id": "1a95b027-8dea-4443-b4e2-75f6a39d3422",
+  "id": "7a99af73-4574-40bc-a54b-0899a3d3e8cb",
   "name": "ds__lab_requests_validation",
   "suite": {
-    "id": "510f2bd0-f345-4330-bf42-209d69ccaa5c",
+    "id": "bb469b60-fc40-40df-8fdd-c2b085785379",
     "name": "ds__lab_requests_expectations"
   }
 }
