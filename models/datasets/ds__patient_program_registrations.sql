@@ -39,14 +39,21 @@ select
     ppr.is_most_recent,
     ppr.registration_status,
     ppr.program_registry_id,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
     ppr.datetime as registration_datetime
 from {{ ref('patient_program_registrations') }} ppr
 join {{ ref('program_registries') }} pr on pr.id = ppr.program_registry_id
 join {{ ref('patients') }} p on p.id = ppr.patient_id
+join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 join {{ ref('facilities') }} registering_facility on registering_facility.id = ppr.registering_facility_id
 join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('facilities') }} currently_at_facility on currently_at_facility.id = ppr.facility_id
+left join {{ ref('reference_data') }} subdivision on subdivision.id = pad.subdivision_id
+left join {{ ref('reference_data') }} division on division.id = pad.division_id
 left join {{ ref('reference_data') }} currently_at_village on currently_at_village.id = ppr.village_id
 left join related_conditions c on (c.patient_id, c.program_registry_id) = (ppr.patient_id, ppr.program_registry_id)
 left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id

@@ -6,6 +6,8 @@ select
     sex as "{{ translate_label('patientSex', 'Sex') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
     registering_facility as "{{ translate_label('registryRegisteringFacility', 'Registering facility') }}",
+    subdivision as "{{ translate_label('patientSubdivision', 'Subdivision') }}",
+    division as "{{ translate_label('patientDivision', 'Division') }}",
     registered_by as "{{ translate_label('registryRegisteredBy', 'Registered by') }}",
     currently_at as "{{ translate_label('registryCurrentlyAt', 'Currently at') }}",
     related_conditions as "{{ translate_label('registryConditions', 'Related conditions') }}",
@@ -30,4 +32,14 @@ where registration_status = 'active'
     case
         when {{ parameter('registryId') }} is null then true
         else program_registry_id = {{ parameter('registryId') }}
+    end
+    and
+    case
+        when {{ parameter('subdivisionId') }} is null then true
+        else subdivision_id = {{ parameter('subdivisionId') }}
+    end
+    and
+    case
+        when {{ parameter('divisionId') }} is null then true
+        else division_id = {{ parameter('divisionId') }}
     end
