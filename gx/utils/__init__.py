@@ -16,8 +16,7 @@ from .validation_manager import (
 )
 from .docs_manager import (
     build_data_docs,
-    open_data_docs,
-    generate_validation_report
+    open_data_docs
 )
 from .result_extractor import (
     extract_validation_results,
