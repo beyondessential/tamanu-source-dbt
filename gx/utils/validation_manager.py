@@ -11,16 +11,14 @@ def create_validation_definition(context, data_source, asset_name, suite_name):
         batch_def = data_asset.get_batch_definition(f"{asset_name}_batch_definition")
         suite = context.suites.get(suite_name)
         validation_name = f"{asset_name}_validation"
-        
+
         try:
             context.validation_definitions.delete(validation_name)
         except Exception:
             pass
-            
+
         validation_def = gx.ValidationDefinition(
-            name=validation_name, 
-            data=batch_def, 
-            suite=suite
+            name=validation_name, data=batch_def, suite=suite
         )
         context.validation_definitions.add(validation_def)
         print(f"  ✓ Created validation definition: {validation_name}")
@@ -85,7 +83,12 @@ def create_validation_definitions_and_checkpoint(context, data_source, root_dir)
             spec.loader.exec_module(module)
 
             if hasattr(module, "main"):
-                module.main()  # Create suite
+                # Pass context to main function if it accepts it
+                try:
+                    suite = module.main(context)  # Try passing context
+                except TypeError:
+                    suite = module.main()  # Fallback to no parameters
+
                 success, _ = create_validation_definition(
                     context, data_source, asset_name, suite_name
                 )
@@ -98,7 +101,8 @@ def create_validation_definitions_and_checkpoint(context, data_source, root_dir)
                         )
                         validation_definitions.append(validation_def)
                     except Exception as e:
-                        print(f"  ⚠ Could not add validation definition: {e}")
+                        print(f"  ⚠ Could not add validation definition to list: {e}")
+                        # Still count as success since the validation definition was created
                 else:
                     failed += 1
             else:

@@ -30,6 +30,10 @@ def main():
         table_names = [Path(f).stem for f in sql_files]
         refreshed_batches, _, _ = refresh_batch_definitions(data_source, table_names, force_refresh=True)
         print(f"Refreshed {refreshed_batches} batch definitions")
+        
+        # Get fresh context and data source reference after batch refresh
+        context = get_context(root_dir)
+        data_source = get_or_create_datasource(context, name=args.datasource)
 
     # Create expectation suites and validation definitions
     added_suites, skipped_suites, failed_suites = create_expectation_suites_from_files(context, root_dir)
