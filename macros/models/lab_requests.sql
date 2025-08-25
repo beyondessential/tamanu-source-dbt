@@ -10,7 +10,7 @@ with lab_test_data as (
     from {{ ref('lab_requests') }} lr
     join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
-    where {% if is_sensitive %}ltt.is_sensitive{% else %}not ltt.is_sensitive{% endif %}
+    where ltt.is_sensitive = {{ is_sensitive }}
     group by lr.id
 )
 
