@@ -17,11 +17,14 @@ def create_validation_definition(context, data_source, asset_name, suite_name):
         except Exception:
             pass
             
-        context.validation_definitions.add(
-            gx.ValidationDefinition(name=validation_name, data=batch_def, suite=suite)
+        validation_def = gx.ValidationDefinition(
+            name=validation_name, 
+            data=batch_def, 
+            suite=suite
         )
-        print(f"  ✓ Reloaded validation definition: {validation_name}")
-        return True, "reloaded"
+        context.validation_definitions.add(validation_def)
+        print(f"  ✓ Created validation definition: {validation_name}")
+        return True, "created"
     except Exception as e:
         print(f"  ✗ Failed to create validation definition for {asset_name}: {e}")
         return False, "failed"
@@ -37,12 +40,18 @@ def create_checkpoint(context, validation_definitions):
             print(f"✓ Deleted existing checkpoint: {name}")
         except Exception:
             pass  # Checkpoint doesn't exist, that's fine
-            
+
         # Create new checkpoint
         context.checkpoints.add(
-            gx.Checkpoint(name=name, validation_definitions=validation_definitions, result_format="SUMMARY")
+            gx.Checkpoint(
+                name=name,
+                validation_definitions=validation_definitions,
+                result_format="SUMMARY",
+            )
         )
-        print(f"✓ Reloaded checkpoint: {name} with {len(validation_definitions)} validation definitions")
+        print(
+            f"✓ Reloaded checkpoint: {name} with {len(validation_definitions)} validation definitions"
+        )
         return True, "reloaded"
     except Exception as e:
         print(f"✗ Failed to create checkpoint: {e}")
@@ -53,34 +62,40 @@ def create_validation_definitions_and_checkpoint(context, data_source, root_dir)
     """Create validation definitions from Python expectation suites"""
     expectations_dir = root_dir / "gx" / "expectations"
     python_files = glob.glob(str(expectations_dir / "*_expectations.py"))
-    
+
     if not python_files:
         print("⚠ No Python expectation files found")
         return 0, 0, 0, False
-        
+
     print(f"\nFound {len(python_files)} Python expectation file(s)")
-    
+
     added, failed = 0, 0
     validation_definitions = []
-    
+
     for python_file in python_files:
         suite_name = Path(python_file).stem
         asset_name = suite_name.replace("_expectations", "")
         print(f"\nProcessing Python suite: {suite_name} -> asset: {asset_name}")
-        
+
         try:
-            spec = importlib.util.spec_from_file_location("expectation_module", python_file)
+            spec = importlib.util.spec_from_file_location(
+                "expectation_module", python_file
+            )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            
-            if hasattr(module, 'main'):
+
+            if hasattr(module, "main"):
                 module.main()  # Create suite
-                success, _ = create_validation_definition(context, data_source, asset_name, suite_name)
-                
+                success, _ = create_validation_definition(
+                    context, data_source, asset_name, suite_name
+                )
+
                 if success:
                     added += 1
                     try:
-                        validation_def = context.validation_definitions.get(f"{asset_name}_validation")
+                        validation_def = context.validation_definitions.get(
+                            f"{asset_name}_validation"
+                        )
                         validation_definitions.append(validation_def)
                     except Exception as e:
                         print(f"  ⚠ Could not add validation definition: {e}")
@@ -92,11 +107,11 @@ def create_validation_definitions_and_checkpoint(context, data_source, root_dir)
         except Exception as e:
             print(f"  ✗ Failed to process {Path(python_file).name}: {e}")
             failed += 1
-    
+
     checkpoint_success = False
     if validation_definitions:
         checkpoint_success, _ = create_checkpoint(context, validation_definitions)
-    
+
     return added, 0, failed, checkpoint_success
 
 
