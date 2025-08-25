@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: patient_field_values
-        description: '{{ doc("table__patient_field_values") }}'
-        tags:
-          - patient
+        description: "{{ doc('table__patient_field_values') }}"
+        config:
+          tags:
+            - patient
         columns:
           - name: created_at
             data_type: timestamp with time zone
@@ -45,8 +46,7 @@ sources:
                   field: id
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              patient_field_values."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in patient_field_values."
             data_tests:
               - not_null
           - name: id

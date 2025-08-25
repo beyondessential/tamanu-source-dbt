@@ -5,11 +5,12 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: patient_family_histories
-        description: '{{ doc("table__patient_family_histories") }}'
+        description: "{{ doc('table__patient_family_histories') }}"
         __generator:
           js_class: PatientFamilyHistory
-        tags:
-          - clinical
+        config:
+          tags:
+            - clinical
         columns:
           - name: id
             data_type: character varying(255)
@@ -68,7 +69,6 @@ sources:
             description: "{{ doc('patient_family_histories__recorded_date_legacy') }}"
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              patient_family_histories."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in patient_family_histories."
             data_tests:
               - not_null

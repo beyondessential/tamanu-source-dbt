@@ -3,8 +3,9 @@ version: 2
 models:
   - name: ds__lab_tests
     description: Lab tests
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: patient_id
         data_type: character varying(255)
@@ -12,10 +13,6 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
       - name: first_name
         data_type: character varying(255)
         description: "{{ doc('patients__first_name') }}"
@@ -106,9 +103,9 @@ models:
       - name: lab_test_type
         data_type: character varying(255)
         description: "{{ doc('lab_test_types__name') }}"
+      - name: is_sensitive
+        data_type: boolean
+        description: "{{ doc('lab_test_types__is_sensitive') }}"
       - name: lab_test_completed_datetime
         data_type: timestamp
         description: "{{ doc('lab_tests__completed_date') }}"
-      
-      
-      

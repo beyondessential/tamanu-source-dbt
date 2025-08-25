@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: invoice_insurer_payments
-        description: '{{ doc("table__invoice_insurer_payments") }}'
-        tags:
-          - administration
+        description: "{{ doc('table__invoice_insurer_payments') }}"
+        config:
+          tags:
+            - administration
         columns:
           - name: id
             data_type: uuid
@@ -60,7 +61,6 @@ sources:
             description: "{{ doc('generic__deleted_at') }} in invoice_insurer_payments."
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              invoice_insurer_payments."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in invoice_insurer_payments."
             data_tests:
               - not_null

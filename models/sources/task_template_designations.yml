@@ -5,8 +5,9 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: task_template_designations
-        description: '{{ doc("table__task_template_designations") }}'
-        tags: []
+        description: "{{ doc('table__task_template_designations') }}"
+        config:
+          tags: []
         columns:
           - name: id
             data_type: uuid
@@ -39,7 +40,6 @@ sources:
             description: "{{ doc('generic__deleted_at') }} in task_template_designations."
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              task_template_designations."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in task_template_designations."
             data_tests:
               - not_null

@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: ds__invoicing_summary_insurer
+    description: Invoicing insurer summary with remaining balances
+    config:
+      tags:
+        - administration
+    columns:
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('invoices__status') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: invoice_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of invoice."
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of encounter."
+      - name: invoice_number
+        data_type: character varying(255)
+        description: "{{ doc('invoices__display_id') }}"
+      - name: patient_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__patients_name') }}"
+      - name: social_security_number
+        data_type: character varying(255)
+        description: "{{ doc('generic__social_security_number') }}"
+      - name: insurance_policy_number
+        data_type: character varying(255)
+        description: "{{ doc('generic__insurance_policy_number') }}"
+      - name: admission_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__start_date') }}"
+      - name: discharge_datetime
+        data_type: timestamp
+        description: "{{ doc('encounters__end_date') }}"
+      - name: insurer_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of insurer."
+      - name: insurer_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} name of the insurer."
+      - name: total_invoice_amount
+        data_type: double precision
+        description: "{{ doc('generic__invoice_total_invoice_amount') }}"
+      - name: insurer_total_amount
+        data_type: double precision
+        description: "{{ doc('generic__invoice_total_insurer_amount') }} for this specific insurer."
+      - name: insurer_payments_received
+        data_type: double precision
+        description: Total amount of payments received from this insurer
+      - name: remaining_insurer_balance
+        data_type: double precision
+        description: Outstanding balance owed by this insurer (insurer total minus payments received)
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - invoice_id
+            - insurer_id

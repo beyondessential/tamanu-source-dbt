@@ -96,4 +96,3 @@ left join {{ ref('reference_data') }} site on site.id = lr.lab_sample_site_id
 left join {{ ref('lab_test_panel_requests') }} ltpr
     on ltpr.id = lr.lab_test_panel_request_id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
-order by lr.requested_datetime

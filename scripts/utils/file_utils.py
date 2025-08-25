@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 import boto3
+import pandas as pd
 
 from .system_utils import cprint
 
@@ -28,10 +29,10 @@ def read_file(file_path, file_type="text"):
 
     Args:
         file_path (str): The path to the file to read.
-        file_type (str): The type of the file ('text' or 'json'). Defaults to 'text'.
+        file_type (str): The type of the file ('text', 'json', or 'excel'/'xlsx'). Defaults to 'text'.
 
     Returns:
-        str or dict: The file content as a string (for text files) or a dictionary (for JSON files).
+        str, dict, or DataFrame: The file content as a string (for text files), a dictionary (for JSON files), or a pandas DataFrame (for Excel files).
 
     Raises:
         FileNotFoundError: If the file does not exist.
@@ -40,14 +41,16 @@ def read_file(file_path, file_type="text"):
     """
     try:
         ensure_file_exists(file_path)
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = f.read()
-            if file_type == "json":
-                return json.loads(data)
-            elif file_type == "text":
-                return data
-            else:
-                raise ValueError(f"Unsupported file_type: {file_type}")
+        if file_type == "json":
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        elif file_type == "text":
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        elif file_type in ["excel", "xlsx"]:
+            return pd.read_excel(file_path)
+        else:
+            raise ValueError(f"Unsupported file_type: {file_type}")
     except Exception as e:
         cprint(f"Error reading file {file_path}: {e}", "error")
         raise Exception(f"Error reading file {file_path}: {e}")

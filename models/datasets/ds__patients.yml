@@ -2,6 +2,9 @@ version: 2
 models:
   - name: ds__patients
     description: Patients
+    config:
+      tags:
+        - patient
     columns:
       - name: registration_date
         data_type: date
@@ -91,3 +94,4 @@ models:
       - name: status
         data_type: character varying(255)
         description: "Indicates whether the patient is alive or deceased."
+

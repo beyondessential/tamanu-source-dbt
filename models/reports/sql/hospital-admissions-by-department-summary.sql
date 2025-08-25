@@ -8,22 +8,22 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
-    adh.facility as "{{ translate_label('facility', 'Facility') }}",
-    adh.department as "{{ translate_label('department', 'Department') }}",
-    count(*) filter (where adh.admission) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",
-    count(*) filter (where adh.discharge) as "{{ translate_label('hospitalDischargeCount', 'Number of discharges') }}",
-    count(*) filter (where adh.death) as "{{ translate_label('hospitalDeathCount', 'Number of deaths') }}",
-    count(*) filter (where adh.transfer_in) as "{{ translate_label('hospitalTransfersIntoDepartmentCount', 'Number of transfers into department') }}",
-    count(*) filter (where adh.transfer_out) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount', 'Number of transfers out of department') }}",
-    round(avg(adh.length_of_stay), 1) as "{{ translate_label('hospitalAverageLengthOfStay', 'Average length of stay') }}"
+    to_char(rm.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
+    adh.facility as "{{ translate_label('facility') }}",
+    adh.department as "{{ translate_label('department') }}",
+    count(*) filter (where adh.admission) as "{{ translate_label('hospitalAdmissionCount') }}",
+    count(*) filter (where adh.discharge) as "{{ translate_label('hospitalDischargeCount') }}",
+    count(*) filter (where adh.death) as "{{ translate_label('hospitalDeathCount') }}",
+    count(*) filter (where adh.transfer_in) as "{{ translate_label('hospitalTransfersIntoDepartmentCount') }}",
+    count(*) filter (where adh.transfer_out) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount') }}",
+    round(avg(adh.length_of_stay), 1) as "{{ translate_label('hospitalAverageLengthOfStay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_history_department') }} adh
     on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
 where adh.facility_id notnull
     and case
         when {{ parameter('departmentId') }} is null then true
-        else adh.department_id::text = {{ parameter('departmentId') }}
+        else adh.department_id = {{ parameter('departmentId') }}
     end
 group by
     rm.month,

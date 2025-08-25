@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: patient_communications
-        description: '{{ doc("table__patient_communications") }}'
-        tags:
-          - clinical
+        description: "{{ doc('table__patient_communications') }}"
+        config:
+          tags:
+            - clinical
         columns:
           - name: id
             data_type: character varying(255)
@@ -73,7 +74,6 @@ sources:
             description: "{{ doc('patient_communications__hash') }}"
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              patient_communications."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in patient_communications."
             data_tests:
               - not_null

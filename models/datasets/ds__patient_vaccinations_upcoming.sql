@@ -16,4 +16,3 @@ from {{ ref("patient_vaccinations_upcoming") }} pvu
 join {{ ref("patients") }} p on p.id = pvu.patient_id
 join {{ ref("vaccine_schedules") }} sv on sv.id = pvu.vaccine_schedules_id
 where p.date_of_death is null
-order by pvu.due_date, p.last_name, p.first_name, sv.label

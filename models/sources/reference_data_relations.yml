@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: reference_data_relations
-        description: '{{ doc("table__reference_data_relations") }}'
-        tags:
-          - reference
+        description: "{{ doc('table__reference_data_relations') }}"
+        config:
+          tags:
+            - reference
         columns:
           - name: id
             data_type: uuid
@@ -41,7 +42,6 @@ sources:
               - not_null
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              reference_data_relations."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in reference_data_relations."
             data_tests:
               - not_null

@@ -6,7 +6,7 @@
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "next30days",
-    "dataSourceOptions": ["thisFacility", "allFacilities"],
+    "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {
         "parameterField": "FacilityField",
@@ -30,6 +30,11 @@
         "label": "Clinician",
         "name": "clinicianId",
         "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "AppointmentTypeField",
+        "label": "Appointment type",
+        "name": "appointmentTypeId"
       },
       {
         "parameterField": "ParameterSelectField",

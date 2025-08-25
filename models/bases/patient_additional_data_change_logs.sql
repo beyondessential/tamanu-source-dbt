@@ -1,0 +1,47 @@
+with filtered_changes as (
+    {{ base_history_from_log('patient_additional_data') }}
+        and record_id != '{{ var("test_patient") }}' -- noqa: ST10
+)
+
+select
+    fc.changelog_id,
+    fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    fc.updated_by_user_id,
+    fc.record_id as patient_id,
+    fc.record_data ->> 'title' as title,
+    fc.record_data ->> 'marital_status' as marital_status,
+    fc.record_data ->> 'primary_contact_number' as primary_contact_number,
+    fc.record_data ->> 'secondary_contact_number' as secondary_contact_number,
+    fc.record_data ->> 'emergency_contact_name' as emergency_contact_name,
+    fc.record_data ->> 'emergency_contact_number' as emergency_contact_number,
+    fc.record_data ->> 'social_media' as social_media,
+    fc.record_data ->> 'ethnicity_id' as ethnicity_id,
+    fc.record_data ->> 'religion_id' as religion_id,
+    fc.record_data ->> 'nationality_id' as nationality_id,
+    fc.record_data ->> 'secondary_village_id' as secondary_village_id,
+    fc.record_data ->> 'country_id' as country_id,
+    fc.record_data ->> 'division_id' as division_id,
+    fc.record_data ->> 'subdivision_id' as subdivision_id,
+    fc.record_data ->> 'medical_area_id' as medical_area_id,
+    fc.record_data ->> 'nursing_zone_id' as nursing_zone_id,
+    fc.record_data ->> 'settlement_id' as settlement_id,
+    fc.record_data ->> 'city_town' as city_town,
+    fc.record_data ->> 'street_village' as street_village,
+    fc.record_data ->> 'country_of_birth_id' as country_of_birth_id,
+    fc.record_data ->> 'place_of_birth' as place_of_birth,
+    fc.record_data ->> 'birth_certificate' as birth_certificate,
+    fc.record_data ->> 'driving_license' as driving_license,
+    fc.record_data ->> 'passport' as passport,
+    fc.record_data ->> 'educational_level' as educational_level,
+    fc.record_data ->> 'occupation_id' as occupation_id,
+    fc.record_data ->> 'blood_type' as blood_type,
+    fc.record_data ->> 'patient_billing_type_id' as patient_billing_type_id,
+    fc.record_data ->> 'health_center_id' as health_center_id,
+    fc.record_data ->> 'insurer_id' as insurer_id,
+    fc.record_data ->> 'insurer_policy_number' as insurer_policy_number,
+    fc.record_data ->> 'mother_id' as mother_id,
+    fc.record_data ->> 'father_id' as father_id,
+    fc.record_data ->> 'registered_by_id' as registered_by_id,
+    fc.record_data -> 'updated_at_by_field' as updated_by_field,
+    (fc.record_data ->> 'created_at')::date as registration_date
+from filtered_changes fc

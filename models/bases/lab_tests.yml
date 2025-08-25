@@ -2,16 +2,13 @@ version: 2
 models:
   - name: lab_tests
     description: '{{ doc("table__lab_tests") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in lab_tests."
-        meta:
-          metrics:
-            total_lab_tests_count:
-              type: count
       - name: date
         data_type: date
         description: "{{ doc('generic__date') }} in lab_tests."
@@ -21,10 +18,6 @@ models:
       - name: lab_request_id
         data_type: character varying(255)
         description: "{{ doc('lab_tests__lab_request_id') }}"
-        meta:
-          metrics:
-            total_lab_requests_distinct_count:
-              type: count_distinct
       - name: lab_test_type_id
         data_type: character varying(255)
         description: "{{ doc('lab_tests__lab_test_type_id') }}"

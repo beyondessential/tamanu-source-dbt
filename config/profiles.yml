@@ -1,5 +1,5 @@
 tamanu_source_dbt:
-  target: release
+  target: demo
   outputs:
     demo:
       type: postgres
@@ -14,9 +14,8 @@ tamanu_source_dbt:
       type: postgres
       threads: 1
       host: "{{ env_var('TAMANU_RL_DB_URL') }}"
-      port: 5432
+      port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
       user: "{{ env_var('TAMANU_RL_DB_USER') }}"
       pass: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
       schema: reporting
-    

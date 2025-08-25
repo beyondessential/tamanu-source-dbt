@@ -2,19 +2,15 @@ version: 2
 models:
   - name: departments
     description: "{{ doc('table__departments') }}"
-    tags:
-      - reference
+    config:
+      tags:
+        - reference
     columns:
       - name: id
         data_type: character varying
         description: "{{ doc('generic__id') }} in departments."
         data_tests:
           - not_null
-          - unique
-        meta:
-          metrics:
-            total_departments_count:
-              type: count
       - name: code
         data_type: character varying
         description: "{{ doc('departments__code') }}"

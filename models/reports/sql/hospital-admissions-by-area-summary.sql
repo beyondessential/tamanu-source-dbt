@@ -53,16 +53,16 @@ area_summary as (
 )
 
 select
-    to_char(lg.month, 'YYYY-MM') as "{{ translate_label('reportingMonth', 'Month') }}",
-    lg.facility as "{{ translate_label('facility', 'Facility') }}",
-    lg.location_group as "{{ translate_label('locationGroup', 'Area') }}",
-    coalesce(lg.admissions, 0) as "{{ translate_label('hospitalAdmissionCount', 'Number of admissions') }}",
-    coalesce(lg.discharges, 0) as "{{ translate_label('hospitalDischargeCount', 'Number of discharges') }}",
-    coalesce(lg.deaths, 0) as "{{ translate_label('hospitalDeathCount', 'Number of deaths') }}",
-    coalesce(lg.transfer_ins, 0) as "{{ translate_label('hospitalTransfersIntoLocationCount', 'Number of transfers into location') }}",
-    coalesce(lg.transfer_outs, 0) as "{{ translate_label('hospitalTransfersOutOfLocationCount', 'Number of transfers out of location') }}",
-    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_label('hospitalAverageLengthOfStay', 'Average length of stay') }}",
-    coalesce(lg.occupancy, 0) as "{{ translate_label('hospitalPatientDayCount', 'Number of patient days') }}",
+    to_char(lg.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
+    lg.facility as "{{ translate_label('facility') }}",
+    lg.location_group as "{{ translate_label('locationGroup') }}",
+    coalesce(lg.admissions, 0) as "{{ translate_label('hospitalAdmissionCount') }}",
+    coalesce(lg.discharges, 0) as "{{ translate_label('hospitalDischargeCount') }}",
+    coalesce(lg.deaths, 0) as "{{ translate_label('hospitalDeathCount') }}",
+    coalesce(lg.transfer_ins, 0) as "{{ translate_label('hospitalTransfersIntoLocationCount') }}",
+    coalesce(lg.transfer_outs, 0) as "{{ translate_label('hospitalTransfersOutOfLocationCount') }}",
+    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_label('hospitalAverageLengthOfStay') }}",
+    coalesce(lg.occupancy, 0) as "{{ translate_label('hospitalPatientDayCount') }}",
     case
         when lg.occupancy notnull and lg.capacity notnull
             then
@@ -78,11 +78,11 @@ select
                     )::text, '%'
                 )
         else 'N/A'
-    end as "{{ translate_label('hospitalBedOccupancyPercent', 'Bed occupancy (%)') }}"
+    end as "{{ translate_label('hospitalBedOccupancyPercent') }}"
 from area_summary lg
 where
     case
         when {{ parameter('locationGroupId') }} is null then true
-        else lg.location_group::text = {{ parameter('locationGroupId') }}
+        else lg.location_group_id = {{ parameter('locationGroupId') }}
     end
 order by lg.month, lg.facility, lg.location_group

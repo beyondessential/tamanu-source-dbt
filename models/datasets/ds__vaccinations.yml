@@ -3,16 +3,13 @@ version: 2
 models:
   - name: ds__vaccinations
     description: Vaccinations
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
       - name: first_name
         data_type: character varying(255)
         description: "{{ doc('patients__first_name') }}"
@@ -106,6 +103,7 @@ models:
       - name: modified_by
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} who modified the record."
-      - name: modification_datetime
+      - name: updated_at
         data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in administered_vaccines which is used as a best estimate of modification datetime."
+        description: "{{ doc('generic__updated_at') }} for the vaccine administration record, sourced from the change logs."
+   

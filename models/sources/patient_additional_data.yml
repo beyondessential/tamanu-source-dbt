@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: patient_additional_data
-        description: '{{ doc("table__patient_additional_data") }}'
-        tags:
-          - patient
+        description: "{{ doc('table__patient_additional_data') }}"
+        config:
+          tags:
+            - patient
         columns:
           - name: created_at
             data_type: timestamp with time zone
@@ -143,8 +144,7 @@ sources:
             description: "{{ doc('patient_additional_data__updated_at_by_field') }}"
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              patient_additional_data."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in patient_additional_data."
             data_tests:
               - not_null
           - name: health_center_id

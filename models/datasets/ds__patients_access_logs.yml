@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: ds__patients_access_logs
+    description: Patient record views tracking which users accessed patient records. If the user's details is blank, it indicates that the user has been deleted from Tamanu.
+    config:
+      tags:
+        - administration
+    columns:
+      - name: patient_id
+        data_type: text
+        description: "{{ doc('generic__id') }} in patients (UUID format)."
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: sex
+        data_type: text
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in reference_data for village."
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} village name where patient resides."
+      - name: viewed_by_user_id
+        data_type: text
+        description: "{{ doc('generic__id') }} in users who viewed the patient record."
+      - name: viewed_by_user
+        data_type: character varying(255)
+        description: "{{ doc('users__display_name') }} who viewed the patient record."
+      - name: user_email
+        data_type: character varying(255)
+        description: "{{ doc('users__email') }} of the user who viewed the record."
+      - name: user_role
+        data_type: character varying(255)
+        description: "{{ doc('users__role') }} of the user who viewed the record."
+      - name: viewed_at_facility
+        data_type: character varying(255)
+        description: "{{ doc('facilities__name') }} where the user was logged in when viewing the record."
+      - name: date_time_viewed
+        data_type: timestamp
+        description: "{{ doc('generic__datetime') }} when the patient record was accessed."
+      - name: facility_id
+        data_type: text
+        description: "{{ doc('generic__facility_id') }} where the access occurred."
+      - name: is_mobile
+        data_type: boolean
+        description: "{{ doc('logs__accesses__is_mobile') }}"
+      - name: session_id
+        data_type: text
+        description: "{{ doc('logs__accesses__session_id') }}"
+      - name: device_id
+        data_type: text
+        description: "{{ doc('logs__accesses__device_id') }}"

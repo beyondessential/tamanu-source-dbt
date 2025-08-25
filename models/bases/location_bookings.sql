@@ -5,7 +5,6 @@ select
     a.patient_id,
     a.clinician_id,
     a.encounter_id,
-    a.schedule_id,
     a.location_id,
     a.booking_type_id,
     a.is_high_priority,

@@ -6,6 +6,12 @@ A dbt project of Tamanu's standard models. This includes:
 - reporting schema
 - analytics schema (upcoming)
 
+## AI Rules
+
+This project includes AI rules for AI assistants located in the `ai/` directory.
+
+To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
+
 ## SQL linting
 
 We use SQLFluff and the configuration file is located in the root folder and is named `.sqlfluff`.
@@ -24,13 +30,11 @@ This command pulls the source model information from the Tamanu repository based
 ## Generate the build script for deployments
 
 Execute the following command:
-`python ./scripts/build_reporting_assets.py --target <target_environment>`
-
-Replace <target_environment> with the desired deployment environment (e.g., fiji, palau). By default, it targets demoland.
+`python ./scripts/build_reporting_assets.py`
 
 This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
 
-- Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script_<target_version>.sql.
+- Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script.sql.
 - Compiled report JSON files: Saved in compiled/reports.
 - Import script: Saved as compiled/reports/importReports.js
 

@@ -2,26 +2,19 @@ version: 2
 models:
   - name: vaccine_administrations
     description: '{{ doc("table__administered_vaccines") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in vaccine_administrations."
-        meta:
-          metrics:
-            total_administered_vaccines_count:
-              type: count
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in vaccine_administrations."
       - name: encounter_id
         data_type: character varying(255)
         description: "{{ doc('administered_vaccines__encounter_id') }}"
-        meta:
-          metrics:
-            total_encounters_distinct_count:
-              type: count_distinct
       - name: location_id
         data_type: character varying(255)
         description: "{{ doc('administered_vaccines__location_id') }}"
@@ -73,6 +66,3 @@ models:
       - name: recorded_by_id
         data_type: character varying(255)
         description: "{{ doc('administered_vaccines__recorder_id') }}"
-      - name: modification_datetime
-        data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in administered_vaccines which is used as a best estimate of modification datetime."

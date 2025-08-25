@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: imaging_request_areas
-        description: '{{ doc("table__imaging_request_areas") }}'
-        tags:
-          - clinical
+        description: "{{ doc('table__imaging_request_areas') }}"
+        config:
+          tags:
+            - clinical
         columns:
           - name: id
             data_type: character varying(255)
@@ -46,7 +47,6 @@ sources:
                   field: id
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              imaging_request_areas."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in imaging_request_areas."
             data_tests:
               - not_null

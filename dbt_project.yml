@@ -1,11 +1,18 @@
 name: tamanu_source_dbt
-version: "2.32.1"
+version: "2.38.0"
+
 config-version: 2
 
 profile: tamanu_source_dbt
 
 vars:
   language: default
+  timezone: Australia/Sydney
+  date_format: YYYY-MM-DD
+  time_format: HH24:MI
+  datetime_format: YYYY-MM-DD HH24:MI:SS
+  datetime_without_seconds_format: YYYY-MM-DD HH24:MI
+  yearmonth_format: YYYY-MM
   translation_prefix: report.reporting
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
 
@@ -17,7 +24,6 @@ macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
 clean-targets:
-  - compiled
   - dbt_packages
   - target
 
@@ -33,7 +39,7 @@ models:
       
     datasets:
       +docs:
-        show: false
+        show: true
       +materialized: view
       
     reports:
@@ -42,6 +48,4 @@ models:
       +tags: [reports]
       
 data_tests:
-  +docs:
-    show: false
   +severity: warn

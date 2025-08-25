@@ -5,9 +5,10 @@ sources:
     description: "{{ doc('generic__schema') }}"
     tables:
       - name: contributing_death_causes
-        description: '{{ doc("table__contributing_death_causes") }}'
-        tags:
-          - clinical
+        description: "{{ doc('table__contributing_death_causes') }}"
+        config:
+          tags:
+            - clinical
         columns:
           - name: id
             data_type: character varying(255)
@@ -48,7 +49,6 @@ sources:
             description: "{{ doc('generic__deleted_at') }} in contributing_death_causes."
           - name: updated_at_sync_tick
             data_type: bigint
-            description: "{{ doc('generic__updated_at_sync_tick') }} in
-              contributing_death_causes."
+            description: "{{ doc('generic__updated_at_sync_tick') }} in contributing_death_causes."
             data_tests:
               - not_null

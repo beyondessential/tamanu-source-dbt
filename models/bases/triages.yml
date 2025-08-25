@@ -2,16 +2,13 @@ version: 2
 models:
   - name: triages
     description: '{{ doc("table__triages") }}'
-    tags:
-      - clinical
+    config:
+      tags:
+        - clinical
     columns:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in triages."
-        meta:
-          metrics:
-            total_triages_count:
-              type: count
       - name: arrival_datetime
         data_type: timestamp
         description: "{{ doc('triages__arrival_time') }}"

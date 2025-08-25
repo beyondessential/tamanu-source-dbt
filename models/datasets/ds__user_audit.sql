@@ -54,4 +54,3 @@ left join {{ ref('facilities') }} f on f.id = l.facility_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('discharges') }} ds on ds.encounter_id = e.id
 left join non_system_notes n on n.record_id = e.id
-order by e.start_datetime
