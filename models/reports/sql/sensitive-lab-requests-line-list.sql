@@ -1,3 +1,4 @@
+{{ config(tags=["restricted"]) }}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
