@@ -126,10 +126,6 @@ An array referencing the [location](#!/source/tamanu-source-dbt.tamanu.locations
 A comma separated list of names of the locations
 {% enddocs %}
 
-{% docs generic__non_sensitive_tests %}
-Full list of non-sensitive tests
-{% enddocs %}
-
 {% docs generic__patient_conditions %}
 Full list of conditions
 {% enddocs %}
@@ -154,12 +150,12 @@ Patient Name
 Full readable name
 {% enddocs %}
 
-{% docs generic__sensitive_tests %}
-Full list of sensitive tests
-{% enddocs %}
-
 {% docs generic__social_security_number %}
 Social security number of the patient.
+{% enddocs %}
+
+{% docs generic__tests %}
+Full list of tests
 {% enddocs %}
 
 {% docs generic__user %}

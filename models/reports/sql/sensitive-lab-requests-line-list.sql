@@ -1,3 +1,4 @@
+{{ config(tags=["restricted"]) }}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -13,28 +14,26 @@ select
     request_id as "{{ translate_label('labRequestId') }}",
     status as "{{ translate_label('labRequestStatus') }}",
     to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
-    clinician as "{{ translate_label('labRequestClinician') }}",
+    requested_by as "{{ translate_label('labRequestClinician') }}",
     requesting_department as "{{ translate_label('labRequestDepartment') }}",
     priority as "{{ translate_label('labRequestPriority') }}",
-    category as "{{ translate_label('labTestCategory') }}",
-    sensitive_tests as "{{ translate_label('labTestRequested') }}",
+    lab_test_category as "{{ translate_label('labTestCategory') }}",
+    tests as "{{ translate_label('labTestRequested') }}",
     to_char(collected_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestSampleCollectionDateTime') }}",
     collected_by as "{{ translate_label('labRequestSampleCollectedBy') }}",
     specimen_type as "{{ translate_label('labRequestSpecimenType') }}",
     site as "{{ translate_label('labRequestSampleSite') }}",
-    to_char(sensitive_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestCompletedDateTime') }}",
+    to_char(completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('labRequestCancellationReason') }}"
-from {{ ref('ds__lab_requests') }}
-where sensitive_tests is not null
-    and
-    case
+from {{ ref('ds__sensitive_lab_requests') }}
+where case
         when {{ parameter('requestedById') }} is null then true
         else requested_by_id = {{ parameter('requestedById') }}
     end
     and
     case
         when {{ parameter('testCategoryId') }} is null then true
-        else category_id = {{ parameter('testCategoryId') }}
+        else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
     and
     case
@@ -53,4 +52,4 @@ where sensitive_tests is not null
         else requested_datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
-order by requested_datetime, last_name, first_name, sensitive_tests
+order by requested_datetime, last_name, first_name, tests

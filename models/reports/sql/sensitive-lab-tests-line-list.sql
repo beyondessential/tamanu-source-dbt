@@ -1,3 +1,4 @@
+{{ config(tags=["restricted"]) }}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -22,10 +23,8 @@ select
     verification as "{{ translate_label('labTestVerification') }}",
     lab_test_type as "{{ translate_label('labTestType') }}",
     to_char(lab_test_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
-from {{ ref('ds__lab_tests') }}
-where is_sensitive
-    and
-    case
+from {{ ref('ds__sensitive_lab_tests') }}
+where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
         else requested_datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
