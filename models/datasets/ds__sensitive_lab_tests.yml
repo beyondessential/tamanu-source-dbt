@@ -6,7 +6,7 @@ models:
     config:
       tags:
         - clinical
-        - sensitive
+        - restricted
     columns:
       - name: patient_id
         data_type: character varying(255)

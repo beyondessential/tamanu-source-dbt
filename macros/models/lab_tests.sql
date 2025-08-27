@@ -63,6 +63,6 @@ left join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
 join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
-where {% if is_sensitive %}ltt.is_sensitive{% else %}not ltt.is_sensitive{% endif %}
+where ltt.is_sensitive = {{ is_sensitive }}
 
 {% endmacro %}
