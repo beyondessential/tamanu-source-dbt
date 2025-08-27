@@ -18,15 +18,21 @@ The models in the "sources" folder represents the models in the operational data
 Data type tag:
 - administration - System operation data that changes during normal use (e.g. user passwords, email addresses)
 - clinical - Patient medical records. Always attached to a Patient, often via an Encounter. Always considered sensitive
+- financial - Patient billing, invoicing, and payment for services and goods provided. Sometimes sensitive
+- log - System generated records that capture events, actions or state changes within an application.
 - patient - Patient demographic information. Can be masked or aggregated for privacy in reporting
 - reference - System-wide configuration and lists (diagnoses, facilities, locations, surveys, vaccination schedules). Populated centrally, synced to all facilities. Never sensitive/restricted
 - system - Internal Tamanu operation data (configuration, sync status, task queues). Usually invisible to clinicians. Sometimes sensitive. Not available for reporting
+
+Identifier type tag:
+- direct_identifier - Identifiers that can uniquely identify an individual on their own (e.g full name, email, passport ID). These identifiers are excluded from data analysis.
+- quasi_identifier - Identifiers that are not uniquely identifying alone, but can identify an individual when combined (e.g. sex, location). These identifiers are to be aggregated or generalised for data analysis.
 
 Operational status tag:
 - deprecated - Models that are no longer in use, data from these models are usually migrated to another part of the database. These models will not be available for reporting.
 
 ### Reporting schema
-The models in the "bases" folder have been stripped of metadata relevant to an operational database as well as test patient and deleted data. It is envisaged that the models from this schema is used by our users rather than the raw public schema to build reports.
+The models in the "bases" folder have been stripped of metadata relevant to an operational database as well as test patient and deleted data. The models from this schema is used to build reports.
 
 The models in the "reports" folder have been flattened for ease of creating reports. These models are used in the standardised reports that are made available to users on Tamanu's facility servers.
 

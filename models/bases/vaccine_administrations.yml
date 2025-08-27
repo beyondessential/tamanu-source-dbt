@@ -1,68 +1,68 @@
 version: 2
 models:
-  - name: vaccine_administrations
-    description: '{{ doc("table__administered_vaccines") }}'
-    config:
-      tags:
-        - clinical
-    columns:
-      - name: id
-        data_type: character varying(255)
-        description: "{{ doc('generic__id') }} in vaccine_administrations."
-      - name: datetime
-        data_type: timestamp
-        description: "{{ doc('generic__date') }} in vaccine_administrations."
-      - name: encounter_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__encounter_id') }}"
-      - name: location_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__location_id') }}"
-      - name: department_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__department_id') }}"
-      - name: scheduled_vaccine_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__scheduled_vaccine_id') }}"
-      - name: status
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__status') }}"
-      - name: reason
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__reason') }}"
-      - name: not_given_reason_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__not_given_reason_id') }}"
-      - name: batch
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__batch') }}"
-      - name: vaccine_name
-        data_type: text
-        description: "{{ doc('administered_vaccines__vaccine_name') }}"
-      - name: vaccine_brand
-        data_type: text
-        description: "{{ doc('administered_vaccines__vaccine_brand') }}"
-      - name: disease
-        data_type: text
-        description: "{{ doc('administered_vaccines__disease') }}"
-      - name: is_consented
-        data_type: boolean
-        description: "{{ doc('administered_vaccines__consent') }}"
-      - name: consent_given_by
-        data_type: text
-        description: "{{ doc('administered_vaccines__consent_given_by') }}"
-      - name: injection_site
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__injection_site') }}"
-      - name: given_by_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__given_by') }}"
-      - name: is_given_elsewhere
-        data_type: boolean
-        description: "{{ doc('administered_vaccines__given_elsewhere') }}"
-      - name: circumstance_ids
-        data_type: array
-        description: "{{ doc('administered_vaccines__circumstance_ids') }}"
-      - name: recorded_by_id
-        data_type: character varying(255)
-        description: "{{ doc('administered_vaccines__recorder_id') }}"
+- name: vaccine_administrations
+  description: '{{ doc("table__administered_vaccines") }}'
+  config:
+    tags:
+    - clinical
+  columns:
+  - name: id
+    data_type: character varying(255)
+    description: "{{ doc('generic__id') }} in vaccine_administrations."
+  - name: datetime
+    data_type: timestamp
+    description: "{{ doc('generic__date') }} in vaccine_administrations."
+  - name: encounter_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__encounter_id') }}"
+  - name: location_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__location_id') }}"
+  - name: department_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__department_id') }}"
+  - name: scheduled_vaccine_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__scheduled_vaccine_id') }}"
+  - name: status
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__status') }}"
+  - name: reason
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__reason') }}"
+  - name: not_given_reason_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__not_given_reason_id') }}"
+  - name: batch
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__batch') }}"
+  - name: vaccine_name
+    data_type: text
+    description: "{{ doc('administered_vaccines__vaccine_name') }}"
+  - name: vaccine_brand
+    data_type: text
+    description: "{{ doc('administered_vaccines__vaccine_brand') }}"
+  - name: disease
+    data_type: text
+    description: "{{ doc('administered_vaccines__disease') }}"
+  - name: is_consented
+    data_type: boolean
+    description: "{{ doc('administered_vaccines__consent') }}"
+  - name: consent_given_by
+    data_type: text
+    description: "{{ doc('administered_vaccines__consent_given_by') }}"
+  - name: injection_site
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__injection_site') }}"
+  - name: given_by_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__given_by') }}"
+  - name: is_given_elsewhere
+    data_type: boolean
+    description: "{{ doc('administered_vaccines__given_elsewhere') }}"
+  - name: circumstance_ids
+    data_type: array
+    description: "{{ doc('administered_vaccines__circumstance_ids') }}"
+  - name: recorded_by_id
+    data_type: character varying(255)
+    description: "{{ doc('administered_vaccines__recorder_id') }}"

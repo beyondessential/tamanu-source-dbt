@@ -1,17 +1,17 @@
 version: 2
 models:
-  - name: programs
-    description: '{{ doc("table__programs") }}'
-    config:
-      tags:
-        - reference
-    columns:
-      - name: id
-        data_type: character varying(255)
-        description: "{{ doc('generic__id') }} in programs."
-      - name: code
-        data_type: character varying(255)
-        description: "{{ doc('programs__code') }}"
-      - name: name
-        data_type: character varying(255)
-        description: "{{ doc('programs__name') }}"
+- name: programs
+  description: '{{ doc("table__programs") }}'
+  config:
+    tags:
+    - reference
+  columns:
+  - name: id
+    data_type: character varying(255)
+    description: "{{ doc('generic__id') }} in programs."
+  - name: code
+    data_type: character varying(255)
+    description: "{{ doc('programs__code') }}"
+  - name: name
+    data_type: character varying(255)
+    description: "{{ doc('programs__name') }}"

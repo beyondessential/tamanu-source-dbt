@@ -1,4 +1,5 @@
 .clinerules
+.env
 .idea
 .vscode
 .DS_Store
@@ -10,3 +11,4 @@ models/surveys/
 target/
 package-lock.yml
 .user.yml
+uv.lock

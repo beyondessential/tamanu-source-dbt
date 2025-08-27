@@ -1,0 +1,82 @@
+version: 2
+models:
+- name: patient_program_registrations_change_logs
+  description: "Change logs of {{ doc('table__patient_program_registrations') }}"
+  config:
+    tags:
+    - clinical
+    - log
+  columns:
+  - name: changelog_id
+    data_type: uuid
+    description: "{{ doc('logs__changes__id') }}"
+  - name: logged_at
+    data_type: timestamp
+    description: "{{ doc('logs__changes__logged_at') }} in patient_program registrations history."
+  - name: updated_by_user_id
+    data_type: text
+    description: "{{ doc('logs__changes__updated_by_user_id') }} in patient_program registrations history."
+  - name: id
+    data_type: text
+    description: "{{ doc('generic__id') }} in patient_program_registrations."
+  - name: datetime
+    data_type: timestamp
+    description: "{{ doc('generic__date') }} in patient_program_registrations history."
+  - name: registration_status
+    data_type: text
+    description: "{{ doc('patient_program_registrations__registration_status') }} from history."
+  - name: patient_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__patient_id') }} from history."
+  - name: program_registry_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__program_registry_id') }} from history."
+  - name: clinical_status_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__clinical_status_id') }} from history."
+  - name: registered_by_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__clinician_id') }} from history."
+  - name: registering_facility_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__registering_facility_id') }} from history."
+  - name: facility_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__facility_id') }} from history."
+  - name: village_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__village_id') }} from history."
+  - name: deactivated_by_id
+    data_type: text
+    description: "{{ doc('patient_program_registrations__deactivated_clinician_id') }} from history."
+  - name: deactivated_datetime
+    data_type: timestamp
+    description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
+unit_tests:
+- name: test_patient_program_registrations_change_logs
+  model: patient_program_registrations_change_logs
+  description: Test basic functionality of patient_program_registrations_change_logs model
+  given:
+  - input: source('logs__tamanu', 'changes')
+    format: sql
+    rows: 'select ''550e8400-e29b-41d4-a716-446655440001''::uuid as id, ''2025-06-20 10:00:00''::timestamp as logged_at, ''user_001'' as updated_by_user_id, ''reg_001'' as record_id, ''patient_program_registrations'' as table_name, ''2.33.0'' as version, ''{"date": "2024-01-15T09:00:00Z", "registration_status": "active", "patient_id": "pat_001", "program_registry_id": "prog_001", "clinical_status_id": "status_001", "clinician_id": "cli_001", "registering_facility_id": "fac_001", "facility_id": "fac_001", "village_id": null, "deactivated_clinician_id": null, "deactivated_date": null}''::jsonb as record_data
+
+      union all
+
+      select ''550e8400-e29b-41d4-a716-446655440002''::uuid, ''2025-06-20 14:30:00''::timestamp, ''user_002'', ''reg_001'', ''patient_program_registrations'', ''2.33.1'', ''{"date": "2024-01-16T13:30:00Z", "registration_status": "inactive", "patient_id": "pat_001", "program_registry_id": "prog_001", "clinical_status_id": "status_002", "clinician_id": "cli_002", "registering_facility_id": "fac_001", "facility_id": "fac_001", "village_id": null, "deactivated_clinician_id": "cli_003", "deactivated_date": "2024-01-16T15:00:00Z"}''::jsonb
+
+      '
+  - input: ref('patient_program_registrations')
+    format: sql
+    rows: 'select ''reg_001'' as id, ''2026-01-18 10:00:00''::timestamp as datetime, ''inactive'' as registration_status, ''pat_001'' as patient_id, ''prog_001'' as program_registry_id, ''status_002'' as clinical_status_id, ''cli_002'' as registered_by_id, ''fac_001'' as registering_facility_id, ''fac_001'' as facility_id, null as village_id, ''cli_003'' as deactivated_by_id, ''2024-01-16 15:00:00''::timestamp as deactivated_datetime, null as deleted_at
+
+      '
+  expect:
+    format: sql
+    rows: 'select ''550e8400-e29b-41d4-a716-446655440001''::uuid as changelog_id, ''2025-06-20 10:00:00''::timestamp as logged_at, ''user_001'' as updated_by_user_id, ''reg_001'' as id, ''2024-01-15 09:00:00''::timestamp as datetime, ''active'' as registration_status, ''pat_001'' as patient_id, ''prog_001'' as program_registry_id, ''status_001'' as clinical_status_id, ''cli_001'' as registered_by_id, ''fac_001'' as registering_facility_id, ''fac_001'' as facility_id, null as village_id, null as deactivated_by_id, null::timestamp as deactivated_datetime
+
+      union all
+
+      select ''550e8400-e29b-41d4-a716-446655440002''::uuid, ''2025-06-20 14:30:00''::timestamp, ''user_002'', ''reg_001'', ''2024-01-16 13:30:00''::timestamp, ''inactive'', ''pat_001'', ''prog_001'', ''status_002'', ''cli_002'', ''fac_001'', ''fac_001'', null, ''cli_003'', ''2024-01-16 15:00:00''::timestamp
+
+      '

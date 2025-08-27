@@ -1,56 +1,56 @@
 version: 2
 models:
-  - name: patients_change_logs
-    description: Historical changes to patients extracted from the changes log table.
-    config:
-      contract:
-        enforced: true
-      tags:
-        - patient
-        - history
-    columns:
-      - name: changelog_id
-        data_type: uuid
-        description: "{{ doc('logs__changes__id') }}"
-      - name: logged_at
-        data_type: timestamp
-        description: "{{ doc('logs__changes__logged_at') }} in patients history."
-      - name: updated_by_user_id
-        data_type: text
-        description: "{{ doc('logs__changes__updated_by_user_id') }} in patients history."
-      - name: id
-        data_type: text
-        description: "{{ doc('generic__id') }} in patients."
-      - name: display_id
-        data_type: text
-        description: "{{ doc('patients__display_id') }} from history."
-      - name: first_name
-        data_type: text
-        description: "{{ doc('patients__first_name') }} from history."
-      - name: middle_name
-        data_type: text
-        description: "{{ doc('patients__middle_name') }} from history."
-      - name: last_name
-        data_type: text
-        description: "{{ doc('patients__last_name') }} from history."
-      - name: cultural_name
-        data_type: text
-        description: "{{ doc('patients__cultural_name') }} from history."
-      - name: email
-        data_type: text
-        description: "{{ doc('patients__email') }} from history."
-      - name: sex
-        data_type: text
-        description: "{{ doc('patients__sex') }} from history."
-      - name: date_of_birth
-        data_type: date
-        description: "{{ doc('patients__date_of_birth') }} from history."
-      - name: date_of_death
-        data_type: timestamp
-        description: "{{ doc('patients__date_of_death') }} from history."
-      - name: village_id
-        data_type: text
-        description: "{{ doc('patients__village_id') }} from history."
-      - name: registration_date
-        data_type: date
-        description: "{{ doc('generic__created_at') }} in patients history which is used as a best estimate of registration date."
+- name: patients_change_logs
+  description: "Change logs for {{ doc('table__patients') }}"
+  config:
+    tags:
+    - patient
+    - log
+  columns:
+  - name: changelog_id
+    data_type: uuid
+    description: "{{ doc('logs__changes__id') }}"
+  - name: logged_at
+    data_type: timestamp
+    description: "{{ doc('logs__changes__logged_at') }} in patients history."
+  - name: updated_by_user_id
+    data_type: text
+    description: "{{ doc('logs__changes__updated_by_user_id') }} in patients history."
+  - name: id
+    data_type: text
+    description: "{{ doc('generic__id') }} in patients."
+  - name: display_id
+    data_type: text
+    description: "{{ doc('patients__display_id') }} from history."
+  - name: first_name
+    data_type: text
+    description: "{{ doc('patients__first_name') }} from history."
+  - name: middle_name
+    data_type: text
+    description: "{{ doc('patients__middle_name') }} from history."
+    tags:
+    - pii
+  - name: last_name
+    data_type: text
+    description: "{{ doc('patients__last_name') }} from history."
+  - name: cultural_name
+    data_type: text
+    description: "{{ doc('patients__cultural_name') }} from history."
+  - name: email
+    data_type: text
+    description: "{{ doc('patients__email') }} from history."
+  - name: sex
+    data_type: text
+    description: "{{ doc('patients__sex') }} from history."
+  - name: date_of_birth
+    data_type: date
+    description: "{{ doc('patients__date_of_birth') }} from history."
+  - name: date_of_death
+    data_type: timestamp
+    description: "{{ doc('patients__date_of_death') }} from history."
+  - name: village_id
+    data_type: text
+    description: "{{ doc('patients__village_id') }} from history."
+  - name: registration_date
+    data_type: date
+    description: "{{ doc('generic__created_at') }} in patients history which is used as a best estimate of registration date."

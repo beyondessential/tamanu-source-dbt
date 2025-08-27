@@ -1,43 +1,43 @@
 models:
-  - name: invoice_items
-    description: '{{ doc("table__invoice_items") }}'
-    config:
-      tags:
-        - administration
-    columns:
-      - name: id
-        data_type: uuid
-        description: "{{ doc('generic__id') }} in invoice_items."
-      - name: invoice_id
-        data_type: uuid
-        description: "{{ doc('invoice_items__invoice_id') }}"
-      - name: date
-        data_type: date
-        description: "{{ doc('invoice_items__order_date') }}"
-      - name: product_id
-        data_type: character varying(255)
-        description: "{{ doc('invoice_items__product_id') }}"
-      - name: product_code
-        data_type: character varying(255)
-        description: "{{ doc('invoice_items__product_code') }}"
-      - name: product_name
-        data_type: character varying(255)
-        description: "{{ doc('invoice_items__product_name') }}"
-      - name: note
-        data_type: character varying(255)
-        description: "{{ doc('invoice_items__note') }}"
-      - name: product_discountable
-        data_type: boolean
-        description: "{{ doc('invoice_items__product_discountable') }}"
-      - name: quantity
-        data_type: integer
-        description: "{{ doc('invoice_items__quantity') }}"
-      - name: product_price
-        data_type: numeric
-        description: "{{ doc('invoice_items__product_price') }}"
-      - name: ordered_by_id
-        data_type: character varying(255)
-        description: "{{ doc('invoice_items__ordered_by_user_id') }}"
-      - name: source_id
-        data_type: uuid
-        description: "{{ doc('invoice_items__source_id') }}"
+- name: invoice_items
+  description: '{{ doc("table__invoice_items") }}'
+  config:
+    tags:
+    - financial
+  columns:
+  - name: id
+    data_type: uuid
+    description: "{{ doc('generic__id') }} in invoice_items."
+  - name: invoice_id
+    data_type: uuid
+    description: "{{ doc('invoice_items__invoice_id') }}"
+  - name: date
+    data_type: date
+    description: "{{ doc('invoice_items__order_date') }}"
+  - name: product_id
+    data_type: character varying(255)
+    description: "{{ doc('invoice_items__product_id') }}"
+  - name: product_code
+    data_type: character varying(255)
+    description: "{{ doc('invoice_items__product_code') }}"
+  - name: product_name
+    data_type: character varying(255)
+    description: "{{ doc('invoice_items__product_name') }}"
+  - name: note
+    data_type: character varying(255)
+    description: "{{ doc('invoice_items__note') }}"
+  - name: product_discountable
+    data_type: boolean
+    description: "{{ doc('invoice_items__product_discountable') }}"
+  - name: quantity
+    data_type: integer
+    description: "{{ doc('invoice_items__quantity') }}"
+  - name: product_price
+    data_type: numeric
+    description: "{{ doc('invoice_items__product_price') }}"
+  - name: ordered_by_id
+    data_type: character varying(255)
+    description: "{{ doc('invoice_items__ordered_by_user_id') }}"
+  - name: source_id
+    data_type: uuid
+    description: "{{ doc('invoice_items__source_id') }}"
