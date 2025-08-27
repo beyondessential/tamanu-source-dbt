@@ -24,13 +24,17 @@ VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 def move_dbt_docs():
     """Move dbt docs to the compiled directory with proper naming."""
     ensure_directory_exists(VERSION_DIR)
-    
+
     source_file = os.path.join(BASE_DIR, "target", "static_index.html")
-    target_file = os.path.join(VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html")
-    
+    target_file = os.path.join(
+        VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html"
+    )
+
     if os.path.exists(source_file):
         shutil.move(source_file, target_file)
-        cprint(f"Moved dbt docs: reporting-docs-v{VERSION}-{DEPLOYMENT}.html", "success")
+        cprint(
+            f"Moved dbt docs: reporting-docs-v{VERSION}-{DEPLOYMENT}.html", "success"
+        )
     else:
         cprint(f"Warning: static_index.html not found at {source_file}", "warning")
 
@@ -52,6 +56,8 @@ def main():
     # Generate scripts and reports
     generate_reporting_schema_script()
     generate_project_reports()
+    
+    # Generate analytics metadata
     generate_analytics_metadata()
     move_dbt_docs()
 

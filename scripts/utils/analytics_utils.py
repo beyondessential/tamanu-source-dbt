@@ -98,17 +98,22 @@ def extract_bases_models(manifest: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "meta": node_data.get("meta", {}),
             }
 
-            # Extract column information
+            # Extract column information, excluding columns tagged as direct_identifier
             columns = node_data.get("columns", {})
             if columns:
                 model_info["columns"] = {}
                 for col_name, col_data in columns.items():
+                    # Skip columns tagged as direct_identifier
+                    col_tags = col_data.get("tags", [])
+                    if "direct_identifier" in col_tags:
+                        continue
+                    
                     col_info = {
                         "name": col_name,
                         "description": col_data.get("description", ""),
                         "data_type": col_data.get("data_type"),
                         "meta": col_data.get("meta", {}),
-                        "tags": col_data.get("tags", []),
+                        "tags": col_tags,
                     }
                     model_info["columns"][col_name] = col_info
 

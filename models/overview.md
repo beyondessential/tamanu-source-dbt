@@ -1,58 +1,104 @@
 {% docs __overview__ %}
-# Tamanu models documentation
+# Tamanu Models Documentation
 
 ## Purpose
-This documentation aims to be a guide to Tamanu's standard models. The expected use-case is a developer or data steward looking up a particular model for information on how to use it.
+This documentation serves as a guide to Tamanu's standard models for developers, data stewards, and analysts looking to understand and utilise the data structure for reporting and analytics.
 
-## Scope
-Models included in this documentation:
-- sources (raw public schema)
-- bases (reporting schema)
-- datasets (reporting schema)
+## Project Overview
+This dbt project transforms Tamanu healthcare system data into optimised datasets following a structured data flow: **sources/logs → bases → datasets → reports**. The architecture supports both reporting and analytics use cases while maintaining data governance and privacy standards.
 
-## Content
+## Model Architecture & Data Flow
 
-### Raw public schema
-The models in the "sources" folder represents the models in the operational database. Tags are used to classify the data and operational status of the models.
+### Layer 1: Sources & Logs
+- **`models/sources`**: Raw operational database tables from the `public` schema
+- **`models/logs`**: System-generated audit and event data from the `logs` schema
+- **Purpose**: Foundation layer representing the operational database structure
+- **Status**: Read-only definitions managed externally
 
-Data type tag:
-- administration - System operation data that changes during normal use (e.g. user passwords, email addresses)
-- clinical - Patient medical records. Always attached to a Patient, often via an Encounter. Always considered sensitive
-- financial - Patient billing, invoicing, and payment for services and goods provided. Sometimes sensitive
-- log - System generated records that capture events, actions or state changes within an application.
-- patient - Patient demographic information. Can be masked or aggregated for privacy in reporting
-- reference - System-wide configuration and lists (diagnoses, facilities, locations, surveys, vaccination schedules). Populated centrally, synced to all facilities. Never sensitive/restricted
-- system - Internal Tamanu operation data (configuration, sync status, task queues). Usually invisible to clinicians. Sometimes sensitive. Not available for reporting
+### Layer 2: Bases
+- **`models/bases`**: Cleaned and filtered source data with soft-deleted records and test patients removed
+- **Purpose**: Clean, reliable foundation for all downstream transformations
+- **Usage**: Building block for datasets and reports
 
-Identifier type tag:
-- direct_identifier - Identifiers that can uniquely identify an individual on their own (e.g full name, email, passport ID). These identifiers are excluded from data analysis.
-- quasi_identifier - Identifiers that are not uniquely identifying alone, but can identify an individual when combined (e.g. sex, location). These identifiers are to be aggregated or generalised for data analysis.
+### Layer 3: Datasets
+- **`models/datasets`**: Business-ready, denormalised views built on bases models
+- **Features**: User-friendly column names, joined data, calculated fields
+- **Purpose**: Optimised for data analysis and report development
+- **Target Audience**: Data analysts and report developers
 
-Operational status tag:
-- deprecated - Models that are no longer in use, data from these models are usually migrated to another part of the database. These models will not be available for reporting.
+### Layer 4: Reports
+- **`models/reports`**: Final reporting layer with translations and formatting applied
+- **Features**: 
+  - Localised field labels using the translation system
+  - Standardised date/time formatting
+  - Optimised for end-user consumption
+- **Configuration**: Each report includes a corresponding `.json` config file in `models/reports/config/`
 
-### Reporting schema
-The models in the "bases" folder have been stripped of metadata relevant to an operational database as well as test patient and deleted data. The models from this schema is used to build reports.
+## Deployment Targets
 
-The models in the "reports" folder have been flattened for ease of creating reports. These models are used in the standardised reports that are made available to users on Tamanu's facility servers.
+### Reporting Schema
+**Command**: `dbt run --target reporting_release`
+- Complete functionality with all models and columns
+- Full data fidelity for comprehensive reporting
+- Used for standardised reports on Tamanu facility servers
 
-## Exploring the documentation
+### Analytics Schema (Tupaia Integration)
+**Command**: `dbt run --target analytics_release --select tag:base`
+- Privacy-compliant deployment excluding direct identifiers
+- Automatically filters columns tagged with `direct_identifier`
+- Preserves all transformations and business logic
+- Optimised for aggregated analysis and population health insights
 
-### Navigation
-You can use the Project and Database navigation tabs on the left side of the window to explore the models in your project.
+## Data Classification System
 
-### Project Tab
-The Project tab mirrors the directory structure of your dbt project. In this tab, you can see all of the models defined in your dbt project, as well as models imported from dbt packages.
+### Data Type Tags
+- **`administration`** - System operation data that changes during normal use (e.g., user passwords, email addresses)
+- **`clinical`** - Patient medical records, always attached to a Patient (often via an Encounter), always considered sensitive
+- **`financial`** - Patient billing, invoicing, and payment for services and goods provided, sometimes sensitive
+- **`log`** - System-generated records capturing events, actions, or state changes within the application
+- **`patient`** - Patient demographic information, can be masked or aggregated for privacy in reporting
+- **`reference`** - System-wide configuration and lists (diagnoses, facilities, locations, surveys, vaccination schedules), populated centrally and synced to all facilities, never sensitive/restricted
+- **`system`** - Internal Tamanu operation data (configuration, sync status, task queues), usually invisible to clinicians, sometimes sensitive, not available for reporting
 
-### Database Tab
-The Database tab also exposes your models, but in a format that looks more like a database explorer. This view shows relations (tables and views) grouped into database schemas. Note that ephemeral models are not shown in this interface, as they do not exist in the database.
+### Privacy Classification Tags
+- **`direct_identifier`** - Identifiers that can uniquely identify an individual on their own (e.g., full name, email, passport ID)
+  - These identifiers are excluded from analytics deployments
+- **`quasi_identifier`** - Identifiers that are not uniquely identifying alone but can identify an individual when combined (e.g., sex, location)
+  - These identifiers should be aggregated or generalised for data analysis
 
-### Graph Exploration
-You can click the blue icon on the bottom-right corner of the page to view the lineage graph of your models.
+### Operational Status Tags
+- **`deprecated`** - Models that are no longer in use; data from these models is usually migrated to another part of the database
+  - These models will not be available for reporting
 
-On model pages, you'll see the immediate parents and children of the model you're exploring. By clicking the Expand button at the top-right of this lineage pane, you'll be able to see all of the models that are used to build, or are built from, the model you're exploring.
+## Extensions & Customisations
 
-Once expanded, you'll be able to use the --select and --exclude model selection syntax to filter the models in the graph. For more information on model selection, check out the dbt docs.
+### Survey Models
+Survey models are not part of the standard model set but are available as extensions in individual project deployments. These handle:
+- Custom form-based data collection
+- Patient-specific survey responses
+- Program-specific data elements
 
-Note that you can also right-click on models to interactively filter and explore the graph.
+Survey models follow the same architectural patterns as standard models when implemented.
+
+## Exploring the Documentation
+
+### Navigation Options
+
+#### Project Tab
+The Project tab mirrors the directory structure of your dbt project, showing all models defined in the project as well as models imported from dbt packages.
+
+#### Database Tab
+The Database tab presents models in a database explorer format, showing relations (tables and views) grouped into database schemas. Note that ephemeral models are not shown in this interface as they do not exist in the database.
+
+### Lineage Graph Exploration
+Click the blue icon on the bottom-right corner of any page to view the lineage graph of your models.
+
+#### Model Page Lineage
+On individual model pages, you'll see the immediate parents and children of the model you're exploring. Click the **Expand** button at the top-right of the lineage pane to see all models that are used to build, or are built from, the current model.
+
+#### Interactive Graph Features
+- Use `--select` and `--exclude` model selection syntax to filter models in the graph
+- Right-click on models to interactively filter and explore the graph
+- Navigate through the complete data lineage to understand dependencies
+
 {% enddocs %}
