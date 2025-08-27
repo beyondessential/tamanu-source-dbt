@@ -1,0 +1,7 @@
+*.json
+*.txt
+checkpoints/*.json
+expectations/.*
+expectations/*.json
+validation_definitions/*.json
+uncommitted/

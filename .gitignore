@@ -1,5 +1,7 @@
 .clinerules
+.env
 .idea
+.venv
 .vscode
 .DS_Store
 __pycache__
@@ -9,4 +11,5 @@ dbt_packages/
 models/surveys/
 target/
 package-lock.yml
+uv.lock
 .user.yml
