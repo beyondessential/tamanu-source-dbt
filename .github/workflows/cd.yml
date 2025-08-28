@@ -99,18 +99,22 @@ jobs:
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/report-translations/any" \
             --cert meta.crt --key meta.key \
             --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/report-translations-v$VERSION_WITH_ZERO_PATCH-standard.xlsx"
+            --fail-with-body
           
           # Publish analytics metadata
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/analytics-metadata/any" \
             --cert meta.crt --key meta.key \
             --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/analytics-metadata-v$VERSION_WITH_ZERO_PATCH-standard.yml"
+            --fail-with-body
           
           # Publish reporting schema
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/reporting-schema/any" \
             --cert meta.crt --key meta.key \
             --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/reporting-schema-v$VERSION_WITH_ZERO_PATCH-standard.sql"
+            --fail-with-body
           
           # Publish dbt docs
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/reporting-docs/any" \
             --cert meta.crt --key meta.key \
             --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/reporting-docs-v$VERSION_WITH_ZERO_PATCH-standard.html"
+            --fail-with-body
