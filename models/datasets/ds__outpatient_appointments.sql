@@ -6,6 +6,7 @@ select
     p.date_of_birth,
     date_part('year', age(a.start_datetime, p.date_of_birth)) as age,
     p.sex,
+    coalesce(pd.primary_contact_number, pd.secondary_contact_number) as contact_number,
     vil.id as village_id,
     vil.name as village,
     billing.id as billing_type_id,

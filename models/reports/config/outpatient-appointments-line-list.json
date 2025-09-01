@@ -37,7 +37,7 @@
         "name": "appointmentTypeId"
       },
       {
-        "parameterField": "ParameterSelectField",
+        "parameterField": "ParameterMultiselectField",
         "label": "Status",
         "name": "appointmentStatus",
         "options": [
