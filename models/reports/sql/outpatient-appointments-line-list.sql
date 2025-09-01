@@ -37,7 +37,7 @@ where case
     end
     and
     case
-        when coalesce({{ parameter('appointmentStatus') }}) is null then true
+        when {{ parameter('appointmentStatus') }} is null then true
         else appointment_status in ({{ parameter('appointmentStatus') }})
     end
     and
