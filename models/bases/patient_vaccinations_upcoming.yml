@@ -1,33 +1,29 @@
 version: 2
 models:
-  - name: patient_vaccinations_upcoming
-    description: "{{ doc('table__upcoming_vaccinations') }}"
-    config:
-      tags:
-        - clinical
-    columns:
-      - name: patient_id
-        data_type: character varying
-        description: "{{ doc('upcoming_vaccinations__patient_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
-      - name: vaccine_schedules_id
-        data_type: character varying
-        description: "{{ doc('upcoming_vaccinations__scheduled_vaccine_id') }}"
-      - name: vaccine_category
-        data_type: character varying
-        description: "{{ doc('upcoming_vaccinations__vaccine_category') }}"
-      - name: vaccine_id
-        data_type: character varying
-        description: "{{ doc('upcoming_vaccinations__vaccine_id') }}"
-      - name: due_date
-        data_type: date
-        description: "{{ doc('upcoming_vaccinations__due_date') }}"
-      - name: days_till_due
-        data_type: integer
-        description: "{{ doc('upcoming_vaccinations__days_till_due') }}"
-      - name: status
-        data_type: text
-        description: "{{ doc('upcoming_vaccinations__status') }}"
+- name: patient_vaccinations_upcoming
+  description: "{{ doc('table__upcoming_vaccinations') }}"
+  config:
+    tags:
+    - clinical
+  columns:
+  - name: patient_id
+    data_type: character varying
+    description: "{{ doc('upcoming_vaccinations__patient_id') }}"
+  - name: vaccine_schedules_id
+    data_type: character varying
+    description: "{{ doc('upcoming_vaccinations__scheduled_vaccine_id') }}"
+  - name: vaccine_category
+    data_type: character varying
+    description: "{{ doc('upcoming_vaccinations__vaccine_category') }}"
+  - name: vaccine_id
+    data_type: character varying
+    description: "{{ doc('upcoming_vaccinations__vaccine_id') }}"
+  - name: due_date
+    data_type: date
+    description: "{{ doc('upcoming_vaccinations__due_date') }}"
+  - name: days_till_due
+    data_type: integer
+    description: "{{ doc('upcoming_vaccinations__days_till_due') }}"
+  - name: status
+    data_type: text
+    description: "{{ doc('upcoming_vaccinations__status') }}"

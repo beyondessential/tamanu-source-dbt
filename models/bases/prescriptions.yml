@@ -9,33 +9,21 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in prescriptions."
-      - name: prescribed_date
+      - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in prescriptions."
-      - name: start_date
+      - name: start_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__start_date') }}"
-      - name: end_date
+      - name: end_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__end_date') }}"
-      - name: notes
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__notes') }}"
-      - name: indication
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__indication') }}"
-      - name: route
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__route') }}"
       - name: medication_id
         data_type: character varying(255)
         description: "{{ doc('prescriptions__medication_id') }}"
       - name: prescriber_id
         data_type: character varying(255)
         description: "{{ doc('prescriptions__prescriber_id') }}"
-      - name: quantity
-        data_type: integer
-        description: "{{ doc('prescriptions__quantity') }}"
       - name: is_discontinued
         data_type: boolean
         description: "{{ doc('prescriptions__discontinued') }}"
@@ -45,54 +33,7 @@ models:
       - name: discontinuing_reason
         data_type: character varying(255)
         description: "{{ doc('prescriptions__discontinuing_reason') }}"
-      - name: repeats
-        data_type: integer
-        description: "{{ doc('prescriptions__repeats') }}"
-      - name: discontinued_date
+      - name: discontinued_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__discontinued_date') }}"
-      - name: is_ongoing
-        data_type: boolean
-        description: "{{ doc('prescriptions__is_ongoing') }}"
-      - name: is_prn
-        data_type: boolean
-        description: "{{ doc('prescriptions__is_prn') }}"
-      - name: is_variable_dose
-        data_type: boolean
-        description: "{{ doc('prescriptions__is_variable_dose') }}"
-      - name: dose_amount
-        data_type: numeric
-        description: "{{ doc('prescriptions__dose_amount') }}"
-      - name: units
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__units') }}"
-      - name: frequency
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__frequency') }}"
-      - name: duration_value
-        data_type: numeric
-        description: "{{ doc('prescriptions__duration_value') }}"
-      - name: duration_unit
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__duration_unit') }}"
-      - name: is_phone_order
-        data_type: boolean
-        description: "{{ doc('prescriptions__is_phone_order') }}"
-      - name: ideal_times
-        data_type: array
-        description: "{{ doc('prescriptions__ideal_times') }}"
-      - name: pharmacy_notes
-        data_type: character varying(255)
-        description: "{{ doc('prescriptions__pharmacy_notes') }}"
-      - name: display_pharmacy_notes_in_mar
-        data_type: boolean
-        description: "{{ doc('prescriptions__display_pharmacy_notes_in_mar') }}"
-      - name: created_at
-        data_type: timestamp
-        description: "{{ doc('generic__created_at') }} in prescriptions."
-      - name: updated_at
-        data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in prescriptions."
-      - name: deleted_at
-        data_type: timestamp
-        description: "{{ doc('generic__deleted_at') }} in prescriptions." 
+      

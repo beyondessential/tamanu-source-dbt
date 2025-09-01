@@ -1,35 +1,35 @@
 version: 2
 models:
-  - name: patient_program_registration_conditions
-    description: '{{ doc("table__patient_program_registration_conditions") }}'
-    config:
-      tags:
-        - clinical
-    columns:
-      - name: id
-        data_type: character varying(255)
-        description: "{{ doc('generic__id') }} in patient_program_registration_conditions."
-      - name: datetime
-        data_type: timestamp
-        description: "{{ doc('generic__date') }} in patient_program_registration_conditions."
-      - name: program_registry_condition_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__program_registry_condition_id') }}"
-      - name: patient_program_registration_id
-        data_type: uuid
-        description: "{{ doc('patient_program_registration_conditions__patient_program_registration_id') }}"
-      - name: program_registry_condition_category_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__program_registry_condition_category_id') }}"
-      - name: reason_for_change
-        data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__reason_for_change') }}"
-      - name: recorded_by_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__clinician_id') }}"
-      - name: deleted_datetime
-        data_type: timestamp
-        description: "{{ doc('generic__deletion_date') }} in patient_program_registration_conditions."
-      - name: deleted_by_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id') }}"
+- name: patient_program_registration_conditions
+  description: '{{ doc("table__patient_program_registration_conditions") }}'
+  config:
+    tags:
+    - clinical
+  columns:
+  - name: id
+    data_type: character varying(255)
+    description: "{{ doc('generic__id') }} in patient_program_registration_conditions."
+  - name: datetime
+    data_type: timestamp
+    description: "{{ doc('generic__date') }} in patient_program_registration_conditions."
+  - name: program_registry_condition_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_program_registration_conditions__program_registry_condition_id') }}"
+  - name: patient_program_registration_id
+    data_type: uuid
+    description: "{{ doc('patient_program_registration_conditions__patient_program_registration_id') }}"
+  - name: program_registry_condition_category_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_program_registration_conditions__program_registry_condition_category_id') }}"
+  - name: reason_for_change
+    data_type: character varying(255)
+    description: "{{ doc('patient_program_registration_conditions__reason_for_change') }}"
+  - name: recorded_by_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_program_registration_conditions__clinician_id') }}"
+  - name: deleted_datetime
+    data_type: timestamp
+    description: "{{ doc('generic__deletion_date') }} in patient_program_registration_conditions."
+  - name: deleted_by_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id')}}"

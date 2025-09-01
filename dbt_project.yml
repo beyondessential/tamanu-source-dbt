@@ -33,6 +33,8 @@ models:
       +docs:
         show: true
       +materialized: view
+      +tags:
+        - base
       
     intermediate:
       +materialized: ephemeral

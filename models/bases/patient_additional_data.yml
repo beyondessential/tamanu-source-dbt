@@ -1,119 +1,183 @@
 version: 2
 models:
-  - name: patient_additional_data
-    description: '{{ doc("table__patient_additional_data") }}'
-    config:
-      tags:
-        - patient
-    columns:
-      - name: patient_id
-        data_type: text
-        description: "{{ doc('generic__id') }} in patient_additional_data."
-      - name: title
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__title') }}"
-      - name: marital_status
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__marital_status') }}"
-      - name: primary_contact_number
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__primary_contact_number') }}"
-      - name: secondary_contact_number
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__secondary_contact_number') }}"
-      - name: emergency_contact_name
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__emergency_contact_name') }}"
-      - name: emergency_contact_number
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__emergency_contact_number') }}"
-      - name: social_media
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__social_media') }}"
-      - name: ethnicity_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__ethnicity_id') }}"
-      - name: religion_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__religion_id') }}"
-      - name: nationality_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__nationality_id') }}"
-      - name: secondary_village_id
-        data_type: text
-        description: "{{ doc('patient_additional_data__secondary_village_id') }}"
-      - name: country_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__country_id') }}"
-      - name: division_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__division_id') }}"
-      - name: subdivision_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__subdivision_id') }}"
-      - name: medical_area_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__medical_area_id') }}"
-      - name: nursing_zone_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__nursing_zone_id') }}"
-      - name: settlement_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__settlement_id') }}"
-      - name: city_town
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__city_town') }}"
-      - name: street_village
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__street_village') }}"
-      - name: country_of_birth_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__country_of_birth_id') }}"
-      - name: place_of_birth
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__place_of_birth') }}"
-      - name: birth_certificate
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__birth_certificate') }}"
-      - name: driving_license
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__driving_license') }}"
-      - name: passport
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__passport') }}"
-      - name: educational_level
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__educational_level') }}"
-      - name: occupation_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__occupation_id') }}"
-      - name: blood_type
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__blood_type') }}"
-      - name: patient_billing_type_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__patient_billing_type_id') }}"
-      - name: health_center_id
-        data_type: text
-        description: "{{ doc('patient_additional_data__health_center_id') }}"
-      - name: insurer_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__insurer_id') }}"
-      - name: insurer_policy_number
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__insurer_policy_number') }}"
-      - name: mother_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__mother_id') }}"
-      - name: father_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__father_id') }}"
-      - name: registered_by_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__registered_by_id') }}"
-      - name: updated_by_field
-        data_type: json
-        description: "{{ doc('patient_additional_data__updated_at_by_field') }}"
-      - name: registration_date
-        data_type: date
-        description: "{{ doc('generic__created_at') }} in patient_additional_data which is used as a best estimate of registration date."
+- name: patient_additional_data
+  description: "{{ doc('table__patient_additional_data') }}"
+  config:
+    tags:
+    - patient
+  columns:
+  - name: patient_id
+    data_type: text
+    description: "{{ doc('generic__id') }} in patient_additional_data."
+  - name: title
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__title') }}"
+  - name: marital_status
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__marital_status') }}"
+    tags:
+    - quasi_identifier
+  - name: primary_contact_number
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__primary_contact_number') }}"
+    tags:
+    - direct_identifier
+  - name: secondary_contact_number
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__secondary_contact_number') }}"
+    tags:
+    - direct_identifier
+  - name: emergency_contact_name
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__emergency_contact_name') }}"
+    tags:
+    - direct_identifier
+  - name: emergency_contact_number
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__emergency_contact_number') }}"
+    tags:
+    - direct_identifier
+  - name: social_media
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__social_media') }}"
+    tags:
+    - direct_identifier
+  - name: ethnicity_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__ethnicity_id') }}"
+    tags:
+    - quasi_identifier
+  - name: religion_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__religion_id') }}"
+    tags:
+    - quasi_identifier
+  - name: nationality_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__nationality_id') }}"
+    tags:
+    - quasi_identifier
+  - name: secondary_village_id
+    data_type: text
+    description: "{{ doc('patient_additional_data__secondary_village_id') }}"
+    tags:
+    - quasi_identifier
+  - name: country_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__country_id') }}"
+    tags:
+    - quasi_identifier
+  - name: division_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__division_id') }}"
+    tags:
+    - quasi_identifier
+  - name: subdivision_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__subdivision_id') }}"
+    tags:
+    - quasi_identifier
+  - name: medical_area_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__medical_area_id') }}"
+    tags:
+    - quasi_identifier
+  - name: nursing_zone_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__nursing_zone_id') }}"
+    tags:
+    - quasi_identifier
+  - name: settlement_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__settlement_id') }}"
+    tags:
+    - direct_identifier
+  - name: city_town
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__city_town') }}"
+    tags:
+    - direct_identifier
+  - name: street_village
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__street_village') }}"
+    tags:
+    - direct_identifier
+  - name: country_of_birth_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__country_of_birth_id') }}"
+    tags:
+    - quasi_identifier
+  - name: place_of_birth
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__place_of_birth') }}"
+    tags:
+    - quasi_identifier
+  - name: birth_certificate
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__birth_certificate') }}"
+    tags:
+    - direct_identifier
+  - name: driving_license
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__driving_license') }}"
+    tags:
+    - direct_identifier
+  - name: passport
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__passport') }}"
+    tags:
+    - direct_identifier
+  - name: educational_level
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__educational_level') }}"
+    tags:
+    - quasi_identifier
+  - name: occupation_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__occupation_id') }}"
+    tags:
+    - quasi_identifier
+  - name: blood_type
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__blood_type') }}"
+    tags:
+    - quasi_identifier
+  - name: patient_billing_type_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__patient_billing_type_id') }}"
+    tags:
+    - quasi_identifier
+  - name: health_center_id
+    data_type: text
+    description: "{{ doc('patient_additional_data__health_center_id') }}"
+    tags:
+    - quasi_identifier
+  - name: insurer_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__insurer_id') }}"
+    tags:
+    - quasi_identifier
+  - name: insurer_policy_number
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__insurer_policy_number') }}"
+    tags:
+    - direct_identifier
+  - name: mother_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__mother_id') }}"
+    tags:
+    - quasi_identifier
+  - name: father_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__father_id') }}"
+    tags:
+    - quasi_identifier
+  - name: registered_by_id
+    data_type: character varying(255)
+    description: "{{ doc('patient_additional_data__registered_by_id') }}"
+  - name: updated_by_field
+    data_type: json
+    description: "{{ doc('patient_additional_data__updated_at_by_field') }}"
+  - name: registration_date
+    data_type: date
+    description: "{{ doc('generic__created_at') }} in patient_additional_data which is used as a best estimate of registration date."
