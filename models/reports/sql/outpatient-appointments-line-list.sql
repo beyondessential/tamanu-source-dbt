@@ -38,7 +38,7 @@ where case
     and
     case
         when {{ parameter('appointmentStatus') }} is null then true
-        else appointment_status = {{ parameter('appointmentStatus') }}
+        else appointment_status in {{ parameter('appointmentStatus') }}
     end
     and
     case
