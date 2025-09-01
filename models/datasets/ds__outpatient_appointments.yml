@@ -28,6 +28,9 @@ models:
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
+      - name: contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__primary_contact_number') }} where available otherwise {{ doc('patient_additional_data__secondary_contact_number') }}"
       - name: village_id
         data_type: character varying(255)
         description: "{{ doc('patients__village_id') }}"
