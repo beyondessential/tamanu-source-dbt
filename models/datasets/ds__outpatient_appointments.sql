@@ -6,6 +6,7 @@ select
     p.date_of_birth,
     date_part('year', age(a.start_datetime, p.date_of_birth)) as age,
     p.sex,
+    coalesce(pad.primary_contact_number, pad.secondary_contact_number) as contact_number,
     vil.id as village_id,
     vil.name as village,
     billing.id as billing_type_id,
@@ -28,6 +29,7 @@ select
     a.nth_weekday
 from {{ ref('outpatient_appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
+join {{ ref('patient_additional_data') }} pad on pad.patient_id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
 left join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id

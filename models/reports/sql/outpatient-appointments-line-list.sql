@@ -5,6 +5,7 @@ select
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth', 'Date of birth') }}",
     age as "{{ translate_label('patientAge', 'Age') }}",
     sex as "{{ translate_label('patientSex', 'Sex') }}",
+    contact_number as "{{ translate_label('patientContactNumber', 'Contact number') }}",
     village as "{{ translate_label('patientVillage', 'Village') }}",
     billing_type as "{{ translate_label('patientBillingType', 'Billing type') }}",
     to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime', 'Appointment date and time') }}",
