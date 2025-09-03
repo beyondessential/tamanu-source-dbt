@@ -4,7 +4,7 @@ A dbt project of Tamanu's standard models. This includes:
 
 - raw (or source) schema
 - reporting schema
-- analytics schema
+- analytics schema (upcoming)
 
 ## AI Rules
 
