@@ -4,7 +4,7 @@
 .vscode
 .DS_Store
 __pycache__
-compiled/
+compiled/*/*.json
 dbt_packages/
 /logs/
 models/surveys/
