@@ -64,6 +64,18 @@ models:
       - name: program_registry_id
         data_type: character varying(255)
         description: "{{ doc('patient_program_registrations__program_registry_id') }}"
+      - name: subdivision_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__subdivision_id') }}"
+      - name: subdivision
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's subdivision."
+      - name: division_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__division_id') }}"
+      - name: division
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's division."
       - name: registration_datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }}"
