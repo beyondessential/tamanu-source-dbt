@@ -13,6 +13,18 @@
         "parameterField": "ParameterAutocompleteField",
         "label": "Registry",
         "suggesterEndpoint": "programRegistry"
+      },
+      {
+        "name": "subdivisionId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Subdivision",
+        "suggesterEndpoint": "subdivision"
+      },
+      {
+        "name": "divisionId",
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Division",
+        "suggesterEndpoint": "division"
       }
     ]
   }

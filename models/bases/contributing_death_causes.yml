@@ -1,20 +1,20 @@
 version: 2
 models:
-  - name: contributing_death_causes
-    description: "{{ doc('table__contributing_death_causes') }}"
-    config:
-      tags:
-        - clinical
-    columns:
-      - name: id
-        data_type: character varying
-        description: "{{ doc('generic__id') }} in contributing_death_causes."
-      - name: time_after_onset
-        data_type: integer
-        description: "{{ doc('contributing_death_causes__time_after_onset') }}"
-      - name: patient_death_data_id
-        data_type: character varying
-        description: "{{ doc('contributing_death_causes__patient_death_data_id') }}"
-      - name: condition_id
-        data_type: character varying
-        description: "{{ doc('contributing_death_causes__condition_id') }}"
+- name: contributing_death_causes
+  description: "{{ doc('table__contributing_death_causes') }}"
+  config:
+    tags:
+    - clinical
+  columns:
+  - name: id
+    data_type: character varying
+    description: "{{ doc('generic__id') }} in contributing_death_causes."
+  - name: time_after_onset
+    data_type: integer
+    description: "{{ doc('contributing_death_causes__time_after_onset') }}"
+  - name: patient_death_data_id
+    data_type: character varying
+    description: "{{ doc('contributing_death_causes__patient_death_data_id') }}"
+  - name: condition_id
+    data_type: character varying
+    description: "{{ doc('contributing_death_causes__condition_id') }}"

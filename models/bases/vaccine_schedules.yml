@@ -1,38 +1,38 @@
 version: 2
 models:
-  - name: vaccine_schedules
-    description: "{{ doc('table__scheduled_vaccines') }}"
-    config:
-      tags:
-        - clinical
-    columns:
-      - name: id
-        data_type: character varying(255)
-        description: "{{ doc('generic__id') }} in vaccine_schedules."
-      - name: category
-        data_type: character varying(255)
-        description: "{{ doc('scheduled_vaccines__category') }}"
-      - name: vaccine_id
-        data_type: character varying(255)
-        description: "{{ doc('scheduled_vaccines__vaccine_id') }}"
-      - name: label
-        data_type: character varying(255)
-        description: "{{ doc('scheduled_vaccines__label') }}"
-      - name: dose_label
-        data_type: character varying(255)
-        description: "{{ doc('scheduled_vaccines__dose_label') }}"
-      - name: index
-        data_type: integer
-        description: "{{ doc('scheduled_vaccines__index') }}"
-      - name: weeks_from_birth_due
-        data_type: integer
-        description: "{{ doc('scheduled_vaccines__weeks_from_birth_due') }}"
-      - name: weeks_from_last_vaccination_due
-        data_type: integer
-        description: "{{ doc('scheduled_vaccines__weeks_from_last_vaccination_due') }}"
-      - name: sort_index
-        data_type: integer
-        description: "{{ doc('scheduled_vaccines__sort_index') }}"
-      - name: visibility_status
-        data_type: text
-        description: "{{ doc('generic__visibility_status') }} in vaccine_schedules."
+- name: vaccine_schedules
+  description: "{{ doc('table__scheduled_vaccines') }}"
+  config:
+    tags:
+    - clinical
+  columns:
+  - name: id
+    data_type: character varying(255)
+    description: "{{ doc('generic__id') }} in vaccine_schedules."
+  - name: category
+    data_type: character varying(255)
+    description: "{{ doc('scheduled_vaccines__category') }}"
+  - name: vaccine_id
+    data_type: character varying(255)
+    description: "{{ doc('scheduled_vaccines__vaccine_id') }}"
+  - name: label
+    data_type: character varying(255)
+    description: "{{ doc('scheduled_vaccines__label') }}"
+  - name: dose_label
+    data_type: character varying(255)
+    description: "{{ doc('scheduled_vaccines__dose_label') }}"
+  - name: index
+    data_type: integer
+    description: "{{ doc('scheduled_vaccines__index') }}"
+  - name: weeks_from_birth_due
+    data_type: integer
+    description: "{{ doc('scheduled_vaccines__weeks_from_birth_due') }}"
+  - name: weeks_from_last_vaccination_due
+    data_type: integer
+    description: "{{ doc('scheduled_vaccines__weeks_from_last_vaccination_due') }}"
+  - name: sort_index
+    data_type: integer
+    description: "{{ doc('scheduled_vaccines__sort_index') }}"
+  - name: visibility_status
+    data_type: text
+    description: "{{ doc('generic__visibility_status') }} in vaccine_schedules."

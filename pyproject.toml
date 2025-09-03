@@ -1,0 +1,28 @@
+[project]
+name = "tamanu-source-dbt"
+version = "2.38.0"
+description = "A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dbt-core",
+    "dbt-postgres",
+    "great-expectations==1.5.9",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "boto3>=1.28.0",
+    "jsonschema",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.1",
+    "sqlfluff>=3.0.0",
+    "numpy>=2.2.6",
+]
+
+[tool.uv]
+dev-dependencies = []
+
+# Don't build this as a package - it's a dbt project
+[tool.hatch.build.targets.wheel]
+packages = []

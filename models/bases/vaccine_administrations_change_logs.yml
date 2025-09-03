@@ -1,86 +1,84 @@
 version: 2
 models:
-  - name: vaccine_administrations_change_logs
-    description: Historical changes to vaccine administrations extracted from the changes log table.
-    config:
-      contract:
-        enforced: true
-      tags:
-        - clinical
-        - history
-    columns:
-      - name: changelog_id
-        data_type: uuid
-        description: "{{ doc('logs__changes__id') }}"
-      - name: logged_at
-        data_type: timestamp
-        description: "{{ doc('logs__changes__logged_at') }} in vaccine administrations history."
-      - name: created_at
-        data_type: timestamp
-        description: "{{ doc('generic__created_at') }} in vaccine_administrations from history."
-      - name: updated_at
-        data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in vaccine_administrations from history."
-      - name: updated_by_user_id
-        data_type: text
-        description: "{{ doc('logs__changes__updated_by_user_id') }} in vaccine administrations history."
-      - name: id
-        data_type: text
-        description: "{{ doc('generic__id') }} in vaccine_administrations from history."
-      - name: datetime
-        data_type: timestamp
-        description: "{{ doc('generic__date') }} in vaccine_administrations from history."
-      - name: batch
-        data_type: text
-        description: "{{ doc('administered_vaccines__batch') }} from history."
-      - name: is_consented
-        data_type: boolean
-        description: "{{ doc('administered_vaccines__consent') }} from history."
-      - name: disease
-        data_type: text
-        description: "{{ doc('administered_vaccines__disease') }} from history."
-      - name: given_by
-        data_type: text
-        description: "{{ doc('administered_vaccines__given_by') }} from history."
-      - name: is_given_elsewhere
-        data_type: boolean
-        description: "{{ doc('administered_vaccines__given_elsewhere') }} from history."
-      - name: circumstance_ids
-        data_type: text
-        description: "{{ doc('administered_vaccines__circumstance_ids') }} from history."
-      - name: recorded_by_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__recorder_id') }} from history."
-      - name: encounter_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__encounter_id') }} from history."
-      - name: location_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__location_id') }} from history."
-      - name: department_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__department_id') }} from history."
-      - name: vaccine_name
-        data_type: text
-        description: "{{ doc('administered_vaccines__vaccine_name') }} from history."
-      - name: vaccine_brand
-        data_type: text
-        description: "{{ doc('administered_vaccines__vaccine_brand') }} from history."
-      - name: injection_site
-        data_type: text
-        description: "{{ doc('administered_vaccines__injection_site') }} from history."
-      - name: consent_given_by
-        data_type: text
-        description: "{{ doc('administered_vaccines__consent_given_by') }} from history."
-      - name: scheduled_vaccine_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__scheduled_vaccine_id') }} from history."
-      - name: status
-        data_type: text
-        description: "{{ doc('administered_vaccines__status') }} from history."
-      - name: reason
-        data_type: text
-        description: "{{ doc('administered_vaccines__reason') }} from history."
-      - name: not_given_reason_id
-        data_type: text
-        description: "{{ doc('administered_vaccines__not_given_reason_id') }} from history."
+- name: vaccine_administrations_change_logs
+  description: "Change logs of {{ doc('table__administered_vaccines') }}"
+  config:
+    tags:
+    - clinical
+    - log
+  columns:
+  - name: changelog_id
+    data_type: uuid
+    description: "{{ doc('logs__changes__id') }}"
+  - name: logged_at
+    data_type: timestamp
+    description: "{{ doc('logs__changes__logged_at') }} in vaccine administrations history."
+  - name: created_at
+    data_type: timestamp
+    description: "{{ doc('generic__created_at') }} in vaccine_administrations from history."
+  - name: updated_at
+    data_type: timestamp
+    description: "{{ doc('generic__updated_at') }} in vaccine_administrations from history."
+  - name: updated_by_user_id
+    data_type: text
+    description: "{{ doc('logs__changes__updated_by_user_id') }} in vaccine administrations history."
+  - name: id
+    data_type: text
+    description: "{{ doc('generic__id') }} in vaccine_administrations from history."
+  - name: datetime
+    data_type: timestamp
+    description: "{{ doc('generic__date') }} in vaccine_administrations from history."
+  - name: batch
+    data_type: text
+    description: "{{ doc('administered_vaccines__batch') }} from history."
+  - name: is_consented
+    data_type: boolean
+    description: "{{ doc('administered_vaccines__consent') }} from history."
+  - name: disease
+    data_type: text
+    description: "{{ doc('administered_vaccines__disease') }} from history."
+  - name: given_by
+    data_type: text
+    description: "{{ doc('administered_vaccines__given_by') }} from history."
+  - name: is_given_elsewhere
+    data_type: boolean
+    description: "{{ doc('administered_vaccines__given_elsewhere') }} from history."
+  - name: circumstance_ids
+    data_type: text
+    description: "{{ doc('administered_vaccines__circumstance_ids') }} from history."
+  - name: recorded_by_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__recorder_id') }} from history."
+  - name: encounter_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__encounter_id') }} from history."
+  - name: location_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__location_id') }} from history."
+  - name: department_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__department_id') }} from history."
+  - name: vaccine_name
+    data_type: text
+    description: "{{ doc('administered_vaccines__vaccine_name') }} from history."
+  - name: vaccine_brand
+    data_type: text
+    description: "{{ doc('administered_vaccines__vaccine_brand') }} from history."
+  - name: injection_site
+    data_type: text
+    description: "{{ doc('administered_vaccines__injection_site') }} from history."
+  - name: consent_given_by
+    data_type: text
+    description: "{{ doc('administered_vaccines__consent_given_by') }} from history."
+  - name: scheduled_vaccine_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__scheduled_vaccine_id') }} from history."
+  - name: status
+    data_type: text
+    description: "{{ doc('administered_vaccines__status') }} from history."
+  - name: reason
+    data_type: text
+    description: "{{ doc('administered_vaccines__reason') }} from history."
+  - name: not_given_reason_id
+    data_type: text
+    description: "{{ doc('administered_vaccines__not_given_reason_id') }} from history."

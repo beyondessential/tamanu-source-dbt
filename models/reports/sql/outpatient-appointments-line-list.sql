@@ -5,6 +5,7 @@ select
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
+    contact_number as "{{ translate_label('patientContactNumber') }}",
     village as "{{ translate_label('patientVillage') }}",
     billing_type as "{{ translate_label('patientBillingType') }}",
     to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime') }}",
@@ -36,8 +37,8 @@ where case
     end
     and
     case
-        when {{ parameter('appointmentStatus') }} is null then true
-        else appointment_status = {{ parameter('appointmentStatus') }}
+        when coalesce({{ parameter('appointmentStatus') }}) is null then true
+        else appointment_status in ({{ parameter('appointmentStatus') }})
     end
     and
     case

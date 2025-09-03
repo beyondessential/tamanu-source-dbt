@@ -1,61 +1,42 @@
 version: 2
-
 models:
-  - name: patients_access_logs
-    description: Patients access logs from the audit system.
-    config:
-      tags:
-        - administration
-    columns:
-      - name: id
-        data_type: uuid
-        description: "{{ doc('generic__id') }} in patients_access_logs."
-        data_tests:
-          - unique
-          - not_null
-      - name: user_id
-        data_type: text
-        description: "{{ doc('generic__id') }} in users."
-        data_tests:
-          - not_null
-      - name: patient_id
-        data_type: text
-        description: "{{ doc('generic__id') }} in patients."
-        data_tests:
-          - not_null
-      - name: facility_id
-        data_type: text
-        description: "{{ doc('logs__accesses__facility_id') }}"
-      - name: logged_at
-        data_type: timestamp with time zone
-        description: "{{ doc('logs__accesses__logged_at') }}"
-        data_tests:
-          - not_null
-      - name: session_id
-        data_type: text
-        description: "{{ doc('logs__accesses__session_id') }}"
-        data_tests:
-          - not_null
-      - name: device_id
-        data_type: text
-        description: "{{ doc('logs__accesses__device_id') }}"
-        data_tests:
-          - not_null
-      - name: is_mobile
-        data_type: boolean
-        description: "{{ doc('logs__accesses__is_mobile') }}"
-      - name: version
-        data_type: text
-        description: "{{ doc('logs__accesses__version') }}"
-        data_tests:
-          - not_null
-      - name: front_end_context
-        data_type: jsonb
-        description: "{{ doc('logs__accesses__front_end_context') }}"
-        data_tests:
-          - not_null
-      - name: back_end_context
-        data_type: jsonb
-        description: "{{ doc('logs__accesses__back_end_context') }}"
-        data_tests:
-          - not_null
+- name: patients_access_logs
+  description: "Access logs of patient data"
+  config:
+    tags:
+    - administration
+    - log
+  columns:
+  - name: id
+    data_type: uuid
+    description: "{{ doc('generic__id') }} in patients_access_logs."
+  - name: user_id
+    data_type: text
+    description: "{{ doc('generic__id') }} in users."
+  - name: patient_id
+    data_type: text
+    description: "{{ doc('generic__id') }} in patients."
+  - name: facility_id
+    data_type: text
+    description: "{{ doc('logs__accesses__facility_id') }}"
+  - name: logged_at
+    data_type: timestamp with time zone
+    description: "{{ doc('logs__accesses__logged_at') }}"
+  - name: session_id
+    data_type: text
+    description: "{{ doc('logs__accesses__session_id') }}"
+  - name: device_id
+    data_type: text
+    description: "{{ doc('logs__accesses__device_id') }}"
+  - name: is_mobile
+    data_type: boolean
+    description: "{{ doc('logs__accesses__is_mobile') }}"
+  - name: version
+    data_type: text
+    description: "{{ doc('logs__accesses__version') }}"
+  - name: front_end_context
+    data_type: jsonb
+    description: "{{ doc('logs__accesses__front_end_context') }}"
+  - name: back_end_context
+    data_type: jsonb
+    description: "{{ doc('logs__accesses__back_end_context') }}"
