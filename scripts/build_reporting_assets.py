@@ -4,7 +4,7 @@ import shutil
 
 from utils import (
     execute_command,
-    generate_import_report_script,
+    generate_multilingual_reports,
     generate_project_reports,
     generate_reporting_schema_script,
     hide_macros_from_docs,
@@ -52,10 +52,13 @@ def main():
     # Hide macros and tests from documentation
     hide_macros_from_docs()
     hide_tests_from_docs()
-
+    
     # Generate scripts and reports
     generate_reporting_schema_script()
     generate_project_reports()
+    
+    # Generate multilingual reports directly from compiled base reports
+    generate_multilingual_reports()
     
     # Generate analytics metadata
     generate_analytics_metadata()

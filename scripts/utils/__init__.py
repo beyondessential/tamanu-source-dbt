@@ -11,7 +11,7 @@ from .file_utils import (
     write_file,
 )
 from .report_utils import (
-    generate_import_report_script,
+    generate_multilingual_reports,
     generate_project_reports,
     generate_reporting_schema_script,
 )
