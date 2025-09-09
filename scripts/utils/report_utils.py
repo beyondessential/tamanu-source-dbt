@@ -1,7 +1,7 @@
 import os
 import re
 
-from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name
+from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name, get_dbt_project_vars
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint
 
@@ -68,6 +68,9 @@ def generate_project_reports():
         return
 
     ensure_directory_exists(VERSION_DIR)
+    
+    # Get current language from dbt_project.yml
+    current_language = get_dbt_project_vars("language") or "default"
 
     for node in nodes:
         report = manifest["nodes"][node]
@@ -85,10 +88,17 @@ def generate_project_reports():
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
-        output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
+        
+        # Include language in filename (only add suffix if not default)
+        if current_language and current_language != "default":
+            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}-{current_language}.json")
+            filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}-{current_language}.json"
+        else:
+            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
+            filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json"
 
         compile_report(report["database"], sql_file, config_file, output_file)
-        cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
+        cprint(f"Compiled report: {filename}", "success")
 
 
 def generate_import_report_script():
