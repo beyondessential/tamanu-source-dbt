@@ -199,11 +199,14 @@ def main():
                     )
                     sys.exit(1)
 
-                # Build dbt assets once (language-agnostic)
+                # Set language BEFORE building dbt assets
+                update_dbt_project_language(args.language)
+
+                # Build dbt assets once (with correct language)
                 build_dbt_assets()
 
-                # Generate language-specific reports
-                generate_reports_for_language(args.language)
+                # Generate language-specific reports (language already set)
+                generate_project_reports()
 
                 # Generate language-agnostic assets once
                 generate_reporting_schema_script()
