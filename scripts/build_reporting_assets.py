@@ -101,20 +101,20 @@ def generate_reporting_schema_script_for_language(language=None):
 def generate_reports_for_language(language):
     """Generate language-specific reports only"""
     cprint(f"Generating reports for language: {language}", "info")
-    
+
     # Update the language in dbt_project.yml
     update_dbt_project_language(language)
-    
+
     # Generate language-specific reports
     generate_project_reports()
-    
+
     cprint(f"Completed report generation for language: {language}", "success")
 
 
 def build_dbt_assets():
     """Build all dbt assets (run once, language-agnostic)"""
     cprint(f"Building dbt assets", "info")
-    
+
     # Execute DBT commands once
     execute_command("dbt clean")
     execute_command("dbt deps")
@@ -125,10 +125,8 @@ def build_dbt_assets():
     # Hide macros and tests from documentation
     hide_macros_from_docs()
     hide_tests_from_docs()
-    
+
     cprint(f"Completed dbt asset build", "success")
-
-
 
 
 def restore_original_language():
@@ -199,14 +197,11 @@ def main():
                     )
                     sys.exit(1)
 
-                # Set language BEFORE building dbt assets
-                update_dbt_project_language(args.language)
-
                 # Build dbt assets once (with correct language)
                 build_dbt_assets()
 
-                # Generate language-specific reports (language already set)
-                generate_project_reports()
+                # Generate language-specific reports
+                generate_reports_for_language(args.language)
 
                 # Generate language-agnostic assets once
                 generate_reporting_schema_script()
@@ -222,7 +217,9 @@ def main():
             build_dbt_assets()
 
             # Generate language-specific reports for current language
-            current_language = get_dbt_project_config().get("vars", {}).get("language", "default")
+            current_language = (
+                get_dbt_project_config().get("vars", {}).get("language", "default")
+            )
             generate_reports_for_language(current_language)
 
             # Generate language-agnostic assets once
