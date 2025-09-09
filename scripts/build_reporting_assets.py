@@ -175,14 +175,14 @@ def main():
                 # Build dbt assets once (language-agnostic)
                 build_dbt_assets()
 
-                # Generate language-specific reports for each language
-                for language in supported_languages:
-                    generate_reports_for_language(language)
-
                 # Generate language-agnostic assets once
                 generate_reporting_schema_script()
                 generate_analytics_metadata()
                 move_dbt_docs()  # Move docs for default language
+
+                # Generate language-specific reports for each language
+                for language in supported_languages:
+                    generate_reports_for_language(language)
 
                 cprint(
                     f"Multi-language build completed for {len(supported_languages)} languages!",
@@ -202,13 +202,13 @@ def main():
                 # Build dbt assets once (with correct language)
                 build_dbt_assets()
 
-                # Generate language-specific reports
-                generate_reports_for_language(args.language)
-
                 # Generate language-agnostic assets once
                 generate_reporting_schema_script()
                 generate_analytics_metadata()
                 move_dbt_docs()
+
+                # Generate language-specific reports
+                generate_reports_for_language(args.language)
 
                 cprint(f"Build completed for language: {args.language}", "success")
         else:
@@ -218,16 +218,16 @@ def main():
             # Build dbt assets once (language-agnostic)
             build_dbt_assets()
 
+            # Generate language-agnostic assets once
+            generate_reporting_schema_script()
+            generate_analytics_metadata()
+            move_dbt_docs()
+
             # Generate language-specific reports for current language
             current_language = (
                 get_dbt_project_config().get("vars", {}).get("language", "default")
             )
             generate_reports_for_language(current_language)
-
-            # Generate language-agnostic assets once
-            generate_reporting_schema_script()
-            generate_analytics_metadata()
-            move_dbt_docs()
 
             cprint("Build completed for current language", "success")
 
