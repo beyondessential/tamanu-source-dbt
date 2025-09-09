@@ -105,6 +105,9 @@ def generate_reports_for_language(language):
     # Update the language in dbt_project.yml
     update_dbt_project_language(language)
 
+    # Compile dbt models with the correct language setting
+    execute_command(f"dbt compile --profiles-dir config")
+
     # Generate language-specific reports
     generate_project_reports()
 
@@ -114,18 +117,17 @@ def generate_reports_for_language(language):
 def build_dbt_assets():
     """Build all dbt assets (run once, language-agnostic)"""
     cprint(f"Building dbt assets", "info")
-
-    # Execute DBT commands once
+    
+    # Execute DBT commands once (excluding compile which is language-specific)
     execute_command("dbt clean")
     execute_command("dbt deps")
     execute_command(f"dbt run --profiles-dir config")
     execute_command(f"dbt docs generate --profiles-dir config --static")
-    execute_command(f"dbt compile --profiles-dir config")
 
     # Hide macros and tests from documentation
     hide_macros_from_docs()
     hide_tests_from_docs()
-
+    
     cprint(f"Completed dbt asset build", "success")
 
 
