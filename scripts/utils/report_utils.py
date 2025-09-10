@@ -44,12 +44,12 @@ def compile_report(database, sql_file, config_file, output_file):
         exit(1)
 
 
-def generate_project_reports():
+def generate_project_reports(language=None):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
     Args:
-        target (str): The target tag to filter the report models.
+        language (str): The language to use for report generation. If None, uses default from dbt_project.yml.
 
     Returns:
         None: Creates compiled report JSON files in the reports directory.
@@ -70,8 +70,8 @@ def generate_project_reports():
 
     ensure_directory_exists(VERSION_DIR)
     
-    # Get current language from dbt_project.yml
-    current_language = get_dbt_project_vars("language") or "default"
+    # Use passed language parameter or fallback to dbt_project.yml
+    current_language = language or get_dbt_project_vars("language") or "default"
 
     for node in nodes:
         report = manifest["nodes"][node]
@@ -243,6 +243,6 @@ def generate_reports_for_language(language):
     execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
 
     # Generate language-specific reports
-    generate_project_reports()
+    generate_project_reports(language)
 
     cprint(f"Completed report generation for language: {language}", "success")
