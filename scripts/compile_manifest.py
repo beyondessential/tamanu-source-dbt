@@ -1,8 +1,8 @@
-import argparse
+import os
 from pathlib import Path
 
 from utils.dbt_utils import get_deployment_name, get_deployment_version
-from utils.file_utils import read_file, write_file
+from utils.file_utils import ensure_directory_exists, read_file, write_file
 from utils.system_utils import cprint
 
 BASE_DIR = Path.cwd()
@@ -14,17 +14,22 @@ VERSION_DIR = COMPILED_DIR / f"v{VERSION}"
 MANIFEST_FILE = COMPILED_DIR / "manifest.json"
 
 
-def compile_manifest():
-    """Compile language-agnostic manifest"""
+def main():
+    cprint(f"Compiling manifest for deployment: {DEPLOYMENT} - {VERSION}", "info")
+
+    if not COMPILED_DIR.exists() or not VERSION_DIR.exists():
+        cprint(
+            "Please run build_reporting_assets.py first to generate compiled assets",
+            "error",
+        )
+        return
+    
     version = ".".join(VERSION.split(".")[:2])
     schema = f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
-    
-    # Get all JSON report files
     reports = [f"./{VERSION}/{file.name}" for file in VERSION_DIR.glob("*.json")]
 
-    entry_key = f"~{version}.0"
     entry = {
-        "tamanu": entry_key,
+        "tamanu": f"~{version}.0",
         "schema": schema,
         "reports": sorted(reports)
     }
@@ -34,11 +39,10 @@ def compile_manifest():
     else:
         manifest = {"deploymentName": DEPLOYMENT, "versions": []}
 
-    # Remove existing entry for this version
     manifest["versions"] = [
         versions
         for versions in manifest["versions"]
-        if versions["tamanu"] != entry_key
+        if versions["tamanu"] != entry["tamanu"]
     ]
     manifest["versions"].append(entry)
     manifest["versions"].sort(key=lambda x: x["tamanu"], reverse=True)
@@ -48,28 +52,6 @@ def compile_manifest():
         f"Manifest updated: {len(reports)} reports added for version {version}",
         "success",
     )
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Compile Tamanu reporting manifest")
-    args = parser.parse_args()
-
-    cprint(f"Compiling manifest for deployment: {DEPLOYMENT} - {VERSION}", "info")
-
-    if not COMPILED_DIR.exists() or not VERSION_DIR.exists():
-        cprint(
-            "Please run build_reporting_assets.py first to generate compiled assets",
-            "error",
-        )
-        return
-
-    try:
-        compile_manifest()
-        cprint("Manifest compilation completed!", "success")
-            
-    except Exception as e:
-        cprint(f"Error during manifest compilation: {e}", "error")
-        raise
 
 
 if __name__ == "__main__":
