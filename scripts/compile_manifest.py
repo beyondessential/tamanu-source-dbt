@@ -23,7 +23,7 @@ def main():
             "error",
         )
         return
-    
+
     version = ".".join(VERSION.split(".")[:2])
     schema = f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
     reports = [f"./{VERSION}/{file.name}" for file in VERSION_DIR.glob("*.json")]
@@ -31,7 +31,7 @@ def main():
     entry = {
         "tamanu": f"~{version}.0",
         "schema": schema,
-        "reports": sorted(reports)
+        "reports": sorted(reports),
     }
 
     if MANIFEST_FILE.exists():
