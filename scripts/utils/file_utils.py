@@ -150,7 +150,7 @@ def move_file(source_path, target_path, create_dirs=True):
 
     except Exception as e:
         cprint(f"Error moving file from {source_path} to {target_path}: {e}", "error")
-        raise Exception(f"Error moving file from {source_path} to {target_path}: {e}")
+        raise
 
 
 def remove_directory(dir_path):
