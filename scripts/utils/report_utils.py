@@ -91,12 +91,9 @@ def generate_project_reports():
         )
         
         # Include language in filename (only add suffix if not default)
-        if current_language and current_language != "default":
-            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}-{current_language}.json")
-            filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}-{current_language}.json"
-        else:
-            output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
-            filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json"
+        lang_suffix = f"-{current_language}" if current_language and current_language != "default" else ""
+        filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}{lang_suffix}.json"
+        output_file = os.path.join(VERSION_DIR, filename)
 
         compile_report(report["database"], sql_file, config_file, output_file)
         cprint(f"Compiled report: {filename}", "success")
