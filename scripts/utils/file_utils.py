@@ -119,6 +119,40 @@ def copy_files_from_directory(source_dir, destination_dir):
         exit(1)
 
 
+def move_file(source_path, target_path, create_dirs=True):
+    """
+    Move a file from source to target path with optional directory creation.
+
+    Args:
+        source_path (str): The path to the source file.
+        target_path (str): The path to the target file.
+        create_dirs (bool): Whether to create target directories if they don't exist. Defaults to True.
+
+    Returns:
+        bool: True if the file was moved successfully, False if source file doesn't exist.
+
+    Raises:
+        Exception: For other errors during moving.
+    """
+    try:
+        if not os.path.exists(source_path):
+            cprint(f"Warning: Source file not found at {source_path}", "warning")
+            return False
+
+        if create_dirs:
+            target_dir = os.path.dirname(target_path)
+            if target_dir:
+                ensure_directory_exists(target_dir)
+
+        shutil.move(source_path, target_path)
+        cprint(f"Moved file: {os.path.basename(target_path)}", "success")
+        return True
+
+    except Exception as e:
+        cprint(f"Error moving file from {source_path} to {target_path}: {e}", "error")
+        raise Exception(f"Error moving file from {source_path} to {target_path}: {e}")
+
+
 def remove_directory(dir_path):
     """
     Removes a directory and all its contents.

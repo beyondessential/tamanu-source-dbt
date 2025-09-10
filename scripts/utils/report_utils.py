@@ -3,7 +3,7 @@ import re
 
 from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name, get_dbt_project_vars
 from .file_utils import ensure_directory_exists, read_file, write_file
-from .system_utils import cprint
+from .system_utils import cprint, execute_command
 
 SCHEMA = "reporting"
 ROLE = "reporting"
@@ -235,3 +235,16 @@ def generate_reporting_schema_script():
         VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
     )
     write_file(output_file, "\n".join(scripts))
+
+
+def generate_reports_for_language(language):
+    """Generate language-specific reports only"""
+    cprint(f"Generating reports for language: {language}", "info")
+
+    # Compile dbt models with the language variable passed via --var
+    execute_command(f"dbt compile --profiles-dir config --var language:{language}")
+
+    # Generate language-specific reports
+    generate_project_reports()
+
+    cprint(f"Completed report generation for language: {language}", "success")
