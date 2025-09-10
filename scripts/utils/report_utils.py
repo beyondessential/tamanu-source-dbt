@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -241,8 +242,8 @@ def generate_reports_for_language(language):
     """Generate language-specific reports only"""
     cprint(f"Generating reports for language: {language}", "info")
 
-    # Compile dbt models with the language variable passed via --var
-    execute_command(f"dbt compile --profiles-dir config --var language:{language}")
+    # Compile dbt models with the language variable passed via --vars
+    execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
 
     # Generate language-specific reports
     generate_project_reports()
