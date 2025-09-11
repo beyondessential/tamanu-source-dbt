@@ -17,8 +17,7 @@ from .file_utils import (
 from .report_utils import (
     generate_import_report_script,
     generate_project_reports,
-    generate_reporting_schema_script,
-    generate_reports_for_language
+    generate_reporting_schema_script
 )
 from .survey_utils import create_survey_model, generate_survey_doc
 from .system_utils import cprint, execute_command

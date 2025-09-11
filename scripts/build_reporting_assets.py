@@ -7,7 +7,7 @@ from utils import (
     execute_command,
     generate_analytics_metadata,
     generate_reporting_schema_script,
-    generate_reports_for_language,
+    generate_project_reports,
     get_dbt_project_config,
     get_deployment_name,
     get_deployment_version,
@@ -64,7 +64,15 @@ def main():
         # Generate language-specific reports for each supported language
         cprint("Generating language-specific reports", "info")
         for language in supported_languages:
-            generate_reports_for_language(language)
+            cprint(f"Generating reports for language: {language}", "info")
+            
+            # Compile dbt models with the language variable passed via --vars
+            execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
+            
+            # Generate language-specific reports
+            generate_project_reports(language)
+            
+            cprint(f"Completed report generation for language: {language}", "success")
 
         cprint(
             f"Multi-language build completed for {len(supported_languages)} languages!",

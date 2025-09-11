@@ -2152,12 +2152,12 @@ encounter_notes as (
         select 
             string_id,
             coalesce(
-                max(case when language = 'en' then text end),
+                max(case when language = 'default' then text end),
                 max(case when language = 'default' then text end),
                 string_id
             ) as text
         from "public"."translated_strings"
-        where language in ('en', 'default')
+        where language in ('default', 'default')
         group by string_id
     ) ts
         on ts.string_id = 'note.property.type.' || n.note_type

@@ -44,12 +44,12 @@ def compile_report(database, sql_file, config_file, output_file):
         exit(1)
 
 
-def generate_project_reports(language=None):
+def generate_project_reports(language):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
     Args:
-        language (str): The language to use for report generation. If None, uses default from dbt_project.yml.
+        language (str): The language to use for report generation.
 
     Returns:
         None: Creates compiled report JSON files in the reports directory.
@@ -70,9 +70,6 @@ def generate_project_reports(language=None):
 
     ensure_directory_exists(VERSION_DIR)
     
-    # Use passed language parameter or fallback to dbt_project.yml
-    current_language = language or get_dbt_project_vars("language") or "default"
-
     for node in nodes:
         report = manifest["nodes"][node]
 
@@ -91,7 +88,7 @@ def generate_project_reports(language=None):
         )
         
         # Include language in filename (only add suffix if not default)
-        lang_suffix = f"-{current_language}" if current_language and current_language != "default" else ""
+        lang_suffix = f"-{language}" if language != "default" else ""
         filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}{lang_suffix}.json"
         output_file = os.path.join(VERSION_DIR, filename)
 
@@ -233,16 +230,3 @@ def generate_reporting_schema_script():
         VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
     )
     write_file(output_file, "\n".join(scripts))
-
-
-def generate_reports_for_language(language):
-    """Generate language-specific reports only"""
-    cprint(f"Generating reports for language: {language}", "info")
-
-    # Compile dbt models with the language variable passed via --vars
-    execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
-
-    # Generate language-specific reports
-    generate_project_reports(language)
-
-    cprint(f"Completed report generation for language: {language}", "success")
