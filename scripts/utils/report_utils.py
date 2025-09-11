@@ -1,9 +1,10 @@
+import json
 import os
 import re
 
-from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name
+from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name, get_dbt_project_vars
 from .file_utils import ensure_directory_exists, read_file, write_file
-from .system_utils import cprint
+from .system_utils import cprint, execute_command
 
 SCHEMA = "reporting"
 ROLE = "reporting"
@@ -43,12 +44,12 @@ def compile_report(database, sql_file, config_file, output_file):
         exit(1)
 
 
-def generate_project_reports():
+def generate_project_reports(language):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
 
     Args:
-        target (str): The target tag to filter the report models.
+        language (str): The language to use for report generation.
 
     Returns:
         None: Creates compiled report JSON files in the reports directory.
@@ -68,7 +69,7 @@ def generate_project_reports():
         return
 
     ensure_directory_exists(VERSION_DIR)
-
+    
     for node in nodes:
         report = manifest["nodes"][node]
 
@@ -85,10 +86,14 @@ def generate_project_reports():
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
-        output_file = os.path.join(VERSION_DIR, f"{report['name']}-v{VERSION}-{DEPLOYMENT}.json")
+        
+        # Include language in filename (only add suffix if not default)
+        lang_suffix = f"-{language}" if language != "default" else ""
+        filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}{lang_suffix}.json"
+        output_file = os.path.join(VERSION_DIR, filename)
 
         compile_report(report["database"], sql_file, config_file, output_file)
-        cprint(f"Compiled report: {report['name']}-v{VERSION}-{DEPLOYMENT}.json", "success")
+        cprint(f"Compiled report: {filename}", "success")
 
 
 def generate_import_report_script():
