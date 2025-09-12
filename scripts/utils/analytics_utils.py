@@ -1,8 +1,9 @@
-import os
 import json
-import yaml
+import os
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+import yaml
 
 from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name
 from .file_utils import ensure_directory_exists
@@ -82,9 +83,11 @@ def extract_bases_models(manifest: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     for node_id, node_data in nodes.items():
         # Check if this is a model node and if it's in the bases folder
-        if node_data.get(
-            "resource_type"
-        ) == "model" and "models\\bases\\" in node_data.get("original_file_path", ""):
+        if (
+            node_data.get("resource_type") == "model"
+            and "models/bases/"
+            in Path(node_data.get("original_file_path", "")).as_posix()
+        ):
 
             # Extract relevant information
             config_data = node_data.get("config", {})
@@ -107,7 +110,7 @@ def extract_bases_models(manifest: Dict[str, Any]) -> List[Dict[str, Any]]:
                     col_tags = col_data.get("tags", [])
                     if "direct_identifier" in col_tags:
                         continue
-                    
+
                     col_info = {
                         "name": col_name,
                         "description": col_data.get("description", ""),
@@ -169,7 +172,10 @@ def generate_analytics_metadata():
 
         # Print concise summary
         total_columns = sum(len(model.get("columns", {})) for model in bases_models)
-        cprint(f"Extracted {len(bases_models)} bases models with {total_columns} total columns", "success")
+        cprint(
+            f"Extracted {len(bases_models)} bases models with {total_columns} total columns",
+            "success",
+        )
 
     except Exception as e:
         cprint(f"Error: {e}", "error")

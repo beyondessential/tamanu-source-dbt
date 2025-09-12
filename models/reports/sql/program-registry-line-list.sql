@@ -6,7 +6,7 @@ select
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     registering_facility as "{{ translate_label('registryRegisteringFacility') }}",
-    subdivision as "{{ translate_label('patientSubdivision') }}",
+    subdivision as "{{ translate_label('patientSubDivision') }}",
     division as "{{ translate_label('patientDivision') }}",
     registered_by as "{{ translate_label('registryRegisteredBy') }}",
     currently_at as "{{ translate_label('registryCurrentlyAt') }}",
