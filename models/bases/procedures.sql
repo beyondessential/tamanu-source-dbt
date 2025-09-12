@@ -11,8 +11,10 @@ select
     p.procedure_type_id,
     p.anaesthetic_id,
     p.physician_id as clinician_id,
-    p.assistant_id,
-    p.anaesthetist_id
+    p.anaesthetist_id,
+    p.assistant_anaesthetist_id,
+    p.time_in,
+    p.time_out
 from {{ source("tamanu", "procedures") }} p
 join {{ source("tamanu", "encounters") }} e on e.id = p.encounter_id
 where p.deleted_at is null

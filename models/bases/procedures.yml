@@ -42,9 +42,15 @@ models:
   - name: clinician_id
     data_type: character varying(255)
     description: "{{ doc('procedures__physician_id') }}"
-  - name: assistant_id
-    data_type: character varying(255)
-    description: "{{ doc('procedures__assistant_id') }}"
   - name: anaesthetist_id
     data_type: character varying(255)
     description: "{{ doc('procedures__anaesthetist_id') }}"
+  - name: assistant_anaesthetist_id
+    data_type: character varying(255)
+    description: "{{ doc('procedures__assistant_anaesthetist_id') }}"
+  - name: time_in
+    data_type: character(19)
+    description: "{{ doc('procedures__time_in') }}"
+  - name: time_out
+    data_type: character(19)
+    description: "{{ doc('procedures__time_out') }}"

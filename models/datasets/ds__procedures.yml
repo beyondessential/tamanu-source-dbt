@@ -76,7 +76,7 @@ models:
       - name: procedure_type
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the procedure type."
-      - name: procdure_start_time
+      - name: procedure_start_time
         data_type: time
         description: "{{ doc('procedures__start_time') }}"
       - name: procedure_end_time
@@ -97,12 +97,18 @@ models:
       - name: procedure_anaesthetist
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} who administered anaesthesia."
-      - name: procedure_assistant_id
+      - name: procedure_assistant_anaesthetist_assistant_id
         data_type: character varying(255)
-        description: "{{ doc('procedures__assistant_id') }}"
-      - name: procdeure_assistant
+        description: "{{ doc('procedures__assistant_anaesthetist_id') }}"
+      - name: procedure_assistant_anaesthetist
         data_type: character varying(255)
-        description: "{{ doc('generic__user') }} who assisted in the procedure."
+        description: "{{ doc('generic__user') }} who assisted the anaesthetist in the procedure."
       - name: is_completed
         data_type: boolean
         description: "{{ doc('procedures__completed') }}"
+      - name: time_in
+        data_type: character(19)
+        description: "{{ doc('procedures__time_in') }}"
+      - name: time_out
+        data_type: character(19)
+        description: "{{ doc('procedures__time_out') }}"
