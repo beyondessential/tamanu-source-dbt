@@ -444,7 +444,7 @@ Registering facility: Facility selected when patient is first added to the regis
 
 **Filters**
 
-Registry
+Registry, Subdivision, Division
 
 **Default date range**: allTime
 

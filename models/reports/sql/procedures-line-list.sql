@@ -21,8 +21,10 @@ select
     procedure_duration as "{{ translate_label('procedureDuration') }}",
     procedure_clinician as "{{ translate_label('procedureClinician') }}",
     procedure_anaesthetist as "{{ translate_label('procedureAnaesthetist') }}",
-    procedure_assistant as "{{ translate_label('procedureAssistant') }}",
-    is_completed as "{{ translate_label('procedureIsCompleted') }}"
+    procedure_assistant_anaesthetist as "{{ translate_label('procedureAssistantAnaesthetist') }}",
+    is_completed as "{{ translate_label('procedureIsCompleted') }}",
+    time_in as "{{ translate_label('procedureTimeIn') }}",
+    time_out as "{{ translate_label('procedureTimeOut') }}"
 from {{ ref('ds__procedures') }}
 where
     case
