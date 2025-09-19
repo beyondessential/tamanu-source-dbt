@@ -7,7 +7,7 @@ This documentation serves as a guide to Tamanu's standard models for developers,
 ## Project Overview
 This dbt project transforms Tamanu healthcare system data into optimised datasets following a structured data flow: 
 - **sources/logs → bases → datasets → reports** for lightweight reporting on operational databases
-- **logs -> reconstructs -> bases** for analytics on replica databases
+- **logs -> reconstructs -> bases (analytics)** for analytics on replica databases
 The architecture supports both reporting and analytics use cases while maintaining data governance and privacy standards.
 
 ## Model Architecture & Data Flow
@@ -29,17 +29,17 @@ The architecture supports both reporting and analytics use cases while maintaini
 - **Purpose**: Clean, reliable foundation for all downstream transformations
 - **Usage**: Building block for datasets and reports
 
+### Layer 2a: Analytics
+- **`models/bases`**: Privacy-compliant datasets stripped of direct identifiers
+- **Features**: Direct identifiers removed, quasi-identifiers tagged for aggregation
+- **Purpose**: Safe data analysis for population health insights and research
+- **Target Audience**: Researchers and public health analysts
+
 ### Layer 3: Datasets
 - **`models/datasets`**: Business-ready, denormalised views built on bases models
 - **Features**: User-friendly column names, joined data, calculated fields
 - **Purpose**: Optimised for data analysis and report development
 - **Target Audience**: Data analysts and report developers
-
-### Layer 3a: Analytics
-- **`models/analytics`**: Privacy-compliant datasets stripped of direct identifiers
-- **Features**: Direct identifiers removed, quasi-identifiers tagged for aggregation
-- **Purpose**: Safe data analysis for population health insights and research
-- **Target Audience**: Researchers and public health analysts
 
 ### Layer 4: Reports
 - **`models/reports`**: Final reporting layer with translations and formatting applied
