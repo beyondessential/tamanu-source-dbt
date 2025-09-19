@@ -7,7 +7,7 @@ This documentation serves as a guide to Tamanu's standard models for developers,
 ## Project Overview
 This dbt project transforms Tamanu healthcare system data into optimised datasets following a structured data flow: 
 - **sources/logs → bases → datasets → reports** for lightweight reporting on operational databases
-- **logs -> reconstructs -> bases -> analytics** for analytics on replica databases
+- **logs -> reconstructs -> bases** for analytics on replica databases
 The architecture supports both reporting and analytics use cases while maintaining data governance and privacy standards.
 
 ## Model Architecture & Data Flow
