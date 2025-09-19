@@ -38,7 +38,7 @@ models:
       +materialized: view
       +tags:
         - base
-      
+
     intermediate:
       +materialized: ephemeral
 
@@ -46,6 +46,13 @@ models:
       +docs:
         show: true
       +materialized: view
+      +tags:
+        - datasets
+
+    reconstructs:
+      +materialized: incremental
+      +tags:
+        - reconstructed
 
     reports:
       +docs:

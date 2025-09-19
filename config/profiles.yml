@@ -14,11 +14,29 @@ tamanu_source_dbt:
       type: postgres
       threads: 1
       host: "{{ env_var('TAMANU_RL_DB_URL') }}"
-      port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
+      port: 60671
       user: "{{ env_var('TAMANU_RL_DB_USER') }}"
       pass: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
       schema: analytics
+    replica_demo:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_DEMO_DB_URL') }}"
+      port: 5432
+      user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
+      schema: replica
+    replica_release:
+      type: postgres
+      threads: 1
+      host: "{{ env_var('TAMANU_RL_DB_URL') }}"
+      port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
+      user: "{{ env_var('TAMANU_RL_DB_USER') }}"
+      pass: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
+      dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
+      schema: replica
     reporting_demo:
       type: postgres
       threads: 1
@@ -27,7 +45,7 @@ tamanu_source_dbt:
       user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
       pass: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
-      schema: reporting
+      schema: juliana
     reporting_release:
       type: postgres
       threads: 1
