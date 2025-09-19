@@ -12,4 +12,3 @@ join {{ ref("encounters")}} e on e.id = ep.encounter_id
 join {{ ref("prescriptions")}} p on p.id = ep.prescription_id
 join {{ ref("locations")}} l on l.id = e.location_id
 join {{ ref("reference_data")}} m on m.id = p.medication_id
-join {{ ref("users")}} u on u.id = p.prescriber_id
