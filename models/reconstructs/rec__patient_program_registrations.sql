@@ -6,4 +6,4 @@
 }}
 
 {{ jsonb_to_columns_dynamic('patient_program_registrations')}}
-    and record_data->>'id' like '%;%'
+where record_data->>'id' like '%;%'
