@@ -11,7 +11,7 @@ models:
         description: "{{ doc('generic__id') }} in prescriptions."
       - name: datetime
         data_type: timestamp
-        description: "{{ doc('generic__date') }} in prescriptions."
+        description: "{{ doc('generic__datetime') }} in prescriptions."
       - name: start_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__start_date') }}"

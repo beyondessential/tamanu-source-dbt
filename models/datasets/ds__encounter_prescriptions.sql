@@ -1,6 +1,7 @@
 select
     ep.encounter_id,
     ep.prescription_id,
+    p.datetime,
     e.patient_id,
     l.facility_id,
     ep.is_selected_for_discharge,
