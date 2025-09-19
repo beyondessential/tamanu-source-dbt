@@ -12,7 +12,7 @@ models:
         description: "{{ doc('encounter_prescriptions__encounter_id') }}"
       - name: prescription_id
         data_type: character varying(255)
-        description: "{{ doc('prescriptions__id') }}"
+        description: "{{ doc('encounter_prescriptions__prescription_id') }}"
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
