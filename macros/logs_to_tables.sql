@@ -1,17 +1,17 @@
 {% macro get_table_list() %}
-  {% set query %}
-    select distinct table_name 
-    from {{ source('logs__tamanu', 'changes') }} 
-    where table_schema = 'public'
-  {% endset %}
+    {% set query %}
+        select distinct table_name 
+        from {{ source('logs__tamanu', 'changes') }} 
+        where table_schema = 'public'
+    {% endset %}
 
-  {% if execute %}
-    {% set results = run_query(query) %}
-    {% set table_names = results.columns[0].values() %}
-    {% for table_name in table_names %}
-      {{ print(table_name) }}
-    {% endfor %}
-  {% endif %}
+    {% if execute %}
+        {% set results = run_query(query) %}
+        {% set table_names = results.columns[0].values() %}
+        {% for table_name in table_names %}
+            {{ print(table_name) }}
+        {% endfor %}
+    {% endif %}
 {% endmacro %}
 
 
@@ -20,14 +20,15 @@
         {% set keys_query %}
             WITH versions AS (
                 SELECT distinct on (version)
-                    version
+                    version,
                     record_data
                 FROM {{ source("logs__tamanu", "changes") }}
                 WHERE table_name = '{{ table_name }}'
                     and version != 'unknown'
             ),
             latest_version as (
-                select record_data
+                select
+                    record_data
                 from versions
                 order by string_to_array(version, '.')::int[] desc
                 limit 1
@@ -50,7 +51,6 @@
         from {{ this }}
     ),
     {% endif %}
-
     latest_changes as (
         select distinct on (record_id)
             record_id,
@@ -73,12 +73,12 @@
     )
 
     select
-        record_id,
+        record_id as logs_changes_record_id,
         record_updated_at,
         {% if keys|length > 0 %}
-        {% for key in keys %}
-        record_data->>'{{ key }}' as {{ key }}{% if not loop.last %},{% endif %}
-        {% endfor %}
+            {% for key in keys %}
+                record_data->>'{{ key }}' as {{ key }}{% if not loop.last %},{% endif %}
+            {% endfor %}
         {% endif %}
     from latest_changes
 {% endmacro %}

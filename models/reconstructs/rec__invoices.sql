@@ -1,6 +1,6 @@
 {{
     config(
-        unique_key='record_id',
+        unique_key='logs_changes_record_id',
         on_schema_change='sync_all_columns'
     )
 }}

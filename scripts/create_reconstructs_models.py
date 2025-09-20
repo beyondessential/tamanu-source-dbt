@@ -7,6 +7,13 @@ Only creates models that don't already exist - existing models are skipped.
 from pathlib import Path
 from utils import write_file, cprint, execute_command_with_output
 
+# List of table names to exclude from reconstructs model creation
+EXCLUDE_TABLES = [
+    "attachments",
+    "lab_request_attachments",
+    "vital_logs"
+]
+
 
 def get_distinct_table_names():
     """Query logs.changes for distinct table names using dbt macro."""
@@ -31,7 +38,7 @@ def get_distinct_table_names():
                 and not line.startswith("Completed")
                 and not line.startswith("Found")
                 and not line.startswith("Registered")
-                and not line.startswith("Functionality")
+                and not line.startswith("functionality")
                 and not ":" in line
             ):  # Skip timestamps
 
@@ -70,7 +77,7 @@ def create_model(table_name):
 
     content = f"""{{{{
     config(
-        unique_key='record_id',
+        unique_key='logs_changes_record_id',
         on_schema_change='sync_all_columns'
     )
 }}}}
@@ -104,6 +111,9 @@ def main():
     for table_name in table_names:
         if table_name in existing:
             cprint(f"Skipped (exists): rec_{table_name}.sql", "warning")
+            skipped_count += 1
+        elif table_name in EXCLUDE_TABLES:
+            cprint(f"Skipped (excluded): rec_{table_name}.sql", "warning")
             skipped_count += 1
         else:
             if create_model(table_name):
