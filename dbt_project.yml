@@ -50,6 +50,7 @@ models:
         - datasets
 
     reconstructs:
+      +incremental_strategy: merge
       +materialized: incremental
       +tags:
         - reconstructed

@@ -1,17 +1,40 @@
+{% macro get_table_list() %}
+  {% set query %}
+    select distinct table_name 
+    from {{ source('logs__tamanu', 'changes') }} 
+    where table_schema = 'public'
+  {% endset %}
+
+  {% if execute %}
+    {% set results = run_query(query) %}
+    {% set table_names = results.columns[0].values() %}
+    {% for table_name in table_names %}
+      {{ print(table_name) }}
+    {% endfor %}
+  {% endif %}
+{% endmacro %}
+
+
 {% macro jsonb_to_columns_dynamic(table_name) %}
     {% if execute %}
         {% set keys_query %}
-            WITH latest_version AS (
-                SELECT record_data,
-                    row_number() over (order by string_to_array(version, '.')::int[] desc) as rn
+            WITH versions AS (
+                SELECT distinct on (version)
+                    version
+                    record_data
                 FROM {{ source("logs__tamanu", "changes") }}
                 WHERE table_name = '{{ table_name }}'
                     and version != 'unknown'
+            ),
+            latest_version as (
+                select record_data
+                from versions
+                order by string_to_array(version, '.')::int[] desc
+                limit 1
             )
             SELECT DISTINCT key
             FROM latest_version,
             LATERAL jsonb_each_text(record_data)
-            WHERE rn = 1
         {% endset %}
 
         {% set keys_result = run_query(keys_query) %}
@@ -28,14 +51,12 @@
     ),
     {% endif %}
 
-    changes_data as (
-        select
+    latest_changes as (
+        select distinct on (record_id)
+            record_id,
             record_updated_at,
             record_data,
-            row_number() over (
-                partition by record_id 
-                order by record_updated_at desc
-            ) as rn
+            version
         from {{ source('logs__tamanu', 'changes') }}
         {% if is_incremental() %}
         cross join max_updated_at
@@ -44,24 +65,20 @@
             {% if is_incremental() %}
                 and record_updated_at > max_updated_at.max_updated_at
             {% endif %}
-    ),
-
-    latest_changes as (
-        select
-            record_updated_at,
-            record_data
-        from changes_data
-        where rn = 1
+        order by
+            record_id,
+            record_updated_at desc,
+            CASE WHEN version = 'unknown' THEN 0 ELSE 1 END desc, -- Ensure 'unknown' versions are sorted last
+            CASE WHEN version != 'unknown' THEN string_to_array(version, '.')::int[] END desc
     )
 
     select
+        record_id,
         record_updated_at,
         {% if keys|length > 0 %}
         {% for key in keys %}
         record_data->>'{{ key }}' as {{ key }}{% if not loop.last %},{% endif %}
         {% endfor %}
-        {% else %}
-        null as placeholder
         {% endif %}
     from latest_changes
 {% endmacro %}

@@ -11,8 +11,8 @@ from utils import write_file, cprint, execute_command_with_output
 def get_distinct_table_names():
     """Query logs.changes for distinct table names using dbt macro."""
     try:
-        # Run dbt macro to get table names
-        result = execute_command_with_output("dbt run-operation get_table_names")
+        # Run dbt macro to get table list
+        result = execute_command_with_output("dbt run-operation get_table_list")
 
         if result.returncode != 0:
             cprint(f"dbt macro failed: {result.stderr}", "error")
@@ -31,6 +31,7 @@ def get_distinct_table_names():
                 and not line.startswith("Completed")
                 and not line.startswith("Found")
                 and not line.startswith("Registered")
+                and not line.startswith("Functionality")
                 and not ":" in line
             ):  # Skip timestamps
 
@@ -69,7 +70,7 @@ def create_model(table_name):
 
     content = f"""{{{{
     config(
-        unique_key='id',
+        unique_key='record_id',
         on_schema_change='sync_all_columns'
     )
 }}}}
