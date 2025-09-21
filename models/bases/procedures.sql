@@ -15,8 +15,8 @@ select
     p.assistant_anaesthetist_id,
     p.time_in,
     p.time_out
-from {{ source("tamanu", "procedures") }} p
-join {{ source("tamanu", "encounters") }} e on e.id = p.encounter_id
+from {{ resolve_input_model('procedures', source_type=var('base_model_source_type', 'source')) }} p
+join {{ resolve_input_model('encounters', source_type=var('base_model_source_type', 'source')) }} e on e.id = p.encounter_id
 where p.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

@@ -9,10 +9,10 @@ select
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
     p.discontinued_date::timestamp as discontinued_datetime
-from {{ source("tamanu", "prescriptions") }} p
-join {{ source("tamanu", "encounter_prescriptions") }} ep
+from {{ resolve_input_model('prescriptions', source_type=var('base_model_source_type', 'source')) }} p
+join {{ resolve_input_model('encounter_prescriptions', source_type=var('base_model_source_type', 'source')) }} ep
     on ep.prescription_id = p.id
-join {{ source("tamanu", "encounters") }} e
+join {{ resolve_input_model('encounters', source_type=var('base_model_source_type', 'source')) }} e
     on e.id = ep.encounter_id
 where p.deleted_at is null
     and ep.deleted_at is null

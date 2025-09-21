@@ -19,8 +19,8 @@ select
     lr.encounter_id,
     lr.department_id,
     lr.updated_at::timestamp as updated_datetime
-from {{ source("tamanu", "lab_requests") }} lr
-join {{ source("tamanu", "encounters") }} e on e.id = lr.encounter_id
+from {{ resolve_input_model('lab_requests', source_type=var('base_model_source_type', 'source')) }} lr
+join {{ resolve_input_model('encounters', source_type=var('base_model_source_type', 'source')) }} e on e.id = lr.encounter_id
 where lr.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

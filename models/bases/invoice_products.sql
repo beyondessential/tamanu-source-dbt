@@ -1,8 +1,8 @@
 select
-    ip.id,
-    ip.name,
-    ip.price,
-    ip.discountable,
-    ip.visibility_status
-from {{ source("tamanu", "invoice_products") }} ip
-where ip.deleted_at is null
+    id,
+    name,
+    price,
+    discountable,
+    visibility_status
+from {{ resolve_input_model('invoice_products', source_type=var('base_model_source_type', 'source')) }}
+where deleted_at is null

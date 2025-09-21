@@ -11,9 +11,9 @@ select
     ii.product_price,
     ii.ordered_by_user_id as ordered_by_id,
     ii.source_id
-from {{ source("tamanu", "invoice_items") }} ii
-join {{ source("tamanu", "invoices") }} i on i.id = ii.invoice_id
-join {{ source("tamanu", "encounters") }} e on e.id = i.encounter_id
+from {{ resolve_input_model('invoice_items', source_type=var('base_model_source_type', 'source')) }} ii
+join {{ resolve_input_model('invoices', source_type=var('base_model_source_type', 'source')) }} i on i.id = ii.invoice_id
+join {{ resolve_input_model('encounters', source_type=var('base_model_source_type', 'source')) }} e on e.id = i.encounter_id
 where ii.deleted_at is null
     and i.deleted_at is null
     and e.deleted_at is null

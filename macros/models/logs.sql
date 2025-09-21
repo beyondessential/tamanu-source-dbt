@@ -11,7 +11,7 @@
     where table_name = '{{ table_name }}'
         and record_id not in (
             select id::text
-            from {{ table_name }} t 
+            from {{ resolve_input_model(table_name, source_type=var('base_model_source_type', 'source')) }} t 
             where t.deleted_at notnull
         )
 {%- endmacro %}
