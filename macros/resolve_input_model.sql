@@ -5,7 +5,7 @@
         {%- set rec__model_name = 'rec__' ~ model_base_name -%}
         {{ return(ref(rec__model_name)) }}
     {% else %}
-        {{ return(ref(model_name)) }}
+        {{ return(ref(model_base_name)) }}
     {% endif %}
 
 {% endmacro %}
