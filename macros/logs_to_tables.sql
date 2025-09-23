@@ -11,6 +11,9 @@
         {% for table_name in table_names %}
             {{ print(table_name) }}
         {% endfor %}
+        {{ return(table_names) }}
+    {% else %}
+        {{ return({}) }}
     {% endif %}
 {% endmacro %}
 
@@ -46,7 +49,7 @@
 
     with
     {% if is_incremental() %}
-    max_updated_at as (
+    max_logged_at as (
         select max(logged_at) as max_logged_at
         from {{ this }}
     ),
