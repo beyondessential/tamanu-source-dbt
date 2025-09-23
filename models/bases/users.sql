@@ -6,5 +6,5 @@ select
     phone_number,
     role,
     visibility_status
-from {{ source("tamanu", "users") }}
+from {{ resolve_input_model('users') }}
 where deleted_at is null

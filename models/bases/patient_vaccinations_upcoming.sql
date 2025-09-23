@@ -6,5 +6,5 @@ select
     due_date::date,
     days_till_due,
     status
-from {{ source("tamanu", "upcoming_vaccinations") }}
+from {{ resolve_input_model('upcoming_vaccinations') }}
 where patient_id != '{{ var("test_patient") }}'
