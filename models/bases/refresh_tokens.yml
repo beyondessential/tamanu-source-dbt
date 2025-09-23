@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: refresh_tokens
+    description: "{{ doc('table__refresh_tokens') }}"
+    config:
+      tags:
+        - administration
+    columns:
+      - name: id
+        description: "{{ doc('generic__id') }}"
+      - name: device_id
+        description: "{{ doc('refresh_tokens__device_id') }}"
+      - name: user_id
+        description: "{{ doc('refresh_tokens__user_id') }}"
+      - name: expires_at
+        description: "{{ doc('refresh_tokens__expires_at') }}"
+      - name: created_at
+        description: "{{ doc('generic__created_at') }}"
+      - name: updated_at
+        description: "{{ doc('generic__updated_at') }}"
