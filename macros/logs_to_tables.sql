@@ -47,34 +47,34 @@
     with
     {% if is_incremental() %}
     max_updated_at as (
-        select max(record_updated_at) as max_updated_at
+        select max(logged_at) as max_logged_at
         from {{ this }}
     ),
     {% endif %}
     latest_changes as (
         select distinct on (record_id)
             record_id,
-            record_updated_at,
+            logged_at,
             record_data,
             version
         from {{ source('logs__tamanu', 'changes') }}
         {% if is_incremental() %}
-        cross join max_updated_at
+        cross join max_logged_at
         {% endif %}
         where table_name = '{{ table_name }}'
             {% if is_incremental() %}
-                and record_updated_at > max_updated_at.max_updated_at
+                and logged_at > max_logged_at.max_logged_at
             {% endif %}
         order by
             record_id,
-            record_updated_at desc,
+            logged_at desc,
             CASE WHEN version = 'unknown' THEN 0 ELSE 1 END desc, -- Ensure 'unknown' versions are sorted last
             CASE WHEN version != 'unknown' THEN string_to_array(version, '.')::int[] END desc
     )
 
     select
         record_id as logs_changes_record_id,
-        record_updated_at,
+        logged_at,
         {% if keys|length > 0 %}
             {% for key in keys %}
                 record_data->>'{{ key }}' as {{ key }}{% if not loop.last %},{% endif %}
