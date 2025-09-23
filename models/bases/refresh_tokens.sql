@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     device_id,
     user_id,
