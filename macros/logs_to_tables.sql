@@ -18,12 +18,12 @@
 {% macro jsonb_to_columns_dynamic(table_name) %}
     {% if execute %}
         {% set keys_query %}
-            WITH versions AS (
-                SELECT distinct on (version)
+            with versions AS (
+                select distinct on (version)
                     version,
                     record_data
-                FROM {{ source("logs__tamanu", "changes") }}
-                WHERE table_name = '{{ table_name }}'
+                from {{ source("logs__tamanu", "changes") }}
+                where table_name = '{{ table_name }}'
                     and version != 'unknown'
             ),
             latest_version as (
@@ -33,9 +33,9 @@
                 order by string_to_array(version, '.')::int[] desc
                 limit 1
             )
-            SELECT DISTINCT key
-            FROM latest_version,
-            LATERAL jsonb_each_text(record_data)
+            select distinct key
+            from latest_version,
+            lateral jsonb_each_text(record_data)
         {% endset %}
 
         {% set keys_result = run_query(keys_query) %}

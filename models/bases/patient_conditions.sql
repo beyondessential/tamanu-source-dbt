@@ -9,6 +9,6 @@ select
     resolution_date::timestamp as resolved_datetime,
     resolution_practitioner_id as resolved_by_id,
     resolution_note
-from {{ resolve_input_model('patient_conditions', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('patient_conditions') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

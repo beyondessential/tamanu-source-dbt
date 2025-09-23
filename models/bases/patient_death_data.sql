@@ -31,6 +31,6 @@ select
     facility_id,
     is_final,
     visibility_status
-from {{ resolve_input_model('patient_death_data', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('patient_death_data') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

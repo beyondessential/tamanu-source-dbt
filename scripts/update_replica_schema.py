@@ -2,8 +2,10 @@
 """
 Create reconstructs models for all tables found in logs.changes.
 Only creates models that don't already exist - existing models are skipped.
+Then runs dbt to build the replica schema.
 """
 
+import argparse
 from pathlib import Path
 from utils import write_file, cprint, execute_command_with_output
 
@@ -15,12 +17,17 @@ EXCLUDE_TABLES = [
 ]
 
 
-def get_distinct_table_names():
+def get_distinct_table_names(target=None):
     """Query logs.changes for distinct table names using dbt macro."""
     try:
+        # Build dbt command
+        cmd = "dbt run-operation get_table_list --profiles-dir config"
+        if target:
+            cmd += f" --target {target}"
+            
         # Run dbt macro to get table list
-        result = execute_command_with_output("dbt run-operation get_table_list")
-
+        result = execute_command_with_output(cmd)
+        print(result)
         if result.returncode != 0:
             cprint(f"dbt macro failed: {result.stderr}", "error")
             return []
@@ -29,22 +36,27 @@ def get_distinct_table_names():
         table_names = []
         lines = result.stdout.split("\n")
 
+        # Look for lines that appear to be table names (after dbt setup messages)
+        parsing_tables = False
         for line in lines:
             line = line.strip()
-
-            if (
-                line
-                and not line.startswith("Running")
-                and not line.startswith("Completed")
-                and not line.startswith("Found")
-                and not line.startswith("Registered")
-                and not line.startswith("functionality")
-                and not ":" in line
-            ):  # Skip timestamps
-
-                # This should be a table name - validate it
-                if line.replace("_", "").isalnum() and len(line) > 0:
-                    table_names.append(line)
+            
+            # Skip empty lines
+            if not line:
+                continue
+                
+            # Skip dbt setup/warning messages
+            if (line.startswith("Running") or 
+                line.startswith("Completed") or 
+                line.startswith("Found") or 
+                line.startswith("Registered") or 
+                "functionality" in line or
+                ":" in line[:12]):  # Skip timestamp lines (first 12 chars contain time)
+                continue
+                
+            # This should be a table name - validate it
+            if line.replace("_", "").isalnum() and len(line) > 0:
+                table_names.append(line)
 
         return table_names
 
@@ -91,10 +103,38 @@ def create_model(table_name):
     return True
 
 
+def run_dbt_replica(target=None):
+    """Run dbt to build the replica schema."""
+    try:
+        # Build dbt command
+        cmd = "dbt run --profiles-dir config --selector replica"
+        if target:
+            cmd += f" --target {target}"
+            
+        cprint(f"Running: {cmd}", "info")
+        result = execute_command_with_output(cmd)
+        
+        if result.returncode == 0:
+            cprint("dbt run completed successfully", "success")
+        else:
+            cprint(f"dbt run failed: {result.stderr}", "error")
+            
+        return result.returncode == 0
+        
+    except Exception as e:
+        cprint(f"Error running dbt: {e}", "error")
+        return False
+
+
 def main():
     """Main execution."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Update replica schema by creating reconstruct models and running dbt")
+    parser.add_argument("--target", help="dbt target to use")
+    args = parser.parse_args()
+    
     cprint("Querying database for table names...", "info")
-    table_names = get_distinct_table_names()
+    table_names = get_distinct_table_names(args.target)
 
     if not table_names:
         cprint("No table names found", "error")
@@ -120,6 +160,13 @@ def main():
                 created_count += 1
 
     cprint(f"Summary: {created_count} created, {skipped_count} skipped", "info")
+    
+    # Run dbt to build replica schema
+    cprint("Building replica schema...", "info")
+    if run_dbt_replica(args.target):
+        cprint("Replica schema update completed successfully!", "success")
+    else:
+        cprint("Replica schema update failed!", "error")
 
 
 if __name__ == "__main__":

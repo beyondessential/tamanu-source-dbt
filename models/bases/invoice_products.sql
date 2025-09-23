@@ -4,5 +4,5 @@ select
     price,
     discountable,
     visibility_status
-from {{ resolve_input_model('invoice_products', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('invoice_products') }}
 where deleted_at is null

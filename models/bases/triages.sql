@@ -9,5 +9,5 @@ select
     practitioner_id as clinician_id,
     chief_complaint_id,
     secondary_complaint_id
-from {{ resolve_input_model('triages', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('triages') }}
 where deleted_at is null

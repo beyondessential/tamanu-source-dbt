@@ -21,8 +21,8 @@ select
     s.is_fully_generated,
     s.generated_until_date,
     s.cancelled_at_date
-from {{ resolve_input_model('appointments', source_type=var('base_model_source_type', 'source')) }} a
-left join {{ resolve_input_model('appointment_schedules', source_type=var('base_model_source_type', 'source')) }} s on s.id = a.schedule_id
+from {{ resolve_input_model('appointments') }} a
+left join {{ resolve_input_model('appointment_schedules') }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
     and a.appointment_type_id notnull

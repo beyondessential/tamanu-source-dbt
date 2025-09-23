@@ -4,5 +4,5 @@ select
     name,
     type,
     visibility_status
-from {{ resolve_input_model('reference_data', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('reference_data') }}
 where deleted_at is null

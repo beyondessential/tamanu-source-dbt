@@ -14,5 +14,5 @@ select
     lab_test_category_id,
     visibility_status,
     is_sensitive
-from {{ resolve_input_model('lab_test_types', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('lab_test_types') }}
 where deleted_at is null

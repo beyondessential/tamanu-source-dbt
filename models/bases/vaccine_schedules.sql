@@ -9,5 +9,5 @@ select
     weeks_from_last_vaccination_due,
     sort_index,
     visibility_status
-from {{ resolve_input_model('scheduled_vaccines', source_type=var('base_model_source_type', 'source')) }}
+from {{ resolve_input_model('scheduled_vaccines') }}
 where deleted_at is null
