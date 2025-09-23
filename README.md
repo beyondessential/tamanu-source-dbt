@@ -2,10 +2,9 @@
 
 A dbt project of Tamanu's standard models. This includes:
 
-- raw (or source) models
-- reconstructed (from logs) models
-- reporting models
-- analytics models
+- raw (or source) schema
+- reporting schema
+- analytics schema (upcoming)
 
 ## AI Rules
 
