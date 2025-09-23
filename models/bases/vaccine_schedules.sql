@@ -9,5 +9,5 @@ select
     weeks_from_last_vaccination_due,
     sort_index,
     visibility_status
-from {{ source("tamanu", "scheduled_vaccines") }}
+from {{ resolve_input_model('scheduled_vaccines') }}
 where deleted_at is null

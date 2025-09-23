@@ -6,5 +6,5 @@ select
     location_group_id,
     facility_id,
     visibility_status
-from {{ source("tamanu", "locations") }}
+from {{ resolve_input_model('locations') }}
 where deleted_at is null

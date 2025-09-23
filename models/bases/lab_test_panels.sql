@@ -5,5 +5,5 @@ select
     name,
     category_id,
     visibility_status
-from {{ source("tamanu", "lab_test_panels") }}
+from {{ resolve_input_model('lab_test_panels') }}
 where deleted_at is null

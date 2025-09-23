@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     device_id,
     user_id,
@@ -6,5 +6,5 @@ SELECT
     created_at,
     updated_at
 from
-    {{ source('tamanu', 'refresh_tokens') }}
+    {{ resolve_input_model('refresh_tokens') }}
 where deleted_at is null
