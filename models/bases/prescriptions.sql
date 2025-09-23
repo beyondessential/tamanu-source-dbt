@@ -5,6 +5,7 @@ select
     p.end_date::timestamp as end_datetime,
     p.medication_id,
     p.prescriber_id,
+    p.quantity,
     p.discontinued as is_discontinued,
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
