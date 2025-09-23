@@ -5,6 +5,8 @@
     {% elif source_type == 'reconstructed' %}
         {%- set rec__model_name = 'rec__' ~ model_base_name -%}
         {{ return(ref(rec__model_name)) }}
+    {% else %}
+        {{ exceptions.raise_compiler_error("Invalid `base_model_source_type` value: " ~ source_type ~ ". Expected 'source' or 'reconstructed'.") }}
     {% endif %}
 
 {% endmacro %}
