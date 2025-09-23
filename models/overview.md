@@ -5,35 +5,20 @@
 This documentation serves as a guide to Tamanu's standard models for developers, data stewards, and analysts looking to understand and utilise the data structure for reporting and analytics.
 
 ## Project Overview
-This dbt project transforms Tamanu healthcare system data into optimised datasets following a structured data flow: 
-- **sources/logs → bases → datasets → reports** for lightweight reporting on operational databases
-- **logs -> reconstructs -> bases (analytics)** for analytics on replica databases
-The architecture supports both reporting and analytics use cases while maintaining data governance and privacy standards.
+This dbt project transforms Tamanu healthcare system data into optimised datasets following a structured data flow: **sources/logs → bases → datasets → reports**. The architecture supports both reporting and analytics use cases while maintaining data governance and privacy standards.
 
 ## Model Architecture & Data Flow
 
-### Layer 1: Logs, and Sources
-- **`models/logs`**: System-generated audit and event data from the `logs` schema
+### Layer 1: Sources & Logs
 - **`models/sources`**: Raw operational database tables from the `public` schema
+- **`models/logs`**: System-generated audit and event data from the `logs` schema
 - **Purpose**: Foundation layer representing the operational database structure
 - **Status**: Read-only definitions managed externally
-
-### Layer 1a: Reconstructs
-- **`models/reconstructs`**: Reconstruction of raw operational database tables from `logs.changes`
-- **Purpose**: Rebuilds the current state of database tables using change log data
-- **Status**: Generated automatically from all distinct table names found in `logs.changes` using the `jsonb_to_columns_dynamic` macro
-- **Usage**: Foundation for analytics workflows where change data is streamed from the operational database
 
 ### Layer 2: Bases
 - **`models/bases`**: Cleaned and filtered source data with soft-deleted records and test patients removed
 - **Purpose**: Clean, reliable foundation for all downstream transformations
 - **Usage**: Building block for datasets and reports
-
-### Layer 2a: Analytics
-- **`models/bases`**: Privacy-compliant datasets stripped of direct identifiers
-- **Features**: Direct identifiers removed, quasi-identifiers tagged for aggregation
-- **Purpose**: Safe data analysis for population health insights and research
-- **Target Audience**: Researchers and public health analysts
 
 ### Layer 3: Datasets
 - **`models/datasets`**: Business-ready, denormalised views built on bases models
@@ -51,24 +36,18 @@ The architecture supports both reporting and analytics use cases while maintaini
 
 ## Deployment Targets
 
-### Analytics Schema (Tupaia Integration)
-**Command**: `dbt run --target analytics_release --selector analytics`
-- Privacy-compliant schema excluding direct identifiers
-- Automatically filters columns tagged with `direct_identifier`
-- Preserves all transformations and business logic
-- Optimised for aggregated analysis and population health insights
-
-### Replica Schema
-**Command**: `dbt run --target replica_release --selector replica`
-- Incrementally updated schema containing raw operational database models reconstructed from change logs.
-- Includes `rec_` prefixed models, providing a near real-time replica of source tables.
-- Serves as a foundation for analytics workflows requiring raw, historical change data.
-
-### Reporting Schema (Tamanu reporting)
-**Command**: `dbt run --target reporting_release --selector reporting`
+### Reporting Schema
+**Command**: `dbt run --target reporting_release`
 - Complete functionality with all models and columns
 - Full data fidelity for comprehensive reporting
 - Used for standardised reports on Tamanu facility servers
+
+### Analytics Schema (Tupaia Integration)
+**Command**: `dbt run --target analytics_release --select tag:base`
+- Privacy-compliant deployment excluding direct identifiers
+- Automatically filters columns tagged with `direct_identifier`
+- Preserves all transformations and business logic
+- Optimised for aggregated analysis and population health insights
 
 ## Data Classification System
 

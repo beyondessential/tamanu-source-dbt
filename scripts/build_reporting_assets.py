@@ -44,8 +44,8 @@ def main():
         
         # Build dbt models and generate documentation
         cprint("Building dbt models and documentation", "info")
-        execute_command("dbt run --profiles-dir config --selector reporting")
-        execute_command("dbt docs generate --profiles-dir config --selector reporting --static")
+        execute_command("dbt run --profiles-dir config")
+        execute_command("dbt docs generate --profiles-dir config --static")
 
         # Customise documentation by hiding macros and tests
         hide_macros_from_docs()
@@ -67,7 +67,7 @@ def main():
             cprint(f"Generating reports for language: {language}", "info")
             
             # Compile dbt models with the language variable passed via --vars
-            execute_command(f'dbt compile --profiles-dir config --selector reports --vars "{{language: {language}}}"')
+            execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
             
             # Generate language-specific reports
             generate_project_reports(language)
