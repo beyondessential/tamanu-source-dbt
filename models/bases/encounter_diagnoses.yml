@@ -1,26 +1,26 @@
 version: 2
 models:
-- name: encounter_diagnoses
-  description: "{{ doc('table__encounter_diagnoses') }}"
-  config:
-    tags:
-    - clinical
-  columns:
-  - name: id
-    data_type: character varying
-    description: "{{ doc('generic__id') }} in encounter_diagnoses."
-  - name: datetime
-    data_type: timestamp
-    description: "{{ doc('generic__date') }} in encounter_diagnoses."
-  - name: is_primary
-    data_type: boolean
-    description: "{{ doc('encounter_diagnoses__is_primary') }}"
-  - name: encounter_id
-    data_type: character varying
-    description: "{{ doc('encounter_diagnoses__encounter_id') }}"
-  - name: diagnosis_id
-    data_type: character varying
-    description: "{{ doc('encounter_diagnoses__diagnosis_id') }}"
-  - name: diagnosed_by_id
-    data_type: character varying
-    description: "{{ doc('encounter_diagnoses__clinician_id') }}"
+  - name: encounter_diagnoses
+    description: "{{ doc('table__encounter_diagnoses') }}"
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: id
+        data_type: character varying
+        description: "{{ doc('generic__id') }} in encounter_diagnoses."
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('generic__date') }} in encounter_diagnoses."
+      - name: is_primary
+        data_type: boolean
+        description: "{{ doc('encounter_diagnoses__is_primary') }}"
+      - name: encounter_id
+        data_type: character varying
+        description: "{{ doc('encounter_diagnoses__encounter_id') }}"
+      - name: diagnosis_id
+        data_type: character varying
+        description: "{{ doc('encounter_diagnoses__diagnosis_id') }}"
+      - name: diagnosed_by_id
+        data_type: character varying
+        description: "{{ doc('encounter_diagnoses__clinician_id') }}"
