@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: ds__usage_quality_metrics_patient_registrations
+    description: Usage quality metrics - patient registrations
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: registration_date
+        data_type: date
+        description: "{{ doc('generic__created_at') }} in patients which is used as a best estimate of registration date."
+      - name: total_patient_registrations
+        data_type: integer
+        description: Total patient registrations
+      - name: total_birth_registrations
+        data_type: integer
+        description: Total birth registrations
+      - name: total_incorrect_registrations_for_patient_under_6mth
+        data_type: integer
+        description: Total registrations for patient under 6 months incorrectly registered as a new patient instead of a birth registration
