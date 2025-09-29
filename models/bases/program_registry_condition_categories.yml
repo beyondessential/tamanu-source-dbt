@@ -1,6 +1,6 @@
 models:
   - name: program_registry_condition_categories
-    description: '{{ doc("table__program_registry_conditions") }}'
+    description: '{{ doc("table__program_registry_condition_categories") }}'
     config:
       tags:
         - reference

@@ -49,28 +49,23 @@ unit_tests:
     description: Test basic functionality of patient_program_registration_conditions_change_logs model
     given:
       - input: source('logs__tamanu', 'changes')
-        format: sql
-        rows:
-          'select ''550e8400-e29b-41d4-a716-446655440001''::uuid as id, ''2025-06-20 10:00:00''::timestamp as logged_at, ''user_001'' as updated_by_user_id, ''cond_001'' as record_id, ''patient_program_registration_conditions'' as table_name, ''2.33.0'' as version, ''{"id": "cond_001", "date": "2024-01-15T09:00:00Z", "program_registry_condition_id": "prog_cond_001", "patient_program_registration_id": "reg_001", "program_registry_condition_category_id": "primary", "reason_for_change": "initial_registration", "clinician_id": "cli_001", "deletion_date": null, "deletion_clinician_id": null}''::jsonb as record_data
+        format: csv
+        rows: |
+          id,logged_at,updated_by_user_id,record_id,table_name,version,record_created_at,record_updated_at,record_data
+          550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00,user_001,cond_001,patient_program_registration_conditions,2.33.0,2024-01-15 09:00:00,2024-01-15 09:00:00,"{""id"": ""cond_001"", ""date"": ""2024-01-15T09:00:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""primary"", ""reason_for_change"": ""initial_registration"", ""clinician_id"": ""cli_001"", ""deletion_date"": null, ""deletion_clinician_id"": null}"
+          550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00,user_002,cond_001,patient_program_registration_conditions,2.33.1,2024-01-16 13:30:00,2024-01-16 13:30:00,"{""id"": ""cond_001"", ""date"": ""2024-01-16T13:30:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""secondary"", ""reason_for_change"": ""condition_category_updated"", ""clinician_id"": ""cli_002"", ""deletion_date"": ""2024-01-16T15:00:00Z"", ""deletion_clinician_id"": ""cli_003""}"
 
-          union all
+      - input: source('tamanu', 'patient_program_registration_conditions')
+        format: csv
+        rows: |
+          id,date,program_registry_condition_id,patient_program_registration_id,program_registry_condition_category_id,reason_for_change,clinician_id,deletion_date,deletion_clinician_id,deleted_at
+          cond_001,2024-01-15 09:00:00,prog_cond_001,reg_001,primary,initial_registration,cli_001,,,
+          cond_001,2024-01-16 13:30:00,prog_cond_001,reg_001,secondary,condition_category_updated,cli_002,2024-01-16 15:00:00,cli_003,
 
-          select ''550e8400-e29b-41d4-a716-446655440002''::uuid, ''2025-06-20 14:30:00''::timestamp, ''user_002'', ''cond_001'', ''patient_program_registration_conditions'', ''2.33.1'', ''{"id": "cond_001", "date": "2024-01-16T13:30:00Z", "program_registry_condition_id": "prog_cond_001", "patient_program_registration_id": "reg_001", "program_registry_condition_category_id": "secondary", "reason_for_change": "condition_category_updated", "clinician_id": "cli_002", "deletion_date": "2024-01-16T15:00:00Z", "deletion_clinician_id": "cli_003"}''::jsonb
-
-          '
-      - input: ref('patient_program_registration_conditions')
-        format: sql
-        rows:
-          "select 'cond_001' as id, '2026-01-18 10:00:00'::timestamp as datetime, 'prog_cond_001' as program_registry_condition_id, 'reg_001'::uuid as patient_program_registration_id, 'secondary' as program_registry_condition_category_id, 'condition_category_updated' as reason_for_change, 'cli_002' as recorded_by_id, '2024-01-16 15:00:00'::timestamp as deleted_datetime, 'cli_003' as deleted_by_id
-
-          "
     expect:
-      format: sql
-      rows:
-        "select '550e8400-e29b-41d4-a716-446655440001'::uuid as changelog_id, '2025-06-20 10:00:00'::timestamp as logged_at, 'user_001' as updated_by_user_id, 'cond_001' as id, '2024-01-15 09:00:00'::timestamp as datetime, 'prog_cond_001' as program_registry_condition_id, 'reg_001' as patient_program_registration_id, 'primary' as program_registry_condition_category_id, 'initial_registration' as reason_for_change, 'cli_001' as recorded_by_id, null::timestamp as deleted_datetime, null as deleted_by_id
+      format: csv
+      rows: |
+        changelog_id,logged_at,updated_by_user_id,id,datetime,program_registry_condition_id,patient_program_registration_id,program_registry_condition_category_id,reason_for_change,recorded_by_id,deleted_datetime,deleted_by_id
+        550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00,user_001,cond_001,2024-01-15 09:00:00,prog_cond_001,reg_001,primary,initial_registration,cli_001,,
+        550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00,user_002,cond_001,2024-01-16 13:30:00,prog_cond_001,reg_001,secondary,condition_category_updated,cli_002,2024-01-16 15:00:00,cli_003
 
-        union all
-
-        select '550e8400-e29b-41d4-a716-446655440002'::uuid, '2025-06-20 14:30:00'::timestamp, 'user_002', 'cond_001', '2024-01-16 13:30:00'::timestamp, 'prog_cond_001', 'reg_001', 'secondary', 'condition_category_updated', 'cli_002', '2024-01-16 15:00:00'::timestamp, 'cli_003'
-
-        "

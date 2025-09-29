@@ -58,28 +58,21 @@ unit_tests:
     description: Test basic functionality of patient_program_registrations_change_logs model
     given:
       - input: source('logs__tamanu', 'changes')
-        format: sql
-        rows:
-          'select ''550e8400-e29b-41d4-a716-446655440001''::uuid as id, ''2025-06-20 10:00:00''::timestamp as logged_at, ''user_001'' as updated_by_user_id, ''reg_001'' as record_id, ''patient_program_registrations'' as table_name, ''2.33.0'' as version, ''{"date": "2024-01-15T09:00:00Z", "registration_status": "active", "patient_id": "pat_001", "program_registry_id": "prog_001", "clinical_status_id": "status_001", "clinician_id": "cli_001", "registering_facility_id": "fac_001", "facility_id": "fac_001", "village_id": null, "deactivated_clinician_id": null, "deactivated_date": null}''::jsonb as record_data
+        format: csv
+        rows: |
+          id,logged_at,updated_by_user_id,record_id,table_name,version,record_created_at,record_updated_at,record_data
+          550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00+12:00,user_001,reg_001,patient_program_registrations,2.33.0,2024-01-15 09:00:00,2024-01-15 09:00:00,"{""date"": ""2024-01-15T09:00:00Z"", ""registration_status"": ""active"", ""patient_id"": ""pat_001"", ""program_registry_id"": ""prog_001"", ""clinical_status_id"": ""status_001"", ""clinician_id"": ""cli_001"", ""registering_facility_id"": ""fac_001"", ""facility_id"": ""fac_001""}"
+          550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00+12:00,user_002,reg_001,patient_program_registrations,2.33.1,2024-01-16 13:30:00,2024-01-16 13:30:00,"{""date"": ""2024-01-16T13:30:00Z"", ""registration_status"": ""inactive"", ""patient_id"": ""pat_001"", ""program_registry_id"": ""prog_001"", ""clinical_status_id"": ""status_002"", ""clinician_id"": ""cli_002"", ""registering_facility_id"": ""fac_001"", ""facility_id"": ""fac_001"", ""deactivated_clinician_id"": ""cli_003"", ""deactivated_date"": ""2024-01-16T15:00:00Z""}"
+      - input: source('tamanu', 'patient_program_registrations')
+        format: csv
+        rows: |
+          id,date,registration_status,patient_id,program_registry_id,clinical_status_id,clinician_id,registering_facility_id,facility_id,village_id,deactivated_clinician_id,deactivated_date,deleted_at
+          reg_001,2026-01-18 10:00:00,inactive,pat_001,prog_001,status_002,cli_002,fac_001,fac_001,,cli_003,2024-01-16 15:00:00,
 
-          union all
-
-          select ''550e8400-e29b-41d4-a716-446655440002''::uuid, ''2025-06-20 14:30:00''::timestamp, ''user_002'', ''reg_001'', ''patient_program_registrations'', ''2.33.1'', ''{"date": "2024-01-16T13:30:00Z", "registration_status": "inactive", "patient_id": "pat_001", "program_registry_id": "prog_001", "clinical_status_id": "status_002", "clinician_id": "cli_002", "registering_facility_id": "fac_001", "facility_id": "fac_001", "village_id": null, "deactivated_clinician_id": "cli_003", "deactivated_date": "2024-01-16T15:00:00Z"}''::jsonb
-
-          '
-      - input: ref('patient_program_registrations')
-        format: sql
-        rows:
-          "select 'reg_001' as id, '2026-01-18 10:00:00'::timestamp as datetime, 'inactive' as registration_status, 'pat_001' as patient_id, 'prog_001' as program_registry_id, 'status_002' as clinical_status_id, 'cli_002' as registered_by_id, 'fac_001' as registering_facility_id, 'fac_001' as facility_id, null as village_id, 'cli_003' as deactivated_by_id, '2024-01-16 15:00:00'::timestamp as deactivated_datetime, null as deleted_at
-
-          "
     expect:
-      format: sql
-      rows:
-        "select '550e8400-e29b-41d4-a716-446655440001'::uuid as changelog_id, '2025-06-20 10:00:00'::timestamp as logged_at, 'user_001' as updated_by_user_id, 'reg_001' as id, '2024-01-15 09:00:00'::timestamp as datetime, 'active' as registration_status, 'pat_001' as patient_id, 'prog_001' as program_registry_id, 'status_001' as clinical_status_id, 'cli_001' as registered_by_id, 'fac_001' as registering_facility_id, 'fac_001' as facility_id, null as village_id, null as deactivated_by_id, null::timestamp as deactivated_datetime
+      format: csv
+      rows: |
+        changelog_id,logged_at,updated_by_user_id,id,datetime,registration_status,patient_id,program_registry_id,clinical_status_id,registered_by_id,registering_facility_id,facility_id,village_id,deactivated_by_id,deactivated_datetime
+        550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00+12:00,user_001,reg_001,2024-01-15 09:00:00,active,pat_001,prog_001,status_001,cli_001,fac_001,fac_001,,,
+        550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00+12:00,user_002,reg_001,2024-01-16 13:30:00,inactive,pat_001,prog_001,status_002,cli_002,fac_001,fac_001,,cli_003,2024-01-16 15:00:00
 
-        union all
-
-        select '550e8400-e29b-41d4-a716-446655440002'::uuid, '2025-06-20 14:30:00'::timestamp, 'user_002', 'reg_001', '2024-01-16 13:30:00'::timestamp, 'inactive', 'pat_001', 'prog_001', 'status_002', 'cli_002', 'fac_001', 'fac_001', null, 'cli_003', '2024-01-16 15:00:00'::timestamp
-
-        "
