@@ -13,17 +13,17 @@ with data as (
         nullif(trim(pad.primary_contact_number),'') as primary_contact_number,
         nullif(trim(pad.secondary_contact_number),'') as secondary_contact_number
     from {{ ref("patients") }} p
-    left join {{ ref("patients_merged") }} pm
+    full join {{ ref("patients_merged") }} pm
     	on pm.id = p.id
     left join {{ ref("patient_additional_data") }} pad
         on pad.patient_id = coalesce(p.id, pm.id)
 )
 select
-	count(*) as total_patients,
-	sum(case when first_name is null or last_name is null then 1 else 0 end) as total_patients_with_incomplete_name,
-	sum(case when date_of_birth is null then 1 else 0 end) as total_patients_with_missing_dob,
-	sum(case when date_of_birth <= '1900-01-01' or date_of_birth > now()::date then 1 else 0 end) as total_patients_with_invalid_dob,
-	sum(case when coalesce(village_id, nursing_zone_id, medical_area_id, subdivision_id, division_id) is null then 1 else 0 end) as total_patients_with_missing_location,
-	sum(case when coalesce(primary_contact_number, secondary_contact_number) is null then 1 else 0 end) as total_patients_with_missing_contact,
-	sum(case when patient_merged_id notnull then 1 else 0 end) as total_patients_merged
+    count(*) as total_patients,
+    count(*) filter (where first_name is null or last_name is null) as total_patients_with_incomplete_name,
+    count(*) filter (where date_of_birth is null) as total_patients_with_missing_dob,
+    count(*) filter (where date_of_birth <= '1900-01-01' or date_of_birth > now()::date) as total_patients_with_invalid_dob,
+    count(*) filter (where coalesce(village_id, nursing_zone_id, medical_area_id, subdivision_id, division_id) is null) as total_patients_with_missing_location,
+    count(*) filter (where coalesce(primary_contact_number, secondary_contact_number) is null) as total_patients_with_missing_contact,
+    count(patient_merged_id) as total_patients_merged
 from data

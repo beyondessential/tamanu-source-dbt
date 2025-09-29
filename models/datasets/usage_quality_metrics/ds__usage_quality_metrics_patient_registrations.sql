@@ -4,15 +4,15 @@ with data as (
         p.id as registration_patient_id,
         pbd.patient_id as birth_patient_id,
         p.date_of_birth,
-		age(p.registration_date, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
+        age(p.registration_date, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from {{ ref("patients") }} p
     left join {{ ref("patient_birth_data") }} pbd
         on pbd.patient_id = p.id
 )
 select
-	registration_date,
-    sum(case when birth_patient_id is null then 1 else 0 end) as total_patient_registrations,
-    sum(case when birth_patient_id notnull then 1 else 0 end) as total_birth_registrations,
-    sum(case when birth_patient_id is null and age_under_6m_at_registration then 1 else 0 end) as total_incorrect_registrations_for_patient_under_6mth
+    registration_date,
+    count(*) filter (where birth_patient_id is null) as total_patient_registrations,
+    count(*) filter (where birth_patient_id notnull) as total_birth_registrations,
+    count(*) filter (where birth_patient_id is null and age_under_6m_at_registration) as total_incorrect_registrations_for_patient_under_6mth
 from data
 group by registration_date
