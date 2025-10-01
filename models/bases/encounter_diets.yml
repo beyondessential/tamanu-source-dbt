@@ -3,7 +3,7 @@ models:
   - name: encounter_diets
     description: '{{ doc("table__encounter_diets") }}'
     config:
-      tags: 
+      tags:
         - administration
     columns:
       - name: id

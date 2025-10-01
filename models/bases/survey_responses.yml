@@ -1,32 +1,32 @@
 version: 2
 models:
-- name: survey_responses
-  description: '{{ doc("table__survey_responses") }}'
-  config:
-    tags:
-    - clinical
-  columns:
-  - name: id
-    data_type: character varying(255)
-    description: "{{ doc('generic__id') }} in survey_responses."
-  - name: start_datetime
-    data_type: timestamp
-    description: "{{ doc('survey_responses__start_time') }}"
-  - name: end_datetime
-    data_type: timestamp
-    description: "{{ doc('survey_responses__end_time') }}"
-  - name: result_text
-    data_type: text
-    description: "{{ doc('survey_responses__result_text') }}"
-  - name: is_notified
-    data_type: boolean
-    description: "{{ doc('survey_responses__notified') }}"
-  - name: survey_id
-    data_type: character varying(255)
-    description: "{{ doc('survey_responses__survey_id') }}"
-  - name: encounter_id
-    data_type: character varying(255)
-    description: "{{ doc('survey_responses__encounter_id') }}"
-  - name: submitted_by_id
-    data_type: character varying(255)
-    description: "{{ doc('survey_responses__user_id') }}"
+  - name: survey_responses
+    description: '{{ doc("table__survey_responses") }}'
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in survey_responses."
+      - name: start_datetime
+        data_type: timestamp
+        description: "{{ doc('survey_responses__start_time') }}"
+      - name: end_datetime
+        data_type: timestamp
+        description: "{{ doc('survey_responses__end_time') }}"
+      - name: result_text
+        data_type: text
+        description: "{{ doc('survey_responses__result_text') }}"
+      - name: is_notified
+        data_type: boolean
+        description: "{{ doc('survey_responses__notified') }}"
+      - name: survey_id
+        data_type: character varying(255)
+        description: "{{ doc('survey_responses__survey_id') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('survey_responses__encounter_id') }}"
+      - name: submitted_by_id
+        data_type: character varying(255)
+        description: "{{ doc('survey_responses__user_id') }}"
