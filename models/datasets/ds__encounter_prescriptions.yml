@@ -9,10 +9,13 @@ models:
     columns:
       - name: encounter_id
         data_type: character varying(255)
-        description: "{{ doc('encounters__id') }}"
+        description: "{{ doc('encounter_prescriptions__encounter_id') }}"
       - name: prescription_id
         data_type: character varying(255)
-        description: "{{ doc('prescriptions__id') }}"
+        description: "{{ doc('encounter_prescriptions__prescription_id') }}"
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('generic__datetime') }} in prescriptions."
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
