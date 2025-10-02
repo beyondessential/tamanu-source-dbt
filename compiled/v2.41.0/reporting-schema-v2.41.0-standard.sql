@@ -2,27 +2,23 @@ drop schema if exists reporting cascade;
 create schema reporting;
 grant usage on schema reporting to reporting;
 alter default privileges in schema reporting grant select on tables to reporting;
-create or replace view "reporting"."contributing_death_causes" as (
-select
-    cdc.id,
-    cdc.time_after_onset,
-    cdc.patient_death_data_id,
-    cdc.condition_id
-from "public"."contributing_death_causes" cdc
-join "public"."patient_death_data" pdd on pdd.id = cdc.patient_death_data_id
-where cdc.deleted_at is null
-    and pdd.deleted_at is null
-    and pdd.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."departments" as (
+create or replace view "reporting"."patient_program_registrations" as (
 select
     id,
-    code,
-    name,
+    date::timestamp as datetime,
+    registration_status,
+    patient_id,
+    program_registry_id,
+    clinical_status_id,
+    clinician_id as registered_by_id,
+    registering_facility_id,
     facility_id,
-    visibility_status
-from "public"."departments"
+    village_id,
+    deactivated_clinician_id as deactivated_by_id,
+    deactivated_date::timestamp as deactivated_datetime
+from "public"."patient_program_registrations"
 where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."discharges" as (
 select distinct on (d.encounter_id)
@@ -38,54 +34,64 @@ where d.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 order by d.encounter_id asc, d.created_at asc
 );
-create or replace view "reporting"."encounters" as (
+create or replace view "reporting"."imaging_results" as (
 select
-    id,
-    start_date::timestamp as start_datetime,
-    case
-        when end_date < start_date then start_date::timestamp
-        else end_date::timestamp
-    end as end_datetime,
-    encounter_type,
-    reason_for_encounter,
-    device_id,
-    patient_id,
-    department_id,
-    location_id,
-    examiner_id as clinician_id,
-    patient_billing_type_id,
-    referral_source_id,
-    planned_location_id,
-    planned_location_start_time::timestamp as planned_location_start_datetime,
-    discharge_draft
-from "public"."encounters"
-where deleted_at is null
-    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."encounter_diagnoses" as (
-select
-    ed.id,
-    ed.date::timestamp as datetime,
-    ed.is_primary,
-    ed.certainty,
-    ed.encounter_id,
-    ed.diagnosis_id,
-    ed.clinician_id as diagnosed_by_id
-from "public"."encounter_diagnoses" ed
-join "public"."encounters" e on e.id = ed.encounter_id
-where ed.deleted_at is null
-    and ed.certainty not in ('disproven', 'error')
+    ires.id,
+    ires.completed_at::timestamp as datetime,
+    ires.description,
+    ires.imaging_request_id,
+    ires.external_code,
+    ires.completed_by_id,
+    ires.visibility_status
+from "public"."imaging_results" ires
+join "public"."imaging_requests" ireq on ireq.id = ires.imaging_request_id
+join "public"."encounters" e on e.id = ireq.encounter_id
+where ires.deleted_at is null
+    and ireq.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."encounter_diets" as (
+create or replace view "reporting"."users" as (
 select
-    ed.id,
-    ed.encounter_id,
-    ed.diet_id
-from "public"."encounter_diets" ed
-join "public"."encounters" e on e.id = ed.encounter_id
-where ed.deleted_at is null
+    id,
+    display_id,
+    display_name,
+    email,
+    phone_number,
+    role,
+    visibility_status
+from "public"."users"
+where deleted_at is null
+);
+create or replace view "reporting"."program_registry_conditions" as (
+select
+    id,
+    code,
+    name,
+    visibility_status,
+    program_registry_id
+from "public"."program_registry_conditions"
+where deleted_at is null
+);
+create or replace view "reporting"."prescriptions" as (
+select
+    p.id,
+    p.date::timestamp as datetime,
+    p.start_date::timestamp as start_datetime,
+    p.end_date::timestamp as end_datetime,
+    p.medication_id,
+    p.prescriber_id,
+    p.discontinued as is_discontinued,
+    p.discontinuing_clinician_id as discontinued_by_id,
+    p.discontinuing_reason,
+    p.discontinued_date::timestamp as discontinued_datetime
+from "public"."prescriptions" p
+join "public"."encounter_prescriptions" ep
+    on ep.prescription_id = p.id
+join "public"."encounters" e
+    on e.id = ep.encounter_id
+where p.deleted_at is null
+    and ep.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
@@ -106,453 +112,6 @@ where eh.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."encounter_prescriptions" as (
-select
-    ep.id,
-    ep.encounter_id,
-    ep.prescription_id,
-    ep.is_selected_for_discharge
-from "public"."encounter_prescriptions" ep
-join "public"."encounters" e on e.id = ep.encounter_id
-where ep.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."facilities" as (
-select
-    id,
-    code,
-    name,
-    division,
-    type,
-    email,
-    contact_number,
-    city_town,
-    street_address,
-    catchment_id,
-    visibility_status
-from "public"."facilities"
-where deleted_at is null
-);
-create or replace view "reporting"."imaging_area_external_codes" as (
-select
-    id,
-    area_id,
-    code,
-    description,
-    visibility_status
-from "public"."imaging_area_external_codes"
-where deleted_at is null
-);
-create or replace view "reporting"."imaging_requests" as (
-select
-    ir.id,
-    ir.display_id,
-    ir.requested_date::timestamp as datetime,
-    ir.status,
-    ir.priority,
-    ir.imaging_type,
-    ir.encounter_id,
-    ir.requested_by_id,
-    ir.completed_by_id,
-    ir.location_id,
-    ir.location_group_id,
-    ir.reason_for_cancellation
-from "public"."imaging_requests" ir
-join "public"."encounters" e on e.id = ir.encounter_id
-where ir.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."imaging_request_areas" as (
-select
-    ira.id,
-    ira.imaging_request_id,
-    ira.area_id
-from "public"."imaging_request_areas" ira
-join "public"."imaging_requests" ir on ir.id = ira.imaging_request_id
-join "public"."encounters" e on e.id = ir.encounter_id
-where ira.deleted_at is null
-    and ir.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."imaging_results" as (
-select
-    ires.id,
-    ires.completed_at::timestamp as datetime,
-    ires.description,
-    ires.imaging_request_id,
-    ires.external_code,
-    ires.completed_by_id,
-    ires.visibility_status
-from "public"."imaging_results" ires
-join "public"."imaging_requests" ireq on ireq.id = ires.imaging_request_id
-join "public"."encounters" e on e.id = ireq.encounter_id
-where ires.deleted_at is null
-    and ireq.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoices" as (
-select
-    i.id,
-    i.display_id,
-    i.date::timestamp as datetime,
-    i.status,
-    i.patient_payment_status,
-    i.insurer_payment_status,
-    i.encounter_id
-from "public"."invoices" i
-join "public"."encounters" e on e.id = i.encounter_id
-where i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_discounts" as (
-select
-    id.id,
-    id.applied_time::timestamp as datetime,
-    id.invoice_id,
-    id.percentage,
-    id.reason,
-    id.is_manual,
-    id.applied_by_user_id as applied_by_id
-from "public"."invoice_discounts" id
-join "public"."invoices" i on i.id = id.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where id.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_insurers" as (
-select
-    ii.id,
-    ii.invoice_id,
-    ii.insurer_id,
-    ii.percentage
-from "public"."invoice_insurers" ii
-join "public"."invoices" i on i.id = ii.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where ii.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_insurer_payments" as (
-select
-    iip.id,
-    iip.invoice_payment_id,
-    iip.insurer_id,
-    iip.status,
-    iip.reason
-from "public"."invoice_insurer_payments" iip
-join "public"."invoice_payments" ip on ip.id = iip.invoice_payment_id
-join "public"."invoices" i on i.id = ip.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where iip.deleted_at is null
-    and ip.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_items" as (
-select
-    ii.id,
-    ii.invoice_id,
-    ii.order_date::date as date,
-    ii.product_id,
-    ii.product_code,
-    ii.product_name,
-    ii.note,
-    ii.product_discountable,
-    ii.quantity,
-    ii.product_price,
-    ii.ordered_by_user_id as ordered_by_id,
-    ii.source_id
-from "public"."invoice_items" ii
-join "public"."invoices" i on i.id = ii.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where ii.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_item_discounts" as (
-select
-    iid.id,
-    iid.invoice_item_id,
-    iid.amount,
-    iid.type,
-    iid.reason
-from "public"."invoice_item_discounts" iid
-join "public"."invoice_items" ii on ii.id = iid.invoice_item_id
-join "public"."invoices" i on i.id = ii.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where iid.deleted_at is null
-    and ii.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_patient_payments" as (
-select
-    ipp.id,
-    ipp.invoice_payment_id,
-    ipp.method_id
-from "public"."invoice_patient_payments" ipp
-join "public"."invoice_payments" ip on ip.id = ipp.invoice_payment_id
-join "public"."invoices" i on i.id = ip.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where ipp.deleted_at is null
-    and ip.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_payments" as (
-select
-    ip.id,
-    ip.invoice_id,
-    ip.date::date as date,
-    ip.receipt_number,
-    ip.amount,
-    ip.updated_by_user_id as updated_by_id
-from "public"."invoice_payments" ip
-join "public"."invoices" i on i.id = ip.invoice_id
-join "public"."encounters" e on e.id = i.encounter_id
-where ip.deleted_at is null
-    and i.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."invoice_products" as (
-select
-    ip.id,
-    ip.name,
-    ip.price,
-    ip.discountable,
-    ip.visibility_status
-from "public"."invoice_products" ip
-where ip.deleted_at is null
-);
-create or replace view "reporting"."lab_requests" as (
-select
-    lr.id,
-    lr.display_id,
-    lr.urgent as is_urgent,
-    lr.status,
-    lr.requested_date::timestamp as requested_datetime,
-    lr.lab_test_priority_id,
-    lr.lab_test_category_id,
-    lr.lab_test_panel_request_id,
-    lr.lab_test_laboratory_id,
-    lr.requested_by_id,
-    lr.specimen_attached as is_specimen_collected,
-    lr.specimen_type_id,
-    lr.lab_sample_site_id,
-    lr.sample_time::timestamp as collected_datetime,
-    lr.collected_by_id,
-    lr.reason_for_cancellation,
-    lr.published_date::timestamp as published_datetime,
-    lr.encounter_id,
-    lr.department_id,
-    lr.updated_at::timestamp as updated_datetime
-from "public"."lab_requests" lr
-join "public"."encounters" e on e.id = lr.encounter_id
-where lr.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."lab_request_logs" as (
-select
-    lrl.id,
-    lrl.lab_request_id,
-    lrl.status,
-    lrl.updated_at::timestamp as updated_datetime,
-    lrl.updated_by_id
-from "public"."lab_request_logs" lrl
-join "public"."lab_requests" lr on lr.id = lrl.lab_request_id
-join "public"."encounters" e on e.id = lr.encounter_id
-where lrl.deleted_at is null
-    and lr.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."lab_tests" as (
-select
-    lt.id,
-    lt.date::date as date,
-    lt.result,
-    lt.lab_request_id,
-    lt.lab_test_type_id,
-    lt.lab_test_method_id,
-    lt.laboratory_officer,
-    lt.completed_date::timestamp as completed_datetime,
-    lt.verification
-from "public"."lab_tests" lt
-join "public"."lab_requests" lr on lr.id = lt.lab_request_id
-join "public"."encounters" e on e.id = lr.encounter_id
-where lt.deleted_at is null
-    and lr.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."lab_test_panels" as (
-select
-    id,
-    code,
-    external_code,
-    name,
-    category_id,
-    visibility_status
-from "public"."lab_test_panels"
-where deleted_at is null
-);
-create or replace view "reporting"."lab_test_panel_lab_test_types" as (
-select
-    id,
-    lab_test_panel_id,
-    lab_test_type_id
-from "public"."lab_test_panel_lab_test_types"
-where deleted_at is null
-);
-create or replace view "reporting"."lab_test_panel_requests" as (
-select
-    ltpr.id,
-    ltpr.lab_test_panel_id,
-    ltpr.encounter_id
-from "public"."lab_test_panel_requests" ltpr
-join "public"."encounters" e on e.id = ltpr.encounter_id
-where ltpr.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."lab_test_types" as (
-select
-    id,
-    code,
-    external_code,
-    name,
-    unit,
-    male_min,
-    male_max,
-    female_min,
-    female_max,
-    range_text
-    as result_type,
-    options,
-    lab_test_category_id,
-    visibility_status,
-    is_sensitive
-from "public"."lab_test_types"
-where deleted_at is null
-);
-create or replace view "reporting"."locations" as (
-select
-    id,
-    code,
-    name,
-    max_occupancy,
-    location_group_id,
-    facility_id,
-    visibility_status
-from "public"."locations"
-where deleted_at is null
-);
-create or replace view "reporting"."location_bookings" as (
-select
-    a.id,
-    a.start_time::timestamp as start_datetime,
-    a.end_time::timestamp as end_datetime,
-    a.patient_id,
-    a.clinician_id,
-    a.encounter_id,
-    a.location_id,
-    a.booking_type_id,
-    a.is_high_priority,
-    a.status
-from "public"."appointments" a
-where a.booking_type_id notnull
-    and a.deleted_at is null
-    and a.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."location_groups" as (
-select
-    id,
-    code,
-    name,
-    facility_id,
-    visibility_status
-from "public"."location_groups"
-where deleted_at is null
-);
-create or replace view "reporting"."notes" as (
--- May include notes for the test patient.
-select
-    id,
-    date::timestamp as datetime,
-    content,
-    note_type,
-    record_type,
-    record_id,
-    author_id as authored_by_id,
-    on_behalf_of_id,
-    revised_by_id as updated_note_id,
-    visibility_status
-from "public"."notes"
-where deleted_at is null
-);
-create or replace view "reporting"."outpatient_appointments" as (
-select
-    a.id,
-    a.start_time::timestamp as start_datetime,
-    a.end_time::timestamp as end_datetime,
-    a.patient_id,
-    a.clinician_id,
-    a.encounter_id,
-    a.schedule_id,
-    a.location_group_id,
-    a.appointment_type_id,
-    case
-        when a.is_high_priority then 'Yes' else 'No'
-    end as priority,
-    a.status,
-    s.until_date::date as until_date,
-    s.interval,
-    s.days_of_week,
-    s.frequency,
-    s.nth_weekday,
-    s.occurrence_count,
-    s.is_fully_generated,
-    s.generated_until_date,
-    s.cancelled_at_date
-from "public"."appointments" a
-left join "public"."appointment_schedules" s on s.id = a.schedule_id
-where a.deleted_at is null
-    and a.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-    and a.appointment_type_id notnull
-);
-create or replace view "reporting"."patients" as (
-select
-    id,
-            display_id as display_id,
-            first_name as first_name,
-            middle_name as middle_name,
-            last_name as last_name,
-            cultural_name as cultural_name,
-            email as email,
-            initcap(sex::text) as sex,
-            date_of_birth::date as date_of_birth,
-            date_of_death::timestamp as date_of_death,
-            village_id as village_id,
-            created_at::date as registration_date
-from "public"."patients"
-where deleted_at is null
-    and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-    and visibility_status != 'merged'
-);
 create or replace view "reporting"."patients_access_logs" as (
 select
     id,
@@ -569,6 +128,121 @@ select
 from "logs"."accesses"
 where deleted_at is null
     and record_type = 'Patient'
+);
+create or replace view "reporting"."program_registry_clinical_statuses" as (
+select
+    id,
+    code,
+    name,
+    color,
+    visibility_status,
+    program_registry_id
+from "public"."program_registry_clinical_statuses"
+where deleted_at is null
+);
+create or replace view "reporting"."patient_death_contributing_causes" as (
+select
+    cdc.id,
+    cdc.time_after_onset as mins_after_onset,
+    cdc.patient_death_data_id,
+    cdc.condition_id
+from "public"."contributing_death_causes" cdc
+join "public"."patient_death_data" pdd on pdd.id = cdc.patient_death_data_id
+where cdc.deleted_at is null
+    and pdd.deleted_at is null
+    and pdd.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."referrals" as (
+select
+    id,
+    status,
+    referred_facility,
+    initiating_encounter_id,
+    survey_response_id
+from "public"."referrals"
+where deleted_at is null
+);
+create or replace view "reporting"."patient_field_values" as (
+select
+    patient_id,
+    definition_id,
+    value
+from "public"."patient_field_values"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."surveys" as (
+select
+    id,
+    code,
+    name,
+    survey_type,
+    is_sensitive,
+    notifiable as is_notifiable,
+    notify_email_addresses,
+    program_id,
+    visibility_status
+from "public"."surveys"
+where deleted_at is null
+);
+create or replace view "reporting"."procedures" as (
+select
+    p.id,
+    p.date::date as date,
+    p.start_time::timestamp::time as start_time,
+    p.end_time::timestamp::time as end_time,
+    p.completed as is_completed,
+    p.note,
+    p.completed_note,
+    p.encounter_id,
+    p.location_id,
+    p.procedure_type_id,
+    p.anaesthetic_id,
+    p.physician_id as clinician_id,
+    p.anaesthetist_id,
+    p.assistant_anaesthetist_id,
+    p.time_in,
+    p.time_out
+from "public"."procedures" p
+join "public"."encounters" e on e.id = p.encounter_id
+where p.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."departments" as (
+select
+    id,
+    code,
+    name,
+    facility_id,
+    visibility_status
+from "public"."departments"
+where deleted_at is null
+);
+create or replace view "reporting"."imaging_area_external_codes" as (
+select
+    id,
+    area_id,
+    code,
+    description,
+    visibility_status
+from "public"."imaging_area_external_codes"
+where deleted_at is null
+);
+create or replace view "reporting"."vaccine_schedules" as (
+select
+    id,
+    category,
+    vaccine_id,
+    label,
+    dose_label,
+    index,
+    weeks_from_birth_due,
+    weeks_from_last_vaccination_due,
+    sort_index,
+    visibility_status
+from "public"."scheduled_vaccines"
+where deleted_at is null
 );
 create or replace view "reporting"."patients_change_logs" as (
 with filtered_changes as (
@@ -651,6 +325,60 @@ from "public"."patient_additional_data"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."invoice_items" as (
+select
+    ii.id,
+    ii.invoice_id,
+    ii.order_date::date as date,
+    ii.product_id,
+    ii.product_code,
+    ii.product_name,
+    ii.note,
+    ii.product_discountable,
+    ii.quantity,
+    ii.product_price,
+    ii.ordered_by_user_id as ordered_by_id,
+    ii.source_id
+from "public"."invoice_items" ii
+join "public"."invoices" i on i.id = ii.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where ii.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."invoice_discounts" as (
+select
+    id.id,
+    id.applied_time::timestamp as datetime,
+    id.invoice_id,
+    id.percentage,
+    id.reason,
+    id.is_manual,
+    id.applied_by_user_id as applied_by_id
+from "public"."invoice_discounts" id
+join "public"."invoices" i on i.id = id.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where id.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."invoices" as (
+select
+    i.id,
+    i.display_id,
+    i.date::timestamp as datetime,
+    i.status,
+    i.patient_payment_status,
+    i.insurer_payment_status,
+    i.encounter_id
+from "public"."invoices" i
+join "public"."encounters" e on e.id = i.encounter_id
+where i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."patient_additional_data_change_logs" as (
 with filtered_changes as (
     select 
@@ -714,15 +442,68 @@ select
             (fc.record_data ->> 'created_at')::date as registration_date
 from filtered_changes fc
 );
-create or replace view "reporting"."patient_allergies" as (
+create or replace view "reporting"."imaging_requests" as (
 select
-    id,
-    patient_id,
-    allergy_id,
-    recorded_date::date as recorded_date,
-    practitioner_id as recorded_by
-from "public"."patient_allergies"
-where deleted_at is null
+    ir.id,
+    ir.display_id,
+    ir.requested_date::timestamp as datetime,
+    ir.status,
+    ir.priority,
+    ir.imaging_type,
+    ir.encounter_id,
+    ir.requested_by_id,
+    ir.completed_by_id,
+    ir.location_id,
+    ir.location_group_id,
+    ir.reason_for_cancellation
+from "public"."imaging_requests" ir
+join "public"."encounters" e on e.id = ir.encounter_id
+where ir.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."lab_request_logs" as (
+select
+    lrl.id,
+    lrl.lab_request_id,
+    lrl.status,
+    lrl.updated_at::timestamp as updated_datetime,
+    lrl.updated_by_id
+from "public"."lab_request_logs" lrl
+join "public"."lab_requests" lr on lr.id = lrl.lab_request_id
+join "public"."encounters" e on e.id = lr.encounter_id
+where lrl.deleted_at is null
+    and lr.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."vaccine_administrations" as (
+select
+    av.id,
+    av.date::timestamp as datetime,
+    av.encounter_id,
+    av.location_id,
+    av.department_id,
+    av.scheduled_vaccine_id,
+    av.status,
+    av.reason,
+    av.not_given_reason_id,
+    av.batch,
+    av.vaccine_name,
+    av.vaccine_brand,
+    av.disease,
+    av.consent as is_consented,
+    av.consent_given_by,
+    av.injection_site,
+    av.given_by,
+    av.given_elsewhere as is_given_elsewhere,
+    av.circumstance_ids,
+    av.recorder_id as recorded_by_id
+from "public"."administered_vaccines" av
+join "public"."encounters" e on e.id = av.encounter_id
+where av.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."patient_birth_data" as (
 select
@@ -744,34 +525,6 @@ select
 from "public"."patient_birth_data"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."patient_conditions" as (
-select
-    id,
-    recorded_date::timestamp as recorded_datetime,
-    note,
-    condition_id,
-    patient_id,
-    examiner_id as recorded_by_id,
-    resolved as is_resolved,
-    resolution_date::timestamp as resolved_datetime,
-    resolution_practitioner_id as resolved_by_id,
-    resolution_note
-from "public"."patient_conditions"
-where deleted_at is null
-    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."patient_death_contributing_causes" as (
-select
-    cdc.id,
-    cdc.time_after_onset as mins_after_onset,
-    cdc.patient_death_data_id,
-    cdc.condition_id
-from "public"."contributing_death_causes" cdc
-join "public"."patient_death_data" pdd on pdd.id = cdc.patient_death_data_id
-where cdc.deleted_at is null
-    and pdd.deleted_at is null
-    and pdd.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."patient_death_data" as (
 select
@@ -811,32 +564,105 @@ from "public"."patient_death_data"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."patient_field_values" as (
+create or replace view "reporting"."lab_test_panels" as (
 select
+    id,
+    code,
+    external_code,
+    name,
+    category_id,
+    visibility_status
+from "public"."lab_test_panels"
+where deleted_at is null
+);
+create or replace view "reporting"."encounter_diets" as (
+select
+    ed.id,
+    ed.encounter_id,
+    ed.diet_id
+from "public"."encounter_diets" ed
+join "public"."encounters" e on e.id = ed.encounter_id
+where ed.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."patient_allergies" as (
+select
+    id,
     patient_id,
-    definition_id,
-    value
-from "public"."patient_field_values"
+    allergy_id,
+    recorded_date::date as recorded_date,
+    practitioner_id as recorded_by
+from "public"."patient_allergies"
+where deleted_at is null
+);
+create or replace view "reporting"."lab_test_panel_requests" as (
+select
+    ltpr.id,
+    ltpr.lab_test_panel_id,
+    ltpr.encounter_id
+from "public"."lab_test_panel_requests" ltpr
+join "public"."encounters" e on e.id = ltpr.encounter_id
+where ltpr.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."lab_tests" as (
+select
+    lt.id,
+    lt.date::date as date,
+    lt.result,
+    lt.lab_request_id,
+    lt.lab_test_type_id,
+    lt.lab_test_method_id,
+    lt.laboratory_officer,
+    lt.completed_date::timestamp as completed_datetime,
+    lt.verification
+from "public"."lab_tests" lt
+join "public"."lab_requests" lr on lr.id = lt.lab_request_id
+join "public"."encounters" e on e.id = lr.encounter_id
+where lt.deleted_at is null
+    and lr.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."location_groups" as (
+select
+    id,
+    code,
+    name,
+    facility_id,
+    visibility_status
+from "public"."location_groups"
+where deleted_at is null
+);
+create or replace view "reporting"."patient_conditions" as (
+select
+    id,
+    recorded_date::timestamp as recorded_datetime,
+    note,
+    condition_id,
+    patient_id,
+    examiner_id as recorded_by_id,
+    resolved as is_resolved,
+    resolution_date::timestamp as resolved_datetime,
+    resolution_practitioner_id as resolved_by_id,
+    resolution_note
+from "public"."patient_conditions"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."patient_program_registrations" as (
+create or replace view "reporting"."patient_vaccinations_upcoming" as (
 select
-    id,
-    date::timestamp as datetime,
-    registration_status,
     patient_id,
-    program_registry_id,
-    clinical_status_id,
-    clinician_id as registered_by_id,
-    registering_facility_id,
-    facility_id,
-    village_id,
-    deactivated_clinician_id as deactivated_by_id,
-    deactivated_date::timestamp as deactivated_datetime
-from "public"."patient_program_registrations"
-where deleted_at is null
-    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    scheduled_vaccine_id as vaccine_schedules_id,
+    vaccine_category,
+    vaccine_id,
+    due_date::date,
+    days_till_due,
+    status
+from "public"."upcoming_vaccinations"
+where patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."patient_program_registrations_change_logs" as (
 with filtered_changes as (
@@ -880,22 +706,191 @@ select
     (fc.record_data ->> 'deactivated_date')::timestamp as deactivated_datetime
 from filtered_changes fc
 );
-create or replace view "reporting"."patient_program_registration_conditions" as (
+create or replace view "reporting"."contributing_death_causes" as (
 select
-    pprc.id,
-    pprc.date::timestamp as datetime,
-    pprc.program_registry_condition_id,
-    pprc.patient_program_registration_id,
-    pprc.program_registry_condition_category_id,
-    pprc.reason_for_change,
-    pprc.clinician_id as recorded_by_id,
-    pprc.deletion_date::timestamp as deleted_datetime,
-    pprc.deletion_clinician_id as deleted_by_id
-from "public"."patient_program_registration_conditions" pprc
-join "public"."patient_program_registrations" ppr
-    on ppr.id = pprc.patient_program_registration_id
-where pprc.deleted_at is null
-    and ppr.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    cdc.id,
+    cdc.time_after_onset,
+    cdc.patient_death_data_id,
+    cdc.condition_id
+from "public"."contributing_death_causes" cdc
+join "public"."patient_death_data" pdd on pdd.id = cdc.patient_death_data_id
+where cdc.deleted_at is null
+    and pdd.deleted_at is null
+    and pdd.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."program_registry_condition_categories" as (
+select
+    id,
+    code,
+    name,
+    visibility_status,
+    program_registry_id
+from "public"."program_registry_condition_categories"
+where deleted_at is null
+);
+create or replace view "reporting"."invoice_insurers" as (
+select
+    ii.id,
+    ii.invoice_id,
+    ii.insurer_id,
+    ii.percentage
+from "public"."invoice_insurers" ii
+join "public"."invoices" i on i.id = ii.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where ii.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."facilities" as (
+select
+    id,
+    code,
+    name,
+    division,
+    type,
+    email,
+    contact_number,
+    city_town,
+    street_address,
+    catchment_id,
+    visibility_status
+from "public"."facilities"
+where deleted_at is null
+);
+create or replace view "reporting"."lab_test_panel_lab_test_types" as (
+select
+    id,
+    lab_test_panel_id,
+    lab_test_type_id
+from "public"."lab_test_panel_lab_test_types"
+where deleted_at is null
+);
+create or replace view "reporting"."lab_requests" as (
+select
+    lr.id,
+    lr.display_id,
+    lr.urgent as is_urgent,
+    lr.status,
+    lr.requested_date::timestamp as requested_datetime,
+    lr.lab_test_priority_id,
+    lr.lab_test_category_id,
+    lr.lab_test_panel_request_id,
+    lr.lab_test_laboratory_id,
+    lr.requested_by_id,
+    lr.specimen_attached as is_specimen_collected,
+    lr.specimen_type_id,
+    lr.lab_sample_site_id,
+    lr.sample_time::timestamp as collected_datetime,
+    lr.collected_by_id,
+    lr.reason_for_cancellation,
+    lr.published_date::timestamp as published_datetime,
+    lr.encounter_id,
+    lr.department_id,
+    lr.updated_at::timestamp as updated_datetime
+from "public"."lab_requests" lr
+join "public"."encounters" e on e.id = lr.encounter_id
+where lr.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."patients" as (
+select
+    id,
+            display_id as display_id,
+            first_name as first_name,
+            middle_name as middle_name,
+            last_name as last_name,
+            cultural_name as cultural_name,
+            email as email,
+            initcap(sex::text) as sex,
+            date_of_birth::date as date_of_birth,
+            date_of_death::timestamp as date_of_death,
+            village_id as village_id,
+            created_at::date as registration_date
+from "public"."patients"
+where deleted_at is null
+    and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    and visibility_status != 'merged'
+);
+create or replace view "reporting"."survey_screen_components" as (
+select
+    id,
+    screen_index,
+    component_index,
+    text,
+    visibility_criteria,
+    validation_criteria,
+    detail,
+    config,
+    options,
+    calculation,
+    survey_id,
+    data_element_id,
+    visibility_status
+from "public"."survey_screen_components"
+where deleted_at is null
+);
+create or replace view "reporting"."triages" as (
+select
+    id,
+    arrival_time::timestamp as arrival_datetime,
+    triage_time::timestamp as triage_datetime,
+    closed_time::timestamp as closed_datetime,
+    arrival_mode_id,
+    score,
+    encounter_id,
+    practitioner_id as clinician_id,
+    chief_complaint_id,
+    secondary_complaint_id
+from "public"."triages"
+where deleted_at is null
+);
+create or replace view "reporting"."encounter_diagnoses" as (
+select
+    ed.id,
+    ed.date::timestamp as datetime,
+    ed.is_primary,
+    ed.certainty,
+    ed.encounter_id,
+    ed.diagnosis_id,
+    ed.clinician_id as diagnosed_by_id
+from "public"."encounter_diagnoses" ed
+join "public"."encounters" e on e.id = ed.encounter_id
+where ed.deleted_at is null
+    and ed.certainty not in ('disproven', 'error')
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."roles" as (
+select
+    id,
+    name
+from "public"."roles"
+where deleted_at is null
+);
+create or replace view "reporting"."imaging_request_areas" as (
+select
+    ira.id,
+    ira.imaging_request_id,
+    ira.area_id
+from "public"."imaging_request_areas" ira
+join "public"."imaging_requests" ir on ir.id = ira.imaging_request_id
+join "public"."encounters" e on e.id = ir.encounter_id
+where ira.deleted_at is null
+    and ir.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."invoice_products" as (
+select
+    ip.id,
+    ip.name,
+    ip.price,
+    ip.discountable,
+    ip.visibility_status
+from "public"."invoice_products" ip
+where ip.deleted_at is null
 );
 create or replace view "reporting"."patient_program_registration_conditions_change_logs" as (
 with filtered_changes as (
@@ -935,70 +930,93 @@ select
     fc.record_data ->> 'deletion_clinician_id' as deleted_by_id
 from filtered_changes fc
 );
-create or replace view "reporting"."patient_vaccinations_upcoming" as (
+create or replace view "reporting"."location_bookings" as (
 select
-    patient_id,
-    scheduled_vaccine_id as vaccine_schedules_id,
-    vaccine_category,
-    vaccine_id,
-    due_date::date,
-    days_till_due,
-    status
-from "public"."upcoming_vaccinations"
-where patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    a.id,
+    a.start_time::timestamp as start_datetime,
+    a.end_time::timestamp as end_datetime,
+    a.patient_id,
+    a.clinician_id,
+    a.encounter_id,
+    a.location_id,
+    a.booking_type_id,
+    a.is_high_priority,
+    a.status
+from "public"."appointments" a
+where a.booking_type_id notnull
+    and a.deleted_at is null
+    and a.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."prescriptions" as (
+create or replace view "reporting"."encounter_prescriptions" as (
 select
-    p.id,
-    p.date::timestamp as datetime,
-    p.start_date::timestamp as start_datetime,
-    p.end_date::timestamp as end_datetime,
-    p.medication_id,
-    p.prescriber_id,
-    p.discontinued as is_discontinued,
-    p.discontinuing_clinician_id as discontinued_by_id,
-    p.discontinuing_reason,
-    p.discontinued_date::timestamp as discontinued_datetime
-from "public"."prescriptions" p
-join "public"."encounter_prescriptions" ep
-    on ep.prescription_id = p.id
-join "public"."encounters" e
-    on e.id = ep.encounter_id
-where p.deleted_at is null
-    and ep.deleted_at is null
+    ep.id,
+    ep.encounter_id,
+    ep.prescription_id,
+    ep.is_selected_for_discharge
+from "public"."encounter_prescriptions" ep
+join "public"."encounters" e on e.id = ep.encounter_id
+where ep.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."procedures" as (
+create or replace view "reporting"."invoice_patient_payments" as (
 select
-    p.id,
-    p.date::date as date,
-    p.start_time::timestamp::time as start_time,
-    p.end_time::timestamp::time as end_time,
-    p.completed as is_completed,
-    p.note,
-    p.completed_note,
-    p.encounter_id,
-    p.location_id,
-    p.procedure_type_id,
-    p.anaesthetic_id,
-    p.physician_id as clinician_id,
-    p.anaesthetist_id,
-    p.assistant_anaesthetist_id,
-    p.time_in,
-    p.time_out
-from "public"."procedures" p
-join "public"."encounters" e on e.id = p.encounter_id
-where p.deleted_at is null
+    ipp.id,
+    ipp.invoice_payment_id,
+    ipp.method_id
+from "public"."invoice_patient_payments" ipp
+join "public"."invoice_payments" ip on ip.id = ipp.invoice_payment_id
+join "public"."invoices" i on i.id = ip.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where ipp.deleted_at is null
+    and ip.deleted_at is null
+    and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."programs" as (
+create or replace view "reporting"."program_registries" as (
 select
     id,
     code,
-    name
-from "public"."programs"
+    name,
+    currently_at_type,
+    visibility_status,
+    program_id
+from "public"."program_registries"
+where deleted_at is null
+);
+create or replace view "reporting"."encounters" as (
+select
+    id,
+    start_date::timestamp as start_datetime,
+    case
+        when end_date < start_date then start_date::timestamp
+        else end_date::timestamp
+    end as end_datetime,
+    encounter_type,
+    reason_for_encounter,
+    device_id,
+    patient_id,
+    department_id,
+    location_id,
+    examiner_id as clinician_id,
+    patient_billing_type_id,
+    referral_source_id,
+    planned_location_id,
+    planned_location_start_time::timestamp as planned_location_start_datetime,
+    discharge_draft
+from "public"."encounters"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."survey_response_answers" as (
+select
+    id,
+    name,
+    body,
+    response_id,
+    data_element_id
+from "public"."survey_response_answers"
 where deleted_at is null
 );
 create or replace view "reporting"."program_data_elements" as (
@@ -1014,47 +1032,122 @@ select
 from "public"."program_data_elements"
 where deleted_at is null
 );
-create or replace view "reporting"."program_registries" as (
+create or replace view "reporting"."invoice_payments" as (
+select
+    ip.id,
+    ip.invoice_id,
+    ip.date::date as date,
+    ip.receipt_number,
+    ip.amount,
+    ip.updated_by_user_id as updated_by_id
+from "public"."invoice_payments" ip
+join "public"."invoices" i on i.id = ip.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where ip.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."locations" as (
 select
     id,
     code,
     name,
-    currently_at_type,
-    visibility_status,
-    program_id
-from "public"."program_registries"
+    max_occupancy,
+    location_group_id,
+    facility_id,
+    visibility_status
+from "public"."locations"
 where deleted_at is null
 );
-create or replace view "reporting"."program_registry_clinical_statuses" as (
+create or replace view "reporting"."programs" as (
 select
     id,
     code,
-    name,
-    color,
-    visibility_status,
-    program_registry_id
-from "public"."program_registry_clinical_statuses"
+    name
+from "public"."programs"
 where deleted_at is null
 );
-create or replace view "reporting"."program_registry_conditions" as (
+create or replace view "reporting"."patient_program_registration_conditions" as (
 select
-    id,
-    code,
-    name,
-    visibility_status,
-    program_registry_id
-from "public"."program_registry_conditions"
-where deleted_at is null
+    pprc.id,
+    pprc.date::timestamp as datetime,
+    pprc.program_registry_condition_id,
+    pprc.patient_program_registration_id,
+    pprc.program_registry_condition_category_id,
+    pprc.reason_for_change,
+    pprc.clinician_id as recorded_by_id,
+    pprc.deletion_date::timestamp as deleted_datetime,
+    pprc.deletion_clinician_id as deleted_by_id
+from "public"."patient_program_registration_conditions" pprc
+join "public"."patient_program_registrations" ppr
+    on ppr.id = pprc.patient_program_registration_id
+where pprc.deleted_at is null
+    and ppr.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
-create or replace view "reporting"."program_registry_condition_categories" as (
+create or replace view "reporting"."invoice_insurer_payments" as (
 select
-    id,
-    code,
-    name,
-    visibility_status,
-    program_registry_id
-from "public"."program_registry_condition_categories"
-where deleted_at is null
+    iip.id,
+    iip.invoice_payment_id,
+    iip.insurer_id,
+    iip.status,
+    iip.reason
+from "public"."invoice_insurer_payments" iip
+join "public"."invoice_payments" ip on ip.id = iip.invoice_payment_id
+join "public"."invoices" i on i.id = ip.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where iip.deleted_at is null
+    and ip.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."invoice_item_discounts" as (
+select
+    iid.id,
+    iid.invoice_item_id,
+    iid.amount,
+    iid.type,
+    iid.reason
+from "public"."invoice_item_discounts" iid
+join "public"."invoice_items" ii on ii.id = iid.invoice_item_id
+join "public"."invoices" i on i.id = ii.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where iid.deleted_at is null
+    and ii.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."outpatient_appointments" as (
+select
+    a.id,
+    a.start_time::timestamp as start_datetime,
+    a.end_time::timestamp as end_datetime,
+    a.patient_id,
+    a.clinician_id,
+    a.encounter_id,
+    a.schedule_id,
+    a.location_group_id,
+    a.appointment_type_id,
+    case
+        when a.is_high_priority then 'Yes' else 'No'
+    end as priority,
+    a.status,
+    s.until_date::date as until_date,
+    s.interval,
+    s.days_of_week,
+    s.frequency,
+    s.nth_weekday,
+    s.occurrence_count,
+    s.is_fully_generated,
+    s.generated_until_date,
+    s.cancelled_at_date
+from "public"."appointments" a
+left join "public"."appointment_schedules" s on s.id = a.schedule_id
+where a.deleted_at is null
+    and a.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+    and a.appointment_type_id notnull
 );
 create or replace view "reporting"."reference_data" as (
 select
@@ -1064,37 +1157,6 @@ select
     type,
     visibility_status
 from "public"."reference_data"
-where deleted_at is null
-);
-create or replace view "reporting"."referrals" as (
-select
-    id,
-    status,
-    referred_facility,
-    initiating_encounter_id,
-    survey_response_id
-from "public"."referrals"
-where deleted_at is null
-);
-create or replace view "reporting"."roles" as (
-select
-    id,
-    name
-from "public"."roles"
-where deleted_at is null
-);
-create or replace view "reporting"."surveys" as (
-select
-    id,
-    code,
-    name,
-    survey_type,
-    is_sensitive,
-    notifiable as is_notifiable,
-    notify_email_addresses,
-    program_id,
-    visibility_status
-from "public"."surveys"
 where deleted_at is null
 );
 create or replace view "reporting"."survey_responses" as (
@@ -1110,159 +1172,87 @@ select
 from "public"."survey_responses"
 where deleted_at is null
 );
-create or replace view "reporting"."survey_response_answers" as (
+create or replace view "reporting"."lab_test_types" as (
 select
     id,
+    code,
+    external_code,
     name,
-    body,
-    response_id,
-    data_element_id
-from "public"."survey_response_answers"
-where deleted_at is null
-);
-create or replace view "reporting"."survey_screen_components" as (
-select
-    id,
-    screen_index,
-    component_index,
-    text,
-    visibility_criteria,
-    validation_criteria,
-    detail,
-    config,
+    unit,
+    male_min,
+    male_max,
+    female_min,
+    female_max,
+    range_text
+    as result_type,
     options,
-    calculation,
-    survey_id,
-    data_element_id,
-    visibility_status
-from "public"."survey_screen_components"
+    lab_test_category_id,
+    visibility_status,
+    is_sensitive
+from "public"."lab_test_types"
 where deleted_at is null
 );
-create or replace view "reporting"."triages" as (
+create or replace view "reporting"."notes" as (
+-- May include notes for the test patient.
 select
     id,
-    arrival_time::timestamp as arrival_datetime,
-    triage_time::timestamp as triage_datetime,
-    closed_time::timestamp as closed_datetime,
-    arrival_mode_id,
-    score,
-    encounter_id,
-    practitioner_id as clinician_id,
-    chief_complaint_id,
-    secondary_complaint_id
-from "public"."triages"
-where deleted_at is null
-);
-create or replace view "reporting"."users" as (
-select
-    id,
-    display_id,
-    display_name,
-    email,
-    phone_number,
-    role,
+    date::timestamp as datetime,
+    content,
+    note_type,
+    record_type,
+    record_id,
+    author_id as authored_by_id,
+    on_behalf_of_id,
+    revised_by_id as updated_note_id,
     visibility_status
-from "public"."users"
+from "public"."notes"
 where deleted_at is null
 );
-create or replace view "reporting"."vaccine_administrations" as (
-select
-    av.id,
-    av.date::timestamp as datetime,
-    av.encounter_id,
-    av.location_id,
-    av.department_id,
-    av.scheduled_vaccine_id,
-    av.status,
-    av.reason,
-    av.not_given_reason_id,
-    av.batch,
-    av.vaccine_name,
-    av.vaccine_brand,
-    av.disease,
-    av.consent as is_consented,
-    av.consent_given_by,
-    av.injection_site,
-    av.given_by,
-    av.given_elsewhere as is_given_elsewhere,
-    av.circumstance_ids,
-    av.recorder_id as recorded_by_id
-from "public"."administered_vaccines" av
-join "public"."encounters" e on e.id = av.encounter_id
-where av.deleted_at is null
-    and e.deleted_at is null
-    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
-);
-create or replace view "reporting"."vaccine_schedules" as (
-select
-    id,
-    category,
-    vaccine_id,
-    label,
-    dose_label,
-    index,
-    weeks_from_birth_due,
-    weeks_from_last_vaccination_due,
-    sort_index,
-    visibility_status
-from "public"."scheduled_vaccines"
-where deleted_at is null
-);
-create or replace view "reporting"."vaccine_administrations_change_logs" as (
-with filtered_changes as (
-    select 
-        av.changelog_id,
-        av.logged_at,
-        av.updated_by_user_id,
-        av.record_created_at,
-        av.record_updated_at,
-        av.record_id,
-        av.record_data
-    from (select 
-        id as changelog_id,
-        logged_at,
-        updated_by_user_id,
-        record_created_at,
-        record_updated_at,
-        record_id,
-        record_data
-    from "logs"."changes"
-    where table_name = 'administered_vaccines'
-        and record_id not in (
-            select id::text
-            from administered_vaccines t 
-            where t.deleted_at notnull
-        )) av
-    join "reporting"."encounters" e on e.id = av.record_data ->> 'encounter_id'
+create or replace view "reporting"."ds__patients_access_logs" as (
+with grouped_access_logs as (
+    select
+        lap.patient_id,
+        lap.user_id,
+        lap.facility_id,
+        date_trunc('minute', min(lap.logged_at)) as date_time_viewed,
+        -- Take the first values for fields that might vary within the same minute
+        lap.is_mobile,
+        lap.session_id,
+        lap.device_id
+    from "reporting"."patients_access_logs" lap
+    group by
+        lap.patient_id,
+        lap.user_id,
+        lap.facility_id,
+        lap.is_mobile,
+        lap.session_id,
+        lap.device_id
 )
 
 select
-    fc.changelog_id,
-    fc.logged_at at time zone 'Australia/Sydney' as logged_at,
-    fc.record_created_at at time zone 'Australia/Sydney' as created_at,
-    fc.record_updated_at at time zone 'Australia/Sydney' as updated_at,
-    fc.updated_by_user_id,
-    fc.record_id as id,
-    (fc.record_data ->> 'date')::timestamp as datetime,
-    fc.record_data ->> 'batch' as batch,
-    (fc.record_data ->> 'consent')::boolean as is_consented,
-    fc.record_data ->> 'disease' as disease,
-    fc.record_data ->> 'given_by' as given_by,
-    (fc.record_data ->> 'given_elsewhere')::boolean as is_given_elsewhere,
-    fc.record_data ->> 'circumstance_ids' as circumstance_ids,
-    fc.record_data ->> 'recorder_id' as recorded_by_id,
-    fc.record_data ->> 'encounter_id' as encounter_id,
-    fc.record_data ->> 'location_id' as location_id,
-    fc.record_data ->> 'department_id' as department_id,
-    fc.record_data ->> 'vaccine_name' as vaccine_name,
-    fc.record_data ->> 'vaccine_brand' as vaccine_brand,
-    fc.record_data ->> 'injection_site' as injection_site,
-    fc.record_data ->> 'consent_given_by' as consent_given_by,
-    fc.record_data ->> 'scheduled_vaccine_id' as scheduled_vaccine_id,
-    fc.record_data ->> 'status' as status,
-    fc.record_data ->> 'reason' as reason,
-    fc.record_data ->> 'not_given_reason_id' as not_given_reason_id
-from filtered_changes fc
+    gal.patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    p.village_id,
+    village.name as village,
+    gal.user_id as viewed_by_user_id,
+    u.display_name as viewed_by_user,
+    u.email as user_email,
+    u.role as user_role,
+    f.name as viewed_at_facility,
+    gal.date_time_viewed,
+    gal.facility_id,
+    gal.is_mobile,
+    gal.session_id,
+    gal.device_id
+from grouped_access_logs gal
+join "reporting"."patients" p on p.id = gal.patient_id
+left join "reporting"."users" u on u.id = gal.user_id
+left join "reporting"."facilities" f on f.id = gal.facility_id
+left join "reporting"."reference_data" village on village.id = p.village_id
 );
 create or replace view "reporting"."ds__admissions" as (
 with admission_encounters as (
@@ -1528,75 +1518,37 @@ left join location_group_changes lgc
 left join encounter_diagnoses ed
     on ed.encounter_id = pd.encounter_id
 );
-create or replace view "reporting"."ds__births" as (
+create or replace view "reporting"."ds__referrals" as (
+with diagnoses as (
+    select
+        ed.encounter_id,
+        string_agg(concat(d.name), '; ') as diagnoses
+    from "reporting"."encounter_diagnoses" ed
+    left join "reporting"."reference_data" d on d.id = ed.diagnosis_id
+    group by ed.encounter_id
+)
+
 select
-    pbd.registration_date,
-    case
-        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
-    end as registered_by,
     p.id as patient_id,
     p.display_id,
     p.first_name,
     p.last_name,
-    p.date_of_birth,
-    p.sex,
-    rd_ethnicity.name as ethnicity,
-    rd_nationality.name as nationality,
     p.village_id,
-    rd_village.name as village,
-    case
-        when
-            p_mother.id is not null
-            then concat(p_mother.first_name, ' ', p_mother.last_name, ' (', p_mother.display_id, ')')
-    end as mother,
-    case
-        when
-            p_father.id is not null
-            then concat(p_father.first_name, ' ', p_father.last_name, ' (', p_father.display_id, ')')
-    end as father,
-    pbd.birth_time,
-    pbd.gestational_age_estimate,
-    case when pbd.registered_birth_place = 'health_facility' then 'Health facility'
-        when pbd.registered_birth_place = 'home' then 'Home'
-        when pbd.registered_birth_place = 'other' then 'Other'
-        else pbd.registered_birth_place
-    end as registered_birth_place,
-    f.id as birth_facility_id,
-    f.name as birth_facility,
-    case when pbd.attendant_at_birth = 'doctor' then 'Doctor'
-        when pbd.attendant_at_birth = 'midwife' then 'Midwife'
-        when pbd.attendant_at_birth = 'nurse' then 'Nurse'
-        when pbd.attendant_at_birth = 'traditional_birth_attentdant' then 'Traditional birth attendant'
-        when pbd.attendant_at_birth = 'other' then 'Other'
-        else pbd.attendant_at_birth
-    end as attendant_at_birth,
-    pbd.name_of_attendant_at_birth,
-    case
-        when pbd.birth_delivery_type = 'normal_vaginal_delivery' then 'Normal vaginal delivery'
-        when pbd.birth_delivery_type = 'breech' then 'Breech'
-        when pbd.birth_delivery_type = 'emergency_c_section' then 'Emergency C-section'
-        when pbd.birth_delivery_type = 'elective_c_section' then 'Elective C-section'
-        when pbd.birth_delivery_type = 'vacuum_extraction' then 'Vacuum extraction'
-        when pbd.birth_delivery_type = 'forceps' then 'Forceps'
-        when pbd.birth_delivery_type = 'other' then 'Other'
-        else pbd.birth_delivery_type
-    end as birth_delivery_type,
-    initcap(pbd.birth_type::text) as birth_type,
-    pbd.birth_weight,
-    pbd.birth_length,
-    pbd.apgar_score_one_minute,
-    pbd.apgar_score_five_minutes,
-    pbd.apgar_score_ten_minutes
-from "reporting"."patient_birth_data" pbd
-join "reporting"."patients" p on p.id = pbd.patient_id
-left join "reporting"."reference_data" rd_village on rd_village.id = p.village_id
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
-left join "reporting"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
-left join "reporting"."patients" p_mother on p_mother.id = pad.mother_id
-left join "reporting"."patients" p_father on p_father.id = pad.father_id
-left join "reporting"."facilities" f on f.id = pbd.birth_facility_id
-left join "reporting"."users" u on u.id = pad.registered_by_id
+    ed.diagnoses,
+    s.name as referral_type,
+    u.id as referring_doctor_id,
+    u.display_name as referring_doctor_name,
+    sr.end_datetime as referral_datetime,
+    rf.status,
+    d.name as department
+from "reporting"."referrals" rf
+join "reporting"."encounters" e on e.id = rf.initiating_encounter_id
+join "reporting"."survey_responses" sr on sr.id = rf.survey_response_id
+join "reporting"."surveys" s on s.id = sr.survey_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."users" u on u.id = e.clinician_id
+join "reporting"."departments" d on d.id = e.department_id
+left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
 );
 create or replace view "reporting"."ds__deaths" as (
 with contributing_death_causes as (
@@ -1747,105 +1699,743 @@ left join "reporting"."users" clinician
 where pdd.visibility_status = 'current'
     and pdd.is_final
 );
-create or replace view "reporting"."ds__diagnoses" as (
-select
-    e.id as encounter_id,
-    p.id as patient_id,
-    diagnosis.id as diagnosis_id,
-    diagnosis.name as diagnosis,
-    ed.datetime as diagnosis_datetime,
-    p.first_name,
-    p.last_name,
-    p.display_id,
-    date_part('year', age(ed.datetime::date, p.date_of_birth)) as age,
-    p.sex,
-    coalesce(pad.primary_contact_number, pad.secondary_contact_number) as contact_number,
-    village.id as village_id,
-    village.name as village,
-    clinician.id as clinician_id,
-    clinician.display_name as clinician,
-    d.id as department_id,
-    d.name as department,
-    l.id as location_id,
-    l.name as location,
-    f.id as facility_id,
-    f.name as facility,
-    initcap(ed.certainty) as certainty,
-    case when ed.is_primary = true then 'Yes' else 'No' end as is_primary
-from "reporting"."encounter_diagnoses" ed
-join "reporting"."reference_data" diagnosis on diagnosis.id = ed.diagnosis_id
-join "reporting"."encounters" e on e.id = ed.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."users" clinician on clinician.id = e.clinician_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-);
-create or replace view "reporting"."ds__encounter_diets" as (
-with diets as (
+create or replace view "reporting"."ds__invoicing_summary_insurer" as (
+with total_invoice_amount as (
     select
-        ed.encounter_id,
-        string_agg(
-            rd.name, ', '
-            order by rd.name
-        ) as diets
-    from "reporting"."encounter_diets" ed
-    join "reporting"."reference_data" rd
-        on rd.id = ed.diet_id
-    group by ed.encounter_id
+        ii.invoice_id,
+        round(
+            sum(
+                case
+                    when ii.product_discountable
+                        then
+                            ((
+                                ii.product_price
+                                - case
+                                    when iid.type = 'percentage' then (coalesce(iid.amount, 0) * ii.product_price)
+                                    when iid.type = 'amount' then coalesce(iid.amount, 0)
+                                    else 0
+                                end
+                            ) * ii.quantity)
+                    else ii.product_price * ii.quantity
+                end
+            ), 2
+        ) as total
+    from "reporting"."invoice_items" ii
+    left join "reporting"."invoice_item_discounts" iid
+        on iid.invoice_item_id = ii.id
+    group by ii.invoice_id
 ),
 
-allergies as (
+total_insurer_amount as (
     select
-        pa.patient_id,
-        string_agg(
-            rd.name, ', '
-            order by rd.name
-        ) as allergies 
-    from "reporting"."patient_allergies" pa
-    join "reporting"."reference_data" rd
-        on rd.id = pa.allergy_id
-    group by pa.patient_id
+        tia.invoice_id,
+        ii.insurer_id,
+        round(sum(tia.total * ii.percentage), 2) as cover
+    from total_invoice_amount tia
+    join "reporting"."invoice_insurers" ii
+        on ii.invoice_id = tia.invoice_id
+    group by tia.invoice_id, ii.insurer_id
+),
+
+total_insurer_payments as (
+    select
+        ip.invoice_id,
+        iip.insurer_id,
+        sum(ip.amount) as total_amount_paid
+    from "reporting"."invoice_payments" ip
+    join "reporting"."invoice_insurer_payments" iip
+        on iip.invoice_payment_id = ip.id
+    group by ip.invoice_id, iip.insurer_id
+),
+
+patient_additional_fields as (
+    select
+        pfv.patient_id,
+        max(case when pfv.definition_id = 'fieldCategory-SocialSecurityNumber' then pfv.value end) as social_security_number,
+        max(
+            case when pfv.definition_id = 'fieldCategory-InsurancePolicyNumber' then pfv.value end
+        ) as insurance_policy_number
+    from "reporting"."patient_field_values" pfv
+    group by pfv.patient_id
 )
 
 select
-    e.id as encounter_id,
     p.id as patient_id,
     p.display_id,
+    i.id as invoice_id,
+    e.id as encounter_id,
+    i.display_id as invoice_number,
     concat(p.first_name, ' ', p.last_name) as patient_name,
-    e.start_datetime,
-    case
-        when age(current_date, p.date_of_birth) < interval '8 days'
-            then concat(extract(day from age(current_date, p.date_of_birth)), ' days')
-        when age(current_date, p.date_of_birth) >= interval '8 days'
-            and age(current_date, p.date_of_birth) < interval '1 month'
-            then concat(extract(week from age(current_date, p.date_of_birth)), ' weeks')
-        when age(current_date, p.date_of_birth) >= interval '1 month'
-            and age(current_date, p.date_of_birth) < interval '2 years'
-            then concat(extract(month from age(current_date, p.date_of_birth)), ' months')
-        when age(current_date, p.date_of_birth) >= interval '2 years'
-            then concat(extract(year from age(current_date, p.date_of_birth)), ' years')
-    end as age,
+    paf.social_security_number,
+    paf.insurance_policy_number,
+    e.start_datetime as admission_datetime,
+    e.end_datetime as discharge_datetime,
+    rd_insurer.id as insurer_id,
+    rd_insurer.name as insurer_name,
+    ta.total as total_invoice_amount,
+    tia.cover as insurer_total_amount,
+    coalesce(tip.total_amount_paid, 0) as insurer_payments_received,
+    (tia.cover - coalesce(tip.total_amount_paid, 0)) as remaining_insurer_balance
+from "reporting"."invoices" i
+join "reporting"."encounters" e
+    on e.id = i.encounter_id
+    and e.end_datetime is not null
+join "reporting"."patients" p
+    on p.id = e.patient_id
+join total_invoice_amount ta
+    on ta.invoice_id = i.id
+join total_insurer_amount tia
+    on tia.invoice_id = i.id
+left join patient_additional_fields paf
+    on paf.patient_id = p.id
+left join total_insurer_payments tip
+    on tip.invoice_id = i.id
+    and tip.insurer_id = tia.insurer_id
+join "reporting"."reference_data" rd_insurer
+    on rd_insurer.id = tia.insurer_id
+where i.status = 'finalised'
+    and (tia.cover - coalesce(tip.total_amount_paid, 0)) > 0
+);
+create or replace view "reporting"."ds__user_audit" as (
+with non_system_notes as (
+    select distinct on (n.record_id)
+        n.record_id,
+        first_value(n.datetime) over w as first_note_datetime,
+        last_value(n.datetime) over w as last_note_datetime,
+        last_value(concat_ws(' on behalf of ', author.display_name, on_behalf.display_name)) over w as last_clinician
+    from "reporting"."notes" n
+    left join "reporting"."users" author on author.id = n.authored_by_id
+    left join "reporting"."users" on_behalf on on_behalf.id = n.on_behalf_of_id
+    where n.note_type != 'system'
+    window w as (
+        partition by n.record_id
+        order by n.datetime
+        rows between unbounded preceding and unbounded following
+    )
+)
+
+select
+    u.id as user_id,
+    u.display_name as user_name,
+    r.name as user_role,
+    p.id as patient_id,
+    p.display_id,
+    bt.name as patient_category,
+    t.score as triage_category,
+    f.id as facility_id,
+    f.name as facility,
+    d.id as department_id,
+    d.name as department,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    l.id as location_id,
+    l.name as location,
+    e.start_datetime as encounter_start_datetime,
+    e.end_datetime as encounter_end_datetime,
+    n.first_note_datetime,
+    n.last_note_datetime,
+    case when e.end_datetime isnull then 'Patient not discharged'
+        else 'Patient discharged'
+    end as is_discharged,
+    case when ds.note like 'Automatically discharged%' then n.last_clinician
+    end as non_discharge_by_clinicians
+from "reporting"."encounters" e
+left join "reporting"."users" u on u.id = e.clinician_id
+left join "reporting"."roles" r on r.id = u.role
+left join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = e.patient_id
+left join "reporting"."reference_data" bt
+    on bt.id = coalesce(e.patient_billing_type_id, pad.patient_billing_type_id)
+left join "reporting"."triages" t on t.encounter_id = e.id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."discharges" ds on ds.encounter_id = e.id
+left join non_system_notes n on n.record_id = e.id
+);
+create or replace view "reporting"."ds__invoicing_pending" as (
+select
+    p.id as patient_id,
+    e.id as encounter_id,
+    p.display_id,
+    e.end_datetime as discharge_datetime,
+    concat(p.first_name, ' ', p.last_name) as patient_name
+from "reporting"."encounters" e
+join "reporting"."patients" p
+    on p.id = e.patient_id
+left join "reporting"."invoices" i
+    on i.encounter_id = e.id
+where e.end_datetime is not null
+    and i.id is null
+);
+create or replace view "reporting"."ds__lab_requests" as (
+
+
+with lab_test_data as (
+    select
+        lr.id as lab_request_id,
+        string_agg(ltt.name, ', '
+            order by ltt.name
+        ) as tests,
+        max(lt.completed_datetime) as completed_datetime
+    from "reporting"."lab_requests" lr
+    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+    where ltt.is_sensitive = False
+    group by lr.id
+)
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(lr.requested_datetime, p.date_of_birth)) as age,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    f.id as facility_id,
+    f.name as facility,
+    d.name as department,
+    d.id as department_id,
     l.id as location_id,
     l.name as location,
     lg.id as location_group_id,
     lg.name as location_group,
-    d.diets,
-    a.allergies
-from "reporting"."encounters" e
-join "reporting"."patients" p
-    on p.id = e.patient_id
-join "reporting"."locations" l
-    on l.id = e.location_id
-join "reporting"."location_groups" lg
-    on lg.id = l.location_group_id
-left join diets d
-    on d.encounter_id = e.id
-left join allergies a
-    on a.patient_id = p.id
-where e.end_datetime is null
+    laboratory.id as laboratory_id,
+    laboratory.name as laboratory,
+    lr.display_id as request_id,
+    case lr.status
+        when 'reception_pending' then 'Reception pending'
+        when 'results_pending' then 'Results pending'
+        when 'to_be_verified' then 'To be verified'
+        when 'verified' then 'Verified'
+        when 'published' then 'Published'
+        when 'cancelled' then 'Cancelled'
+        when 'deleted' then 'Deleted'
+        when 'sample-not-collected' then 'Sample not collected'
+        when 'entered-in-error' then 'Entered in error'
+        else lr.status
+    end as status,
+    lr.status as status_id,
+    lr.requested_datetime,
+    req_clinician.id as requested_by_id,
+    req_clinician.display_name as requested_by,
+    lr.department_id as requesting_department_id,
+    req_department.name as requesting_department,
+    lr.lab_test_priority_id as priority_id,
+    priority.name as priority,
+    category.id as lab_test_category_id,
+    category.name as lab_test_category,
+    ltp.name as lab_test_panel,
+    lta.tests,
+    lr.collected_datetime,
+    lr.collected_by_id,
+    collector.display_name as collected_by,
+    lr.specimen_type_id,
+    specimen.name as specimen_type,
+    site.name as site,
+    lta.completed_datetime,
+    case lr.reason_for_cancellation
+        when 'clinical' then 'Clinical reason'
+        when 'duplicate' then 'Duplicate'
+        when 'entered-in-error' then 'Entered in error'
+        when 'patient-discharged' then 'Patient discharged'
+        when 'patient-refused' then 'Patient refused'
+        when 'other' then 'Other'
+        else lr.reason_for_cancellation
+    end as reason_for_cancellation
+from "reporting"."lab_requests" lr
+join lab_test_data lta on lta.lab_request_id = lr.id
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
+left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
+left join "reporting"."departments" req_department on req_department.id = lr.department_id
+left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+left join "reporting"."users" collector on collector.id = lr.collected_by_id
+left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
+left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
+left join "reporting"."lab_test_panel_requests" ltpr
+    on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+
+
+);
+create or replace view "reporting"."ds__imaging_requests" as (
+with results as (
+    select
+        imaging_request_id,
+        min(datetime) as completed_datetime
+    from "reporting"."imaging_results"
+    group by imaging_request_id
+)
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(ir.datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    v.id as village_id,
+    v.name as village,
+    f.id as facility_id,
+    f.name as facility,
+    d.id as department_id,
+    d.name as department,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    ir.display_id as request_id,
+    ir.datetime as requested_datetime,
+    su.id as supervising_clinician_id,
+    su.display_name as supervising_clinician,
+    ru.id as requesting_clinician_id,
+    ru.display_name as requesting_clinician,
+    case
+        when ir.priority = 'routine' then 'Routine'
+        when ir.priority = 'urgent' then 'Urgent'
+        when ir.priority = 'asap' then 'ASAP'
+        when ir.priority = 'stat' then 'STAT'
+        when ir.priority = 'today' then 'Today'
+        else ir.priority
+    end as priority,
+    ir.imaging_type as imaging_type_id,
+    case
+        when ir.imaging_type = 'xRay' then 'X-Ray'
+        when ir.imaging_type = 'ctScan' then 'CT Scan'
+        when ir.imaging_type = 'ultrasound' then 'Ultrasound'
+        when ir.imaging_type = 'mri' then 'MRI'
+        when ir.imaging_type = 'ecg' then 'ECG'
+        when ir.imaging_type = 'holterMonitor' then 'Holter Monitor'
+        when ir.imaging_type = 'echocardiogram' then 'Echocardiogram'
+        when ir.imaging_type = 'mammogram' then 'Mammogram'
+        when ir.imaging_type = 'endoscopy' then 'Endoscopy'
+        when ir.imaging_type = 'fluroscopy' then 'Fluroscopy'
+        when ir.imaging_type = 'angiogram' then 'Angiogram'
+        when ir.imaging_type = 'colonoscopy' then 'Colonoscopy'
+        when ir.imaging_type = 'vascularStudy' then 'Vascular Study'
+        when ir.imaging_type = 'stressTest' then 'Stress Test'
+        else ir.imaging_type
+    end as imaging_type,
+    case
+        when ia.id is not null then ia.name
+        else n.content
+    end as imaging_area,
+    ir.status as status_id,
+    case
+        when ir.status = 'pending' then 'Pending'
+        when ir.status = 'in_progress' then 'In progress'
+        when ir.status = 'completed' then 'Completed'
+        when ir.status = 'cancelled' then 'Cancelled'
+        when ir.status = 'deleted' then 'Deleted'
+        when ir.status = 'entered_in_error' then 'Entered in error'
+        else 'Unknown'
+    end as status,
+    case
+        when ir.status = 'completed' then irs.completed_datetime
+    end as completed_datetime,
+    case
+        when ir.reason_for_cancellation = 'clinical' then 'Clinical reason'
+        when ir.reason_for_cancellation = 'duplicate' then 'Duplicate'
+        when ir.reason_for_cancellation = 'entered-in-error' then 'Entered in error'
+        when ir.reason_for_cancellation = 'patient-discharged' then 'Patient discharged'
+        when ir.reason_for_cancellation = 'patient-refused' then 'Patient refused'
+        when ir.reason_for_cancellation = 'other' then 'Other'
+    end as reason_for_cancellation
+from "reporting"."imaging_requests" ir
+join "reporting"."encounters" e on e.id = ir.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."users" su on su.id = e.clinician_id
+left join "reporting"."users" ru on ru.id = ir.requested_by_id
+left join "reporting"."notes" n
+    on n.record_id = ir.id and n.record_type = 'ImagingRequest' and n.note_type = 'areaToBeImaged'
+left join "reporting"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
+left join "reporting"."reference_data" ia on ia.id = ira.area_id
+left join "reporting"."reference_data" v on v.id = p.village_id
+left join results irs on irs.imaging_request_id = ir.id
+);
+create or replace view "reporting"."ds__patients_change_logs" as (
+with patient_edits as (
+    -- Patient details edits
+    select
+        lcp.id as patient_id,
+        lcp.display_id,
+        lcp.first_name,
+        lcp.last_name,
+        lcp.date_of_birth,
+        lcp.sex,
+        lcp.village_id,
+        lcp.updated_by_user_id,
+        lcp.logged_at
+    from "reporting"."patients_change_logs" lcp
+
+    union all
+
+    -- Patient additional data edits
+    select
+        lcpad.patient_id,
+        p.display_id,
+        p.first_name,
+        p.last_name,
+        p.date_of_birth,
+        p.sex,
+        p.village_id,
+        lcpad.updated_by_user_id,
+        lcpad.logged_at
+    from "reporting"."patient_additional_data_change_logs" lcpad
+    left join "reporting"."patients" p on p.id = lcpad.patient_id
+),
+
+grouped_edits as (
+    select
+        pe.patient_id,
+        pe.display_id,
+        pe.first_name,
+        pe.last_name,
+        pe.date_of_birth,
+        pe.sex,
+        pe.village_id,
+        pe.updated_by_user_id,
+        date_trunc('minute', pe.logged_at) as edited_datetime
+    from patient_edits pe
+    group by
+        pe.patient_id,
+        pe.display_id,
+        pe.first_name,
+        pe.last_name,
+        pe.date_of_birth,
+        pe.sex,
+        pe.village_id,
+        pe.updated_by_user_id,
+        date_trunc('minute', pe.logged_at)
+)
+
+select
+    ge.patient_id,
+    ge.display_id,
+    ge.first_name,
+    ge.last_name,
+    ge.date_of_birth,
+    ge.sex,
+    ge.village_id,
+    village.name as village,
+    ge.updated_by_user_id as edited_by_user_id,
+    u.display_name as edited_by_user,
+    u.email as user_email,
+    u.role as user_role,
+    ge.edited_datetime
+from grouped_edits ge
+left join "reporting"."users" u on u.id = ge.updated_by_user_id
+left join "reporting"."reference_data" village on village.id = ge.village_id
+);
+create or replace view "reporting"."ds__patient_vaccinations_upcoming" as (
+select
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.id as patient_id,
+    p.date_of_birth,
+    date_part('year', age(p.date_of_birth)) as age,
+    p.sex,
+    pvu.due_date,
+    pvu.vaccine_category,
+    pvu.vaccine_schedules_id,
+    sv.label as vaccine_name,
+    sv.dose_label as vaccine_schedule,
+    pvu.status as vaccine_status
+from "reporting"."patient_vaccinations_upcoming" pvu
+join "reporting"."patients" p on p.id = pvu.patient_id
+join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
+where p.date_of_death is null
+);
+create or replace view "reporting"."ds__sensitive_lab_requests" as (
+
+
+with lab_test_data as (
+    select
+        lr.id as lab_request_id,
+        string_agg(ltt.name, ', '
+            order by ltt.name
+        ) as tests,
+        max(lt.completed_datetime) as completed_datetime
+    from "reporting"."lab_requests" lr
+    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+    where ltt.is_sensitive = True
+    group by lr.id
+)
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(lr.requested_datetime, p.date_of_birth)) as age,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    f.id as facility_id,
+    f.name as facility,
+    d.name as department,
+    d.id as department_id,
+    l.id as location_id,
+    l.name as location,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    laboratory.id as laboratory_id,
+    laboratory.name as laboratory,
+    lr.display_id as request_id,
+    case lr.status
+        when 'reception_pending' then 'Reception pending'
+        when 'results_pending' then 'Results pending'
+        when 'to_be_verified' then 'To be verified'
+        when 'verified' then 'Verified'
+        when 'published' then 'Published'
+        when 'cancelled' then 'Cancelled'
+        when 'deleted' then 'Deleted'
+        when 'sample-not-collected' then 'Sample not collected'
+        when 'entered-in-error' then 'Entered in error'
+        else lr.status
+    end as status,
+    lr.status as status_id,
+    lr.requested_datetime,
+    req_clinician.id as requested_by_id,
+    req_clinician.display_name as requested_by,
+    lr.department_id as requesting_department_id,
+    req_department.name as requesting_department,
+    lr.lab_test_priority_id as priority_id,
+    priority.name as priority,
+    category.id as lab_test_category_id,
+    category.name as lab_test_category,
+    ltp.name as lab_test_panel,
+    lta.tests,
+    lr.collected_datetime,
+    lr.collected_by_id,
+    collector.display_name as collected_by,
+    lr.specimen_type_id,
+    specimen.name as specimen_type,
+    site.name as site,
+    lta.completed_datetime,
+    case lr.reason_for_cancellation
+        when 'clinical' then 'Clinical reason'
+        when 'duplicate' then 'Duplicate'
+        when 'entered-in-error' then 'Entered in error'
+        when 'patient-discharged' then 'Patient discharged'
+        when 'patient-refused' then 'Patient refused'
+        when 'other' then 'Other'
+        else lr.reason_for_cancellation
+    end as reason_for_cancellation
+from "reporting"."lab_requests" lr
+join lab_test_data lta on lta.lab_request_id = lr.id
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
+left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
+left join "reporting"."departments" req_department on req_department.id = lr.department_id
+left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+left join "reporting"."users" collector on collector.id = lr.collected_by_id
+left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
+left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
+left join "reporting"."lab_test_panel_requests" ltpr
+    on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+
+
+);
+create or replace view "reporting"."ds__procedures" as (
+with filtered_procedure as (
+    select
+        pc.*,
+        eh.department_id,
+        eh.encounter_type,
+        row_number() over (
+            partition by pc.id
+            order by eh.datetime desc
+        ) as encounter_history_record
+    from "reporting"."procedures" pc
+    left join "reporting"."encounter_history" eh
+        on eh.encounter_id = pc.encounter_id
+        and eh.datetime::date <= pc.date
+)
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(pc.date, p.date_of_birth)) as age,
+    p.sex,
+    nationality.name as nationality,
+    encounter_facility.id as encounter_facility_id,
+    encounter_facility.name as encounter_facility,
+    encounter_department.id as encounter_department_id,
+    encounter_department.name as encounter_department,
+    case
+        when coalesce(pc.encounter_type, e.encounter_type) = 'admission' then 'Hospital Admission'
+        when coalesce(pc.encounter_type, e.encounter_type) = 'clinic' then 'Clinic'
+        when coalesce(pc.encounter_type, e.encounter_type) in ('triage', 'observation', 'emergency') then 'Triage'
+    end as encounter_type,
+    e.start_datetime as encounter_start_datetime,
+    e.end_datetime as encounter_end_datetime,
+    procedure_facility.id as procedure_facility_id,
+    procedure_facility.name as procedure_facility,
+    procedure_area.id as procedure_area_id,
+    procedure_area.name as procedure_area,
+    procedure_location.id as procedure_location_id,
+    procedure_location.name as procedure_location,
+    procedure_type.id as procedure_type_id,
+    procedure_type.name as procedure_type,
+    pc.date as procedure_date,
+    pc.start_time as procedure_start_time,
+    pc.end_time as procedure_end_time,
+    case
+        when pc.end_time is not null and pc.start_time is not null then
+            concat(
+                lpad((
+                    case
+                        when pc.end_time < pc.start_time
+                            then
+                                (24 + extract(hour from pc.end_time) - extract(hour from pc.start_time))
+                        else
+                            extract(hour from (pc.end_time - pc.start_time))
+                    end
+                )::text, 2, '0'), ':',
+                lpad((
+                    case
+                        when pc.end_time < pc.start_time
+                            then
+                                (extract(minute from pc.end_time) - extract(minute from pc.start_time))
+                        else
+                            extract(minute from (pc.end_time - pc.start_time))
+                    end
+                )::text, 2, '0')
+            )
+    end as procedure_duration,
+    clinician.id as procedure_clinician_id,
+    clinician.display_name as procedure_clinician,
+    anaesthetist.id as procedure_anaesthetist_id,
+    anaesthetist.display_name as procedure_anaesthetist,
+    assistant_anaesthetist.id as procedure_assistant_anaesthetist_id,
+    assistant_anaesthetist.display_name as procedure_assistant_anaesthetist,
+    case
+        when pc.is_completed then 'Y' else 'N'
+    end as is_completed,
+    pc.time_in,
+    pc.time_out
+from filtered_procedure pc
+join "reporting"."encounters" e on e.id = pc.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."reference_data" procedure_type on procedure_type.id = pc.procedure_type_id
+join "reporting"."locations" procedure_location
+    on procedure_location.id = pc.location_id
+left join "reporting"."location_groups" procedure_area
+    on procedure_area.id = procedure_location.location_group_id
+join "reporting"."facilities" procedure_facility
+    on procedure_facility.id = procedure_location.facility_id
+join "reporting"."locations" encounter_location
+    on encounter_location.id = e.location_id
+join "reporting"."facilities" encounter_facility
+    on encounter_facility.id = encounter_location.facility_id
+join "reporting"."departments" encounter_department
+    on encounter_department.id = coalesce(pc.department_id, e.department_id)
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" nationality on nationality.id = pd.nationality_id
+left join "reporting"."users" assistant_anaesthetist on assistant_anaesthetist.id = pc.assistant_anaesthetist_id
+left join "reporting"."users" anaesthetist on anaesthetist.id = pc.anaesthetist_id
+left join "reporting"."users" clinician on clinician.id = pc.clinician_id
+where pc.encounter_history_record = 1
+);
+create or replace view "reporting"."ds__births" as (
+select
+    pbd.registration_date,
+    case
+        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
+    end as registered_by,
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    rd_ethnicity.name as ethnicity,
+    rd_nationality.name as nationality,
+    p.village_id,
+    rd_village.name as village,
+    case
+        when
+            p_mother.id is not null
+            then concat(p_mother.first_name, ' ', p_mother.last_name, ' (', p_mother.display_id, ')')
+    end as mother,
+    case
+        when
+            p_father.id is not null
+            then concat(p_father.first_name, ' ', p_father.last_name, ' (', p_father.display_id, ')')
+    end as father,
+    pbd.birth_time,
+    pbd.gestational_age_estimate,
+    case when pbd.registered_birth_place = 'health_facility' then 'Health facility'
+        when pbd.registered_birth_place = 'home' then 'Home'
+        when pbd.registered_birth_place = 'other' then 'Other'
+        else pbd.registered_birth_place
+    end as registered_birth_place,
+    f.id as birth_facility_id,
+    f.name as birth_facility,
+    case when pbd.attendant_at_birth = 'doctor' then 'Doctor'
+        when pbd.attendant_at_birth = 'midwife' then 'Midwife'
+        when pbd.attendant_at_birth = 'nurse' then 'Nurse'
+        when pbd.attendant_at_birth = 'traditional_birth_attentdant' then 'Traditional birth attendant'
+        when pbd.attendant_at_birth = 'other' then 'Other'
+        else pbd.attendant_at_birth
+    end as attendant_at_birth,
+    pbd.name_of_attendant_at_birth,
+    case
+        when pbd.birth_delivery_type = 'normal_vaginal_delivery' then 'Normal vaginal delivery'
+        when pbd.birth_delivery_type = 'breech' then 'Breech'
+        when pbd.birth_delivery_type = 'emergency_c_section' then 'Emergency C-section'
+        when pbd.birth_delivery_type = 'elective_c_section' then 'Elective C-section'
+        when pbd.birth_delivery_type = 'vacuum_extraction' then 'Vacuum extraction'
+        when pbd.birth_delivery_type = 'forceps' then 'Forceps'
+        when pbd.birth_delivery_type = 'other' then 'Other'
+        else pbd.birth_delivery_type
+    end as birth_delivery_type,
+    initcap(pbd.birth_type::text) as birth_type,
+    pbd.birth_weight,
+    pbd.birth_length,
+    pbd.apgar_score_one_minute,
+    pbd.apgar_score_five_minutes,
+    pbd.apgar_score_ten_minutes
+from "reporting"."patient_birth_data" pbd
+join "reporting"."patients" p on p.id = pbd.patient_id
+left join "reporting"."reference_data" rd_village on rd_village.id = p.village_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
+left join "reporting"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
+left join "reporting"."patients" p_mother on p_mother.id = pad.mother_id
+left join "reporting"."patients" p_father on p_father.id = pad.father_id
+left join "reporting"."facilities" f on f.id = pbd.birth_facility_id
+left join "reporting"."users" u on u.id = pad.registered_by_id
 );
 create or replace view "reporting"."ds__encounter_summary" as (
 with encounter_history_consolidated as (
@@ -2274,14 +2864,119 @@ left join encounter_imaging_requests eir on eir.encounter_id = e.id
 left join encounter_notes en on en.encounter_id = e.id
 where e.end_datetime is not null
 );
-create or replace view "reporting"."ds__imaging_requests" as (
-with results as (
-    select
-        imaging_request_id,
-        min(datetime) as completed_datetime
-    from "reporting"."imaging_results"
-    group by imaging_request_id
-)
+create or replace view "reporting"."ds__diagnoses" as (
+select
+    e.id as encounter_id,
+    p.id as patient_id,
+    diagnosis.id as diagnosis_id,
+    diagnosis.name as diagnosis,
+    ed.datetime as diagnosis_datetime,
+    p.first_name,
+    p.last_name,
+    p.display_id,
+    date_part('year', age(ed.datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    coalesce(pad.primary_contact_number, pad.secondary_contact_number) as contact_number,
+    village.id as village_id,
+    village.name as village,
+    clinician.id as clinician_id,
+    clinician.display_name as clinician,
+    d.id as department_id,
+    d.name as department,
+    l.id as location_id,
+    l.name as location,
+    f.id as facility_id,
+    f.name as facility,
+    initcap(ed.certainty) as certainty,
+    case when ed.is_primary = true then 'Yes' else 'No' end as is_primary
+from "reporting"."encounter_diagnoses" ed
+join "reporting"."reference_data" diagnosis on diagnosis.id = ed.diagnosis_id
+join "reporting"."encounters" e on e.id = ed.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."users" clinician on clinician.id = e.clinician_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+);
+create or replace view "reporting"."ds__location_bookings" as (
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(a.start_datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    vil.id as village_id,
+    vil.name as village,
+    billing.id as billing_type_id,
+    billing.name as billing_type,
+    a.start_datetime as booking_start_datetime,
+    a.end_datetime as booking_end_datetime,
+    a.status as booking_status,
+    u.id as clinician_id,
+    u.display_name as clinician,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    l.id as location_id,
+    l.name as location,
+    a.booking_type_id,
+    bt.name as booking_type
+from "reporting"."location_bookings" a
+join "reporting"."patients" p on p.id = a.patient_id
+left join "reporting"."users" u on u.id = a.clinician_id
+left join "reporting"."locations" l on l.id = a.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
+left join "reporting"."reference_data" vil on vil.id = p.village_id
+left join "reporting"."reference_data" bt on bt.id = a.booking_type_id
+where a.booking_type_id notnull
+);
+create or replace view "reporting"."ds__outpatient_appointments" as (
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(a.start_datetime, p.date_of_birth)) as age,
+    p.sex,
+    coalesce(pd.primary_contact_number, pd.secondary_contact_number) as contact_number,
+    vil.id as village_id,
+    vil.name as village,
+    billing.id as billing_type_id,
+    billing.name as billing_type,
+    a.start_datetime as appointment_start_datetime,
+    a.end_datetime as appointment_end_datetime,
+    a.appointment_type_id,
+    apt.name as appointment_type,
+    a.status as appointment_status,
+    u.id as clinician_id,
+    u.display_name as clinician,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    a.priority,
+    a.schedule_id,
+    a.until_date,
+    a.interval,
+    a.days_of_week,
+    a.frequency,
+    a.nth_weekday
+from "reporting"."outpatient_appointments" a
+join "reporting"."patients" p on p.id = a.patient_id
+left join "reporting"."users" u on u.id = a.clinician_id
+left join "reporting"."location_groups" lg on lg.id = a.location_group_id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
+left join "reporting"."reference_data" vil on vil.id = p.village_id
+left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
+where a.appointment_type_id notnull
+);
+create or replace view "reporting"."ds__lab_tests" as (
+
 
 select
     p.id as patient_id,
@@ -2289,88 +2984,381 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(ir.datetime::date, p.date_of_birth)) as age,
+    date_part('year', age(lr.requested_datetime, p.date_of_birth::date)) as age,
     p.sex,
-    v.id as village_id,
-    v.name as village,
+    village.id as village_id,
+    village.name as village,
     f.id as facility_id,
     f.name as facility,
     d.id as department_id,
     d.name as department,
+    req_dept.id as requesting_department_id,
+    req_dept.name as requesting_department,
     lg.id as location_group_id,
     lg.name as location_group,
-    ir.display_id as request_id,
-    ir.datetime as requested_datetime,
-    su.id as supervising_clinician_id,
-    su.display_name as supervising_clinician,
-    ru.id as requesting_clinician_id,
-    ru.display_name as requesting_clinician,
-    case
-        when ir.priority = 'routine' then 'Routine'
-        when ir.priority = 'urgent' then 'Urgent'
-        when ir.priority = 'asap' then 'ASAP'
-        when ir.priority = 'stat' then 'STAT'
-        when ir.priority = 'today' then 'Today'
-        else ir.priority
-    end as priority,
-    ir.imaging_type as imaging_type_id,
-    case
-        when ir.imaging_type = 'xRay' then 'X-Ray'
-        when ir.imaging_type = 'ctScan' then 'CT Scan'
-        when ir.imaging_type = 'ultrasound' then 'Ultrasound'
-        when ir.imaging_type = 'mri' then 'MRI'
-        when ir.imaging_type = 'ecg' then 'ECG'
-        when ir.imaging_type = 'holterMonitor' then 'Holter Monitor'
-        when ir.imaging_type = 'echocardiogram' then 'Echocardiogram'
-        when ir.imaging_type = 'mammogram' then 'Mammogram'
-        when ir.imaging_type = 'endoscopy' then 'Endoscopy'
-        when ir.imaging_type = 'fluroscopy' then 'Fluroscopy'
-        when ir.imaging_type = 'angiogram' then 'Angiogram'
-        when ir.imaging_type = 'colonoscopy' then 'Colonoscopy'
-        when ir.imaging_type = 'vascularStudy' then 'Vascular Study'
-        when ir.imaging_type = 'stressTest' then 'Stress Test'
-        else ir.imaging_type
-    end as imaging_type,
-    case
-        when ia.id is not null then ia.name
-        else n.content
-    end as imaging_area,
-    ir.status as status_id,
-    case
-        when ir.status = 'pending' then 'Pending'
-        when ir.status = 'in_progress' then 'In progress'
-        when ir.status = 'completed' then 'Completed'
-        when ir.status = 'cancelled' then 'Cancelled'
-        when ir.status = 'deleted' then 'Deleted'
-        when ir.status = 'entered_in_error' then 'Entered in error'
-        else 'Unknown'
+    l.id as location_id,
+    l.name as location,
+    lr.display_id as lab_request_id,
+    lr.status as status_id,
+    case lr.status
+        when 'reception_pending' then 'Reception pending'
+        when 'results_pending' then 'Results pending'
+        when 'to_be_verified' then 'To be verified'
+        when 'verified' then 'Verified'
+        when 'published' then 'Published'
+        when 'cancelled' then 'Cancelled'
+        when 'deleted' then 'Deleted'
+        when 'sample-not-collected' then 'Sample not collected'
+        when 'entered-in-error' then 'Entered in error'
+        else lr.status
     end as status,
-    case
-        when ir.status = 'completed' then irs.completed_datetime
-    end as completed_datetime,
-    case
-        when ir.reason_for_cancellation = 'clinical' then 'Clinical reason'
-        when ir.reason_for_cancellation = 'duplicate' then 'Duplicate'
-        when ir.reason_for_cancellation = 'entered-in-error' then 'Entered in error'
-        when ir.reason_for_cancellation = 'patient-discharged' then 'Patient discharged'
-        when ir.reason_for_cancellation = 'patient-refused' then 'Patient refused'
-        when ir.reason_for_cancellation = 'other' then 'Other'
-    end as reason_for_cancellation
-from "reporting"."imaging_requests" ir
-join "reporting"."encounters" e on e.id = ir.encounter_id
+    ltp.id as lab_test_panel_id,
+    ltp.name as lab_test_panel,
+    category.id as lab_test_category_id,
+    category.name as lab_test_category,
+    lr.requested_datetime,
+    requester.id as requested_by_id,
+    requester.display_name as requested_by,
+    lr.published_datetime as lab_request_published_datetime,
+    lt.date as lab_test_date,
+    lt.result,
+    lt.verification,
+    ltt.id as lab_test_type_id,
+    ltt.name as lab_test_type,
+    lt.completed_datetime as lab_test_completed_datetime
+from "reporting"."lab_requests" lr
+join "reporting"."encounters" e on e.id = lr.encounter_id
 join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
 left join "reporting"."locations" l on l.id = e.location_id
 left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."facilities" f on f.id = l.facility_id
 left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."users" su on su.id = e.clinician_id
-left join "reporting"."users" ru on ru.id = ir.requested_by_id
-left join "reporting"."notes" n
-    on n.record_id = ir.id and n.record_type = 'ImagingRequest' and n.note_type = 'areaToBeImaged'
-left join "reporting"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
-left join "reporting"."reference_data" ia on ia.id = ira.area_id
-left join "reporting"."reference_data" v on v.id = p.village_id
-left join results irs on irs.imaging_request_id = ir.id
+left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."users" requester on requester.id = lr.requested_by_id
+left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+where ltt.is_sensitive = False
+
+
+);
+create or replace view "reporting"."ds__patient_program_registrations" as (
+with related_conditions as (
+    select
+        ppr.id as patient_program_registration_id,
+        string_agg(
+            prc.name, '; '
+            order by pprc.datetime
+        ) as conditions,
+        array_agg(
+            pprc.program_registry_condition_id
+            order by pprc.datetime
+        ) as condition_ids,
+        string_agg(
+            prcc.name, '; '
+            order by pprc.datetime
+        ) as condition_categories,
+        array_agg(
+            pprc.program_registry_condition_category_id
+            order by pprc.datetime
+        ) as condition_category_ids
+    from "reporting"."patient_program_registration_conditions" pprc
+    join "reporting"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
+    left join "reporting"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
+    left join "reporting"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
+    group by ppr.id
+)
+
+select
+    ppr.id as patient_program_registration_id,
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    registering_facility.id as registering_facility_id,
+    registering_facility.name as registering_facility,
+    registered_by.id as registered_by_id,
+    registered_by.display_name as registered_by,
+    case
+        when pr.currently_at_type = 'facility' then currently_at_facility.name
+        when pr.currently_at_type = 'village' then currently_at_village.name
+    end as currently_at,
+    pr.currently_at_type,
+    c.condition_ids as related_condition_ids,
+    c.conditions as related_conditions,
+    c.condition_category_ids as related_condition_category_ids,
+    c.condition_categories as related_condition_categories,
+    prcs.id as clinical_status_id,
+    prcs.name as clinical_status,
+    ppr.registration_status,
+    ppr.program_registry_id,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
+    ppr.datetime as registration_datetime,
+    ppr.deactivated_by_id,
+    deactivated_by.display_name as deactivated_by,
+    ppr.deactivated_datetime
+from "reporting"."patient_program_registrations" ppr
+join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
+join "reporting"."patients" p on p.id = ppr.patient_id
+join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
+left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
+left join "reporting"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
+left join related_conditions c on c.patient_program_registration_id = ppr.id
+left join "reporting"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
+left join "reporting"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
+);
+create or replace view "reporting"."ds__sensitive_lab_tests" as (
+
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(lr.requested_datetime, p.date_of_birth::date)) as age,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    f.id as facility_id,
+    f.name as facility,
+    d.id as department_id,
+    d.name as department,
+    req_dept.id as requesting_department_id,
+    req_dept.name as requesting_department,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    l.id as location_id,
+    l.name as location,
+    lr.display_id as lab_request_id,
+    lr.status as status_id,
+    case lr.status
+        when 'reception_pending' then 'Reception pending'
+        when 'results_pending' then 'Results pending'
+        when 'to_be_verified' then 'To be verified'
+        when 'verified' then 'Verified'
+        when 'published' then 'Published'
+        when 'cancelled' then 'Cancelled'
+        when 'deleted' then 'Deleted'
+        when 'sample-not-collected' then 'Sample not collected'
+        when 'entered-in-error' then 'Entered in error'
+        else lr.status
+    end as status,
+    ltp.id as lab_test_panel_id,
+    ltp.name as lab_test_panel,
+    category.id as lab_test_category_id,
+    category.name as lab_test_category,
+    lr.requested_datetime,
+    requester.id as requested_by_id,
+    requester.display_name as requested_by,
+    lr.published_datetime as lab_request_published_datetime,
+    lt.date as lab_test_date,
+    lt.result,
+    lt.verification,
+    ltt.id as lab_test_type_id,
+    ltt.name as lab_test_type,
+    lt.completed_datetime as lab_test_completed_datetime
+from "reporting"."lab_requests" lr
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."users" requester on requester.id = lr.requested_by_id
+left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+where ltt.is_sensitive = True
+
+
+);
+create or replace view "reporting"."ds__ongoing_conditions" as (
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(pc.recorded_datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    village.name as village,
+    village.id as village_id,
+    conditions.name as condition,
+    conditions.id as condition_id,
+    pc.recorded_datetime,
+    clinician.id as clinician_id,
+    clinician.display_name as clinician,
+    case when pc.is_resolved then pc.resolved_datetime end as date_resolved,
+    case when pc.is_resolved then resolving_clinician.display_name end as clinician_resolving
+from "reporting"."patient_conditions" pc
+join "reporting"."patients" p on p.id = pc.patient_id
+join "reporting"."reference_data" conditions on conditions.id = pc.condition_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."users" clinician on clinician.id = pc.recorded_by_id
+left join "reporting"."users" resolving_clinician
+    on resolving_clinician.id = pc.resolved_by_id
+);
+create or replace view "reporting"."ds__patients" as (
+select
+    p.registration_date,
+    u.display_name as registered_by,
+    p.id as patient_id,
+    p.first_name,
+    p.middle_name,
+    p.last_name,
+    p.cultural_name,
+    p.display_id,
+    p.sex,
+    p.village_id,
+    village.name as village,
+    p.date_of_birth,
+    pad.birth_certificate,
+    pad.driving_license,
+    pad.passport,
+    pad.blood_type,
+    pad.title,
+    pad.marital_status,
+    pad.primary_contact_number,
+    pad.secondary_contact_number,
+    cob.name as country_of_birth,
+    nationality.name as nationality,
+    ethnicity.name as ethnicity,
+    occupation.name as occupation,
+    religion.name as religion,
+    billing.name as patient_billing_type,
+    case
+        when pbd.patient_id is null then 'Patient'
+        else 'Birth'
+    end as registration_type,
+    date_part(
+        'year',
+        age(
+            coalesce(p.date_of_death::date, current_date),
+            p.date_of_birth
+        )
+    ) as age,
+    case
+        when p.date_of_death is not null then 'Deceased'
+        else 'Alive'
+    end as status
+from "reporting"."patients" p
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
+left join "reporting"."users" u on u.id = pad.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
+left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
+left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
+left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
+left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
+left join "reporting"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
+left join
+    "reporting"."reference_data" billing
+    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+);
+create or replace view "reporting"."ds__invoicing_transactions_patient" as (
+select
+    ip.date,
+    i.id as invoice_id,
+    p.id as patient_id,
+    e.id as encounter_id,
+    i.display_id as invoice_number,
+    concat(p.first_name, ' ', p.last_name) as patient_name,
+    rd_method.id as payment_method_id,
+    rd_method.name as payment_method,
+    ip.receipt_number,
+    ip.amount,
+    u.display_name as received_by
+from "reporting"."invoice_payments" ip
+join "reporting"."invoice_patient_payments" ipp on ipp.invoice_payment_id = ip.id
+join "reporting"."invoices" i on i.id = ip.invoice_id
+join "reporting"."encounters" e on e.id = i.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."reference_data" rd_method on rd_method.id = ipp.method_id
+left join "reporting"."users" u on u.id = ip.updated_by_id
+);
+create or replace view "reporting"."ds__encounter_diets" as (
+with diets as (
+    select
+        ed.encounter_id,
+        string_agg(
+            rd.name, ', '
+            order by rd.name
+        ) as diets
+    from "reporting"."encounter_diets" ed
+    join "reporting"."reference_data" rd
+        on rd.id = ed.diet_id
+    group by ed.encounter_id
+),
+
+allergies as (
+    select
+        pa.patient_id,
+        string_agg(
+            rd.name, ', '
+            order by rd.name
+        ) as allergies 
+    from "reporting"."patient_allergies" pa
+    join "reporting"."reference_data" rd
+        on rd.id = pa.allergy_id
+    group by pa.patient_id
+)
+
+select
+    e.id as encounter_id,
+    p.id as patient_id,
+    p.display_id,
+    concat(p.first_name, ' ', p.last_name) as patient_name,
+    e.start_datetime,
+    case
+        when age(current_date, p.date_of_birth) < interval '8 days'
+            then concat(extract(day from age(current_date, p.date_of_birth)), ' days')
+        when age(current_date, p.date_of_birth) >= interval '8 days'
+            and age(current_date, p.date_of_birth) < interval '1 month'
+            then concat(extract(week from age(current_date, p.date_of_birth)), ' weeks')
+        when age(current_date, p.date_of_birth) >= interval '1 month'
+            and age(current_date, p.date_of_birth) < interval '2 years'
+            then concat(extract(month from age(current_date, p.date_of_birth)), ' months')
+        when age(current_date, p.date_of_birth) >= interval '2 years'
+            then concat(extract(year from age(current_date, p.date_of_birth)), ' years')
+    end as age,
+    l.id as location_id,
+    l.name as location,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    d.diets,
+    a.allergies
+from "reporting"."encounters" e
+join "reporting"."patients" p
+    on p.id = e.patient_id
+join "reporting"."locations" l
+    on l.id = e.location_id
+join "reporting"."location_groups" lg
+    on lg.id = l.location_group_id
+left join diets d
+    on d.encounter_id = e.id
+left join allergies a
+    on a.patient_id = p.id
+where e.end_datetime is null
 );
 create or replace view "reporting"."ds__invoicing" as (
 with total_invoice_amount as (
@@ -2526,1049 +3514,61 @@ left join total_patient_payments tpp
     on tpp.invoice_id = i.id
 left join patient_additional_fields paf on paf.patient_id = p.id
 );
-create or replace view "reporting"."ds__invoicing_pending" as (
-select
-    p.id as patient_id,
-    e.id as encounter_id,
-    p.display_id,
-    e.end_datetime as discharge_datetime,
-    concat(p.first_name, ' ', p.last_name) as patient_name
-from "reporting"."encounters" e
-join "reporting"."patients" p
-    on p.id = e.patient_id
-left join "reporting"."invoices" i
-    on i.encounter_id = e.id
-where e.end_datetime is not null
-    and i.id is null
-);
-create or replace view "reporting"."ds__invoicing_summary_insurer" as (
-with total_invoice_amount as (
-    select
-        ii.invoice_id,
-        round(
-            sum(
-                case
-                    when ii.product_discountable
-                        then
-                            ((
-                                ii.product_price
-                                - case
-                                    when iid.type = 'percentage' then (coalesce(iid.amount, 0) * ii.product_price)
-                                    when iid.type = 'amount' then coalesce(iid.amount, 0)
-                                    else 0
-                                end
-                            ) * ii.quantity)
-                    else ii.product_price * ii.quantity
-                end
-            ), 2
-        ) as total
-    from "reporting"."invoice_items" ii
-    left join "reporting"."invoice_item_discounts" iid
-        on iid.invoice_item_id = ii.id
-    group by ii.invoice_id
-),
-
-total_insurer_amount as (
-    select
-        tia.invoice_id,
-        ii.insurer_id,
-        round(sum(tia.total * ii.percentage), 2) as cover
-    from total_invoice_amount tia
-    join "reporting"."invoice_insurers" ii
-        on ii.invoice_id = tia.invoice_id
-    group by tia.invoice_id, ii.insurer_id
-),
-
-total_insurer_payments as (
-    select
-        ip.invoice_id,
-        iip.insurer_id,
-        sum(ip.amount) as total_amount_paid
-    from "reporting"."invoice_payments" ip
-    join "reporting"."invoice_insurer_payments" iip
-        on iip.invoice_payment_id = ip.id
-    group by ip.invoice_id, iip.insurer_id
-),
-
-patient_additional_fields as (
-    select
-        pfv.patient_id,
-        max(case when pfv.definition_id = 'fieldCategory-SocialSecurityNumber' then pfv.value end) as social_security_number,
-        max(
-            case when pfv.definition_id = 'fieldCategory-InsurancePolicyNumber' then pfv.value end
-        ) as insurance_policy_number
-    from "reporting"."patient_field_values" pfv
-    group by pfv.patient_id
+create or replace view "reporting"."vaccine_administrations_change_logs" as (
+with filtered_changes as (
+    select 
+        av.changelog_id,
+        av.logged_at,
+        av.updated_by_user_id,
+        av.record_created_at,
+        av.record_updated_at,
+        av.record_id,
+        av.record_data
+    from (select 
+        id as changelog_id,
+        logged_at,
+        updated_by_user_id,
+        record_created_at,
+        record_updated_at,
+        record_id,
+        record_data
+    from "logs"."changes"
+    where table_name = 'administered_vaccines'
+        and record_id not in (
+            select id::text
+            from administered_vaccines t 
+            where t.deleted_at notnull
+        )) av
+    join "reporting"."encounters" e on e.id = av.record_data ->> 'encounter_id'
 )
 
 select
-    p.id as patient_id,
-    p.display_id,
-    i.id as invoice_id,
-    e.id as encounter_id,
-    i.display_id as invoice_number,
-    concat(p.first_name, ' ', p.last_name) as patient_name,
-    paf.social_security_number,
-    paf.insurance_policy_number,
-    e.start_datetime as admission_datetime,
-    e.end_datetime as discharge_datetime,
-    rd_insurer.id as insurer_id,
-    rd_insurer.name as insurer_name,
-    ta.total as total_invoice_amount,
-    tia.cover as insurer_total_amount,
-    coalesce(tip.total_amount_paid, 0) as insurer_payments_received,
-    (tia.cover - coalesce(tip.total_amount_paid, 0)) as remaining_insurer_balance
-from "reporting"."invoices" i
-join "reporting"."encounters" e
-    on e.id = i.encounter_id
-    and e.end_datetime is not null
-join "reporting"."patients" p
-    on p.id = e.patient_id
-join total_invoice_amount ta
-    on ta.invoice_id = i.id
-join total_insurer_amount tia
-    on tia.invoice_id = i.id
-left join patient_additional_fields paf
-    on paf.patient_id = p.id
-left join total_insurer_payments tip
-    on tip.invoice_id = i.id
-    and tip.insurer_id = tia.insurer_id
-join "reporting"."reference_data" rd_insurer
-    on rd_insurer.id = tia.insurer_id
-where i.status = 'finalised'
-    and (tia.cover - coalesce(tip.total_amount_paid, 0)) > 0
-);
-create or replace view "reporting"."ds__invoicing_transactions_patient" as (
-select
-    ip.date,
-    i.id as invoice_id,
-    p.id as patient_id,
-    e.id as encounter_id,
-    i.display_id as invoice_number,
-    concat(p.first_name, ' ', p.last_name) as patient_name,
-    rd_method.id as payment_method_id,
-    rd_method.name as payment_method,
-    ip.receipt_number,
-    ip.amount,
-    u.display_name as received_by
-from "reporting"."invoice_payments" ip
-join "reporting"."invoice_patient_payments" ipp on ipp.invoice_payment_id = ip.id
-join "reporting"."invoices" i on i.id = ip.invoice_id
-join "reporting"."encounters" e on e.id = i.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-join "reporting"."reference_data" rd_method on rd_method.id = ipp.method_id
-left join "reporting"."users" u on u.id = ip.updated_by_id
-);
-create or replace view "reporting"."ds__lab_requests" as (
-
-
-with lab_test_data as (
-    select
-        lr.id as lab_request_id,
-        string_agg(ltt.name, ', '
-            order by ltt.name
-        ) as tests,
-        max(lt.completed_datetime) as completed_datetime
-    from "reporting"."lab_requests" lr
-    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
-    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
-    where ltt.is_sensitive = False
-    group by lr.id
-)
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(lr.requested_datetime, p.date_of_birth)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    f.id as facility_id,
-    f.name as facility,
-    d.name as department,
-    d.id as department_id,
-    l.id as location_id,
-    l.name as location,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    laboratory.id as laboratory_id,
-    laboratory.name as laboratory,
-    lr.display_id as request_id,
-    case lr.status
-        when 'reception_pending' then 'Reception pending'
-        when 'results_pending' then 'Results pending'
-        when 'to_be_verified' then 'To be verified'
-        when 'verified' then 'Verified'
-        when 'published' then 'Published'
-        when 'cancelled' then 'Cancelled'
-        when 'deleted' then 'Deleted'
-        when 'sample-not-collected' then 'Sample not collected'
-        when 'entered-in-error' then 'Entered in error'
-        else lr.status
-    end as status,
-    lr.status as status_id,
-    lr.requested_datetime,
-    req_clinician.id as requested_by_id,
-    req_clinician.display_name as requested_by,
-    lr.department_id as requesting_department_id,
-    req_department.name as requesting_department,
-    lr.lab_test_priority_id as priority_id,
-    priority.name as priority,
-    category.id as lab_test_category_id,
-    category.name as lab_test_category,
-    ltp.name as lab_test_panel,
-    lta.tests,
-    lr.collected_datetime,
-    lr.collected_by_id,
-    collector.display_name as collected_by,
-    lr.specimen_type_id,
-    specimen.name as specimen_type,
-    site.name as site,
-    lta.completed_datetime,
-    case lr.reason_for_cancellation
-        when 'clinical' then 'Clinical reason'
-        when 'duplicate' then 'Duplicate'
-        when 'entered-in-error' then 'Entered in error'
-        when 'patient-discharged' then 'Patient discharged'
-        when 'patient-refused' then 'Patient refused'
-        when 'other' then 'Other'
-        else lr.reason_for_cancellation
-    end as reason_for_cancellation
-from "reporting"."lab_requests" lr
-join lab_test_data lta on lta.lab_request_id = lr.id
-join "reporting"."encounters" e on e.id = lr.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
-left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
-left join "reporting"."departments" req_department on req_department.id = lr.department_id
-left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
-left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
-left join "reporting"."users" collector on collector.id = lr.collected_by_id
-left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
-left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
-left join "reporting"."lab_test_panel_requests" ltpr
-    on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-
-
-);
-create or replace view "reporting"."ds__lab_tests" as (
-
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(lr.requested_datetime, p.date_of_birth::date)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    f.id as facility_id,
-    f.name as facility,
-    d.id as department_id,
-    d.name as department,
-    req_dept.id as requesting_department_id,
-    req_dept.name as requesting_department,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    l.id as location_id,
-    l.name as location,
-    lr.display_id as lab_request_id,
-    lr.status as status_id,
-    case lr.status
-        when 'reception_pending' then 'Reception pending'
-        when 'results_pending' then 'Results pending'
-        when 'to_be_verified' then 'To be verified'
-        when 'verified' then 'Verified'
-        when 'published' then 'Published'
-        when 'cancelled' then 'Cancelled'
-        when 'deleted' then 'Deleted'
-        when 'sample-not-collected' then 'Sample not collected'
-        when 'entered-in-error' then 'Entered in error'
-        else lr.status
-    end as status,
-    ltp.id as lab_test_panel_id,
-    ltp.name as lab_test_panel,
-    category.id as lab_test_category_id,
-    category.name as lab_test_category,
-    lr.requested_datetime,
-    requester.id as requested_by_id,
-    requester.display_name as requested_by,
-    lr.published_datetime as lab_request_published_datetime,
-    lt.date as lab_test_date,
-    lt.result,
-    lt.verification,
-    ltt.id as lab_test_type_id,
-    ltt.name as lab_test_type,
-    lt.completed_datetime as lab_test_completed_datetime
-from "reporting"."lab_requests" lr
-join "reporting"."encounters" e on e.id = lr.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-left join "reporting"."users" requester on requester.id = lr.requested_by_id
-left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
-join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
-join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
-where ltt.is_sensitive = False
-
-
-);
-create or replace view "reporting"."ds__location_bookings" as (
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(a.start_datetime::date, p.date_of_birth)) as age,
-    p.sex,
-    vil.id as village_id,
-    vil.name as village,
-    billing.id as billing_type_id,
-    billing.name as billing_type,
-    a.start_datetime as booking_start_datetime,
-    a.end_datetime as booking_end_datetime,
-    a.status as booking_status,
-    u.id as clinician_id,
-    u.display_name as clinician,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    l.id as location_id,
-    l.name as location,
-    a.booking_type_id,
-    bt.name as booking_type
-from "reporting"."location_bookings" a
-join "reporting"."patients" p on p.id = a.patient_id
-left join "reporting"."users" u on u.id = a.clinician_id
-left join "reporting"."locations" l on l.id = a.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
-left join "reporting"."reference_data" vil on vil.id = p.village_id
-left join "reporting"."reference_data" bt on bt.id = a.booking_type_id
-where a.booking_type_id notnull
-);
-create or replace view "reporting"."ds__ongoing_conditions" as (
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(pc.recorded_datetime::date, p.date_of_birth)) as age,
-    p.sex,
-    village.name as village,
-    village.id as village_id,
-    conditions.name as condition,
-    conditions.id as condition_id,
-    pc.recorded_datetime,
-    clinician.id as clinician_id,
-    clinician.display_name as clinician,
-    case when pc.is_resolved then pc.resolved_datetime end as date_resolved,
-    case when pc.is_resolved then resolving_clinician.display_name end as clinician_resolving
-from "reporting"."patient_conditions" pc
-join "reporting"."patients" p on p.id = pc.patient_id
-join "reporting"."reference_data" conditions on conditions.id = pc.condition_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."users" clinician on clinician.id = pc.recorded_by_id
-left join "reporting"."users" resolving_clinician
-    on resolving_clinician.id = pc.resolved_by_id
-);
-create or replace view "reporting"."ds__outpatient_appointments" as (
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(a.start_datetime, p.date_of_birth)) as age,
-    p.sex,
-    coalesce(pd.primary_contact_number, pd.secondary_contact_number) as contact_number,
-    vil.id as village_id,
-    vil.name as village,
-    billing.id as billing_type_id,
-    billing.name as billing_type,
-    a.start_datetime as appointment_start_datetime,
-    a.end_datetime as appointment_end_datetime,
-    a.appointment_type_id,
-    apt.name as appointment_type,
-    a.status as appointment_status,
-    u.id as clinician_id,
-    u.display_name as clinician,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    a.priority,
-    a.schedule_id,
-    a.until_date,
-    a.interval,
-    a.days_of_week,
-    a.frequency,
-    a.nth_weekday
-from "reporting"."outpatient_appointments" a
-join "reporting"."patients" p on p.id = a.patient_id
-left join "reporting"."users" u on u.id = a.clinician_id
-left join "reporting"."location_groups" lg on lg.id = a.location_group_id
-left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
-left join "reporting"."reference_data" vil on vil.id = p.village_id
-left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
-where a.appointment_type_id notnull
-);
-create or replace view "reporting"."ds__patients" as (
-select
-    p.registration_date,
-    u.display_name as registered_by,
-    p.id as patient_id,
-    p.first_name,
-    p.middle_name,
-    p.last_name,
-    p.cultural_name,
-    p.display_id,
-    p.sex,
-    p.village_id,
-    village.name as village,
-    p.date_of_birth,
-    pad.birth_certificate,
-    pad.driving_license,
-    pad.passport,
-    pad.blood_type,
-    pad.title,
-    pad.marital_status,
-    pad.primary_contact_number,
-    pad.secondary_contact_number,
-    cob.name as country_of_birth,
-    nationality.name as nationality,
-    ethnicity.name as ethnicity,
-    occupation.name as occupation,
-    religion.name as religion,
-    billing.name as patient_billing_type,
-    case
-        when pbd.patient_id is null then 'Patient'
-        else 'Birth'
-    end as registration_type,
-    date_part(
-        'year',
-        age(
-            coalesce(p.date_of_death::date, current_date),
-            p.date_of_birth
-        )
-    ) as age,
-    case
-        when p.date_of_death is not null then 'Deceased'
-        else 'Alive'
-    end as status
-from "reporting"."patients" p
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
-left join "reporting"."users" u on u.id = pad.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
-left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
-left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
-left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
-left join "reporting"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join
-    "reporting"."reference_data" billing
-    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
-);
-create or replace view "reporting"."ds__patients_access_logs" as (
-with grouped_access_logs as (
-    select
-        lap.patient_id,
-        lap.user_id,
-        lap.facility_id,
-        date_trunc('minute', min(lap.logged_at)) as date_time_viewed,
-        -- Take the first values for fields that might vary within the same minute
-        lap.is_mobile,
-        lap.session_id,
-        lap.device_id
-    from "reporting"."patients_access_logs" lap
-    group by
-        lap.patient_id,
-        lap.user_id,
-        lap.facility_id,
-        lap.is_mobile,
-        lap.session_id,
-        lap.device_id
-)
-
-select
-    gal.patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    p.sex,
-    p.village_id,
-    village.name as village,
-    gal.user_id as viewed_by_user_id,
-    u.display_name as viewed_by_user,
-    u.email as user_email,
-    u.role as user_role,
-    f.name as viewed_at_facility,
-    gal.date_time_viewed,
-    gal.facility_id,
-    gal.is_mobile,
-    gal.session_id,
-    gal.device_id
-from grouped_access_logs gal
-join "reporting"."patients" p on p.id = gal.patient_id
-left join "reporting"."users" u on u.id = gal.user_id
-left join "reporting"."facilities" f on f.id = gal.facility_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-);
-create or replace view "reporting"."ds__patients_change_logs" as (
-with patient_edits as (
-    -- Patient details edits
-    select
-        lcp.id as patient_id,
-        lcp.display_id,
-        lcp.first_name,
-        lcp.last_name,
-        lcp.date_of_birth,
-        lcp.sex,
-        lcp.village_id,
-        lcp.updated_by_user_id,
-        lcp.logged_at
-    from "reporting"."patients_change_logs" lcp
-
-    union all
-
-    -- Patient additional data edits
-    select
-        lcpad.patient_id,
-        p.display_id,
-        p.first_name,
-        p.last_name,
-        p.date_of_birth,
-        p.sex,
-        p.village_id,
-        lcpad.updated_by_user_id,
-        lcpad.logged_at
-    from "reporting"."patient_additional_data_change_logs" lcpad
-    left join "reporting"."patients" p on p.id = lcpad.patient_id
-),
-
-grouped_edits as (
-    select
-        pe.patient_id,
-        pe.display_id,
-        pe.first_name,
-        pe.last_name,
-        pe.date_of_birth,
-        pe.sex,
-        pe.village_id,
-        pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at) as edited_datetime
-    from patient_edits pe
-    group by
-        pe.patient_id,
-        pe.display_id,
-        pe.first_name,
-        pe.last_name,
-        pe.date_of_birth,
-        pe.sex,
-        pe.village_id,
-        pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at)
-)
-
-select
-    ge.patient_id,
-    ge.display_id,
-    ge.first_name,
-    ge.last_name,
-    ge.date_of_birth,
-    ge.sex,
-    ge.village_id,
-    village.name as village,
-    ge.updated_by_user_id as edited_by_user_id,
-    u.display_name as edited_by_user,
-    u.email as user_email,
-    u.role as user_role,
-    ge.edited_datetime
-from grouped_edits ge
-left join "reporting"."users" u on u.id = ge.updated_by_user_id
-left join "reporting"."reference_data" village on village.id = ge.village_id
-);
-create or replace view "reporting"."ds__patient_program_registrations" as (
-with related_conditions as (
-    select
-        ppr.id as patient_program_registration_id,
-        string_agg(
-            prc.name, '; '
-            order by pprc.datetime
-        ) as conditions,
-        array_agg(
-            pprc.program_registry_condition_id
-            order by pprc.datetime
-        ) as condition_ids,
-        string_agg(
-            prcc.name, '; '
-            order by pprc.datetime
-        ) as condition_categories,
-        array_agg(
-            pprc.program_registry_condition_category_id
-            order by pprc.datetime
-        ) as condition_category_ids
-    from "reporting"."patient_program_registration_conditions" pprc
-    join "reporting"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
-    left join "reporting"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
-    left join "reporting"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
-    group by ppr.id
-)
-
-select
-    ppr.id as patient_program_registration_id,
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    registering_facility.id as registering_facility_id,
-    registering_facility.name as registering_facility,
-    registered_by.id as registered_by_id,
-    registered_by.display_name as registered_by,
-    case
-        when pr.currently_at_type = 'facility' then currently_at_facility.name
-        when pr.currently_at_type = 'village' then currently_at_village.name
-    end as currently_at,
-    pr.currently_at_type,
-    c.condition_ids as related_condition_ids,
-    c.conditions as related_conditions,
-    c.condition_category_ids as related_condition_category_ids,
-    c.condition_categories as related_condition_categories,
-    prcs.id as clinical_status_id,
-    prcs.name as clinical_status,
-    ppr.registration_status,
-    ppr.program_registry_id,
-    subdivision.id as subdivision_id,
-    subdivision.name as subdivision,
-    division.id as division_id,
-    division.name as division,
-    ppr.datetime as registration_datetime,
-    ppr.deactivated_by_id,
-    deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime
-from "reporting"."patient_program_registrations" ppr
-join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
-join "reporting"."patients" p on p.id = ppr.patient_id
-join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
-left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
-left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
-left join "reporting"."reference_data" division on division.id = pad.division_id
-left join "reporting"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
-left join related_conditions c on c.patient_program_registration_id = ppr.id
-left join "reporting"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
-left join "reporting"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
-);
-create or replace view "reporting"."ds__patient_vaccinations_upcoming" as (
-select
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.id as patient_id,
-    p.date_of_birth,
-    date_part('year', age(p.date_of_birth)) as age,
-    p.sex,
-    pvu.due_date,
-    pvu.vaccine_category,
-    pvu.vaccine_schedules_id,
-    sv.label as vaccine_name,
-    sv.dose_label as vaccine_schedule,
-    pvu.status as vaccine_status
-from "reporting"."patient_vaccinations_upcoming" pvu
-join "reporting"."patients" p on p.id = pvu.patient_id
-join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
-where p.date_of_death is null
-);
-create or replace view "reporting"."ds__procedures" as (
-with filtered_procedure as (
-    select
-        pc.*,
-        eh.department_id,
-        eh.encounter_type,
-        row_number() over (
-            partition by pc.id
-            order by eh.datetime desc
-        ) as encounter_history_record
-    from "reporting"."procedures" pc
-    left join "reporting"."encounter_history" eh
-        on eh.encounter_id = pc.encounter_id
-        and eh.datetime::date <= pc.date
-)
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(pc.date, p.date_of_birth)) as age,
-    p.sex,
-    nationality.name as nationality,
-    encounter_facility.id as encounter_facility_id,
-    encounter_facility.name as encounter_facility,
-    encounter_department.id as encounter_department_id,
-    encounter_department.name as encounter_department,
-    case
-        when coalesce(pc.encounter_type, e.encounter_type) = 'admission' then 'Hospital Admission'
-        when coalesce(pc.encounter_type, e.encounter_type) = 'clinic' then 'Clinic'
-        when coalesce(pc.encounter_type, e.encounter_type) in ('triage', 'observation', 'emergency') then 'Triage'
-    end as encounter_type,
-    e.start_datetime as encounter_start_datetime,
-    e.end_datetime as encounter_end_datetime,
-    procedure_facility.id as procedure_facility_id,
-    procedure_facility.name as procedure_facility,
-    procedure_area.id as procedure_area_id,
-    procedure_area.name as procedure_area,
-    procedure_location.id as procedure_location_id,
-    procedure_location.name as procedure_location,
-    procedure_type.id as procedure_type_id,
-    procedure_type.name as procedure_type,
-    pc.date as procedure_date,
-    pc.start_time as procedure_start_time,
-    pc.end_time as procedure_end_time,
-    case
-        when pc.end_time is not null and pc.start_time is not null then
-            concat(
-                lpad((
-                    case
-                        when pc.end_time < pc.start_time
-                            then
-                                (24 + extract(hour from pc.end_time) - extract(hour from pc.start_time))
-                        else
-                            extract(hour from (pc.end_time - pc.start_time))
-                    end
-                )::text, 2, '0'), ':',
-                lpad((
-                    case
-                        when pc.end_time < pc.start_time
-                            then
-                                (extract(minute from pc.end_time) - extract(minute from pc.start_time))
-                        else
-                            extract(minute from (pc.end_time - pc.start_time))
-                    end
-                )::text, 2, '0')
-            )
-    end as procedure_duration,
-    clinician.id as procedure_clinician_id,
-    clinician.display_name as procedure_clinician,
-    anaesthetist.id as procedure_anaesthetist_id,
-    anaesthetist.display_name as procedure_anaesthetist,
-    assistant_anaesthetist.id as procedure_assistant_anaesthetist_id,
-    assistant_anaesthetist.display_name as procedure_assistant_anaesthetist,
-    case
-        when pc.is_completed then 'Y' else 'N'
-    end as is_completed,
-    pc.time_in,
-    pc.time_out
-from filtered_procedure pc
-join "reporting"."encounters" e on e.id = pc.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-join "reporting"."reference_data" procedure_type on procedure_type.id = pc.procedure_type_id
-join "reporting"."locations" procedure_location
-    on procedure_location.id = pc.location_id
-left join "reporting"."location_groups" procedure_area
-    on procedure_area.id = procedure_location.location_group_id
-join "reporting"."facilities" procedure_facility
-    on procedure_facility.id = procedure_location.facility_id
-join "reporting"."locations" encounter_location
-    on encounter_location.id = e.location_id
-join "reporting"."facilities" encounter_facility
-    on encounter_facility.id = encounter_location.facility_id
-join "reporting"."departments" encounter_department
-    on encounter_department.id = coalesce(pc.department_id, e.department_id)
-left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting"."reference_data" nationality on nationality.id = pd.nationality_id
-left join "reporting"."users" assistant_anaesthetist on assistant_anaesthetist.id = pc.assistant_anaesthetist_id
-left join "reporting"."users" anaesthetist on anaesthetist.id = pc.anaesthetist_id
-left join "reporting"."users" clinician on clinician.id = pc.clinician_id
-where pc.encounter_history_record = 1
-);
-create or replace view "reporting"."ds__referrals" as (
-with diagnoses as (
-    select
-        ed.encounter_id,
-        string_agg(concat(d.name), '; ') as diagnoses
-    from "reporting"."encounter_diagnoses" ed
-    left join "reporting"."reference_data" d on d.id = ed.diagnosis_id
-    group by ed.encounter_id
-)
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.village_id,
-    ed.diagnoses,
-    s.name as referral_type,
-    u.id as referring_doctor_id,
-    u.display_name as referring_doctor_name,
-    sr.end_datetime as referral_datetime,
-    rf.status,
-    d.name as department
-from "reporting"."referrals" rf
-join "reporting"."encounters" e on e.id = rf.initiating_encounter_id
-join "reporting"."survey_responses" sr on sr.id = rf.survey_response_id
-join "reporting"."surveys" s on s.id = sr.survey_id
-join "reporting"."patients" p on p.id = e.patient_id
-join "reporting"."users" u on u.id = e.clinician_id
-join "reporting"."departments" d on d.id = e.department_id
-left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
-);
-create or replace view "reporting"."ds__sensitive_lab_requests" as (
-
-
-with lab_test_data as (
-    select
-        lr.id as lab_request_id,
-        string_agg(ltt.name, ', '
-            order by ltt.name
-        ) as tests,
-        max(lt.completed_datetime) as completed_datetime
-    from "reporting"."lab_requests" lr
-    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
-    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
-    where ltt.is_sensitive = True
-    group by lr.id
-)
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(lr.requested_datetime, p.date_of_birth)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    f.id as facility_id,
-    f.name as facility,
-    d.name as department,
-    d.id as department_id,
-    l.id as location_id,
-    l.name as location,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    laboratory.id as laboratory_id,
-    laboratory.name as laboratory,
-    lr.display_id as request_id,
-    case lr.status
-        when 'reception_pending' then 'Reception pending'
-        when 'results_pending' then 'Results pending'
-        when 'to_be_verified' then 'To be verified'
-        when 'verified' then 'Verified'
-        when 'published' then 'Published'
-        when 'cancelled' then 'Cancelled'
-        when 'deleted' then 'Deleted'
-        when 'sample-not-collected' then 'Sample not collected'
-        when 'entered-in-error' then 'Entered in error'
-        else lr.status
-    end as status,
-    lr.status as status_id,
-    lr.requested_datetime,
-    req_clinician.id as requested_by_id,
-    req_clinician.display_name as requested_by,
-    lr.department_id as requesting_department_id,
-    req_department.name as requesting_department,
-    lr.lab_test_priority_id as priority_id,
-    priority.name as priority,
-    category.id as lab_test_category_id,
-    category.name as lab_test_category,
-    ltp.name as lab_test_panel,
-    lta.tests,
-    lr.collected_datetime,
-    lr.collected_by_id,
-    collector.display_name as collected_by,
-    lr.specimen_type_id,
-    specimen.name as specimen_type,
-    site.name as site,
-    lta.completed_datetime,
-    case lr.reason_for_cancellation
-        when 'clinical' then 'Clinical reason'
-        when 'duplicate' then 'Duplicate'
-        when 'entered-in-error' then 'Entered in error'
-        when 'patient-discharged' then 'Patient discharged'
-        when 'patient-refused' then 'Patient refused'
-        when 'other' then 'Other'
-        else lr.reason_for_cancellation
-    end as reason_for_cancellation
-from "reporting"."lab_requests" lr
-join lab_test_data lta on lta.lab_request_id = lr.id
-join "reporting"."encounters" e on e.id = lr.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
-left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
-left join "reporting"."departments" req_department on req_department.id = lr.department_id
-left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
-left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
-left join "reporting"."users" collector on collector.id = lr.collected_by_id
-left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
-left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
-left join "reporting"."lab_test_panel_requests" ltpr
-    on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-
-
-);
-create or replace view "reporting"."ds__sensitive_lab_tests" as (
-
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(lr.requested_datetime, p.date_of_birth::date)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    f.id as facility_id,
-    f.name as facility,
-    d.id as department_id,
-    d.name as department,
-    req_dept.id as requesting_department_id,
-    req_dept.name as requesting_department,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    l.id as location_id,
-    l.name as location,
-    lr.display_id as lab_request_id,
-    lr.status as status_id,
-    case lr.status
-        when 'reception_pending' then 'Reception pending'
-        when 'results_pending' then 'Results pending'
-        when 'to_be_verified' then 'To be verified'
-        when 'verified' then 'Verified'
-        when 'published' then 'Published'
-        when 'cancelled' then 'Cancelled'
-        when 'deleted' then 'Deleted'
-        when 'sample-not-collected' then 'Sample not collected'
-        when 'entered-in-error' then 'Entered in error'
-        else lr.status
-    end as status,
-    ltp.id as lab_test_panel_id,
-    ltp.name as lab_test_panel,
-    category.id as lab_test_category_id,
-    category.name as lab_test_category,
-    lr.requested_datetime,
-    requester.id as requested_by_id,
-    requester.display_name as requested_by,
-    lr.published_datetime as lab_request_published_datetime,
-    lt.date as lab_test_date,
-    lt.result,
-    lt.verification,
-    ltt.id as lab_test_type_id,
-    ltt.name as lab_test_type,
-    lt.completed_datetime as lab_test_completed_datetime
-from "reporting"."lab_requests" lr
-join "reporting"."encounters" e on e.id = lr.encounter_id
-join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-left join "reporting"."users" requester on requester.id = lr.requested_by_id
-left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
-join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
-join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
-where ltt.is_sensitive = True
-
-
-);
-create or replace view "reporting"."ds__user_audit" as (
-with non_system_notes as (
-    select distinct on (n.record_id)
-        n.record_id,
-        first_value(n.datetime) over w as first_note_datetime,
-        last_value(n.datetime) over w as last_note_datetime,
-        last_value(concat_ws(' on behalf of ', author.display_name, on_behalf.display_name)) over w as last_clinician
-    from "reporting"."notes" n
-    left join "reporting"."users" author on author.id = n.authored_by_id
-    left join "reporting"."users" on_behalf on on_behalf.id = n.on_behalf_of_id
-    where n.note_type != 'system'
-    window w as (
-        partition by n.record_id
-        order by n.datetime
-        rows between unbounded preceding and unbounded following
-    )
-)
-
-select
-    u.id as user_id,
-    u.display_name as user_name,
-    r.name as user_role,
-    p.id as patient_id,
-    p.display_id,
-    bt.name as patient_category,
-    t.score as triage_category,
-    f.id as facility_id,
-    f.name as facility,
-    d.id as department_id,
-    d.name as department,
-    lg.id as location_group_id,
-    lg.name as location_group,
-    l.id as location_id,
-    l.name as location,
-    e.start_datetime as encounter_start_datetime,
-    e.end_datetime as encounter_end_datetime,
-    n.first_note_datetime,
-    n.last_note_datetime,
-    case when e.end_datetime isnull then 'Patient not discharged'
-        else 'Patient discharged'
-    end as is_discharged,
-    case when ds.note like 'Automatically discharged%' then n.last_clinician
-    end as non_discharge_by_clinicians
-from "reporting"."encounters" e
-left join "reporting"."users" u on u.id = e.clinician_id
-left join "reporting"."roles" r on r.id = u.role
-left join "reporting"."patients" p on p.id = e.patient_id
-left join "reporting"."patient_additional_data" pad on pad.patient_id = e.patient_id
-left join "reporting"."reference_data" bt
-    on bt.id = coalesce(e.patient_billing_type_id, pad.patient_billing_type_id)
-left join "reporting"."triages" t on t.encounter_id = e.id
-left join "reporting"."locations" l on l.id = e.location_id
-left join "reporting"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting"."facilities" f on f.id = l.facility_id
-left join "reporting"."departments" d on d.id = e.department_id
-left join "reporting"."discharges" ds on ds.encounter_id = e.id
-left join non_system_notes n on n.record_id = e.id
+    fc.changelog_id,
+    fc.logged_at at time zone 'Australia/Sydney' as logged_at,
+    fc.record_created_at at time zone 'Australia/Sydney' as created_at,
+    fc.record_updated_at at time zone 'Australia/Sydney' as updated_at,
+    fc.updated_by_user_id,
+    fc.record_id as id,
+    (fc.record_data ->> 'date')::timestamp as datetime,
+    fc.record_data ->> 'batch' as batch,
+    (fc.record_data ->> 'consent')::boolean as is_consented,
+    fc.record_data ->> 'disease' as disease,
+    fc.record_data ->> 'given_by' as given_by,
+    (fc.record_data ->> 'given_elsewhere')::boolean as is_given_elsewhere,
+    fc.record_data ->> 'circumstance_ids' as circumstance_ids,
+    fc.record_data ->> 'recorder_id' as recorded_by_id,
+    fc.record_data ->> 'encounter_id' as encounter_id,
+    fc.record_data ->> 'location_id' as location_id,
+    fc.record_data ->> 'department_id' as department_id,
+    fc.record_data ->> 'vaccine_name' as vaccine_name,
+    fc.record_data ->> 'vaccine_brand' as vaccine_brand,
+    fc.record_data ->> 'injection_site' as injection_site,
+    fc.record_data ->> 'consent_given_by' as consent_given_by,
+    fc.record_data ->> 'scheduled_vaccine_id' as scheduled_vaccine_id,
+    fc.record_data ->> 'status' as status,
+    fc.record_data ->> 'reason' as reason,
+    fc.record_data ->> 'not_given_reason_id' as not_given_reason_id
+from filtered_changes fc
 );
 create or replace view "reporting"."int__admission_history_department" as (
 with admission_department_log as (
@@ -3612,6 +3612,47 @@ window w as (
     partition by encounter_id
     order by dl.start_datetime
 )
+);
+create or replace view "reporting"."int__lab_requests_history" as (
+select distinct on (lr.id, coalesce(lrl.status, lr.status))
+    lr.id as request_id,
+    lr.requested_datetime::date as requested_date,
+    lr.encounter_id,
+    f.id as facility_id,
+    f.name as facility,
+    d.id as department_id,
+    d.name as department,
+    ltc.id as lab_test_category_id,
+    ltc.name as lab_test_category,
+    coalesce(lrl.status, lr.status) as status,
+    coalesce(lrl.updated_datetime, lr.updated_datetime)::date as status_start_date,
+    case
+        when coalesce(lrl.status, lr.status) = 'published'
+            then
+                coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+        when lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w is not null
+            then
+                case
+                    when coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+                        = (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                        then (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                    else (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w - interval '1 day')::date
+                end
+        else current_date
+    end as status_end_date
+from "reporting"."lab_requests" lr
+left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
+left join "reporting"."encounters" e on e.id = lr.encounter_id
+left join "reporting"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
+left join "reporting"."facilities" f on f.id = d.facility_id
+left join "reporting"."reference_data" ltc on ltc.id = lr.lab_test_category_id
+where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
+window
+    w as (
+        partition by lr.id
+        order by coalesce(lrl.updated_datetime, lr.updated_datetime)
+    )
+order by lr.id, coalesce(lrl.status, lr.status)
 );
 create or replace view "reporting"."int__admission_history_location" as (
 with admission_location_log as (
@@ -3658,47 +3699,6 @@ window w as (
     partition by ll.encounter_id
     order by ll.start_datetime
 )
-);
-create or replace view "reporting"."int__lab_requests_history" as (
-select distinct on (lr.id, coalesce(lrl.status, lr.status))
-    lr.id as request_id,
-    lr.requested_datetime::date as requested_date,
-    lr.encounter_id,
-    f.id as facility_id,
-    f.name as facility,
-    d.id as department_id,
-    d.name as department,
-    ltc.id as lab_test_category_id,
-    ltc.name as lab_test_category,
-    coalesce(lrl.status, lr.status) as status,
-    coalesce(lrl.updated_datetime, lr.updated_datetime)::date as status_start_date,
-    case
-        when coalesce(lrl.status, lr.status) = 'published'
-            then
-                coalesce(lrl.updated_datetime, lr.updated_datetime)::date
-        when lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w is not null
-            then
-                case
-                    when coalesce(lrl.updated_datetime, lr.updated_datetime)::date
-                        = (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
-                        then (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
-                    else (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w - interval '1 day')::date
-                end
-        else current_date
-    end as status_end_date
-from "reporting"."lab_requests" lr
-left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
-left join "reporting"."encounters" e on e.id = lr.encounter_id
-left join "reporting"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
-left join "reporting"."facilities" f on f.id = d.facility_id
-left join "reporting"."reference_data" ltc on ltc.id = lr.lab_test_category_id
-where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
-window
-    w as (
-        partition by lr.id
-        order by coalesce(lrl.updated_datetime, lr.updated_datetime)
-    )
-order by lr.id, coalesce(lrl.status, lr.status)
 );
 create or replace view "reporting"."ds__vaccinations" as (
 with vaccine_administrations_metadata as (
