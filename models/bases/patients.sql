@@ -19,7 +19,7 @@ select
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
     {%- endfor %}
-from {{ source("tamanu", "patients") }}
+from {{ resolve_input_model('patients') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
     and visibility_status != 'merged'

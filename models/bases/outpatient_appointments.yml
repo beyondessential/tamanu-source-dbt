@@ -1,68 +1,68 @@
 version: 2
 models:
-- name: outpatient_appointments
-  description: "{{ doc('table__appointments') }} (outpatient appointment)"
-  config:
-    tags:
-      - clinical
-  columns:
-  - name: id
-    data_type: character varying(255)
-    description: "{{ doc('generic__id') }} in appointments."
-  - name: start_datetime
-    data_type: timestamp
-    description: "{{ doc('appointments__start_time') }}"
-  - name: end_datetime
-    data_type: timestamp
-    description: "{{ doc('appointments__end_time') }}"
-  - name: patient_id
-    data_type: character varying(255)
-    description: "{{ doc('appointments__patient_id') }}"
-  - name: clinician_id
-    data_type: character varying(255)
-    description: "{{ doc('appointments__clinician_id') }}"
-  - name: location_group_id
-    data_type: character varying(255)
-    description: "{{ doc('appointments__location_group_id') }}]"
-  - name: status
-    data_type: character varying(255)
-    description: "{{ doc('appointments__status') }}"
-  - name: appointment_type_id
-    data_type: character varying(255)
-    description: "{{ doc('appointments__appointment_type_id') }}"
-  - name: is_high_priority
-    data_type: boolean
-    description: "{{ doc('appointments__is_high_priority') }}"
-  - name: encounter_id
-    data_type: character varying(255)
-    description: "{{ doc('appointments__encounter_id') }}"
-  - name: schedule_id
-    data_type: uuid
-    description: "{{ doc('appointments__schedule_id') }}"
-  - name: until_date
-    data_type: date
-    description: "{{ doc('appointment_schedules__until_date') }}"
-  - name: interval
-    data_type: integer
-    description: "{{ doc('appointment_schedules__interval') }}"
-  - name: frequency
-    data_type: character varying(255)
-    description: "{{ doc('appointment_schedules__frequency') }}"
-  - name: days_of_week
-    data_type: array
-    description: "{{ doc('appointment_schedules__days_of_week') }}"
-  - name: nth_weekday
-    data_type: integer
-    description: "{{ doc('appointment_schedules__nth_weekday') }}"
-  - name: occurrence_count
-    data_type: integer
-    description: "{{ doc('appointment_schedules__occurrence_count') }}"
-  - name: is_fully_generated
-    data_type: boolean
-    description: "{{ doc('appointment_schedules__is_fully_generated') }}"
-  - name: generated_until_date
-    data_type: character(10)
-    description: "{{ doc('appointment_schedules__generated_until_date') }}"
-  - name: cancelled_at_date
-    data_type: character(10)
-    description: "{{ doc('appointment_schedules__cancelled_at_date') }}"
+  - name: outpatient_appointments
+    description: "{{ doc('table__appointments') }} (outpatient appointment)"
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in appointments."
+      - name: start_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__start_time') }}"
+      - name: end_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__end_time') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__patient_id') }}"
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__clinician_id') }}"
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__location_group_id') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('appointments__status') }}"
+      - name: appointment_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__appointment_type_id') }}"
+      - name: is_high_priority
+        data_type: boolean
+        description: "{{ doc('appointments__is_high_priority') }}"
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__encounter_id') }}"
+      - name: schedule_id
+        data_type: uuid
+        description: "{{ doc('appointments__schedule_id') }}"
+      - name: until_date
+        data_type: date
+        description: "{{ doc('appointment_schedules__until_date') }}"
+      - name: interval
+        data_type: integer
+        description: "{{ doc('appointment_schedules__interval') }}"
+      - name: frequency
+        data_type: character varying(255)
+        description: "{{ doc('appointment_schedules__frequency') }}"
+      - name: days_of_week
+        data_type: array
+        description: "{{ doc('appointment_schedules__days_of_week') }}"
+      - name: nth_weekday
+        data_type: integer
+        description: "{{ doc('appointment_schedules__nth_weekday') }}"
+      - name: occurrence_count
+        data_type: integer
+        description: "{{ doc('appointment_schedules__occurrence_count') }}"
+      - name: is_fully_generated
+        data_type: boolean
+        description: "{{ doc('appointment_schedules__is_fully_generated') }}"
+      - name: generated_until_date
+        data_type: character(10)
+        description: "{{ doc('appointment_schedules__generated_until_date') }}"
+      - name: cancelled_at_date
+        data_type: character(10)
+        description: "{{ doc('appointment_schedules__cancelled_at_date') }}"

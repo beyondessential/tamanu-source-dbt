@@ -44,6 +44,6 @@ select
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
     {%- endfor %}
-from {{ source("tamanu", "patient_additional_data") }}
+from {{ resolve_input_model('patient_additional_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
