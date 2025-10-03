@@ -1,5 +1,5 @@
 with filtered_changes as (
-    select 
+    select
         av.changelog_id,
         av.logged_at,
         av.updated_by_user_id,

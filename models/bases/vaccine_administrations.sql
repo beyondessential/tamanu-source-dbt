@@ -19,8 +19,8 @@ select
     av.given_elsewhere as is_given_elsewhere,
     av.circumstance_ids,
     av.recorder_id as recorded_by_id
-from {{ source("tamanu", "administered_vaccines") }} av
-join {{ source("tamanu", "encounters") }} e on e.id = av.encounter_id
+from {{ resolve_input_model('administered_vaccines') }} av
+join {{ resolve_input_model('encounters') }} e on e.id = av.encounter_id
 where av.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

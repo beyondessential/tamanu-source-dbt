@@ -11,10 +11,12 @@ select
     p.procedure_type_id,
     p.anaesthetic_id,
     p.physician_id as clinician_id,
-    p.assistant_id,
-    p.anaesthetist_id
-from {{ source("tamanu", "procedures") }} p
-join {{ source("tamanu", "encounters") }} e on e.id = p.encounter_id
+    p.anaesthetist_id,
+    p.assistant_anaesthetist_id,
+    p.time_in,
+    p.time_out
+from {{ resolve_input_model('procedures') }} p
+join {{ resolve_input_model('encounters') }} e on e.id = p.encounter_id
 where p.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

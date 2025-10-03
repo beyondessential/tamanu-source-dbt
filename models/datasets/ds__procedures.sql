@@ -71,11 +71,13 @@ select
     clinician.display_name as procedure_clinician,
     anaesthetist.id as procedure_anaesthetist_id,
     anaesthetist.display_name as procedure_anaesthetist,
-    assistant.id as procedure_assistant_id,
-    assistant.display_name as procedure_assistant,
+    assistant_anaesthetist.id as procedure_assistant_anaesthetist_id,
+    assistant_anaesthetist.display_name as procedure_assistant_anaesthetist,
     case
         when pc.is_completed then 'Y' else 'N'
-    end as is_completed
+    end as is_completed,
+    pc.time_in,
+    pc.time_out
 from filtered_procedure pc
 join {{ ref('encounters') }} e on e.id = pc.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
@@ -94,7 +96,7 @@ join {{ ref('departments') }} encounter_department
     on encounter_department.id = coalesce(pc.department_id, e.department_id)
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} nationality on nationality.id = pd.nationality_id
-left join {{ ref('users') }} assistant on assistant.id = pc.assistant_id
+left join {{ ref('users') }} assistant_anaesthetist on assistant_anaesthetist.id = pc.assistant_anaesthetist_id
 left join {{ ref('users') }} anaesthetist on anaesthetist.id = pc.anaesthetist_id
 left join {{ ref('users') }} clinician on clinician.id = pc.clinician_id
 where pc.encounter_history_record = 1

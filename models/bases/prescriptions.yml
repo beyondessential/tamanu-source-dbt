@@ -39,4 +39,3 @@ models:
       - name: discontinued_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__discontinued_date') }}"
-      
