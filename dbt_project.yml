@@ -1,10 +1,10 @@
 name: tamanu_source_dbt
-version: 2.38.2
+version: 2.38.3
 
 config-version: 2
 profile: tamanu_source_dbt
 vars:
-  language: default
+  language: en
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
   time_format: HH24:MI
@@ -14,7 +14,7 @@ vars:
   translation_prefix: report.reporting
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
-    - default
+    - en
 
 model-paths: 
   - models
