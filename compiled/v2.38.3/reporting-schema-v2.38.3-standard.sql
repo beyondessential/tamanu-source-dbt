@@ -1218,7 +1218,7 @@ with grouped_access_logs as (
         lap.is_mobile,
         lap.session_id,
         lap.device_id
-    from "reporting_salman"."patients_access_logs" lap
+    from "reporting"."patients_access_logs" lap
     group by
         lap.patient_id,
         lap.user_id,
@@ -1248,10 +1248,10 @@ select
     gal.session_id,
     gal.device_id
 from grouped_access_logs gal
-join "reporting_salman"."patients" p on p.id = gal.patient_id
-left join "reporting_salman"."users" u on u.id = gal.user_id
-left join "reporting_salman"."facilities" f on f.id = gal.facility_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
+join "reporting"."patients" p on p.id = gal.patient_id
+left join "reporting"."users" u on u.id = gal.user_id
+left join "reporting"."facilities" f on f.id = gal.facility_id
+left join "reporting"."reference_data" village on village.id = p.village_id
 );
 create or replace view "reporting"."ds__admissions" as (
 with admission_encounters as (
@@ -1262,7 +1262,7 @@ with admission_encounters as (
         end_datetime,
         location_id,
         patient_billing_type_id
-    from "reporting_salman"."encounters"
+    from "reporting"."encounters"
     where encounter_type = 'admission'
 ),
 
@@ -1289,17 +1289,17 @@ encounter_history_consolidated as (
             order by eh.datetime
         ) as prev_location_group_id
     from admission_encounters ae
-    left join "reporting_salman"."encounter_history" eh
+    left join "reporting"."encounter_history" eh
         on eh.encounter_id = ae.id
         and eh.encounter_type = 'admission'
         and (eh.change_type is null or eh.change_type in ('encounter_type', 'examiner', 'department', 'location'))
-    left join "reporting_salman"."users" u
+    left join "reporting"."users" u
         on u.id = eh.clinician_id
-    left join "reporting_salman"."departments" d
+    left join "reporting"."departments" d
         on d.id = eh.department_id
-    left join "reporting_salman"."locations" l
+    left join "reporting"."locations" l
         on l.id = eh.location_id
-    left join "reporting_salman"."location_groups" lg
+    left join "reporting"."location_groups" lg
         on lg.id = l.location_group_id
 ),
 
@@ -1432,9 +1432,9 @@ encounter_diagnoses as (
             order by ed.datetime
         ) as secondary_diagnoses
     from admission_encounters ae
-    inner join "reporting_salman"."encounter_diagnoses" ed
+    inner join "reporting"."encounter_diagnoses" ed
         on ed.encounter_id = ae.id
-    inner join "reporting_salman"."reference_data" rd
+    inner join "reporting"."reference_data" rd
         on rd.id = ed.diagnosis_id
     where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
@@ -1460,15 +1460,15 @@ patient_data as (
         f.id as facility_id,
         f.name as facility_name
     from admission_encounters ae
-    left join "reporting_salman"."patients" p
+    left join "reporting"."patients" p
         on p.id = ae.patient_id
-    left join "reporting_salman"."reference_data" village
+    left join "reporting"."reference_data" village
         on village.id = p.village_id
-    left join "reporting_salman"."reference_data" bt
+    left join "reporting"."reference_data" bt
         on bt.id = ae.patient_billing_type_id
-    left join "reporting_salman"."locations" l
+    left join "reporting"."locations" l
         on l.id = ae.location_id
-    left join "reporting_salman"."facilities" f
+    left join "reporting"."facilities" f
         on f.id = l.facility_id
 )
 
@@ -1522,8 +1522,8 @@ with diagnoses as (
     select
         ed.encounter_id,
         string_agg(concat(d.name), '; ') as diagnoses
-    from "reporting_salman"."encounter_diagnoses" ed
-    left join "reporting_salman"."reference_data" d on d.id = ed.diagnosis_id
+    from "reporting"."encounter_diagnoses" ed
+    left join "reporting"."reference_data" d on d.id = ed.diagnosis_id
     group by ed.encounter_id
 )
 
@@ -1540,13 +1540,13 @@ select
     sr.end_datetime as referral_datetime,
     rf.status,
     d.name as department
-from "reporting_salman"."referrals" rf
-join "reporting_salman"."encounters" e on e.id = rf.initiating_encounter_id
-join "reporting_salman"."survey_responses" sr on sr.id = rf.survey_response_id
-join "reporting_salman"."surveys" s on s.id = sr.survey_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."users" u on u.id = e.clinician_id
-join "reporting_salman"."departments" d on d.id = e.department_id
+from "reporting"."referrals" rf
+join "reporting"."encounters" e on e.id = rf.initiating_encounter_id
+join "reporting"."survey_responses" sr on sr.id = rf.survey_response_id
+join "reporting"."surveys" s on s.id = sr.survey_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."users" u on u.id = e.clinician_id
+join "reporting"."departments" d on d.id = e.department_id
 left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
 );
 create or replace view "reporting"."ds__deaths" as (
@@ -1557,7 +1557,7 @@ with contributing_death_causes as (
             cdc.condition_id
             order by cdc.time_after_onset
         ) as other_conditions
-    from "reporting_salman"."contributing_death_causes" cdc
+    from "reporting"."contributing_death_causes" cdc
     group by cdc.patient_death_data_id
 ),
 
@@ -1569,8 +1569,8 @@ encounters_with_death as (
         e.location_id,
         e.department_id,
         e.clinician_id
-    from "reporting_salman"."encounters" e
-    join "reporting_salman"."patients" p
+    from "reporting"."encounters" e
+    join "reporting"."patients" p
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
     order by e.patient_id asc, e.end_datetime desc
@@ -1654,46 +1654,46 @@ select
         else 'No'
     end as death_within_day_of_birth,
     pdd.hours_survived_since_birth
-from "reporting_salman"."patient_death_data" pdd
-join "reporting_salman"."patients" p
+from "reporting"."patient_death_data" pdd
+join "reporting"."patients" p
     on p.id = pdd.patient_id
-left join "reporting_salman"."patient_additional_data" pd
+left join "reporting"."patient_additional_data" pd
     on pd.patient_id = p.id
-left join "reporting_salman"."reference_data" village
+left join "reporting"."reference_data" village
     on village.id = p.village_id
-left join "reporting_salman"."reference_data" nationality
+left join "reporting"."reference_data" nationality
     on nationality.id = pd.nationality_id
-left join "reporting_salman"."reference_data" primary_condition
+left join "reporting"."reference_data" primary_condition
     on primary_condition.id = pdd.primary_cause_condition_id
-left join "reporting_salman"."reference_data" antecedent_condition_1
+left join "reporting"."reference_data" antecedent_condition_1
     on antecedent_condition_1.id = pdd.antecedent_cause1_condition_id
-left join "reporting_salman"."reference_data" antecedent_condition_2
+left join "reporting"."reference_data" antecedent_condition_2
     on antecedent_condition_2.id = pdd.antecedent_cause2_condition_id
 left join contributing_death_causes cdc
     on cdc.patient_death_data_id = pdd.id
-left join "reporting_salman"."reference_data" other_condition_1
+left join "reporting"."reference_data" other_condition_1
     on other_condition_1.id = cdc.other_conditions[1]
-left join "reporting_salman"."reference_data" other_condition_2
+left join "reporting"."reference_data" other_condition_2
     on other_condition_2.id = cdc.other_conditions[2]
-left join "reporting_salman"."reference_data" other_condition_3
+left join "reporting"."reference_data" other_condition_3
     on other_condition_3.id = cdc.other_conditions[3]
-left join "reporting_salman"."reference_data" other_condition_4
+left join "reporting"."reference_data" other_condition_4
     on other_condition_4.id = cdc.other_conditions[4]
-left join "reporting_salman"."reference_data" surgery_reason
+left join "reporting"."reference_data" surgery_reason
     on surgery_reason.id = pdd.last_surgery_reason_id
-left join "reporting_salman"."reference_data" carrier_condition
+left join "reporting"."reference_data" carrier_condition
     on carrier_condition.id = pdd.carrier_existing_condition_id
 left join encounters_with_death ewd
     on ewd.patient_id = p.id
-left join "reporting_salman"."facilities" facility
+left join "reporting"."facilities" facility
     on facility.id = pdd.facility_id
-left join "reporting_salman"."departments" department
+left join "reporting"."departments" department
     on department.id = ewd.department_id
-left join "reporting_salman"."locations" location
+left join "reporting"."locations" location
     on location.id = ewd.location_id
-left join "reporting_salman"."location_groups" location_group
+left join "reporting"."location_groups" location_group
     on location_group.id = location.location_group_id
-left join "reporting_salman"."users" clinician
+left join "reporting"."users" clinician
     on clinician.id = pdd.recorded_by_id
 where pdd.visibility_status = 'current'
     and pdd.is_final
@@ -1719,8 +1719,8 @@ with total_invoice_amount as (
                 end
             ), 2
         ) as total
-    from "reporting_salman"."invoice_items" ii
-    left join "reporting_salman"."invoice_item_discounts" iid
+    from "reporting"."invoice_items" ii
+    left join "reporting"."invoice_item_discounts" iid
         on iid.invoice_item_id = ii.id
     group by ii.invoice_id
 ),
@@ -1731,7 +1731,7 @@ total_insurer_amount as (
         ii.insurer_id,
         round(sum(tia.total * ii.percentage), 2) as cover
     from total_invoice_amount tia
-    join "reporting_salman"."invoice_insurers" ii
+    join "reporting"."invoice_insurers" ii
         on ii.invoice_id = tia.invoice_id
     group by tia.invoice_id, ii.insurer_id
 ),
@@ -1741,8 +1741,8 @@ total_insurer_payments as (
         ip.invoice_id,
         iip.insurer_id,
         sum(ip.amount) as total_amount_paid
-    from "reporting_salman"."invoice_payments" ip
-    join "reporting_salman"."invoice_insurer_payments" iip
+    from "reporting"."invoice_payments" ip
+    join "reporting"."invoice_insurer_payments" iip
         on iip.invoice_payment_id = ip.id
     group by ip.invoice_id, iip.insurer_id
 ),
@@ -1754,7 +1754,7 @@ patient_additional_fields as (
         max(
             case when pfv.definition_id = 'fieldCategory-InsurancePolicyNumber' then pfv.value end
         ) as insurance_policy_number
-    from "reporting_salman"."patient_field_values" pfv
+    from "reporting"."patient_field_values" pfv
     group by pfv.patient_id
 )
 
@@ -1775,11 +1775,11 @@ select
     tia.cover as insurer_total_amount,
     coalesce(tip.total_amount_paid, 0) as insurer_payments_received,
     (tia.cover - coalesce(tip.total_amount_paid, 0)) as remaining_insurer_balance
-from "reporting_salman"."invoices" i
-join "reporting_salman"."encounters" e
+from "reporting"."invoices" i
+join "reporting"."encounters" e
     on e.id = i.encounter_id
     and e.end_datetime is not null
-join "reporting_salman"."patients" p
+join "reporting"."patients" p
     on p.id = e.patient_id
 join total_invoice_amount ta
     on ta.invoice_id = i.id
@@ -1790,7 +1790,7 @@ left join patient_additional_fields paf
 left join total_insurer_payments tip
     on tip.invoice_id = i.id
     and tip.insurer_id = tia.insurer_id
-join "reporting_salman"."reference_data" rd_insurer
+join "reporting"."reference_data" rd_insurer
     on rd_insurer.id = tia.insurer_id
 where i.status = 'finalised'
     and (tia.cover - coalesce(tip.total_amount_paid, 0)) > 0
@@ -1802,9 +1802,9 @@ with non_system_notes as (
         first_value(n.datetime) over w as first_note_datetime,
         last_value(n.datetime) over w as last_note_datetime,
         last_value(concat_ws(' on behalf of ', author.display_name, on_behalf.display_name)) over w as last_clinician
-    from "reporting_salman"."notes" n
-    left join "reporting_salman"."users" author on author.id = n.authored_by_id
-    left join "reporting_salman"."users" on_behalf on on_behalf.id = n.on_behalf_of_id
+    from "reporting"."notes" n
+    left join "reporting"."users" author on author.id = n.authored_by_id
+    left join "reporting"."users" on_behalf on on_behalf.id = n.on_behalf_of_id
     where n.note_type != 'system'
     window w as (
         partition by n.record_id
@@ -1838,19 +1838,19 @@ select
     end as is_discharged,
     case when ds.note like 'Automatically discharged%' then n.last_clinician
     end as non_discharge_by_clinicians
-from "reporting_salman"."encounters" e
-left join "reporting_salman"."users" u on u.id = e.clinician_id
-left join "reporting_salman"."roles" r on r.id = u.role
-left join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."patient_additional_data" pad on pad.patient_id = e.patient_id
-left join "reporting_salman"."reference_data" bt
+from "reporting"."encounters" e
+left join "reporting"."users" u on u.id = e.clinician_id
+left join "reporting"."roles" r on r.id = u.role
+left join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = e.patient_id
+left join "reporting"."reference_data" bt
     on bt.id = coalesce(e.patient_billing_type_id, pad.patient_billing_type_id)
-left join "reporting_salman"."triages" t on t.encounter_id = e.id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."discharges" ds on ds.encounter_id = e.id
+left join "reporting"."triages" t on t.encounter_id = e.id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."discharges" ds on ds.encounter_id = e.id
 left join non_system_notes n on n.record_id = e.id
 );
 create or replace view "reporting"."ds__invoicing_pending" as (
@@ -1860,10 +1860,10 @@ select
     p.display_id,
     e.end_datetime as discharge_datetime,
     concat(p.first_name, ' ', p.last_name) as patient_name
-from "reporting_salman"."encounters" e
-join "reporting_salman"."patients" p
+from "reporting"."encounters" e
+join "reporting"."patients" p
     on p.id = e.patient_id
-left join "reporting_salman"."invoices" i
+left join "reporting"."invoices" i
     on i.encounter_id = e.id
 where e.end_datetime is not null
     and i.id is null
@@ -1878,9 +1878,9 @@ with lab_test_data as (
             order by ltt.name
         ) as tests,
         max(lt.completed_datetime) as completed_datetime
-    from "reporting_salman"."lab_requests" lr
-    join "reporting_salman"."lab_tests" lt on lt.lab_request_id = lr.id
-    join "reporting_salman"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+    from "reporting"."lab_requests" lr
+    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
     where ltt.is_sensitive = False
     group by lr.id
 )
@@ -1946,26 +1946,26 @@ select
         when 'other' then 'Other'
         else lr.reason_for_cancellation
     end as reason_for_cancellation
-from "reporting_salman"."lab_requests" lr
+from "reporting"."lab_requests" lr
 join lab_test_data lta on lta.lab_request_id = lr.id
-join "reporting_salman"."encounters" e on e.id = lr.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
-left join "reporting_salman"."users" req_clinician on req_clinician.id = lr.requested_by_id
-left join "reporting_salman"."departments" req_department on req_department.id = lr.department_id
-left join "reporting_salman"."reference_data" priority on priority.id = lr.lab_test_priority_id
-left join "reporting_salman"."reference_data" category on category.id = lr.lab_test_category_id
-left join "reporting_salman"."users" collector on collector.id = lr.collected_by_id
-left join "reporting_salman"."reference_data" specimen on specimen.id = lr.specimen_type_id
-left join "reporting_salman"."reference_data" site on site.id = lr.lab_sample_site_id
-left join "reporting_salman"."lab_test_panel_requests" ltpr
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
+left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
+left join "reporting"."departments" req_department on req_department.id = lr.department_id
+left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+left join "reporting"."users" collector on collector.id = lr.collected_by_id
+left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
+left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
+left join "reporting"."lab_test_panel_requests" ltpr
     on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting_salman"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
 
 
 );
@@ -1974,7 +1974,7 @@ with results as (
     select
         imaging_request_id,
         min(datetime) as completed_datetime
-    from "reporting_salman"."imaging_results"
+    from "reporting"."imaging_results"
     group by imaging_request_id
 )
 
@@ -2051,20 +2051,20 @@ select
         when ir.reason_for_cancellation = 'patient-refused' then 'Patient refused'
         when ir.reason_for_cancellation = 'other' then 'Other'
     end as reason_for_cancellation
-from "reporting_salman"."imaging_requests" ir
-join "reporting_salman"."encounters" e on e.id = ir.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."users" su on su.id = e.clinician_id
-left join "reporting_salman"."users" ru on ru.id = ir.requested_by_id
-left join "reporting_salman"."notes" n
+from "reporting"."imaging_requests" ir
+join "reporting"."encounters" e on e.id = ir.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."users" su on su.id = e.clinician_id
+left join "reporting"."users" ru on ru.id = ir.requested_by_id
+left join "reporting"."notes" n
     on n.record_id = ir.id and n.record_type = 'ImagingRequest' and n.note_type = 'areaToBeImaged'
-left join "reporting_salman"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
-left join "reporting_salman"."reference_data" ia on ia.id = ira.area_id
-left join "reporting_salman"."reference_data" v on v.id = p.village_id
+left join "reporting"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
+left join "reporting"."reference_data" ia on ia.id = ira.area_id
+left join "reporting"."reference_data" v on v.id = p.village_id
 left join results irs on irs.imaging_request_id = ir.id
 );
 create or replace view "reporting"."ds__patients_change_logs" as (
@@ -2080,7 +2080,7 @@ with patient_edits as (
         lcp.village_id,
         lcp.updated_by_user_id,
         lcp.logged_at
-    from "reporting_salman"."patients_change_logs" lcp
+    from "reporting"."patients_change_logs" lcp
 
     union all
 
@@ -2095,8 +2095,8 @@ with patient_edits as (
         p.village_id,
         lcpad.updated_by_user_id,
         lcpad.logged_at
-    from "reporting_salman"."patient_additional_data_change_logs" lcpad
-    left join "reporting_salman"."patients" p on p.id = lcpad.patient_id
+    from "reporting"."patient_additional_data_change_logs" lcpad
+    left join "reporting"."patients" p on p.id = lcpad.patient_id
 ),
 
 grouped_edits as (
@@ -2138,8 +2138,8 @@ select
     u.role as user_role,
     ge.edited_datetime
 from grouped_edits ge
-left join "reporting_salman"."users" u on u.id = ge.updated_by_user_id
-left join "reporting_salman"."reference_data" village on village.id = ge.village_id
+left join "reporting"."users" u on u.id = ge.updated_by_user_id
+left join "reporting"."reference_data" village on village.id = ge.village_id
 );
 create or replace view "reporting"."ds__patient_vaccinations_upcoming" as (
 select
@@ -2156,9 +2156,9 @@ select
     sv.label as vaccine_name,
     sv.dose_label as vaccine_schedule,
     pvu.status as vaccine_status
-from "reporting_salman"."patient_vaccinations_upcoming" pvu
-join "reporting_salman"."patients" p on p.id = pvu.patient_id
-join "reporting_salman"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
+from "reporting"."patient_vaccinations_upcoming" pvu
+join "reporting"."patients" p on p.id = pvu.patient_id
+join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
 where p.date_of_death is null
 );
 create or replace view "reporting"."ds__sensitive_lab_requests" as (
@@ -2171,9 +2171,9 @@ with lab_test_data as (
             order by ltt.name
         ) as tests,
         max(lt.completed_datetime) as completed_datetime
-    from "reporting_salman"."lab_requests" lr
-    join "reporting_salman"."lab_tests" lt on lt.lab_request_id = lr.id
-    join "reporting_salman"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+    from "reporting"."lab_requests" lr
+    join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+    join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
     where ltt.is_sensitive = True
     group by lr.id
 )
@@ -2239,26 +2239,26 @@ select
         when 'other' then 'Other'
         else lr.reason_for_cancellation
     end as reason_for_cancellation
-from "reporting_salman"."lab_requests" lr
+from "reporting"."lab_requests" lr
 join lab_test_data lta on lta.lab_request_id = lr.id
-join "reporting_salman"."encounters" e on e.id = lr.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
-left join "reporting_salman"."users" req_clinician on req_clinician.id = lr.requested_by_id
-left join "reporting_salman"."departments" req_department on req_department.id = lr.department_id
-left join "reporting_salman"."reference_data" priority on priority.id = lr.lab_test_priority_id
-left join "reporting_salman"."reference_data" category on category.id = lr.lab_test_category_id
-left join "reporting_salman"."users" collector on collector.id = lr.collected_by_id
-left join "reporting_salman"."reference_data" specimen on specimen.id = lr.specimen_type_id
-left join "reporting_salman"."reference_data" site on site.id = lr.lab_sample_site_id
-left join "reporting_salman"."lab_test_panel_requests" ltpr
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."reference_data" laboratory on laboratory.id = lr.lab_test_laboratory_id
+left join "reporting"."users" req_clinician on req_clinician.id = lr.requested_by_id
+left join "reporting"."departments" req_department on req_department.id = lr.department_id
+left join "reporting"."reference_data" priority on priority.id = lr.lab_test_priority_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+left join "reporting"."users" collector on collector.id = lr.collected_by_id
+left join "reporting"."reference_data" specimen on specimen.id = lr.specimen_type_id
+left join "reporting"."reference_data" site on site.id = lr.lab_sample_site_id
+left join "reporting"."lab_test_panel_requests" ltpr
     on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting_salman"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
 
 
 );
@@ -2272,8 +2272,8 @@ with filtered_procedure as (
             partition by pc.id
             order by eh.datetime desc
         ) as encounter_history_record
-    from "reporting_salman"."procedures" pc
-    left join "reporting_salman"."encounter_history" eh
+    from "reporting"."procedures" pc
+    left join "reporting"."encounter_history" eh
         on eh.encounter_id = pc.encounter_id
         and eh.datetime::date <= pc.date
 )
@@ -2342,26 +2342,26 @@ select
         when pc.is_completed then 'Y' else 'N'
     end as is_completed
 from filtered_procedure pc
-join "reporting_salman"."encounters" e on e.id = pc.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."reference_data" procedure_type on procedure_type.id = pc.procedure_type_id
-join "reporting_salman"."locations" procedure_location
+join "reporting"."encounters" e on e.id = pc.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."reference_data" procedure_type on procedure_type.id = pc.procedure_type_id
+join "reporting"."locations" procedure_location
     on procedure_location.id = pc.location_id
-left join "reporting_salman"."location_groups" procedure_area
+left join "reporting"."location_groups" procedure_area
     on procedure_area.id = procedure_location.location_group_id
-join "reporting_salman"."facilities" procedure_facility
+join "reporting"."facilities" procedure_facility
     on procedure_facility.id = procedure_location.facility_id
-join "reporting_salman"."locations" encounter_location
+join "reporting"."locations" encounter_location
     on encounter_location.id = e.location_id
-join "reporting_salman"."facilities" encounter_facility
+join "reporting"."facilities" encounter_facility
     on encounter_facility.id = encounter_location.facility_id
-join "reporting_salman"."departments" encounter_department
+join "reporting"."departments" encounter_department
     on encounter_department.id = coalesce(pc.department_id, e.department_id)
-left join "reporting_salman"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting_salman"."reference_data" nationality on nationality.id = pd.nationality_id
-left join "reporting_salman"."users" assistant on assistant.id = pc.assistant_id
-left join "reporting_salman"."users" anaesthetist on anaesthetist.id = pc.anaesthetist_id
-left join "reporting_salman"."users" clinician on clinician.id = pc.clinician_id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" nationality on nationality.id = pd.nationality_id
+left join "reporting"."users" assistant on assistant.id = pc.assistant_id
+left join "reporting"."users" anaesthetist on anaesthetist.id = pc.anaesthetist_id
+left join "reporting"."users" clinician on clinician.id = pc.clinician_id
 where pc.encounter_history_record = 1
 );
 create or replace view "reporting"."ds__births" as (
@@ -2423,16 +2423,16 @@ select
     pbd.apgar_score_one_minute,
     pbd.apgar_score_five_minutes,
     pbd.apgar_score_ten_minutes
-from "reporting_salman"."patient_birth_data" pbd
-join "reporting_salman"."patients" p on p.id = pbd.patient_id
-left join "reporting_salman"."reference_data" rd_village on rd_village.id = p.village_id
-left join "reporting_salman"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting_salman"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
-left join "reporting_salman"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
-left join "reporting_salman"."patients" p_mother on p_mother.id = pad.mother_id
-left join "reporting_salman"."patients" p_father on p_father.id = pad.father_id
-left join "reporting_salman"."facilities" f on f.id = pbd.birth_facility_id
-left join "reporting_salman"."users" u on u.id = pad.registered_by_id
+from "reporting"."patient_birth_data" pbd
+join "reporting"."patients" p on p.id = pbd.patient_id
+left join "reporting"."reference_data" rd_village on rd_village.id = p.village_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
+left join "reporting"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
+left join "reporting"."patients" p_mother on p_mother.id = pad.mother_id
+left join "reporting"."patients" p_father on p_father.id = pad.father_id
+left join "reporting"."facilities" f on f.id = pbd.birth_facility_id
+left join "reporting"."users" u on u.id = pad.registered_by_id
 );
 create or replace view "reporting"."ds__encounter_summary" as (
 with encounter_history_consolidated as (
@@ -2459,16 +2459,16 @@ with encounter_history_consolidated as (
             partition by eh.encounter_id
             order by eh.datetime
         ) as prev_location_group_id
-    from "reporting_salman"."encounter_history" eh
-    join "reporting_salman"."users" actor
+    from "reporting"."encounter_history" eh
+    join "reporting"."users" actor
         on actor.id = eh.updated_by_id
-    join "reporting_salman"."users" clinician
+    join "reporting"."users" clinician
         on clinician.id = eh.clinician_id
-    join "reporting_salman"."departments" d
+    join "reporting"."departments" d
         on d.id = eh.department_id
-    join "reporting_salman"."locations" l
+    join "reporting"."locations" l
         on l.id = eh.location_id
-    join "reporting_salman"."location_groups" lg
+    join "reporting"."location_groups" lg
         on lg.id = l.location_group_id
 ),
 
@@ -2577,10 +2577,10 @@ encounter_diagnoses as (
             E'\n'
             order by ed.is_primary desc, ed.datetime asc
         ) as diagnoses
-    from "reporting_salman"."encounters" e
-    join "reporting_salman"."encounter_diagnoses" ed
+    from "reporting"."encounters" e
+    join "reporting"."encounter_diagnoses" ed
         on ed.encounter_id = e.id
-    join "reporting_salman"."reference_data" d
+    join "reporting"."reference_data" d
         on d.id = ed.diagnosis_id
     where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
@@ -2598,10 +2598,10 @@ encounter_prescriptions as (
             '' || E'\n' || ''
             order by p.datetime
         ) as medications
-    from "reporting_salman"."encounter_prescriptions" ep
-    join "reporting_salman"."prescriptions" p
+    from "reporting"."encounter_prescriptions" ep
+    join "reporting"."prescriptions" p
         on p.id = ep.prescription_id
-    join "reporting_salman"."reference_data" m on m.id = p.medication_id
+    join "reporting"."reference_data" m on m.id = p.medication_id
     group by ep.encounter_id
 ),
 
@@ -2617,10 +2617,10 @@ encounter_vaccinations as (
             E'\n'
             order by av.datetime
         ) as vaccinations
-    from "reporting_salman"."vaccine_administrations" av
-    join "reporting_salman"."vaccine_schedules" sv
+    from "reporting"."vaccine_administrations" av
+    join "reporting"."vaccine_schedules" sv
         on sv.id = av.scheduled_vaccine_id
-    join "reporting_salman"."reference_data" v
+    join "reporting"."reference_data" v
         on v.id = sv.vaccine_id
     group by av.encounter_id
 ),
@@ -2639,10 +2639,10 @@ encounter_procedures as (
             E'\n'
             order by p.date
         ) as procedures
-    from "reporting_salman"."procedures" p
-    left join "reporting_salman"."reference_data" proc
+    from "reporting"."procedures" p
+    left join "reporting"."reference_data" proc
         on proc.id = p.procedure_type_id
-    left join "reporting_salman"."locations" loc
+    left join "reporting"."locations" loc
         on loc.id = p.location_id
     group by p.encounter_id
 ),
@@ -2654,15 +2654,15 @@ encounter_lab_requests as (
             coalesce(ltp.name, ltt.name), '' || E'\n' || ''
             order by lr.collected_datetime
         ) as lab_requests
-    from "reporting_salman"."lab_requests" lr
-    left join "reporting_salman"."lab_test_panel_requests" ltpr
+    from "reporting"."lab_requests" lr
+    left join "reporting"."lab_test_panel_requests" ltpr
         on ltpr.id = lr.lab_test_panel_request_id
-    left join "reporting_salman"."lab_test_panels" ltp
+    left join "reporting"."lab_test_panels" ltp
         on ltp.id = ltpr.lab_test_panel_id
-    left join "reporting_salman"."lab_tests" lt
+    left join "reporting"."lab_tests" lt
         on lt.lab_request_id = lr.id
         and lr.lab_test_panel_request_id isnull
-    left join "reporting_salman"."lab_test_types" ltt
+    left join "reporting"."lab_test_types" ltt
         on ltt.id = lt.lab_test_type_id
     where lr.status not in ('cancelled', 'deleted', 'entered-in-error')
     group by lr.encounter_id
@@ -2703,12 +2703,12 @@ imaging_request_areas as (
             when n.note_type = 'other' then n.content
         end, ','
         order by n.datetime) as notes
-    from "reporting_salman"."imaging_requests" ir
-    left join "reporting_salman"."imaging_request_areas" ira
+    from "reporting"."imaging_requests" ir
+    left join "reporting"."imaging_request_areas" ira
         on ira.imaging_request_id = ir.id
-    left join "reporting_salman"."reference_data" area
+    left join "reporting"."reference_data" area
         on area.id = ira.area_id
-    left join "reporting_salman"."notes" n
+    left join "reporting"."notes" n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -2736,7 +2736,7 @@ encounter_notes as (
         ),
         E'\n'
         order by n.datetime) as notes
-    from "reporting_salman"."notes" n
+    from "reporting"."notes" n
     left join (
         select 
             string_id,
@@ -2833,25 +2833,25 @@ select
                 )
         else en.notes
     end as notes
-from "reporting_salman"."encounters" e
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."locations" l on l.id = e.location_id
-join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."users" c on c.id = e.clinician_id
-join "reporting_salman"."departments" dp on dp.id = e.department_id
-join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
+from "reporting"."encounters" e
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."locations" l on l.id = e.location_id
+join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."users" c on c.id = e.clinician_id
+join "reporting"."departments" dp on dp.id = e.department_id
+join "reporting"."location_groups" lg on lg.id = l.location_group_id
 join encounter_type_changes etc on etc.encounter_id = e.id
 join department_changes dc on dc.encounter_id = e.id
 join location_group_changes lgc on lgc.encounter_id = e.id
 join location_changes lc on lc.encounter_id = e.id
 join encounter_history_consolidated ehc on ehc.encounter_id = e.id and ehc.change_type is null
-left join "reporting_salman"."triages" t on t.encounter_id = e.id
-left join "reporting_salman"."discharges" d on d.encounter_id = e.id
-left join "reporting_salman"."patient_additional_data" pd on pd.patient_id = e.patient_id
-left join "reporting_salman"."reference_data" eth on eth.id = pd.ethnicity_id
-left join "reporting_salman"."reference_data" bt on bt.id = e.patient_billing_type_id
-left join "reporting_salman"."reference_data" am on am.id = t.arrival_mode_id
-left join "reporting_salman"."reference_data" dd on dd.id = d.disposition_id
+left join "reporting"."triages" t on t.encounter_id = e.id
+left join "reporting"."discharges" d on d.encounter_id = e.id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = e.patient_id
+left join "reporting"."reference_data" eth on eth.id = pd.ethnicity_id
+left join "reporting"."reference_data" bt on bt.id = e.patient_billing_type_id
+left join "reporting"."reference_data" am on am.id = t.arrival_mode_id
+left join "reporting"."reference_data" dd on dd.id = d.disposition_id
 left join encounter_diagnoses ed on ed.encounter_id = e.id
 left join encounter_prescriptions ep on ep.encounter_id = e.id
 left join encounter_vaccinations ev on ev.encounter_id = e.id
@@ -2873,11 +2873,11 @@ select
     m.code as medication_code,
     m.name as medication,
     p.quantity
-from "reporting_salman"."encounter_prescriptions" ep
-join "reporting_salman"."encounters" e on e.id = ep.encounter_id
-join "reporting_salman"."prescriptions" p on p.id = ep.prescription_id
-join "reporting_salman"."locations" l on l.id = e.location_id
-join "reporting_salman"."reference_data" m on m.id = p.medication_id
+from "reporting"."encounter_prescriptions" ep
+join "reporting"."encounters" e on e.id = ep.encounter_id
+join "reporting"."prescriptions" p on p.id = ep.prescription_id
+join "reporting"."locations" l on l.id = e.location_id
+join "reporting"."reference_data" m on m.id = p.medication_id
 );
 create or replace view "reporting"."ds__diagnoses" as (
 select
@@ -2904,16 +2904,16 @@ select
     f.name as facility,
     initcap(ed.certainty) as certainty,
     case when ed.is_primary = true then 'Yes' else 'No' end as is_primary
-from "reporting_salman"."encounter_diagnoses" ed
-join "reporting_salman"."reference_data" diagnosis on diagnosis.id = ed.diagnosis_id
-join "reporting_salman"."encounters" e on e.id = ed.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."users" clinician on clinician.id = e.clinician_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
+from "reporting"."encounter_diagnoses" ed
+join "reporting"."reference_data" diagnosis on diagnosis.id = ed.diagnosis_id
+join "reporting"."encounters" e on e.id = ed.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."users" clinician on clinician.id = e.clinician_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."facilities" f on f.id = l.facility_id
 );
 create or replace view "reporting"."ds__location_bookings" as (
 select
@@ -2939,15 +2939,15 @@ select
     l.name as location,
     a.booking_type_id,
     bt.name as booking_type
-from "reporting_salman"."location_bookings" a
-join "reporting_salman"."patients" p on p.id = a.patient_id
-left join "reporting_salman"."users" u on u.id = a.clinician_id
-left join "reporting_salman"."locations" l on l.id = a.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting_salman"."reference_data" billing on billing.id = pd.patient_billing_type_id
-left join "reporting_salman"."reference_data" vil on vil.id = p.village_id
-left join "reporting_salman"."reference_data" bt on bt.id = a.booking_type_id
+from "reporting"."location_bookings" a
+join "reporting"."patients" p on p.id = a.patient_id
+left join "reporting"."users" u on u.id = a.clinician_id
+left join "reporting"."locations" l on l.id = a.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
+left join "reporting"."reference_data" vil on vil.id = p.village_id
+left join "reporting"."reference_data" bt on bt.id = a.booking_type_id
 where a.booking_type_id notnull
 );
 create or replace view "reporting"."ds__outpatient_appointments" as (
@@ -2980,14 +2980,14 @@ select
     a.days_of_week,
     a.frequency,
     a.nth_weekday
-from "reporting_salman"."outpatient_appointments" a
-join "reporting_salman"."patients" p on p.id = a.patient_id
-left join "reporting_salman"."users" u on u.id = a.clinician_id
-left join "reporting_salman"."location_groups" lg on lg.id = a.location_group_id
-left join "reporting_salman"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting_salman"."reference_data" billing on billing.id = pd.patient_billing_type_id
-left join "reporting_salman"."reference_data" vil on vil.id = p.village_id
-left join "reporting_salman"."reference_data" apt on apt.id = a.appointment_type_id
+from "reporting"."outpatient_appointments" a
+join "reporting"."patients" p on p.id = a.patient_id
+left join "reporting"."users" u on u.id = a.clinician_id
+left join "reporting"."location_groups" lg on lg.id = a.location_group_id
+left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
+left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
+left join "reporting"."reference_data" vil on vil.id = p.village_id
+left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
 where a.appointment_type_id notnull
 );
 create or replace view "reporting"."ds__lab_tests" as (
@@ -3041,21 +3041,21 @@ select
     ltt.id as lab_test_type_id,
     ltt.name as lab_test_type,
     lt.completed_datetime as lab_test_completed_datetime
-from "reporting_salman"."lab_requests" lr
-join "reporting_salman"."encounters" e on e.id = lr.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."departments" req_dept on req_dept.id = lr.department_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."users" requester on requester.id = lr.requested_by_id
-left join "reporting_salman"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting_salman"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-left join "reporting_salman"."reference_data" category on category.id = lr.lab_test_category_id
-join "reporting_salman"."lab_tests" lt on lt.lab_request_id = lr.id
-join "reporting_salman"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+from "reporting"."lab_requests" lr
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."users" requester on requester.id = lr.requested_by_id
+left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
 where ltt.is_sensitive = False
 
 
@@ -3080,10 +3080,10 @@ with related_conditions as (
             pprc.program_registry_condition_category_id
             order by pprc.datetime
         ) as condition_category_ids
-    from "reporting_salman"."patient_program_registration_conditions" pprc
-    join "reporting_salman"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
-    left join "reporting_salman"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
-    left join "reporting_salman"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
+    from "reporting"."patient_program_registration_conditions" pprc
+    join "reporting"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
+    left join "reporting"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
+    left join "reporting"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
     group by ppr.id
 )
 
@@ -3122,20 +3122,20 @@ select
     ppr.deactivated_by_id,
     deactivated_by.display_name as deactivated_by,
     ppr.deactivated_datetime
-from "reporting_salman"."patient_program_registrations" ppr
-join "reporting_salman"."program_registries" pr on pr.id = ppr.program_registry_id
-join "reporting_salman"."patients" p on p.id = ppr.patient_id
-join "reporting_salman"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting_salman"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
-left join "reporting_salman"."users" registered_by on registered_by.id = ppr.registered_by_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
-left join "reporting_salman"."reference_data" subdivision on subdivision.id = pad.subdivision_id
-left join "reporting_salman"."reference_data" division on division.id = pad.division_id
-left join "reporting_salman"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
+from "reporting"."patient_program_registrations" ppr
+join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
+join "reporting"."patients" p on p.id = ppr.patient_id
+join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
+left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
+left join "reporting"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
 left join related_conditions c on c.patient_program_registration_id = ppr.id
-left join "reporting_salman"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
-left join "reporting_salman"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
+left join "reporting"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
+left join "reporting"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
 );
 create or replace view "reporting"."ds__sensitive_lab_tests" as (
 
@@ -3188,21 +3188,21 @@ select
     ltt.id as lab_test_type_id,
     ltt.name as lab_test_type,
     lt.completed_datetime as lab_test_completed_datetime
-from "reporting_salman"."lab_requests" lr
-join "reporting_salman"."encounters" e on e.id = lr.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."locations" l on l.id = e.location_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."departments" d on d.id = e.department_id
-left join "reporting_salman"."departments" req_dept on req_dept.id = lr.department_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."users" requester on requester.id = lr.requested_by_id
-left join "reporting_salman"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
-left join "reporting_salman"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
-left join "reporting_salman"."reference_data" category on category.id = lr.lab_test_category_id
-join "reporting_salman"."lab_tests" lt on lt.lab_request_id = lr.id
-join "reporting_salman"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
+from "reporting"."lab_requests" lr
+join "reporting"."encounters" e on e.id = lr.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."departments" d on d.id = e.department_id
+left join "reporting"."departments" req_dept on req_dept.id = lr.department_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."users" requester on requester.id = lr.requested_by_id
+left join "reporting"."lab_test_panel_requests" ltpr on ltpr.id = lr.lab_test_panel_request_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ltpr.lab_test_panel_id
+left join "reporting"."reference_data" category on category.id = lr.lab_test_category_id
+join "reporting"."lab_tests" lt on lt.lab_request_id = lr.id
+join "reporting"."lab_test_types" ltt on ltt.id = lt.lab_test_type_id
 where ltt.is_sensitive = True
 
 
@@ -3225,12 +3225,12 @@ select
     clinician.display_name as clinician,
     case when pc.is_resolved then pc.resolved_datetime end as date_resolved,
     case when pc.is_resolved then resolving_clinician.display_name end as clinician_resolving
-from "reporting_salman"."patient_conditions" pc
-join "reporting_salman"."patients" p on p.id = pc.patient_id
-join "reporting_salman"."reference_data" conditions on conditions.id = pc.condition_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id
-left join "reporting_salman"."users" clinician on clinician.id = pc.recorded_by_id
-left join "reporting_salman"."users" resolving_clinician
+from "reporting"."patient_conditions" pc
+join "reporting"."patients" p on p.id = pc.patient_id
+join "reporting"."reference_data" conditions on conditions.id = pc.condition_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."users" clinician on clinician.id = pc.recorded_by_id
+left join "reporting"."users" resolving_clinician
     on resolving_clinician.id = pc.resolved_by_id
 );
 create or replace view "reporting"."ds__patients" as (
@@ -3276,18 +3276,18 @@ select
         when p.date_of_death is not null then 'Deceased'
         else 'Alive'
     end as status
-from "reporting_salman"."patients" p
-left join "reporting_salman"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting_salman"."patient_birth_data" pbd on pbd.patient_id = p.id
-left join "reporting_salman"."users" u on u.id = pad.registered_by_id
-left join "reporting_salman"."reference_data" village on village.id = p.village_id and village.type = 'village'
-left join "reporting_salman"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join "reporting_salman"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
-left join "reporting_salman"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
-left join "reporting_salman"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
-left join "reporting_salman"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
+from "reporting"."patients" p
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
+left join "reporting"."users" u on u.id = pad.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
+left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
+left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
+left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
+left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
+left join "reporting"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
 left join
-    "reporting_salman"."reference_data" billing
+    "reporting"."reference_data" billing
     on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
 );
 create or replace view "reporting"."ds__invoicing_transactions_patient" as (
@@ -3303,13 +3303,13 @@ select
     ip.receipt_number,
     ip.amount,
     u.display_name as received_by
-from "reporting_salman"."invoice_payments" ip
-join "reporting_salman"."invoice_patient_payments" ipp on ipp.invoice_payment_id = ip.id
-join "reporting_salman"."invoices" i on i.id = ip.invoice_id
-join "reporting_salman"."encounters" e on e.id = i.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."reference_data" rd_method on rd_method.id = ipp.method_id
-left join "reporting_salman"."users" u on u.id = ip.updated_by_id
+from "reporting"."invoice_payments" ip
+join "reporting"."invoice_patient_payments" ipp on ipp.invoice_payment_id = ip.id
+join "reporting"."invoices" i on i.id = ip.invoice_id
+join "reporting"."encounters" e on e.id = i.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."reference_data" rd_method on rd_method.id = ipp.method_id
+left join "reporting"."users" u on u.id = ip.updated_by_id
 );
 create or replace view "reporting"."ds__encounter_diets" as (
 with diets as (
@@ -3319,8 +3319,8 @@ with diets as (
             rd.name, ', '
             order by rd.name
         ) as diets
-    from "reporting_salman"."encounter_diets" ed
-    join "reporting_salman"."reference_data" rd
+    from "reporting"."encounter_diets" ed
+    join "reporting"."reference_data" rd
         on rd.id = ed.diet_id
     group by ed.encounter_id
 ),
@@ -3332,8 +3332,8 @@ allergies as (
             rd.name, ', '
             order by rd.name
         ) as allergies 
-    from "reporting_salman"."patient_allergies" pa
-    join "reporting_salman"."reference_data" rd
+    from "reporting"."patient_allergies" pa
+    join "reporting"."reference_data" rd
         on rd.id = pa.allergy_id
     group by pa.patient_id
 )
@@ -3362,12 +3362,12 @@ select
     lg.name as location_group,
     d.diets,
     a.allergies
-from "reporting_salman"."encounters" e
-join "reporting_salman"."patients" p
+from "reporting"."encounters" e
+join "reporting"."patients" p
     on p.id = e.patient_id
-join "reporting_salman"."locations" l
+join "reporting"."locations" l
     on l.id = e.location_id
-join "reporting_salman"."location_groups" lg
+join "reporting"."location_groups" lg
     on lg.id = l.location_group_id
 left join diets d
     on d.encounter_id = e.id
@@ -3413,8 +3413,8 @@ with total_invoice_amount as (
                 end
             ), 2
         ) as total_nondiscountable_amount
-    from "reporting_salman"."invoice_items" ii
-    left join "reporting_salman"."invoice_item_discounts" iid
+    from "reporting"."invoice_items" ii
+    left join "reporting"."invoice_item_discounts" iid
         on iid.invoice_item_id = ii.id
     group by ii.invoice_id
 ),
@@ -3426,9 +3426,9 @@ total_insurer_amount as (
         round(sum(tia.total_discountable_amount * ii.percentage), 2) as total_discountable_covered,
         round(sum(tia.total_nondiscountable_amount * ii.percentage), 2) as total_nondiscountable_covered
     from total_invoice_amount tia
-    join "reporting_salman"."invoice_insurers" ii
+    join "reporting"."invoice_insurers" ii
         on ii.invoice_id = tia.invoice_id
-    join "reporting_salman"."reference_data" rd_insurer
+    join "reporting"."reference_data" rd_insurer
         on rd_insurer.id = ii.insurer_id
     group by tia.invoice_id
 ),
@@ -3457,7 +3457,7 @@ total_patient_amount as (
     from total_invoice_amount tia
     left join total_insurer_amount ii
         on ii.invoice_id = tia.invoice_id
-    left join "reporting_salman"."invoice_discounts" id
+    left join "reporting"."invoice_discounts" id
         on id.invoice_id = tia.invoice_id
     group by tia.invoice_id
 ),
@@ -3466,8 +3466,8 @@ total_patient_payments as (
     select
         ip.invoice_id,
         sum(ip.amount) as total_amount_paid
-    from "reporting_salman"."invoice_payments" ip
-    join "reporting_salman"."invoice_patient_payments" ipp
+    from "reporting"."invoice_payments" ip
+    join "reporting"."invoice_patient_payments" ipp
         on ipp.invoice_payment_id = ip.id
     group by ip.invoice_id
 ),
@@ -3479,7 +3479,7 @@ patient_additional_fields as (
         max(
             case when pfv.definition_id = 'fieldCategory-InsurancePolicyNumber' then pfv.value end
         ) as insurance_policy_number
-    from "reporting_salman"."patient_field_values" pfv
+    from "reporting"."patient_field_values" pfv
     group by pfv.patient_id
 )
 
@@ -3507,18 +3507,18 @@ select
     - coalesce(tpp.total_amount_paid, 0) as remaining_patient_balance,
     case when p.date_of_death is not null then 'Deceased' else 'Active' end as is_deceased,
     p.date_of_death
-from "reporting_salman"."invoices" i
-join "reporting_salman"."encounters" e
+from "reporting"."invoices" i
+join "reporting"."encounters" e
     on e.id = i.encounter_id
     and e.end_datetime is not null
-join "reporting_salman"."patients" p
+join "reporting"."patients" p
     on p.id = e.patient_id
-left join "reporting_salman"."patient_additional_data" pd
+left join "reporting"."patient_additional_data" pd
     on pd.patient_id = p.id
-left join "reporting_salman"."reference_data" rd_nationality
+left join "reporting"."reference_data" rd_nationality
     on rd_nationality.id = pd.nationality_id
-join "reporting_salman"."locations" l on l.id = e.location_id
-join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
+join "reporting"."locations" l on l.id = e.location_id
+join "reporting"."location_groups" lg on lg.id = l.location_group_id
 left join total_invoice_amount ta
     on ta.invoice_id = i.id
 left join total_insurer_amount tia
@@ -3554,7 +3554,7 @@ with filtered_changes as (
             from administered_vaccines t 
             where t.deleted_at notnull
         )) av
-    join "reporting_salman"."encounters" e on e.id = av.record_data ->> 'encounter_id'
+    join "reporting"."encounters" e on e.id = av.record_data ->> 'encounter_id'
 )
 
 select
@@ -3596,7 +3596,7 @@ with admission_department_log as (
             when eh.change_type is null or eh.change_type = 'encounter_type' then 'admission'
             else 'transfer-in'
         end as type
-    from "reporting_salman"."encounter_history" eh
+    from "reporting"."encounter_history" eh
     where (eh.change_type isnull or eh.change_type in ('department', 'encounter_type'))
         and eh.encounter_type = 'admission'
 )
@@ -3619,10 +3619,10 @@ select
     coalesce(lead(dl.department_id) over w notnull, false) as transfer_out,
     coalesce(lead(dl.start_datetime) over w isnull and e.end_datetime::date = p.date_of_death, false) as death
 from admission_department_log dl
-join "reporting_salman"."encounters" e on e.id = dl.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."departments" d on d.id = dl.department_id
-join "reporting_salman"."facilities" f on f.id = d.facility_id
+join "reporting"."encounters" e on e.id = dl.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."departments" d on d.id = dl.department_id
+join "reporting"."facilities" f on f.id = d.facility_id
 window w as (
     partition by encounter_id
     order by dl.start_datetime
@@ -3655,12 +3655,12 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
                 end
         else current_date
     end as status_end_date
-from "reporting_salman"."lab_requests" lr
-left join "reporting_salman"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
-left join "reporting_salman"."encounters" e on e.id = lr.encounter_id
-left join "reporting_salman"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
-left join "reporting_salman"."facilities" f on f.id = d.facility_id
-left join "reporting_salman"."reference_data" ltc on ltc.id = lr.lab_test_category_id
+from "reporting"."lab_requests" lr
+left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
+left join "reporting"."encounters" e on e.id = lr.encounter_id
+left join "reporting"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
+left join "reporting"."facilities" f on f.id = d.facility_id
+left join "reporting"."reference_data" ltc on ltc.id = lr.lab_test_category_id
 where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
 window
     w as (
@@ -3680,7 +3680,7 @@ with admission_location_log as (
             when eh.change_type is null or eh.change_type = 'encounter_type' then 'admission'
             else 'transfer-in'
         end as type
-    from "reporting_salman"."encounter_history" eh
+    from "reporting"."encounter_history" eh
     where (eh.change_type isnull or eh.change_type in ('location', 'encounter_type'))
         and eh.encounter_type = 'admission'
 )
@@ -3705,11 +3705,11 @@ select
     coalesce(lead(ll.location_id) over w notnull, false) as transfer_out,
     coalesce(lead(ll.start_datetime) over w isnull and e.end_datetime::date = p.date_of_death, false) as death
 from admission_location_log ll
-join "reporting_salman"."encounters" e on e.id = ll.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
-join "reporting_salman"."locations" l on l.id = ll.location_id
-join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-join "reporting_salman"."facilities" f on f.id = l.facility_id
+join "reporting"."encounters" e on e.id = ll.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+join "reporting"."locations" l on l.id = ll.location_id
+join "reporting"."location_groups" lg on lg.id = l.location_group_id
+join "reporting"."facilities" f on f.id = l.facility_id
 window w as (
     partition by ll.encounter_id
     order by ll.start_datetime
@@ -3720,7 +3720,7 @@ with vaccine_administrations_metadata as (
     select 
         id,
         max(updated_at) as updated_at
-    from "reporting_salman"."vaccine_administrations_change_logs"
+    from "reporting"."vaccine_administrations_change_logs"
     group by id
 ),
 
@@ -3728,9 +3728,9 @@ administered_circumstances as (
     select
         a.id,
         string_agg(rd_cir.name, '; ') as circumstance_name
-    from "reporting_salman"."vaccine_administrations" a
+    from "reporting"."vaccine_administrations" a
     cross join lateral unnest(a.circumstance_ids) c (unnest_circumstance_id)
-    left join "reporting_salman"."reference_data" rd_cir
+    left join "reporting"."reference_data" rd_cir
         on rd_cir.id = c.unnest_circumstance_id
     group by a.id
 )
@@ -3792,17 +3792,17 @@ select
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
     vam.updated_at
-from "reporting_salman"."vaccine_administrations" av
-join "reporting_salman"."encounters" e on e.id = av.encounter_id
-join "reporting_salman"."patients" p on p.id = e.patient_id
+from "reporting"."vaccine_administrations" av
+join "reporting"."encounters" e on e.id = av.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
 left join vaccine_administrations_metadata vam on vam.id = av.id
-left join "reporting_salman"."locations" l on l.id = av.location_id
-left join "reporting_salman"."departments" d on d.id = av.department_id
-left join "reporting_salman"."location_groups" lg on lg.id = l.location_group_id
-left join "reporting_salman"."facilities" f on f.id = l.facility_id
-left join "reporting_salman"."vaccine_schedules" sv on sv.id = av.scheduled_vaccine_id
-left join "reporting_salman"."users" u on u.id = av.recorded_by_id
-left join "reporting_salman"."reference_data" rd_vil on rd_vil.id = p.village_id
-left join "reporting_salman"."reference_data" rd_reason on rd_reason.id = av.not_given_reason_id
+left join "reporting"."locations" l on l.id = av.location_id
+left join "reporting"."departments" d on d.id = av.department_id
+left join "reporting"."location_groups" lg on lg.id = l.location_group_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."vaccine_schedules" sv on sv.id = av.scheduled_vaccine_id
+left join "reporting"."users" u on u.id = av.recorded_by_id
+left join "reporting"."reference_data" rd_vil on rd_vil.id = p.village_id
+left join "reporting"."reference_data" rd_reason on rd_reason.id = av.not_given_reason_id
 left join administered_circumstances ac on ac.id = av.id
 );
