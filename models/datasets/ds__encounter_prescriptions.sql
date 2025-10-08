@@ -6,6 +6,7 @@ select
     l.facility_id,
     ep.is_selected_for_discharge,
     p.medication_id,
+    m.code as medication_code,
     m.name as medication,
     p.quantity
 from {{ ref("encounter_prescriptions") }} ep
