@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: ds__usage_quality_metrics_patient_details
+    description: Usage quality metrics - patient details
+    config:
+      tags:
+        - clinical
+    columns:
+      - name: total_patients
+        data_type: integer
+        description: Total patients in the database includes merged
+      - name: total_patients_with_incomplete_name
+        data_type: integer
+        description: Total patients with incomplete name (missing first or last name)
+      - name: total_patients_with_missing_dob
+        data_type: integer
+        description: Total patients with missing date of birth
+      - name: total_patients_with_invalid_dob
+        data_type: integer
+        description: Total patients with invalid date of birth (on or before 1900-01-01 or after today's date)
+      - name: total_patients_with_missing_location
+        data_type: integer
+        description: Total patients with missing location information (no entry for village, nursing zone, medical_area, sub-division, division)
+      - name: total_patients_with_missing_contact
+        data_type: integer
+        description: Total patients with missing contact information (no entry for primary nor secondary contact)
+      - name: total_patients_merged
+        data_type: integer
+        description: Total patients merged
