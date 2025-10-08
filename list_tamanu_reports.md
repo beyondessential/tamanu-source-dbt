@@ -586,6 +586,28 @@ Category, Vaccine, Vaccine status
 
 ---
 
+### Usage quality metrics patient details
+
+**Report Description**
+
+This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
+
+**Default date range**: allTime
+
+
+---
+
+### Usage quality metrics patient registrations
+
+**Report Description**
+
+This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
+
+**Default date range**: 30days
+
+
+---
+
 ### User audit report
 
 **Report Description**
