@@ -1,0 +1,28 @@
+{
+  "query": "replace this",
+  "name": "Medication Dispensed summary report",
+  "notes": "This report shows count of doses dispensed for a given drug within a specified date range.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Drug",
+        "name": "medicationId",
+        "suggesterEndpoint": "drug"
+      }
+    ]
+  }
+}
