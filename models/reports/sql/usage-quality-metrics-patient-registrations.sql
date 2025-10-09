@@ -1,8 +1,8 @@
 select
-    registration_date as {{ translate_label('patientRegistrationDate') }},
-    total_patient_registrations as {{ translate_label('patientTotalPatientRegistrations') }},
-    total_birth_registrations as {{ translate_label('patientTotalBirthRegistrations') }},
-    total_incorrect_registrations_for_patient_under_6mth as {{ translate_label('patientTotalIncorrectRegistrationsForAgedUnder6Months') }}
+    registration_date as "{{ translate_label('patientRegistrationDate') }}",
+    total_patient_registrations as "{{ translate_label('patientTotalPatientRegistrations') }}",
+    total_birth_registrations as "{{ translate_label('patientTotalBirthRegistrations') }}",
+    total_incorrect_registrations_for_patient_under_6mth as "{{ translate_label('patientTotalIncorrectRegistrationsForAgedUnder6Months') }}"
 from {{ ref("ds__usage_quality_metrics_patient_registrations") }}
 where
     case
