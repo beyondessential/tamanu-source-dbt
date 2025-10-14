@@ -15,5 +15,5 @@ join {{ ref("prescriptions")}} p on p.id = ep.prescription_id
 join {{ ref("locations")}} l on l.id = e.location_id
 join {{ ref("facilities") }} f 
     on f.id = l.facility_id
-    and f.is_sensitive is false
+    and not f.is_sensitive
 join {{ ref("reference_data")}} m on m.id = p.medication_id
