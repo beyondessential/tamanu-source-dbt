@@ -30,5 +30,7 @@ left join {{ ref('patient_additional_data') }} pad on pad.patient_id = p.id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('users') }} clinician on clinician.id = e.clinician_id
 left join {{ ref('departments') }} d on d.id = e.department_id
-left join {{ ref('locations') }} l on l.id = e.location_id
-left join {{ ref('facilities') }} f on f.id = l.facility_id
+join {{ ref('locations') }} l on l.id = e.location_id
+join {{ ref('facilities') }} f
+    on f.id = l.facility_id
+    and not f.is_sensitive

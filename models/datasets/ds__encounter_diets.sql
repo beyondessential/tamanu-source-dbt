@@ -53,7 +53,10 @@ join {{ ref('patients') }} p
     on p.id = e.patient_id
 join {{ ref('locations') }} l
     on l.id = e.location_id
-join {{ ref('location_groups') }} lg
+join {{ ref('facilities') }} f
+    on f.id = l.facility_id
+    and f.is_sensitive is false
+left join {{ ref('location_groups') }} lg
     on lg.id = l.location_group_id
 left join diets d
     on d.encounter_id = e.id
