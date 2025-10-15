@@ -31,74 +31,60 @@ with encounter_history_consolidated as (
         on d.id = eh.department_id
     join {{ ref('locations') }} l
         on l.id = eh.location_id
-    join {{ ref('location_groups') }} lg
+    join {{ ref('facilities') }} f
+        on f.id = l.facility_id
+        and not f.is_sensitive
+    left join {{ ref('location_groups') }} lg
         on lg.id = l.location_group_id
 ),
 
-location_changes as (
+encounter_changes as (
     select
         encounter_id,
+        
+        -- Location changes: tracks all location changes throughout the encounter
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) as location_datetimes,
+        ) filter (where change_type isnull or change_type = 'location') as location_datetimes,
         array_agg(
             location_id
             order by datetime
-        ) as location_ids,
+        ) filter (where change_type isnull or change_type = 'location') as location_ids,
         string_agg(
             location_name, ', '
             order by datetime
-        ) as locations
-    from encounter_history_consolidated
-    where change_type isnull or change_type = 'location'
-    group by encounter_id
-),
-
-location_group_changes as (
-    select
-        encounter_id,
+        ) filter (where change_type isnull or change_type = 'location') as locations,
+        
+        -- Location group changes: tracks location group changes (only when group actually changes)
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) as location_group_datetimes,
+        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
         array_agg(
             location_group_id
             order by datetime
-        ) as location_group_ids,
+        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_group_ids,
         string_agg(
             location_group_name, ', '
             order by datetime
-        ) as location_groups
-    from encounter_history_consolidated
-    where (change_type isnull or change_type = 'location')
-        and (location_group_id != prev_location_group_id or prev_location_group_id is null)
-    group by encounter_id
-),
-
-department_changes as (
-    select
-        encounter_id,
+        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_groups,
+        
+        -- Department changes: tracks all department changes throughout the encounter
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) as department_datetimes,
+        ) filter (where change_type isnull or change_type = 'department') as department_datetimes,
         array_agg(
             department_id
             order by datetime
-        ) as department_ids,
+        ) filter (where change_type isnull or change_type = 'department') as department_ids,
         string_agg(
             department_name, ', '
             order by datetime
-        ) as departments
-    from encounter_history_consolidated
-    where change_type isnull or change_type = 'department'
-    group by encounter_id
-),
-
-encounter_type_changes as (
-    select
-        encounter_id,
+        ) filter (where change_type isnull or change_type = 'department') as departments,
+        
+        -- Encounter type changes: tracks encounter type progression (emergency types)
         string_agg(
             case
                 when encounter_type = 'triage' then 'Triage'
@@ -106,13 +92,17 @@ encounter_type_changes as (
                 when encounter_type = 'emergency' then 'Emergency short stay'
             end, ', '
             order by datetime
-        ) as encounter_type_emergency,
+        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_emergency,
+        
+        -- Encounter type changes: tracks encounter type progression (inpatient types)
         string_agg(
             case
                 when encounter_type = 'admission' then 'Hospital admission'
             end, ', '
             order by datetime
-        ) as encounter_type_inpatient,
+        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_inpatient,
+        
+        -- Encounter type changes: tracks encounter type progression (outpatient types)
         string_agg(
             case
                 when encounter_type = 'clinic' then 'Clinic'
@@ -121,9 +111,8 @@ encounter_type_changes as (
                 when encounter_type = 'vaccination' then 'Vaccination'
             end, ', '
             order by datetime
-        ) as encounter_type_outpatient
+        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_outpatient
     from encounter_history_consolidated
-    where change_type isnull or change_type = 'encounter_type'
     group by encounter_id
 ),
 
@@ -327,9 +316,9 @@ select
     end as length_of_stay,
     f.id as facility_id,
     f.name as facility,
-    etc.encounter_type_emergency,
-    etc.encounter_type_inpatient,
-    etc.encounter_type_outpatient,
+    ec.encounter_type_emergency,
+    ec.encounter_type_inpatient,
+    ec.encounter_type_outpatient,
     dd.id as discharge_disposition_id,
     dd.name as discharge_disposition,
     t.score as triage_score,
@@ -357,18 +346,18 @@ select
     lg.name as discharging_location_group,
     l.id as discharging_location_id,
     l.name as discharging_location,
-    dc.department_datetimes[array_upper(dc.department_datetimes, 1)] as time_assigned_to_discharging_department,
-    lgc.location_group_datetimes[array_upper(lgc.location_group_datetimes, 1)] as time_assigned_to_discharging_location_group,
-    lc.location_datetimes[array_upper(lc.location_datetimes, 1)] as time_assigned_to_discharging_location,
-    dc.department_ids,
-    dc.departments,
-    array_to_string(dc.department_datetimes, ', ') as department_datetimes,
-    lgc.location_group_ids,
-    lgc.location_groups,
-    array_to_string(lgc.location_group_datetimes, ', ') as location_group_datetimes,
-    lc.location_ids,
-    lc.locations,
-    array_to_string(lc.location_datetimes, ', ') as location_datetimes,
+    ec.department_datetimes[array_upper(ec.department_datetimes, 1)] as time_assigned_to_discharging_department,
+    ec.location_group_datetimes[array_upper(ec.location_group_datetimes, 1)] as time_assigned_to_discharging_location_group,
+    ec.location_datetimes[array_upper(ec.location_datetimes, 1)] as time_assigned_to_discharging_location,
+    ec.department_ids,
+    ec.departments,
+    array_to_string(ec.department_datetimes, ', ') as department_datetimes,
+    ec.location_group_ids,
+    ec.location_groups,
+    array_to_string(ec.location_group_datetimes, ', ') as location_group_datetimes,
+    ec.location_ids,
+    ec.locations,
+    array_to_string(ec.location_datetimes, ', ') as location_datetimes,
     e.reason_for_encounter,
     ed.diagnoses,
     ep.medications,
@@ -387,14 +376,13 @@ select
 from {{ ref('encounters') }} e
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('locations') }} l on l.id = e.location_id
-join {{ ref('facilities') }} f on f.id = l.facility_id
+join {{ ref('facilities') }} f
+    on f.id = l.facility_id
+    and not f.is_sensitive
 left join {{ ref('users') }} c on c.id = e.clinician_id
 join {{ ref('departments') }} dp on dp.id = e.department_id
-join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-join encounter_type_changes etc on etc.encounter_id = e.id
-join department_changes dc on dc.encounter_id = e.id
-join location_group_changes lgc on lgc.encounter_id = e.id
-join location_changes lc on lc.encounter_id = e.id
+left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+join encounter_changes ec on ec.encounter_id = e.id
 join encounter_history_consolidated ehc on ehc.encounter_id = e.id and ehc.change_type is null
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 left join {{ ref('discharges') }} d on d.encounter_id = e.id
