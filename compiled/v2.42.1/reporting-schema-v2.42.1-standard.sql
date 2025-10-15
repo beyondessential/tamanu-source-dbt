@@ -1919,7 +1919,6 @@ join "reporting"."facilities" f
     on f.id = l.facility_id
     and f.is_sensitive = False
 left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
 left join "reporting"."reference_data" vil on vil.id = p.village_id
 join "reporting"."reference_data" m on m.id = pr.medication_id
 
@@ -2221,12 +2220,12 @@ encounter_notes as (
         select 
             string_id,
             coalesce(
-                max(case when language = 'en' then text end),
+                max(case when language = 'default' then text end),
                 max(case when language = 'default' then text end),
                 string_id
             ) as text
         from "public"."translated_strings"
-        where language in ('en', 'default')
+        where language in ('default', 'default')
         group by string_id
     ) ts
         on ts.string_id = 'note.property.type.' || n.note_type
@@ -3450,7 +3449,6 @@ join "reporting"."facilities" f
     on f.id = l.facility_id
     and f.is_sensitive = True
 left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
-left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
 left join "reporting"."reference_data" vil on vil.id = p.village_id
 join "reporting"."reference_data" m on m.id = pr.medication_id
 
