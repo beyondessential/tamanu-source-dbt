@@ -88,10 +88,12 @@ left join {{ ref('location_groups') }} procedure_area
     on procedure_area.id = procedure_location.location_group_id
 join {{ ref('facilities') }} procedure_facility
     on procedure_facility.id = procedure_location.facility_id
+    and not procedure_facility.is_sensitive
 join {{ ref('locations') }} encounter_location
     on encounter_location.id = e.location_id
 join {{ ref('facilities') }} encounter_facility
     on encounter_facility.id = encounter_location.facility_id
+    and not encounter_facility.is_sensitive
 join {{ ref('departments') }} encounter_department
     on encounter_department.id = coalesce(pc.department_id, e.department_id)
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
