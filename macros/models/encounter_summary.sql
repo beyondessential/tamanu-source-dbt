@@ -262,7 +262,7 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} area
         on area.id = ira.area_id
-    left join {{ ref('int__notes_final') }} n
+    left join {{ ref('notes') }} n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -290,9 +290,8 @@ encounter_notes as (
         ),
         E'\n'
         order by n.datetime) as notes
-    from {{ ref('int__notes_final') }} n
+    from {{ ref('int__encounter_notes_final') }} n
     {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
-    where n.record_type = 'Encounter' and n.note_type != 'system'
     group by n.record_id
 )
 

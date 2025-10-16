@@ -13,6 +13,8 @@ with notes_ordering as (
         visibility_status,
         row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
     from {{ ref('notes') }}
+    where record_type = 'Encounter'
+        and note_type != 'system'
 )
 select 
     id,

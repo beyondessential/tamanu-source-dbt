@@ -3410,6 +3410,38 @@ window w as (
     order by ll.start_datetime
 )
 );
+create or replace view "reporting"."int__encounter_notes_final" as (
+-- May include notes for the test patient.
+with notes_ordering as (
+    select
+        id,
+        datetime,
+        content,
+        note_type,
+        record_type,
+        record_id,
+        authored_by_id,
+        on_behalf_of_id,
+        updated_note_id,
+        visibility_status,
+        row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
+    from "reporting"."notes"
+    where record_type = 'Encounter'
+        and note_type != 'system'
+)
+select 
+    id,
+    datetime,
+    content,
+    note_type,
+    record_type,
+    record_id,
+    authored_by_id,
+    on_behalf_of_id,
+    visibility_status
+from notes_ordering
+where row_number = 1
+);
 create or replace view "reporting"."int__lab_requests_history" as (
 select distinct on (lr.id, coalesce(lrl.status, lr.status))
     lr.id as request_id,
@@ -3451,40 +3483,10 @@ window
     )
 order by lr.id, coalesce(lrl.status, lr.status)
 );
-create or replace view "reporting"."int__notes_final" as (
--- May include notes for the test patient.
-with notes_ordering as (
-    select
-        id,
-        datetime,
-        content,
-        note_type,
-        record_type,
-        record_id,
-        authored_by_id,
-        on_behalf_of_id,
-        updated_note_id,
-        visibility_status,
-        row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
-    from "reporting"."notes"
-)
-select 
-    id,
-    datetime,
-    content,
-    note_type,
-    record_type,
-    record_id,
-    authored_by_id,
-    on_behalf_of_id,
-    visibility_status
-from notes_ordering
-where row_number = 1
-);
 create or replace view "reporting"."ds__encounter_summary" as (
 
 
-with  __dbt__cte__int__notes_final as (
+with  __dbt__cte__int__encounter_notes_final as (
 -- May include notes for the test patient.
 with notes_ordering as (
     select
@@ -3500,6 +3502,8 @@ with notes_ordering as (
         visibility_status,
         row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
     from "reporting"."notes"
+    where record_type = 'Encounter'
+        and note_type != 'system'
 )
 select 
     id,
@@ -3775,7 +3779,7 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join "reporting"."reference_data" area
         on area.id = ira.area_id
-    left join __dbt__cte__int__notes_final n
+    left join "reporting"."notes" n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -3803,7 +3807,7 @@ encounter_notes as (
         ),
         E'\n'
         order by n.datetime) as notes
-    from __dbt__cte__int__notes_final n
+    from __dbt__cte__int__encounter_notes_final n
     left join (
         select 
             string_id,
@@ -3817,7 +3821,6 @@ encounter_notes as (
         group by string_id
     ) ts
         on ts.string_id = 'note.property.type.' || n.note_type
-    where n.record_type = 'Encounter' and n.note_type != 'system'
     group by n.record_id
 )
 
@@ -3932,7 +3935,7 @@ where e.end_datetime is not null
 create or replace view "reporting"."ds__sensitive_encounter_summary" as (
 
 
-with  __dbt__cte__int__notes_final as (
+with  __dbt__cte__int__encounter_notes_final as (
 -- May include notes for the test patient.
 with notes_ordering as (
     select
@@ -3948,6 +3951,8 @@ with notes_ordering as (
         visibility_status,
         row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
     from "reporting"."notes"
+    where record_type = 'Encounter'
+        and note_type != 'system'
 )
 select 
     id,
@@ -3996,7 +4001,7 @@ where row_number = 1
         on l.id = eh.location_id
     join "reporting"."facilities" f
         on f.id = l.facility_id
-        and f.is_sensitive = False
+        and f.is_sensitive = True
     left join "reporting"."location_groups" lg
         on lg.id = l.location_group_id
 ),
@@ -4223,7 +4228,7 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join "reporting"."reference_data" area
         on area.id = ira.area_id
-    left join __dbt__cte__int__notes_final n
+    left join "reporting"."notes" n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -4251,7 +4256,7 @@ encounter_notes as (
         ),
         E'\n'
         order by n.datetime) as notes
-    from __dbt__cte__int__notes_final n
+    from __dbt__cte__int__encounter_notes_final n
     left join (
         select 
             string_id,
@@ -4265,7 +4270,6 @@ encounter_notes as (
         group by string_id
     ) ts
         on ts.string_id = 'note.property.type.' || n.note_type
-    where n.record_type = 'Encounter' and n.note_type != 'system'
     group by n.record_id
 )
 
@@ -4353,7 +4357,7 @@ join "reporting"."patients" p on p.id = e.patient_id
 join "reporting"."locations" l on l.id = e.location_id
 join "reporting"."facilities" f
     on f.id = l.facility_id
-    and f.is_sensitive = False
+    and f.is_sensitive = True
 left join "reporting"."users" c on c.id = e.clinician_id
 join "reporting"."departments" dp on dp.id = e.department_id
 left join "reporting"."location_groups" lg on lg.id = l.location_group_id
