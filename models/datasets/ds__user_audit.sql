@@ -48,9 +48,11 @@ left join {{ ref('patient_additional_data') }} pad on pad.patient_id = e.patient
 left join {{ ref('reference_data') }} bt
     on bt.id = coalesce(e.patient_billing_type_id, pad.patient_billing_type_id)
 left join {{ ref('triages') }} t on t.encounter_id = e.id
-left join {{ ref('locations') }} l on l.id = e.location_id
+join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-left join {{ ref('facilities') }} f on f.id = l.facility_id
+join {{ ref('facilities') }} f
+    on f.id = l.facility_id
+    and not f.is_sensitive
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('discharges') }} ds on ds.encounter_id = e.id
 left join non_system_notes n on n.record_id = e.id
