@@ -1,11 +1,12 @@
 version: 2
 
 models:
-  - name: ds__encounter_prescriptions
-    description: Encounter prescriptions
+  - name: ds__sensitive_encounter_prescriptions
+    description: Sensitive facility encounter prescriptions
     config:
       tags:
         - clinical
+        - restricted
     columns:
       - name: encounter_id
         data_type: character varying(255)

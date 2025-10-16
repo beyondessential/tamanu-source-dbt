@@ -24,10 +24,11 @@ select
 from {{ ref('location_bookings') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
-left join {{ ref('locations') }} l on l.id = a.location_id
+join {{ ref('locations') }} l on l.id = a.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+join {{ ref('facilities') }} f on f.id = l.facility_id
+    and not f.is_sensitive
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing_type_id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
 left join {{ ref('reference_data') }} bt on bt.id = a.booking_type_id
-where a.booking_type_id notnull

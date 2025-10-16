@@ -1,0 +1,19 @@
+{
+  "query": "replace this",
+  "name": "Sensitive prescription line list",
+  "status": "published",
+  "notes": "This report generates a list of all prescription created in the selected date range from encounters at sensitive facilities. Prescriptions are listed in order of most recent prescribed date and time.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      }
+    ]
+  }
+}
