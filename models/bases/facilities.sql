@@ -9,6 +9,7 @@ select
     city_town,
     street_address,
     catchment_id,
-    visibility_status
-from {{ source("tamanu", "facilities") }}
+    visibility_status,
+    is_sensitive
+from {{ resolve_input_model('facilities') }}
 where deleted_at is null

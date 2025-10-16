@@ -22,6 +22,10 @@ select
     d.name as department
 from {{ ref('referrals') }} rf
 join {{ ref('encounters') }} e on e.id = rf.initiating_encounter_id
+join {{ ref('locations') }} l on l.id = e.location_id
+join {{ ref('facilities') }} f 
+    on f.id = l.facility_id
+    and not f.is_sensitive
 join {{ ref('survey_responses') }} sr on sr.id = rf.survey_response_id
 join {{ ref('surveys') }} s on s.id = sr.survey_id
 join {{ ref('patients') }} p on p.id = e.patient_id

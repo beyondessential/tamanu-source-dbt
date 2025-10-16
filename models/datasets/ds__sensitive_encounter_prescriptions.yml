@@ -1,11 +1,12 @@
 version: 2
 
 models:
-  - name: ds__encounter_prescriptions
-    description: Encounter prescriptions
+  - name: ds__sensitive_encounter_prescriptions
+    description: Sensitive facility encounter prescriptions
     config:
       tags:
         - clinical
+        - restricted
     columns:
       - name: encounter_id
         data_type: character varying(255)
@@ -55,6 +56,9 @@ models:
       - name: medication_id
         data_type: character varying(255)
         description: "{{ doc('prescriptions__medication_id') }}"
+      - name: medication_code
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} code of the prescribed medication."
       - name: medication
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} name of the prescribed medication."
