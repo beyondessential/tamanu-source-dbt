@@ -1,13 +1,18 @@
 with admission_encounters as (
     select
-        id,
-        patient_id,
-        start_datetime,
-        end_datetime,
-        location_id,
-        patient_billing_type_id
-    from {{ ref('encounters') }}
-    where encounter_type = 'admission'
+        e.id,
+        e.patient_id,
+        e.start_datetime,
+        e.end_datetime,
+        e.location_id,
+        e.patient_billing_type_id,
+        f.id as facility_id,
+        f.name as facility_name
+    from {{ ref('encounters') }} e
+    join {{ ref('locations') }} l on l.id = e.location_id
+    join {{ ref('facilities') }} f on f.id = l.facility_id
+    where e.encounter_type = 'admission'
+        and not f.is_sensitive
 ),
 
 encounter_history_consolidated as (
@@ -201,8 +206,8 @@ patient_data as (
         ae.start_datetime,
         ae.end_datetime,
         ae.location_id,
-        f.id as facility_id,
-        f.name as facility_name
+        ae.facility_id,
+        ae.facility_name
     from admission_encounters ae
     left join {{ ref('patients') }} p
         on p.id = ae.patient_id
@@ -210,10 +215,6 @@ patient_data as (
         on village.id = p.village_id
     left join {{ ref('reference_data') }} bt
         on bt.id = ae.patient_billing_type_id
-    left join {{ ref('locations') }} l
-        on l.id = ae.location_id
-    left join {{ ref('facilities') }} f
-        on f.id = l.facility_id
 )
 
 select

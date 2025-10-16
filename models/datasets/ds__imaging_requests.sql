@@ -82,9 +82,11 @@ select
 from {{ ref('imaging_requests') }} ir
 join {{ ref('encounters') }} e on e.id = ir.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-left join {{ ref('locations') }} l on l.id = e.location_id
+join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-left join {{ ref('facilities') }} f on f.id = l.facility_id
+join {{ ref('facilities') }} f
+    on f.id = l.facility_id
+    and not f.is_sensitive
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('users') }} su on su.id = e.clinician_id
 left join {{ ref('users') }} ru on ru.id = ir.requested_by_id
