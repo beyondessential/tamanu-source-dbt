@@ -2931,18 +2931,63 @@
       data_type: character varying(255)
       description: If the prescription was discontinued, why that happened.
       name: discontinuing_reason
+    dose_amount:
+      data_type: numeric
+      description: Numeric field to record dose amount
+      name: dose_amount
+    duration_unit:
+      data_type: character varying(255)
+      description: The duration unit of the prescription
+      name: duration_unit
+    duration_value:
+      data_type: numeric
+      description: The duration value of the prescription
+      name: duration_value
     end_datetime:
       data_type: timestamp
       description: When the prescription ends.
       name: end_datetime
+    frequency:
+      data_type: character varying(255)
+      description: The frequency of the prescription
+      name: frequency
     id:
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in prescriptions.
       name: id
+    ideal_times:
+      data_type: array
+      description: Ideal times which are specified by prescriber
+      name: ideal_times
+    indication:
+      data_type: character varying(255)
+      description: The [indication of use](https://en.wikipedia.org/wiki/Indication_(medicine))
+        for the medicine.
+      name: indication
     is_discontinued:
       data_type: boolean
       description: Whether the prescription was discontinued.
       name: is_discontinued
+    is_ongoing:
+      data_type: boolean
+      description: A flag to determine whether or not the current prescription is
+        ongoing
+      name: is_ongoing
+    is_phone_order:
+      data_type: boolean
+      description: A flag to determine whether or not the current prescription is
+        phone order
+      name: is_phone_order
+    is_prn:
+      data_type: boolean
+      description: A flag to determine whether or not the current prescription is
+        prn
+      name: is_prn
+    is_variable_does:
+      data_type: boolean
+      description: A flag to determine whether or not the current prescription is
+        variable does
+      name: is_variable_does
     medication_id:
       data_type: character varying(255)
       description: The medication ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
@@ -2956,10 +3001,23 @@
       data_type: integer
       description: Quantity of medicine to dispense.
       name: quantity
+    repeats:
+      data_type: integer
+      description: How many times this prescription can be repeatedly dispensed without
+        a new prescription.
+      name: repeats
+    route:
+      data_type: character varying(255)
+      description: Administration route for the medication.
+      name: route
     start_datetime:
       data_type: timestamp
       description: The start date of the prescription
       name: start_datetime
+    units:
+      data_type: character varying(255)
+      description: The units of the prescription
+      name: units
   config:
     tags:
     - base
