@@ -20,7 +20,19 @@ select
     pr.medication_id,
     m.code as medication_code,
     m.name as medication,
-    pr.quantity
+    pr.route,
+    pr.quantity,
+    pr.repeats,
+    pr.is_ongoing,
+    pr.is_prn,
+    pr.is_variable_dose,
+    pr.dose_amount,
+    pr.units,
+    pr.frequency,
+    pr.is_discontinued,
+    pr.discontinued_by_id,
+    pr.discontinuing_reason,
+    pr.discontinued_datetime
 from {{ ref("encounter_prescriptions") }} ep
 join {{ ref("encounters") }} e on e.id = ep.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
