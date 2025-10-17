@@ -42,7 +42,7 @@ models:
       - name: is_prn
         data_type: boolean
         description: "{{ doc('prescriptions__is_prn') }}"
-      - name: is_variable_does
+      - name: is_variable_dose
         data_type: boolean
         description: "{{ doc('prescriptions__is_variable_dose') }}"
       - name: dose_amount

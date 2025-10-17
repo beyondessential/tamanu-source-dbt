@@ -2983,11 +2983,11 @@
       description: A flag to determine whether or not the current prescription is
         prn
       name: is_prn
-    is_variable_does:
+    is_variable_dose:
       data_type: boolean
       description: A flag to determine whether or not the current prescription is
         variable does
-      name: is_variable_does
+      name: is_variable_dose
     medication_id:
       data_type: character varying(255)
       description: The medication ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
