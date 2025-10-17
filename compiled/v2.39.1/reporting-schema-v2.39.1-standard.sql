@@ -975,7 +975,20 @@ select
     p.end_date::timestamp as end_datetime,
     p.medication_id,
     p.prescriber_id,
+    p.indication,
+    p.route,
     p.quantity,
+    p.repeats,
+    p.is_ongoing,
+    p.is_prn,
+    p.is_variable_dose,
+    p.dose_amount,
+    p.units,
+    p.frequency,
+    p.duration_value,
+    p.duration_unit,
+    p.is_phone_order,
+    p.ideal_times,
     p.discontinued as is_discontinued,
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
@@ -1895,7 +1908,19 @@ select
     pr.medication_id,
     m.code as medication_code,
     m.name as medication,
-    pr.quantity
+    pr.route,
+    pr.quantity,
+    pr.repeats,
+    pr.is_ongoing,
+    pr.is_prn,
+    pr.is_variable_dose,
+    pr.dose_amount,
+    pr.units,
+    pr.frequency,
+    pr.is_discontinued,
+    pr.discontinued_by_id,
+    pr.discontinuing_reason,
+    pr.discontinued_datetime
 from "reporting"."encounter_prescriptions" ep
 join "reporting"."encounters" e on e.id = ep.encounter_id
 join "reporting"."patients" p on p.id = e.patient_id
@@ -3008,7 +3033,19 @@ select
     pr.medication_id,
     m.code as medication_code,
     m.name as medication,
-    pr.quantity
+    pr.route,
+    pr.quantity,
+    pr.repeats,
+    pr.is_ongoing,
+    pr.is_prn,
+    pr.is_variable_dose,
+    pr.dose_amount,
+    pr.units,
+    pr.frequency,
+    pr.is_discontinued,
+    pr.discontinued_by_id,
+    pr.discontinuing_reason,
+    pr.discontinued_datetime
 from "reporting"."encounter_prescriptions" ep
 join "reporting"."encounters" e on e.id = ep.encounter_id
 join "reporting"."patients" p on p.id = e.patient_id
