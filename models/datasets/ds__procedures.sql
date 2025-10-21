@@ -10,7 +10,7 @@ with filtered_procedure as (
     from {{ ref('procedures') }} pc
     left join {{ ref('encounter_history') }} eh
         on eh.encounter_id = pc.encounter_id
-        and eh.datetime::date <= pc.date
+        and eh.datetime <= pc.datetime
 )
 
 select
@@ -19,7 +19,7 @@ select
     p.first_name,
     p.last_name,
     p.date_of_birth,
-    date_part('year', age(pc.date, p.date_of_birth)) as age,
+    date_part('year', age(pc.datetime, p.date_of_birth)) as age,
     p.sex,
     nationality.name as nationality,
     encounter_facility.id as encounter_facility_id,
@@ -41,28 +41,28 @@ select
     procedure_location.name as procedure_location,
     procedure_type.id as procedure_type_id,
     procedure_type.name as procedure_type,
-    pc.date as procedure_date,
-    pc.start_time as procedure_start_time,
-    pc.end_time as procedure_end_time,
+    pc.datetime as procedure_datetime,
+    pc.start_datetime as procedure_start_datetime,
+    pc.end_datetime as procedure_end_datetime,
     case
-        when pc.end_time is not null and pc.start_time is not null then
+        when pc.end_datetime is not null and pc.start_datetime is not null then
             concat(
                 lpad((
                     case
-                        when pc.end_time < pc.start_time
+                        when pc.end_datetime < pc.start_datetime
                             then
-                                (24 + extract(hour from pc.end_time) - extract(hour from pc.start_time))
+                                (24 + extract(hour from pc.end_datetime) - extract(hour from pc.start_datetime))
                         else
-                            extract(hour from (pc.end_time - pc.start_time))
+                            extract(hour from (pc.end_datetime - pc.start_datetime))
                     end
                 )::text, 2, '0'), ':',
                 lpad((
                     case
-                        when pc.end_time < pc.start_time
+                        when pc.end_datetime < pc.start_datetime
                             then
-                                (extract(minute from pc.end_time) - extract(minute from pc.start_time))
+                                (extract(minute from pc.end_datetime) - extract(minute from pc.start_datetime))
                         else
-                            extract(minute from (pc.end_time - pc.start_time))
+                            extract(minute from (pc.end_datetime - pc.start_datetime))
                     end
                 )::text, 2, '0')
             )

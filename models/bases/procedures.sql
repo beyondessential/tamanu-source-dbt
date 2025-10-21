@@ -1,8 +1,8 @@
 select
     p.id,
-    p.date::date as date,
-    p.start_time::timestamp::time as start_time,
-    p.end_time::timestamp::time as end_time,
+    p.date::timestamp as datetime,
+    p.start_time::timestamp as start_datetime,
+    p.end_time::timestamp as end_datetime,
     p.completed as is_completed,
     p.note,
     p.completed_note,

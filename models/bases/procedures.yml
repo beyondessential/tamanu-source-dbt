@@ -9,14 +9,14 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in procedures."
-      - name: date
-        data_type: date
-        description: "{{ doc('generic__date') }} in procedures."
-      - name: start_time
-        data_type: time
+      - name: datetime
+        data_type: timestamp
+        description: "{{ doc('generic__datetime') }} in procedures."
+      - name: start_datetime
+        data_type: timestamp
         description: "{{ doc('procedures__start_time') }}"
-      - name: end_time
-        data_type: time
+      - name: end_datetime
+        data_type: timestamp
         description: "{{ doc('procedures__end_time') }}"
       - name: is_completed
         data_type: boolean

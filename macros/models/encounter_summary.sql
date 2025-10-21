@@ -185,13 +185,13 @@ encounter_procedures as (
         string_agg(
             concat(
                 'Name: ', proc.name,
-                ', Date: ', to_char(p.date, '{{ var("date_format") }}'),
+                ', Date: ', to_char(p.datetime, '{{ var("date_format") }}'),
                 ', Location: ', loc.name,
                 ', Notes: ', p.note,
                 ', Completed notes: ', p.completed_note
             ),
             E'\n'
-            order by p.date
+            order by p.datetime
         ) as procedures
     from {{ ref('procedures') }} p
     left join {{ ref('reference_data') }} proc
