@@ -3049,19 +3049,19 @@
       data_type: text
       description: Free-form notes at completion of the procedure.
       name: completed_note
-    date:
-      data_type: date
-      description: Local date for the record in procedures.
-      name: date
+    datetime:
+      data_type: timestamp
+      description: Local date and time for the record in procedures.
+      name: datetime
     encounter_id:
       data_type: character varying(255)
       description: The [encounter](#!/source/source.tamanu.tamanu.encounters) this
         procedure is a part of.
       name: encounter_id
-    end_time:
-      data_type: time
+    end_datetime:
+      data_type: timestamp
       description: When the procedure ended, if it's completed.
-      name: end_time
+      name: end_datetime
     id:
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in procedures.
@@ -3084,10 +3084,10 @@
       description: Reference to the procedure type ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
         `type = procedureType`).
       name: procedure_type_id
-    start_time:
-      data_type: time
+    start_datetime:
+      data_type: timestamp
       description: When the procedure started.
-      name: start_time
+      name: start_datetime
     time_in:
       data_type: character(19)
       description: The time when the patient entered the procedure room or when the
