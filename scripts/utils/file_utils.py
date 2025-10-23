@@ -49,6 +49,8 @@ def read_file(file_path, file_type="text"):
                 return f.read()
         elif file_type in ["excel", "xlsx"]:
             return pd.read_excel(file_path)
+        elif file_type == "csv":
+            return pd.read_csv(file_path)
         else:
             raise ValueError(f"Unsupported file_type: {file_type}")
     except Exception as e:
