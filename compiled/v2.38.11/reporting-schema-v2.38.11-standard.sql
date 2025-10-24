@@ -3542,6 +3542,7 @@ select
     lg.name as location_group,
     l.id as location_id,
     l.name as location,
+    av.scheduled_vaccine_id,
     case
         when av.is_given_elsewhere = true and av.datetime is null then null
         else av.datetime::date
