@@ -16,7 +16,7 @@ def extract_translate_labels_from_file(file_path):
 
 def load_translations_from_file(file_path):
     if file_path.exists():
-        df = read_file(file_path, file_type="excel")
+        df = read_file(file_path, file_type="csv")
         return {
             sid[len("report.reporting.") :]
             for sid in df["stringId"]
@@ -30,15 +30,15 @@ def load_translations_from_file(file_path):
 def main():
     if DEPLOYMENT == "standard":
         translations = load_translations_from_file(
-            Path("report_translations_standard.xlsx")
+            Path("report_translations_standard.csv")
         )
         sql_folders = [Path("models/reports/sql")]
     else:
         translations_standard = load_translations_from_file(
-            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.xlsx")
+            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
         )
         translations_deployment = load_translations_from_file(
-            Path(f"report_translations_{DEPLOYMENT}.xlsx")
+            Path(f"report_translations_{DEPLOYMENT}.csv")
         )
 
         if translations_deployment:
