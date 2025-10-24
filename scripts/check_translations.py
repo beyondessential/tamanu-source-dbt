@@ -38,7 +38,7 @@ def main():
             Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
         )
         translations_deployment = load_translations_from_file(
-            Path(f"report_translations_{DEPLOYMENT}.xlsx")
+            Path(f"report_translations_{DEPLOYMENT}.csv")
         )
 
         if translations_deployment:
