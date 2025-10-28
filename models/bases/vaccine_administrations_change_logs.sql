@@ -9,7 +9,7 @@ with filtered_changes as (
         av.record_data
     from ({{ base_history_from_log('administered_vaccines') }}) av
     join {{ ref("encounters") }} e on e.id = av.record_data ->> 'encounter_id'
-{% if dbt_utils.get_relations_by_pattern('logs__tamanu', 'changes_backup')%}
+{% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup')%}
     union all
     select
         av.changelog_id,
@@ -19,7 +19,7 @@ with filtered_changes as (
         av.record_updated_at,
         av.record_id,
         av.record_data
-    from ({{ base_history_from('administered_vaccines', 'logs__tamanu', 'changes_backup') }}) av
+    from ({{ base_history_from_log('administered_vaccines', 'logs__tamanu', 'changes_backup') }}) av
     join {{ ref("encounters") }} e on e.id = av.record_data ->> 'encounter_id'
 {% endif %}
 )
