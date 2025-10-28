@@ -17,7 +17,7 @@ with filtered_changes as (
         and record_id != '{{ var("test_patient") }}'
 {% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup') %}
     union all
-    {{ base_history_from_log_backup('patients') }}
+    {{ base_history_from_log('patients') }}
         and record_id != '{{ var("test_patient") }}'
 {% endif %}
 )
