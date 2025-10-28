@@ -15,18 +15,12 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
         and record_id != '{{ var("test_patient") }}'
-)
-
-{% if dbt_utils.get_relations_by_pattern(
-    schema_pattern='logs',
-    table_pattern='changes_backup')
-%}
-,
-backup_filtered_changes as (
+{% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup') %}
+    union all
     {{ base_history_from_log_backup('patients') }}
         and record_id != '{{ var("test_patient") }}'
-)
 {% endif %}
+)
 
 select
     fc.changelog_id,
@@ -40,23 +34,3 @@ select
         {%- endif -%}
     {%- endfor %}
 from filtered_changes fc
-
-{% if dbt_utils.get_relations_by_pattern(
-    schema_pattern='logs',
-    table_pattern='changes_backup')
-%}
-union all
-
-select
-    fc.changelog_id,
-    fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
-    fc.updated_by_user_id,
-    fc.record_id as id
-    {%- for col in columns -%}
-        {%- if not (is_analytics_target() and col.is_direct_identifier) -%}
-            ,
-            {{ col.expr }} as {{ col.name }}
-        {%- endif -%}
-    {%- endfor %}
-from backup_filtered_changes fc
-{% endif %}
