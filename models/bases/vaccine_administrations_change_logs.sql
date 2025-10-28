@@ -62,7 +62,7 @@ from filtered_changes fc
     schema_pattern='logs',
     table_pattern='changes_backup')
 %}
-union
+union all
 
 select
     fc.changelog_id,
