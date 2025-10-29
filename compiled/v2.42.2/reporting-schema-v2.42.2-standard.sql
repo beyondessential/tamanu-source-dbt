@@ -2629,6 +2629,7 @@ select
     p.village_id,
     village.name as village,
     p.date_of_birth,
+    p.date_of_death,
     pad.birth_certificate,
     pad.driving_license,
     pad.passport,
@@ -2643,6 +2644,9 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    pad.mother_id,
+    pad.father_id,
+    pad.street_village,
     case
         when pbd.patient_id is null then 'Patient'
         else 'Birth'
@@ -2668,9 +2672,7 @@ left join "juliana"."reference_data" nationality on nationality.id = pad.nationa
 left join "juliana"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
 left join "juliana"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join "juliana"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join
-    "juliana"."reference_data" billing
-    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join "juliana"."reference_data" billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
 );
 create or replace view "reporting"."ds__patients_access_logs" as (
 with grouped_access_logs as (
@@ -4461,6 +4463,7 @@ select
     lg.name as location_group,
     l.id as location_id,
     l.name as location,
+    av.scheduled_vaccine_id,
     case
         when av.is_given_elsewhere = true and av.datetime is null then null
         else av.datetime::date
