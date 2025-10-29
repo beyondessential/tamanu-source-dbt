@@ -69,6 +69,7 @@ report.reporting.departments,Departments
 report.reporting.diagnoses,Diagnoses
 report.reporting.diagnosesPrimary,Primary diagnoses
 report.reporting.diagnosesSecondary,Secondary diagnoses
+report.reporting.diagnosis,Diagnosis
 report.reporting.diagnosisCertainty,Certainty
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
@@ -84,6 +85,7 @@ report.reporting.encounterDepartmentHistoryDateTimes,Department history date and
 report.reporting.encounterDiet,Diet
 report.reporting.encounterEndDateTime,Encounter end date and time
 report.reporting.encounterIsDischarged,Discharges (has the patient been discharged)
+report.reporting.encounterIsHospitalAdmission,Hospital admission
 report.reporting.encounterLengthOfStay,Length of stay (days)
 report.reporting.encounterLocationGroupHistory,Area history
 report.reporting.encounterLocationGroupHistoryDateTimes,Area history date and times
@@ -139,6 +141,7 @@ report.reporting.labLaboratory,Laboratory
 report.reporting.labRequestCancellationReason,Reason for cancellation
 report.reporting.labRequestClinician,Requesting clinician
 report.reporting.labRequestCompletedDateTime,Completed date and time
+report.reporting.labRequestDates,Lab request dates
 report.reporting.labRequestDateTime,Lab request date and time
 report.reporting.labRequestDepartment,Requesting department
 report.reporting.labRequestId,Request ID
