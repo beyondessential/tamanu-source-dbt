@@ -11,6 +11,7 @@ select
     p.village_id,
     village.name as village,
     p.date_of_birth,
+    p.date_of_death,
     pad.birth_certificate,
     pad.driving_license,
     pad.passport,
@@ -25,6 +26,9 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    pad.mother_id,
+    pad.father_id,
+    pad.street_village,
     case
         when pbd.patient_id is null then 'Patient'
         else 'Birth'
@@ -50,6 +54,4 @@ left join {{ ref("reference_data") }} nationality on nationality.id = pad.nation
 left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
 left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join
-    {{ ref("reference_data") }} billing
-    on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
