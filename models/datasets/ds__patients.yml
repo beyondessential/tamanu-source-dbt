@@ -85,6 +85,15 @@ models:
       - name: patient_billing_type
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the patient billing type."
+      - name: mother_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__mother_id') }}"
+      - name: father_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__father_id') }}"
+      - name: street_village
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__street_village') }}"
       - name: registration_type
         data_type: character varying(255)
         description: "Indicates whether the patient was registered as a birth or patient."

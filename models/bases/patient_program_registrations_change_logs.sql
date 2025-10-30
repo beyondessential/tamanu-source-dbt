@@ -5,6 +5,15 @@ with filtered_changes as (
             or string_to_array(version, '.')::int [] >= string_to_array('2.33.0', '.')::int []
         )
         and record_data ->> 'patient_id' != '{{ var("test_patient") }}'
+{% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup') %}
+    union all
+    {{ base_history_from_log('patient_program_registrations', 'logs__tamanu', 'changes_backup') }}
+        and (
+            version = 'unknown'
+            or string_to_array(version, '.')::int [] >= string_to_array('2.33.0', '.')::int []
+        )
+        and record_data ->> 'patient_id' != '{{ var("test_patient") }}'
+{% endif %}
 )
 
 select

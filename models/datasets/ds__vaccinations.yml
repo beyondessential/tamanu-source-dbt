@@ -58,6 +58,9 @@ models:
       - name: location
         data_type: character varying(255)
         description: "{{ doc('generic__location') }} at which the vaccine was given."
+      - name: scheduled_vaccine_id
+        data_type: character varying(255)
+        description: "{{ doc('administered_vaccines__scheduled_vaccine_id') }}"
       - name: vaccination_date
         data_type: timestamp
         description: "{{ doc('generic__date') }}"

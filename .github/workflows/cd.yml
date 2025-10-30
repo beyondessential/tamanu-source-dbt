@@ -58,6 +58,12 @@ jobs:
         env:
           BUCKET: s3://bes-data-tamanu-translations
           
+      - name: Convert CSV to Excel
+        run: |
+          set -x
+          python -m pip install pandas openpyxl
+          python scripts/convert_translations_to_excel_file.py report_translations_standard.csv
+
       - name: Publish translations to S3
         run: |
           set -x
