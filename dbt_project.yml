@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.42.1
+version: 2.42.2
 config-version: 2
 profile: tamanu_source_dbt
 vars:
