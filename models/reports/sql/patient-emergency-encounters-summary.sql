@@ -9,20 +9,18 @@ select
     count(*) as "{{ translate_label('triageRecordCount') }}"
 from {{ ref('ds__encounters_emergency') }}
 where case
-        when {{ parameter('patientDisplayId') }} is null then true
-        else display_id = {{ parameter('patientDisplayId') }}
+        when {{ parameter('patientId') }} is null then true
+        else patient_id = {{ parameter('patientId') }}
     end
     and
     case
-        when {{ parameter('fromDate', default_value='current_date - interval \'30 days\'', data_type='date') }} is null then true
-        else arrival_datetime
-            >= {{ parameter('fromDate', default_value='current_date - interval \'30 days\'', data_type='date') }}
+        when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
+        else triage_datetime >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     end
     and
     case
-        when {{ parameter('toDate', default_value='current_date', data_type='date') }} is null then true
-        else arrival_datetime
-            <= {{ parameter('toDate', default_value='current_date', data_type='date') }}
+        when {{ parameter('toDate', default_value='2025-01-31', data_type='date') }} is null then true
+        else triage_datetime <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
     end
 group by
     display_id,

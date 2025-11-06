@@ -9,10 +9,9 @@
     "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {
-        "parameterField": "ParameterAutocompleteField",
-        "label": "Patient display ID",
-        "name": "patientDisplayId",
-        "suggesterEndpoint": "patient"
+        "parameterField": "PatientField",
+        "label": "Patient",
+        "name": "patientId"
       }
     ]
   }
