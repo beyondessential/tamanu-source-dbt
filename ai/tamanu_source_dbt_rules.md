@@ -27,7 +27,8 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 ## Essential Requirements
 
 ### Documentation
-- **Mandatory**: `.yml` file for each model (except reports)
+- **Mandatory**: `.yml` file for each model in `models/bases`, `models/surveys`, and `models/datasets`
+- **Reports do not require `.yml` files**
 - Include comprehensive name/description for model and all columns
 - Document new columns when adding to existing models
 - Use Australian English spelling
@@ -55,19 +56,25 @@ A dbt project that transforms Tamanu healthcare system data into optimised repor
 ## Development Workflow
 1. Understand data flow and dependencies
 2. Create/modify models following layer patterns
-3. Add comprehensive documentation
+3. Add comprehensive documentation (`.yml` files for bases/surveys/datasets, `.json` config for reports)
 4. Implement tests
-5. **If adding new translation strings**: Add to `report_translation_strings.csv`, run `python scripts/generate_translated_strings_sql.py`, then `dbt run --select translated_strings_default`
-6. Run `sqlfluff fix`
+5. **If adding new translation strings**: Add to `report_translations_standard.csv`, run `python scripts/generate_translated_strings_sql.py`, then `dbt run --select translated_strings_default`
+6. Run `sqlfluff fix` (requires database environment variables)
 7. Execute `dbt test --profiles-dir config`
-8. Validate report configurations
+8. Validate report configurations with `python scripts/validate_report_configs.py`
 9. **Validate translation consistency**: Run `python scripts/check_translations.py` to ensure all translate_label calls have corresponding CSV entries
 10. Use `dbt run` to verify
 
 ## Translation System
-- **Dynamic Generation**: Use `python scripts/generate_translated_strings_sql.py` to generate `translated_strings_default.sql` from `report_translation_strings.csv`
+- **CSV File**: Translation strings stored in `report_translations_standard.csv`
+- **Dynamic Generation**: Use `python scripts/generate_translated_strings_sql.py` to generate `translated_strings_default.sql` from CSV
 - **Fallback Hierarchy**: Translation system checks database translations first, then falls back to default model, then string ID
 - **Adding Translations**: Add new entries to CSV file, run generation script, then `dbt run --select translated_strings_default`
 - **Usage**: Use `translate_label('fieldName')` in reports - automatically references `report.reporting.fieldName` format
 - **Testing**: Run `dbt test --select translated_strings_default` to validate translation data quality
 - **Validation**: Use `python scripts/check_translations.py` to ensure all `translate_label` calls have corresponding entries in CSV file - identifies missing translations and provides file-by-file analysis
+
+## Report Configuration
+- **Schema documentation**: See `documentations/tamanu-report-configuration-schema.md` for detailed report configuration requirements
+- **Config location**: Report JSON configs must be placed in `models/reports/config/`
+- **Validation**: Always validate with `python scripts/validate_report_configs.py` after creating or modifying report configs
