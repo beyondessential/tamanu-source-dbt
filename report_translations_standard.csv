@@ -288,6 +288,7 @@ report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
+report.reporting.triageRecordCount,Number of triage records
 report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
 report.reporting.userEmail,User email
 report.reporting.userName,User name
