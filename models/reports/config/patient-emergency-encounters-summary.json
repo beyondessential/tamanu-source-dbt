@@ -10,7 +10,7 @@
     "parameters": [
       {
         "parameterField": "PatientField",
-        "label": "Patient",
+        "label": "Patient (or leave blank for all patients)",
         "name": "patientId"
       }
     ]
