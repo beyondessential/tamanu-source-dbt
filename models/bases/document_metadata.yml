@@ -7,7 +7,7 @@ models:
         - clinical
     columns:
       - name: id
-        data_type: uuid
+        data_type: character varying(255)
         description: "{{ doc('generic__id') }} in document_metadata."
       - name: name
         data_type: character varying(255)
