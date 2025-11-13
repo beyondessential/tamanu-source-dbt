@@ -100,6 +100,49 @@
   - base
   - clinical
 - columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in document_metadata.
+      name: created_datetime
+    encounter_id:
+      data_type: character varying(255)
+      description: Reference to the [encounter](#!/source/source.tamanu.tamanu.encounters)
+        the document was uploaded to.
+      name: encounter_id
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in document_metadata.
+      name: id
+    name:
+      data_type: character varying(255)
+      description: "Free-form name of the document.\r\n\r\nOften this is the filename."
+      name: name
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients)
+        the document was uploaded to.
+      name: patient_id
+    type:
+      data_type: character varying(255)
+      description: The [media type](https://en.wikipedia.org/wiki/Media_type) of the
+        file.
+      name: type
+  config:
+    tags:
+    - base
+    - clinical
+  description: "Information about an uploaded document or file, typically attached\
+    \ to an encounter or directly to a patient.\r\n\r\nThe actual file data is stored\
+    \ in [`attachments`](#!/source/source.tamanu.tamanu.attachments)."
+  name: document_metadata
+  tags:
+  - base
+  - clinical
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in encounter_diagnoses.
+      name: created_datetime
     datetime:
       data_type: timestamp
       description: Local date for the record in encounter_diagnoses.
@@ -249,6 +292,10 @@
       data_type: character varying(255)
       description: Reference to the [examiner](#!/source/source.tamanu.tamanu.users).
       name: clinician_id
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in encounters.
+      name: created_datetime
     department_id:
       data_type: character varying(255)
       description: Reference to the [department](#!/source/source.tamanu.tamanu.departments)
@@ -908,6 +955,10 @@
   - base
   - financial
 - columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in lab_request_logs.
+      name: created_datetime
     id:
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in lab_request_logs.
@@ -3049,6 +3100,10 @@
       data_type: text
       description: Free-form notes at completion of the procedure.
       name: completed_note
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in procedures.
+      name: created_datetime
     date:
       data_type: date
       description: Local date for the record in procedures.
@@ -3089,15 +3144,19 @@
       description: When the procedure started.
       name: start_time
     time_in:
-      data_type: character(19)
+      data_type: time
       description: The time when the patient entered the procedure room or when the
         procedure setup began.
       name: time_in
     time_out:
-      data_type: character(19)
+      data_type: time
       description: The time when the patient left the procedure room or when the procedure
         cleanup was completed.
       name: time_out
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in procedures.
+      name: updated_datetime
   config:
     tags:
     - base
@@ -3756,6 +3815,10 @@
   - base
   - clinical
 - columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in users.
+      name: created_datetime
     display_id:
       data_type: character varying(255)
       description: "Display identifier for the user.\r\n\r\nThis may be the employee\

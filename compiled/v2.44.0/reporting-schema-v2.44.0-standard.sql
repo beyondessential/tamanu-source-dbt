@@ -38,6 +38,17 @@ where d.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 order by d.encounter_id asc, d.created_at asc
 );
+create or replace view "reporting"."document_metadata" as (
+select
+    id,
+    name,
+    type,
+    created_at::timestamp as created_datetime,
+    patient_id,
+    encounter_id
+from "public"."document_metadata"
+where deleted_at is null
+);
 create or replace view "reporting"."encounters" as (
 select
     id,
@@ -57,7 +68,8 @@ select
     referral_source_id,
     planned_location_id,
     planned_location_start_time::timestamp as planned_location_start_datetime,
-    discharge_draft
+    discharge_draft,
+    created_at::timestamp as created_datetime
 from "public"."encounters"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
@@ -70,7 +82,8 @@ select
     ed.certainty,
     ed.encounter_id,
     ed.diagnosis_id,
-    ed.clinician_id as diagnosed_by_id
+    ed.clinician_id as diagnosed_by_id,
+    ed.created_at::timestamp as created_datetime
 from "public"."encounter_diagnoses" ed
 join "public"."encounters" e on e.id = ed.encounter_id
 where ed.deleted_at is null
@@ -371,6 +384,7 @@ select
     lrl.id,
     lrl.lab_request_id,
     lrl.status,
+    lrl.created_at::timestamp as created_datetime,
     lrl.updated_at::timestamp as updated_datetime,
     lrl.updated_by_id
 from "public"."lab_request_logs" lrl
@@ -1023,8 +1037,10 @@ select
     p.physician_id as clinician_id,
     p.anaesthetist_id,
     p.assistant_anaesthetist_id,
-    p.time_in,
-    p.time_out
+    p.time_in::time as time_in,
+    p.time_out::time as time_out,
+    p.created_at::timestamp as created_datetime,
+    p.updated_at::timestamp as updated_datetime
 from "public"."procedures" p
 join "public"."encounters" e on e.id = p.encounter_id
 where p.deleted_at is null
@@ -1211,7 +1227,8 @@ select
     email,
     phone_number,
     role,
-    visibility_status
+    visibility_status,
+    created_at::timestamp as created_datetime
 from "public"."users"
 where deleted_at is null
 );
@@ -1836,6 +1853,41 @@ join "reporting"."locations" l on l.id = e.location_id
 join "reporting"."facilities" f
     on f.id = l.facility_id
     and not f.is_sensitive
+);
+create or replace view "reporting"."ds__encounters_emergency" as (
+select
+    t.id as triage_id,
+    t.arrival_datetime,
+    t.triage_datetime,
+    t.closed_datetime,
+    t.score,
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    p.village_id,
+    village.name as village,
+    e.id as encounter_id,
+    e.encounter_type,
+    arrival_mode.name as arrival_mode,
+    chief_complaint.name as chief_complaint,
+    secondary_complaint.name as secondary_complaint,
+    clinician.display_name as clinician,
+    t.clinician_id,
+    f.id as facility_id,
+    f.name as facility
+from "reporting"."triages" t
+join "reporting"."encounters" e on e.id = t.encounter_id
+join "reporting"."patients" p on p.id = e.patient_id
+left join "reporting"."locations" l on l.id = e.location_id
+left join "reporting"."facilities" f on f.id = l.facility_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."reference_data" arrival_mode on arrival_mode.id = t.arrival_mode_id
+left join "reporting"."reference_data" chief_complaint on chief_complaint.id = t.chief_complaint_id
+left join "reporting"."reference_data" secondary_complaint on secondary_complaint.id = t.secondary_complaint_id
+left join "reporting"."users" clinician on clinician.id = t.clinician_id
 );
 create or replace view "reporting"."ds__encounter_diets" as (
 with diets as (
