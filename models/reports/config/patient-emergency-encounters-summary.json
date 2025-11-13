@@ -1,0 +1,18 @@
+{
+  "query": "replace this",
+  "name": "Patient emergency encounters summary",
+  "notes": "This report generates a summary showing the number of triage (emergency room encounter) records per patient within a specified date range. The report defaults to the past 30 days and can be filtered by patient display ID. Patients are listed alphabetically by last name.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "PatientField",
+        "label": "Patient (or leave blank for all patients)",
+        "name": "patientId"
+      }
+    ]
+  }
+}

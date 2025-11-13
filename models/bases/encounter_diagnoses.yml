@@ -24,3 +24,6 @@ models:
       - name: diagnosed_by_id
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__clinician_id') }}"
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in encounter_diagnoses."

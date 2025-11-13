@@ -16,7 +16,8 @@ select
     referral_source_id,
     planned_location_id,
     planned_location_start_time::timestamp as planned_location_start_datetime,
-    discharge_draft
+    discharge_draft,
+    created_at::timestamp as created_datetime
 from {{ resolve_input_model('encounters') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
