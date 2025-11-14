@@ -165,8 +165,8 @@ where deleted_at is null
 create or replace view "reporting"."patients_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'patients'
 group by record_id
@@ -216,8 +216,8 @@ where deleted_at is null
 create or replace view "reporting"."users_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'users'
 group by record_id
@@ -337,8 +337,8 @@ from filtered_changes fc
 create or replace view "reporting"."encounters_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'encounters'
 group by record_id
@@ -541,8 +541,8 @@ where lrl.deleted_at is null
 create or replace view "reporting"."lab_requests_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'lab_requests'
 group by record_id
@@ -599,8 +599,8 @@ where deleted_at is null
 create or replace view "reporting"."encounter_diagnoses_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'encounter_diagnoses'
 group by record_id
@@ -1255,8 +1255,8 @@ where a.deleted_at is null
 create or replace view "reporting"."lab_request_logs_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'lab_request_logs'
 group by record_id
@@ -1307,8 +1307,8 @@ where deleted_at is null
 create or replace view "reporting"."procedures_metadata" as (
 select 
     record_id as id,
-    min(record_created_at) as created_datetime,
-    max(record_created_at) as updated_datetime
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
 from "logs"."changes"
 where table_name = 'procedures'
 group by record_id
