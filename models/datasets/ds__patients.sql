@@ -1,5 +1,5 @@
 select
-    p.registration_date,
+    pm.created_datetime as registration_date,
     u.display_name as registered_by,
     p.id as patient_id,
     p.first_name,
@@ -46,6 +46,7 @@ select
     end as status
 from {{ ref("patients") }} p
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
+left join {{ ref("patients_metadata") }} pm on pm.id = p.id
 left join {{ ref("patient_birth_data") }} pbd on pbd.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
 left join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
