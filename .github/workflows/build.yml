@@ -23,6 +23,12 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-secret: ${{ secrets.TAILSCALE_DBPROXY_ACCESS_OAUTH }}
+          tags: tag:infra,tag:infra-gha-deploy
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
