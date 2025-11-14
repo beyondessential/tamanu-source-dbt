@@ -45,8 +45,8 @@ select
         else 'Alive'
     end as status
 from {{ ref("patients") }} p
+join {{ ref("patients_with_metadata") }} pm on pm.id = p.id
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
-left join {{ ref("patients_metadata") }} pm on pm.id = p.id
 left join {{ ref("patient_birth_data") }} pbd on pbd.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
 left join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'

@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: encounter_diagnoses_metadata
+  - name: encounter_diagnoses_with_metadata
     description: "{{ doc('generic__metadata') }} for encounter_diagnoses."
     config:
       tags:

@@ -25,7 +25,7 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
         else current_date
     end as status_end_date
 from {{ ref('lab_requests') }} lr
-left join {{ ref('lab_requests_metadata') }} lrm on lrm.id = lr.id
+join {{ ref('lab_requests_with_metadata') }} lrm on lrm.id = lr.id
 left join {{ ref('lab_request_logs') }} lrl on lrl.lab_request_id = lr.id
 left join {{ ref('lab_request_logs_metadata') }} lrlm on lrlm.id = lrl.id
 left join {{ ref('encounters') }} e on e.id = lr.encounter_id

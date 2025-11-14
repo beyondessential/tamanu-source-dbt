@@ -6,7 +6,7 @@ with data as (
         p.date_of_birth,
         age(pm.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from {{ ref("patients") }} p
-    left join {{ ref("patients_metadata") }} pm on pm.id = p.id
+    join {{ ref("patients_with_metadata") }} pm on pm.id = p.id
     left join {{ ref("patient_birth_data") }} pbd
         on pbd.patient_id = p.id
 )

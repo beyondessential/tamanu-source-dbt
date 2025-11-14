@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: procedures_metadata
+  - name: procedures_with_metadata
     description: "{{ doc('generic__metadata') }} for procedures."
     config:
       tags:
