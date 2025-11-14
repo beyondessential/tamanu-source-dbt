@@ -5,8 +5,7 @@ select
     ed.certainty,
     ed.encounter_id,
     ed.diagnosis_id,
-    ed.clinician_id as diagnosed_by_id,
-    ed.created_at::timestamp as created_datetime
+    ed.clinician_id as diagnosed_by_id
 from {{ resolve_input_model('encounter_diagnoses') }} ed
 join {{ resolve_input_model('encounters') }} e on e.id = ed.encounter_id
 where ed.deleted_at is null
