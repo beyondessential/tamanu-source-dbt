@@ -52,11 +52,3 @@ jobs:
           git add compiled/
           git diff --staged --quiet || git commit -m "chore: update compiled reporting assets [skip ci]"
           git push
-
-      - name: Summary
-        if: success()
-        run: |
-          VERSION=$(grep '^version:' dbt_project.yml | awk '{print $2}')
-          echo "Built completed successfully for version $VERSION"
-          echo "Built completed successfully for version $VERSION" >> $GITHUB_STEP_SUMMARY
-
