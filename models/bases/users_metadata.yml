@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: users_with_metadata
+  - name: users_metadata
     description: "{{ doc('generic__metadata') }} for users."
     config:
       tags:

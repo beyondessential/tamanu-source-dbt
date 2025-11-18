@@ -3110,8 +3110,8 @@ select
         else 'Alive'
     end as status
 from "reporting"."patients" p
+join "reporting"."patients_metadata" pm on pm.id = p.id
 left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."patients_metadata" pm on pm.id = p.id
 left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
 left join "reporting"."users" u on u.id = pad.registered_by_id
 left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
@@ -3373,7 +3373,7 @@ with data as (
         p.date_of_birth,
         age(pm.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from "reporting"."patients" p
-    left join "reporting"."patients_metadata" pm on pm.id = p.id
+    join "reporting"."patients_metadata" pm on pm.id = p.id
     left join "reporting"."patient_birth_data" pbd
         on pbd.patient_id = p.id
 )
@@ -3544,7 +3544,7 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
         else current_date
     end as status_end_date
 from "reporting"."lab_requests" lr
-left join "reporting"."lab_requests_metadata" lrm on lrm.id = lr.id
+join "reporting"."lab_requests_metadata" lrm on lrm.id = lr.id
 left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
 left join "reporting"."lab_request_logs_metadata" lrlm on lrlm.id = lrl.id
 left join "reporting"."encounters" e on e.id = lr.encounter_id

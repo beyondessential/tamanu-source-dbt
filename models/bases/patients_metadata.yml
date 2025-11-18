@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: patients_with_metadata
+  - name: patients_metadata
     description: "{{ doc('generic__metadata') }} for patients."
     config:
       tags:

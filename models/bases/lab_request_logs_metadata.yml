@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: lab_request_logs_with_metadata
+  - name: lab_request_logs_metadata
     description: "{{ doc('generic__metadata') }} for lab_request_logs."
     config:
       tags:

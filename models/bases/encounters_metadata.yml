@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: encounters_with_metadata
+  - name: encounters_metadata
     description: "{{ doc('generic__metadata') }} for encounters."
     config:
       tags:
