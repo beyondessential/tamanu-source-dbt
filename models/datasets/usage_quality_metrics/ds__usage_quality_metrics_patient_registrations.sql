@@ -1,11 +1,12 @@
 with data as (
     select
-        p.registration_date,
+        pm.created_datetime as registration_date,
         p.id as registration_patient_id,
         pbd.patient_id as birth_patient_id,
         p.date_of_birth,
-        age(p.registration_date, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
+        age(pm.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from {{ ref("patients") }} p
+    join {{ ref("patients_metadata") }} pm on pm.id = p.id
     left join {{ ref("patient_birth_data") }} pbd
         on pbd.patient_id = p.id
 )

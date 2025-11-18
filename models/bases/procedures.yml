@@ -54,9 +54,3 @@ models:
       - name: time_out
         data_type: time
         description: "{{ doc('procedures__time_out') }}"
-      - name: created_datetime
-        data_type: timestamp
-        description: "{{ doc('generic__created_at') }} in procedures."
-      - name: updated_datetime
-        data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in procedures."

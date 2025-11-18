@@ -51,6 +51,3 @@ models:
       - name: discharge_draft
         data_type: jsonb
         description: "{{ doc('encounters__discharge_draft') }}"
-      - name: created_datetime
-        data_type: timestamp
-        description: "{{ doc('generic__created_at') }} in encounters."
