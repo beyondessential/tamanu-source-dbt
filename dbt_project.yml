@@ -1,7 +1,10 @@
 name: tamanu_source_dbt
+
 version: 2.44.1
+
 config-version: 2
 profile: tamanu_source_dbt
+
 vars:
   language: default
   timezone: Australia/Sydney
