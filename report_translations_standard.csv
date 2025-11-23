@@ -191,6 +191,8 @@ report.reporting.patientDeceasedOrActive,Deceased/Active
 report.reporting.patientDisplayId,Patient ID
 report.reporting.patientDivision,Division
 report.reporting.patientDrivingLicense,Driving license
+report.reporting.patientEmergencyContactName,Emergency contact name
+report.reporting.patientEmergencyContactNumber,Emergency contact number
 report.reporting.patientEthnicity,Ethnicity
 report.reporting.patientFather,Father
 report.reporting.patientFemaleCount,Total patients (female)
