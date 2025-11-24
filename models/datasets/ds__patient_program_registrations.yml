@@ -88,3 +88,15 @@ models:
       - name: deactivated_datetime
         data_type: timestamp
         description: "{{ doc('patient_program_registrations__deactivated_date') }}"
+      - name: primary_contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__primary_contact_number') }}"
+      - name: secondary_contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__secondary_contact_number') }}"
+      - name: emergency_contact_name
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__emergency_contact_name') }}"
+      - name: emergency_contact_number
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__emergency_contact_number') }}"
