@@ -73,9 +73,8 @@ sources:
             description: "{{ doc('patient_communications__patient_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'patients')
-                    field: id
+                  to: source('tamanu', 'patients')
+                  field: id
           - name: destination
             data_type: character varying(255)
             description: "{{ doc('patient_communications__destination') }}"

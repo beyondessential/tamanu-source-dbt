@@ -57,7 +57,6 @@ sources:
             description: "{{ doc('lab_tests__lab_request_id') }}"
             data_tests:
               - relationships:
-                  arguments:
                     to: source('tamanu', 'lab_requests')
                     field: id
           - name: lab_test_type_id
@@ -65,7 +64,6 @@ sources:
             description: "{{ doc('lab_tests__lab_test_type_id') }}"
             data_tests:
               - relationships:
-                  arguments:
                     to: source('tamanu', 'lab_test_types')
                     field: id
           - name: category_id
@@ -73,7 +71,6 @@ sources:
             description: "{{ doc('lab_tests__category_id') }}"
             data_tests:
               - dbt_utils.relationships_where:
-                  arguments:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'labTestCategory'
@@ -82,7 +79,6 @@ sources:
             description: "{{ doc('lab_tests__lab_test_method_id') }}"
             data_tests:
               - dbt_utils.relationships_where:
-                  arguments:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'labTestMethod'

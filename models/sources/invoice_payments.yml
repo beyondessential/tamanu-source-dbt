@@ -28,9 +28,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'invoices')
-                    field: id
+                  to: source('tamanu', 'invoices')
+                  field: id
           - name: date
             data_type: character(10)
             description: "{{ doc('generic__date') }} in invoice_payments."
@@ -73,9 +72,8 @@ sources:
             description: "{{ doc('invoice_payments__updated_by_user_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in invoice_payments."

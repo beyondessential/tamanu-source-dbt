@@ -26,10 +26,9 @@ sources:
             description: "{{ doc('medication_administration_records__status') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - GIVEN
-                      - NOT_GIVEN
+                  values:
+                    - GIVEN
+                    - NOT_GIVEN
           - name: due_at
             data_type: character(19)
             description: "{{ doc('medication_administration_records__due_at') }}"

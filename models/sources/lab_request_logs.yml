@@ -41,17 +41,15 @@ sources:
             description: "{{ doc('lab_request_logs__lab_request_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'lab_requests')
-                    field: id
+                  to: source('tamanu', 'lab_requests')
+                  field: id
           - name: updated_by_id
             data_type: character varying(255)
             description: "{{ doc('lab_request_logs__updated_by_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in lab_request_logs."

@@ -48,9 +48,8 @@ sources:
               - unique
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'reference_data')
-                    field: id
+                  to: source('tamanu', 'reference_data')
+                  field: id
           - name: code
             data_type: text
             description: "{{ doc('imaging_area_external_codes__code') }}"

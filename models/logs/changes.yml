@@ -51,7 +51,6 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
                     to: source('tamanu', 'users')
                     field: id
           - name: device_id

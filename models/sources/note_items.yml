@@ -43,7 +43,6 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
                     to: source('tamanu', 'note_pages')
                     field: id
           - name: revised_by_id
@@ -54,7 +53,6 @@ sources:
             description: "{{ doc('note_items__author_id') }}"
             data_tests:
               - relationships:
-                  arguments:
                     to: source('tamanu', 'users')
                     field: id
           - name: on_behalf_of_id
@@ -62,7 +60,6 @@ sources:
             description: "{{ doc('note_items__on_behalf_of_id') }}"
             data_tests:
               - relationships:
-                  arguments:
                     to: source('tamanu', 'users')
                     field: id
           - name: content

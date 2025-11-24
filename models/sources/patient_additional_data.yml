@@ -50,15 +50,14 @@ sources:
             description: "{{ doc('patient_additional_data__marital_status') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - Defacto
-                      - Married
-                      - Single
-                      - Widow
-                      - Divorced
-                      - Separated
-                      - Unknown
+                  values:
+                    - Defacto
+                    - Married
+                    - Single
+                    - Widow
+                    - Divorced
+                    - Separated
+                    - Unknown
           - name: city_town
             data_type: character varying(255)
             description: "{{ doc('patient_additional_data__city_town') }}"
@@ -85,16 +84,15 @@ sources:
             description: "{{ doc('patient_additional_data__blood_type') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - A+
-                      - A-
-                      - AB-
-                      - AB+
-                      - B+
-                      - B-
-                      - O+
-                      - O-
+                  values:
+                    - A+
+                    - A-
+                    - AB-
+                    - AB+
+                    - B+
+                    - B-
+                    - O+
+                    - O-
           - name: title
             data_type: character varying(255)
             description: "{{ doc('patient_additional_data__title') }}"

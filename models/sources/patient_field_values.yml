@@ -43,18 +43,16 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'patient_field_definitions')
-                    field: id
+                  to: source('tamanu', 'patient_field_definitions')
+                  field: id
           - name: patient_id
             data_type: character varying(255)
             description: "{{ doc('patient_field_values__patient_id') }}"
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'patients')
-                    field: id
+                  to: source('tamanu', 'patients')
+                  field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in patient_field_values."

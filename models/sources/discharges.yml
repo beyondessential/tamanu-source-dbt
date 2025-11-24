@@ -44,26 +44,23 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'encounters')
-                    field: id
+                  to: source('tamanu', 'encounters')
+                  field: id
           - name: discharger_id
             data_type: character varying(255)
             description: "{{ doc('discharges__discharger_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: disposition_id
             data_type: character varying(255)
             description: "{{ doc('discharges__disposition_id') }}"
             data_tests:
               - dbt_utils.relationships_where:
-                  arguments:
-                    to: source('tamanu', 'reference_data')
-                    field: id
-                    to_condition: type = 'dischargeDisposition'
+                  to: source('tamanu', 'reference_data')
+                  field: id
+                  to_condition: type = 'dischargeDisposition'
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in discharges."
@@ -74,22 +71,19 @@ sources:
             description: "{{ doc('discharges__facility_name') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'facilities')
-                    field: name
+                  to: source('tamanu', 'facilities')
+                  field: name
           - name: facility_address
             data_type: character varying(255)
             description: "{{ doc('discharges__facility_address') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'facilities')
-                    field: street_address
+                  to: source('tamanu', 'facilities')
+                  field: street_address
           - name: facility_town
             data_type: character varying(255)
             description: "{{ doc('discharges__facility_town') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'facilities')
-                    field: city_town
+                  to: source('tamanu', 'facilities')
+                  field: city_town

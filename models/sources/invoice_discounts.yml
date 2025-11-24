@@ -28,9 +28,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'invoices')
-                    field: id
+                  to: source('tamanu', 'invoices')
+                  field: id
           - name: percentage
             data_type: numeric
             description: "{{ doc('invoice_discounts__percentage') }}"
@@ -53,9 +52,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: applied_time
             data_type: character(19)
             description: "{{ doc('invoice_discounts__applied_time') }}"

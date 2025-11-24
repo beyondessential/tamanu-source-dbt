@@ -37,9 +37,8 @@ sources:
               - unique
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'patients')
-                    field: id
+                  to: source('tamanu', 'patients')
+                  field: id
           - name: birth_weight
             data_type: numeric
             description: "{{ doc('patient_birth_data__birth_weight') }}"
@@ -61,15 +60,14 @@ sources:
             description: "{{ doc('patient_birth_data__birth_delivery_type') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - normal_vaginal_delivery
-                      - breech
-                      - emergency_c_section
-                      - elective_c_section
-                      - vacuum_extraction
-                      - forceps
-                      - other
+                  values:
+                    - normal_vaginal_delivery
+                    - breech
+                    - emergency_c_section
+                    - elective_c_section
+                    - vacuum_extraction
+                    - forceps
+                    - other
           - name: gestational_age_estimate
             data_type: double precision
             description: "{{ doc('patient_birth_data__gestational_age_estimate') }}"
@@ -116,13 +114,12 @@ sources:
             description: "{{ doc('patient_birth_data__attendant_at_birth') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - doctor
-                      - midwife
-                      - nurse
-                      - traditional_birth_attentdant
-                      - other
+                  values:
+                    - doctor
+                    - midwife
+                    - nurse
+                    - traditional_birth_attentdant
+                    - other
           - name: name_of_attendant_at_birth
             data_type: character varying(255)
             description: "{{ doc('patient_birth_data__name_of_attendant_at_birth') }}"
@@ -134,19 +131,17 @@ sources:
             description: "{{ doc('patient_birth_data__birth_facility_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'facilities')
-                    field: id
+                  to: source('tamanu', 'facilities')
+                  field: id
           - name: registered_birth_place
             data_type: character varying(255)
             description: "{{ doc('patient_birth_data__registered_birth_place') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - health_facility
-                      - home
-                      - other
+                  values:
+                    - health_facility
+                    - home
+                    - other
           - name: time_of_birth_legacy
             data_type: character varying(255)
             description: "{{ doc('patient_birth_data__time_of_birth_legacy') }}"

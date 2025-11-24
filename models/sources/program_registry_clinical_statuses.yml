@@ -58,9 +58,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'program_registries')
-                    field: id
+                  to: source('tamanu', 'program_registries')
+                  field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in program_registry_clinical_statuses."

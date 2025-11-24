@@ -46,7 +46,6 @@ sources:
             data_tests:
               - not_null
               - accepted_values:
-                  arguments:
                     values:
                       - string
                       - number
@@ -65,7 +64,6 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
                     to: source('tamanu', 'patient_field_definition_categories')
                     field: id
           - name: updated_at_sync_tick

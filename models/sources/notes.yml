@@ -42,24 +42,23 @@ sources:
             data_tests:
               - not_null
               - accepted_values:
-                  arguments:
-                    values:
-                      - admission
-                      - areaToBeImaged
-                      - clinicalMobile
-                      - dietary
-                      - handover
-                      - discharge
-                      - medical
-                      - nursing
-                      - other
-                      - pharmacy
-                      - physiotherapy
-                      - resultDescription
-                      - social
-                      - surgical
-                      - system
-                      - treatmentPlan
+                  values:
+                    - admission
+                    - areaToBeImaged
+                    - clinicalMobile
+                    - dietary
+                    - handover
+                    - discharge
+                    - medical
+                    - nursing
+                    - other
+                    - pharmacy
+                    - physiotherapy
+                    - resultDescription
+                    - social
+                    - surgical
+                    - system
+                    - treatmentPlan
           - name: record_id
             data_type: character varying(255)
             description: "{{ doc('notes__record_id') }}"
@@ -71,14 +70,13 @@ sources:
             data_tests:
               - not_null
               - accepted_values:
-                  arguments:
-                    values:
-                      - Encounter
-                      - ImagingRequest
-                      - LabRequest
-                      - Patient
-                      - PatientCarePlan
-                      - Triage
+                  values:
+                    - Encounter
+                    - ImagingRequest
+                    - LabRequest
+                    - Patient
+                    - PatientCarePlan
+                    - Triage
           - name: date
             data_type: character(19)
             description: "{{ doc('generic__date') }} in notes."
@@ -106,17 +104,15 @@ sources:
             description: "{{ doc('notes__author_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: on_behalf_of_id
             data_type: character varying(255)
             description: "{{ doc('notes__on_behalf_of_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: content
             data_type: text
             description: "{{ doc('notes__content') }}"
@@ -130,6 +126,5 @@ sources:
             description: "{{ doc('notes__revised_by_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'notes')
-                    field: id
+                  to: source('tamanu', 'notes')
+                  field: id

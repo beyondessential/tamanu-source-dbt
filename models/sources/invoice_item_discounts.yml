@@ -28,9 +28,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'invoice_items')
-                    field: id
+                  to: source('tamanu', 'invoice_items')
+                  field: id
           - name: amount
             data_type: numeric
             description: "{{ doc('invoice_item_discounts__amount') }}"

@@ -41,18 +41,16 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'attachments')
-                    field: id
+                  to: source('tamanu', 'attachments')
+                  field: id
           - name: lab_request_id
             data_type: character varying(255)
             description: "{{ doc('lab_request_attachments__lab_request_id') }}"
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'lab_requests')
-                    field: id
+                  to: source('tamanu', 'lab_requests')
+                  field: id
           - name: title
             data_type: character varying(255)
             description: "{{ doc('lab_request_attachments__title') }}"
@@ -64,9 +62,8 @@ sources:
             description: "{{ doc('lab_request_attachments__replaced_by_id') }}"
             data_tests:
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'lab_request_attachments')
-                    field: id
+                  to: source('tamanu', 'lab_request_attachments')
+                  field: id
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in lab_request_attachments."

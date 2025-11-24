@@ -41,12 +41,11 @@ sources:
             description: "{{ doc('scheduled_vaccines__category') }}"
             data_tests:
               - accepted_values:
-                  arguments:
-                    values:
-                      - Campaign
-                      - Catchup
-                      - Other
-                      - Routine
+                  values:
+                    - Campaign
+                    - Catchup
+                    - Other
+                    - Routine
           - name: label
             data_type: character varying(255)
             description: "{{ doc('scheduled_vaccines__label') }}"
