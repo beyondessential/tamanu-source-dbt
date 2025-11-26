@@ -41,7 +41,8 @@ def main():
         cprint("Preparing dbt environment", "info")
         execute_command("dbt clean")
         execute_command("dbt deps")
-        
+        execute_command("dbt seed --profiles-dir config")
+
         # Build dbt models and generate documentation
         cprint("Building dbt models and documentation", "info")
         execute_command("dbt run --profiles-dir config")
