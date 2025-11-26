@@ -1,17 +1,17 @@
 select
-    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('diagnosisDateTime') }}",
-    diagnosis as "{{ translate_label('diagnoses') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    age as "{{ translate_label('patientAge') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    contact_number as "{{ translate_label('patientPrimaryContactNumber') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    clinician as "{{ translate_label('encounterClinician') }}",
-    department as "{{ translate_label('department') }}",
-    certainty as "{{ translate_label('diagnosisCertainty') }}",
-    is_primary as "{{ translate_label('diagnosisIsPrimary') }}"
+    to_char(diagnosis_datetime, '{{ var("datetime_format") }}') as "{{ translate_label_from_seed('diagnosisDateTime') }}",
+    diagnosis as "{{ translate_label_from_seed('diagnoses') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    age as "{{ translate_label_from_seed('patientAge') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    contact_number as "{{ translate_label_from_seed('patientPrimaryContactNumber') }}",
+    village as "{{ translate_label_from_seed('patientVillage') }}",
+    clinician as "{{ translate_label_from_seed('encounterClinician') }}",
+    department as "{{ translate_label_from_seed('department') }}",
+    certainty as "{{ translate_label_from_seed('diagnosisCertainty') }}",
+    is_primary as "{{ translate_label_from_seed('diagnosisIsPrimary') }}"
 from {{ ref('ds__diagnoses') }}
 where
     case

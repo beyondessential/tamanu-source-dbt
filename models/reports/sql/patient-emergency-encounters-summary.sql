@@ -1,12 +1,12 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    facility as "{{ translate_label('facility') }}",
-    count(*) as "{{ translate_label('triageRecordCount') }}"
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientDateOfBirth') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    village as "{{ translate_label_from_seed('patientVillage') }}",
+    facility as "{{ translate_label_from_seed('facility') }}",
+    count(*) as "{{ translate_label_from_seed('triageRecordCount') }}"
 from {{ ref('ds__encounters_emergency') }}
 where case
         when {{ parameter('patientId') }} is null then true

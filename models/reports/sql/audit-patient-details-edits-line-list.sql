@@ -1,14 +1,14 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    edited_by_user as "{{ translate_label('logChangeBy') }}",
-    user_email as "{{ translate_label('userEmail') }}",
-    user_role as "{{ translate_label('userRole') }}",
-    to_char(edited_datetime, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logChangeDateTime') }}"
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientDateOfBirth') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    village as "{{ translate_label_from_seed('patientVillage') }}",
+    edited_by_user as "{{ translate_label_from_seed('logChangeBy') }}",
+    user_email as "{{ translate_label_from_seed('userEmail') }}",
+    user_role as "{{ translate_label_from_seed('userRole') }}",
+    to_char(edited_datetime, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label_from_seed('logChangeDateTime') }}"
 from {{ ref('ds__patients_change_logs') }}
 where
     case

@@ -1,11 +1,11 @@
 select
-    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_label('patientRegistrationDate') }}",
+    to_char(registration_date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientRegistrationDate') }}",
     count(
         case when sex = 'Male' then 1 end
-    ) as "{{ translate_label('patientMaleCount') }}",
+    ) as "{{ translate_label_from_seed('patientMaleCount') }}",
     count(
         case when sex = 'Female' then 1 end
-    ) as "{{ translate_label('patientFemaleCount') }}"
+    ) as "{{ translate_label_from_seed('patientFemaleCount') }}"
 from {{ ref("ds__patients") }}
 where
     case

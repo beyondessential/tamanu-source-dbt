@@ -2915,7 +2915,11 @@ select
     ppr.datetime as registration_datetime,
     ppr.deactivated_by_id,
     deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime
+    ppr.deactivated_datetime,
+    pad.primary_contact_number,
+    pad.secondary_contact_number,
+    pad.emergency_contact_name,
+    pad.emergency_contact_number
 from "reporting"."patient_program_registrations" ppr
 join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
 join "reporting"."patients" p on p.id = ppr.patient_id

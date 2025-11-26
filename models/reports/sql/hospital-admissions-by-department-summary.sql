@@ -8,15 +8,15 @@ with reporting_months as (
 )
 
 select
-    to_char(rm.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
-    adh.facility as "{{ translate_label('facility') }}",
-    adh.department as "{{ translate_label('department') }}",
-    count(*) filter (where adh.admission) as "{{ translate_label('hospitalAdmissionCount') }}",
-    count(*) filter (where adh.discharge) as "{{ translate_label('hospitalDischargeCount') }}",
-    count(*) filter (where adh.death) as "{{ translate_label('hospitalDeathCount') }}",
-    count(*) filter (where adh.transfer_in) as "{{ translate_label('hospitalTransfersIntoDepartmentCount') }}",
-    count(*) filter (where adh.transfer_out) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount') }}",
-    round(avg(adh.length_of_stay), 1) as "{{ translate_label('hospitalAverageLengthOfStay') }}"
+    to_char(rm.month, '{{ var("yearmonth_format") }}') as "{{ translate_label_from_seed('reportingMonth') }}",
+    adh.facility as "{{ translate_label_from_seed('facility') }}",
+    adh.department as "{{ translate_label_from_seed('department') }}",
+    count(*) filter (where adh.admission) as "{{ translate_label_from_seed('hospitalAdmissionCount') }}",
+    count(*) filter (where adh.discharge) as "{{ translate_label_from_seed('hospitalDischargeCount') }}",
+    count(*) filter (where adh.death) as "{{ translate_label_from_seed('hospitalDeathCount') }}",
+    count(*) filter (where adh.transfer_in) as "{{ translate_label_from_seed('hospitalTransfersIntoDepartmentCount') }}",
+    count(*) filter (where adh.transfer_out) as "{{ translate_label_from_seed('hospitalTransfersOutOfDepartmentCount') }}",
+    round(avg(adh.length_of_stay), 1) as "{{ translate_label_from_seed('hospitalAverageLengthOfStay') }}"
 from reporting_months rm
 left join {{ ref('int__admission_history_department') }} adh
     on adh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)

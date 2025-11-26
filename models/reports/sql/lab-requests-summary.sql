@@ -8,22 +8,22 @@ with reporting_dates as (
 )
 
 select
-    to_char(rd.reporting_date, '{{ var("date_format") }}') as "{{ translate_label('reportingDate') }}",
-    lrh.facility as "{{ translate_label('facility') }}",
-    lrh.department as "{{ translate_label('department') }}",
-    lrh.lab_test_category as "{{ translate_label('labTestCategory') }}",
+    to_char(rd.reporting_date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('reportingDate') }}",
+    lrh.facility as "{{ translate_label_from_seed('facility') }}",
+    lrh.department as "{{ translate_label_from_seed('department') }}",
+    lrh.lab_test_category as "{{ translate_label_from_seed('labTestCategory') }}",
     count(distinct case
         when rd.reporting_date = lrh.requested_date
             then lrh.request_id
-    end) as "{{ translate_label('labRequestNewCount') }}",
+    end) as "{{ translate_label_from_seed('labRequestNewCount') }}",
     count(case
         when lrh.status = 'results_pending'
             then 1
-    end) as "{{ translate_label('labRequestPendingCount') }}",
+    end) as "{{ translate_label_from_seed('labRequestPendingCount') }}",
     count(case
         when lrh.status = 'published'
             then 1
-    end) as "{{ translate_label('labRequestPublishedCount') }}"
+    end) as "{{ translate_label_from_seed('labRequestPublishedCount') }}"
 from reporting_dates rd
 join {{ ref('int__lab_requests_history') }} lrh
     on lrh.status_start_date <= rd.reporting_date

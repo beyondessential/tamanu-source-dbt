@@ -1,21 +1,21 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    age as "{{ translate_label('patientAge') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
-    vaccine_name as "{{ translate_label('vaccineName') }}",
-    vaccine_brand as "{{ translate_label('vaccineBrand') }}",
-    disease as "{{ translate_label('vaccineDisease') }}",
-    vaccine_status as "{{ translate_label('vaccinationStatus') }}",
-    vaccine_schedule as "{{ translate_label('vaccineSchedule') }}",
-    given_by as "{{ translate_label('vaccinationGivenBy') }}",
-    recorded_by as "{{ translate_label('vaccinationRecordedBy') }}",
-    modified_by as "{{ translate_label('vaccinationModifiedBy') }}",
-    to_char(updated_at, '{{ var("datetime_format") }}') as "{{ translate_label('vaccinationModifiedDate') }}"
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientDateOfBirth') }}",
+    age as "{{ translate_label_from_seed('patientAge') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    village as "{{ translate_label_from_seed('patientVillage') }}",
+    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('vaccinationDate') }}",
+    vaccine_name as "{{ translate_label_from_seed('vaccineName') }}",
+    vaccine_brand as "{{ translate_label_from_seed('vaccineBrand') }}",
+    disease as "{{ translate_label_from_seed('vaccineDisease') }}",
+    vaccine_status as "{{ translate_label_from_seed('vaccinationStatus') }}",
+    vaccine_schedule as "{{ translate_label_from_seed('vaccineSchedule') }}",
+    given_by as "{{ translate_label_from_seed('vaccinationGivenBy') }}",
+    recorded_by as "{{ translate_label_from_seed('vaccinationRecordedBy') }}",
+    modified_by as "{{ translate_label_from_seed('vaccinationModifiedBy') }}",
+    to_char(updated_at, '{{ var("datetime_format") }}') as "{{ translate_label_from_seed('vaccinationModifiedDate') }}"
 from {{ ref("ds__vaccinations") }}
 where
     vaccine_status in ('Recorded in error', 'Historical')

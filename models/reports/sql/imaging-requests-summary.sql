@@ -8,18 +8,18 @@ with reporting_dates as (
 )
 
 select
-    to_char(rd.date, '{{ var("date_format") }}') as "{{ translate_label('reportingDate') }}",
-    ir.facility as "{{ translate_label('facility') }}",
-    ir.department as "{{ translate_label('department') }}",
-    ir.imaging_type as "{{ translate_label('imagingType') }}",
-    count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests') }}",
+    to_char(rd.date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('reportingDate') }}",
+    ir.facility as "{{ translate_label_from_seed('facility') }}",
+    ir.department as "{{ translate_label_from_seed('department') }}",
+    ir.imaging_type as "{{ translate_label_from_seed('imagingType') }}",
+    count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label_from_seed('imagingTotalRequests') }}",
     count(distinct ir.request_id) filter (
         where ir.requested_datetime::date <= rd.date
         and (ir.completed_datetime::date > rd.date or ir.completed_datetime is null)
-    ) as "{{ translate_label('imagingPendingRequests') }}",
+    ) as "{{ translate_label_from_seed('imagingPendingRequests') }}",
     count(distinct ir.request_id) filter (
         where ir.completed_datetime::date = rd.date
-    ) as "{{ translate_label('imagingCompletedRequests') }}"
+    ) as "{{ translate_label_from_seed('imagingCompletedRequests') }}"
 from reporting_dates rd
 left join {{ ref('ds__imaging_requests') }} ir
     on ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')

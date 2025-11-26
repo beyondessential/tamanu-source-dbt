@@ -1,14 +1,14 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    age as "{{ translate_label('patientAge') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    to_char(due_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDueDate') }}",
-    vaccine_name as "{{ translate_label('vaccineName') }}",
-    vaccine_schedule as "{{ translate_label('vaccineSchedule') }}",
-    vaccine_status as "{{ translate_label('vaccinationStatus') }}"
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientDateOfBirth') }}",
+    age as "{{ translate_label_from_seed('patientAge') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    to_char(due_date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('vaccinationDueDate') }}",
+    vaccine_name as "{{ translate_label_from_seed('vaccineName') }}",
+    vaccine_schedule as "{{ translate_label_from_seed('vaccineSchedule') }}",
+    vaccine_status as "{{ translate_label_from_seed('vaccinationStatus') }}"
 from {{ ref("ds__patient_vaccinations_upcoming") }}
 where
     case

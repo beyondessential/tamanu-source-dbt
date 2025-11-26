@@ -1,11 +1,11 @@
 select
-    to_char(itp.date, '{{ var("date_format") }}') as "{{ translate_label('paymentDate') }}",
-    itp.invoice_number as "{{ translate_label('invoiceNumber') }}",
-    itp.patient_name as "{{ translate_label('patientName') }}",
-    itp.payment_method as "{{ translate_label('paymentMethod') }}",
-    itp.receipt_number as "{{ translate_label('paymentReceiptNumber') }}",
-    itp.amount as "{{ translate_label('paymentAmount') }}",
-    itp.received_by as "{{ translate_label('paymentReceivedBy') }}"
+    to_char(itp.date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('paymentDate') }}",
+    itp.invoice_number as "{{ translate_label_from_seed('invoiceNumber') }}",
+    itp.patient_name as "{{ translate_label_from_seed('patientName') }}",
+    itp.payment_method as "{{ translate_label_from_seed('paymentMethod') }}",
+    itp.receipt_number as "{{ translate_label_from_seed('paymentReceiptNumber') }}",
+    itp.amount as "{{ translate_label_from_seed('paymentAmount') }}",
+    itp.received_by as "{{ translate_label_from_seed('paymentReceivedBy') }}"
 from {{ ref("ds__invoicing_transactions_patient") }} itp
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true

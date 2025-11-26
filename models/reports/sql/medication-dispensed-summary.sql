@@ -1,7 +1,7 @@
 select 
-    ep.medication as "{{ translate_label('prescriptionMedication')}}",
-    ep.medication_code as "{{ translate_label('prescriptionMedicationCode')}}",
-    sum(ep.quantity) as "{{ translate_label('prescriptionQuantity')}}"
+    ep.medication as "{{ translate_label_from_seed('prescriptionMedication')}}",
+    ep.medication_code as "{{ translate_label_from_seed('prescriptionMedicationCode')}}",
+    sum(ep.quantity) as "{{ translate_label_from_seed('prescriptionQuantity')}}"
 from {{ ref('ds__encounter_prescriptions') }} ep
 where is_selected_for_discharge = true
     and

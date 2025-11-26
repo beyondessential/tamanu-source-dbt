@@ -1,25 +1,25 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
-    age as "{{ translate_label('patientAge') }}",
-    sex as "{{ translate_label('patientSex') }}",
-    contact_number as "{{ translate_label('patientContactNumber') }}",
-    village as "{{ translate_label('patientVillage') }}",
-    billing_type as "{{ translate_label('patientBillingType') }}",
-    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime') }}",
-    to_char(appointment_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentEndDateTime') }}",
-    appointment_type as "{{ translate_label('appointmentType') }}",
-    appointment_status as "{{ translate_label('appointmentStatus') }}",
-    clinician as "{{ translate_label('appointmentClinician') }}",
-    location_group as "{{ translate_label('appointmentLocationGroup') }}",
-    priority as "{{ translate_label('appointmentPriority') }}",
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label_from_seed('patientDateOfBirth') }}",
+    age as "{{ translate_label_from_seed('patientAge') }}",
+    sex as "{{ translate_label_from_seed('patientSex') }}",
+    contact_number as "{{ translate_label_from_seed('patientContactNumber') }}",
+    village as "{{ translate_label_from_seed('patientVillage') }}",
+    billing_type as "{{ translate_label_from_seed('patientBillingType') }}",
+    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label_from_seed('appointmentDateTime') }}",
+    to_char(appointment_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label_from_seed('appointmentEndDateTime') }}",
+    appointment_type as "{{ translate_label_from_seed('appointmentType') }}",
+    appointment_status as "{{ translate_label_from_seed('appointmentStatus') }}",
+    clinician as "{{ translate_label_from_seed('appointmentClinician') }}",
+    location_group as "{{ translate_label_from_seed('appointmentLocationGroup') }}",
+    priority as "{{ translate_label_from_seed('appointmentPriority') }}",
     case
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
-    end as "{{ translate_label('appointmentIsRepeating') }}",
-    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}"
+    end as "{{ translate_label_from_seed('appointmentIsRepeating') }}",
+    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label_from_seed('appointmentRepeatingEndDate') }}"
 from {{ ref('ds__outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true

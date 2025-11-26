@@ -53,16 +53,16 @@ area_summary as (
 )
 
 select
-    to_char(lg.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
-    lg.facility as "{{ translate_label('facility') }}",
-    lg.location_group as "{{ translate_label('locationGroup') }}",
-    coalesce(lg.admissions, 0) as "{{ translate_label('hospitalAdmissionCount') }}",
-    coalesce(lg.discharges, 0) as "{{ translate_label('hospitalDischargeCount') }}",
-    coalesce(lg.deaths, 0) as "{{ translate_label('hospitalDeathCount') }}",
-    coalesce(lg.transfer_ins, 0) as "{{ translate_label('hospitalTransfersIntoLocationCount') }}",
-    coalesce(lg.transfer_outs, 0) as "{{ translate_label('hospitalTransfersOutOfLocationCount') }}",
-    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_label('hospitalAverageLengthOfStay') }}",
-    coalesce(lg.occupancy, 0) as "{{ translate_label('hospitalPatientDayCount') }}",
+    to_char(lg.month, '{{ var("yearmonth_format") }}') as "{{ translate_label_from_seed('reportingMonth') }}",
+    lg.facility as "{{ translate_label_from_seed('facility') }}",
+    lg.location_group as "{{ translate_label_from_seed('locationGroup') }}",
+    coalesce(lg.admissions, 0) as "{{ translate_label_from_seed('hospitalAdmissionCount') }}",
+    coalesce(lg.discharges, 0) as "{{ translate_label_from_seed('hospitalDischargeCount') }}",
+    coalesce(lg.deaths, 0) as "{{ translate_label_from_seed('hospitalDeathCount') }}",
+    coalesce(lg.transfer_ins, 0) as "{{ translate_label_from_seed('hospitalTransfersIntoLocationCount') }}",
+    coalesce(lg.transfer_outs, 0) as "{{ translate_label_from_seed('hospitalTransfersOutOfLocationCount') }}",
+    coalesce(lg.avg_length_of_stay, 0) as "{{ translate_label_from_seed('hospitalAverageLengthOfStay') }}",
+    coalesce(lg.occupancy, 0) as "{{ translate_label_from_seed('hospitalPatientDayCount') }}",
     case
         when lg.occupancy notnull and lg.capacity notnull
             then
@@ -78,7 +78,7 @@ select
                     )::text, '%'
                 )
         else 'N/A'
-    end as "{{ translate_label('hospitalBedOccupancyPercent') }}"
+    end as "{{ translate_label_from_seed('hospitalBedOccupancyPercent') }}"
 from area_summary lg
 where
     case

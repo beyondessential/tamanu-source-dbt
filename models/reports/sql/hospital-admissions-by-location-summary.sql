@@ -49,17 +49,17 @@ location_summary as (
 )
 
 select
-    to_char(ls.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
-    ls.facility as "{{ translate_label('facility') }}",
-    ls.location_group as "{{ translate_label('locationGroup') }}",
-    ls.location as "{{ translate_label('location') }}",
-    coalesce(ls.admissions, 0) as "{{ translate_label('hospitalAdmissionCount') }}",
-    coalesce(ls.discharges, 0) as "{{ translate_label('hospitalDischargeCount') }}",
-    coalesce(ls.deaths, 0) as "{{ translate_label('hospitalDeathCount') }}",
-    coalesce(ls.transfer_ins, 0) as "{{ translate_label('hospitalTransfersIntoLocationCount') }}",
-    coalesce(ls.transfer_outs, 0) as "{{ translate_label('hospitalTransfersOutOfLocationCount') }}",
-    coalesce(ls.avg_length_of_stay, 0) as "{{ translate_label('hospitalAverageLengthOfStay') }}",
-    coalesce(ls.occupancy, 0) as "{{ translate_label('hospitalPatientDayCount') }}",
+    to_char(ls.month, '{{ var("yearmonth_format") }}') as "{{ translate_label_from_seed('reportingMonth') }}",
+    ls.facility as "{{ translate_label_from_seed('facility') }}",
+    ls.location_group as "{{ translate_label_from_seed('locationGroup') }}",
+    ls.location as "{{ translate_label_from_seed('location') }}",
+    coalesce(ls.admissions, 0) as "{{ translate_label_from_seed('hospitalAdmissionCount') }}",
+    coalesce(ls.discharges, 0) as "{{ translate_label_from_seed('hospitalDischargeCount') }}",
+    coalesce(ls.deaths, 0) as "{{ translate_label_from_seed('hospitalDeathCount') }}",
+    coalesce(ls.transfer_ins, 0) as "{{ translate_label_from_seed('hospitalTransfersIntoLocationCount') }}",
+    coalesce(ls.transfer_outs, 0) as "{{ translate_label_from_seed('hospitalTransfersOutOfLocationCount') }}",
+    coalesce(ls.avg_length_of_stay, 0) as "{{ translate_label_from_seed('hospitalAverageLengthOfStay') }}",
+    coalesce(ls.occupancy, 0) as "{{ translate_label_from_seed('hospitalPatientDayCount') }}",
     case
         when ls.occupancy notnull and ls.capacity notnull
             then
@@ -75,7 +75,7 @@ select
                     )::text, '%'
                 )
         else 'N/A'
-    end as "{{ translate_label('hospitalBedOccupancyPercent') }}"
+    end as "{{ translate_label_from_seed('hospitalBedOccupancyPercent') }}"
 from location_summary ls
 where
     case

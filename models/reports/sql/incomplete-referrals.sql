@@ -1,12 +1,12 @@
 select
-    display_id as "{{ translate_label('patientDisplayId') }}",
-    first_name as "{{ translate_label('patientFirstName') }}",
-    last_name as "{{ translate_label('patientLastName') }}",
-    diagnoses as "{{ translate_label('diagnoses') }}",
-    referral_type as "{{ translate_label('referralType') }}",
-    referring_doctor_name as "{{ translate_label('referralCompletedBy') }}",
-    to_char(referral_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('referralDate') }}",
-    department as "{{ translate_label('department') }}"
+    display_id as "{{ translate_label_from_seed('patientDisplayId') }}",
+    first_name as "{{ translate_label_from_seed('patientFirstName') }}",
+    last_name as "{{ translate_label_from_seed('patientLastName') }}",
+    diagnoses as "{{ translate_label_from_seed('diagnoses') }}",
+    referral_type as "{{ translate_label_from_seed('referralType') }}",
+    referring_doctor_name as "{{ translate_label_from_seed('referralCompletedBy') }}",
+    to_char(referral_datetime, '{{ var("datetime_format") }}') as "{{ translate_label_from_seed('referralDate') }}",
+    department as "{{ translate_label_from_seed('department') }}"
 from {{ ref('ds__referrals') }}
 where status in ('pending', 'cancelled')
     and case
