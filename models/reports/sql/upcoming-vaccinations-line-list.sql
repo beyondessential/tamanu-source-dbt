@@ -3,6 +3,7 @@ select
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
+    village as "{{ translate_label('patientVillage') }}",
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     to_char(due_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDueDate') }}",
@@ -34,5 +35,10 @@ where
     case
         when {{ parameter('vaccine') }} is null then true
         else vaccine_name = {{ parameter('vaccine') }}
+    end
+    and
+    case
+        when {{ parameter('villageId') }} is null then true
+        else village_id = {{ parameter('villageId') }}
     end
 order by due_date, last_name, first_name, vaccine_name
