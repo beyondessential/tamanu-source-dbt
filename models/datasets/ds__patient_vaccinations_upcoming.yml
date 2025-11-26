@@ -28,6 +28,12 @@ models:
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the village"
       - name: due_date
         data_type: date
         description: "{{ doc('upcoming_vaccinations__due_date') }}"

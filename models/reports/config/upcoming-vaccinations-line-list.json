@@ -45,6 +45,12 @@
             "value": "SCHEDULED"
           }
         ]
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Village",
+        "name": "villageId",
+        "suggesterEndpoint": "village"
       }
     ]
   }
