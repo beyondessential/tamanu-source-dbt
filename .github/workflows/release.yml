@@ -39,6 +39,15 @@ jobs:
         run: |
           uv sync
 
+      - name: Extract version from dbt_project.yml
+        id: get_version
+        run: |
+          VERSION=$(uv run python -c "import yaml; print(yaml.safe_load(open('dbt_project.yml'))['version'])")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          VERSION_WITH_ZERO_PATCH="${VERSION%.*}.0"
+          echo "VERSION_WITH_ZERO_PATCH=$VERSION_WITH_ZERO_PATCH" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION (zero patch: $VERSION_WITH_ZERO_PATCH)"
+
       - name: Build reporting assets
         env:
           TAMANU_DEMO_DB_URL: ${{ secrets.TAMANU_DEMO_DB_URL }}
@@ -68,53 +77,43 @@ jobs:
       - name: Publish translations to S3
         run: |
           set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
-          aws s3 cp report_translations_standard.xlsx s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/report-translations-v$VERSION_WITH_ZERO_PATCH-standard.xlsx
+          aws s3 cp report_translations_standard.xlsx s3://bes-data-tamanu-translations/${{ env.VERSION_WITH_ZERO_PATCH }}/report-translations-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.xlsx
 
       - name: Publish analytics metadata to S3
         run: |
           set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
-          aws s3 cp compiled/v$VERSION/analytics-metadata-v$VERSION-standard.yml s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/analytics-metadata-v$VERSION_WITH_ZERO_PATCH-standard.yml
+          aws s3 cp compiled/v${{ env.VERSION }}/analytics-metadata-v${{ env.VERSION }}-standard.yml s3://bes-data-tamanu-translations/${{ env.VERSION_WITH_ZERO_PATCH }}/analytics-metadata-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.yml
 
       - name: Publish reporting schema to S3
         run: |
           set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
-          aws s3 cp compiled/v$VERSION/reporting-schema-v$VERSION-standard.sql s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/reporting-schema-v$VERSION_WITH_ZERO_PATCH-standard.sql
+          aws s3 cp compiled/v${{ env.VERSION }}/reporting-schema-v${{ env.VERSION }}-standard.sql s3://bes-data-tamanu-translations/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-schema-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.sql
 
       - name: Publish dbt docs to S3
         run: |
           set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
-          aws s3 cp compiled/v$VERSION/reporting-docs-v$VERSION-standard.html s3://bes-data-tamanu-translations/$VERSION_WITH_ZERO_PATCH/reporting-docs-v$VERSION_WITH_ZERO_PATCH-standard.html
+          aws s3 cp compiled/v${{ env.VERSION }}/reporting-docs-v${{ env.VERSION }}-standard.html s3://bes-data-tamanu-translations/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-docs-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.html
 
       - name: Publish to meta-server
         run: |
           set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_ZERO_PATCH=${VERSION%.*}.0
           
           echo "${{ secrets.META_CERT }}" > meta.crt
           echo "${{ secrets.META_KEY }}" > meta.key
           
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/report-translations/any" \
+          curl -v "${{ vars.META_URL }}/artifacts/${{ env.VERSION_WITH_ZERO_PATCH }}/report-translations/any" \
             --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/report-translations-v$VERSION_WITH_ZERO_PATCH-standard.xlsx"
+            --data-binary "https://tamanu-translations.data.bes.au/${{ env.VERSION_WITH_ZERO_PATCH }}/report-translations-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.xlsx"
           
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/analytics-metadata/any" \
+          curl -v "${{ vars.META_URL }}/artifacts/${{ env.VERSION_WITH_ZERO_PATCH }}/analytics-metadata/any" \
             --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/analytics-metadata-v$VERSION_WITH_ZERO_PATCH-standard.yml"
-
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/reporting-schema/any" \
-            --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/reporting-schema-v$VERSION_WITH_ZERO_PATCH-standard.sql"
+            --data-binary "https://tamanu-translations.data.bes.au/${{ env.VERSION_WITH_ZERO_PATCH }}/analytics-metadata-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.yml"
           
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_ZERO_PATCH/reporting-docs/any" \
+          curl -v "${{ vars.META_URL }}/artifacts/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-schema/any" \
             --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_ZERO_PATCH/reporting-docs-v$VERSION_WITH_ZERO_PATCH-standard.html"
+            --data-binary "https://tamanu-translations.data.bes.au/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-schema-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.sql"
+          
+          curl -v "${{ vars.META_URL }}/artifacts/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-docs/any" \
+            --cert meta.crt --key meta.key \
+            --data-binary "https://tamanu-translations.data.bes.au/${{ env.VERSION_WITH_ZERO_PATCH }}/reporting-docs-v${{ env.VERSION_WITH_ZERO_PATCH }}-standard.html"
 
