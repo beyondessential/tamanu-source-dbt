@@ -5,15 +5,15 @@ description = "A dbt project that transforms Tamanu healthcare system data into 
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "boto3>=1.28.0",
     "dbt-core",
     "dbt-postgres",
     "great-expectations==1.5.9",
-    "boto3>=1.28.0",
     "jsonschema",
     "openpyxl>=3.1.0",
-    "sqlfluff>=3.0.0",
     "pandas>=2.0.0",
-    "PyYAML>=6.0.1"
+    "PyYAML>=6.0.1",
+    "sqlfluff>=3.0.0",
 ]
 
 [tool.uv]
