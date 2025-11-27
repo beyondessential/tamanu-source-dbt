@@ -11,12 +11,12 @@
 - Navigate to project directory in PowerShell
 
 ### 2. Virtual Environment Setup
-- Create virtual environment: `python -m venv .venv`
-- **Required**: Upgrade pip after creating virtual environment: `.venv/Scripts/python -m pip install --upgrade pip`
+- **Required**: Install uv package manager: `pip install uv` or follow [uv installation guide](https://github.com/astral-sh/uv#installation)
+- Create virtual environment and install dependencies: `uv sync`
 - **Required**: Enhance virtual environment activation script to automatically load .env file:
   - Add logic to `.venv/Scripts/Activate.ps1` to parse the project's `.env` file and load the key-value pairs as environment variables.
 - Activate virtual environment: `.venv/Scripts/Activate.ps1`
-- Install Python dependencies: `pip install -r requirements.txt`
+- **Note**: uv automatically manages the virtual environment and dependencies from `pyproject.toml`
 ### 3. Environment Configuration
 - Copy environment template: `Copy-Item .env.example .env`
 - **Required**: Update .env.example file with country-specific environment variable names
