@@ -1,0 +1,19 @@
+version: 2
+models:
+  - name: patients_metadata
+    description: "{{ doc('generic__metadata') }} for patients."
+    config:
+      tags:
+        - patient
+        - log
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in patients."
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in the patients table."
+      - name: updated_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__updated_at') }} in the patients table."
+

@@ -1,0 +1,19 @@
+version: 2
+models:
+  - name: lab_request_logs_metadata
+    description: "{{ doc('generic__metadata') }} for lab_request_logs."
+    config:
+      tags:
+        - clinical
+        - log
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in lab_request_logs."
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in the lab_request_logs table."
+      - name: updated_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__updated_at') }} in the lab_request_logs table."
+

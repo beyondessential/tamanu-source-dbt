@@ -8,7 +8,7 @@ models:
     columns:
       - name: registration_date
         data_type: date
-        description: "{{ doc('generic__created_at') }} in patients."
+        description: "{{ doc('generic__created_at') }} from the patients_metadata."
       - name: registered_by
         data_type: character varying(255)
         description: "{{ doc('users__display_id') }} the patient record is registered by."
