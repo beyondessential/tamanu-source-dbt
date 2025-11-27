@@ -1,5 +1,7 @@
 import sys
 import os
+import csv
+import json
 
 from utils import (
     cprint,
@@ -13,7 +15,7 @@ from utils import (
     get_deployment_version,
     hide_macros_from_docs,
     hide_tests_from_docs,
-    move_file
+    move_file,
 )
 
 BASE_DIR = os.getcwd()
@@ -22,11 +24,40 @@ VERSION = get_deployment_version()
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
+def load_translations():
+    def read_csv(rel_path):
+        path = os.path.join(BASE_DIR, rel_path)
+        if not os.path.exists(path):
+            return {}
+        mapping = {}
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                string_id = row.get("stringId")
+                text = row.get("default")
+                if string_id and text is not None:
+                    mapping[string_id] = text
+        return mapping
+
+    standard = read_csv("report_translations_standard.csv")
+    if not standard:
+        standard = read_csv(
+            os.path.join(
+                "dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv"
+            )
+        )
+
+    localised = read_csv("report_translations_localised.csv")
+    merged = {}
+    merged.update(standard)
+    merged.update(localised)
+    return merged
+
+
 def main():
     """Build Tamanu reporting assets for all supported languages"""
-    # Get supported languages from configuration
     config = get_dbt_project_config()
     supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
+    translations = load_translations()
 
     cprint(
         f"Building for all supported languages: {', '.join(supported_languages)}",
@@ -41,10 +72,11 @@ def main():
         cprint("Preparing dbt environment", "info")
         execute_command("dbt clean")
         execute_command("dbt deps")
-        
-        # Build dbt models and generate documentation
+
+        vars_for_run = json.dumps({"report_translations": translations})
+
         cprint("Building dbt models and documentation", "info")
-        execute_command("dbt run --profiles-dir config")
+        execute_command(f"dbt run --profiles-dir config --vars '{vars_for_run}'")
         execute_command("dbt docs generate --profiles-dir config --static")
 
         # Customise documentation by hiding macros and tests
@@ -65,11 +97,15 @@ def main():
         cprint("Generating language-specific reports", "info")
         for language in supported_languages:
             cprint(f"Generating reports for language: {language}", "info")
-            
-            # Compile dbt models with the language variable passed via --vars
-            execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
-            
-            # Generate language-specific reports
+
+            vars_for_compile = json.dumps(
+                {"language": language, "report_translations": translations}
+            )
+
+            execute_command(
+                f"dbt compile --profiles-dir config --vars '{vars_for_compile}'"
+            )
+
             generate_project_reports(language)
             
             cprint(f"Completed report generation for language: {language}", "success")
