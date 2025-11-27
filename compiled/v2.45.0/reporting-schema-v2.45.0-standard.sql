@@ -68,11 +68,19 @@ select
     referral_source_id,
     planned_location_id,
     planned_location_start_time::timestamp as planned_location_start_datetime,
-    discharge_draft,
-    created_at::timestamp as created_datetime
+    discharge_draft
 from "public"."encounters"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."encounters_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'encounters'
+group by record_id
 );
 create or replace view "reporting"."encounter_diagnoses" as (
 select
@@ -82,14 +90,22 @@ select
     ed.certainty,
     ed.encounter_id,
     ed.diagnosis_id,
-    ed.clinician_id as diagnosed_by_id,
-    ed.created_at::timestamp as created_datetime
+    ed.clinician_id as diagnosed_by_id
 from "public"."encounter_diagnoses" ed
 join "public"."encounters" e on e.id = ed.encounter_id
 where ed.deleted_at is null
     and ed.certainty not in ('disproven', 'error')
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."encounter_diagnoses_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'encounter_diagnoses'
+group by record_id
 );
 create or replace view "reporting"."encounter_diets" as (
 select
@@ -228,21 +244,27 @@ select
     lr.reason_for_cancellation,
     lr.published_date::timestamp as published_datetime,
     lr.encounter_id,
-    lr.department_id,
-    lr.updated_at::timestamp as updated_datetime
+    lr.department_id
 from "public"."lab_requests" lr
 join "public"."encounters" e on e.id = lr.encounter_id
 where lr.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."lab_requests_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'lab_requests'
+group by record_id
+);
 create or replace view "reporting"."lab_request_logs" as (
 select
     lrl.id,
     lrl.lab_request_id,
     lrl.status,
-    lrl.created_at::timestamp as created_datetime,
-    lrl.updated_at::timestamp as updated_datetime,
     lrl.updated_by_id
 from "public"."lab_request_logs" lrl
 join "public"."lab_requests" lr on lr.id = lrl.lab_request_id
@@ -251,6 +273,15 @@ where lrl.deleted_at is null
     and lr.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."lab_request_logs_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'lab_request_logs'
+group by record_id
 );
 create or replace view "reporting"."lab_tests" as (
 select
@@ -418,8 +449,7 @@ select
             initcap(sex::text) as sex,
             date_of_birth::date as date_of_birth,
             date_of_death::timestamp as date_of_death,
-            village_id as village_id,
-            created_at::date as registration_date
+            village_id as village_id
 from "public"."patients"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
@@ -499,6 +529,15 @@ from "public"."patients"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
     and visibility_status = 'merged'
+);
+create or replace view "reporting"."patients_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'patients'
+group by record_id
 );
 create or replace view "reporting"."patient_additional_data" as (
 select
@@ -895,14 +934,21 @@ select
     p.anaesthetist_id,
     p.assistant_anaesthetist_id,
     p.time_in::time as time_in,
-    p.time_out::time as time_out,
-    p.created_at::timestamp as created_datetime,
-    p.updated_at::timestamp as updated_datetime
+    p.time_out::time as time_out
 from "public"."procedures" p
 join "public"."encounters" e on e.id = p.encounter_id
 where p.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."procedures_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'procedures'
+group by record_id
 );
 create or replace view "reporting"."programs" as (
 select
@@ -1084,10 +1130,18 @@ select
     email,
     phone_number,
     role,
-    visibility_status,
-    created_at::timestamp as created_datetime
+    visibility_status
 from "public"."users"
 where deleted_at is null
+);
+create or replace view "reporting"."users_metadata" as (
+select 
+    record_id as id,
+    min(logged_at) as created_datetime,
+    max(logged_at) as updated_datetime
+from "logs"."changes"
+where table_name = 'users'
+group by record_id
 );
 create or replace view "reporting"."vaccine_administrations" as (
 select
@@ -2239,7 +2293,7 @@ left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
 );
 create or replace view "reporting"."ds__patients" as (
 select
-    p.registration_date,
+    pm.created_datetime as registration_date,
     u.display_name as registered_by,
     p.id as patient_id,
     p.first_name,
@@ -2285,6 +2339,7 @@ select
         else 'Alive'
     end as status
 from "reporting"."patients" p
+join "reporting"."patients_metadata" pm on pm.id = p.id
 left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
 left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
 left join "reporting"."users" u on u.id = pad.registered_by_id
@@ -2477,7 +2532,11 @@ select
     ppr.datetime as registration_datetime,
     ppr.deactivated_by_id,
     deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime
+    ppr.deactivated_datetime,
+    pad.primary_contact_number,
+    pad.secondary_contact_number,
+    pad.emergency_contact_name,
+    pad.emergency_contact_number
 from "reporting"."patient_program_registrations" ppr
 join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
 join "reporting"."patients" p on p.id = ppr.patient_id
@@ -2502,6 +2561,8 @@ select
     p.date_of_birth,
     date_part('year', age(p.date_of_birth)) as age,
     p.sex,
+    village.id as village_id,
+    village.name as village,
     pvu.due_date,
     pvu.vaccine_category,
     pvu.vaccine_schedules_id,
@@ -2511,6 +2572,7 @@ select
 from "reporting"."patient_vaccinations_upcoming" pvu
 join "reporting"."patients" p on p.id = pvu.patient_id
 join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
+left join "reporting"."reference_data" village on village.id = p.village_id
 where p.date_of_death is null
 );
 create or replace view "reporting"."ds__procedures" as (
@@ -2970,12 +3032,13 @@ from data
 create or replace view "reporting"."ds__usage_quality_metrics_patient_registrations" as (
 with data as (
     select
-        p.registration_date,
+        pm.created_datetime as registration_date,
         p.id as registration_patient_id,
         pbd.patient_id as birth_patient_id,
         p.date_of_birth,
-        age(p.registration_date, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
+        age(pm.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from "reporting"."patients" p
+    join "reporting"."patients_metadata" pm on pm.id = p.id
     left join "reporting"."patient_birth_data" pbd
         on pbd.patient_id = p.id
 )
@@ -3120,23 +3183,25 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
     ltc.id as lab_test_category_id,
     ltc.name as lab_test_category,
     coalesce(lrl.status, lr.status) as status,
-    coalesce(lrl.updated_datetime, lr.updated_datetime)::date as status_start_date,
+    coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date as status_start_date,
     case
         when coalesce(lrl.status, lr.status) = 'published'
             then
-                coalesce(lrl.updated_datetime, lr.updated_datetime)::date
-        when lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w is not null
+                coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date
+        when lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w is not null
             then
                 case
-                    when coalesce(lrl.updated_datetime, lr.updated_datetime)::date
-                        = (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
-                        then (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
-                    else (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w - interval '1 day')::date
+                    when coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date
+                        = (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w)::date
+                        then (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w)::date
+                    else (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w - interval '1 day')::date
                 end
         else current_date
     end as status_end_date
 from "reporting"."lab_requests" lr
+join "reporting"."lab_requests_metadata" lrm on lrm.id = lr.id
 left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
+left join "reporting"."lab_request_logs_metadata" lrlm on lrlm.id = lrl.id
 left join "reporting"."encounters" e on e.id = lr.encounter_id
 left join "reporting"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
 left join "reporting"."facilities" f on f.id = d.facility_id
@@ -3145,7 +3210,7 @@ where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
 window
     w as (
         partition by lr.id
-        order by coalesce(lrl.updated_datetime, lr.updated_datetime)
+        order by coalesce(lrlm.updated_datetime, lrm.updated_datetime)
     )
 order by lr.id, coalesce(lrl.status, lr.status)
 );
