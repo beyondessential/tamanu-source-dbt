@@ -110,9 +110,9 @@
     {%- else -%}
         {%- set query -%}
             select 
-                max(case when language = '{{ language }}' then text end) as text
+                max(text) as text
             from {{ source('tamanu', 'translated_strings') }}
-            where string_id ilike '{{ full_string_id }}'
+            where string_id = '{{ full_string_id }}'
               and language = '{{ language }}'
         {%- endset -%}
 
