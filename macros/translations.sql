@@ -97,12 +97,35 @@
 {%- endmacro -%}
 
 {%- macro translate_label(string_id) -%}
-    {%- set prefix = var('translation_prefix', 'report.reporting') -%}
-    {%- set full_string_id = prefix ~ '.' ~ string_id -%}
+    {%- set language = var('language', 'default') -%}
+    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
     {%- set translations = var('report_translations', {}) -%}
-    {%- if full_string_id in translations -%}
-        {{- translations[full_string_id] -}}
+
+    {%- if language == 'default' -%}
+        {%- if full_string_id in translations -%}
+            {{- translations[full_string_id] -}}
+        {%- else -%}
+            {{- string_id -}}
+        {%- endif -%}
     {%- else -%}
-        {{- string_id -}}
+        {%- set query -%}
+            select 
+                max(case when language = '{{ language }}' then text end) as text
+            from {{ source('tamanu', 'translated_strings') }}
+            where string_id ilike '{{ full_string_id }}'
+              and language = '{{ language }}'
+        {%- endset -%}
+
+        {%- set result = run_query(query) -%}
+
+        {%- if execute -%}
+            {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
+                {{- result.columns[0].values()[0] -}}
+            {%- elif full_string_id in translations -%}
+                {{- translations[full_string_id] -}}
+            {%- else -%}
+                {{- string_id -}}
+            {%- endif -%}
+        {%- endif -%}
     {%- endif -%}
 {%- endmacro -%}

@@ -24,7 +24,7 @@ VERSION = get_deployment_version()
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
-def load_translations():
+def load_default_translations():
     def read_csv(rel_path):
         path = os.path.join(BASE_DIR, rel_path)
         if not os.path.exists(path):
@@ -33,6 +33,7 @@ def load_translations():
         with open(path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 string_id = row.get("stringId")
+
                 text = row.get("default")
                 if string_id and text is not None:
                     mapping[string_id] = text
@@ -57,7 +58,7 @@ def main():
     """Build Tamanu reporting assets for all supported languages"""
     config = get_dbt_project_config()
     supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
-    translations = load_translations()
+    default_translations = load_default_translations()
 
     cprint(
         f"Building for all supported languages: {', '.join(supported_languages)}",
@@ -73,7 +74,7 @@ def main():
         execute_command("dbt clean")
         execute_command("dbt deps")
 
-        vars_for_run = json.dumps({"report_translations": translations})
+        vars_for_run = json.dumps({"report_translations": default_translations})
 
         cprint("Building dbt models and documentation", "info")
         execute_command(f"dbt run --profiles-dir config --vars '{vars_for_run}'")
@@ -82,15 +83,17 @@ def main():
         # Customise documentation by hiding macros and tests
         hide_macros_from_docs()
         hide_tests_from_docs()
-        
+
         # Generate language-agnostic reporting assets
         cprint("Generating reporting assets", "info")
         generate_reporting_schema_script()
         generate_analytics_metadata()
-        
+
         # Move documentation to versioned directory
         source_file = os.path.join(BASE_DIR, "target", "static_index.html")
-        target_file = os.path.join(VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html")
+        target_file = os.path.join(
+            VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html"
+        )
         move_file(source_file, target_file)
 
         # Generate language-specific reports for each supported language
@@ -99,7 +102,7 @@ def main():
             cprint(f"Generating reports for language: {language}", "info")
 
             vars_for_compile = json.dumps(
-                {"language": language, "report_translations": translations}
+                {"language": language, "report_translations": default_translations}
             )
 
             execute_command(
@@ -107,7 +110,7 @@ def main():
             )
 
             generate_project_reports(language)
-            
+
             cprint(f"Completed report generation for language: {language}", "success")
 
         cprint(
