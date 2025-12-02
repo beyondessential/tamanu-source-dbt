@@ -26,6 +26,7 @@ VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 def main():
     """Build Tamanu reporting assets for all supported languages"""
+    # Get supported languages from configuration
     config = get_dbt_project_config()
     supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
 
@@ -47,6 +48,7 @@ def main():
         cprint("Generating default translations macro", "info")
         generate_translation_macro()
 
+        # Build dbt models and generate documentation
         cprint("Building dbt models and documentation", "info")
         execute_command("dbt run --profiles-dir config")
         execute_command("dbt docs generate --profiles-dir config --static")
