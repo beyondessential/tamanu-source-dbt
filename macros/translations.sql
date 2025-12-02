@@ -99,11 +99,11 @@
 {%- macro translate_label(string_id) -%}
     {%- set language = var('language', 'default') -%}
     {%- set full_string_id = 'report.reporting.' ~ string_id -%}
-    {%- set translations = var('report_translations', {}) -%}
+    {%- set default_translations = get_default_translations() -%}
 
     {%- if language == 'default' -%}
-        {%- if full_string_id in translations -%}
-            {{- translations[full_string_id] -}}
+        {%- if full_string_id in default_translations -%}
+            {{- default_translations[full_string_id] -}}
         {%- else -%}
             {{- string_id -}}
         {%- endif -%}
@@ -121,8 +121,8 @@
         {%- if execute -%}
             {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
                 {{- result.columns[0].values()[0] -}}
-            {%- elif full_string_id in translations -%}
-                {{- translations[full_string_id] -}}
+            {%- elif full_string_id in default_translations -%}
+                {{- default_translations[full_string_id] -}}
             {%- else -%}
                 {{- string_id -}}
             {%- endif -%}
