@@ -72,10 +72,10 @@ def main():
         for language in supported_languages:
             cprint(f"Generating reports for language: {language}", "info")
 
-            execute_command(
-                f'dbt compile --profiles-dir config --vars "{{language: {language}}}"'
-            )
+            # Compile dbt models with the language variable passed via --vars
+            execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
 
+            # Generate language-specific reports
             generate_project_reports(language)
 
             cprint(f"Completed report generation for language: {language}", "success")
