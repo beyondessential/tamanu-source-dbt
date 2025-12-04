@@ -19,7 +19,7 @@ def read_csv(rel_path):
             string_id = row.get("stringId")
             text = row.get("default")
             if string_id and text is not None:
-                text_escaped = text.replace("'", "\\'")
+                text_escaped = text.replace("\\", "\\\\").replace("'", "\\'")
                 mapping[string_id] = text_escaped
     return mapping
 
