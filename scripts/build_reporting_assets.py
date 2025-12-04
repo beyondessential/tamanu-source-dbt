@@ -13,8 +13,10 @@ from utils import (
     get_deployment_version,
     hide_macros_from_docs,
     hide_tests_from_docs,
-    move_file
+    move_file,
 )
+from generate_translation_macro import generate_translation_macro
+
 
 BASE_DIR = os.getcwd()
 DEPLOYMENT = get_deployment_name()
@@ -41,7 +43,11 @@ def main():
         cprint("Preparing dbt environment", "info")
         execute_command("dbt clean")
         execute_command("dbt deps")
-        
+
+        # Regenerate the default translations macro so dbt picks up the latest CSVs
+        cprint("Generating default translations macro", "info")
+        generate_translation_macro()
+
         # Build dbt models and generate documentation
         cprint("Building dbt models and documentation", "info")
         execute_command("dbt run --profiles-dir config")
@@ -50,28 +56,30 @@ def main():
         # Customise documentation by hiding macros and tests
         hide_macros_from_docs()
         hide_tests_from_docs()
-        
+
         # Generate language-agnostic reporting assets
         cprint("Generating reporting assets", "info")
         generate_reporting_schema_script()
         generate_analytics_metadata()
-        
+
         # Move documentation to versioned directory
         source_file = os.path.join(BASE_DIR, "target", "static_index.html")
-        target_file = os.path.join(VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html")
+        target_file = os.path.join(
+            VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html"
+        )
         move_file(source_file, target_file)
 
         # Generate language-specific reports for each supported language
         cprint("Generating language-specific reports", "info")
         for language in supported_languages:
             cprint(f"Generating reports for language: {language}", "info")
-            
+
             # Compile dbt models with the language variable passed via --vars
             execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
-            
+
             # Generate language-specific reports
             generate_project_reports(language)
-            
+
             cprint(f"Completed report generation for language: {language}", "success")
 
         cprint(
