@@ -1,29 +1,3 @@
-{%- macro translate_label(string_id) -%}
-    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
-    
-    {%- set query -%}
-        select 
-            coalesce(
-                max(case when language = '{{ var("language") }}' then text end),
-                max(case when language = 'default' then text end),
-                '{{ string_id }}'
-            ) as text
-        from {{ source('tamanu', 'translated_strings') }}
-        where string_id = '{{ full_string_id }}'
-        and language in ('{{ var("language") }}', 'default')
-    {%- endset -%}
-    
-    {%- set result = run_query(query) -%}
-    
-    {%- if execute -%}
-        {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
-            {{- result.columns[0].values()[0] -}}
-        {%- else -%}
-            {{- string_id -}}
-        {%- endif -%}
-    {%- endif -%}
-{%- endmacro -%}
-
 {%- macro get_translation_prefix(prefix_key) -%}
     {%- set mapping = {
         'APPOINTMENT_STATUSES': 'appointment.property.status',
@@ -120,4 +94,38 @@
         group by string_id
     ) {{ alias }}
         on {{ alias }}.string_id = '{{ get_translation_prefix(prefix_key) }}.' || {{ column_name }}
+{%- endmacro -%}
+
+{%- macro translate_label(string_id) -%}
+    {%- set language = var('language', 'default') -%}
+    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
+    {%- set default_translations = get_default_translations() -%}
+
+    {%- if language == 'default' -%}
+        {%- if full_string_id in default_translations -%}
+            {{- default_translations[full_string_id] -}}
+        {%- else -%}
+            {{- string_id -}}
+        {%- endif -%}
+    {%- else -%}
+        {%- set query -%}
+            select 
+                max(text) as text
+            from {{ source('tamanu', 'translated_strings') }}
+            where string_id = '{{ full_string_id }}'
+              and language = '{{ language }}'
+        {%- endset -%}
+
+        {%- set result = run_query(query) -%}
+
+        {%- if execute -%}
+            {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
+                {{- result.columns[0].values()[0] -}}
+            {%- elif full_string_id in default_translations -%}
+                {{- default_translations[full_string_id] -}}
+            {%- else -%}
+                {{- string_id -}}
+            {%- endif -%}
+        {%- endif -%}
+    {%- endif -%}
 {%- endmacro -%}
