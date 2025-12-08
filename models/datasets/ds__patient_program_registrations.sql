@@ -66,7 +66,7 @@ select
 from {{ ref('patient_program_registrations') }} ppr
 join {{ ref('program_registries') }} pr on pr.id = ppr.program_registry_id
 join {{ ref('patients') }} p on p.id = ppr.patient_id
-join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
+left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref('facilities') }} registering_facility on registering_facility.id = ppr.registering_facility_id
 left join {{ ref('users') }} registered_by on registered_by.id = ppr.registered_by_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
