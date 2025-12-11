@@ -213,18 +213,14 @@ def generate_reporting_schema_script():
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
 
-    # Drop views before creating them
-    for node in ordered:
-        model = manifest["nodes"][node]
-        scripts.append(
-            f'drop view if exists "{SCHEMA}"."{model["name"]}" cascade;'
-        )
-
     for node in ordered:
         model = manifest["nodes"][node]
         if model["compiled_path"] is None:
             cprint(f"Model {model['name']} has no compiled path, skipping.", "warning")
             continue
+        scripts.append(
+            f'drop view if exists "{SCHEMA}"."{model["name"]}" cascade;'
+        )
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         scripts.append(
