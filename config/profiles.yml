@@ -1,5 +1,5 @@
 tamanu_source_dbt:
-  target: reporting_release
+  target: reporting_demo
   outputs:
     analytics_demo:
       type: postgres

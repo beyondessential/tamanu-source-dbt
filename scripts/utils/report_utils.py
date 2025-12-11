@@ -208,11 +208,17 @@ def generate_reporting_schema_script():
             ordered.append(node)
 
     scripts = [
-        f"drop schema if exists {SCHEMA} cascade;",
-        f"create schema {SCHEMA};",
+        f"create schema if not exists {SCHEMA};",
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
+
+    # Drop views before creating them
+    for node in ordered:
+        model = manifest["nodes"][node]
+        scripts.append(
+            f'drop view if exists "{SCHEMA}"."{model["name"]}" cascade;'
+        )
 
     for node in ordered:
         model = manifest["nodes"][node]

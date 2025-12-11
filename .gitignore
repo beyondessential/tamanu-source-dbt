@@ -4,6 +4,7 @@
 .vscode
 .DS_Store
 __pycache__
+CLAUDE.md
 compiled/*/*.json
 dbt_packages/
 /logs/
