@@ -64,8 +64,6 @@ def find_config_files(config_dir: str) -> List[str]:
 def main():
     """Main validation function."""
     # Set up paths relative to the script's location
-    # This allows the script to work both when run from the repo root
-    # and when used as a package in other projects (e.g., dbt_packages/tamanu_source_dbt/)
     SCRIPT_DIR = Path(__file__).parent.resolve()
     BASE_DIR = SCRIPT_DIR.parent  # Go up from scripts/ to package root
 
