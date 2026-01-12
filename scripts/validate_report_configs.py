@@ -64,7 +64,7 @@ def find_config_files(config_dir: str) -> List[str]:
 def main():
     """Main validation function."""
     # Set up paths relative to the script's location
-    SCRIPT_DIR = Path(__file__).parent.resolve()
+    SCRIPT_DIR = Path(__file__).resolve().parent
     BASE_DIR = SCRIPT_DIR.parent  # Go up from scripts/ to package root
 
     CONFIG_DIR = BASE_DIR / "models" / "reports" / "config"
