@@ -1,5 +1,7 @@
 select
-    id
+    id,
+    created_at as created_datetime,
+    updated_at as updated_datetime
     {%- set columns = [
         {'expr': 'display_id', 'name': 'display_id', 'is_direct_identifier': true},
         {'expr': 'first_name', 'name': 'first_name', 'is_direct_identifier': true},
