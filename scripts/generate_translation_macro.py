@@ -37,7 +37,7 @@ def generate_translation_macro():
                 "dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv"
             )
         )
-        localised = read_csv("report_translations_localised.csv")
+        localised = read_csv(f"report_translations_{deployment}.csv")
 
     merged = {}
     merged.update(standard)
