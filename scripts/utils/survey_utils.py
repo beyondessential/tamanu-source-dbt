@@ -103,14 +103,15 @@ models:
     doc = ""
     for id, code, name in columns:
         doc_id = id.replace("-", "_")
+        prefixed_doc_id = f"{survey_id}__{doc_id}"
         doc += f"""
-{{% docs {doc_id} %}}
+{{% docs {prefixed_doc_id} %}}
 {name.replace('"', "'")}
 {{% enddocs %}}
 """
         yml += f"""
       - name: {code}
-        description: '{{{{ doc("{doc_id}") }}}}'"""
+        description: '{{{{ doc("{prefixed_doc_id}") }}}}'"""
 
     md_file = SURVEYS_DIR / f"{survey_id}.md"
     write_file(str(md_file), doc.strip() + "\n")
