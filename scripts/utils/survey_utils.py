@@ -104,7 +104,9 @@ models:
     doc_parts = []  
     yml_parts = []  
     for id, code, name in columns:  
-        # ... logic to create prefixed_doc_id ...  
+        doc_id = id.replace("-", "_")
+        prefixed_doc_id = f"{survey_id}__{doc_id}"
+        
         doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")  
         yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
 
