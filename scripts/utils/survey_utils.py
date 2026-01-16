@@ -83,6 +83,7 @@ def generate_survey_doc(survey_id, survey_name):
 
     survey_id = survey_id.replace("-", "_")
 
+    doc = ""
     yml = f"""version: 2
 
 models:
@@ -100,16 +101,19 @@ models:
       - name: result_text
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
-    doc = ""
-    for id, code, name in columns:
-        doc += f"""
-{{% docs {id} %}}
-{name.replace('"', "'")}
-{{% enddocs %}}
-"""
-        yml += f"""
-      - name: {code}
-        description: '{{{{ doc("{id}") }}}}'"""
+    doc_parts = []  
+    yml_parts = []  
+    for id, code, name in columns:  
+        doc_id = id.replace("-", "_")
+        prefixed_doc_id = f"{survey_id}__{doc_id}"
+        
+        doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")  
+        yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
+
+    # Assuming 'doc' was initialized as an empty string  
+    doc = "\n\n".join(doc_parts)  
+    # 'yml' is appended to  
+    yml += "".join(yml_parts)  
 
     md_file = SURVEYS_DIR / f"{survey_id}.md"
     write_file(str(md_file), doc.strip() + "\n")
