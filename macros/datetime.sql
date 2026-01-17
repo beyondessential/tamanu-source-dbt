@@ -1,15 +1,16 @@
-{% macro get_current_date() %}
-    {%- if var('test_current_date', None) -%}
-        '{{ var('test_current_date') }}'::date
+{%- macro _get_current(datetime_type, native_function) -%}
+    {%- set var_name = 'test_current_' ~ datetime_type -%}
+    {%- if var(var_name, none) -%}
+        '{{ var(var_name) }}'::{{ datetime_type }}
     {%- else -%}
-        current_date
+        {{ native_function }}
     {%- endif -%}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro get_current_timestamp() %}
-    {%- if var('test_current_timestamp', None) -%}
-        '{{ var('test_current_timestamp') }}'::timestamp
-    {%- else -%}
-        now()
-    {%- endif -%}
-{% endmacro %}
+{%- macro get_current_date() -%}
+    {{ _get_current('date', 'current_date') }}
+{%- endmacro -%}
+
+{%- macro get_current_timestamp() -%}
+    {{ _get_current('timestamp', 'now()') }}
+{%- endmacro -%}
