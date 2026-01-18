@@ -55,7 +55,7 @@ def get_survey_columns_from_deployment(survey_id):
                 cprint(f"Error running dbt command: {result.stderr}", "error")
             return columns
 
-        for line (result.stdout + result.stderr).split("\n"):
+        for line in (result.stdout + result.stderr).split("\n"):
             if "COLUMN_DATA:" in line:
                 parts = line.split("COLUMN_DATA:")[1].split("|")
                 if len(parts) == 3:
