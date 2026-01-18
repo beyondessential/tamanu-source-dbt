@@ -26,7 +26,7 @@ def get_surveys_from_deployment():
             if "SURVEY_DATA:" in line:
                 parts = line.split("SURVEY_DATA:")[1].split("|")
                 if len(parts) == 2:
-                    surveys.append(tuple(part.strip() for part in parts))
+                    surveys.append(tuple(part.strip().rstrip("'\"") for part in parts))
 
         return surveys
 
@@ -55,11 +55,11 @@ def get_survey_columns_from_deployment(survey_id):
                 cprint(f"Error running dbt command: {result.stderr}", "error")
             return columns
 
-        for line in (result.stdout + result.stderr).split("\n"):
+        for line (result.stdout + result.stderr).split("\n"):
             if "COLUMN_DATA:" in line:
                 parts = line.split("COLUMN_DATA:")[1].split("|")
                 if len(parts) == 3:
-                    columns.append(tuple(part.strip() for part in parts))
+                    columns.append(tuple(part.strip().rstrip("'\"") for part in parts))
 
         return columns
 
