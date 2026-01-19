@@ -88,7 +88,7 @@ def generate_survey_doc(survey_id, survey_name):
 
 models:
   - name: {survey_id}
-    description: "Dataset containing responses for {survey_name} survey"
+    description: "Dataset containing responses for **{survey_name}** survey"
     columns:
       - name: encounter_id
         description: '{{{{ doc("survey_responses__encounter_id") }}}}'
