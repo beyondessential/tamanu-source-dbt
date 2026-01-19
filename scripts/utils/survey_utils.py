@@ -88,7 +88,7 @@ def generate_survey_doc(survey_id, survey_name):
 
 models:
   - name: {survey_id}
-    description: "Dataset containing responses for '{survey_name}' survey"
+    description: "Dataset containing responses for **{survey_name}** survey"
     columns:
       - name: encounter_id
         description: '{{{{ doc("survey_responses__encounter_id") }}}}'
@@ -107,7 +107,7 @@ models:
         doc_id = id.replace("-", "_")
         prefixed_doc_id = f"{survey_id}__{doc_id}"
         
-        doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")  
+        doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")
         yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
 
     # Assuming 'doc' was initialized as an empty string  
