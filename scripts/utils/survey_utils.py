@@ -26,7 +26,7 @@ def get_surveys_from_deployment():
             if "SURVEY_DATA:" in line:
                 parts = line.split("SURVEY_DATA:")[1].split("|")
                 if len(parts) == 2:
-                    surveys.append(tuple(part.strip().rstrip("'\"") for part in parts))
+                    surveys.append(tuple(part.strip() for part in parts))
 
         return surveys
 
@@ -59,7 +59,7 @@ def get_survey_columns_from_deployment(survey_id):
             if "COLUMN_DATA:" in line:
                 parts = line.split("COLUMN_DATA:")[1].split("|")
                 if len(parts) == 3:
-                    columns.append(tuple(part.strip().rstrip("'\"") for part in parts))
+                    columns.append(tuple(part.strip() for part in parts))
 
         return columns
 
@@ -107,7 +107,7 @@ models:
         doc_id = id.replace("-", "_")
         prefixed_doc_id = f"{survey_id}__{doc_id}"
         
-        doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name}\n{{% enddocs %}}""")  
+        doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")
         yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
 
     # Assuming 'doc' was initialized as an empty string  
