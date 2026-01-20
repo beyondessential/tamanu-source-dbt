@@ -11,5 +11,6 @@ macros/default_translations.sql
 models/surveys/
 target/
 package-lock.yml
+report_translations_standard.xlsx
 .user.yml
 uv.lock
