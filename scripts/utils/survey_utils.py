@@ -8,37 +8,6 @@ BASE_DIR = Path.cwd()
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
 
 
-def clean_surveys_directory():
-    """
-    Delete all existing survey model files before regenerating them.
-    This ensures removed surveys are cleaned up.
-    """
-    try:
-        if SURVEYS_DIR.exists():
-            cprint(f"Cleaning surveys directory: {SURVEYS_DIR}", "info")
-
-            # Count files before deletion
-            files = list(SURVEYS_DIR.glob("*"))
-            file_count = len(files)
-
-            if file_count > 0:
-                # Remove all files in the surveys directory
-                for file_path in files:
-                    if file_path.is_file():
-                        file_path.unlink()
-                        cprint(f"Deleted: {file_path.name}", "warning")
-
-                cprint(f"Removed {file_count} files from surveys directory", "success")
-            else:
-                cprint("Surveys directory is already empty", "info")
-        else:
-            cprint(f"Surveys directory does not exist yet: {SURVEYS_DIR}", "info")
-
-    except Exception as e:
-        cprint(f"Error cleaning surveys directory: {e}", "error")
-        raise
-
-
 def get_surveys_from_deployment():
     """
     Get all surveys from the database using dbt using the get_surveys_list macro.

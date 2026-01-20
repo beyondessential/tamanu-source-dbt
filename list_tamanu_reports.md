@@ -248,84 +248,6 @@ Village, Doctor/Nurse
 
 ---
 
-### Invoicing insurance remaining balance line list
-
-**Report Description**
-
-This report generates a list of all invoices with outstanding insurer balances. Each row represents a single invoice-insurer combination showing the amount covered by each insurer, payments received, and remaining balance. The report includes patient details, invoice information, and insurer-specific payment status. Results are ordered chronologically by discharge date.
-
-**Filters**
-
-Insurer
-
-**Default date range**: allTime
-
-
----
-
-### Invoicing patient payment by discharge location summary
-
-**Report Description**
-
-This report generates a summary of patient payments by discharge location. Each row in the report represents a single discharge location. The report includes location and payment information. Locations are listed in alphabetical order.
-
-**Filters**
-
-Facility, Discharging Area
-
-**Default date range**: allTime
-
-
----
-
-### Invoicing patient remaining balance line list
-
-**Report Description**
-
-This report generates a list of all patients that have a remaining balance. Each row in the report represents a single patient with a remaining balance. The report includes patient and remaining balance information. Patients are listed in chronological order by discharge date.
-
-**Default date range**: allTime
-
-
----
-
-### Invoicing payment methods line list
-
-**Report Description**
-
-This report generates a list of all patient payments. Each row in the report represents a single payment. The report includes patient, payment and payment method information. Payments are listed in chronological order by payment date.
-
-**Filters**
-
-Payment method
-
-**Default date range**: allTime
-
-
----
-
-### Invoicing pending line list
-
-**Report Description**
-
-Pending Invoicing Line List. This report generates a list of all encounters that have not been invoiced.
-
-**Default date range**: allTime
-
-
----
-
-### Invoicing summary
-
-**Report Description**
-
-This report generates a summary of invoices. The report includes patient, insurer and remaining balance information. Patients are listed in chronological order by discharge date.
-
-**Default date range**: allTime
-
-
----
-
 ### Lab requests line list
 
 **Report Description**
@@ -388,6 +310,21 @@ Facility, Area, Clinician, Booking type, Status
 
 ---
 
+### Medication dispensed summary
+
+**Report Description**
+
+This report shows count of doses dispensed for a given drug within a specified date range.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
+
+
+---
+
 ### Ongoing conditions line list
 
 **Report Description**
@@ -410,6 +347,36 @@ This report generates a list of all patients with a scheduled appointment for th
 Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
+
+
+---
+
+### Patient emergency encounters summary
+
+**Report Description**
+
+This report generates a summary showing the number of triage (emergency room encounter) records per patient within a specified date range. The report defaults to the past 30 days and can be filtered by patient display ID. Patients are listed alphabetically by last name.
+
+**Filters**
+
+Patient (or leave blank for all patients)
+
+**Default date range**: 30days
+
+
+---
+
+### Prescription line list
+
+**Report Description**
+
+This report generates a list of all prescription created in the selected date range. Prescriptions are listed in order of most recent prescribed date and time.
+
+**Filters**
+
+Facility
+
+**Default date range**: 7days
 
 
 ---
@@ -537,6 +504,39 @@ This report generates a list of all patients that have been registered, includin
 
 ---
 
+### Sensitive encounter summary
+
+**Report Description**
+
+This report generates a list of all patients from a sensitive facility that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. 
+
+The below information is included for each encounter: 
+- Encounter start and end dates and times with length of stay. 
+- Facility at which the encounter occurred. 
+- List of encounter types assigned during each encounter. Triage encounters include details of the triage category, arrival mode and wait time. 
+- Encountering and discharging clinicians.
+- Discharge information including disposition, discharging department, area, and location with timestamps.
+- Complete history of all assigned departments, areas, and locations with date and time assignments.
+
+All clinical data is listed chronologically within each cell. The below is a summary of the clinical information included for each encounter: 
+- List of diagnoses. Diagnoses with a status of Disproven or Recorded in error are excluded from the report. 
+- List of medications prescribed. 
+- List of vaccinations recorded. 
+- List of procedures performed.
+- List of lab requests. Lab requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- List of imaging requests. Imaging requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- All clinical notes recorded throughout the encounter.
+- Reason for encounter as documented.
+
+**Filters**
+
+Facility, Department, Area, Patient billing type, Supervising clinician
+
+**Default date range**: 7days
+
+
+---
+
 ### Sensitive lab requests line list
 
 **Report Description**
@@ -571,6 +571,21 @@ Status, Test category
 
 ---
 
+### Sensitive prescription line list
+
+**Report Description**
+
+This report generates a list of all prescription created in the selected date range from encounters at sensitive facilities. Prescriptions are listed in order of most recent prescribed date and time.
+
+**Filters**
+
+Facility
+
+**Default date range**: 7days
+
+
+---
+
 ### Upcoming vaccinations line list
 
 **Report Description**
@@ -579,7 +594,7 @@ This report generates upcoming vaccination schedules for patients up to 18 years
 
 **Filters**
 
-Category, Vaccine, Vaccine status
+Category, Vaccine, Vaccine status, Village
 
 **Default date range**: 18years
 

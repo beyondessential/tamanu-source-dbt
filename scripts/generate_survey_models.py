@@ -1,7 +1,8 @@
 import sys
 
+from utils.file_utils import clean_directory
 from utils.survey_utils import (
-    clean_surveys_directory,
+    SURVEYS_DIR,
     create_survey_model,
     generate_survey_doc,
     get_surveys_from_deployment,
@@ -18,7 +19,7 @@ def main():
 
         # Clean up existing survey models before regenerating
         cprint(f"\nCleaning up existing survey models...", "info")
-        clean_surveys_directory()
+        clean_directory(SURVEYS_DIR)
 
         cprint(f"\nGenerating {total} survey models...", "info")
 

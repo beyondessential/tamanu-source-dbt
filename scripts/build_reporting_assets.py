@@ -1,5 +1,6 @@
 import sys
 import os
+from pathlib import Path
 
 from utils import (
     cprint,
@@ -24,21 +25,77 @@ VERSION = get_deployment_version()
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
+def get_scripts_dir() -> Path:
+    """
+    Get the scripts directory path, accounting for different repository structures.
+
+    Returns:
+        Path: Path to the scripts directory
+
+    In tamanu-source-dbt: scripts/
+    In project repos (tamanu-dbt-*): dbt_packages/tamanu_source_dbt/scripts/
+    """
+    if DEPLOYMENT == "standard":
+        return Path("scripts")
+    else:
+        return Path("dbt_packages") / "tamanu_source_dbt" / "scripts"
+
+
 def main():
     """Build Tamanu reporting assets for all supported languages"""
-    # Get supported languages from configuration
-    config = get_dbt_project_config()
-    supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
+    scripts_dir = get_scripts_dir()
 
-    cprint(
-        f"Building for all supported languages: {', '.join(supported_languages)}",
-        "info",
-    )
-
-    # Ensure version directory exists
-    ensure_directory_exists(VERSION_DIR)
+    cprint(f"\n{'='*60}", "info")
+    cprint("BUILD TAMANU REPORTING ASSETS", "info")
+    cprint(f"{'='*60}", "info")
+    cprint(f"Version: {VERSION}", "info")
+    cprint(f"Deployment: {DEPLOYMENT}", "info")
+    cprint(f"Scripts directory: {scripts_dir}", "info")
+    cprint(f"{'='*60}\n", "info")
 
     try:
+        # Step 1: Generate survey models (only for non-standard deployments)
+        if DEPLOYMENT != "standard":
+            cprint("\nGenerating survey models...", "info")
+            execute_command(f"python {scripts_dir / 'generate_survey_models.py'}")
+            cprint("Survey models generated successfully!", "success")
+        else:
+            cprint("\nSkipping survey models generation (standard deployment)", "info")
+
+        # Step 2: Validate report configurations
+        cprint("\nValidating report configurations...", "info")
+        execute_command(f"python {scripts_dir / 'validate_report_configs.py'}")
+        cprint("Report configurations validated successfully!", "success")
+
+        # Step 3: Process translations
+        cprint("\n" + "="*60, "info")
+        cprint("Processing translations...", "info")
+        cprint("="*60, "info")
+
+        cprint("\nChecking translations...", "info")
+        execute_command(f"python {scripts_dir / 'check_translations.py'}")
+        cprint("Translations checked successfully!", "success")
+
+        cprint("\nConverting translations to Excel file...", "info")
+        execute_command(f"python {scripts_dir / 'convert_translations_to_excel_file.py'}")
+        cprint("Translations converted to Excel successfully!", "success")
+
+        # Step 4: Build reporting assets
+        cprint("\n" + "="*60, "info")
+        cprint("Building reporting assets...", "info")
+        cprint("="*60 + "\n", "info")
+
+        # Get supported languages from configuration
+        config = get_dbt_project_config()
+        supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
+
+        cprint(
+            f"Building for all supported languages: {', '.join(supported_languages)}",
+            "info",
+        )
+
+        # Ensure version directory exists
+        ensure_directory_exists(VERSION_DIR)
         # Clean and prepare dbt environment
         cprint("Preparing dbt environment", "info")
         execute_command("dbt clean")
@@ -86,6 +143,21 @@ def main():
             f"Multi-language build completed for {len(supported_languages)} languages!",
             "success",
         )
+
+        # Step 5: List Tamanu reports
+        cprint("\nListing Tamanu reports...", "info")
+        execute_command(f"python {scripts_dir / 'list_tamanu_reports.py'}")
+        cprint("Tamanu reports listed successfully!", "success")
+
+        # Success summary
+        cprint("\n" + "="*60, "success")
+        cprint("✓ BUILD COMPLETE!", "success")
+        cprint("="*60, "success")
+        cprint(f"\nReporting assets built for version {VERSION}", "success")
+        cprint("\nNext steps:", "info")
+        cprint("1. Review the generated files in compiled/", "info")
+        cprint("2. Commit the changes: git add . && git commit", "info")
+        cprint("3. Push to remote: git push", "info")
 
     except Exception as e:
         cprint(f"Error during build: {e}", "error")

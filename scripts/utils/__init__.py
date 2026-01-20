@@ -7,6 +7,7 @@ from .dbt_utils import (
     hide_tests_from_docs,
 )
 from .file_utils import (
+    clean_directory,
     copy_files_from_directory,
     ensure_directory_exists,
     move_file,
@@ -20,7 +21,7 @@ from .report_utils import (
     generate_reporting_schema_script,
 )
 from .survey_utils import (
-    clean_surveys_directory,
+    SURVEYS_DIR,
     create_survey_model,
     generate_survey_doc,
 )

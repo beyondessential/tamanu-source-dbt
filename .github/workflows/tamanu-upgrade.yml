@@ -44,7 +44,8 @@ jobs:
           else
             echo "Auto-detecting latest Tamanu release branch..."
             LATEST_RELEASE=$(gh api repos/beyondessential/tamanu/branches \
-              --jq '[.[] | select(.name | startswith("release/")) | .name] | sort | last')
+              --jq '[.[] | select(.name | startswith("release/")) | .name]' | sort -V | tail -1)
+
 
             if [ -z "$LATEST_RELEASE" ]; then
               echo "Error: Could not find any release branches in tamanu repo"
@@ -140,14 +141,14 @@ jobs:
           - Tamanu release branch: [\`release/$RELEASE_VERSION\`](https://github.com/beyondessential/tamanu/tree/release/$RELEASE_VERSION)
 
           ## Next Steps
-          After merging this PR, you'll need to prepare models and build the reporting assets locally:
+          After merging this PR, you'll need to build the reporting assets locally:
           \`\`\`bash
-          python scripts/prepare_build_assets.py
+          python scripts/build_reporting_assets.py
           \`\`\`
 
           ## Testing
           - [ ] Verify source models are up to date
-          - [ ] Run \`prepare_build_assets.py\` locally to generate survey models, validate reports, process translations, and build compiled assets
+          - [ ] Run \`build_reporting_assets.py\` locally to prepare models and build compiled assets
           - [ ] Check compiled reporting assets in \`compiled/v$DBT_VERSION/\`
           - [ ] Run tests: \`dbt test\`
 
