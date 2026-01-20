@@ -6,6 +6,41 @@ from utils.dbt_utils import get_deployment_name
 from utils.system_utils import cprint
 
 
+def load_translation_file(file_path, project_root, description):
+    """
+    Load a translation CSV file and return its DataFrame.
+
+    Args:
+        file_path (Path): Path to the translation file
+        project_root (Path): Project root directory for relative path display
+        description (str): Description of the file being loaded (e.g., "standard", "project-specific")
+
+    Returns:
+        tuple: (DataFrame or None, filename or None)
+    """
+    if not file_path.exists():
+        try:
+            rel_path = file_path.relative_to(project_root)
+            cprint(f"{description.capitalize()} translation file not found: {rel_path}", "warning")
+        except ValueError:
+            cprint(f"{description.capitalize()} translation file not found: {file_path}", "warning")
+        return None, None
+
+    cprint(f"\nLoading {description} translations...", "info")
+    try:
+        cprint(f"  Source: {file_path.relative_to(project_root)}", "info")
+    except ValueError:
+        cprint(f"  Source: {file_path}", "info")
+
+    try:
+        df = pd.read_csv(file_path)
+        cprint(f"  Loaded {len(df)} rows", "success")
+        return df, file_path.name
+    except Exception as e:
+        cprint(f"Warning: Failed to load {description} file: {e}", "warning")
+        return None, None
+
+
 def main():
     """
     Convert translation CSV files to a single Excel file.
@@ -52,46 +87,20 @@ def main():
         standard_file = project_root / "dbt_packages" / "tamanu_source_dbt" / "report_translations_standard.csv"
 
     # Load standard translations file
-    if standard_file.exists():
-        cprint(f"\nLoading standard translations...", "info")
-        try:
-            cprint(f"  Source: {standard_file.relative_to(project_root)}", "info")
-        except ValueError:
-            cprint(f"  Source: {standard_file}", "info")
-
-        try:
-            df_standard = pd.read_csv(standard_file)
-            dataframes.append(df_standard)
-            source_files.append(standard_file.name)
-            cprint(f"  Loaded {len(df_standard)} rows", "success")
-        except Exception as e:
-            cprint(f"Warning: Failed to load standard file: {e}", "warning")
-    else:
-        try:
-            cprint(f"Standard translation file not found: {standard_file.relative_to(project_root)}", "warning")
-        except ValueError:
-            cprint(f"Standard translation file not found: {standard_file}", "warning")
+    df_standard, standard_filename = load_translation_file(standard_file, project_root, "standard")
+    if df_standard is not None:
+        dataframes.append(df_standard)
+        source_files.append(standard_filename)
 
     # For non-standard deployments, also load project-specific translations
     if deployment_name != "standard":
         project_file = project_root / f"report_translations_{deployment_name}.csv"
+        df_project, project_filename = load_translation_file(project_file, project_root, f"project-specific ({deployment_name})")
 
-        if project_file.exists():
-            cprint(f"\nLoading project-specific translations ({deployment_name})...", "info")
-            try:
-                cprint(f"  Source: {project_file.relative_to(project_root)}", "info")
-            except ValueError:
-                cprint(f"  Source: {project_file}", "info")
-
-            try:
-                df_project = pd.read_csv(project_file)
-                dataframes.append(df_project)
-                source_files.append(project_file.name)
-                cprint(f"  Loaded {len(df_project)} rows", "success")
-            except Exception as e:
-                cprint(f"Warning: Failed to load project-specific file: {e}", "warning")
+        if df_project is not None:
+            dataframes.append(df_project)
+            source_files.append(project_filename)
         else:
-            cprint(f"\nProject-specific translation file not found: {project_file.name}", "info")
             cprint(f"This is expected if the project doesn't have custom translations.", "info")
 
     # Merge and convert to Excel
