@@ -7,7 +7,6 @@ from .dbt_utils import (
     hide_tests_from_docs,
 )
 from .file_utils import (
-    clean_directory,
     copy_files_from_directory,
     ensure_directory_exists,
     move_file,

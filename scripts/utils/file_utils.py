@@ -157,56 +157,6 @@ def move_file(source_path, target_path, create_dirs=True):
         raise
 
 
-def clean_directory(dir_path):
-    """
-    Removes all files from a directory without deleting the directory itself.
-
-    Args:
-        dir_path (str or Path): The path to the directory to clean.
-
-    Returns:
-        int: Number of files deleted.
-
-    Raises:
-        Exception: If there's an error during file deletion.
-    """
-    dir_path = Path(dir_path)
-
-    try:
-        if not dir_path.exists():
-            cprint(f"Directory does not exist: {dir_path}", "info")
-            return 0
-
-        if not dir_path.is_dir():
-            cprint(f"Path is not a directory: {dir_path}", "warning")
-            return 0
-
-        cprint(f"Cleaning directory: {dir_path}", "info")
-
-        # Get all files in the directory
-        files = list(dir_path.glob("*"))
-        file_count = len([f for f in files if f.is_file()])
-
-        if file_count == 0:
-            cprint("Directory is already empty", "info")
-            return 0
-
-        # Remove all files
-        deleted_count = 0
-        for file_path in files:
-            if file_path.is_file():
-                file_path.unlink()
-                cprint(f"Deleted: {file_path.name}", "warning")
-                deleted_count += 1
-
-        cprint(f"Removed {deleted_count} files from directory", "success")
-        return deleted_count
-
-    except Exception as e:
-        cprint(f"Error cleaning directory {dir_path}: {e}", "error")
-        raise
-
-
 def remove_directory(dir_path):
     """
     Removes a directory and all its contents.
