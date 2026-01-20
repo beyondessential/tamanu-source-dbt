@@ -18,6 +18,7 @@ Usage:
 
 import argparse
 import sys
+from pathlib import Path
 
 from utils import (
     cprint,
@@ -27,13 +28,33 @@ from utils import (
 )
 
 
-def generate_survey_models() -> None:
+def get_scripts_dir() -> Path:
+    """
+    Get the scripts directory path, accounting for different repository structures.
+
+    Returns:
+        Path: Path to the scripts directory
+
+    In tamanu-source-dbt: scripts/
+    In project repos (tamanu-dbt-*): dbt_packages/tamanu_source_dbt/scripts/
+    """
+    deployment_name = get_deployment_name()
+
+    if deployment_name == "standard":
+        # In tamanu-source-dbt
+        return Path("scripts")
+    else:
+        # In project repos
+        return Path("dbt_packages") / "tamanu_source_dbt" / "scripts"
+
+
+def generate_survey_models(scripts_dir: Path) -> None:
     """
     Run the generate_survey_models.py script to create survey models.
     """
     try:
         cprint("\nGenerating survey models...", "info")
-        execute_command("python scripts/generate_survey_models.py")
+        execute_command(f"python {scripts_dir / 'generate_survey_models.py'}")
         cprint("Survey models generated successfully!", "success")
 
     except Exception as e:
@@ -41,13 +62,13 @@ def generate_survey_models() -> None:
         raise
 
 
-def validate_report_configs() -> None:
+def validate_report_configs(scripts_dir: Path) -> None:
     """
     Run the validate_report_configs.py script to validate report configurations.
     """
     try:
         cprint("\nValidating report configurations...", "info")
-        execute_command("python scripts/validate_report_configs.py")
+        execute_command(f"python {scripts_dir / 'validate_report_configs.py'}")
         cprint("Report configurations validated successfully!", "success")
 
     except Exception as e:
@@ -55,13 +76,13 @@ def validate_report_configs() -> None:
         raise
 
 
-def check_translations() -> None:
+def check_translations(scripts_dir: Path) -> None:
     """
     Run the check_translations.py script to check translation files.
     """
     try:
         cprint("\nChecking translations...", "info")
-        execute_command("python scripts/check_translations.py")
+        execute_command(f"python {scripts_dir / 'check_translations.py'}")
         cprint("Translations checked successfully!", "success")
 
     except Exception as e:
@@ -69,13 +90,13 @@ def check_translations() -> None:
         raise
 
 
-def generate_translation_macro() -> None:
+def generate_translation_macro(scripts_dir: Path) -> None:
     """
     Run the generate_translation_macro.py script to generate translation macros.
     """
     try:
         cprint("\nGenerating translation macro...", "info")
-        execute_command("python scripts/generate_translation_macro.py")
+        execute_command(f"python {scripts_dir / 'generate_translation_macro.py'}")
         cprint("Translation macro generated successfully!", "success")
 
     except Exception as e:
@@ -83,13 +104,13 @@ def generate_translation_macro() -> None:
         raise
 
 
-def convert_translations_to_excel() -> None:
+def convert_translations_to_excel(scripts_dir: Path) -> None:
     """
     Run the convert_translations_to_excel_file.py script to convert translations.
     """
     try:
         cprint("\nConverting translations to Excel file...", "info")
-        execute_command("python scripts/convert_translations_to_excel_file.py")
+        execute_command(f"python {scripts_dir / 'convert_translations_to_excel_file.py'}")
         cprint("Translations converted to Excel successfully!", "success")
 
     except Exception as e:
@@ -97,13 +118,13 @@ def convert_translations_to_excel() -> None:
         raise
 
 
-def build_reporting_assets() -> None:
+def build_reporting_assets(scripts_dir: Path) -> None:
     """
     Run the build_reporting_assets.py script to regenerate reporting assets.
     """
     try:
         cprint("\nBuilding reporting assets...", "info")
-        execute_command("python scripts/build_reporting_assets.py")
+        execute_command(f"python {scripts_dir / 'build_reporting_assets.py'}")
         cprint("Reporting assets built successfully!", "success")
 
     except Exception as e:
@@ -111,13 +132,13 @@ def build_reporting_assets() -> None:
         raise
 
 
-def list_tamanu_reports() -> None:
+def list_tamanu_reports(scripts_dir: Path) -> None:
     """
     Run the list_tamanu_reports.py script to list all reports.
     """
     try:
         cprint("\nListing Tamanu reports...", "info")
-        execute_command("python scripts/list_tamanu_reports.py")
+        execute_command(f"python {scripts_dir / 'list_tamanu_reports.py'}")
         cprint("Tamanu reports listed successfully!", "success")
 
     except Exception as e:
@@ -147,36 +168,38 @@ Typical workflow:
         # Get current version and deployment info
         current_version = get_deployment_version()
         deployment_name = get_deployment_name()
+        scripts_dir = get_scripts_dir()
 
         cprint(f"\n{'='*60}", "info")
         cprint("PREPARE AND BUILD REPORTING ASSETS", "info")
         cprint(f"{'='*60}", "info")
         cprint(f"Version: {current_version}", "info")
         cprint(f"Deployment: {deployment_name}", "info")
+        cprint(f"Scripts directory: {scripts_dir}", "info")
         cprint(f"{'='*60}\n", "info")
 
         # Step 1: Generate survey models (only for non-standard deployments)
         if deployment_name != "standard":
-            generate_survey_models()
+            generate_survey_models(scripts_dir)
         else:
             cprint("\nSkipping survey models generation (standard deployment)", "info")
 
         # Step 2: Validate report configurations
-        validate_report_configs()
+        validate_report_configs(scripts_dir)
 
         # Step 3: Process translations
         cprint("\n" + "="*60, "info")
         cprint("Processing translations...", "info")
         cprint("="*60, "info")
-        check_translations()
-        generate_translation_macro()
-        convert_translations_to_excel()
+        check_translations(scripts_dir)
+        generate_translation_macro(scripts_dir)
+        convert_translations_to_excel(scripts_dir)
 
         # Step 4: Build reporting assets
-        build_reporting_assets()
+        build_reporting_assets(scripts_dir)
 
         # Step 5: List Tamanu reports
-        list_tamanu_reports()
+        list_tamanu_reports(scripts_dir)
 
         # Success summary
         cprint("\n" + "="*60, "success")
