@@ -21,22 +21,44 @@ There are two commands available to run:
 - `sqlfluff lint models` - Lints the file (does not apply fix)
 - `sqlfluff fix models` - Fixes the SQL files
 
+## Upgrading Tamanu Version
+
+**Automated Upgrade (Recommended):** Use the GitHub Actions workflow to automatically upgrade to the latest Tamanu version or specify a version manually.
+
+Quick start:
+1. Go to Actions → "Tamanu Version Upgrade"
+2. Click "Run workflow"
+3. Leave version empty for auto-detection or specify a version
+4. Review and merge the generated PR
+5. After merging, run locally: `python scripts/prepare_build_assets.py`
+
+The GitHub Actions workflow updates the version and refreshes source models. After merging, you need to run the prepare script locally to generate survey models, validate reports, process translations, and build reporting assets.
+
 ## Refresh Tamanu source models
 To refresh the source models from the Tamanu repository, execute the following command:
 `python scripts/refresh_tamanu_source.py`
 
 This command pulls the source model information from the Tamanu repository based on the version specified in the dbt_project.yml file. All models located under the `tamanu/database/model/central-server/public/` folder (remote tamanu repository) will be copied to the `models/sources/` folder (local repository).
 
-## Generate the build script for deployments
+## Prepare and Build Reporting Assets
 
-Execute the following command:
-`python ./scripts/build_reporting_assets.py`
+After upgrading the Tamanu version (via GitHub Actions), prepare models and build reporting assets:
 
-This command generates views, reports, and an import script for deployment in the .\compiled\ folder. The following outputs are created:
+```bash
+python scripts/prepare_build_assets.py
+```
 
-- Dataset SQL scripts: Saved in compiled/views/reporting_schema_build_script.sql.
-- Compiled report JSON files: Saved in compiled/reports.
-- Import script: Saved as compiled/reports/importReports.js
+This script performs the following steps:
+1. Generate survey models (for non-standard deployments)
+2. Validate report configurations
+3. Process translations (check, generate macro, convert to Excel)
+4. Build reporting assets
+5. List all Tamanu reports
+
+The generated assets are saved in the `./compiled/` folder:
+- Dataset SQL scripts: `compiled/views/reporting_schema_build_script.sql`
+- Compiled report JSON files: `compiled/reports/`
+- Import script: `compiled/reports/importReports.js`
 
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:

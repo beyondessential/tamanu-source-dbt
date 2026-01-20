@@ -1,6 +1,7 @@
 import sys
 
 from utils.survey_utils import (
+    clean_surveys_directory,
     create_survey_model,
     generate_survey_doc,
     get_surveys_from_deployment,
@@ -14,6 +15,12 @@ def main():
 
         surveys = get_surveys_from_deployment()
         total = len(surveys)
+
+        # Clean up existing survey models before regenerating
+        cprint(f"\nCleaning up existing survey models...", "info")
+        clean_surveys_directory()
+
+        cprint(f"\nGenerating {total} survey models...", "info")
 
         for index, (survey_id, survey_name) in enumerate(surveys, 1):
             cprint(f"\n\nProgress: [{index}/{total}]", "warning")

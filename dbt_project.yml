@@ -1,8 +1,7 @@
 name: tamanu_source_dbt
-version: 2.46.1
+version: 2.46.2
 config-version: 2
 profile: tamanu_source_dbt
-
 vars:
   language: default
   timezone: Australia/Sydney
@@ -14,23 +13,22 @@ vars:
   translation_prefix: report.reporting
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
-    - default
-
-model-paths: 
-  - models
-analysis-paths: 
-  - analyses
-test-paths: 
-  - tests
-seed-paths: 
-  - seeds
-macro-paths: 
-  - macros
-snapshot-paths: 
-  - snapshots
+  - default
+model-paths:
+- models
+analysis-paths:
+- analyses
+test-paths:
+- tests
+seed-paths:
+- seeds
+macro-paths:
+- macros
+snapshot-paths:
+- snapshots
 clean-targets:
-  - dbt_packages
-  - target
+- dbt_packages
+- target
 models:
   tamanu_source_dbt:
     bases:
@@ -38,29 +36,24 @@ models:
         show: true
       +materialized: view
       +tags:
-        - base
-
+      - base
     intermediate:
       +materialized: ephemeral
-
     datasets:
       +docs:
         show: true
       +materialized: view
       +tags:
-        - datasets
-
+      - datasets
     reconstructs:
       +incremental_strategy: merge
       +materialized: incremental
       +tags:
-        - reconstructed
-
+      - reconstructed
     reports:
       +docs:
         show: false
-      +tags: 
-        - reports
-
+      +tags:
+      - reports
 data_tests:
   +severity: warn

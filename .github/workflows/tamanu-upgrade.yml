@@ -1,0 +1,166 @@
+name: Tamanu Version Upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tamanu version to upgrade to (e.g., 2.47). Leave empty to auto-detect latest release branch.'
+        required: false
+        type: string
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system -r scripts/requirements.txt
+
+      - name: Determine version to upgrade to
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            echo "Using manually specified version: $VERSION"
+          else
+            echo "Auto-detecting latest Tamanu release branch..."
+            LATEST_RELEASE=$(gh api repos/beyondessential/tamanu/branches \
+              --jq '[.[] | select(.name | startswith("release/")) | .name] | sort | last')
+
+            if [ -z "$LATEST_RELEASE" ]; then
+              echo "Error: Could not find any release branches in tamanu repo"
+              exit 1
+            fi
+
+            VERSION="${LATEST_RELEASE#release/}"
+            echo "Auto-detected version: $VERSION"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Upgrading to Tamanu version: $VERSION"
+
+      - name: Update dbt_project.yml version
+        id: normalize
+        run: |
+          RELEASE_VERSION="${{ steps.version.outputs.version }}"
+          DBT_VERSION="$RELEASE_VERSION"
+
+          # Normalize version to X.Y.0 format if only X.Y is provided
+          if [[ "$DBT_VERSION" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            DBT_VERSION="${DBT_VERSION}.0"
+            echo "Normalized version to three-part format: $DBT_VERSION"
+          fi
+
+          echo "Updating dbt_project.yml to version $DBT_VERSION"
+
+          # Update version in dbt_project.yml
+          sed -i "s/^version: .*/version: $DBT_VERSION/" dbt_project.yml
+
+          echo "Version updated in dbt_project.yml:"
+          grep "^version:" dbt_project.yml
+
+          # Export both versions for use in later steps
+          echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "dbt_version=$DBT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Run refresh_tamanu_source.py
+        run: |
+          echo "Running refresh_tamanu_source.py to pull latest source models..."
+          python scripts/refresh_tamanu_source.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes detected after upgrade"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            echo "Changed files:"
+            git status --short
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_VERSION="${{ steps.normalize.outputs.release_version }}"
+          DBT_VERSION="${{ steps.normalize.outputs.dbt_version }}"
+          BRANCH="feature/maui-6163-upgrade-tamanu-$RELEASE_VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          git add .
+
+          git commit -m "Upgrade Tamanu version to $DBT_VERSION
+
+          - Updated dbt_project.yml to version $DBT_VERSION
+          - Refreshed Tamanu source tables from release/$RELEASE_VERSION
+
+          Related: MAUI-6163
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "Upgrade Tamanu version to $DBT_VERSION" \
+            --body "## Summary
+          Automated upgrade for Tamanu version \`$DBT_VERSION\`
+
+          ## Changes
+          - ✅ Updated \`dbt_project.yml\` to version \`$DBT_VERSION\`
+          - ✅ Ran \`refresh_tamanu_source.py\` to pull source models from \`release/$RELEASE_VERSION\`
+
+          ## Related
+          - Tamanu release branch: [\`release/$RELEASE_VERSION\`](https://github.com/beyondessential/tamanu/tree/release/$RELEASE_VERSION)
+
+          ## Next Steps
+          After merging this PR, you'll need to prepare models and build the reporting assets locally:
+          \`\`\`bash
+          python scripts/prepare_build_assets.py
+          \`\`\`
+
+          ## Testing
+          - [ ] Verify source models are up to date
+          - [ ] Run \`prepare_build_assets.py\` locally to generate survey models, validate reports, process translations, and build compiled assets
+          - [ ] Check compiled reporting assets in \`compiled/v$DBT_VERSION/\`
+          - [ ] Run tests: \`dbt test\`
+
+          ---
+          🤖 _This PR was automatically generated by [GitHub Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})_" \
+            --base main \
+            --head "$BRANCH"
+
+          echo "✅ Pull request created successfully!"
+          echo "PR URL:"
+          gh pr view "$BRANCH" --json url --jq '.url'
+
+      - name: No changes summary
+        if: steps.check_changes.outputs.has_changes == 'false'
+        run: |
+          echo "ℹ️ No changes detected. The repository is already up to date with version ${{ steps.version.outputs.version }}"
