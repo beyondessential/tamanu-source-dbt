@@ -134,7 +134,7 @@ def main():
         cprint("✓ Conversion complete!", "success")
         cprint("="*60, "success")
     else:
-        cprint("\nNo translation files found", "warning")
+        cprint("\nNo translation files found", "error")
         sys.exit(1)
 
 
