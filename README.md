@@ -57,11 +57,11 @@ This script performs the following steps:
 6. Generate language-specific reports for all supported languages
 7. List all Tamanu reports
 
-The generated assets are saved in the `./compiled/v{VERSION}/` folder:
+The generated assets are saved in the `compiled/` folder. The documentation is versioned and placed in a subfolder:
 - Dataset SQL scripts: `compiled/views/reporting_schema_build_script.sql`
 - Compiled report JSON files: `compiled/reports/`
 - Import script: `compiled/reports/importReports.js`
-- Documentation: `reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
+- Versioned documentation: `compiled/v{VERSION}/reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
 
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:
