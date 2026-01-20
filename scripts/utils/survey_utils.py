@@ -113,6 +113,11 @@ def generate_survey_doc(survey_id, survey_name):
     ensure_directory_exists(str(SURVEYS_DIR))
     columns = get_survey_columns_from_deployment(survey_id)
 
+    # Check if columns were retrieved successfully
+    if not columns:
+        cprint(f"Warning: No columns found for survey '{survey_name}'. Skipping documentation generation.", "warning")
+        return None
+
     survey_id = survey_id.replace("-", "_")
 
     doc = ""
