@@ -109,10 +109,21 @@ jobs:
         run: |
           RELEASE_VERSION="${{ steps.normalize.outputs.release_version }}"
           DBT_VERSION="${{ steps.normalize.outputs.dbt_version }}"
-          BRANCH="feature/maui-6163-upgrade-tamanu-$RELEASE_VERSION"
+          BRANCH="feature/tamanu-upgrade-v$RELEASE_VERSION"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Delete branch if it already exists (locally and remotely)
+          if git show-ref --verify --quiet refs/heads/"$BRANCH"; then
+            echo "Branch $BRANCH exists locally, deleting..."
+            git branch -D "$BRANCH"
+          fi
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Branch $BRANCH exists on remote, deleting..."
+            git push origin --delete "$BRANCH"
+          fi
 
           git checkout -b "$BRANCH"
           git add .

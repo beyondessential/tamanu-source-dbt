@@ -1,8 +1,6 @@
 import json
 import os
 import shutil
-import stat
-import time
 from pathlib import Path
 
 import boto3
@@ -160,55 +158,20 @@ def move_file(source_path, target_path, create_dirs=True):
 def remove_directory(dir_path):
     """
     Removes a directory and all its contents.
-    Handles Windows file permission issues with git repositories.
 
     Args:
         dir_path (str): The path to the directory to remove.
 
-    Logs warnings if there is an error removing the directory but does not exit.
+    Exits the program if there is an error removing the directory.
     """
-    def handle_remove_readonly(func, path, exc_info):
-        """
-        Error handler for Windows readonly file issues.
-        Changes file permissions and retries the operation.
-        """
-        if not os.access(path, os.W_OK):
-            # Change the file to be writable
-            os.chmod(path, stat.S_IWUSR | stat.S_IREAD)
-            # Retry the operation
-            func(path)
-        else:
-            raise
-
     try:
         if os.path.exists(dir_path):
-            # Use onerror parameter for Python 3.11 and below, onexc for 3.12+
-            try:
-                shutil.rmtree(dir_path, onexc=handle_remove_readonly)
-            except TypeError:
-                # Fallback for Python < 3.12
-                shutil.rmtree(dir_path, onerror=handle_remove_readonly)
+            shutil.rmtree(dir_path)
         else:
-            cprint(f"Warning: Directory not found: {dir_path}", "warning")
+            cprint(f"Error: Directory not found: {dir_path}", "error")
     except Exception as e:
         cprint(f"Error removing directory {dir_path}: {e}", "error")
-        # Try one more time with a brief delay (sometimes helps on Windows)
-        try:
-            time.sleep(0.5)
-            if os.path.exists(dir_path):
-                try:
-                    shutil.rmtree(dir_path, onexc=handle_remove_readonly)
-                except TypeError:
-                    shutil.rmtree(dir_path, onerror=handle_remove_readonly)
-        except Exception as retry_error:
-            cprint(
-                f"Failed to remove directory after retry: {retry_error}", "warning"
-            )
-            cprint(
-                "You may need to manually delete the temporary directory.", "warning"
-            )
-            # Don't exit, allow the script to continue
-            pass
+        exit(1)
 
 
 def upload_to_s3(file_path: Path, bucket: str, key: str) -> None:
