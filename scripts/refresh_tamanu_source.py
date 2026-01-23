@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-import tempfile
 from pathlib import Path
 
 from utils import (
@@ -15,7 +14,7 @@ from utils.system_utils import cprint
 REPO_URL = "https://github.com/beyondessential/tamanu.git"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-TEMP_DIR = Path(tempfile.gettempdir()) / "tamanu"
+TEMP_DIR = BASE_DIR / ".temp" / "tamanu"
 DBT_SOURCE_DIR = BASE_DIR / "models" / "sources"
 DBT_LOG_DIR = BASE_DIR / "models" / "logs"
 REPO_SOURCE_DIR = TEMP_DIR / "database" / "model" / "public"
