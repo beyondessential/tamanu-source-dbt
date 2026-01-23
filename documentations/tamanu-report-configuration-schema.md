@@ -23,7 +23,7 @@ Every report configuration file must be a valid JSON object with the following s
 
 - **`notes`** (string): Detailed description and notes about the report's purpose and functionality.
 - **`reportDefinitionId`** (string): Unique identifier for the report definition.
-- **`dhisDataSet`** (string): DHIS2 dataset identifier for importing this report into DHIS2. Used for DHIS2 integration to specify which dataset the report should be imported to.
+- **`dhisDataSet`** (string): DHIS2 dataset identifier for importing this report into DHIS2.
 
 ### Query Options Structure
 
