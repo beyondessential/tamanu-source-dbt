@@ -23,6 +23,7 @@ Every report configuration file must be a valid JSON object with the following s
 
 - **`notes`** (string): Detailed description and notes about the report's purpose and functionality.
 - **`reportDefinitionId`** (string): Unique identifier for the report definition.
+- **`dhisDataSet`** (string): DHIS2 dataset identifier for importing this report into DHIS2. Used for DHIS2 integration to specify which dataset the report should be imported to.
 
 ### Query Options Structure
 
@@ -233,6 +234,7 @@ Here's a comprehensive example of a valid report configuration:
   "notes": "Patient encounter report showing all encounters within the selected date range, with optional filtering by facility and department. Useful for tracking patient flow and departmental activity.",
   "dbSchema": "reporting",
   "reportDefinitionId": "patient-encounters-detailed",
+  "dhisDataSet": "abcdefghijk",
   "queryOptions": {
     "name": "Patient Encounters Report",
     "defaultDateRange": "30days",

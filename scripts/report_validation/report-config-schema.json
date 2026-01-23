@@ -87,6 +87,10 @@
     "reportDefinitionId": {
       "type": "string",
       "description": "ID for the report definition"
+    },
+    "dhisDataSet": {
+      "type": "string",
+      "description": "DHIS2 dataset identifier for importing this report into DHIS2"
     }
   },
   "additionalProperties": true,
