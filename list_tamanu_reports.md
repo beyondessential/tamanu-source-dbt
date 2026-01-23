@@ -388,6 +388,21 @@ Facility, Area, Clinician, Booking type, Status
 
 ---
 
+### Medication dispensed summary
+
+**Report Description**
+
+This report shows count of doses dispensed for a given drug within a specified date range.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
+
+
+---
+
 ### Ongoing conditions line list
 
 **Report Description**
@@ -410,6 +425,21 @@ This report generates a list of all patients with a scheduled appointment for th
 Facility, Area, Clinician, Appointment type, Status
 
 **Default date range**: next30days
+
+
+---
+
+### Prescription line list
+
+**Report Description**
+
+This report generates a list of all prescription created in the selected date range. Prescriptions are listed in order of most recent prescribed date and time.
+
+**Filters**
+
+Facility
+
+**Default date range**: 7days
 
 
 ---
@@ -444,7 +474,7 @@ Registering facility: Facility selected when patient is first added to the regis
 
 **Filters**
 
-Registry
+Registry, Subdivision, Division
 
 **Default date range**: allTime
 
@@ -537,6 +567,39 @@ This report generates a list of all patients that have been registered, includin
 
 ---
 
+### Sensitive encounter summary
+
+**Report Description**
+
+This report generates a list of all patients from a sensitive facility that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. 
+
+The below information is included for each encounter: 
+- Encounter start and end dates and times with length of stay. 
+- Facility at which the encounter occurred. 
+- List of encounter types assigned during each encounter. Triage encounters include details of the triage category, arrival mode and wait time. 
+- Encountering and discharging clinicians.
+- Discharge information including disposition, discharging department, area, and location with timestamps.
+- Complete history of all assigned departments, areas, and locations with date and time assignments.
+
+All clinical data is listed chronologically within each cell. The below is a summary of the clinical information included for each encounter: 
+- List of diagnoses. Diagnoses with a status of Disproven or Recorded in error are excluded from the report. 
+- List of medications prescribed. 
+- List of vaccinations recorded. 
+- List of procedures performed.
+- List of lab requests. Lab requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- List of imaging requests. Imaging requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
+- All clinical notes recorded throughout the encounter.
+- Reason for encounter as documented.
+
+**Filters**
+
+Facility, Department, Area, Patient billing type, Supervising clinician
+
+**Default date range**: 7days
+
+
+---
+
 ### Sensitive lab requests line list
 
 **Report Description**
@@ -571,6 +634,36 @@ Status, Test category
 
 ---
 
+### Sensitive medication dispensed summary
+
+**Report Description**
+
+This report shows count of doses dispensed for a given drug within a specified date range.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
+
+
+---
+
+### Sensitive prescription line list
+
+**Report Description**
+
+This report generates a list of all prescription created in the selected date range from encounters at sensitive facilities. Prescriptions are listed in order of most recent prescribed date and time.
+
+**Filters**
+
+Facility
+
+**Default date range**: 7days
+
+
+---
+
 ### Upcoming vaccinations line list
 
 **Report Description**
@@ -582,6 +675,28 @@ This report generates upcoming vaccination schedules for patients up to 18 years
 Category, Vaccine, Vaccine status
 
 **Default date range**: 18years
+
+
+---
+
+### Usage quality metrics patient details
+
+**Report Description**
+
+This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
+
+**Default date range**: allTime
+
+
+---
+
+### Usage quality metrics patient registrations
+
+**Report Description**
+
+This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
+
+**Default date range**: 30days
 
 
 ---

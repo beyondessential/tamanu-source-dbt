@@ -1,6 +1,6 @@
 {% macro get_survey_columns(survey_id) %}
     SELECT 
-        replace(concat(ssc.survey_id, '_', pde.code), '-', '_') as id, 
+        pde.id, 
         replace(pde.code,'-','_') as code,
         pde.name 
     FROM {{ source('tamanu', 'survey_screen_components') }} ssc
