@@ -7,6 +7,8 @@ on:
         description: 'Tamanu version to upgrade to (e.g., 2.47). Leave empty to auto-detect latest release branch.'
         required: false
         type: string
+  repository_dispatch:
+    types: [tamanu-release-created]
 
 jobs:
   upgrade:
@@ -41,11 +43,18 @@ jobs:
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
             echo "Using manually specified version: $VERSION"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            BRANCH_NAME="${{ github.event.client_payload.branch }}"
+            if [ -z "$BRANCH_NAME" ]; then
+              echo "Error: No branch name provided in repository_dispatch payload"
+              exit 1
+            fi
+            VERSION="${BRANCH_NAME#release/}"
+            echo "Using version from repository_dispatch: $VERSION"
           else
             echo "Auto-detecting latest Tamanu release branch..."
             LATEST_RELEASE=$(gh api repos/beyondessential/tamanu/branches \
               --jq '[.[] | select(.name | startswith("release/")) | .name]' | sort -V | tail -1)
-
 
             if [ -z "$LATEST_RELEASE" ]; then
               echo "Error: Could not find any release branches in tamanu repo"
