@@ -74,12 +74,20 @@ where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."encounters_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'encounters'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'encounters'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."encounter_diagnoses" as (
@@ -99,12 +107,20 @@ where ed.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."encounter_diagnoses_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'encounter_diagnoses'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'encounter_diagnoses'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."encounter_diets" as (
@@ -370,6 +386,8 @@ where deleted_at is null
 create or replace view "reporting"."lab_requests" as (
 select
     lr.id,
+    lr.created_at as created_datetime,
+    lr.updated_at as updated_datetime,
     lr.display_id,
     lr.urgent as is_urgent,
     lr.status,
@@ -395,17 +413,27 @@ where lr.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."lab_requests_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'lab_requests'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'lab_requests'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."lab_request_logs" as (
 select
     lrl.id,
+    lrl.created_at as created_datetime,
+    lrl.updated_at as updated_datetime,
     lrl.lab_request_id,
     lrl.status,
     lrl.updated_by_id
@@ -418,12 +446,20 @@ where lrl.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."lab_request_logs_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'lab_request_logs'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'lab_request_logs'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."lab_tests" as (
@@ -650,6 +686,8 @@ from appointment_changes
 create or replace view "reporting"."patients" as (
 select
     id,
+    created_at as created_datetime,
+    updated_at as updated_datetime,
             display_id as display_id,
             first_name as first_name,
             middle_name as middle_name,
@@ -741,12 +779,20 @@ where deleted_at is null
     and visibility_status = 'merged'
 );
 create or replace view "reporting"."patients_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'patients'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'patients'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."patient_additional_data" as (
@@ -1152,12 +1198,20 @@ where p.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."procedures_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'procedures'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'procedures'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."programs" as (
@@ -1319,18 +1373,21 @@ where deleted_at is null
 );
 create or replace view "reporting"."triages" as (
 select
-    id,
-    arrival_time::timestamp as arrival_datetime,
-    triage_time::timestamp as triage_datetime,
-    closed_time::timestamp as closed_datetime,
-    arrival_mode_id,
-    score,
-    encounter_id,
-    practitioner_id as clinician_id,
-    chief_complaint_id,
-    secondary_complaint_id
-from "public"."triages"
-where deleted_at is null
+    t.id,
+    t.arrival_time::timestamp as arrival_datetime,
+    t.triage_time::timestamp as triage_datetime,
+    t.closed_time::timestamp as closed_datetime,
+    t.arrival_mode_id,
+    t.score,
+    t.encounter_id,
+    t.practitioner_id as clinician_id,
+    t.chief_complaint_id,
+    t.secondary_complaint_id
+from "public"."triages" t
+join "public"."encounters" e on e.id = t.encounter_id
+where t.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
 create or replace view "reporting"."users" as (
 select
@@ -1345,12 +1402,20 @@ from "public"."users"
 where deleted_at is null
 );
 create or replace view "reporting"."users_metadata" as (
+with change_logs as (
+    select 
+        record_id,
+        logged_at,
+        least(record_created_at, logged_at) as created_datetime
+    from "logs"."changes"
+    where table_name = 'users'
+    
+)
 select 
     record_id as id,
-    min(logged_at) as created_datetime,
+    min(created_datetime) as created_datetime,
     max(logged_at) as updated_datetime
-from "logs"."changes"
-where table_name = 'users'
+from change_logs
 group by record_id
 );
 create or replace view "reporting"."vaccine_administrations" as (
@@ -2796,33 +2861,11 @@ create or replace view "reporting"."ds__outpatient_appointments_audit" as (
 -- Only includes appointments that have been modified (not just created)
 -- change_number: 0 = initial creation, 1+ = modifications
 
-with appointments_with_modifications as (
-    -- Only include appointments that have meaningful modifications (not just status-only changes)
-    select distinct appointment_id
-    from "reporting"."outpatient_appointments_change_logs" cl
-    where change_sequence > 1
-        and (
-            -- Has status change to Cancelled
-            (cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled')
-            -- Or has substantive field changes
-            or (
-                cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
-                or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
-                or cl.prev_clinician_id IS DISTINCT FROM cl.clinician_id
-                or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
-                or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
-                or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
-            )
-        )
-),
-
-filtered_changes as (
+with filtered_changes as (
     select
         cl.*,
         -- Determine if this is a meaningful change
         case
-            when cl.change_sequence = 1 then true -- Include creation events (will be change_number 0)
             -- Include if status changed to Cancelled
             when cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled' then true
             -- Include if any non-status fields changed
@@ -2837,10 +2880,28 @@ filtered_changes as (
             ) then true
             -- Exclude status-only changes (including status changes that aren't to Cancelled)
             else false
-        end as is_meaningful_change
+        end as is_meaningful_change,
+        -- Check if appointment has any meaningful modifications (not just creation)
+        max(
+            case
+                when cl.change_sequence > 1
+                    and (
+                        (cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled')
+                        or (
+                            cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
+                            or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
+                            or cl.prev_clinician_id IS DISTINCT FROM cl.clinician_id
+                            or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
+                            or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
+                            or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
+                            or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
+                        )
+                    )
+                then 1
+                else 0
+            end
+        ) over (partition by cl.appointment_id) as has_meaningful_modifications
     from "reporting"."outpatient_appointments_change_logs" cl
-    -- Only process changes for appointments that have been modified
-    join appointments_with_modifications awm on awm.appointment_id = cl.appointment_id
 ),
 
 numbered_changes as (
@@ -2854,6 +2915,7 @@ numbered_changes as (
         ) - 1 as change_number
     from filtered_changes fc
     where fc.is_meaningful_change = true
+        and fc.has_meaningful_modifications = 1
 )
 
 select
@@ -2917,13 +2979,14 @@ select
     case
         when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
         then prev_lg.name
-    end as prev_area,
+    end as prev_location_group,
     case
         when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
         then fc.prev_location_group_id
     end as prev_location_group_id,
     case
-        when fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
+        when fc.prev_is_high_priority IS NOT NULL
+            and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as prev_priority,
     case
@@ -2935,8 +2998,9 @@ select
         then prev_s.until_date
     end as prev_repeating_end_date,
     case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then case when fc.prev_schedule_id is not null then 'Yes' else 'No' end
+        when fc.prev_schedule_id IS NOT NULL
+            and fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
+        then 'Yes'
     end as prev_is_repeating,
     -- Facility details for filtering
     f.id as facility_id,
@@ -2959,7 +3023,7 @@ left join "reporting"."facilities" f on f.id = lg.facility_id
 );
 create or replace view "reporting"."ds__patients" as (
 select
-    pm.created_datetime as registration_date,
+    p.created_datetime as registration_date,
     u.display_name as registered_by,
     p.id as patient_id,
     p.first_name,
@@ -3005,7 +3069,6 @@ select
         else 'Alive'
     end as status
 from "reporting"."patients" p
-join "reporting"."patients_metadata" pm on pm.id = p.id
 left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
 left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
 left join "reporting"."users" u on u.id = pad.registered_by_id
@@ -3206,7 +3269,7 @@ select
 from "reporting"."patient_program_registrations" ppr
 join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
 join "reporting"."patients" p on p.id = ppr.patient_id
-join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
 left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
 left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
 left join "reporting"."reference_data" village on village.id = p.village_id
@@ -3698,13 +3761,12 @@ from data
 create or replace view "reporting"."ds__usage_quality_metrics_patient_registrations" as (
 with data as (
     select
-        pm.created_datetime as registration_date,
+        p.created_datetime as registration_date,
         p.id as registration_patient_id,
         pbd.patient_id as birth_patient_id,
         p.date_of_birth,
-        age(pm.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
+        age(p.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
     from "reporting"."patients" p
-    join "reporting"."patients_metadata" pm on pm.id = p.id
     left join "reporting"."patient_birth_data" pbd
         on pbd.patient_id = p.id
 )
@@ -3849,25 +3911,23 @@ select distinct on (lr.id, coalesce(lrl.status, lr.status))
     ltc.id as lab_test_category_id,
     ltc.name as lab_test_category,
     coalesce(lrl.status, lr.status) as status,
-    coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date as status_start_date,
+    coalesce(lrl.updated_datetime, lr.updated_datetime)::date as status_start_date,
     case
         when coalesce(lrl.status, lr.status) = 'published'
             then
-                coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date
-        when lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w is not null
+                coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+        when lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w is not null
             then
                 case
-                    when coalesce(lrlm.updated_datetime, lrm.updated_datetime)::date
-                        = (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w)::date
-                        then (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w)::date
-                    else (lead(coalesce(lrlm.updated_datetime, lrm.updated_datetime)) over w - interval '1 day')::date
+                    when coalesce(lrl.updated_datetime, lr.updated_datetime)::date
+                        = (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                        then (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w)::date
+                    else (lead(coalesce(lrl.updated_datetime, lr.updated_datetime)) over w - interval '1 day')::date
                 end
         else current_date
     end as status_end_date
 from "reporting"."lab_requests" lr
-join "reporting"."lab_requests_metadata" lrm on lrm.id = lr.id
 left join "reporting"."lab_request_logs" lrl on lrl.lab_request_id = lr.id
-left join "reporting"."lab_request_logs_metadata" lrlm on lrlm.id = lrl.id
 left join "reporting"."encounters" e on e.id = lr.encounter_id
 left join "reporting"."departments" d on d.id = coalesce(lr.department_id, e.department_id)
 left join "reporting"."facilities" f on f.id = d.facility_id
@@ -3876,7 +3936,7 @@ where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
 window
     w as (
         partition by lr.id
-        order by coalesce(lrlm.updated_datetime, lrm.updated_datetime)
+        order by coalesce(lrl.updated_datetime, lr.updated_datetime)
     )
 order by lr.id, coalesce(lrl.status, lr.status)
 );

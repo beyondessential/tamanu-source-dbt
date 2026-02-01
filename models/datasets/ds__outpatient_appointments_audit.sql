@@ -5,33 +5,11 @@
 -- Only includes appointments that have been modified (not just created)
 -- change_number: 0 = initial creation, 1+ = modifications
 
-with appointments_with_modifications as (
-    -- Only include appointments that have meaningful modifications (not just status-only changes)
-    select distinct appointment_id
-    from {{ ref('outpatient_appointments_change_logs') }} cl
-    where change_sequence > 1
-        and (
-            -- Has status change to Cancelled
-            (cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled')
-            -- Or has substantive field changes
-            or (
-                cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
-                or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
-                or cl.prev_clinician_id IS DISTINCT FROM cl.clinician_id
-                or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
-                or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
-                or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
-            )
-        )
-),
-
-filtered_changes as (
+with filtered_changes as (
     select
         cl.*,
         -- Determine if this is a meaningful change
         case
-            when cl.change_sequence = 1 then true -- Include creation events (will be change_number 0)
             -- Include if status changed to Cancelled
             when cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled' then true
             -- Include if any non-status fields changed
@@ -46,10 +24,28 @@ filtered_changes as (
             ) then true
             -- Exclude status-only changes (including status changes that aren't to Cancelled)
             else false
-        end as is_meaningful_change
+        end as is_meaningful_change,
+        -- Check if appointment has any meaningful modifications (not just creation)
+        max(
+            case
+                when cl.change_sequence > 1
+                    and (
+                        (cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled')
+                        or (
+                            cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
+                            or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
+                            or cl.prev_clinician_id IS DISTINCT FROM cl.clinician_id
+                            or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
+                            or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
+                            or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
+                            or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
+                        )
+                    )
+                then 1
+                else 0
+            end
+        ) over (partition by cl.appointment_id) as has_meaningful_modifications
     from {{ ref('outpatient_appointments_change_logs') }} cl
-    -- Only process changes for appointments that have been modified
-    join appointments_with_modifications awm on awm.appointment_id = cl.appointment_id
 ),
 
 numbered_changes as (
@@ -63,6 +59,7 @@ numbered_changes as (
         ) - 1 as change_number
     from filtered_changes fc
     where fc.is_meaningful_change = true
+        and fc.has_meaningful_modifications = 1
 )
 
 select
@@ -126,13 +123,14 @@ select
     case
         when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
         then prev_lg.name
-    end as prev_area,
+    end as prev_location_group,
     case
         when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
         then fc.prev_location_group_id
     end as prev_location_group_id,
     case
-        when fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
+        when fc.prev_is_high_priority IS NOT NULL
+            and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as prev_priority,
     case
@@ -144,8 +142,9 @@ select
         then prev_s.until_date
     end as prev_repeating_end_date,
     case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then case when fc.prev_schedule_id is not null then 'Yes' else 'No' end
+        when fc.prev_schedule_id IS NOT NULL
+            and fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
+        then 'Yes'
     end as prev_is_repeating,
     -- Facility details for filtering
     f.id as facility_id,

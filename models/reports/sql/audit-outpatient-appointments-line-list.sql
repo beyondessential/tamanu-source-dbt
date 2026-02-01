@@ -26,13 +26,13 @@ select
     to_char(prev_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('auditPrevAppointmentDateTime') }}",
     prev_appointment_type as "{{ translate_label('auditPrevAppointmentType') }}",
     prev_clinician as "{{ translate_label('auditPrevClinician') }}",
-    prev_area as "{{ translate_label('auditPrevArea') }}",
+    prev_location_group as "{{ translate_label('auditPrevLocationGroup') }}",
     prev_priority as "{{ translate_label('auditPrevPriority') }}",
     prev_is_repeating as "{{ translate_label('auditPrevIsRepeating') }}",
     to_char(prev_repeating_end_date::date, '{{ var("date_format") }}') as "{{ translate_label('auditPrevRepeatingEndDate') }}"
 from {{ ref('ds__outpatient_appointments_audit') }}
 where
-    -- Date range filter on modification datetime
+    -- Date range filter on appointment datetime
     case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
         else appointment_start_datetime >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
@@ -48,4 +48,4 @@ where
         when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
     end
-order by appointment_start_datetime desc
+order by display_id, appointment_id, change_number
