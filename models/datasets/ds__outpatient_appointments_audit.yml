@@ -54,7 +54,7 @@ models:
       - name: clinician_id
         description: "{{ doc('outpatient_appointments_change_logs__clinician_id') }}"
 
-      - name: area
+      - name: location_group
         description: "Current {{ doc('location_groups__name') }} for area"
 
       - name: location_group_id
@@ -108,7 +108,7 @@ models:
       - name: prev_clinician_id
         description: "{{ doc('outpatient_appointments_change_logs__prev_clinician_id') }}"
 
-      - name: prev_area
+      - name: prev_location_group
         description: "Previous {{ doc('location_groups__name') }} for area"
 
       - name: prev_location_group_id

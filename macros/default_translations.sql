@@ -27,7 +27,6 @@ Run: python scripts/generate_translation_macro.py
         'report.reporting.auditCreatedBy': 'Appointment created by',
         'report.reporting.auditModifiedBy': 'Appointment modified by',
         'report.reporting.auditModifiedDateTime': 'Appointment modified date & time',
-        'report.reporting.auditPrevAppointmentArea': 'Previous area',
         'report.reporting.auditPrevAppointmentDateTime': 'Previous appointment date & time',
         'report.reporting.auditPrevAppointmentType': 'Previous appointment type',
         'report.reporting.auditPrevClinician': 'Previous clinician',
