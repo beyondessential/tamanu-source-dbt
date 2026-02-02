@@ -1,9 +1,21 @@
 -- Outpatient Appointments Audit Dataset
 -- This dataset tracks changes/modifications to outpatient appointments
 -- Each row represents a modification event (excludes initial creation)
--- Excludes status-only changes unless the status change is to 'Cancelled'
--- Only includes appointments that have been modified (not just created)
+--
+-- Included changes:
+--   - Status changed to 'Cancelled' (individual cancellations only)
+--   - Changes to: start/end datetime, clinician, location group, appointment type, priority
+--
+-- Excluded changes:
+--   - Initial appointment creation (change_sequence = 1)
+--   - Status-only changes (unless changing to 'Cancelled')
+--   - Appointments automatically cancelled when their schedule was cancelled
+--     (i.e., bulk cancellations via "cancel this and all future appointments")
+--
 -- change_number: starts from 1 for the first modification, increments for subsequent changes
+--
+-- Note: schedule_id never changes on existing appointments in Tamanu.
+-- When a schedule is modified, old appointments are cancelled and new ones are created.
 
 with change_evaluation as (
     select
@@ -24,6 +36,15 @@ with change_evaluation as (
             else false
         end as is_meaningful_change
     from {{ ref('outpatient_appointments_change_logs') }} cl
+    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id::uuid
+    where
+        -- Exclude appointments that were automatically cancelled when the schedule was cancelled
+        -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
+        not (
+            cl.status = 'Cancelled'
+            and s.cancelled_at_date is not null
+            and cl.start_datetime > s.cancelled_at_date::date
+        )
 ),
 
 numbered_changes as (
@@ -109,7 +130,7 @@ select
         when fc.prev_is_high_priority IS NOT NULL
             and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
-    end as prev_priority, 
+    end as prev_priority,
     -- Facility details for filtering
     f.id as facility_id,
     f.name as facility
