@@ -627,6 +627,8 @@ with appointment_changes as (
         c.record_id as appointment_id,
         c.logged_at as modified_datetime,
         c.updated_by_user_id as modified_by_user_id,
+        c.record_data,
+        c.record_created_at,
         -- Extract current values from the change log record_data
         (c.record_data->>'start_time')::timestamp as start_datetime,
         (c.record_data->>'end_time')::timestamp as end_datetime,
@@ -2886,6 +2888,7 @@ with change_evaluation as (
                 or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
                 or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
                 or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
+                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
             ) then true
             else false
         end as is_meaningful_change
