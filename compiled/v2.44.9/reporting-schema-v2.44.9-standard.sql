@@ -627,8 +627,6 @@ with appointment_changes as (
         c.record_id as appointment_id,
         c.logged_at as modified_datetime,
         c.updated_by_user_id as modified_by_user_id,
-        c.record_data,
-        c.record_created_at,
         -- Extract current values from the change log record_data
         (c.record_data->>'start_time')::timestamp as start_datetime,
         (c.record_data->>'end_time')::timestamp as end_datetime,
@@ -2857,9 +2855,21 @@ create or replace view "reporting"."ds__outpatient_appointments_audit" as (
 -- Outpatient Appointments Audit Dataset
 -- This dataset tracks changes/modifications to outpatient appointments
 -- Each row represents a modification event (excludes initial creation)
--- Excludes status-only changes unless the status change is to 'Cancelled'
--- Only includes appointments that have been modified (not just created)
+--
+-- Included changes:
+--   - Status changed to 'Cancelled' (individual cancellations only)
+--   - Changes to: start/end datetime, clinician, location group, appointment type, priority
+--
+-- Excluded changes:
+--   - Initial appointment creation (change_sequence = 1)
+--   - Status-only changes (unless changing to 'Cancelled')
+--   - Appointments automatically cancelled when their schedule was cancelled
+--     (i.e., bulk cancellations via "cancel this and all future appointments")
+--
 -- change_number: starts from 1 for the first modification, increments for subsequent changes
+--
+-- Note: schedule_id never changes on existing appointments in Tamanu.
+-- When a schedule is modified, old appointments are cancelled and new ones are created.
 
 with change_evaluation as (
     select
@@ -2876,11 +2886,19 @@ with change_evaluation as (
                 or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
                 or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
                 or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
             ) then true
             else false
         end as is_meaningful_change
     from "reporting"."outpatient_appointments_change_logs" cl
+    left join "public"."appointment_schedules" s on s.id = cl.schedule_id::uuid
+    where
+        -- Exclude appointments that were automatically cancelled when the schedule was cancelled
+        -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
+        not (
+            cl.status = 'Cancelled'
+            and s.cancelled_at_date is not null
+            and cl.start_datetime > s.cancelled_at_date::date
+        )
 ),
 
 numbered_changes as (
@@ -2967,18 +2985,6 @@ select
             and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as prev_priority,
-    case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then fc.prev_schedule_id
-    end as prev_schedule_id,
-    case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then prev_s.until_date
-    end as prev_repeating_end_date,
-    case  
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id  
-        then case when fc.prev_schedule_id is not null then 'Yes' else 'No' end  
-    end as prev_is_repeating, 
     -- Facility details for filtering
     f.id as facility_id,
     f.name as facility
@@ -2993,7 +2999,6 @@ left join "reporting"."location_groups" prev_lg on prev_lg.id = fc.prev_location
 left join "reporting"."reference_data" apt on apt.id = fc.appointment_type_id
 left join "reporting"."reference_data" prev_apt on prev_apt.id = fc.prev_appointment_type_id
 left join "public"."appointment_schedules" s on s.id = fc.schedule_id::uuid
-left join "public"."appointment_schedules" prev_s on prev_s.id = fc.prev_schedule_id::uuid
 -- Join to facility, department, location for filtering
 left join "reporting"."facilities" f on f.id = lg.facility_id
     and not f.is_sensitive

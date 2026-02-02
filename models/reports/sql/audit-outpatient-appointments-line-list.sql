@@ -27,9 +27,7 @@ select
     prev_appointment_type as "{{ translate_label('auditPrevAppointmentType') }}",
     prev_clinician as "{{ translate_label('auditPrevClinician') }}",
     prev_location_group as "{{ translate_label('auditPrevLocationGroup') }}",
-    prev_priority as "{{ translate_label('auditPrevPriority') }}",
-    prev_is_repeating as "{{ translate_label('auditPrevIsRepeating') }}",
-    to_char(prev_repeating_end_date::date, '{{ var("date_format") }}') as "{{ translate_label('auditPrevRepeatingEndDate') }}"
+    prev_priority as "{{ translate_label('auditPrevPriority') }}"
 from {{ ref('ds__outpatient_appointments_audit') }}
 where
     -- Date range filter on appointment datetime

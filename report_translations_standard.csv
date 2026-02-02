@@ -20,10 +20,8 @@ report.reporting.auditModifiedDateTime,Appointment modified date & time
 report.reporting.auditPrevAppointmentDateTime,Previous appointment date & time
 report.reporting.auditPrevAppointmentType,Previous appointment type
 report.reporting.auditPrevClinician,Previous clinician
-report.reporting.auditPrevIsRepeating,Previous repeating appointment
 report.reporting.auditPrevLocationGroup,Previous area
 report.reporting.auditPrevPriority,Previous priority appointment
-report.reporting.auditPrevRepeatingEndDate,Previous repeating appointment end date
 report.reporting.birthApgarScoreFiveMinutes,Apgar score at 5 min
 report.reporting.birthApgarScoreOneMinute,Apgar score at 1 min
 report.reporting.birthApgarScoreTenMinutes,Apgar score at 10 min
