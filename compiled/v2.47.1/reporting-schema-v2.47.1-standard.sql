@@ -2429,19 +2429,19 @@ left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
 create or replace view "reporting"."ds__outpatient_appointments_audit" as (
 -- Outpatient Appointments Audit Dataset
 -- This dataset tracks changes/modifications to outpatient appointments
--- Each row represents a change event (creation, modification, or cancellation)
+-- Each row represents a modification event (excludes initial creation)
 -- Excludes status-only changes unless the status change is to 'Cancelled'
 -- Only includes appointments that have been modified (not just created)
--- change_number: 0 = initial creation, 1+ = modifications
+-- change_number: starts from 1 for the first modification, increments for subsequent changes
 
-with filtered_changes as (
+with change_evaluation as (
     select
         cl.*,
-        -- Determine if this is a meaningful change
+        -- Determine if this change has meaningful field modifications
         case
-            -- Include if status changed to Cancelled
+            -- Status changed to Cancelled
             when cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled' then true
-            -- Include if any non-status fields changed
+            -- Any non-status fields changed
             when (
                 cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
                 or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
@@ -2451,44 +2451,22 @@ with filtered_changes as (
                 or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
                 or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
             ) then true
-            -- Exclude status-only changes (including status changes that aren't to Cancelled)
             else false
-        end as is_meaningful_change,
-        -- Check if appointment has any meaningful modifications (not just creation)
-        max(
-            case
-                when cl.change_sequence > 1
-                    and (
-                        (cl.status = 'Cancelled' and cl.prev_status IS DISTINCT FROM 'Cancelled')
-                        or (
-                            cl.prev_start_datetime IS DISTINCT FROM cl.start_datetime
-                            or cl.prev_end_datetime IS DISTINCT FROM cl.end_datetime
-                            or cl.prev_clinician_id IS DISTINCT FROM cl.clinician_id
-                            or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
-                            or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
-                            or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                            or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
-                        )
-                    )
-                then 1
-                else 0
-            end
-        ) over (partition by cl.appointment_id) as has_meaningful_modifications
+        end as is_meaningful_change
     from "reporting"."outpatient_appointments_change_logs" cl
 ),
 
 numbered_changes as (
     select
-        fc.*,
-        -- Assign change number: 0 for creation, 1+ for modifications
-        -- row_number starts at 1, so subtract 1 to get 0-based numbering
+        ce.*,
+        -- Assign change number: starts from 1 for first modification
         row_number() over (
-            partition by fc.appointment_id
-            order by fc.modified_datetime
-        ) - 1 as change_number
-    from filtered_changes fc
-    where fc.is_meaningful_change = true
-        and fc.has_meaningful_modifications = 1
+            partition by ce.appointment_id
+            order by ce.modified_datetime
+        ) as change_number
+    from change_evaluation ce
+    where ce.is_meaningful_change = true
+        and ce.change_sequence > 1  -- Exclude initial creation
 )
 
 select
@@ -2570,11 +2548,10 @@ select
         when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
         then prev_s.until_date
     end as prev_repeating_end_date,
-    case
-        when fc.prev_schedule_id IS NOT NULL
-            and fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then 'Yes'
-    end as prev_is_repeating,
+    case  
+        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id  
+        then case when fc.prev_schedule_id is not null then 'Yes' else 'No' end  
+    end as prev_is_repeating, 
     -- Facility details for filtering
     f.id as facility_id,
     f.name as facility
