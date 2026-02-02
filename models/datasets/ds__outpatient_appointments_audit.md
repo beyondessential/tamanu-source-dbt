@@ -1,5 +1,5 @@
 {% docs ds__outpatient_appointments_audit__change_number %}
-Sequential change number for this appointment. 0 = initial creation, 1 = first modification, 2 = second modification, etc.
+Sequential change number for this appointment. 1 = first modification, 2 = second modification, etc.
 {% enddocs %}
 
 {% docs ds__outpatient_appointments_audit__is_cancelled %}

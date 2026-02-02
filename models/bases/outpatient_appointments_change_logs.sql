@@ -8,8 +8,6 @@ with appointment_changes as (
         c.record_id as appointment_id,
         c.logged_at as modified_datetime,
         c.updated_by_user_id as modified_by_user_id,
-        c.record_data,
-        c.record_created_at,
         -- Extract current values from the change log record_data
         (c.record_data->>'start_time')::timestamp as start_datetime,
         (c.record_data->>'end_time')::timestamp as end_datetime,

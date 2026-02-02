@@ -20,7 +20,6 @@ with change_evaluation as (
                 or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
                 or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
                 or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
             ) then true
             else false
         end as is_meaningful_change
@@ -110,19 +109,7 @@ select
         when fc.prev_is_high_priority IS NOT NULL
             and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
-    end as prev_priority,
-    case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then fc.prev_schedule_id
-    end as prev_schedule_id,
-    case
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id
-        then prev_s.until_date
-    end as prev_repeating_end_date,
-    case  
-        when fc.prev_schedule_id IS DISTINCT FROM fc.schedule_id  
-        then case when fc.prev_schedule_id is not null then 'Yes' else 'No' end  
-    end as prev_is_repeating, 
+    end as prev_priority, 
     -- Facility details for filtering
     f.id as facility_id,
     f.name as facility
@@ -137,7 +124,6 @@ left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
 left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id::uuid
-left join {{ source('tamanu', 'appointment_schedules') }} prev_s on prev_s.id = fc.prev_schedule_id::uuid
 -- Join to facility, department, location for filtering
 left join {{ ref('facilities') }} f on f.id = lg.facility_id
     and not f.is_sensitive
