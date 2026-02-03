@@ -75,7 +75,10 @@ from cte_name_2
 
 ### Common Patterns
 
-**Standard Filters:**
+**Standard Filters (Base Models Only):**
+
+These filters are only applied at the base model level. Once filtered at the base, downstream models (datasets, reports) inherit the clean data and do not need to reapply these filters.
+
 ```sql
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
@@ -184,8 +187,7 @@ When reviewing pull requests, prioritise:
 
 ### Common Issues to Check
 
-- Missing `deleted_at is null` filters
-- Missing test patient filter: `id != '{{ var("test_patient") }}'`
+- Missing `deleted_at is null` or test patient filters in **base models** (not required in downstream models)
 - Incorrect datetime formatting (should use variables)
 - Missing YAML documentation for bases/surveys/datasets
 - Missing sensitivity tags for PII columns
