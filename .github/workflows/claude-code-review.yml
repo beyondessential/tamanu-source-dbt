@@ -25,8 +25,11 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
+          claude_args: '--allowed-tools Bash(gh pr edit:*)'
           prompt: |
-            Please analyse the changes in this PR and focus on identifying critical issues related to:
+            First, review the PR title and update it if needed to accurately reflect the changes. Use `gh pr edit` to update the title if it needs improvement.
+
+            Then, analyse the changes in this PR and focus on identifying critical issues related to:
             - Potential bugs or issues
             - Performance
             - Security
