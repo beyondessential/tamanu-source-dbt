@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
 **When ORDER BY should be flagged:**
 - Query-level ORDER BY in bases/surveys/datasets that unnecessarily sorts the final output
-- Only flag if the ORDER BY is solely for sorting the result set, not for functional purposes
+- Only flag if the ORDER BY is solely for sorting the result set, not for functional purposes (e.g., when used with `LIMIT`)
 
 ## Code Review Focus
 
