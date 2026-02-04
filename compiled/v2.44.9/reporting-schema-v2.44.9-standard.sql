@@ -638,8 +638,12 @@ with appointment_changes as (
         c.record_data->>'appointment_type_id' as appointment_type_id,
         (c.record_data->>'is_high_priority')::boolean as is_high_priority,
         c.record_data->>'status' as status,
-        c.record_data->>'schedule_id' as schedule_id,
-        c.record_data->>'created_by' as created_by_user_id,
+        (c.record_data->>'schedule_id')::uuid as schedule_id,
+        -- Get creator from the first change_sequence (initial creation)
+        first_value(c.updated_by_user_id) over (
+            partition by c.record_id
+            order by c.logged_at
+        ) as created_by_user_id,
         -- Use LAG to get the previous record state
         lag(c.record_data) over (
             partition by c.record_id
@@ -679,7 +683,6 @@ select
     (previous_record_data->>'appointment_type_id') as prev_appointment_type_id,
     (previous_record_data->>'is_high_priority')::boolean as prev_is_high_priority,
     (previous_record_data->>'status') as prev_status,
-    (previous_record_data->>'schedule_id') as prev_schedule_id,
     change_sequence
 from appointment_changes
 );
@@ -933,6 +936,17 @@ from "public"."patient_birth_data"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."patient_care_plans" as (
+select
+    id,
+    date::timestamp as care_plan_datetime,
+    patient_id,
+    examiner_id as clinician_id,
+    care_plan_id
+from "public"."patient_care_plans"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."patient_conditions" as (
 select
     id,
@@ -996,6 +1010,19 @@ select
     is_final,
     visibility_status
 from "public"."patient_death_data"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."patient_family_histories" as (
+select
+    id,
+    recorded_date::timestamp as recorded_datetime,
+    patient_id,
+    practitioner_id as clinician_id,
+    diagnosis_id,
+    relationship,
+    note
+from "public"."patient_family_histories"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
@@ -2893,14 +2920,14 @@ with change_evaluation as (
             else false
         end as is_meaningful_change
     from "reporting"."outpatient_appointments_change_logs" cl
-    left join "public"."appointment_schedules" s on s.id = cl.schedule_id::uuid
+    left join "public"."appointment_schedules" s on s.id = cl.schedule_id
     where
         -- Exclude appointments that were automatically cancelled when the schedule was cancelled
         -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
         not (
             cl.status = 'Cancelled'
             and s.cancelled_at_date is not null
-            and cl.start_datetime > s.cancelled_at_date::date
+            and cl.start_datetime::date > s.cancelled_at_date::date
         )
 ),
 
@@ -2939,10 +2966,6 @@ select
     case when fc.is_high_priority then 'Yes' else 'No' end as priority,
     fc.schedule_id,
     s.until_date as repeating_end_date,
-    case
-        when fc.schedule_id is not null then 'Yes'
-        else 'No'
-    end as is_repeating,
     -- Modification details
     creator.display_name as created_by,
     fc.created_by_user_id,
@@ -3001,7 +3024,7 @@ left join "reporting"."location_groups" lg on lg.id = fc.location_group_id
 left join "reporting"."location_groups" prev_lg on prev_lg.id = fc.prev_location_group_id
 left join "reporting"."reference_data" apt on apt.id = fc.appointment_type_id
 left join "reporting"."reference_data" prev_apt on prev_apt.id = fc.prev_appointment_type_id
-left join "public"."appointment_schedules" s on s.id = fc.schedule_id::uuid
+left join "public"."appointment_schedules" s on s.id = fc.schedule_id
 -- Join to facility, department, location for filtering
 left join "reporting"."facilities" f on f.id = lg.facility_id
     and not f.is_sensitive

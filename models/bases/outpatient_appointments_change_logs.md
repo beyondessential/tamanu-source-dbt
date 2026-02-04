@@ -88,10 +88,6 @@ Previous priority status (before the change). Null for creation events (change_s
 Previous appointment status (before the change). Null for creation events (change_sequence = 1).
 {% enddocs %}
 
-{% docs outpatient_appointments_change_logs__prev_schedule_id %}
-Previous recurring schedule ID (before the change). Null for creation events (change_sequence = 1).
-{% enddocs %}
-
 {% docs outpatient_appointments_change_logs__change_sequence %}
 Sequential number of this change for the appointment.
 - 1 = initial creation event

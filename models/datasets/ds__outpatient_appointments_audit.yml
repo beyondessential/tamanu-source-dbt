@@ -69,9 +69,6 @@ models:
       - name: repeating_end_date
         description: "{{ doc('ds__outpatient_appointments_audit__repeating_end_date') }}"
 
-      - name: is_repeating
-        description: "{{ doc('ds__outpatient_appointments_audit__is_repeating') }}"
-
       - name: created_by
         description: "{{ doc('users__display_name') }} who created the appointment"
 
@@ -116,15 +113,6 @@ models:
 
       - name: prev_priority
         description: "Previous {{ doc('outpatient_appointments_change_logs__prev_is_high_priority') }} formatted as Yes/No"
-
-      - name: prev_schedule_id
-        description: "{{ doc('outpatient_appointments_change_logs__prev_schedule_id') }}"
-
-      - name: prev_repeating_end_date
-        description: "{{ doc('ds__outpatient_appointments_audit__prev_repeating_end_date') }}"
-
-      - name: prev_is_repeating
-        description: "{{ doc('ds__outpatient_appointments_audit__prev_is_repeating') }}"
 
       - name: facility_id
         description: "{{ doc('generic__id') }} in facilities (for filtering)"

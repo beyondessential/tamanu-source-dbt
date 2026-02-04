@@ -75,8 +75,5 @@ models:
       - name: prev_status
         description: "{{ doc('outpatient_appointments_change_logs__prev_status') }}"
 
-      - name: prev_schedule_id
-        description: "{{ doc('outpatient_appointments_change_logs__prev_schedule_id') }}"
-
       - name: change_sequence
         description: "{{ doc('outpatient_appointments_change_logs__change_sequence') }}"

@@ -37,14 +37,14 @@ with change_evaluation as (
             else false
         end as is_meaningful_change
     from {{ ref('outpatient_appointments_change_logs') }} cl
-    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id::uuid
+    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id
     where
         -- Exclude appointments that were automatically cancelled when the schedule was cancelled
         -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
         not (
             cl.status = 'Cancelled'
             and s.cancelled_at_date is not null
-            and cl.start_datetime > s.cancelled_at_date::date
+            and cl.start_datetime::date > s.cancelled_at_date::date
         )
 ),
 
@@ -83,10 +83,6 @@ select
     case when fc.is_high_priority then 'Yes' else 'No' end as priority,
     fc.schedule_id,
     s.until_date as repeating_end_date,
-    case
-        when fc.schedule_id is not null then 'Yes'
-        else 'No'
-    end as is_repeating,
     -- Modification details
     creator.display_name as created_by,
     fc.created_by_user_id,
@@ -145,7 +141,7 @@ left join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
-left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id::uuid
+left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id
 -- Join to facility, department, location for filtering
 left join {{ ref('facilities') }} f on f.id = lg.facility_id
     and not f.is_sensitive
