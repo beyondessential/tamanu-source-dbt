@@ -36,22 +36,17 @@ jobs:
           plugins: 'code-review@claude-code-plugins'
           claude_args: '--allowed-tools Bash(gh pr edit:*)'
           prompt: |
-            First, review the PR title and update it if needed to accurately reflect the changes. Use `gh pr edit` to update the title if it needs improvement.
+            You have been mentioned in a GitHub PR. Respond to the user's request.
 
-            Then, analyse the changes in this PR and focus on identifying critical issues related to:
-            - Potential bugs or issues
-            - Performance
-            - Security
-            - Correctness
+            When the user asks you to review the PR (e.g., "review this PR", "can you review", etc.), use the code-review plugin with the following approach:
+            - First, review the PR title and update it if needed to accurately reflect the changes using `gh pr edit`
+            - Then analyse changes focusing on: potential bugs, performance, security, and correctness
+            - List critical issues in bullet points, or provide simple approval if none found
+            - Sign off with ✅ (approved) or ⚠️ (issues found)
+            - Keep responses concise, highlighting only critical issues
+            - Use CLAUDE.md for style and conventions guidance
 
-            If critical issues are found, list them in a few short bullet points. If no critical issues are found, provide a simple approval.
-            Sign off with a checkbox emoji: ✅ (approved) or ⚠️ (issues found).
-
-            Keep your response concise. Only highlight critical issues that must be addressed before merging. Skip detailed style or minor suggestions unless they impact performance, security, or correctness.
-
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            /code-review:code-review ${{ github.event.issue.pull_request.html_url || github.event.pull_request.html_url }}
+            For other requests (questions, explanations, specific tasks), respond to the user's instructions directly without running a review.
           additional_permissions: |
             actions: read
 
