@@ -32,7 +32,6 @@ with change_evaluation as (
                 or cl.prev_location_group_id IS DISTINCT FROM cl.location_group_id
                 or cl.prev_appointment_type_id IS DISTINCT FROM cl.appointment_type_id
                 or cl.prev_is_high_priority IS DISTINCT FROM cl.is_high_priority
-                or cl.prev_schedule_id IS DISTINCT FROM cl.schedule_id
             ) then true
             else false
         end as is_meaningful_change
