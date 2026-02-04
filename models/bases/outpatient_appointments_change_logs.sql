@@ -17,8 +17,12 @@ with appointment_changes as (
         c.record_data->>'appointment_type_id' as appointment_type_id,
         (c.record_data->>'is_high_priority')::boolean as is_high_priority,
         c.record_data->>'status' as status,
-        c.record_data->>'schedule_id' as schedule_id,
-        c.record_data->>'created_by' as created_by_user_id,
+        (c.record_data->>'schedule_id')::uuid as schedule_id,
+        -- Get creator from the first change_sequence (initial creation)
+        first_value(c.updated_by_user_id) over (
+            partition by c.record_id
+            order by c.logged_at
+        ) as created_by_user_id,
         -- Use LAG to get the previous record state
         lag(c.record_data) over (
             partition by c.record_id
@@ -58,6 +62,5 @@ select
     (previous_record_data->>'appointment_type_id') as prev_appointment_type_id,
     (previous_record_data->>'is_high_priority')::boolean as prev_is_high_priority,
     (previous_record_data->>'status') as prev_status,
-    (previous_record_data->>'schedule_id') as prev_schedule_id,
     change_sequence
 from appointment_changes
