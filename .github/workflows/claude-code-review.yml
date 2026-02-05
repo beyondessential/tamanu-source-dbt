@@ -3,10 +3,15 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches:
+      - dev
 
 jobs:
   claude-review:
     runs-on: ubuntu-latest
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
@@ -30,6 +35,6 @@ jobs:
           use_sticky_comment: true
           prompt: "/review"
           claude_args: |
-            --allowedTools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(git diff*),Bash(git log*)"
             --append-system-prompt "Focus on: potential bugs, performance, security, and correctness. List critical issues in bullet points or provide simple approval. Sign off with ✅ (approved) or ⚠️ (issues found). Keep responses concise."
 
