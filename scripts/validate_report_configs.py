@@ -67,11 +67,11 @@ def find_config_files(config_dir: str) -> List[str]:
 
 def main():
     """Main validation function."""
-    # Set up paths based on deployment
-    CONFIG_DIR = Path("models/reports/config")
-
-    # Determine base path for package files
-    BASE_PATH = Path(".") if DEPLOYMENT == "standard" else Path("dbt_packages/tamanu_source_dbt")
+    # Initialize deployment and determine project root for robust pathing
+    DEPLOYMENT = get_deployment_name()
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    CONFIG_DIR = PROJECT_ROOT / "models/reports/config"
+    BASE_PATH = PROJECT_ROOT if DEPLOYMENT == "standard" else PROJECT_ROOT / "dbt_packages/tamanu_source_dbt"
     SCHEMA_PATH = BASE_PATH / "scripts" / "report_validation" / "report-config-schema.json"
 
     # Load schema
