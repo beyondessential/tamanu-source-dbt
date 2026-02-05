@@ -168,11 +168,23 @@ if __name__ == "__main__":
 4. Check translations: `python scripts/check_translations.py`
 
 ### Key Rules
-- **No ORDER BY** in bases/surveys/datasets - only in reports
+- **No query-level ORDER BY** in bases/surveys/datasets - only in reports (see ORDER BY guidance below)
 - Use **explicit aliases** for columns (required by SQLFluff)
 - **Comprehensive documentation** required for bases/surveys/datasets
 - Test models before committing
 - Check dependencies before deleting models
+
+### ORDER BY Usage Guidelines
+
+**When ORDER BY is allowed (do NOT flag as an issue):**
+- Within window functions: `row_number() over (partition by x order by y)`
+- Within array aggregations: `array_agg(column order by datetime)`
+- Within string aggregations: `string_agg(column, ', ' order by datetime)`
+- In report models: Final query-level ORDER BY for user-facing output
+
+**When ORDER BY should be flagged:**
+- Query-level ORDER BY in bases/surveys/datasets that unnecessarily sorts the final output
+- Only flag if the ORDER BY is solely for sorting the result set, not for functional purposes (e.g., when used with `LIMIT`)
 
 ## Code Review Focus
 
@@ -191,9 +203,13 @@ When reviewing pull requests, prioritise:
 - Incorrect datetime formatting (should use variables)
 - Missing YAML documentation for bases/surveys/datasets
 - Missing sensitivity tags for PII columns
-- ORDER BY in non-report models
+- Query-level ORDER BY in non-report models (ORDER BY within functions is acceptable)
 - Implicit column aliases (should be explicit)
 - American spelling in documentation
+
+### Template Files and Placeholders
+
+Report configuration templates may contain placeholder text such as `"query": "replace this"`. These are **intentional** and used as templates. The query will be compiled into a complete file during the build process. Do not flag these as bugs or issues in code reviews.
 
 ## Reference Files
 

@@ -30,20 +30,23 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           claude_args: '--allowed-tools Bash(gh pr edit:*)'
           prompt: |
-            When asked to review a PR, use the code-review plugin with the following approach:
-            - First, review the PR title and update it if needed to accurately reflect the changes
+            You have been mentioned in a GitHub PR. Respond to the user's request.
+
+            When the user asks you to review the PR (e.g., "review this PR", "can you review", etc.), use the code-review plugin with the following approach:
+            - First, review the PR title and update it if needed to accurately reflect the changes using `gh pr edit`
             - Then analyse changes focusing on: potential bugs, performance, security, and correctness
             - List critical issues in bullet points, or provide simple approval if none found
             - Sign off with ✅ (approved) or ⚠️ (issues found)
             - Keep responses concise, highlighting only critical issues
             - Use CLAUDE.md for style and conventions guidance
 
-            For other requests, respond to the user's specific instructions flexibly.
+            For other requests (questions, explanations, specific tasks), respond to the user's instructions directly without running a review.
           additional_permissions: |
             actions: read
 
