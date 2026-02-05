@@ -2,21 +2,26 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   claude-review:
     runs-on: ubuntu-latest
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
       id-token: write
+      actions: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
 
       - name: Run Claude Code Review
         id: claude-review
@@ -24,24 +29,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          claude_args: '--allowed-tools Bash(gh pr edit:*)'
-          prompt: |
-            First, review the PR title and update it if needed to accurately reflect the changes. Use `gh pr edit` to update the title if it needs improvement.
-
-            Then, analyse the changes in this PR and focus on identifying critical issues related to:
-            - Potential bugs or issues
-            - Performance
-            - Security
-            - Correctness
-
-            If critical issues are found, list them in a few short bullet points. If no critical issues are found, provide a simple approval.
-            Sign off with a checkbox emoji: ✅ (approved) or ⚠️ (issues found).
-
-            Keep your response concise. Only highlight critical issues that must be addressed before merging. Skip detailed style or minor suggestions unless they impact performance, security, or correctness.
-
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: "/review"
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(git diff*),Bash(git log*)"
+            --append-system-prompt "Focus on: potential bugs, performance, security, and correctness. List critical issues in bullet points or provide simple approval. Sign off with ✅ (approved) or ⚠️ (issues found). Keep responses concise."
 
