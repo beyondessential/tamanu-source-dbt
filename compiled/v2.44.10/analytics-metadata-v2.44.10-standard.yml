@@ -2317,6 +2317,40 @@
   - base
   - clinical
 - columns:
+    care_plan_datetime:
+      data_type: timestamp
+      description: Local date for the record in patient_care_plans.
+      name: care_plan_datetime
+    care_plan_id:
+      data_type: character varying(255)
+      description: Reference to the care plan ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
+      name: care_plan_id
+    clinician_id:
+      data_type: character varying(255)
+      description: Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
+        who prescribed this care plan.
+      name: clinician_id
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in patient_care_plans.
+      name: id
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
+      name: patient_id
+  config:
+    tags:
+    - base
+    - clinical
+  description: "List of current care plans the patient is on.\r\n\r\nIn Tamanu this\
+    \ is displayed and entered in the patient view sidebar, under \"Care plans\".\r\
+    \n\r\nSee also: `public.patient_allergies`, `public.patient_conditions`, `public.patient_family_histories`,\r\
+    \n`public.patient_issues`."
+  name: patient_care_plans
+  tags:
+  - base
+  - clinical
+- columns:
     condition_id:
       data_type: character varying(255)
       description: Reference to a diagnosis describing this issue ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
@@ -2561,6 +2595,49 @@
     - clinical
   description: Information about a patient's death.
   name: patient_death_data
+  tags:
+  - base
+  - clinical
+- columns:
+    clinician_id:
+      data_type: character varying(255)
+      description: Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
+        recording this history.
+      name: clinician_id
+    diagnosis_id:
+      data_type: character varying(255)
+      description: "Reference to a diagnosis ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))\r\
+        \ndescribing this issue."
+      name: diagnosis_id
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in patient_family_histories.
+      name: id
+    note:
+      data_type: character varying(255)
+      description: Free-form description of this issue.
+      name: note
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
+      name: patient_id
+    recorded_datetime:
+      data_type: timestamp
+      description: Datetime at which this issue was recorded.
+      name: recorded_datetime
+    relationship:
+      data_type: character varying(255)
+      description: Free-form description of the family relationship.
+      name: relationship
+  config:
+    tags:
+    - base
+    - clinical
+  description: "List of family history conditions known about a patient.\r\n\r\nIn\
+    \ Tamanu this is displayed and entered in the patient view sidebar, under \"Family\
+    \ history\".\r\n\r\nSee also: `public.patient_allergies`, `public.patient_care_plans`,\
+    \ `public.patient_conditions`,\r\n`public.patient_issues`."
+  name: patient_family_histories
   tags:
   - base
   - clinical

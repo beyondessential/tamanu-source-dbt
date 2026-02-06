@@ -936,6 +936,17 @@ from "public"."patient_birth_data"
 where deleted_at is null
     and id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."patient_care_plans" as (
+select
+    id,
+    date::timestamp as care_plan_datetime,
+    patient_id,
+    examiner_id as clinician_id,
+    care_plan_id
+from "public"."patient_care_plans"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."patient_conditions" as (
 select
     id,
@@ -999,6 +1010,19 @@ select
     is_final,
     visibility_status
 from "public"."patient_death_data"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."patient_family_histories" as (
+select
+    id,
+    recorded_date::timestamp as recorded_datetime,
+    patient_id,
+    practitioner_id as clinician_id,
+    diagnosis_id,
+    relationship,
+    note
+from "public"."patient_family_histories"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
