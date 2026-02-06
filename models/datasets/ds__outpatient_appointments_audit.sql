@@ -82,7 +82,7 @@ select
     case when fc.is_high_priority then 'Yes' else 'No' end as priority,
     fc.schedule_id,
     case
-        when fc.schedule_id IS NOT NULL then 'Yes'
+        when fc.schedule_id is not null then 'Yes'
         else 'No'
     end as is_repeating,
     -- Modification details
@@ -94,40 +94,40 @@ select
     case when fc.status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
     -- Previous appointment details (only shown if different from current)
     case
-        when fc.prev_start_datetime IS DISTINCT FROM fc.start_datetime
+        when fc.prev_start_datetime is distinct from fc.start_datetime
         then fc.prev_start_datetime
     end as prev_start_datetime,
     case
-        when fc.prev_end_datetime IS DISTINCT FROM fc.end_datetime
+        when fc.prev_end_datetime is distinct from fc.end_datetime
         then fc.prev_end_datetime
     end as prev_end_datetime,
     case
-        when fc.prev_appointment_type_id IS DISTINCT FROM fc.appointment_type_id
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
         then prev_apt.name
     end as prev_appointment_type,
     case
-        when fc.prev_appointment_type_id IS DISTINCT FROM fc.appointment_type_id
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
         then fc.prev_appointment_type_id
     end as prev_appointment_type_id,
     case
-        when fc.prev_clinician_id IS DISTINCT FROM fc.clinician_id
+        when fc.prev_clinician_id is distinct from fc.clinician_id
         then prev_clinician.display_name
     end as prev_clinician,
     case
-        when fc.prev_clinician_id IS DISTINCT FROM fc.clinician_id
+        when fc.prev_clinician_id is distinct from fc.clinician_id
         then fc.prev_clinician_id
     end as prev_clinician_id,
     case
-        when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
+        when fc.prev_location_group_id is distinct from fc.location_group_id
         then prev_lg.name
     end as prev_location_group,
     case
-        when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
+        when fc.prev_location_group_id is distinct from fc.location_group_id
         then fc.prev_location_group_id
     end as prev_location_group_id,
     case
-        when fc.prev_is_high_priority IS NOT NULL
-            and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
+        when fc.prev_is_high_priority is not null
+            and fc.prev_is_high_priority is distinct from fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as prev_priority,
     -- Facility details for filtering

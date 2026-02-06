@@ -488,15 +488,15 @@ with appointment_changes as (
         c.logged_at as modified_datetime,
         c.updated_by_user_id as modified_by_user_id,
         -- Extract current values from the change log record_data
-        (c.record_data->>'start_time')::timestamp as start_datetime,
-        (c.record_data->>'end_time')::timestamp as end_datetime,
-        c.record_data->>'patient_id' as patient_id,
-        c.record_data->>'clinician_id' as clinician_id,
-        c.record_data->>'location_group_id' as location_group_id,
-        c.record_data->>'appointment_type_id' as appointment_type_id,
-        (c.record_data->>'is_high_priority')::boolean as is_high_priority,
-        c.record_data->>'status' as status,
-        (c.record_data->>'schedule_id')::uuid as schedule_id,
+        (c.record_data ->> 'start_time')::timestamp as start_datetime,
+        (c.record_data ->> 'end_time')::timestamp as end_datetime,
+        c.record_data ->> 'patient_id' as patient_id,
+        c.record_data ->> 'clinician_id' as clinician_id,
+        c.record_data ->> 'location_group_id' as location_group_id,
+        c.record_data ->> 'appointment_type_id' as appointment_type_id,
+        (c.record_data ->> 'is_high_priority')::boolean as is_high_priority,
+        c.record_data ->> 'status' as status,
+        (c.record_data ->> 'schedule_id')::uuid as schedule_id,
         -- Get creator from the first change_sequence (initial creation)
         first_value(c.updated_by_user_id) over (
             partition by c.record_id
@@ -534,13 +534,13 @@ select
     status,
     schedule_id,
     -- Previous appointment details
-    (previous_record_data->>'start_time')::timestamp as prev_start_datetime,
-    (previous_record_data->>'end_time')::timestamp as prev_end_datetime,
-    (previous_record_data->>'clinician_id') as prev_clinician_id,
-    (previous_record_data->>'location_group_id') as prev_location_group_id,
-    (previous_record_data->>'appointment_type_id') as prev_appointment_type_id,
-    (previous_record_data->>'is_high_priority')::boolean as prev_is_high_priority,
-    (previous_record_data->>'status') as prev_status,
+    (previous_record_data ->> 'start_time')::timestamp as prev_start_datetime,
+    (previous_record_data ->> 'end_time')::timestamp as prev_end_datetime,
+    (previous_record_data ->> 'clinician_id') as prev_clinician_id,
+    (previous_record_data ->> 'location_group_id') as prev_location_group_id,
+    (previous_record_data ->> 'appointment_type_id') as prev_appointment_type_id,
+    (previous_record_data ->> 'is_high_priority')::boolean as prev_is_high_priority,
+    (previous_record_data ->> 'status') as prev_status,
     change_sequence
 from appointment_changes
 );
@@ -2535,7 +2535,10 @@ select
     fc.location_group_id,
     case when fc.is_high_priority then 'Yes' else 'No' end as priority,
     fc.schedule_id,
-    s.until_date as repeating_end_date,
+    case
+        when fc.schedule_id is not null then 'Yes'
+        else 'No'
+    end as is_repeating,
     -- Modification details
     creator.display_name as created_by,
     fc.created_by_user_id,
@@ -2545,40 +2548,40 @@ select
     case when fc.status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
     -- Previous appointment details (only shown if different from current)
     case
-        when fc.prev_start_datetime IS DISTINCT FROM fc.start_datetime
+        when fc.prev_start_datetime is distinct from fc.start_datetime
         then fc.prev_start_datetime
     end as prev_start_datetime,
     case
-        when fc.prev_end_datetime IS DISTINCT FROM fc.end_datetime
+        when fc.prev_end_datetime is distinct from fc.end_datetime
         then fc.prev_end_datetime
     end as prev_end_datetime,
     case
-        when fc.prev_appointment_type_id IS DISTINCT FROM fc.appointment_type_id
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
         then prev_apt.name
     end as prev_appointment_type,
     case
-        when fc.prev_appointment_type_id IS DISTINCT FROM fc.appointment_type_id
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
         then fc.prev_appointment_type_id
     end as prev_appointment_type_id,
     case
-        when fc.prev_clinician_id IS DISTINCT FROM fc.clinician_id
+        when fc.prev_clinician_id is distinct from fc.clinician_id
         then prev_clinician.display_name
     end as prev_clinician,
     case
-        when fc.prev_clinician_id IS DISTINCT FROM fc.clinician_id
+        when fc.prev_clinician_id is distinct from fc.clinician_id
         then fc.prev_clinician_id
     end as prev_clinician_id,
     case
-        when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
+        when fc.prev_location_group_id is distinct from fc.location_group_id
         then prev_lg.name
     end as prev_location_group,
     case
-        when fc.prev_location_group_id IS DISTINCT FROM fc.location_group_id
+        when fc.prev_location_group_id is distinct from fc.location_group_id
         then fc.prev_location_group_id
     end as prev_location_group_id,
     case
-        when fc.prev_is_high_priority IS NOT NULL
-            and fc.prev_is_high_priority IS DISTINCT FROM fc.is_high_priority
+        when fc.prev_is_high_priority is not null
+            and fc.prev_is_high_priority is distinct from fc.is_high_priority
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as prev_priority,
     -- Facility details for filtering
