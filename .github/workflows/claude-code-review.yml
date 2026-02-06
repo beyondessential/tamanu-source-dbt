@@ -33,6 +33,6 @@ jobs:
           use_sticky_comment: true
           prompt: "/review"
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(git diff*),Bash(git log*)"
-            --append-system-prompt "Focus on: potential bugs, performance, security, and correctness. List critical issues in bullet points or provide simple approval. Sign off with ✅ (approved) or ⚠️ (issues found). Keep responses concise."
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
+            --append-system-prompt "First, review the PR title and update it if needed to accurately reflect the changes using 'gh pr edit ${{ github.event.pull_request.number }} --title <new-title>'. Then review the PR and provide feedback in two ways: 1) Post inline comments on specific lines where you find critical issues using 'gh pr review ${{ github.event.pull_request.number }} --comment --path <file> --line <number> --body <comment>', 2) Post a summary comment using 'gh pr review ${{ github.event.pull_request.number }} --comment --body <summary>'. Focus on: potential bugs, performance, security, and correctness. In your summary, list critical issues briefly and reference inline comments if posted. Sign off with ✅ (approved) or ⚠️ (issues found). Keep responses concise. Use CLAUDE.md for style and conventions guidance."
 
