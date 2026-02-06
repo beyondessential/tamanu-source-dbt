@@ -9,7 +9,7 @@ report.reporting.appointmentEndDateTime,Appointment end date and time
 report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
 report.reporting.appointmentPriority,Priority appointment
-report.reporting.appointmentRepeatingEndDate,Repeating appointment end date
+report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentStatus,Appointment status
 report.reporting.appointmentType,Appointment type
 report.reporting.appointmentIsCancelled,Appointment cancelled

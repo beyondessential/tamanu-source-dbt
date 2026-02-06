@@ -15,7 +15,7 @@ select
     clinician as "{{ translate_label('appointmentClinician') }}",
     location_group as "{{ translate_label('appointmentLocationGroup') }}",
     priority as "{{ translate_label('appointmentPriority') }}",
-    to_char(repeating_end_date::date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}",
+    is_repeating as "{{ translate_label('appointmentIsRepeating') }}",
     -- Modification details
     created_by as "{{ translate_label('auditCreatedBy') }}",
     modified_by as "{{ translate_label('auditModifiedBy') }}",

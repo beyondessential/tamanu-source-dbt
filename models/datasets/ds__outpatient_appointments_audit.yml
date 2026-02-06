@@ -66,8 +66,8 @@ models:
       - name: schedule_id
         description: "{{ doc('outpatient_appointments_change_logs__schedule_id') }}"
 
-      - name: repeating_end_date
-        description: "{{ doc('ds__outpatient_appointments_audit__repeating_end_date') }}"
+      - name: is_repeating
+        description: "{{ doc('ds__outpatient_appointments_audit__is_repeating') }}"
 
       - name: created_by
         description: "{{ doc('users__display_name') }} who created the appointment"

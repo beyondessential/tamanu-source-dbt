@@ -81,7 +81,10 @@ select
     fc.location_group_id,
     case when fc.is_high_priority then 'Yes' else 'No' end as priority,
     fc.schedule_id,
-    s.until_date as repeating_end_date,
+    case
+        when fc.schedule_id IS NOT NULL then 'Yes'
+        else 'No'
+    end as is_repeating,
     -- Modification details
     creator.display_name as created_by,
     fc.created_by_user_id,
