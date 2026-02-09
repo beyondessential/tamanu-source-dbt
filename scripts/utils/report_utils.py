@@ -2,7 +2,12 @@ import json
 import os
 import re
 
-from .dbt_utils import get_deployment_name, get_deployment_version, get_project_name, get_dbt_project_vars
+from .dbt_utils import (
+    get_dbt_project_vars,
+    get_deployment_name,
+    get_deployment_version,
+    get_project_name,
+)
 from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint, execute_command
 
@@ -69,7 +74,7 @@ def generate_project_reports(language):
         return
 
     ensure_directory_exists(VERSION_DIR)
-    
+
     for node in nodes:
         report = manifest["nodes"][node]
 
@@ -86,7 +91,7 @@ def generate_project_reports(language):
             .replace(".sql", ".json")
             .replace("sql", "config")
         )
-        
+
         # Include language in filename (only add suffix if not default)
         lang_suffix = f"-{language}" if language != "default" else ""
         filename = f"{report['name']}-v{VERSION}-{DEPLOYMENT}{lang_suffix}.json"
@@ -221,8 +226,9 @@ def generate_reporting_schema_script():
             continue
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
+        name = model.get("config", {}).get("alias") or model["name"]
         scripts.append(
-            f'create or replace view "{SCHEMA}"."{model["name"]}" as (\n{cleaned_sql}\n);'
+            f'create or replace view "{SCHEMA}"."{name}" as (\n{cleaned_sql}\n);'
         )
 
     ensure_directory_exists(VERSION_DIR)
