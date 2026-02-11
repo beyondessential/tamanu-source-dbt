@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+from utils.dbt_utils import get_deployment_name
+
+DEPLOYMENT = get_deployment_name()
+
 
 def load_schema(schema_path: str) -> dict:
     """Load the JSON schema from file."""
@@ -63,62 +67,42 @@ def find_config_files(config_dir: str) -> List[str]:
 
 def main():
     """Main validation function."""
-    # Set up paths relative to the script's location
-    SCRIPT_DIR = Path(__file__).resolve().parent
-    BASE_DIR = SCRIPT_DIR.parent  # Go up from scripts/ to package root
+    # Initialize deployment and determine project root for robust pathing
+    DEPLOYMENT = get_deployment_name()
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    CONFIG_DIR = PROJECT_ROOT / "models/reports/config"
+    BASE_PATH = PROJECT_ROOT if DEPLOYMENT == "standard" else PROJECT_ROOT / "dbt_packages/tamanu_source_dbt"
+    SCHEMA_PATH = BASE_PATH / "scripts" / "report_validation" / "report-config-schema.json"
 
-    CONFIG_DIR = BASE_DIR / "models" / "reports" / "config"
-    SCHEMA_PATH = SCRIPT_DIR / "report_validation" / "report-config-schema.json"
-    
-    print("Tamanu Report Configuration Validator")
-    print("=" * 40)
-    print(f"Schema: {SCHEMA_PATH}")
-    print(f"Config directory: {CONFIG_DIR}")
-    print()
-    
     # Load schema
     schema = load_schema(SCHEMA_PATH)
-    print(f"✓ Schema loaded successfully")
-    
+
     # Find configuration files
     config_files = find_config_files(str(CONFIG_DIR))
     if not config_files:
-        print("No configuration files found to validate.")
+        print("No configuration files found.")
         return
-    
-    print(f"✓ Found {len(config_files)} configuration files")
-    print()
-    
+
     # Validate each file
     valid_count = 0
     invalid_count = 0
-    
+
     for config_file in sorted(config_files):
         file_name = Path(config_file).name
         is_valid, error_message = validate_config_file(config_file, schema)
-        
+
         if is_valid:
-            print(f"✓ {file_name}")
             valid_count += 1
         else:
-            print(f"✗ {file_name}")
-            print(f"  Error: {error_message}")
+            print(f"INVALID: {file_name}: {error_message}")
             invalid_count += 1
-    
+
     # Summary
-    print()
-    print("Validation Summary:")
-    print(f"  Valid files: {valid_count}")
-    print(f"  Invalid files: {invalid_count}")
-    print(f"  Total files: {len(config_files)}")
-    
     if invalid_count > 0:
-        print()
-        print("❌ Some configuration files failed validation.")
+        print(f"\n{invalid_count} of {len(config_files)} files failed validation")
         sys.exit(1)
     else:
-        print()
-        print("✅ All configuration files are valid!")
+        print(f"All {len(config_files)} configuration files are valid")
 
 
 if __name__ == "__main__":
