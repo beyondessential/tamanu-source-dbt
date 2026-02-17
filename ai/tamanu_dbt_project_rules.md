@@ -1,114 +1,77 @@
 # AI Rules for tamanu-dbt-* Projects
 
 ## Project Overview
-tamanu-dbt-* projects are country-specific dbt implementations that use tamanu-source-dbt as a package dependency. These projects transform Tamanu healthcare system data into optimised reporting schemas for specific deployments.
+Country-specific dbt projects using tamanu-source-dbt as a package dependency to transform Tamanu healthcare data for specific deployments.
 
 ## Core Principles
-- Always follow the established data flow: sources (including logs) → bases (including surveys) → datasets → reports
-- Use tamanu-source-dbt package for standard models and extend with project-specific customisations
-- Maintain data integrity and quality at each transformation layer
-- Prioritise performance and readability in SQL code
-- Ensure comprehensive documentation for all custom models
+- Follow data flow: sources/logs → bases/surveys → datasets → reports
+- Use tamanu-source-dbt package for standard models, extend with project-specific customisations
+- Maintain data integrity at each layer
+- Use Australian English spelling
 
-## Model Layer Requirements
-When working with models, always respect the following hierarchy:
+## Model Layers
 
-### `models/sources` and `models/logs` (Package-Managed)
-- **Never modify**: Source and log definitions are managed in tamanu-source-dbt package
-- Automatically available through package dependency
-- Origin point for most documentation blocks and data integrity checks
+**sources/logs** - Package-managed, never modify
+**bases** - Package-managed, never modify
+**surveys** - Generated via `python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py`
+**datasets** - Project-specific denormalised views (no ORDER BY)
+**reports** - Project-specific with translations, ORDER BY allowed
 
-### `models/bases` (Package-Managed)
-- **Never modify**: Base models are managed in tamanu-source-dbt package
-- Strips out deleted data and metadata from tables
-- **Always filter out soft-deleted records and test patients using appropriate conditions**
-- Shared with data warehouse as `staging` model
+## Essential Rules
 
-### `models/surveys` (Generated)
-- **Generated using package scripts**: Use `python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py`
-- Handle form-based data collection and responses specific to project deployment
-- Follow the same bases principles: filter out soft-deleted records and test patients
-- **Regenerate when survey definitions change**
+### Documentation
+- **Mandatory `.yml`** for all custom models except reports
+- **Mandatory `.json` config** for each report in `models/reports/config/`
+- Document all columns
+- Use Australian English spelling
 
-### `models/datasets` (Project-Specific)
-- Build on top of `bases` models from package
-- Create project-specific de-normalised data for reporting consumption
-- **Focus on creating user-friendly, denormalised views**
-- **No ORDER BY clauses** (intermediate transformation)
+### Code Quality
+- Run `sqlfluff fix` before committing
+- Run `dbt test` before committing
+- Test SQL syntax before committing
+- **No ORDER BY** in datasets (reports only)
 
-### `models/reports` (Project-Specific)
-- Based on `datasets` models with customised translations applied
-- **Apply translations consistently using established patterns**
-- **Each report must have a corresponding config file in `models/reports/config/`** with `.json` extension
-- **Only layer where ORDER BY clauses are permitted**
-- **Use centralised date/time formatting variables** from `dbt_project.yml`
+### Date/Time Formatting
+Use centralised variables from `dbt_project.yml`:
+- `{{ var("date_format") }}`, `{{ var("datetime_format") }}`, `{{ var("time_format") }}`, etc.
+
+### Validation (Before Committing)
+1. `python dbt_packages/tamanu_source_dbt/scripts/validate_report_configs.py`
+2. `python dbt_packages/tamanu_source_dbt/scripts/check_translations.py`
+3. If surveys changed: regenerate with package script
 
 ## Package Management
-- **Required**: Use tamanu-source-dbt as package dependency in `packages.yml`
-- **Version pinning**: Use specific version tags for production deployments
-- **Update process**: Run `dbt deps` after updating package version
-- **Script usage**: Use package scripts for generating surveys and building reporting assets
+- Use specific version tags in `packages.yml` for production
+- Run `dbt deps` after version updates
+- Use package scripts for surveys and building assets
 
-## Documentation Requirements
-- **Mandatory**: Each custom model except those in `reports` must have a corresponding .yml file
-- Include comprehensive name and description for both the model and all columns
-- Maintain professional, clear, and respectful tone in all documentation
-- Reference existing doc blocks from package when possible to maintain consistency
-- **Always document new columns when adding them to existing models**
+## Translation Rules
+- Check for existing translations before creating new ones
+- Use sentence casing (e.g., "Patient name")
+- Prefix with concept (patient_name, encounter_date)
+- Never use generic names (name, date)
 
-## Translation Management
-- Keep translation string lists concise and avoid duplication
-- **Always check for existing translations before creating new ones**
-- Follow established naming conventions for translation keys
-- **Use sentence casing for the second variable (display label) in translate functions** (e.g., "Patient name" not "patient_name" or "PATIENT_NAME")
-- **Translation labels must be prefixed with a concept** (e.g., patient, user, encounter) to maintain organisation and avoid conflicts
+## Common Pitfalls
+- ❌ Modifying package-managed models (sources/logs/bases)
+- ❌ ORDER BY in datasets
+- ❌ Hard-coded date formats
+- ❌ Missing documentation
+- ❌ Generic translation labels
+- ❌ American spelling
 
-## Code Style Standards
-- **Mandatory**: Use `.sqlfluff` for SQL code style enforcement
-- Run `sqlfluff fix` before committing changes
-- Follow consistent indentation and formatting patterns
-- Use meaningful aliases and avoid ambiguous column references
-- **Always test SQL syntax before committing**
-- **Use Australian English spelling** in all documentation, comments, and text (e.g., "optimise" not "optimize", "colour" not "color", "centre" not "center")
-- **Sort order should only be applied in `models/reports`** - Do not use ORDER BY clauses in `models/datasets` as these are intermediate transformations
-- **Use centralised date/time formatting variables** from `dbt_project.yml` in all reports: `to_char(field, '{{ var("date_format") }}')` for dates, `to_char(field, '{{ var("datetime_format") }}')` for datetimes, `to_char(field, '{{ var("datetime_without_seconds_format") }}')` for datetimes without seconds, `to_char(field, '{{ var("time_format") }}')` for times, and `to_char(field, '{{ var("yearmonth_format") }}')` for year-month values
-
-## Testing Standards
-- **Required**: Implement integrity tests using dbt built-in tests for all custom models
-- **Required**: Unit tests for business logic using dbt built-in tests or dbt-utils
-- Test critical relationships and constraints
-- **Always run `dbt test` before finalising changes**
-- Document test failures and resolution steps
-
-## File Management Guidelines
-- Follow established naming conventions: `{table_name}.sql` and `{table_name}.yml`
-- Place files in appropriate directories based on model layer
-- **Never delete files without understanding downstream dependencies**
-- **Never manually edit `list_tamanu_reports.md`** - this file is auto-generated from report configuration files
-- Use `dbt deps` to manage package dependencies
-
-## Report Configuration Validation
-- **Required**: Validate all report configuration files using the package validation script: `python dbt_packages/tamanu_source_dbt/scripts/validate_report_configs.py`
-- Report configurations must conform to the JSON schema defined in package
-- **Always run validation before committing changes** to report configurations
-- Configuration files are located in `models/reports/config/` and must be valid JSON
-- **Fix all validation errors** before proceeding with deployment
-
-## Project-Specific Configuration
-- **Required**: Update `dbt_project.yml` with project-specific name, profile, and version
-- **Required**: Configure `config/profiles.yml` with appropriate database connections
-- **Required**: Set up environment variables in `.env` file for database credentials
-- **Version alignment**: Mirror Tamanu's release version numbers in project version
+## Project Configuration
+- Update `dbt_project.yml` with project name, profile, version
+- Configure `config/profiles.yml` with database connections
+- Set `.env` file for credentials
+- Mirror Tamanu release version numbers
 
 ## Development Workflow
-1. Activate virtual environment before development
-2. Understand the data flow and existing model dependencies from package
-3. Create or modify project-specific models following layer-appropriate patterns
-4. Add comprehensive documentation in .yml files for custom models
-5. Implement appropriate tests for custom models
-6. Run `sqlfluff fix` for code formatting
-7. Execute `dbt test` to validate changes
-8. **Validate report configurations** using package validation script
-9. Use `dbt run` to build and verify models
-10. **Generate survey models** when survey definitions change
-11. **Build reporting assets** using package script before deployment
+1. Activate virtual environment
+2. Understand data flow and dependencies
+3. Create/modify models following layer patterns
+4. Add documentation (.yml for custom models)
+5. Implement tests
+6. Run sqlfluff fix → dbt test → validate scripts
+7. Use `dbt run` to verify
+8. Regenerate surveys when definitions change
+9. Build reporting assets before deployment
