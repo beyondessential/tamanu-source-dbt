@@ -284,14 +284,13 @@ encounter_notes as (
         n.record_id as encounter_id,
         string_agg(concat(
             'Note type: ',
-            coalesce(ts.text, n.note_type),
+            {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type') }},
             ', Content: ', n.content,
             ', Note date: ', to_char(n.datetime, '{{ var("datetime_format") }}')
         ),
         E'\n'
         order by n.datetime) as notes
     from {{ ref('int__encounter_notes_final') }} n
-    {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
     group by n.record_id
 )
 

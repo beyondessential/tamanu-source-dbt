@@ -43,7 +43,7 @@ def main():
         # Process translations
         cprint("Processing translations...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'check_translations.py'}")
-        execute_command(f"python {SCRIPTS_DIR / 'convert_translations_to_excel_file.py'}")
+        execute_command(f"python {SCRIPTS_DIR / 'generate_translation_macro.py'}")
 
         # Build reporting assets
         config = get_dbt_project_config()
