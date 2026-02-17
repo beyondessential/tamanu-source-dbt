@@ -1,18 +1,3 @@
-{%- macro translate_label(string_id, language=var("language", "default")) -%}
-    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
-    {%- set translations = get_translations() -%}
-
-    {%- if full_string_id in translations -%}
-        {%- set lang_dict = translations[full_string_id] -%}
-        {{- lang_dict.get(language, lang_dict.get('default', string_id)) -}}
-    {%- elif string_id in translations -%}
-        {%- set lang_dict = translations[string_id] -%}
-        {{- lang_dict.get(language, lang_dict.get('default', string_id)) -}}
-    {%- else -%}
-        {{- string_id -}}
-    {%- endif -%}
-{%- endmacro -%}
-
 {%- macro get_translation_prefix(prefix_key) -%}
     {%- set mapping = {
         'APPOINTMENT_STATUSES': 'appointment.property.status',
