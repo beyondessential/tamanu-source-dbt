@@ -50,13 +50,9 @@ def generate_translation_macro():
 
     # Merge standard and localised translations
     # For each string_id, merge language dicts with localised overriding standard
-    merged = {}
-    for string_id in set(list(standard.keys()) + list(localised.keys())):
-        merged[string_id] = {}
-        if string_id in standard:
-            merged[string_id].update(standard[string_id])
-        if string_id in localised:
-            merged[string_id].update(localised[string_id])
+    merged = standard.copy()
+    for string_id, lang_dict in localised.items():
+        merged.setdefault(string_id, {}).update(lang_dict)
 
     macro_content = """{#
 Auto-generated macro containing report translations.

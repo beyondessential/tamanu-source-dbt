@@ -2,7 +2,7 @@
     condition_id:
       data_type: character varying
       description: Reference to the condition ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
-        `type = condition`).
+        `type = diagnosis`).
       name: condition_id
     id:
       data_type: character varying
@@ -100,6 +100,45 @@
   - base
   - clinical
 - columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in document_metadata.
+      name: created_datetime
+    encounter_id:
+      data_type: character varying(255)
+      description: Reference to the [encounter](#!/source/source.tamanu.tamanu.encounters)
+        the document was uploaded to.
+      name: encounter_id
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in document_metadata.
+      name: id
+    name:
+      data_type: character varying(255)
+      description: "Free-form name of the document.\r\n\r\nOften this is the filename."
+      name: name
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients)
+        the document was uploaded to.
+      name: patient_id
+    type:
+      data_type: character varying(255)
+      description: The [media type](https://en.wikipedia.org/wiki/Media_type) of the
+        file.
+      name: type
+  config:
+    tags:
+    - base
+    - clinical
+  description: "Information about an uploaded document or file, typically attached\
+    \ to an encounter or directly to a patient.\r\n\r\nThe actual file data is stored\
+    \ in [`attachments`](#!/source/source.tamanu.tamanu.attachments)."
+  name: document_metadata
+  tags:
+  - base
+  - clinical
+- columns:
     datetime:
       data_type: timestamp
       description: Local date for the record in encounter_diagnoses.
@@ -135,6 +174,32 @@
   tags:
   - base
   - clinical
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the encounter_diagnoses
+        table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in encounter_diagnoses.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the encounter_diagnoses
+        table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - clinical
+    - log
+  description: Metadata information extracted from the change logs for encounter_diagnoses.
+  name: encounter_diagnoses_metadata
+  tags:
+  - base
+  - clinical
+  - log
 - columns:
     diet_id:
       data_type: character varying(255)
@@ -325,6 +390,30 @@
   tags:
   - base
   - clinical
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the encounters table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in encounters.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the encounters table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - clinical
+    - log
+  description: Metadata information extracted from the change logs for encounters.
+  name: encounters_metadata
+  tags:
+  - base
+  - clinical
+  - log
 - columns:
     catchment_id:
       data_type: text
@@ -579,335 +668,6 @@
   - base
   - clinical
 - columns:
-    applied_by_id:
-      data_type: character varying(255)
-      description: The [user](#!/source/source.tamanu.tamanu.users) who applied this
-        discount.
-      name: applied_by_id
-    datetime:
-      data_type: timestamp
-      description: When this discount was applied.
-      name: datetime
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_discounts.
-      name: id
-    invoice_id:
-      data_type: uuid
-      description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
-      name: invoice_id
-    is_manual:
-      data_type: boolean
-      description: Indicates if the discount was manually added or based on an assessment
-      name: is_manual
-    percentage:
-      data_type: numeric
-      description: Percentage discount to apply to the invoice
-      name: percentage
-    reason:
-      data_type: character varying(255)
-      description: Reason the discount is given
-      name: reason
-  config:
-    tags:
-    - base
-    - financial
-  description: Invoice discount that is applied to the patient's portion of the discountable
-    costs.
-  name: invoice_discounts
-  tags:
-  - base
-  - financial
-- columns:
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_insurer_payments.
-      name: id
-    insurer_id:
-      data_type: character varying(255)
-      description: The insurer ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
-      name: insurer_id
-    invoice_payment_id:
-      data_type: uuid
-      description: The [payment](#!/source/source.tamanu.tamanu.invoice_payments).
-      name: invoice_payment_id
-    reason:
-      data_type: character varying(255)
-      description: The reason for the payment. Generally this is used for rejections.
-      name: reason
-    status:
-      data_type: character varying(255)
-      description: "The status of this payment.\r\n\r\nOne of:\r\n- `unpaid`\r\n-\
-        \ `paid`\r\n- `partial`\r\n- `rejected`"
-      name: status
-  config:
-    tags:
-    - base
-    - financial
-  description: Extra metadata about a payment when it was done by a patient.
-  name: invoice_insurer_payments
-  tags:
-  - base
-  - financial
-- columns:
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_insurers.
-      name: id
-    insurer_id:
-      data_type: character varying(255)
-      description: The insurer ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
-      name: insurer_id
-    invoice_id:
-      data_type: uuid
-      description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
-      name: invoice_id
-    percentage:
-      data_type: numeric
-      description: How much of the invoice this insurer is paying.
-      name: percentage
-  config:
-    tags:
-    - base
-    - financial
-  description: Insurers to be used for an invoice.
-  name: invoice_insurers
-  tags:
-  - base
-  - financial
-- columns:
-    amount:
-      data_type: numeric
-      description: Discount amount of invoice items (can be percentage or a whole
-        number)
-      name: amount
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_item_discounts.
-      name: id
-    invoice_item_id:
-      data_type: uuid
-      description: The [invoice item](#!/source/source.tamanu.tamanu.invoice_items).
-      name: invoice_item_id
-    reason:
-      data_type: character varying(255)
-      description: Free-form reason for the discount.
-      name: reason
-    type:
-      data_type: character varying(255)
-      description: Discount type of invoice items
-      name: type
-  config:
-    tags:
-    - base
-    - financial
-  description: Discounts applied to invoice items.
-  name: invoice_item_discounts
-  tags:
-  - base
-  - financial
-- columns:
-    date:
-      data_type: date
-      description: When the item was ordered.
-      name: date
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_items.
-      name: id
-    invoice_id:
-      data_type: uuid
-      description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
-      name: invoice_id
-    note:
-      data_type: character varying(255)
-      description: Free-form note for this item.
-      name: note
-    ordered_by_id:
-      data_type: character varying(255)
-      description: '[Who](#!/source/source.tamanu.tamanu.users) ordered the item.'
-      name: ordered_by_id
-    product_code:
-      data_type: character varying(255)
-      description: Code of the product.
-      name: product_code
-    product_discountable:
-      data_type: boolean
-      description: "Whether this product can be discounted.\r\n\r\nThis is usually\
-        \ copied from the [product](#!/source/source.tamanu.tamanu.invoice_products);\
-        \ as\r\nproducts can change discountability it is stored here for the record."
-      name: product_discountable
-    product_id:
-      data_type: character varying(255)
-      description: The [product](#!/source/source.tamanu.tamanu.invoice_products).
-      name: product_id
-    product_name:
-      data_type: character varying(255)
-      description: "Name of the product.\r\n\r\nThis is usually copied from the [product](#!/source/source.tamanu.tamanu.invoice_products);\
-        \ as\r\nproducts can change names it is stored here for the record."
-      name: product_name
-    product_price:
-      data_type: numeric
-      description: "Price of the product.\r\n\r\nThis is usually copied from the [product](#!/source/source.tamanu.tamanu.invoice_products);\
-        \ as\r\nproducts can change price it is stored here for the record."
-      name: product_price
-    quantity:
-      data_type: integer
-      description: Quantity ordered.
-      name: quantity
-    source_id:
-      data_type: uuid
-      description: "Items can be direct references to [procedures](#!/source/source.tamanu.tamanu.procedures),\r\
-        \n[lab tests](#!/source/source.tamanu.tamanu.lab_tests), and\r\n[imagings](#!/source/source.tamanu.tamanu.imaging_requests).\r\
-        \n\r\nIn those cases, this field is set to the id of the \"source\" row.\r\
-        \n\r\nIf this is set, the item is not editable."
-      name: source_id
-  config:
-    tags:
-    - base
-    - financial
-  description: Items (products) on invoices.
-  name: invoice_items
-  tags:
-  - base
-  - financial
-- columns:
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_patient_payments.
-      name: id
-    invoice_payment_id:
-      data_type: uuid
-      description: The [payment](#!/source/source.tamanu.tamanu.invoice_payments).
-      name: invoice_payment_id
-    method_id:
-      data_type: character varying(255)
-      description: The method used to pay ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
-      name: method_id
-  config:
-    tags:
-    - base
-    - financial
-  description: Extra metadata about a payment when it was done by a patient.
-  name: invoice_patient_payments
-  tags:
-  - base
-  - financial
-- columns:
-    amount:
-      data_type: numeric
-      description: Amount paid.
-      name: amount
-    date:
-      data_type: date
-      description: Local date for the record in invoice_payments.
-      name: date
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoice_payments.
-      name: id
-    invoice_id:
-      data_type: uuid
-      description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
-      name: invoice_id
-    receipt_number:
-      data_type: character varying(255)
-      description: Receipt number. Usually auto-generated.
-      name: receipt_number
-    updated_by_id:
-      data_type: character varying(255)
-      description: Reference to the [user](#!/source/source.tamanu.tamanu.users) who
-        updated this invoice payment.
-      name: updated_by_id
-  config:
-    tags:
-    - base
-    - financial
-  description: "Individual payment against an invoice.\r\n\r\nInvoices can be paid\
-    \ in installments, by different parties, etc."
-  name: invoice_payments
-  tags:
-  - base
-  - financial
-- columns:
-    discountable:
-      data_type: boolean
-      description: Whether the product can be discounted.
-      name: discountable
-    id:
-      data_type: character varying(255)
-      description: Tamanu internal identifier (generally a UUID) in invoice_products.
-      name: id
-    name:
-      data_type: text
-      description: Name of the product.
-      name: name
-    price:
-      data_type: numeric
-      description: Price of the product.
-      name: price
-    visibility_status:
-      data_type: text
-      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\r\
-        \n  on the User Interface.\r\n- `historical` indicates that the record is\
-        \ no longer in use and should not be visible nor\r\n  accessible to users.\
-        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
-        \ that the record has been merged, is no longer in use and should not be visible\r\
-        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in invoice_products."
-      name: visibility_status
-  config:
-    tags:
-    - base
-    - reference
-  description: Products which can be invoiced.
-  name: invoice_products
-  tags:
-  - base
-  - reference
-- columns:
-    datetime:
-      data_type: timestamp
-      description: Local date for the record in invoices.
-      name: datetime
-    display_id:
-      data_type: character varying(255)
-      description: Short unique identifier used on the frontend.
-      name: display_id
-    encounter_id:
-      data_type: character varying(255)
-      description: Reference to the [encounter](#!/source/source.tamanu.tamanu.encounters)
-        this invoice is a part of.
-      name: encounter_id
-    id:
-      data_type: uuid
-      description: Tamanu internal identifier (generally a UUID) in invoices.
-      name: id
-    insurer_payment_status:
-      data_type: character varying(255)
-      description: "Payment status (insurer portion, if applicable).\r\n\r\nOne of:\r\
-        \n- `unpaid`\r\n- `paid`\r\n- `partial`\r\n- `rejected`"
-      name: insurer_payment_status
-    patient_payment_status:
-      data_type: character varying(255)
-      description: "Payment status (patient portion, if applicable).\r\n\r\nOne of:\r\
-        \n- `unpaid`\r\n- `paid`\r\n- `partial`"
-      name: patient_payment_status
-    status:
-      data_type: character varying(255)
-      description: "Status of the invoice.\r\n\r\nOne of:\r\n- `cancelled`\r\n- `in_progress`\r\
-        \n- `finalised`"
-      name: status
-  config:
-    tags:
-    - base
-    - financial
-  description: Invoices related to encounters.
-  name: invoices
-  tags:
-  - base
-  - financial
-- columns:
     id:
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in lab_request_logs.
@@ -925,10 +685,6 @@
       description: Reference to the [user](#!/source/source.tamanu.tamanu.users) who
         updated this lab request.
       name: updated_by_id
-    updated_datetime:
-      data_type: timestamp
-      description: Timestamp of when record was last updated in lab_request_logs.
-      name: updated_datetime
   config:
     tags:
     - base
@@ -936,6 +692,31 @@
     - log
   description: This is a log of who changed the status of a lab request when.
   name: lab_request_logs
+  tags:
+  - base
+  - clinical
+  - log
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the lab_request_logs table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in lab_request_logs.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the lab_request_logs
+        table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - clinical
+    - log
+  description: Metadata information extracted from the change logs for lab_request_logs.
+  name: lab_request_logs_metadata
   tags:
   - base
   - clinical
@@ -1032,11 +813,6 @@
         \n- `published`\r\n- `cancelled`\r\n- `invalidated`\r\n- `deleted`\r\n- `sample-not-collected`\r\
         \n- `entered-in-error`"
       name: status
-    updated_datetime:
-      data_type: timestamp
-      description: Timestamp of when record was last updated in lab_requests which
-        is used as a best estimate of modification datetime.
-      name: updated_datetime
   config:
     tags:
     - base
@@ -1053,6 +829,30 @@
   tags:
   - base
   - clinical
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the lab_requests table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in lab_requests.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the lab_requests table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - clinical
+    - log
+  description: Metadata information extracted from the change logs for lab_requests.
+  name: lab_requests_metadata
+  tags:
+  - base
+  - clinical
+  - log
 - columns:
     id:
       description: Tamanu internal identifier (generally a UUID) in lab_test_panel_lab_test_types.
@@ -1433,10 +1233,11 @@
       data_type: uuid
       description: Tamanu internal identifier (generally a UUID) in notes.
       name: id
-    note_type:
+    note_type_id:
       data_type: character varying(255)
-      description: Type of note recorded.
-      name: note_type
+      description: Reference to the note type ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
+        `type = noteType`).
+      name: note_type_id
     on_behalf_of_id:
       data_type: character varying(255)
       description: Reference to the [user](#!/source/source.tamanu.tamanu.users) who
@@ -1547,7 +1348,7 @@
     location_group_id:
       data_type: character varying(255)
       description: The [location group](#!/source/source.tamanu.tamanu.location_groups)
-        where the appointment will take place.]
+        where the appointment will take place.
       name: location_group_id
     nth_weekday:
       data_type: integer
@@ -1595,6 +1396,108 @@
   tags:
   - base
   - clinical
+- columns:
+    appointment_id:
+      description: Reference to the [appointment](#!/model/model.tamanu_source_dbt.outpatient_appointments)
+        that was modified.
+      name: appointment_id
+    appointment_type_id:
+      description: Current [appointment type](#!/model/model.tamanu_source_dbt.reference_data)
+        ID (after the change).
+      name: appointment_type_id
+    change_id:
+      description: Unique identifier for the change log entry (UUID from logs.changes).
+      name: change_id
+    change_sequence:
+      description: "Sequential number of this change for the appointment.\r\n- 1 =\
+        \ initial creation event\r\n- 2+ = subsequent modifications\r\n\r\nUses ROW_NUMBER()\
+        \ partitioned by appointment_id and ordered by logged_at."
+      name: change_sequence
+    clinician_id:
+      description: Current [clinician](#!/model/model.tamanu_source_dbt.users) ID
+        (after the change).
+      name: clinician_id
+    created_by_user_id:
+      description: Reference to the [user](#!/model/model.tamanu_source_dbt.users)
+        who originally created the appointment.
+      name: created_by_user_id
+    end_datetime:
+      description: Current appointment end date and time (after the change).
+      name: end_datetime
+    is_high_priority:
+      description: Current priority status (after the change). Boolean indicating
+        if the appointment is high priority.
+      name: is_high_priority
+    location_group_id:
+      description: Current [location group](#!/model/model.tamanu_source_dbt.location_groups)/area
+        ID (after the change).
+      name: location_group_id
+    modified_by_user_id:
+      description: Reference to the [user](#!/model/model.tamanu_source_dbt.users)
+        who made the modification.
+      name: modified_by_user_id
+    modified_datetime:
+      description: Timestamp when the change was logged (from logs.changes.logged_at).
+      name: modified_datetime
+    patient_id:
+      description: Reference to the [patient](#!/model/model.tamanu_source_dbt.patients)
+        associated with the appointment.
+      name: patient_id
+    prev_appointment_type_id:
+      description: Previous appointment type ID (before the change). Null for creation
+        events (change_sequence = 1).
+      name: prev_appointment_type_id
+    prev_clinician_id:
+      description: Previous clinician ID (before the change). Null for creation events
+        (change_sequence = 1).
+      name: prev_clinician_id
+    prev_end_datetime:
+      description: Previous appointment end date and time (before the change). Null
+        for creation events (change_sequence = 1).
+      name: prev_end_datetime
+    prev_is_high_priority:
+      description: Previous priority status (before the change). Null for creation
+        events (change_sequence = 1).
+      name: prev_is_high_priority
+    prev_location_group_id:
+      description: Previous location group/area ID (before the change). Null for creation
+        events (change_sequence = 1).
+      name: prev_location_group_id
+    prev_start_datetime:
+      description: Previous appointment start date and time (before the change). Null
+        for creation events (change_sequence = 1).
+      name: prev_start_datetime
+    prev_status:
+      description: Previous appointment status (before the change). Null for creation
+        events (change_sequence = 1).
+      name: prev_status
+    schedule_id:
+      description: Current recurring schedule ID (after the change). References appointment_schedules
+        table.
+      name: schedule_id
+    start_datetime:
+      description: Current appointment start date and time (after the change).
+      name: start_datetime
+    status:
+      description: "Current appointment status (after the change).\r\n\r\nOne of:\r\
+        \n- `Confirmed`\r\n- `Arrived`\r\n- `No-show`\r\n- `Cancelled`"
+      name: status
+  config:
+    tags:
+    - base
+    - base
+    - clinical
+    - audit
+  description: 'Base model for appointment change logs. Contains all changes to appointments
+    extracted from the logs.changes table, including the initial creation. Each row
+    represents a change event with both current and previous values.
+
+    '
+  name: outpatient_appointments_change_logs
+  tags:
+  - base
+  - clinical
+  - audit
 - columns:
     blood_type:
       data_type: character varying(255)
@@ -2086,6 +1989,40 @@
   - base
   - clinical
 - columns:
+    care_plan_datetime:
+      data_type: timestamp
+      description: Local date for the record in patient_care_plans.
+      name: care_plan_datetime
+    care_plan_id:
+      data_type: character varying(255)
+      description: Reference to the care plan ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
+      name: care_plan_id
+    clinician_id:
+      data_type: character varying(255)
+      description: Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
+        who prescribed this care plan.
+      name: clinician_id
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in patient_care_plans.
+      name: id
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
+      name: patient_id
+  config:
+    tags:
+    - base
+    - clinical
+  description: "List of current care plans the patient is on.\r\n\r\nIn Tamanu this\
+    \ is displayed and entered in the patient view sidebar, under \"Care plans\".\r\
+    \n\r\nSee also: `public.patient_allergies`, `public.patient_conditions`, `public.patient_family_histories`,\r\
+    \n`public.patient_issues`."
+  name: patient_care_plans
+  tags:
+  - base
+  - clinical
+- columns:
     condition_id:
       data_type: character varying(255)
       description: Reference to a diagnosis describing this issue ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
@@ -2144,7 +2081,7 @@
     condition_id:
       data_type: character varying(255)
       description: Reference to the condition ([Reference Data](#!/source/source.tamanu.tamanu.reference_data),
-        `type = condition`).
+        `type = diagnosis`).
       name: condition_id
     id:
       data_type: character varying(255)
@@ -2334,38 +2271,48 @@
   - base
   - clinical
 - columns:
-    created_at:
-      data_type: timestamp with time zone
-      description: Timestamp of when record was created in patient_facilities.
-      name: created_at
-    facility_id:
+    clinician_id:
       data_type: character varying(255)
-      description: Reference to the [facility](#!/source/source.tamanu.tamanu.facilities).
-      name: facility_id
+      description: Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
+        recording this history.
+      name: clinician_id
+    diagnosis_id:
+      data_type: character varying(255)
+      description: "Reference to a diagnosis ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))\r\
+        \ndescribing this issue."
+      name: diagnosis_id
     id:
-      data_type: text
-      description: Tamanu internal identifier (generally a UUID) in patient_facilities.
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in patient_family_histories.
       name: id
+    note:
+      data_type: character varying(255)
+      description: Free-form description of this issue.
+      name: note
     patient_id:
       data_type: character varying(255)
       description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
       name: patient_id
+    recorded_datetime:
+      data_type: timestamp
+      description: Datetime at which this issue was recorded.
+      name: recorded_datetime
+    relationship:
+      data_type: character varying(255)
+      description: Free-form description of the family relationship.
+      name: relationship
   config:
     tags:
     - base
-    - patient
-  description: "Tracks which patients are of interest to which facilities.\r\n\r\n\
-    This is used to refine sync data: only patient data related to these patients\
-    \ is synced to a\r\nfacility (plus general data, and some exceptions apply like\
-    \ vaccine data under some conditions).\r\n\r\nIn Tamanu, this can be set manually\
-    \ on the facility server (via the \"mark for sync\" button), or\r\ncentrally (via\
-    \ some labs / vaccine programs, or via bulk-imports).\r\n\r\n_(\"Joe Patient attends\
-    \ X Clinic\" is clinical info; even though an entry in patient facilities\r\n\
-    doesn't necessarily imply this, it often does.)_"
-  name: patient_facilities
+    - clinical
+  description: "List of family history conditions known about a patient.\r\n\r\nIn\
+    \ Tamanu this is displayed and entered in the patient view sidebar, under \"Family\
+    \ history\".\r\n\r\nSee also: `public.patient_allergies`, `public.patient_care_plans`,\
+    \ `public.patient_conditions`,\r\n`public.patient_issues`."
+  name: patient_family_histories
   tags:
   - base
-  - patient
+  - clinical
 - columns:
     definition_id:
       data_type: character varying(255)
@@ -2736,11 +2683,6 @@
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in patients.
       name: id
-    registration_date:
-      data_type: date
-      description: Timestamp of when record was created in patients which is used
-        as a best estimate of registration date.
-      name: registration_date
     sex:
       data_type: character varying(255)
       description: "Sex of patient.\r\n\r\nOne of:\r\n- `male`\r\n- `female`\r\n-\
@@ -2948,6 +2890,30 @@
   - base
   - patient
 - columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the patients table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in patients.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the patients table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - patient
+    - log
+  description: Metadata information extracted from the change logs for patients.
+  name: patients_metadata
+  tags:
+  - base
+  - patient
+  - log
+- columns:
     datetime:
       data_type: timestamp
       description: Local date and time for the record in prescriptions.
@@ -3070,10 +3036,10 @@
       data_type: character varying(255)
       description: Reference to the [anaesthetist](#!/source/source.tamanu.tamanu.users).
       name: anaesthetist_id
-    assistant_id:
+    assistant_anaesthetist_id:
       data_type: character varying(255)
-      description: Reference to the [assistant](#!/source/source.tamanu.tamanu.users).
-      name: assistant_id
+      description: Reference to the assistant [anaesthetist](#!/source/source.tamanu.tamanu.users).
+      name: assistant_anaesthetist_id
     clinician_id:
       data_type: character varying(255)
       description: Reference to the [physician](#!/source/source.tamanu.tamanu.users).
@@ -3121,6 +3087,16 @@
       data_type: time
       description: When the procedure started.
       name: start_time
+    time_in:
+      data_type: time
+      description: The time when the patient entered the procedure room or when the
+        procedure setup began.
+      name: time_in
+    time_out:
+      data_type: time
+      description: The time when the patient left the procedure room or when the procedure
+        cleanup was completed.
+      name: time_out
   config:
     tags:
     - base
@@ -3130,6 +3106,30 @@
   tags:
   - base
   - clinical
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the procedures table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in procedures.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the procedures table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - clinical
+    - log
+  description: Metadata information extracted from the change logs for procedures.
+  name: procedures_metadata
+  tags:
+  - base
+  - clinical
+  - log
 - columns:
     code:
       data_type: character varying(255)
@@ -3266,20 +3266,19 @@
 - columns:
     code:
       data_type: text
-      description: Code (identifier) for the condition.
+      description: The code for the category.
       name: code
     id:
-      data_type: character varying(255)
-      description: Tamanu internal identifier (generally a UUID) in program_registry_conditions.
+      data_type: text
+      description: Tamanu internal identifier (generally a UUID) in program_registry_condition_categories.
       name: id
     name:
       data_type: text
-      description: The name of the condition.
+      description: The name for the category.
       name: name
     program_registry_id:
       data_type: character varying(255)
-      description: "Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)\r\
-        \nthe condition is a part of."
+      description: The id of the program registry.
       name: program_registry_id
     visibility_status:
       data_type: text
@@ -3289,13 +3288,16 @@
         \ no longer in use and should not be visible nor\r\n  accessible to users.\
         \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
         \ that the record has been merged, is no longer in use and should not be visible\r\
-        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registry_conditions."
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registry_condition_categories."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: Table of program registry conditions.
+  description: Categories to be set against patient program registry conditions. The
+    categories are configured through the program importer for each program registry.
+    There is a hard-loaded list that is seeded by default in the database for each
+    program registry.
   name: program_registry_condition_categories
   tags:
   - base
@@ -3450,6 +3452,36 @@
   tags:
   - base
   - clinical
+- columns:
+    created_at:
+      description: Timestamp of when record was created
+      name: created_at
+    device_id:
+      description: Unique device ID from the client.
+      name: device_id
+    expires_at:
+      description: When the refresh token expires.
+      name: expires_at
+    id:
+      description: Tamanu internal identifier (generally a UUID)
+      name: id
+    updated_at:
+      description: Timestamp of when record was last updated
+      name: updated_at
+    user_id:
+      description: The [user](#!/source/source.tamanu.tamanu.users) being authenticated
+        as.
+      name: user_id
+  config:
+    tags:
+    - base
+    - administration
+  description: Refresh tokens are used by API clients to refresh their authentication
+    quickly, within a timeout.
+  name: refresh_tokens
+  tags:
+  - base
+  - administration
 - columns:
     id:
       data_type: character varying(255)
@@ -3798,6 +3830,30 @@
   tags:
   - base
   - administration
+- columns:
+    created_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was created in the users table.
+      name: created_datetime
+    id:
+      data_type: character varying(255)
+      description: Tamanu internal identifier (generally a UUID) in users.
+      name: id
+    updated_datetime:
+      data_type: timestamp
+      description: Timestamp of when record was last updated in the users table.
+      name: updated_datetime
+  config:
+    tags:
+    - base
+    - administration
+    - log
+  description: Metadata information extracted from the change logs for users.
+  name: users_metadata
+  tags:
+  - base
+  - administration
+  - log
 - columns:
     batch:
       data_type: character varying(255)
