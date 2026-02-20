@@ -4,6 +4,7 @@ Script to validate Tamanu report configuration files against the JSON schema.
 """
 
 import json
+import os
 from jsonschema import validate, ValidationError
 import sys
 from pathlib import Path
@@ -69,7 +70,7 @@ def main():
     """Main validation function."""
     # Initialize deployment and determine project root for robust pathing
     DEPLOYMENT = get_deployment_name()
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    PROJECT_ROOT = Path(os.getcwd())
     CONFIG_DIR = PROJECT_ROOT / "models/reports/config"
     BASE_PATH = PROJECT_ROOT if DEPLOYMENT == "standard" else PROJECT_ROOT / "dbt_packages/tamanu_source_dbt"
     SCHEMA_PATH = BASE_PATH / "scripts" / "report_validation" / "report-config-schema.json"
