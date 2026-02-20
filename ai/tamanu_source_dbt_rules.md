@@ -39,27 +39,8 @@ Use centralised variables from `dbt_project.yml`:
 **Usage**: `translate_label('field_name')` (auto-prefixes with `report.reporting.`)
 **Rules**: Use concept prefixes (patient_name, encounter_date) not generic names (name, date)
 
-## Common Pitfalls
-
-- ❌ ORDER BY in bases/surveys/datasets
-- ❌ Hard-coded date formats
-- ❌ Missing documentation
-- ❌ Generic translation labels
-- ❌ American spelling
-- ❌ Modifying sources/logs
-- ❌ Deleting without checking dependencies
-
 ## File Naming
 
 - Models: `{table_name}.sql`, `{table_name}.yml`
 - Reports: `{description}-line-list.sql`, config in `models/reports/config/`
 - Never edit `list_tamanu_reports.md` (auto-generated)
-
-## Git Workflow
-
-**Main branch**: `main` (protected)
-**Feature branches**: Descriptive names (e.g., `feature/patient-report`, `fix/translation-bug`)
-**Commit messages**: Imperative mood (e.g., "Add report", "Fix bug")
-
-**Before committing**: sqlfluff fix → dbt test → validate scripts
-**Pull requests**: Clear description, testing notes, request review
