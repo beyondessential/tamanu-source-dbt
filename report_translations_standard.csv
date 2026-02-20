@@ -10,6 +10,7 @@ report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
 report.reporting.appointmentPriority,Priority appointment
 report.reporting.appointmentIsRepeating,Repeating appointment
+report.reporting.appointmentRepeatingEndDate,Repeating appointment end date
 report.reporting.appointmentStatus,Appointment status
 report.reporting.appointmentType,Appointment type
 report.reporting.appointmentIsCancelled,Appointment cancelled

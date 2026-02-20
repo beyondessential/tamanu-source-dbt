@@ -26,7 +26,7 @@ def extract_and_write_to_md(base_path, output_file, report_type):
         file.write(f"## {report_type}\n")
         
         for root, _, files in os.walk(base_path):
-            for file_name in files:
+            for file_name in sorted(files):
                 if file_name.endswith(".json"):
                     json_file_path = os.path.join(root, file_name)
 
