@@ -91,7 +91,7 @@
     "dhis2DataSet": {
       "type": "string",
       "description": "DHIS2 dataset identifier for importing this report into DHIS2",
-      "pattern": "^[a-zA-Z][a-zA-Z0-9]{11}$"
+      "pattern": "^[a-zA-Z][a-zA-Z0-9]{10}$"
     }
   },
   "additionalProperties": true,
