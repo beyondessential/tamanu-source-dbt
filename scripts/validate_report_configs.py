@@ -57,6 +57,8 @@ def find_config_files(config_dir: str) -> List[str]:
     config_path = Path(config_dir)
     if not config_path.exists():
         print(f"Error: Configuration directory not found: {config_dir}")
+        print(f"  (current working directory: {Path.cwd()})")
+        print("  Ensure this script is run from the project root.")
         sys.exit(1)
     
     json_files = list(config_path.glob("*.json"))
@@ -68,7 +70,9 @@ def find_config_files(config_dir: str) -> List[str]:
 
 def main():
     """Main validation function."""
-    # Initialize deployment and determine project root for robust pathing
+    # Initialize deployment and determine project root.
+    # Uses cwd so this works when installed as a dbt package under dbt_packages/.
+    # Must be run from the project root.
     DEPLOYMENT = get_deployment_name()
     PROJECT_ROOT = Path(os.getcwd())
     CONFIG_DIR = PROJECT_ROOT / "models/reports/config"
