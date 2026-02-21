@@ -22,6 +22,7 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 - Run `dbt test --profiles-dir config` before committing
 - Test SQL syntax before committing
 - **No ORDER BY** in bases/surveys/datasets (reports only)
+- **Before deleting a model**, check for downstream refs with `grep -r "ref('<model_name>')" models/`
 
 ### Date/Time Formatting
 Use centralised variables from `dbt_project.yml`:

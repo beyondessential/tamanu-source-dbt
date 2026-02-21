@@ -13,13 +13,14 @@
 ## tamanu-dbt-* (country projects)
 
 1. Activate virtual environment
-2. Create/modify models following layer patterns
-3. Add documentation (`.yml` for custom models)
-4. Implement tests
-5. Run `sqlfluff fix` → `dbt test` → validate scripts
-6. Use `dbt run` to verify
-7. Regenerate surveys when definitions change
-8. Build reporting assets before deployment
+2. Understand data flow and dependencies: sources/logs → bases/surveys → datasets → reports
+3. Create/modify models following layer patterns
+4. Add documentation (`.yml` for custom models)
+5. Implement tests
+6. Run `sqlfluff fix` → `dbt test` → validate scripts
+7. Use `dbt run` to verify
+8. Regenerate surveys when definitions change
+9. Build reporting assets before deployment
 
 ### Project setup
 - Update `dbt_project.yml` with project name, profile, version

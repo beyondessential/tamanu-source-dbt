@@ -28,6 +28,7 @@ Country-specific dbt projects using tamanu-source-dbt as a package dependency to
 - Run `dbt test` before committing
 - Test SQL syntax before committing
 - **No ORDER BY** in datasets (reports only)
+- **Before deleting a model**, check for downstream refs with `grep -r "ref('<model_name>')" models/`
 
 ### Date/Time Formatting
 Use centralised variables from `dbt_project.yml`:
