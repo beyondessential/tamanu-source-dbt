@@ -7,7 +7,6 @@ Country-specific dbt projects using tamanu-source-dbt as a package dependency to
 - Follow data flow: sources/logs → bases/surveys → datasets → reports
 - Use tamanu-source-dbt package for standard models, extend with project-specific customisations
 - Maintain data integrity at each layer
-- Use Australian English spelling
 
 ## Model Layers
 
@@ -23,7 +22,6 @@ Country-specific dbt projects using tamanu-source-dbt as a package dependency to
 - **Mandatory `.yml`** for all custom models except reports
 - **Mandatory `.json` config** for each report in `models/reports/config/`
 - Document all columns
-- Use Australian English spelling
 
 ### Code Quality
 - Run `sqlfluff fix` before committing
@@ -47,7 +45,3 @@ Use centralised variables from `dbt_project.yml`:
 
 ## Translation Rules
 - Check for existing translations before creating new ones
-- Use sentence casing (e.g., "Patient name")
-- Prefix with concept (patient_name, encounter_date)
-- Never use generic names (name, date)
-

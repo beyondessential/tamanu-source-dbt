@@ -15,7 +15,6 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 ### Documentation
 - **Mandatory `.yml`** for bases/surveys/datasets (not reports)
 - **Mandatory `.json` config** for each report in `models/reports/config/`
-- Use Australian English spelling
 - Document all columns
 
 ### Code Quality
@@ -37,7 +36,6 @@ Use centralised variables from `dbt_project.yml`:
 
 **Storage**: `report_translations_standard.csv` → generates `macros/default_translations.sql`
 **Usage**: `translate_label('field_name')` (auto-prefixes with `report.reporting.`)
-**Rules**: Use concept prefixes (patient_name, encounter_date) not generic names (name, date)
 
 ## File Naming
 
