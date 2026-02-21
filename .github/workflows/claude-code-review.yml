@@ -2,25 +2,45 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
 
 jobs:
   claude-review:
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        contains(github.event.comment.body, '/review') &&
+        github.event.comment.author_association != 'NONE' &&
+        github.event.comment.author_association != 'FIRST_TIMER')
     concurrency:
-      group: claude-review-${{ github.event.pull_request.number }}
+      group: claude-review-${{ github.event.pull_request.number || github.event.issue.number }}
       cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
+      issues: read
       id-token: write
       actions: read
 
     steps:
+      - name: Resolve PR metadata
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          PR_SHA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.head.sha')
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "sha=$PR_SHA" >> $GITHUB_OUTPUT
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ steps.pr.outputs.sha }}
           fetch-depth: 0
 
       - name: Run Claude Code Review
@@ -42,9 +62,9 @@ jobs:
             - PII in code or examples
             - Unmasked secrets in log statements
 
-            PR TITLE: Review the current PR title. If it is vague or auto-generated, update it to a clear conventional commit title (feat/fix/chore/refactor/docs) using: gh pr edit ${{ github.event.pull_request.number }} --title 'improved title here'
+            PR TITLE: Review the current PR title. If it is vague or auto-generated, update it to a clear conventional commit title (feat/fix/chore/refactor/docs) using: gh pr edit ${{ steps.pr.outputs.number }} --title 'improved title here'
 
             REGRESSION TESTING: Include in the summary a checklist of what needs testing. For model changes: dbt build --select +<changed_model>. For report config or translation changes: run the validation scripts (validate_report_configs.py, check_translations.py). List only what needs to be tested and the commands — no explanations.
 
-            INLINE COMMENTS: Post all specific code feedback as inline review comments on the relevant lines — not in the summary. Use: gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments --method POST --field body='your comment' --field commit_id='${{ github.event.pull_request.head.sha }}' --field path='relative/file/path' --field line=LINE_NUMBER --field side='RIGHT'."
+            INLINE COMMENTS: Post all specific code feedback as inline review comments on the relevant lines — not in the summary. Use: gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.number }}/comments --method POST --field body='your comment' --field commit_id='${{ github.event.pull_request.head.sha || steps.pr.outputs.sha }}' --field path='relative/file/path' --field line=LINE_NUMBER --field side='RIGHT'."
 
