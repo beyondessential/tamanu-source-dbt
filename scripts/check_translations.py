@@ -70,7 +70,7 @@ def main():
     for folder in sql_folders:
         for sql_file in folder.glob("*.sql"):
             labels = extract_translate_labels_from_file(sql_file)
-            file_referencing_translations[sql_file.name] = labels
+            file_referencing_translations[str(sql_file)] = labels
             referenced_translations.update(labels)
 
     cprint(f"Found {len(translations)} translations", "info")
