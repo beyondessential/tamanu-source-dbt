@@ -18,15 +18,16 @@ imaging_area_notes as (
 
 imaging_areas as (
     select
-        ira.imaging_request_id,
+        ir.id as imaging_request_id,
         coalesce(
             string_agg(ia.name, ', ' order by ia.name),
             n.imaging_area
         ) as imaging_area
-    from {{ ref('imaging_request_areas') }} ira
+    from {{ ref('imaging_requests') }} ir
+    left join {{ ref('imaging_request_areas') }} ira on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
-    left join imaging_area_notes n on n.imaging_request_id = ira.imaging_request_id
-    group by ira.imaging_request_id, n.imaging_area
+    left join imaging_area_notes n on n.imaging_request_id = ir.id
+    group by ir.id, n.imaging_area
 )
 
 select
