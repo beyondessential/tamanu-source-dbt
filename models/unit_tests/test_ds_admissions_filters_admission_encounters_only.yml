@@ -24,7 +24,7 @@ unit_tests:
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
       
       - input: ref('users')
         format: sql

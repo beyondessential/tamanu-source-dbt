@@ -24,11 +24,11 @@ unit_tests:
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
           union all
-          select 'enc_002', '2024-01-16 14:30:00'::timestamp, null, 'cli_002', 'dept_002', 'loc_002', 'admission'
+          select 'enc_002', '2024-01-16 14:30:00'::timestamp, null::text[], 'cli_002', 'dept_002', 'loc_002', 'admission'
           union all
-          select 'enc_002', '2024-01-18 10:00:00'::timestamp, 'department', 'cli_002', 'dept_003', 'loc_002', 'admission'
+          select 'enc_002', '2024-01-18 10:00:00'::timestamp, array['department'], 'cli_002', 'dept_003', 'loc_002', 'admission'
       
       - input: ref('users')
         format: sql

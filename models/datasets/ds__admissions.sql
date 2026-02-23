@@ -41,7 +41,7 @@ encounter_history_consolidated as (
     left join {{ ref('encounter_history') }} eh
         on eh.encounter_id = ae.id
         and eh.encounter_type = 'admission'
-        and (eh.change_type is null or eh.change_type in ('encounter_type', 'examiner', 'department', 'location'))
+        and (eh.change_type is null or eh.change_type && array['encounter_type', 'examiner', 'department', 'location'])
     left join {{ ref('users') }} u
         on u.id = eh.clinician_id
     left join {{ ref('departments') }} d
@@ -56,22 +56,22 @@ encounter_history_consolidated as (
 clinician_data as (
     select
         encounter_id,
-        bool_or(change_type = 'encounter_type' and change_sequence = 1) as is_transfer,
-        min(datetime) filter (where change_type is null or change_type in ('encounter_type', 'examiner')) as admission_datetime,
+        bool_or('encounter_type' = any(change_type) and change_sequence = 1) as is_transfer,
+        min(datetime) filter (where change_type is null or change_type && array['encounter_type', 'examiner']) as admission_datetime,
         array_agg(
             datetime
             order by datetime
-        ) filter (where change_type is null or change_type in ('encounter_type', 'examiner')
+        ) filter (where change_type is null or change_type && array['encounter_type', 'examiner']
         ) as clinician_datetimes,
         array_agg(
             clinician_id
             order by datetime
-        ) filter (where change_type is null or change_type in ('encounter_type', 'examiner')
+        ) filter (where change_type is null or change_type && array['encounter_type', 'examiner']
         ) as clinician_ids,
         array_agg(
             clinician_name
             order by datetime
-        ) filter (where change_type is null or change_type in ('encounter_type', 'examiner')
+        ) filter (where change_type is null or change_type && array['encounter_type', 'examiner']
         ) as clinician_names
     from encounter_history_consolidated
     group by encounter_id
@@ -113,7 +113,7 @@ department_changes as (
             order by datetime
         ) as departments
     from encounter_history_consolidated
-    where change_type is null or change_type in ('encounter_type', 'department')
+    where change_type is null or change_type && array['encounter_type', 'department']
     group by encounter_id
 ),
 
@@ -135,7 +135,7 @@ location_changes as (
             order by datetime
         ) as locations
     from encounter_history_consolidated
-    where change_type is null or change_type in ('encounter_type', 'location')
+    where change_type is null or change_type && array['encounter_type', 'location']
     group by encounter_id
 ),
 
@@ -157,7 +157,7 @@ location_group_changes as (
             order by datetime
         ) as location_groups
     from encounter_history_consolidated
-    where (change_type is null or change_type in ('encounter_type', 'location'))
+    where (change_type is null or change_type && array['encounter_type', 'location'])
         and (location_group_id != prev_location_group_id or prev_location_group_id is null)
     group by encounter_id
 ),
