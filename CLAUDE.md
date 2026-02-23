@@ -2,7 +2,8 @@
 
 For comprehensive conventions, standards, and workflows when working on the Tamanu Source DBT repository, refer to:
 
-- **`/ai/tamanu_source_dbt_rules.md`** - Core AI assistant rules and development workflow
+- **`/.ai/tamanu_source_dbt_rules.md`** - Core AI assistant rules and development workflow
+- **`/.ai/style-guide.md`** - Language, writing style, and naming conventions
 
 ## Key Configuration Files
 - `/dbt_project.yml` - Project configuration and variables
