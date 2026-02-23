@@ -3,6 +3,6 @@ select
     created_at,
     patient_id,
     facility_id
-from {{ source("tamanu", "patient_facilities") }}
-where patient_id != '{{ var("test_patient") }}'
-    and deleted_at is null
+from {{ resolve_input_model('patient_facilities') }}
+where deleted_at is null
+    and patient_id != '{{ var("test_patient") }}'
