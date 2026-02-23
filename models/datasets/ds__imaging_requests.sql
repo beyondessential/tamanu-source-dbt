@@ -6,20 +6,27 @@ with results as (
     group by imaging_request_id
 ),
 
+imaging_area_notes as (
+    select
+        record_id as imaging_request_id,
+        string_agg(content, ', ' order by datetime) as imaging_area
+    from {{ ref('notes') }}
+    where record_type = 'ImagingRequest'
+        and note_type = 'areaToBeImaged'
+    group by record_id
+),
+
 imaging_areas as (
     select
         ira.imaging_request_id,
         coalesce(
             string_agg(ia.name, ', ' order by ia.name),
-            string_agg(n.content, ', ' order by n.datetime)
+            n.imaging_area
         ) as imaging_area
     from {{ ref('imaging_request_areas') }} ira
     left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
-    left join {{ ref('notes') }} n
-        on n.record_id = ira.imaging_request_id
-        and n.record_type = 'ImagingRequest'
-        and n.note_type = 'areaToBeImaged'
-    group by ira.imaging_request_id
+    left join imaging_area_notes n on n.imaging_request_id = ira.imaging_request_id
+    group by ira.imaging_request_id, n.imaging_area
 )
 
 select
