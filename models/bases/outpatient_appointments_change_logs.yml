@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: outpatient_appointments_change_logs
+    description: >
+      Base model for appointment change logs. Contains all changes to appointments
+      extracted from the logs.changes table, including the initial creation. Each row
+      represents a change event with both current and previous values.
+    config:
+      tags:
+        - base
+        - clinical
+        - audit
+    columns:
+      - name: change_id
+        description: "{{ doc('outpatient_appointments_change_logs__change_id') }}"
+
+      - name: appointment_id
+        description: "{{ doc('outpatient_appointments_change_logs__appointment_id') }}"
+
+      - name: modified_datetime
+        description: "{{ doc('outpatient_appointments_change_logs__modified_datetime') }}"
+
+      - name: modified_by_user_id
+        description: "{{ doc('outpatient_appointments_change_logs__modified_by_user_id') }}"
+
+      - name: created_by_user_id
+        description: "{{ doc('outpatient_appointments_change_logs__created_by_user_id') }}"
+
+      - name: patient_id
+        description: "{{ doc('outpatient_appointments_change_logs__patient_id') }}"
+
+      - name: start_datetime
+        description: "{{ doc('outpatient_appointments_change_logs__start_datetime') }}"
+
+      - name: end_datetime
+        description: "{{ doc('outpatient_appointments_change_logs__end_datetime') }}"
+
+      - name: clinician_id
+        description: "{{ doc('outpatient_appointments_change_logs__clinician_id') }}"
+
+      - name: location_group_id
+        description: "{{ doc('outpatient_appointments_change_logs__location_group_id') }}"
+
+      - name: appointment_type_id
+        description: "{{ doc('outpatient_appointments_change_logs__appointment_type_id') }}"
+
+      - name: is_high_priority
+        description: "{{ doc('outpatient_appointments_change_logs__is_high_priority') }}"
+
+      - name: status
+        description: "{{ doc('outpatient_appointments_change_logs__status') }}"
+
+      - name: schedule_id
+        description: "{{ doc('outpatient_appointments_change_logs__schedule_id') }}"
+
+      - name: prev_start_datetime
+        description: "{{ doc('outpatient_appointments_change_logs__prev_start_datetime') }}"
+
+      - name: prev_end_datetime
+        description: "{{ doc('outpatient_appointments_change_logs__prev_end_datetime') }}"
+
+      - name: prev_clinician_id
+        description: "{{ doc('outpatient_appointments_change_logs__prev_clinician_id') }}"
+
+      - name: prev_location_group_id
+        description: "{{ doc('outpatient_appointments_change_logs__prev_location_group_id') }}"
+
+      - name: prev_appointment_type_id
+        description: "{{ doc('outpatient_appointments_change_logs__prev_appointment_type_id') }}"
+
+      - name: prev_is_high_priority
+        description: "{{ doc('outpatient_appointments_change_logs__prev_is_high_priority') }}"
+
+      - name: prev_status
+        description: "{{ doc('outpatient_appointments_change_logs__prev_status') }}"
+
+      - name: change_sequence
+        description: "{{ doc('outpatient_appointments_change_logs__change_sequence') }}"

@@ -9,9 +9,20 @@ report.reporting.appointmentEndDateTime,Appointment end date and time
 report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
 report.reporting.appointmentPriority,Priority appointment
+report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentRepeatingEndDate,Repeating appointment end date
 report.reporting.appointmentStatus,Appointment status
 report.reporting.appointmentType,Appointment type
+report.reporting.appointmentIsCancelled,Appointment cancelled
+report.reporting.auditChangeNumber,Change number
+report.reporting.auditCreatedBy,Appointment created by
+report.reporting.auditModifiedBy,Appointment modified by
+report.reporting.auditModifiedDateTime,Appointment modified date & time
+report.reporting.auditPrevAppointmentDateTime,Previous appointment date & time
+report.reporting.auditPrevAppointmentType,Previous appointment type
+report.reporting.auditPrevClinician,Previous clinician
+report.reporting.auditPrevLocationGroup,Previous area
+report.reporting.auditPrevPriority,Previous priority appointment
 report.reporting.birthApgarScoreFiveMinutes,Apgar score at 5 min
 report.reporting.birthApgarScoreOneMinute,Apgar score at 1 min
 report.reporting.birthApgarScoreTenMinutes,Apgar score at 10 min
