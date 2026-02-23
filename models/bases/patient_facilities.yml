@@ -5,7 +5,6 @@ models:
     config:
       tags:
         - clinical
-        - patient
     columns:
       - name: id
         data_type: text
