@@ -30,9 +30,9 @@ encounter_history_consolidated as (
         lg.name as location_group_name,
         -- Window functions for ordering and lag operations
         row_number() over (
-            partition by eh.encounter_id, eh.change_type
+            partition by eh.encounter_id, ('encounter_type' = any(eh.change_type))
             order by eh.datetime
-        ) as change_sequence,
+        ) as encounter_type_change_sequence,
         lag(lg.id) over (
             partition by eh.encounter_id
             order by eh.datetime
@@ -56,7 +56,7 @@ encounter_history_consolidated as (
 clinician_data as (
     select
         encounter_id,
-        bool_or('encounter_type' = any(change_type) and change_sequence = 1) as is_transfer,
+        bool_or('encounter_type' = any(change_type) and encounter_type_change_sequence = 1) as is_transfer,
         min(datetime) filter (where change_type is null or change_type && array['encounter_type', 'examiner']) as admission_datetime,
         array_agg(
             datetime
