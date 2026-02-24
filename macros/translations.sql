@@ -95,7 +95,7 @@
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
             {%- set value = string_id.replace(prefix ~ '.', '') -%}
-            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)) -%}
+            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") -%}
         when {{ column_name }} = '{{ value }}' then '{{ translated_text }}'
         {%- endif -%}
     {%- endfor %}
