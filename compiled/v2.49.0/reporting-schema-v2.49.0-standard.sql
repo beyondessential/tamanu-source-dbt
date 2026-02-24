@@ -144,7 +144,7 @@ select
     eh.encounter_type,
     eh.examiner_id as clinician_id,
     eh.actor_id as updated_by_id,
-    eh.change_type::text[]
+    eh.change_type
 from "public"."encounter_history" eh
 join "public"."encounters" e on e.id = eh.encounter_id
 where eh.deleted_at is null
@@ -1446,9 +1446,9 @@ encounter_history_consolidated as (
         lg.name as location_group_name,
         -- Window functions for ordering and lag operations
         row_number() over (
-            partition by eh.encounter_id, eh.change_type
+            partition by eh.encounter_id, ('encounter_type' = any(eh.change_type))
             order by eh.datetime
-        ) as change_sequence,
+        ) as encounter_type_change_sequence,
         lag(lg.id) over (
             partition by eh.encounter_id
             order by eh.datetime
@@ -1472,7 +1472,7 @@ encounter_history_consolidated as (
 clinician_data as (
     select
         encounter_id,
-        bool_or('encounter_type' = any(change_type) and change_sequence = 1) as is_transfer,
+        bool_or('encounter_type' = any(change_type) and encounter_type_change_sequence = 1) as is_transfer,
         min(datetime) filter (where change_type is null or change_type && array['encounter_type', 'examiner']) as admission_datetime,
         array_agg(
             datetime
@@ -2094,30 +2094,6 @@ with results as (
         min(datetime) as completed_datetime
     from "reporting"."imaging_results"
     group by imaging_request_id
-),
-
-imaging_area_notes as (
-    select
-        record_id as imaging_request_id,
-        string_agg(content, ', ' order by datetime) as imaging_area
-    from "reporting"."notes"
-    where record_type = 'ImagingRequest'
-        and note_type = 'areaToBeImaged'
-    group by record_id
-),
-
-imaging_areas as (
-    select
-        ir.id as imaging_request_id,
-        coalesce(
-            string_agg(ia.name, ', ' order by ia.name),
-            n.imaging_area
-        ) as imaging_area
-    from "reporting"."imaging_requests" ir
-    left join "reporting"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
-    left join "reporting"."reference_data" ia on ia.id = ira.area_id
-    left join imaging_area_notes n on n.imaging_request_id = ir.id
-    group by ir.id, n.imaging_area
 )
 
 select
@@ -2168,7 +2144,10 @@ select
         when ir.imaging_type = 'stressTest' then 'Stress Test'
         else ir.imaging_type
     end as imaging_type,
-    areas.imaging_area,
+    case
+        when ia.id is not null then ia.name
+        else n.content
+    end as imaging_area,
     ir.status as status_id,
     case
         when ir.status = 'pending' then 'Pending'
@@ -2201,7 +2180,10 @@ join "reporting"."facilities" f
 left join "reporting"."departments" d on d.id = e.department_id
 left join "reporting"."users" su on su.id = e.clinician_id
 left join "reporting"."users" ru on ru.id = ir.requested_by_id
-left join imaging_areas areas on areas.imaging_request_id = ir.id
+left join "reporting"."notes" n
+    on n.record_id = ir.id and n.record_type = 'ImagingRequest' and n.note_type = 'areaToBeImaged'
+left join "reporting"."imaging_request_areas" ira on ira.imaging_request_id = ir.id
+left join "reporting"."reference_data" ia on ia.id = ira.area_id
 left join "reporting"."reference_data" v on v.id = p.village_id
 left join results irs on irs.imaging_request_id = ir.id
 );
