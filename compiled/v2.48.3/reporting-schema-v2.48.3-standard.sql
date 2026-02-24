@@ -871,6 +871,16 @@ from "public"."patient_death_data"
 where deleted_at is null
     and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."patient_facilities" as (
+select
+    id,
+    created_at,
+    patient_id,
+    facility_id
+from "public"."patient_facilities"
+where deleted_at is null
+    and patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."patient_family_histories" as (
 select
     id,

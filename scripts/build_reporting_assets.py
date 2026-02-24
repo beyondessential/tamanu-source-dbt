@@ -43,8 +43,7 @@ def main():
         # Process translations
         cprint("Processing translations...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'check_translations.py'}")
-        execute_command(f"python {SCRIPTS_DIR / 'generate_translation_macro.py'}")
-
+        
         # Build reporting assets
         config = get_dbt_project_config()
         supported_languages = config.get("vars", {}).get("supported_languages", ["default"])

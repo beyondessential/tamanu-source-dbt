@@ -2271,6 +2271,39 @@
   - base
   - clinical
 - columns:
+    created_at:
+      data_type: timestamp with time zone
+      description: Timestamp of when record was created in patient_facilities.
+      name: created_at
+    facility_id:
+      data_type: character varying(255)
+      description: Reference to the [facility](#!/source/source.tamanu.tamanu.facilities).
+      name: facility_id
+    id:
+      data_type: text
+      description: Tamanu internal identifier (generally a UUID) in patient_facilities.
+      name: id
+    patient_id:
+      data_type: character varying(255)
+      description: Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
+      name: patient_id
+  config:
+    tags:
+    - base
+    - clinical
+  description: "Tracks which patients are of interest to which facilities.\r\n\r\n\
+    This is used to refine sync data: only patient data related to these patients\
+    \ is synced to a\r\nfacility (plus general data, and some exceptions apply like\
+    \ vaccine data under some conditions).\r\n\r\nIn Tamanu, this can be set manually\
+    \ on the facility server (via the \"mark for sync\" button), or\r\ncentrally (via\
+    \ some labs / vaccine programs, or via bulk-imports).\r\n\r\n_(\"Joe Patient attends\
+    \ X Clinic\" is clinical info; even though an entry in patient facilities\r\n\
+    doesn't necessarily imply this, it often does.)_"
+  name: patient_facilities
+  tags:
+  - base
+  - clinical
+- columns:
     clinician_id:
       data_type: character varying(255)
       description: Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
