@@ -113,7 +113,11 @@ encounter_changes as (
                 when encounter_type = 'vaccination' then 'Vaccination'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_outpatient
+        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
+
+        -- Encountering clinician: actor who created the initial encounter record
+        min(updated_by_id) filter (where change_type is null) as encountering_clinician_id,
+        min(updated_by_name) filter (where change_type is null) as encountering_clinician
     from encounter_history_consolidated
     group by encounter_id
 ),
@@ -131,12 +135,9 @@ encounter_diagnoses as (
             E'\n'
             order by ed.is_primary desc, ed.datetime asc
         ) as diagnoses
-    from {{ ref('encounters') }} e
-    join {{ ref('encounter_diagnoses') }} ed
-        on ed.encounter_id = e.id
+    from {{ ref('encounter_diagnoses') }} ed
     join {{ ref('reference_data') }} d
         on d.id = ed.diagnosis_id
-    where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
 ),
 
@@ -222,6 +223,38 @@ encounter_lab_requests as (
     group by lr.encounter_id
 ),
 
+notes_raw as (
+    select
+        id,
+        datetime,
+        content,
+        note_type,
+        record_type,
+        record_id,
+        authored_by_id,
+        on_behalf_of_id,
+        updated_note_id,
+        visibility_status
+    from {{ ref('notes') }}
+    where record_type in ('Encounter', 'ImagingRequest')
+),
+
+encounter_notes_deduped as (
+    select
+        id,
+        datetime,
+        content,
+        note_type,
+        record_id,
+        authored_by_id,
+        on_behalf_of_id,
+        visibility_status,
+        row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
+    from notes_raw
+    where record_type = 'Encounter'
+        and note_type != 'system'
+),
+
 imaging_request_areas as (
     select
         ir.encounter_id,
@@ -262,7 +295,7 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} area
         on area.id = ira.area_id
-    left join {{ ref('notes') }} n
+    left join notes_raw n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -290,8 +323,9 @@ encounter_notes as (
         ),
         E'\n'
         order by n.datetime) as notes
-    from {{ ref('int__encounter_notes_final') }} n
+    from encounter_notes_deduped n
     {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
+    where n.row_number = 1
     group by n.record_id
 )
 
@@ -337,8 +371,8 @@ select
                     )
                 )
     end as triage_wait_time,
-    ehc.updated_by_id as encountering_clinician_id,
-    ehc.updated_by_name as encountering_clinician,
+    ec.encountering_clinician_id,
+    ec.encountering_clinician,
     c.id as supervising_clinician_id,
     c.display_name as supervising_clinician,
     dp.id as discharging_department_id,
@@ -384,7 +418,6 @@ left join {{ ref('users') }} c on c.id = e.clinician_id
 join {{ ref('departments') }} dp on dp.id = e.department_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 join encounter_changes ec on ec.encounter_id = e.id
-join encounter_history_consolidated ehc on ehc.encounter_id = e.id and ehc.change_type is null
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 left join {{ ref('discharges') }} d on d.encounter_id = e.id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = e.patient_id
