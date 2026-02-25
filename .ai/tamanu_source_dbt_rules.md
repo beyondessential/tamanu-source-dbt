@@ -10,6 +10,10 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 **datasets** - Denormalised, user-friendly views
 **reports** - Apply translations, date formatting, and report configs
 
+## Do Not Review
+
+- **`models/sources/`** — copied verbatim from an external repository. Do not modify, review, or suggest changes to files in this directory.
+
 ## Essential Rules
 
 ### Documentation
