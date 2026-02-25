@@ -28,7 +28,7 @@ unit_tests:
           union all
           select 'enc_002', '2024-01-16 14:30:00'::timestamp, null, 'cli_002', 'dept_002', 'loc_002', 'admission'
           union all
-          select 'enc_002', '2024-01-18 10:00:00'::timestamp, 'department', 'cli_002', 'dept_003', 'loc_002', 'admission'
+          select 'enc_002', '2024-01-18 10:00:00'::timestamp, array['department'], 'cli_002', 'dept_003', 'loc_002', 'admission'
       
       - input: ref('users')
         format: sql
