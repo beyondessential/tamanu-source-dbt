@@ -4,6 +4,30 @@ with results as (
         min(datetime) as completed_datetime
     from {{ ref('imaging_results') }}
     group by imaging_request_id
+),
+
+imaging_area_notes as (
+    select
+        record_id as imaging_request_id,
+        string_agg(content, ', ' order by datetime) as imaging_area
+    from {{ ref('notes') }}
+    where record_type = 'ImagingRequest'
+        and note_type = 'areaToBeImaged'
+    group by record_id
+),
+
+imaging_areas as (
+    select
+        ir.id as imaging_request_id,
+        coalesce(
+            string_agg(ia.name, ', ' order by ia.name),
+            n.imaging_area
+        ) as imaging_area
+    from {{ ref('imaging_requests') }} ir
+    left join {{ ref('imaging_request_areas') }} ira on ira.imaging_request_id = ir.id
+    left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
+    left join imaging_area_notes n on n.imaging_request_id = ir.id
+    group by ir.id, n.imaging_area
 )
 
 select
@@ -54,10 +78,7 @@ select
         when ir.imaging_type = 'stressTest' then 'Stress Test'
         else ir.imaging_type
     end as imaging_type,
-    case
-        when ia.id is not null then ia.name
-        else n.content
-    end as imaging_area,
+    areas.imaging_area,
     ir.status as status_id,
     case
         when ir.status = 'pending' then 'Pending'
@@ -90,9 +111,6 @@ join {{ ref('facilities') }} f
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('users') }} su on su.id = e.clinician_id
 left join {{ ref('users') }} ru on ru.id = ir.requested_by_id
-left join {{ ref('notes') }} n
-    on n.record_id = ir.id and n.record_type = 'ImagingRequest' and n.note_type = 'areaToBeImaged'
-left join {{ ref('imaging_request_areas') }} ira on ira.imaging_request_id = ir.id
-left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
+left join imaging_areas areas on areas.imaging_request_id = ir.id
 left join {{ ref('reference_data') }} v on v.id = p.village_id
 left join results irs on irs.imaging_request_id = ir.id
