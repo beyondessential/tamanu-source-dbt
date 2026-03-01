@@ -324,7 +324,6 @@ encounter_notes as (
         E'\n'
         order by n.datetime) as notes
     from encounter_notes_deduped n
-    {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
     where n.row_number = 1
     group by n.record_id
 )
