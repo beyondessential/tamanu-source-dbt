@@ -139,12 +139,6 @@
   - base
   - clinical
 - columns:
-    certainty:
-      data_type: character varying
-      description: "The level of certainty of the recorded diagnosis.\r\n\r\nOne of:\r\
-        \n- `confirmed`\r\n- `disproven`\r\n- `emergency`\r\n- `error`\r\n- `suspected`\r\
-        \n\r\n`disproven` and `error` are excluded for reporting"
-      name: certainty
     datetime:
       data_type: timestamp
       description: Local date for the record in encounter_diagnoses.
