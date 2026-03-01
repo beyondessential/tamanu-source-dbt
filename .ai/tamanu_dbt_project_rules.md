@@ -8,6 +8,10 @@ Country-specific dbt projects using tamanu-source-dbt as a package dependency to
 - Use tamanu-source-dbt package for standard models, extend with project-specific customisations
 - Maintain data integrity at each layer
 
+## Do Not Review
+
+- **`compiled/`** — generated output artefacts. Do not review or suggest changes to files in this directory.
+
 ## Model Layers
 
 **sources/logs** - Package-managed, never modify
