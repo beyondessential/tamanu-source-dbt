@@ -53,20 +53,27 @@
 {%- endmacro -%}
 
 {%- macro translate_value(prefix_key, value) -%}
-    {%- set language = var('language') -%}
+    {%- set language = var('language', 'default') -%}
     {%- set prefix = get_translation_prefix(prefix_key) -%}
     {%- set string_id = prefix ~ '.' ~ value -%}
-    
+
     {%- set query -%}
-        select 
+        select
             coalesce(
+                {%- if language != 'default' %}
                 max(case when language = '{{ language }}' then text end),
+                {%- endif %}
                 max(case when language = 'default' then text end),
                 '{{ value }}'
             ) as text
         from {{ source('tamanu', 'translated_strings') }} ts
         where string_id ilike '{{ string_id }}'
-        and language in ('{{ language }}', 'default')
+        and
+        {%- if language != 'default' %}
+            language in ('{{ language }}', 'default')
+        {%- else %}
+            language = 'default'
+        {%- endif %}
     {%- endset -%}
     
     {%- set result = run_query(query) -%}
@@ -81,16 +88,24 @@
 {%- endmacro -%}
 
 {%- macro translate_column_value(prefix_key, column_name, alias='ts') -%}
+    {%- set language = var("language", "default") -%}
     left join (
-        select 
+        select
             string_id,
             coalesce(
-                max(case when language = '{{ var("language") }}' then text end),
+                {%- if language != 'default' %}
+                max(case when language = '{{ language }}' then text end),
+                {%- endif %}
                 max(case when language = 'default' then text end),
                 string_id
             ) as text
         from {{ source('tamanu', 'translated_strings') }}
-        where language in ('{{ var("language") }}', 'default')
+        where
+        {%- if language != 'default' %}
+            language in ('{{ language }}', 'default')
+        {%- else %}
+            language = 'default'
+        {%- endif %}
         group by string_id
     ) {{ alias }}
         on {{ alias }}.string_id = '{{ get_translation_prefix(prefix_key) }}.' || {{ column_name }}
