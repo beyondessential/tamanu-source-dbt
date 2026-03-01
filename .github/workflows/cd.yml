@@ -57,19 +57,6 @@ jobs:
           audience: sts.amazonaws.com
         env:
           BUCKET: s3://bes-data-tamanu-translations
-          
-      - name: Convert CSV to Excel
-        run: |
-          set -x
-          python -m pip install pandas openpyxl
-          python scripts/convert_translations_to_excel_file.py report_translations_standard.csv
-
-      - name: Publish translations to S3
-        run: |
-          set -x
-          VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION_WITH_X_PATCH=${VERSION%.*}.x
-          aws s3 cp report_translations_standard.xlsx s3://bes-data-tamanu-translations/$VERSION_WITH_X_PATCH/report-translations-v$VERSION_WITH_X_PATCH-standard.xlsx
 
       - name: Publish analytics metadata to S3
         run: |
@@ -100,11 +87,6 @@ jobs:
 
           echo "${{ secrets.META_CERT }}" > meta.crt
           echo "${{ secrets.META_KEY }}" > meta.key
-
-          # Publish translations
-          curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_X_PATCH/report-translations/any" \
-            --cert meta.crt --key meta.key \
-            --data-binary "https://tamanu-translations.data.bes.au/$VERSION_WITH_X_PATCH/report-translations-v$VERSION_WITH_X_PATCH-standard.xlsx"
 
           # Publish analytics metadata
           curl -v "${{ vars.META_URL }}/artifacts/$VERSION_WITH_X_PATCH/analytics-metadata/any" \

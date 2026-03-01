@@ -1,3 +1,18 @@
+{%- macro translate_label(string_id, language=var("language", "default")) -%}
+    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
+    {%- set translations = get_translations() -%}
+
+    {%- if full_string_id in translations -%}
+        {%- set lang_dict = translations[full_string_id] -%}
+        {{- lang_dict.get(language, lang_dict.get('default', string_id)) -}}
+    {%- elif string_id in translations -%}
+        {%- set lang_dict = translations[string_id] -%}
+        {{- lang_dict.get(language, lang_dict.get('default', string_id)) -}}
+    {%- else -%}
+        {{- string_id -}}
+    {%- endif -%}
+{%- endmacro -%}
+
 {%- macro get_translation_prefix(prefix_key) -%}
     {%- set mapping = {
         'APPOINTMENT_STATUSES': 'appointment.property.status',
@@ -52,95 +67,41 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro translate_value(prefix_key, value) -%}
-    {%- set language = var('language', 'default') -%}
+{%- macro translate_value(prefix_key, value, language=var("language", "default")) -%}
+    {%- set translations = get_translations() -%}
     {%- set prefix = get_translation_prefix(prefix_key) -%}
     {%- set string_id = prefix ~ '.' ~ value -%}
 
-    {%- set query -%}
-        select
-            coalesce(
-                {%- if language != 'default' %}
-                max(case when language = '{{ language }}' then text end),
-                {%- endif %}
-                max(case when language = 'default' then text end),
-                '{{ value }}'
-            ) as text
-        from {{ source('tamanu', 'translated_strings') }} ts
-        where string_id ilike '{{ string_id }}'
-        and
-        {%- if language != 'default' %}
-            language in ('{{ language }}', 'default')
-        {%- else %}
-            language = 'default'
-        {%- endif %}
-    {%- endset -%}
-    
-    {%- set result = run_query(query) -%}
-    
-    {%- if execute -%}
-        {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
-            {{- result.columns[0].values()[0] -}}
-        {%- else -%}
-            {{- value -}}
-        {%- endif -%}
+    {%- if string_id in translations -%}
+        {%- set lang_dict = translations[string_id] -%}
+        {{- lang_dict.get(language, lang_dict.get('default', value)) -}}
+    {%- else -%}
+        {{- value -}}
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro translate_column_value(prefix_key, column_name, alias='ts') -%}
-    {%- set language = var("language", "default") -%}
-    left join (
-        select
-            string_id,
-            coalesce(
-                {%- if language != 'default' %}
-                max(case when language = '{{ language }}' then text end),
-                {%- endif %}
-                max(case when language = 'default' then text end),
-                string_id
-            ) as text
-        from {{ source('tamanu', 'translated_strings') }}
-        where
-        {%- if language != 'default' %}
-            language in ('{{ language }}', 'default')
-        {%- else %}
-            language = 'default'
-        {%- endif %}
-        group by string_id
-    ) {{ alias }}
-        on {{ alias }}.string_id = '{{ get_translation_prefix(prefix_key) }}.' || {{ column_name }}
-{%- endmacro -%}
-
-{%- macro translate_label(string_id) -%}
-    {%- set language = var('language', 'default') -%}
-    {%- set full_string_id = 'report.reporting.' ~ string_id -%}
-    {%- set default_translations = get_default_translations() -%}
-
-    {%- if language == 'default' -%}
-        {%- if full_string_id in default_translations -%}
-            {{- default_translations[full_string_id] -}}
-        {%- else -%}
-            {{- string_id -}}
+{%- macro translate_column_value(prefix_key, column_name, language=var("language", "default")) -%}
+    {%- set translations = get_translations() -%}
+    {%- set prefix = get_translation_prefix(prefix_key) -%}
+    {%- set has_translations = false -%}
+    {%- for string_id, lang_dict in translations.items() -%}
+        {%- if string_id.startswith(prefix ~ '.') -%}
+            {%- set has_translations = true -%}
+            {%- break -%}
         {%- endif -%}
+    {%- endfor -%}
+    {%- if has_translations -%}
+    case
+    {%- for string_id, lang_dict in translations.items() -%}
+        {%- if string_id.startswith(prefix ~ '.') -%}
+            {%- set value = string_id.replace(prefix ~ '.', '') -%}
+            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") -%}
+        when {{ column_name }} = '{{ value }}' then '{{ translated_text }}'
+        {%- endif -%}
+    {%- endfor %}
+        else {{ column_name }}
+    end
     {%- else -%}
-        {%- set query -%}
-            select 
-                max(text) as text
-            from {{ source('tamanu', 'translated_strings') }}
-            where string_id = '{{ full_string_id }}'
-              and language = '{{ language }}'
-        {%- endset -%}
-
-        {%- set result = run_query(query) -%}
-
-        {%- if execute -%}
-            {%- if result.rows | length > 0 and result.columns[0].values()[0] is not none -%}
-                {{- result.columns[0].values()[0] -}}
-            {%- elif full_string_id in default_translations -%}
-                {{- default_translations[full_string_id] -}}
-            {%- else -%}
-                {{- string_id -}}
-            {%- endif -%}
-        {%- endif -%}
+    {{ column_name }}
     {%- endif -%}
 {%- endmacro -%}
