@@ -13,6 +13,7 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 ## Do Not Review
 
 - **`models/sources/`** — copied verbatim from an external repository. Do not modify, review, or suggest changes to files in this directory.
+- **`compiled/`** — generated output artefacts. Do not review or suggest changes to files in this directory.
 
 ## Essential Rules
 
