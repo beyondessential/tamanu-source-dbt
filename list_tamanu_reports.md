@@ -586,6 +586,21 @@ Status, Test category
 
 ---
 
+### Sensitive medication dispensed summary
+
+**Report Description**
+
+This report shows count of doses dispensed for a given drug within a specified date range for prescriptions from encounters at sensitive facilities. Only prescriptions selected for discharge are included.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
+
+
+---
+
 ### Sensitive prescription line list
 
 **Report Description**
