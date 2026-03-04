@@ -48,44 +48,44 @@ encounter_changes as (
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or change_type = 'location') as location_datetimes,
+        ) filter (where change_type isnull or 'location' = any(change_type)) as location_datetimes,
         array_agg(
             location_id
             order by datetime
-        ) filter (where change_type isnull or change_type = 'location') as location_ids,
+        ) filter (where change_type isnull or 'location' = any(change_type)) as location_ids,
         string_agg(
             location_name, ', '
             order by datetime
-        ) filter (where change_type isnull or change_type = 'location') as locations,
-        
+        ) filter (where change_type isnull or 'location' = any(change_type)) as locations,
+
         -- Location group changes: tracks location group changes (only when group actually changes)
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
+        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
         array_agg(
             location_group_id
             order by datetime
-        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_group_ids,
+        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_ids,
         string_agg(
             location_group_name, ', '
             order by datetime
-        ) filter (where change_type isnull or (change_type = 'location' and location_group_id is distinct from prev_location_group_id)) as location_groups,
-        
+        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_groups,
+
         -- Department changes: tracks all department changes throughout the encounter
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or change_type = 'department') as department_datetimes,
+        ) filter (where change_type isnull or 'department' = any(change_type)) as department_datetimes,
         array_agg(
             department_id
             order by datetime
-        ) filter (where change_type isnull or change_type = 'department') as department_ids,
+        ) filter (where change_type isnull or 'department' = any(change_type)) as department_ids,
         string_agg(
             department_name, ', '
             order by datetime
-        ) filter (where change_type isnull or change_type = 'department') as departments,
-        
+        ) filter (where change_type isnull or 'department' = any(change_type)) as departments,
+
         -- Encounter type changes: tracks encounter type progression (emergency types)
         string_agg(
             case
@@ -94,16 +94,16 @@ encounter_changes as (
                 when encounter_type = 'emergency' then 'Emergency short stay'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_emergency,
-        
+        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_emergency,
+
         -- Encounter type changes: tracks encounter type progression (inpatient types)
         string_agg(
             case
                 when encounter_type = 'admission' then 'Hospital admission'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_inpatient,
-        
+        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_inpatient,
+
         -- Encounter type changes: tracks encounter type progression (outpatient types)
         string_agg(
             case
@@ -113,7 +113,11 @@ encounter_changes as (
                 when encounter_type = 'vaccination' then 'Vaccination'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or change_type = 'encounter_type') as encounter_type_outpatient
+        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
+
+        -- Encountering clinician: actor who created the initial encounter record
+        min(updated_by_id) filter (where change_type is null) as encountering_clinician_id,
+        min(updated_by_name) filter (where change_type is null) as encountering_clinician
     from encounter_history_consolidated
     group by encounter_id
 ),
@@ -131,12 +135,9 @@ encounter_diagnoses as (
             E'\n'
             order by ed.is_primary desc, ed.datetime asc
         ) as diagnoses
-    from {{ ref('encounters') }} e
-    join {{ ref('encounter_diagnoses') }} ed
-        on ed.encounter_id = e.id
+    from {{ ref('encounter_diagnoses') }} ed
     join {{ ref('reference_data') }} d
         on d.id = ed.diagnosis_id
-    where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
 ),
 
@@ -222,6 +223,38 @@ encounter_lab_requests as (
     group by lr.encounter_id
 ),
 
+notes_raw as (
+    select
+        id,
+        datetime,
+        content,
+        note_type,
+        record_type,
+        record_id,
+        authored_by_id,
+        on_behalf_of_id,
+        updated_note_id,
+        visibility_status
+    from {{ ref('notes') }}
+    where record_type in ('Encounter', 'ImagingRequest')
+),
+
+encounter_notes_deduped as (
+    select
+        id,
+        datetime,
+        content,
+        note_type,
+        record_id,
+        authored_by_id,
+        on_behalf_of_id,
+        visibility_status,
+        row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
+    from notes_raw
+    where record_type = 'Encounter'
+        and note_type != 'system'
+),
+
 imaging_request_areas as (
     select
         ir.encounter_id,
@@ -262,7 +295,7 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} area
         on area.id = ira.area_id
-    left join {{ ref('notes') }} n
+    left join notes_raw n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -284,14 +317,14 @@ encounter_notes as (
         n.record_id as encounter_id,
         string_agg(concat(
             'Note type: ',
-            coalesce(ts.text, n.note_type),
+            {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type') }},
             ', Content: ', n.content,
             ', Note date: ', to_char(n.datetime, '{{ var("datetime_format") }}')
         ),
         E'\n'
         order by n.datetime) as notes
-    from {{ ref('int__encounter_notes_final') }} n
-    {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type', 'ts') }}
+    from encounter_notes_deduped n
+    where n.row_number = 1
     group by n.record_id
 )
 
@@ -337,8 +370,8 @@ select
                     )
                 )
     end as triage_wait_time,
-    ehc.updated_by_id as encountering_clinician_id,
-    ehc.updated_by_name as encountering_clinician,
+    ec.encountering_clinician_id,
+    ec.encountering_clinician,
     c.id as supervising_clinician_id,
     c.display_name as supervising_clinician,
     dp.id as discharging_department_id,
@@ -384,7 +417,6 @@ left join {{ ref('users') }} c on c.id = e.clinician_id
 join {{ ref('departments') }} dp on dp.id = e.department_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 join encounter_changes ec on ec.encounter_id = e.id
-join encounter_history_consolidated ehc on ehc.encounter_id = e.id and ehc.change_type is null
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 left join {{ ref('discharges') }} d on d.encounter_id = e.id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = e.patient_id

@@ -5,11 +5,11 @@ with admission_location_log as (
         eh.datetime as start_datetime,
         eh.location_id,
         case
-            when eh.change_type is null or eh.change_type = 'encounter_type' then 'admission'
+            when eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'
             else 'transfer-in'
         end as type
     from {{ ref('encounter_history') }} eh
-    where (eh.change_type isnull or eh.change_type in ('location', 'encounter_type'))
+    where (eh.change_type isnull or eh.change_type && array['location', 'encounter_type'])
         and eh.encounter_type = 'admission'
 )
 

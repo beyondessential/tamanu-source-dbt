@@ -1,18 +1,28 @@
+# IDE and editor files
 .claude/
-.clinerules
-.env
+CLAUDE.md
 .idea
 .vscode
+
+# OS files
 .DS_Store
+
+# Environment and config
+.env
+.user.yml
+
+# Python
 __pycache__
-compiled/*/*.json
+
+# Dependencies
 dbt_packages/
+package-lock.yml
+uv.lock
+
+# Build and generated files
+compiled/*/*.json
 /logs/
 macros/default_translations.sql
 models/surveys/
 target/
-package-lock.yml
-report_translations_standard.xlsx
-.user.yml
-uv.lock
 .temp/

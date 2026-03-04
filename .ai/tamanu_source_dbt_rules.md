@@ -10,12 +10,16 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 **datasets** - Denormalised, user-friendly views
 **reports** - Apply translations, date formatting, and report configs
 
+## Do Not Review
+
+- **`models/sources/`** — copied verbatim from an external repository. Do not modify, review, or suggest changes to files in this directory.
+- **`compiled/`** — generated output artefacts. Do not review or suggest changes to files in this directory.
+
 ## Essential Rules
 
 ### Documentation
 - **Mandatory `.yml`** for bases/surveys/datasets (not reports)
 - **Mandatory `.json` config** for each report in `models/reports/config/`
-- Use Australian English spelling
 - Document all columns
 
 ### Code Quality
@@ -23,6 +27,7 @@ A dbt project transforming Tamanu healthcare data: sources/logs → bases/survey
 - Run `dbt test --profiles-dir config` before committing
 - Test SQL syntax before committing
 - **No ORDER BY** in bases/surveys/datasets (reports only)
+- **Before deleting a model**, check for downstream refs with `grep -r "ref('<model_name>')" models/`
 
 ### Date/Time Formatting
 Use centralised variables from `dbt_project.yml`:
@@ -37,29 +42,9 @@ Use centralised variables from `dbt_project.yml`:
 
 **Storage**: `report_translations_standard.csv` → generates `macros/default_translations.sql`
 **Usage**: `translate_label('field_name')` (auto-prefixes with `report.reporting.`)
-**Rules**: Use concept prefixes (patient_name, encounter_date) not generic names (name, date)
-
-## Common Pitfalls
-
-- ❌ ORDER BY in bases/surveys/datasets
-- ❌ Hard-coded date formats
-- ❌ Missing documentation
-- ❌ Generic translation labels
-- ❌ American spelling
-- ❌ Modifying sources/logs
-- ❌ Deleting without checking dependencies
 
 ## File Naming
 
 - Models: `{table_name}.sql`, `{table_name}.yml`
 - Reports: `{description}-line-list.sql`, config in `models/reports/config/`
 - Never edit `list_tamanu_reports.md` (auto-generated)
-
-## Git Workflow
-
-**Main branch**: `main` (protected)
-**Feature branches**: Descriptive names (e.g., `feature/patient-report`, `fix/translation-bug`)
-**Commit messages**: Imperative mood (e.g., "Add report", "Fix bug")
-
-**Before committing**: sqlfluff fix → dbt test → validate scripts
-**Pull requests**: Clear description, testing notes, request review
