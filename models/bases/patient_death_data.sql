@@ -16,7 +16,6 @@ select
     hours_survived_since_birth,
     carrier_age,
     carrier_pregnancy_weeks,
-    carrier_existing_condition_id,
     outside_health_facility as was_outside_health_facility,
     primary_cause_time_after_onset as primary_cause_mins_after_onset,
     primary_cause_condition_id,
@@ -30,7 +29,13 @@ select
     clinician_id as recorded_by_id,
     facility_id,
     is_final,
-    visibility_status
+    visibility_status,
+    autopsy_requested,
+    autopsy_findings_used,
+    manner_of_death_description,
+    pregnancy_moment,
+    multiple_pregnancy,
+    mother_condition_description
 from {{ resolve_input_model('patient_death_data') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
