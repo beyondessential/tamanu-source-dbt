@@ -96,7 +96,7 @@ select
     pdd.birth_weight,
     pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
     pdd.carrier_age as age_of_mother,
-    carrier_condition.name as condition_in_mother_affecting_fetus_or_newborn,
+    pdd.mother_condition_description as condition_in_mother_affecting_fetus_or_newborn,
     case
         when pdd.was_within_day_of_birth then 'Yes'
         else 'No'
@@ -129,8 +129,6 @@ left join {{ ref("reference_data") }} other_condition_4
     on other_condition_4.id = cdc.other_conditions[4]
 left join {{ ref("reference_data") }} surgery_reason
     on surgery_reason.id = pdd.last_surgery_reason_id
-left join {{ ref("reference_data") }} carrier_condition
-    on carrier_condition.id = pdd.carrier_existing_condition_id
 left join encounters_with_death ewd
     on ewd.patient_id = p.id
 left join {{ ref("facilities") }} facility
