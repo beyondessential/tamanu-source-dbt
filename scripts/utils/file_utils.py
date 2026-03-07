@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import stat
 from pathlib import Path
 
 import boto3
@@ -98,17 +99,22 @@ def ensure_directory_exists(dir_path):
     os.makedirs(dir_path, exist_ok=True)
 
 
-def copy_files_from_directory(source_dir, destination_dir):
+def copy_files_from_directory(source_dir, destination_dir, clear_destination=False):
     """
     Copies all files from one directory to another.
 
     Args:
         source_dir (str): The path to the source directory.
         destination_dir (str): The path to the destination directory.
+        clear_destination (bool): If True, clears the destination directory before copying (full refresh).
+            If False, copies files into the existing destination (append). Defaults to False.
 
     Exits the program if there is an error copying the files.
     """
     try:
+        if clear_destination and os.path.exists(destination_dir):
+            shutil.rmtree(destination_dir)
+            os.makedirs(destination_dir)
         for file_name in os.listdir(source_dir):
             source_file = os.path.join(source_dir, file_name)
             dest_file = os.path.join(destination_dir, file_name)
@@ -166,7 +172,7 @@ def remove_directory(dir_path):
     """
     try:
         if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+            shutil.rmtree(dir_path, onerror=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
         else:
             cprint(f"Error: Directory not found: {dir_path}", "error")
     except Exception as e:
