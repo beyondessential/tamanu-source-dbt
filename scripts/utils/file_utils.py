@@ -112,8 +112,8 @@ def copy_files_from_directory(source_dir, destination_dir, clear_destination=Fal
     Exits the program if there is an error copying the files.
     """
     try:
-        if clear_destination and os.path.exists(destination_dir):
-            shutil.rmtree(destination_dir)
+        if clear_destination:
+            shutil.rmtree(destination_dir, ignore_errors=True)
             os.makedirs(destination_dir)
         for file_name in os.listdir(source_dir):
             source_file = os.path.join(source_dir, file_name)
@@ -172,7 +172,7 @@ def remove_directory(dir_path):
     """
     try:
         if os.path.exists(dir_path):
-            shutil.rmtree(dir_path, onerror=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
+            shutil.rmtree(dir_path, onexc=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
         else:
             cprint(f"Error: Directory not found: {dir_path}", "error")
     except Exception as e:
