@@ -28,8 +28,8 @@ def main():
     cprint(f"Cloning branch '{branch_name}' from repository '{REPO_URL}'", "info")
 
     execute_command(f"git clone --branch {branch_name} --depth 1 {REPO_URL} {TEMP_DIR}")
-    copy_files_from_directory(REPO_SOURCE_DIR, DBT_SOURCE_DIR)
-    copy_files_from_directory(REPO_LOG_DIR, DBT_LOG_DIR)
+    copy_files_from_directory(REPO_SOURCE_DIR, DBT_SOURCE_DIR, clear_destination=True)
+    copy_files_from_directory(REPO_LOG_DIR, DBT_LOG_DIR, clear_destination=True)
 
     # Delete overview.md from the sources directory
     overview_file = DBT_SOURCE_DIR / "overview.md"
@@ -37,7 +37,6 @@ def main():
         overview_file.unlink()
         cprint("Deleted overview.md from the sources directory.", "success")
 
-    remove_directory(TEMP_DIR)
     cprint("\nFiles copied successfully!", "success")
 
 
@@ -47,3 +46,5 @@ if __name__ == "__main__":
     except Exception as err:
         cprint(f"Error: {err}", "error")
         sys.exit(1)
+    finally:
+        remove_directory(TEMP_DIR)
