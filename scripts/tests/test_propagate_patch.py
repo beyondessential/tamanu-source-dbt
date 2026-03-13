@@ -144,9 +144,9 @@ def test_replace_revision_idempotent():
 
 
 def test_replace_revision_only_updates_tamanu_block():
-    # Ensures the tamanu block update doesn't bleed into a preceding package
+    # Ensures the tamanu block update doesn't bleed into the preceding dbt-utils package
     result = replace_revision(PACKAGES_OTHER_FIRST, "v2.49.7")
     lines = result.splitlines()
-    dbt_utils_revision = next(l for l in lines if "v1.2.0" in l or "v2.49.7" in l and "dbt-utils" not in l)
-    # dbt-utils revision line should still contain v1.2.0
-    assert any("v1.2.0" in l for l in lines)
+    dbt_utils_line = next(l for l in lines if "revision" in l and "v1.2.0" in l)
+    assert "v1.2.0" in dbt_utils_line
+    assert "v2.49.7" not in dbt_utils_line
