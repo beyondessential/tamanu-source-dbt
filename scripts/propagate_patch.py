@@ -68,12 +68,32 @@ def find_revision(packages_content: str) -> str | None:
 
 
 def replace_revision(packages_content: str, new_revision: str) -> str:
-    """Replace the revision value, preserving surrounding quote style."""
-    return re.sub(
-        r"(revision:\s*)([\"']?)(v[\d.]+)([\"']?)",
-        lambda m: m.group(1) + m.group(2) + new_revision + m.group(4),
-        packages_content,
-    )
+    """Replace the revision for the tamanu-source-dbt package only.
+
+    Walks lines to find the tamanu-source-dbt git block, then replaces only
+    the revision line within that block. Preserves surrounding quote style.
+    Leaves any other packages' revision fields untouched.
+    """
+    lines = packages_content.splitlines(keepends=True)
+    in_target_block = False
+    result = []
+    for line in lines:
+        if "tamanu-source-dbt" in line:
+            in_target_block = True
+        elif in_target_block and re.match(r"\s*-\s", line):
+            # New package entry — exit the block without having found revision
+            in_target_block = False
+
+        if in_target_block and re.match(r"\s*revision:\s*", line):
+            line = re.sub(
+                r"(revision:\s*)([\"']?)(v[\d.]+)([\"']?)",
+                lambda m: m.group(1) + m.group(2) + new_revision + m.group(4),
+                line,
+            )
+            in_target_block = False  # revision replaced, no need to continue
+
+        result.append(line)
+    return "".join(result)
 
 
 def branch_exists(repo: str, branch: str) -> bool:
@@ -116,20 +136,23 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
 
     branch = f"chore/bump-tamanu-source-dbt-{new_tag}"
 
+    # Check for an existing open PR before touching any branches
+    org = repo.split("/")[0]
+    prs = gh_api(f"repos/{repo}/pulls?head={org}:{branch}&state=open")
+    if prs:
+        print(f"  PR already open: {prs[0]['html_url']} — skipping")
+        return
+
     # Get default branch head SHA
     repo_info = gh_api(f"repos/{repo}")
     default_branch = repo_info["default_branch"]
     ref_info = gh_api(f"repos/{repo}/git/ref/heads/{default_branch}")
     head_sha = ref_info["object"]["sha"]
 
-    # Create or reset branch
+    # Create branch (no force-reset — if it exists without an open PR it may
+    # have been manually modified; reuse it rather than discarding changes)
     if branch_exists(repo, branch):
-        gh_api(
-            f"repos/{repo}/git/refs/heads/{branch}",
-            method="PATCH",
-            data={"sha": head_sha, "force": True},
-        )
-        print(f"  ♻️  Reset existing branch {branch}")
+        print(f"  ♻️  Branch {branch} already exists, reusing")
     else:
         gh_api(
             f"repos/{repo}/git/refs",
@@ -138,7 +161,7 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         )
         print(f"  🌿 Created branch {branch}")
 
-    # Get file SHA on the new branch (may differ from default branch if branch was reset)
+    # Get file SHA on the branch
     _, file_sha = get_packages_yml(repo, ref=branch)
 
     # Commit updated packages.yml
@@ -155,13 +178,6 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         },
     )
     print("  📝 Committed packages.yml update")
-
-    # Check for existing open PR on this branch
-    org = repo.split("/")[0]
-    prs = gh_api(f"repos/{repo}/pulls?head={org}:{branch}&state=open")
-    if prs:
-        print(f"  PR already open: {prs[0]['html_url']}")
-        return
 
     # Open PR
     pr = gh_api(
