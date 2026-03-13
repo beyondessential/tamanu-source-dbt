@@ -20,8 +20,12 @@ dependencies = [
     "numpy>=2.2.6",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["scripts/tests"]
+pythonpath = ["scripts"]
+
 [tool.uv]
-dev-dependencies = []
+dev-dependencies = ["pytest"]
 
 # Don't build this as a package - it's a dbt project
 [tool.hatch.build.targets.wheel]

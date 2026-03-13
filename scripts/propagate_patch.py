@@ -100,16 +100,18 @@ def branch_exists(repo: str, branch: str) -> bool:
     try:
         gh_api(f"repos/{repo}/git/ref/heads/{branch}")
         return True
-    except RuntimeError:
-        return False
+    except RuntimeError as e:
+        if "404" in str(e):
+            return False
+        raise
 
 
 def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
     print(f"\n{'='*60}")
     print(f"Checking {repo}...")
 
-    content, _ = get_packages_yml(repo)
-    current_revision = find_revision(content)
+    default_content, _ = get_packages_yml(repo)
+    current_revision = find_revision(default_content)
 
     if not current_revision:
         print("  ⏭️  No tamanu-source-dbt package found, skipping")
@@ -149,9 +151,10 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
     ref_info = gh_api(f"repos/{repo}/git/ref/heads/{default_branch}")
     head_sha = ref_info["object"]["sha"]
 
-    # Create branch (no force-reset — if it exists without an open PR it may
-    # have been manually modified; reuse it rather than discarding changes)
+    # Create branch or reuse existing one
     if branch_exists(repo, branch):
+        # Fetch content from the branch — it may have been manually modified
+        branch_content, file_sha = get_packages_yml(repo, ref=branch)
         print(f"  ♻️  Branch {branch} already exists, reusing")
     else:
         gh_api(
@@ -159,13 +162,17 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
             method="POST",
             data={"ref": f"refs/heads/{branch}", "sha": head_sha},
         )
+        # Branch was just created from head_sha, content is identical to default branch
+        branch_content, file_sha = default_content, get_packages_yml(repo, ref=branch)[1]
         print(f"  🌿 Created branch {branch}")
 
-    # Get file SHA on the branch
-    _, file_sha = get_packages_yml(repo, ref=branch)
-
     # Commit updated packages.yml
-    updated_content = replace_revision(content, new_tag)
+    updated_content = replace_revision(branch_content, new_tag)
+    if updated_content == branch_content:
+        raise RuntimeError(
+            f"replace_revision made no change — revision in packages.yml may be a "
+            f"branch name or commit SHA rather than a semver tag; cannot auto-bump"
+        )
     updated_b64 = base64.b64encode(updated_content.encode()).decode()
     gh_api(
         f"repos/{repo}/contents/packages.yml",
