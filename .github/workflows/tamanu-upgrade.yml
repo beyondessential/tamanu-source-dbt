@@ -149,7 +149,7 @@ jobs:
           git push origin "$BRANCH"
 
           gh pr create \
-            --title "Upgrade Tamanu version to $DBT_VERSION" \
+            --title "feat: Upgrade Tamanu version to $DBT_VERSION" \
             --body "## Summary
           Automated upgrade for Tamanu version \`$DBT_VERSION\`
 
