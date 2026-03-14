@@ -1,9 +1,9 @@
 with appointment_creators as (
-    select distinct on (appointment_id)
+    select
         appointment_id,
         created_by_user_id
     from {{ ref('outpatient_appointments_change_logs') }}
-    order by appointment_id, change_sequence
+    where change_sequence = 1
 )
 
 select

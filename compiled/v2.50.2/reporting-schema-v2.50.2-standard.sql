@@ -2881,11 +2881,11 @@ left join "reporting"."users" resolving_clinician
 );
 create or replace view "reporting"."ds__outpatient_appointments" as (
 with appointment_creators as (
-    select distinct on (appointment_id)
+    select
         appointment_id,
         created_by_user_id
     from "reporting"."outpatient_appointments_change_logs"
-    order by appointment_id, change_sequence asc
+    where change_sequence = 1
 )
 
 select
@@ -2923,7 +2923,8 @@ from "reporting"."outpatient_appointments" a
 join "reporting"."patients" p on p.id = a.patient_id
 left join "reporting"."users" u on u.id = a.clinician_id
 join "reporting"."location_groups" lg on lg.id = a.location_group_id
-join "reporting"."facilities" f on f.id = lg.facility_id
+join "reporting"."facilities" f
+    on f.id = lg.facility_id
     and not f.is_sensitive
 left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
 left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
