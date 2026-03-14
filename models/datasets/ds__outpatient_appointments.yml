@@ -97,4 +97,3 @@ models:
       - name: created_by
         data_type: character varying(255)
         description: Display name of the user who created the appointment.
-        
