@@ -26,7 +26,8 @@ models:
         description: "{{ doc('encounter_diagnoses__certainty') }}"
         tests:
           - dbt_utils.not_accepted_values:
-              values: ['disproven', 'error']
+              arguments:
+                values: ['disproven', 'error']
       - name: diagnosed_by_id
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__clinician_id') }}"
