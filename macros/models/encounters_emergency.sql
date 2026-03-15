@@ -1,4 +1,4 @@
-{% macro encounters_emergency_dataset(is_sensitive) %}
+{% macro encounters_emergency_dataset(is_sensitive=false) %}
 
 select
     t.id as triage_id,

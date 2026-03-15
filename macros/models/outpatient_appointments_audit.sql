@@ -147,7 +147,7 @@ left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
 left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id
 -- Join to facility for filtering by sensitivity
-join {{ ref('facilities') }} f on f.id = lg.facility_id
+left join {{ ref('facilities') }} f on f.id = lg.facility_id
     and f.is_sensitive = {{ is_sensitive }}
 
 {% endmacro %}
