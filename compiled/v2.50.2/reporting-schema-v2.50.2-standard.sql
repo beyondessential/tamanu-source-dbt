@@ -3243,6 +3243,14 @@ left join "reporting"."reference_data" bt on bt.id = a.booking_type_id
 create or replace view "reporting"."ds__sensitive_outpatient_appointments" as (
 
 
+with appointment_creators as (
+    select
+        appointment_id,
+        created_by_user_id
+    from "reporting"."outpatient_appointments_change_logs"
+    where change_sequence = 1
+)
+
 select
     p.id as patient_id,
     p.display_id,
@@ -3271,7 +3279,9 @@ select
     a.interval,
     a.days_of_week,
     a.frequency,
-    a.nth_weekday
+    a.nth_weekday,
+    ac.created_by_user_id,
+    creator.display_name as created_by
 from "reporting"."outpatient_appointments" a
 join "reporting"."patients" p on p.id = a.patient_id
 left join "reporting"."users" u on u.id = a.clinician_id
@@ -3282,6 +3292,8 @@ left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
 left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
 left join "reporting"."reference_data" vil on vil.id = p.village_id
 left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
+left join appointment_creators ac on ac.appointment_id = a.id
+left join "reporting"."users" creator on creator.id = ac.created_by_user_id
 
 
 );
@@ -4899,6 +4911,14 @@ left join "reporting"."reference_data" bt on bt.id = a.booking_type_id
 create or replace view "reporting"."ds__outpatient_appointments" as (
 
 
+with appointment_creators as (
+    select
+        appointment_id,
+        created_by_user_id
+    from "reporting"."outpatient_appointments_change_logs"
+    where change_sequence = 1
+)
+
 select
     p.id as patient_id,
     p.display_id,
@@ -4927,7 +4947,9 @@ select
     a.interval,
     a.days_of_week,
     a.frequency,
-    a.nth_weekday
+    a.nth_weekday,
+    ac.created_by_user_id,
+    creator.display_name as created_by
 from "reporting"."outpatient_appointments" a
 join "reporting"."patients" p on p.id = a.patient_id
 left join "reporting"."users" u on u.id = a.clinician_id
@@ -4938,6 +4960,8 @@ left join "reporting"."patient_additional_data" pd on pd.patient_id = p.id
 left join "reporting"."reference_data" billing on billing.id = pd.patient_billing_type_id
 left join "reporting"."reference_data" vil on vil.id = p.village_id
 left join "reporting"."reference_data" apt on apt.id = a.appointment_type_id
+left join appointment_creators ac on ac.appointment_id = a.id
+left join "reporting"."users" creator on creator.id = ac.created_by_user_id
 
 
 );

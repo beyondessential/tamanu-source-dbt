@@ -92,3 +92,9 @@ models:
       - name: days_of_week
         data_type: array
         description: "{{ doc('appointment_schedules__days_of_week') }}"
+      - name: created_by_user_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who created the appointment, sourced from the earliest change log entry."
+      - name: created_by
+        data_type: character varying(255)
+        description: Display name of the user who created the appointment.
