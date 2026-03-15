@@ -1,0 +1,64 @@
+{
+  "query": "replace this",
+  "name": "Sensitive admissions line list",
+  "status": "published",
+  "notes": "This report generates a list of all patients with a hospital admission started within the selected date range at sensitive facilities. The report includes both active and discharged admissions. Patients are listed in order of most recent admission by admission date and time. The discharge date is displayed if the patient has been discharged, \notherwise if the encounter is active this column will appear blank. \n\nThe below information is included for each hospital admission:\n- List of all assigned departments and the date and time a patient was assigned to each department.\n- List of all assigned areas and the date and time a patient was assigned to each area.\n- List of all assigned locations and the date and time a patient was assigned to each location.\n- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed' and 'Suspected'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. \n",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Patient billing type",
+        "name": "patientBillingTypeId",
+        "suggesterEndpoint": "patientBillingType"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Admitting clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Admission status",
+        "name": "admissionStatus",
+        "options": [
+          {
+            "label": "Active",
+            "value": "active"
+          },
+          {
+            "label": "Discharged",
+            "value": "discharged"
+          }
+        ]
+      }
+    ]
+  }
+}

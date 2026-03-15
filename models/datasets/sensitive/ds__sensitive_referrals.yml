@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: ds__sensitive_referrals
+    description: Sensitive facility referrals
+    config:
+      tags:
+        - clinical
+        - restricted
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: diagnoses
+        data_type: character varying(255)
+        description: "{{ doc('generic__diagnoses') }} at the time of referral."
+      - name: referral_type
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} for the referral."
+      - name: referring_doctor_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__examiner_id') }}"
+      - name: referring_doctor_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who referred the patient."
+      - name: referral_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__date') }} in encounter_diagnoses."
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('referrals__status') }}"
+      - name: department
+        data_type: character varying(255)
+        description: "{{ doc('generic__department') }} from which the patient was referred."
