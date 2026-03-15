@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: ds__sensitive_location_bookings
+    description: Sensitive facility location bookings
+    config:
+      tags:
+        - clinical
+        - restricted
+    columns:
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: age
+        data_type: integer
+        description: "{{ doc('generic__patients_age') }} at the time of the booking."
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: billing_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__booking_type_id') }}"
+      - name: billing_type
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the billing type."
+      - name: booking_start_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__start_time') }}"
+      - name: booking_end_datetime
+        data_type: timestamp
+        description: "{{ doc('appointments__start_time') }}"
+      - name: booking_type_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__booking_type_id') }}"
+      - name: booking_type
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the booking type."
+      - name: booking_status
+        data_type: character varying(255)
+        description: "{{ doc('appointments__status') }}"
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__clinician_id') }}"
+      - name: clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who booked the location."
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__location_group_id') }}"
+      - name: location_group
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} where the appointment will take place."
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__location_id') }}"
+      - name: location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} where the appointment will take place."
