@@ -141,13 +141,13 @@ left join {{ ref('users') }} clinician on clinician.id = fc.clinician_id
 left join {{ ref('users') }} prev_clinician on prev_clinician.id = fc.prev_clinician_id
 left join {{ ref('users') }} creator on creator.id = fc.created_by_user_id
 left join {{ ref('users') }} modifier on modifier.id = fc.modified_by_user_id
-left join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
+join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
 left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id
 -- Join to facility for filtering by sensitivity
-left join {{ ref('facilities') }} f on f.id = lg.facility_id
+join {{ ref('facilities') }} f on f.id = lg.facility_id
     and f.is_sensitive = {{ is_sensitive }}
 
 {% endmacro %}
