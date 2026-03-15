@@ -1,0 +1,4 @@
+# IS DISTINCT FROM in CASE WHEN causes SQLFluff PRS errors (known parser limitation).
+# The underlying SQL is valid PostgreSQL - the macro source is linted via macros/models/.sqlfluff.
+models/datasets/standard/ds__outpatient_appointments_audit.sql
+models/datasets/sensitive/ds__sensitive_outpatient_appointments_audit.sql

@@ -1,0 +1,153 @@
+{% macro outpatient_appointments_audit_dataset(is_sensitive=false) %}
+
+-- Outpatient Appointments Audit Dataset
+-- This dataset tracks changes/modifications to outpatient appointments
+-- Each row represents a modification event (excludes initial creation)
+--
+-- Included changes:
+--   - Status changed to 'Cancelled' (individual cancellations only)
+--   - Changes to: start/end datetime, clinician, location group, appointment type, priority
+--
+-- Excluded changes:
+--   - Initial appointment creation (change_sequence = 1)
+--   - Status-only changes (unless changing to 'Cancelled')
+--   - Appointments automatically cancelled when their schedule was cancelled
+--     (i.e., bulk cancellations via "cancel this and all future appointments")
+--
+-- change_number: starts from 1 for the first modification, increments for subsequent changes
+--
+-- Note: schedule_id never changes on existing appointments in Tamanu.
+-- When a schedule is modified, old appointments are cancelled and new ones are created.
+
+with change_evaluation as (
+    select
+        cl.*,
+        -- Determine if this change has meaningful field modifications
+        case
+            -- Status changed to Cancelled
+            when cl.status = 'Cancelled' and cl.prev_status is distinct from 'Cancelled' then true
+            -- Any non-status fields changed
+            when (
+                cl.prev_start_datetime is distinct from cl.start_datetime
+                or cl.prev_end_datetime is distinct from cl.end_datetime
+                or cl.prev_clinician_id is distinct from cl.clinician_id
+                or cl.prev_location_group_id is distinct from cl.location_group_id
+                or cl.prev_appointment_type_id is distinct from cl.appointment_type_id
+                or cl.prev_is_high_priority is distinct from cl.is_high_priority
+            ) then true
+            else false
+        end as is_meaningful_change
+    from {{ ref('outpatient_appointments_change_logs') }} cl
+    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id
+    where
+        -- Exclude appointments that were automatically cancelled when the schedule was cancelled
+        -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
+        not (
+            cl.status = 'Cancelled'
+            and s.cancelled_at_date is not null
+            and cl.start_datetime::date > s.cancelled_at_date::date
+        )
+),
+
+numbered_changes as (
+    select
+        ce.*,
+        -- Assign change number: starts from 1 for first modification
+        row_number() over (
+            partition by ce.appointment_id
+            order by ce.modified_datetime
+        ) as change_number
+    from change_evaluation ce
+    where ce.is_meaningful_change = true
+        and ce.change_sequence > 1  -- Exclude initial creation
+)
+
+select
+    fc.change_id,
+    fc.appointment_id,
+    fc.change_number,
+    -- Patient details
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    -- Current appointment details
+    fc.start_datetime as appointment_start_datetime,
+    fc.end_datetime as appointment_end_datetime,
+    apt.name as appointment_type,
+    fc.appointment_type_id,
+    clinician.display_name as clinician,
+    fc.clinician_id,
+    lg.name as location_group,
+    fc.location_group_id,
+    case when fc.is_high_priority then 'Yes' else 'No' end as priority,
+    fc.schedule_id,
+    case
+        when fc.schedule_id is not null then 'Yes'
+        else 'No'
+    end as is_repeating,
+    -- Modification details
+    creator.display_name as created_by,
+    fc.created_by_user_id,
+    modifier.display_name as modified_by,
+    fc.modified_by_user_id,
+    fc.modified_datetime,
+    case when fc.status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
+    -- Previous appointment details (only shown if different from current)
+    case
+        when fc.prev_start_datetime is distinct from fc.start_datetime
+        then fc.prev_start_datetime
+    end as prev_start_datetime,
+    case
+        when fc.prev_end_datetime is distinct from fc.end_datetime
+        then fc.prev_end_datetime
+    end as prev_end_datetime,
+    case
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
+        then prev_apt.name
+    end as prev_appointment_type,
+    case
+        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
+        then fc.prev_appointment_type_id
+    end as prev_appointment_type_id,
+    case
+        when fc.prev_clinician_id is distinct from fc.clinician_id
+        then prev_clinician.display_name
+    end as prev_clinician,
+    case
+        when fc.prev_clinician_id is distinct from fc.clinician_id
+        then fc.prev_clinician_id
+    end as prev_clinician_id,
+    case
+        when fc.prev_location_group_id is distinct from fc.location_group_id
+        then prev_lg.name
+    end as prev_location_group,
+    case
+        when fc.prev_location_group_id is distinct from fc.location_group_id
+        then fc.prev_location_group_id
+    end as prev_location_group_id,
+    case
+        when fc.prev_is_high_priority is not null
+            and fc.prev_is_high_priority is distinct from fc.is_high_priority
+        then case when fc.prev_is_high_priority then 'Yes' else 'No' end
+    end as prev_priority,
+    -- Facility details for filtering
+    f.id as facility_id,
+    f.name as facility
+from numbered_changes fc
+join {{ ref('patients') }} p on p.id = fc.patient_id
+left join {{ ref('users') }} clinician on clinician.id = fc.clinician_id
+left join {{ ref('users') }} prev_clinician on prev_clinician.id = fc.prev_clinician_id
+left join {{ ref('users') }} creator on creator.id = fc.created_by_user_id
+left join {{ ref('users') }} modifier on modifier.id = fc.modified_by_user_id
+left join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
+left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
+left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
+left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
+left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = fc.schedule_id
+-- Join to facility for filtering by sensitivity
+join {{ ref('facilities') }} f on f.id = lg.facility_id
+    and f.is_sensitive = {{ is_sensitive }}
+
+{% endmacro %}
