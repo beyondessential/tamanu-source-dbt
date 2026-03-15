@@ -34,6 +34,6 @@ jobs:
 
       - name: Propagate patch to deployment repos
         env:
-          GH_TOKEN: ${{ secrets.GH_DEPLOYMENT_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TAMANU_DBT_DEPLOYMENT_TOKEN }}
           NEW_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
         run: python scripts/propagate_patch.py
