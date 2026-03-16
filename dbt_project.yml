@@ -50,6 +50,15 @@ models:
       +materialized: view
       +tags:
         - datasets
+      sensitive:
+        +tags:
+          - restricted
+      admin:
+        +tags:
+          - admin
+      standard:
+        +tags:
+          - standard
     reconstructs:
       +incremental_strategy: merge
       +materialized: incremental
@@ -60,6 +69,16 @@ models:
         show: false
       +tags:
         - reports
+      sql:
+        sensitive:
+          +tags:
+            - restricted
+        admin:
+          +tags:
+            - admin
+        standard:
+          +tags:
+            - standard
 
 data_tests:
   +severity: warn

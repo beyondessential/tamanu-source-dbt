@@ -1,0 +1,10 @@
+name: Update .maui Submodule
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  update-submodule:
+    uses: beyondessential/maui-team/.github/workflows/update-submodule.yml@main
+    secrets: inherit
