@@ -1395,6 +1395,12 @@
   tags:
   - base
   - clinical
+- config:
+    tags:
+    - base
+  name: outpatient_appointments_change_logs
+  tags:
+  - base
 - columns:
     blood_type:
       data_type: character varying(255)

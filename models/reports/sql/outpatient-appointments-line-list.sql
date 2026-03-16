@@ -19,7 +19,8 @@ select
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
     end as "{{ translate_label('appointmentIsRepeating') }}",
-    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}"
+    to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}",
+    created_by as "{{ translate_label('appointmentCreatedBy') }}"
 from {{ ref('ds__outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true

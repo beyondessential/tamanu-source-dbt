@@ -14,6 +14,7 @@ Run: python scripts/generate_translation_macro.py
         'report.reporting.admissionStatus': 'Admission status',
         'report.reporting.admittingClinician': 'Admitting clinician',
         'report.reporting.appointmentClinician': 'Clinician',
+        'report.reporting.appointmentCreatedBy': 'Appointment created by',
         'report.reporting.appointmentDateTime': 'Appointment date and time',
         'report.reporting.appointmentEndDateTime': 'Appointment end date and time',
         'report.reporting.appointmentIsRepeating': 'Repeating appointment',
