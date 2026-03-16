@@ -36,7 +36,6 @@ with appointment_changes as (
     from {{ source('logs__tamanu', 'changes') }} c
     where c.table_name = 'appointments'
         and c.record_deleted_at is null
-        and (c.record_data ->> 'appointment_type_id') is not null
 )
 
 select
