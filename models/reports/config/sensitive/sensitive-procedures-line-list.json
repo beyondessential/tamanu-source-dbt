@@ -1,0 +1,52 @@
+{
+  "query": "replace this",
+  "name": "Sensitive procedures line list",
+  "notes": "This report pulls list of all patients that have documented procedures at sensitive facilities during the selected date period ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": ["allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Procedure clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Location",
+        "name": "locationId",
+        "suggesterEndpoint": "location",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      }
+    ]
+  }
+}

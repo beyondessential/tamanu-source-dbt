@@ -1,0 +1,38 @@
+{% macro location_bookings_dataset(is_sensitive=false) %}
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(a.start_datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    vil.id as village_id,
+    vil.name as village,
+    billing.id as billing_type_id,
+    billing.name as billing_type,
+    a.start_datetime as booking_start_datetime,
+    a.end_datetime as booking_end_datetime,
+    a.status as booking_status,
+    u.id as clinician_id,
+    u.display_name as clinician,
+    lg.id as location_group_id,
+    lg.name as location_group,
+    l.id as location_id,
+    l.name as location,
+    a.booking_type_id,
+    bt.name as booking_type
+from {{ ref('location_bookings') }} a
+join {{ ref('patients') }} p on p.id = a.patient_id
+left join {{ ref('users') }} u on u.id = a.clinician_id
+join {{ ref('locations') }} l on l.id = a.location_id
+left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+join {{ ref('facilities') }} f on f.id = l.facility_id
+    and f.is_sensitive = {{ is_sensitive }}
+left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
+left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing_type_id
+left join {{ ref('reference_data') }} vil on vil.id = p.village_id
+left join {{ ref('reference_data') }} bt on bt.id = a.booking_type_id
+
+{% endmacro %}
