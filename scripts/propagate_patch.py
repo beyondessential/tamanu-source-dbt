@@ -47,13 +47,27 @@ def get_major_minor(version: str) -> str:
     return f"{parts[0]}.{parts[1]}"
 
 
-def get_packages_yml(repo: str, ref: str = None) -> tuple[str, str]:
+def get_file(repo: str, filepath: str, ref: str = None) -> tuple[str, str]:
     """Returns (decoded_content, sha)."""
-    path = f"repos/{repo}/contents/packages.yml"
+    path = f"repos/{repo}/contents/{filepath}"
     if ref:
         path += f"?ref={ref}"
     info = gh_api(path)
     return base64.b64decode(info["content"]).decode("utf-8"), info["sha"]
+
+
+def get_packages_yml(repo: str, ref: str = None) -> tuple[str, str]:
+    return get_file(repo, "packages.yml", ref)
+
+
+def bump_patch(version: str) -> str:
+    """Increment the patch component of a version string (e.g. '2.50.1' -> '2.50.2')."""
+    v = version.lstrip("v")
+    parts = v.split(".")
+    if len(parts) < 3:
+        raise ValueError(f"Cannot parse patch from version: {version}")
+    parts[2] = str(int(parts[2]) + 1)
+    return ".".join(parts)
 
 
 def find_revision(packages_content: str) -> str | None:
@@ -67,28 +81,18 @@ def find_revision(packages_content: str) -> str | None:
 def replace_revision(packages_content: str, new_revision: str) -> str:
     """Replace the revision for the tamanu-source-dbt package only.
 
-    Assumes git: precedes revision: within the entry (dbt's standard ordering).
-    Preserves surrounding quote style. Other packages are left untouched.
+    Parses YAML to find the current revision value, then substitutes it
+    in-place to preserve the original file formatting and quote style.
     """
-    lines = packages_content.splitlines(keepends=True)
-    in_target_block = False
-    result = []
-    for line in lines:
-        if "tamanu-source-dbt" in line:
-            in_target_block = True
-        elif in_target_block and re.match(r"\s*-\s", line):
-            in_target_block = False
-
-        if in_target_block and re.match(r"\s*revision:\s*", line):
-            line = re.sub(
-                r"(revision:\s*)([\"']?)(v[\d.]+)([\"']?)",
-                lambda m: m.group(1) + m.group(2) + new_revision + m.group(4),
-                line,
-            )
-            in_target_block = False
-
-        result.append(line)
-    return "".join(result)
+    old_revision = find_revision(packages_content)
+    if not old_revision:
+        return packages_content
+    return re.sub(
+        r"(revision:\s*)([\"']?)" + re.escape(str(old_revision)) + r"([\"']?)",
+        lambda m: m.group(1) + m.group(2) + new_revision + m.group(3),
+        packages_content,
+        count=1,
+    )
 
 
 def branch_exists(repo: str, branch: str) -> bool:
@@ -158,6 +162,22 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         "sha": file_sha,
         "branch": branch,
     })
+
+    try:
+        dbt_proj_content, dbt_proj_sha = get_file(repo, "dbt_project.yml", ref=branch)
+        m = re.search(r"^version:\s*(\S+)", dbt_proj_content, flags=re.MULTILINE)
+        if m:
+            current_proj_version = m.group(1)
+            new_proj_version = bump_patch(current_proj_version)
+            updated_dbt_proj = dbt_proj_content[:m.start(1)] + new_proj_version + dbt_proj_content[m.end(1):]
+            gh_api(f"repos/{repo}/contents/dbt_project.yml", method="PUT", data={
+                "message": f"chore: bump version to {new_proj_version}",
+                "content": base64.b64encode(updated_dbt_proj.encode()).decode(),
+                "sha": dbt_proj_sha,
+                "branch": branch,
+            })
+    except RuntimeError:
+        pass  # dbt_project.yml absent — skip silently
 
     pr = gh_api(f"repos/{repo}/pulls", method="POST", data={
         "title": f"chore: bump tamanu-source-dbt to {new_tag}",
