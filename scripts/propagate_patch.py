@@ -165,6 +165,10 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
 
     try:
         dbt_proj_content, dbt_proj_sha = get_file(repo, "dbt_project.yml", ref=branch)
+    except RuntimeError as e:
+        if "404" not in str(e):
+            raise
+    else:
         m = re.search(r"^version:\s*(\S+)", dbt_proj_content, flags=re.MULTILINE)
         if m:
             current_proj_version = m.group(1)
@@ -176,8 +180,6 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
                 "sha": dbt_proj_sha,
                 "branch": branch,
             })
-    except RuntimeError:
-        pass  # dbt_project.yml absent — skip silently
 
     pr = gh_api(f"repos/{repo}/pulls", method="POST", data={
         "title": f"chore: bump tamanu-source-dbt to {new_tag}",

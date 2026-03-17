@@ -1,6 +1,6 @@
 import pytest
 
-from propagate_patch import find_revision, get_major_minor, replace_revision
+from propagate_patch import bump_patch, find_revision, get_major_minor, replace_revision
 
 
 # ---------------------------------------------------------------------------
@@ -28,6 +28,33 @@ def test_get_major_minor_no_patch():
 def test_get_major_minor_invalid_raises():
     with pytest.raises(ValueError):
         get_major_minor("notaversion")
+
+
+# ---------------------------------------------------------------------------
+# bump_patch
+# ---------------------------------------------------------------------------
+
+
+def test_bump_patch_standard():
+    assert bump_patch("2.50.1") == "2.50.2"
+
+
+def test_bump_patch_with_v_prefix():
+    assert bump_patch("v2.50.1") == "2.50.2"
+
+
+def test_bump_patch_single_digit_rollover():
+    assert bump_patch("2.50.9") == "2.50.10"
+
+
+def test_bump_patch_two_part_raises():
+    with pytest.raises(ValueError):
+        bump_patch("2.50")
+
+
+def test_bump_patch_non_numeric_patch_raises():
+    with pytest.raises(ValueError):
+        bump_patch("v2.50.x")
 
 
 # ---------------------------------------------------------------------------
@@ -126,15 +153,16 @@ def test_replace_revision_no_tamanu_unchanged():
     assert "v2.49.7" not in result
 
 
-def test_replace_revision_branch_name_noop():
-    # Branch name or SHA revisions don't match the semver regex — content is unchanged
+def test_replace_revision_branch_name():
+    # replace_revision substitutes whatever revision YAML parsing finds — callers are
+    # responsible for skipping non-semver revisions (propagate() does this via get_major_minor).
     content = "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n    revision: main\n"
-    assert replace_revision(content, "v2.49.7") == content
+    assert replace_revision(content, "v2.49.7") == content.replace("main", "v2.49.7")
 
 
-def test_replace_revision_sha_noop():
+def test_replace_revision_sha():
     content = "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n    revision: abc1234def5678\n"
-    assert replace_revision(content, "v2.49.7") == content
+    assert replace_revision(content, "v2.49.7") == content.replace("abc1234def5678", "v2.49.7")
 
 
 def test_replace_revision_idempotent():
