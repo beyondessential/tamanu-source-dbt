@@ -40,11 +40,6 @@
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}
         and record_id != '{{ var("test_patient") }}' -- noqa: ST10
-{% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup') %}
-    union all
-    {{ base_history_from_log('patient_additional_data', 'logs__tamanu', 'changes_backup') }}
-        and record_id != '{{ var("test_patient") }}' -- noqa: ST10
-{% endif %}
 )
 
 select
