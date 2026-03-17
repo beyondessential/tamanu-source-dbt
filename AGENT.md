@@ -17,6 +17,15 @@ Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data
 - Label conventions: sentence casing (e.g. "Patient name"), concept prefixes (e.g. `patient_name`, not `name`)
 - Run `python scripts/generate_translation_macro.py` if the CSV changes
 
+## Patch propagation script
+
+`scripts/propagate_patch.py` has a test suite at `scripts/tests/test_propagate_patch.py`.
+Run the tests whenever `propagate_patch.py` or its test file changes:
+
+```bash
+cd scripts && python -m pytest tests/test_propagate_patch.py -v
+```
+
 ## Pre-commit checklist
 
 ```bash
