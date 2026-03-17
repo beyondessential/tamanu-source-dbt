@@ -36,15 +36,19 @@ def test_get_major_minor_invalid_raises():
 
 
 def test_bump_patch_standard():
-    assert bump_patch("2.50.1") == "2.50.2"
+    assert bump_patch("2.50.1") == "v2.50.2"
 
 
 def test_bump_patch_with_v_prefix():
-    assert bump_patch("v2.50.1") == "2.50.2"
+    assert bump_patch("v2.50.1") == "v2.50.2"
 
 
 def test_bump_patch_single_digit_rollover():
-    assert bump_patch("2.50.9") == "2.50.10"
+    assert bump_patch("2.50.9") == "v2.50.10"
+
+
+def test_bump_patch_quoted():
+    assert bump_patch('"2.50.1"') == "v2.50.2"
 
 
 def test_bump_patch_two_part_raises():

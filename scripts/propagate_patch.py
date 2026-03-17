@@ -62,12 +62,12 @@ def get_packages_yml(repo: str, ref: str = None) -> tuple[str, str]:
 
 def bump_patch(version: str) -> str:
     """Increment the patch component of a version string (e.g. '2.50.1' -> '2.50.2')."""
-    v = version.lstrip("v")
+    v = version.strip("\"'").lstrip("v")
     parts = v.split(".")
     if len(parts) < 3:
         raise ValueError(f"Cannot parse patch from version: {version}")
     parts[2] = str(int(parts[2]) + 1)
-    return ".".join(parts)
+    return "v" + ".".join(parts)
 
 
 def find_revision(packages_content: str) -> str | None:
@@ -173,7 +173,7 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         if m:
             current_proj_version = m.group(1)
             new_proj_version = bump_patch(current_proj_version)
-            updated_dbt_proj = dbt_proj_content[:m.start(1)] + new_proj_version + dbt_proj_content[m.end(1):]
+            updated_dbt_proj = dbt_proj_content[:m.start(1)] + new_proj_version.lstrip("v") + dbt_proj_content[m.end(1):]
             gh_api(f"repos/{repo}/contents/dbt_project.yml", method="PUT", data={
                 "message": f"chore: bump version to {new_proj_version}",
                 "content": base64.b64encode(updated_dbt_proj.encode()).decode(),
