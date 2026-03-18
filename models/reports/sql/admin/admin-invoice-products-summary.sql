@@ -1,21 +1,21 @@
 {%- set price_lists_query %}
-    select id, name
+    select name
     from {{ ref('invoice_price_lists') }}
     order by name
 {%- endset %}
 
 {%- set insurance_plans_query %}
-    select id, name, default_coverage
+    select name
     from {{ ref('invoice_insurance_plans') }}
     order by name
 {%- endset %}
 
 {%- if execute %}
-    {%- set price_lists = run_query(price_lists_query) %}
-    {%- set insurance_plans = run_query(insurance_plans_query) %}
+    {%- set price_list_names = run_query(price_lists_query).columns[0].values() %}
+    {%- set insurance_plan_names = run_query(insurance_plans_query).columns[0].values() %}
 {%- else %}
-    {%- set price_lists = [] %}
-    {%- set insurance_plans = [] %}
+    {%- set price_list_names = [] %}
+    {%- set insurance_plan_names = [] %}
 {%- endif %}
 
 select
@@ -25,26 +25,11 @@ select
     category as "{{ translate_label('invoiceProductCategory') }}",
     source_record_id as "{{ translate_label('invoiceProductCategoryId') }}",
     visibility_status as "{{ translate_label('invoiceProductVisibilityStatus') }}"
-    {%- for row in price_lists %}
-    , max(case when invoice_price_list_id = '{{ row[0] }}' then price end) as "Price: {{ row[1] }}"
+    {%- for name in price_list_names %}
+    , "Price: {{ name }}"
     {%- endfor %}
-    {%- for row in insurance_plans %}
-    , case
-        when insurable = false then 'n/a'
-        else cast(
-            coalesce(
-                max(case when invoice_insurance_plan_id = '{{ row[0] }}' then coverage_value end),
-                {%- if row[2] is not none %}{{ row[2] }}{%- else %}null{%- endif %}
-            ) as text
-        )
-    end as "Insurance: {{ row[1] }}"
+    {%- for name in insurance_plan_names %}
+    , "Insurance: {{ name }}"
     {%- endfor %}
 from {{ ref('ds__invoice_products') }}
-group by
-    id,
-    name,
-    insurable,
-    category,
-    source_record_id,
-    visibility_status
 order by name

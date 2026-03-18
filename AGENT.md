@@ -10,6 +10,11 @@
 
 Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data-staging` and deployment-specific `tamanu-dbt-*` repos.
 
+## Base model conventions
+
+- All base model `.yml` files require `config.tags: [reference]` — this applies to every base model, including junction/item-level tables
+- Do not add `data_tests` to base model `.yml` files — tests are already defined on source models and would run twice
+
 ## Documentation (doc blocks)
 
 Column descriptions are defined once in `models/sources/<table>.md` and reused throughout the model hierarchy via `{{ doc('key') }}`:
