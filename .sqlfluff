@@ -26,6 +26,7 @@ max_line_length = 0
 # If negative or zero, implies number_of_cpus - specified_number.
 # e.g. -1 means use all processors but one. 0 means all cpus.
 processes = -1
+large_file_skip_byte_limit = 0
 
 # If using the dbt templater, we recommend setting the project dir.
 [sqlfluff:templater:dbt]
