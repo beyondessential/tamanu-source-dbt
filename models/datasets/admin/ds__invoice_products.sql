@@ -18,6 +18,29 @@
     {%- set insurance_plans = [] %}
 {%- endif %}
 
+with price_pivot as (
+    select
+        invoice_product_id
+        {%- for row in price_lists %}
+        , max(case when invoice_price_list_id = '{{ row[0] }}' then price end)
+            as price_{{ loop.index }}
+        {%- endfor %}
+    from {{ ref('invoice_price_list_items') }}
+    where is_hidden = false
+    group by invoice_product_id
+),
+
+insurance_pivot as (
+    select
+        invoice_product_id
+        {%- for row in insurance_plans %}
+        , max(case when invoice_insurance_plan_id = '{{ row[0] }}' then coverage_value end)
+            as cov_{{ loop.index }}
+        {%- endfor %}
+    from {{ ref('invoice_insurance_plan_items') }}
+    group by invoice_product_id
+)
+
 select
     ip.id,
     ip.name,
@@ -26,30 +49,19 @@ select
     ip.source_record_id,
     ip.visibility_status
     {%- for row in price_lists %}
-    , max(case when ipli.invoice_price_list_id = '{{ row[0] }}' then ipli.price end)
-        as "Price: {{ row[1] }}"
+    , pp.price_{{ loop.index }} as "Price: {{ row[1] }}"
     {%- endfor %}
     {%- for row in insurance_plans %}
     , case
         when ip.insurable = false then 'n/a'
         else cast(
             coalesce(
-                max(case when iipi.invoice_insurance_plan_id = '{{ row[0] }}' then iipi.coverage_value end),
+                insurp.cov_{{ loop.index }},
                 {%- if row[2] is not none %}{{ row[2] }}{%- else %}null{%- endif %}
             ) as text
         )
     end as "Insurance: {{ row[1] }}"
     {%- endfor %}
 from {{ ref('invoice_products') }} ip
-left join {{ ref('invoice_price_list_items') }} ipli
-    on ipli.invoice_product_id = ip.id
-    and ipli.is_hidden = false
-left join {{ ref('invoice_insurance_plan_items') }} iipi
-    on iipi.invoice_product_id = ip.id
-group by
-    ip.id,
-    ip.name,
-    ip.insurable,
-    ip.category,
-    ip.source_record_id,
-    ip.visibility_status
+left join price_pivot pp on pp.invoice_product_id = ip.id
+left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
