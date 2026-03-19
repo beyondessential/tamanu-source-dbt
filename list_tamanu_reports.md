@@ -48,6 +48,17 @@ Facility, Cause of death, Due to (or as a consequence of), Other contributing co
 
 ---
 
+### Admin invoice products summary
+
+**Report Description**
+
+This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
+
+**Default date range**: allTime
+
+
+---
+
 ### Admin ongoing conditions line list
 
 **Report Description**
