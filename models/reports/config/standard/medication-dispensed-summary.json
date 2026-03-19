@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Medication Dispensed summary report",
-  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range, based on actual dispense records.",
+  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range, based on dispense records.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {

@@ -5,6 +5,7 @@ models:
     config:
       tags:
         - clinical
+        - reference
     columns:
       - name: id
         data_type: uuid
