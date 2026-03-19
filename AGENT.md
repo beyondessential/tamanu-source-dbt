@@ -10,6 +10,23 @@
 
 Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data-staging` and deployment-specific `tamanu-dbt-*` repos.
 
+## Base model conventions
+
+- All base model `.yml` files require `config.tags: [reference]` — this applies to every base model, including junction/item-level tables
+- Do not add `data_tests` to base model `.yml` files — tests are already defined on source models and would run twice
+
+## Documentation (doc blocks)
+
+Column descriptions are defined once in `models/sources/<table>.md` and reused throughout the model hierarchy via `{{ doc('key') }}`:
+
+- `models/sources/<table>.md` — defines `{% docs table__<table> %}` and `{% docs <table>__<column> %}` blocks
+- Base model `.yml` files reference these with `{{ doc('table__<table>') }}` (description) and `{{ doc('<table>__<column>') }}` (column descriptions)
+- Dataset `.yml` files reference the same source-layer doc blocks for columns they expose
+
+Generic doc blocks (e.g. `generic__id`, `generic__visibility_status`) are in `models/sources/generic.md`.
+
+Never write inline descriptions in `.yml` files when a `{{ doc() }}` reference exists — always prefer the reusable doc block.
+
 ## Translation system
 
 - Source: `report_translations_standard.csv` → generates `macros/default_translations.sql`
