@@ -2,7 +2,6 @@ select
     pop.id,
     pop.pharmacy_order_id,
     pop.prescription_id,
-    pop.ongoing_prescription_id,
     pop.display_id,
     pop.quantity,
     pop.repeats,
