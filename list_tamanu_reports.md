@@ -393,7 +393,7 @@ Facility, Area, Clinician, Booking type, Status
 
 **Report Description**
 
-This report shows count of doses dispensed for a given drug within a specified date range for prescriptions from encounters at sensitive facilities. Only prescriptions selected for discharge are included.
+This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on dispense records.
 
 **Filters**
 
@@ -828,7 +828,7 @@ Facility, Area, Clinician, Booking type, Status
 
 **Report Description**
 
-This report shows count of doses dispensed for a given drug within a specified date range.
+This report shows quantity of medication dispensed for a given drug within a specified date range, based on dispense records.
 
 **Filters**
 
