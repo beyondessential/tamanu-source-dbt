@@ -23,12 +23,12 @@ select
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
     p.discontinued_date::timestamp as discontinued_datetime
-from {{ resolve_input_model('prescriptions') }} p
+from {{ source('tamanu', 'prescriptions') }} p
 where p.deleted_at is null
     and exists (
         select 1
-        from {{ resolve_input_model('encounter_prescriptions') }} ep
-        join {{ resolve_input_model('encounters') }} e on e.id = ep.encounter_id
+        from {{ source('tamanu', 'encounter_prescriptions') }} ep
+        join {{ source('tamanu', 'encounters') }} e on e.id = ep.encounter_id
         where ep.prescription_id = p.id
             and ep.deleted_at is null
             and e.deleted_at is null

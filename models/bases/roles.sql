@@ -1,5 +1,5 @@
 select
     id,
     name
-from {{ resolve_input_model('roles') }}
+from {{ source('tamanu', 'roles') }}
 where deleted_at is null

@@ -5,5 +5,5 @@ select
     category,
     source_record_id,
     visibility_status
-from {{ resolve_input_model('invoice_products') }}
+from {{ source('tamanu', 'invoice_products') }}
 where deleted_at is null

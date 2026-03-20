@@ -20,8 +20,8 @@ select
     lr.published_date::timestamp as published_datetime,
     lr.encounter_id,
     lr.department_id
-from {{ resolve_input_model('lab_requests') }} lr
-join {{ resolve_input_model('encounters') }} e on e.id = lr.encounter_id
+from {{ source('tamanu', 'lab_requests') }} lr
+join {{ source('tamanu', 'encounters') }} e on e.id = lr.encounter_id
 where lr.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

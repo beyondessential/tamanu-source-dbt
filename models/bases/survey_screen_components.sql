@@ -12,5 +12,5 @@ select
     survey_id,
     data_element_id,
     visibility_status
-from {{ resolve_input_model('survey_screen_components') }}
+from {{ source('tamanu', 'survey_screen_components') }}
 where deleted_at is null

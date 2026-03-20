@@ -7,5 +7,5 @@ select
     survey_id,
     encounter_id,
     user_id as submitted_by_id
-from {{ resolve_input_model('survey_responses') }}
+from {{ source('tamanu', 'survey_responses') }}
 where deleted_at is null
