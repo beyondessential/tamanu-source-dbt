@@ -1,0 +1,41 @@
+name: Forward-port Patch
+
+# When a patch is released on an older minor (e.g. v2.49.9), cherry-picks
+# the new commits onto all higher-minor branches and main, bumps their
+# versions, and opens a PR for each.
+#
+# GHA release events do not support tag-pattern filters; early-exit by design
+# in forwardport_patch.py when the tag is not a patch on a lower minor.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to forward-port (e.g. v2.49.9)'
+        required: true
+
+jobs:
+  forwardport:
+    name: Forward-port patch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Forward-port patch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          REPO: ${{ github.repository }}
+        run: python scripts/forwardport_patch.py

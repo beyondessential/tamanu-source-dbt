@@ -1,0 +1,33 @@
+name: Create Version Branch
+
+# Creates a maintenance branch for the previous minor version when a new
+# minor or major release is published (e.g. v2.51.0 → branch "2.50").
+#
+# GHA release events do not support tag-pattern filters; early-exit by design
+# in create_version_branch.py when the tag is not vX.Y.0.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v2.51.0)'
+        required: true
+
+jobs:
+  create-version-branch:
+    name: Create version branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create version branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          REPO: ${{ github.repository }}
+        run: python scripts/create_version_branch.py
