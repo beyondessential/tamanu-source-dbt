@@ -15,11 +15,6 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
         and record_id != '{{ var("test_patient") }}'
-{% if dbt_utils.get_relations_by_pattern('logs', 'changes_backup') %}
-    union all
-    {{ base_history_from_log('patients', 'logs__tamanu', 'changes_backup') }}
-        and record_id != '{{ var("test_patient") }}'
-{% endif %}
 )
 
 select
