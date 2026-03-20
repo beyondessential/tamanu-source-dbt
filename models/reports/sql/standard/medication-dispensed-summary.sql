@@ -1,28 +1,29 @@
 select
-    md.medication as "{{ translate_label('prescriptionMedication') }}",
-    md.medication_code as "{{ translate_label('prescriptionMedicationCode') }}",
-    sum(md.quantity) as "{{ translate_label('prescriptionQuantity') }}"
-from {{ ref('ds__medication_dispenses') }} md
-where
+    ep.medication as "{{ translate_label('prescriptionMedication') }}",
+    ep.medication_code as "{{ translate_label('prescriptionMedicationCode') }}",
+    sum(ep.quantity) as "{{ translate_label('prescriptionQuantity') }}"
+from {{ ref('ds__encounter_prescriptions') }} ep
+where ep.is_selected_for_discharge = true
+    and
     case
         when {{ parameter('facilityId') }} is null then true
-        else md.facility_id = {{ parameter('facilityId') }}
+        else ep.facility_id = {{ parameter('facilityId') }}
     end
     and
     case
         when {{ parameter('medicationId') }} is null then true
-        else md.medication_id = {{ parameter('medicationId') }}
+        else ep.medication_id = {{ parameter('medicationId') }}
     end
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }} is null then true
-        else md.dispensed_at
+        else ep.datetime
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }} is null then true
-        else md.dispensed_at
+        else ep.datetime
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
     end
-group by md.medication_id, md.medication, md.medication_code
+group by ep.medication_id, ep.medication, ep.medication_code
