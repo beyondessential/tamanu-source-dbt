@@ -2,6 +2,8 @@
 """Create a maintenance branch for the previous minor version when a new minor release is published.
 
 When v2.51.0 is released, creates a '2.50' branch pointing to the latest v2.50.* tag.
+When v3.0.0 is released (major bump), creates a '2.{last_minor}' branch pointing to the
+latest v2.*.* tag, since the previous minor lived in a different major.
 
 Usage:
     NEW_TAG=v2.51.0 REPO=beyondessential/tamanu-source-dbt python scripts/create_version_branch.py
@@ -59,6 +61,32 @@ def find_latest_tag_for_minor(refs: list[dict], major: int, minor: int) -> str |
     return matching[-1]
 
 
+def find_latest_tag_for_major(refs: list[dict], major: int) -> str | None:
+    """Return the latest vX.Y.Z tag across all minors for a given major.
+
+    Used for major-bump releases (vX.0.0) where the previous minor lived in a
+    different major version. Sorts by (minor, patch) numerically.
+    """
+    prefix = f"refs/tags/v{major}."
+    matching = [
+        r["ref"].removeprefix("refs/tags/")
+        for r in refs
+        if r["ref"].startswith(prefix)
+    ]
+    if not matching:
+        return None
+
+    def minor_patch(tag: str) -> tuple[int, int]:
+        parts = tag.split(".")
+        try:
+            return int(parts[1]), int(parts[2])
+        except (ValueError, IndexError):
+            return (-1, -1)
+
+    matching.sort(key=minor_patch)
+    return matching[-1]
+
+
 def get_commit_sha_for_tag(repo: str, tag: str) -> str:
     """Return the commit SHA for a tag, dereferencing annotated tags."""
     ref_info = gh_api(f"repos/{repo}/git/ref/tags/{tag}")
@@ -97,8 +125,26 @@ def main():
 
     major = int(m.group(1))
     minor = int(m.group(2))
-    prev_minor = minor - 1
-    branch_name = f"{major}.{prev_minor}"
+
+    all_refs = gh_api(f"repos/{repo}/git/refs/tags") or []
+
+    if minor == 0:
+        # Major bump: the previous minor lived in the previous major entirely.
+        # Find the latest tag for that major to determine the branch name.
+        prev_major = major - 1
+        latest_tag = find_latest_tag_for_major(all_refs, prev_major)
+        if not latest_tag:
+            print(f"No tags found for v{prev_major}.*.*, skipping")
+            sys.exit(0)
+        prev_minor = int(latest_tag.split(".")[1])
+        branch_name = f"{prev_major}.{prev_minor}"
+    else:
+        prev_minor = minor - 1
+        branch_name = f"{major}.{prev_minor}"
+        latest_tag = find_latest_tag_for_minor(all_refs, major, prev_minor)
+        if not latest_tag:
+            print(f"No tags found for v{major}.{prev_minor}.*, skipping")
+            sys.exit(0)
 
     print(f"Release {new_tag}: creating maintenance branch '{branch_name}'")
 
@@ -106,13 +152,7 @@ def main():
         print(f"Branch '{branch_name}' already exists, skipping")
         sys.exit(0)
 
-    all_refs = gh_api(f"repos/{repo}/git/refs/tags") or []
-    latest_tag = find_latest_tag_for_minor(all_refs, major, prev_minor)
-    if not latest_tag:
-        print(f"No tags found for v{major}.{prev_minor}.*, skipping")
-        sys.exit(0)
-
-    print(f"Latest tag for v{major}.{prev_minor}: {latest_tag}")
+    print(f"Latest tag: {latest_tag}")
 
     sha = get_commit_sha_for_tag(repo, latest_tag)
 

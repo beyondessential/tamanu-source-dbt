@@ -6,6 +6,9 @@ name: Create Version Branch
 # Example: publishing v2.51.0 creates branch '2.50' at the latest v2.50.* tag.
 #
 # Requires: GITHUB_TOKEN with contents:write (granted automatically by GHA).
+#
+# Note: GHA release events don't support tag-pattern filters. This triggers on
+# every release; the script exits early if the tag is not a vX.Y.0 minor release.
 
 on:
   release:

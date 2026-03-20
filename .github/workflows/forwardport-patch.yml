@@ -8,6 +8,9 @@ name: Forward-port Patch
 #   the '2.50' branch (bumping to 2.50.next) and main (bumping to 2.51.next).
 #
 # Requires: GITHUB_TOKEN with contents:write and pull-requests:write.
+#
+# Note: GHA release events don't support tag-pattern filters. This triggers on
+# every release; the script exits early if the tag is not an older-minor patch.
 
 on:
   release:

@@ -304,7 +304,7 @@ def main():
 
     mmaj, mmin, _ = get_major_minor_patch(main_version)
 
-    if minor >= mmin:
+    if (major, minor) >= (mmaj, mmin):
         print(
             f"{new_tag} is at or above the current minor ({mmaj}.{mmin} on main) — nothing to forward-port"
         )
@@ -329,7 +329,7 @@ def main():
 
     # Collect target branches: all major.Y (Y > minor) + main
     target_branches = get_higher_minor_branches(major, minor)
-    if mmin > minor:
+    if (mmaj, mmin) > (major, minor):
         target_branches.append("main")
 
     if not target_branches:

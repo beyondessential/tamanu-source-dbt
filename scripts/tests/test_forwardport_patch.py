@@ -105,7 +105,7 @@ def test_get_previous_tag_large_patch():
 # find_latest_tag_for_minor  (from create_version_branch.py)
 # ---------------------------------------------------------------------------
 
-from create_version_branch import find_latest_tag_for_minor  # noqa: E402
+from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor  # noqa: E402
 
 
 def _make_refs(*tags):
@@ -136,6 +136,38 @@ def test_find_latest_tag_numeric_not_lexicographic():
     # lexicographic sort would give v2.49.9 > v2.49.10, numeric gives v2.49.10
     refs = _make_refs("v2.49.1", "v2.49.9", "v2.49.10")
     assert find_latest_tag_for_minor(refs, 2, 49) == "v2.49.10"
+
+
+# ---------------------------------------------------------------------------
+# find_latest_tag_for_major  (major-bump case: v3.0.0 → branch for last v2.* minor)
+# ---------------------------------------------------------------------------
+
+
+def test_find_latest_tag_for_major_standard():
+    # v3.0.0 released: find the last tag across all of major 2
+    refs = _make_refs("v2.49.7", "v2.50.0", "v2.51.3", "v3.0.0")
+    assert find_latest_tag_for_major(refs, 2) == "v2.51.3"
+
+
+def test_find_latest_tag_for_major_single_minor():
+    refs = _make_refs("v2.50.4")
+    assert find_latest_tag_for_major(refs, 2) == "v2.50.4"
+
+
+def test_find_latest_tag_for_major_no_match_returns_none():
+    refs = _make_refs("v3.0.0", "v3.1.0")
+    assert find_latest_tag_for_major(refs, 2) is None
+
+
+def test_find_latest_tag_for_major_ignores_other_majors():
+    refs = _make_refs("v1.99.9", "v2.50.1", "v3.0.0")
+    assert find_latest_tag_for_major(refs, 2) == "v2.50.1"
+
+
+def test_find_latest_tag_for_major_numeric_minor_sort():
+    # minor 9 < minor 10 numerically; lexicographic would give 9 > 10
+    refs = _make_refs("v2.9.5", "v2.10.0")
+    assert find_latest_tag_for_major(refs, 2) == "v2.10.0"
 
 
 # ---------------------------------------------------------------------------
