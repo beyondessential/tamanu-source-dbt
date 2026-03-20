@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor
 from forwardport_patch import (
     get_higher_minor_branches_from_list,
     get_major_minor_patch,
@@ -104,9 +105,6 @@ def test_get_previous_tag_large_patch():
 # ---------------------------------------------------------------------------
 # find_latest_tag_for_minor  (from create_version_branch.py)
 # ---------------------------------------------------------------------------
-
-from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor  # noqa: E402
-
 
 def _make_refs(*tags):
     return [{"ref": f"refs/tags/{t}"} for t in tags]
