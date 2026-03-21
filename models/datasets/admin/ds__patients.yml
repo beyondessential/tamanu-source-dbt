@@ -5,6 +5,12 @@ models:
     config:
       tags:
         - patient
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: gold
+      pii: true
+      classification: restricted
     columns:
       - name: registration_date
         data_type: date

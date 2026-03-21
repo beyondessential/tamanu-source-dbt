@@ -6,6 +6,12 @@ models:
     config:
       tags:
         - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: gold
+      pii: false
+      classification: confidential
     columns:
       - name: user_id
         data_type: character varying(255)

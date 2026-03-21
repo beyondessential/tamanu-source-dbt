@@ -11,6 +11,12 @@ models:
         - base
         - clinical
         - audit
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: false
+      classification: restricted
     columns:
       - name: change_id
         description: "{{ doc('outpatient_appointments_change_logs__change_id') }}"
