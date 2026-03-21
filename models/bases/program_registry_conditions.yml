@@ -9,7 +9,7 @@ models:
       domain: admin
       tier: silver
       pii: false
-      classification: internal_use
+      classification: internal
     columns:
       - name: id
         data_type: character varying(255)

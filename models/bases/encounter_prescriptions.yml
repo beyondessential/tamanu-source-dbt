@@ -21,10 +21,6 @@ models:
       - name: prescription_id
         data_type: character varying(255)
         description: "{{ doc('encounter_prescriptions__prescription_id') }}"
-        tags:
-          - phi
       - name: is_selected_for_discharge
         data_type: boolean
         description: "{{ doc('encounter_prescriptions__is_selected_for_discharge') }}"
-        tags:
-          - phi

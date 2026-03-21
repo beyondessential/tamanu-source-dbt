@@ -9,8 +9,8 @@ models:
       owner: bes-maui
       domain: admin
       tier: silver
-      pii: true
-      classification: restricted
+      pii: false
+      classification: internal
     columns:
       - name: id
         data_type: character varying
