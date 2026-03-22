@@ -2,6 +2,7 @@
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/sql-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
+@./.maui/knowledge/standards/metadata.md
 @./.maui/knowledge/standards/tamanu-conventions.md
 
 ---

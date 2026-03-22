@@ -5,6 +5,12 @@ models:
     config:
       tags:
         - patient
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: true
+      classification: restricted
     columns:
       - name: id
         data_type: character varying(255)

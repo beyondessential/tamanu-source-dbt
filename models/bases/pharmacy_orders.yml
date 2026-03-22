@@ -6,6 +6,12 @@ models:
       tags:
         - clinical
         - reference
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: false
+      classification: restricted
     columns:
       - name: id
         data_type: uuid
