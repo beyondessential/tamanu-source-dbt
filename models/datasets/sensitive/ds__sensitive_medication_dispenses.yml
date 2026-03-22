@@ -7,6 +7,12 @@ models:
       tags:
         - clinical
         - restricted
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: gold
+      pii: false
+      classification: restricted
     columns:
       - name: id
         data_type: uuid

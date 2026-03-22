@@ -6,6 +6,12 @@ models:
     config:
       tags:
         - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: confidential
     columns:
       - name: id
         description: "{{ doc('generic__id') }}"

@@ -5,6 +5,12 @@ models:
     config:
       tags:
         - reference
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: internal
     columns:
       - name: id
         description: "{{ doc('generic__id') }} in lab_test_panel_lab_test_types."
