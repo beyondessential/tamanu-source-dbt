@@ -25,7 +25,7 @@ select
     category as "{{ translate_label('invoiceProductCategory') }}",
     source_record_id as "{{ translate_label('invoiceProductCategoryId') }}",
     visibility_status as "{{ translate_label('invoiceProductVisibilityStatus') }}",
-    external_code as "Lab ex. code"
+    external_code as "{{ translate_label('invoiceProductLabExternalCode') }}"
     {%- for name in price_list_names %}
     , "Price: {{ name }}"
     {%- endfor %}

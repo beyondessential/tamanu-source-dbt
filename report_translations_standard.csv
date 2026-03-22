@@ -150,6 +150,7 @@ report.reporting.invoiceProductCategoryId,Category ID
 report.reporting.invoiceProductId,ID
 report.reporting.invoiceProductInsurable,Insurable
 report.reporting.invoiceProductName,Product name
+report.reporting.invoiceProductLabExternalCode,Lab external code
 report.reporting.invoiceProductVisibilityStatus,Visibility status
 report.reporting.invoiceRemainingInsurerBalance,Remaining balance (insurer payments)
 report.reporting.invoiceRemainingPatientBalance,Remaining balance (patient)
