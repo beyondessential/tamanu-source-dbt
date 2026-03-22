@@ -9,7 +9,7 @@ select
     booking_type_id,
     is_high_priority,
     status
-from {{ resolve_input_model('appointments') }}
+from {{ source('tamanu', 'appointments') }}
 where booking_type_id notnull
     and deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

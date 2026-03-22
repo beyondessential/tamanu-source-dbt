@@ -6,6 +6,6 @@ select
     diagnosis_id,
     relationship,
     note
-from {{ resolve_input_model('patient_family_histories') }}
+from {{ source('tamanu', 'patient_family_histories') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

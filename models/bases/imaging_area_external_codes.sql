@@ -4,5 +4,5 @@ select
     code,
     description,
     visibility_status
-from {{ resolve_input_model('imaging_area_external_codes') }}
+from {{ source('tamanu', 'imaging_area_external_codes') }}
 where deleted_at is null

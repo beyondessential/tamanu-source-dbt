@@ -11,7 +11,7 @@ select
     n.on_behalf_of_id,
     n.revised_by_id as updated_note_id,
     n.visibility_status
-from {{ resolve_input_model('notes') }} n
-join {{ resolve_input_model('reference_data') }} rd
+from {{ source('tamanu', 'notes') }} n
+join {{ source('tamanu', 'reference_data') }} rd
     on rd.id = n.note_type_id
 where n.deleted_at is null

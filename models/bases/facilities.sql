@@ -11,5 +11,5 @@ select
     catchment_id,
     visibility_status,
     is_sensitive
-from {{ resolve_input_model('facilities') }}
+from {{ source('tamanu', 'facilities') }}
 where deleted_at is null

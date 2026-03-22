@@ -14,6 +14,6 @@ select
     registered_birth_place,
     birth_facility_id,
     created_at::date as registration_date
-from {{ resolve_input_model('patient_birth_data') }}
+from {{ source('tamanu', 'patient_birth_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'

@@ -4,5 +4,5 @@ select
     name,
     facility_id,
     visibility_status
-from {{ resolve_input_model('departments') }}
+from {{ source('tamanu', 'departments') }}
 where deleted_at is null

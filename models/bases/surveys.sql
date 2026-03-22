@@ -8,5 +8,5 @@ select
     notify_email_addresses,
     program_id,
     visibility_status
-from {{ resolve_input_model('surveys') }}
+from {{ source('tamanu', 'surveys') }}
 where deleted_at is null

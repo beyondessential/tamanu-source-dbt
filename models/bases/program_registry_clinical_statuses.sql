@@ -5,5 +5,5 @@ select
     color,
     visibility_status,
     program_registry_id
-from {{ resolve_input_model('program_registry_clinical_statuses') }}
+from {{ source('tamanu', 'program_registry_clinical_statuses') }}
 where deleted_at is null
