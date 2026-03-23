@@ -8,6 +8,7 @@ repos:
   - beyondessential/tamanu-dbt-fsm
   - beyondessential/tamanu-dbt-kiribati
   - beyondessential/tamanu-dbt-msf-syria
+  - beyondessential/tamanu-dbt-msf-ethiopia
   - beyondessential/tamanu-dbt-nauru
   - beyondessential/tamanu-dbt-palau
   - beyondessential/tamanu-dbt-samoa
