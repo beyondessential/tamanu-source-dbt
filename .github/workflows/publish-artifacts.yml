@@ -1,0 +1,13 @@
+name: Publish Artifacts
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
