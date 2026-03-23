@@ -2,6 +2,7 @@
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/sql-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
+@./.maui/knowledge/standards/metadata.md
 @./.maui/knowledge/standards/tamanu-conventions.md
 
 ---
@@ -14,7 +15,8 @@ Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data
 
 - All base model `.yml` files require `config.tags: [reference]` — this applies to every base model, including junction/item-level tables
 - Do not add `data_tests` to base model `.yml` files — tests are already defined on source models and would run twice
-- `resolve_input_model()` is for use in base models only — it resolves a source table (or its reconstructed equivalent). Dataset macros must use `ref()` to reference base models, never `resolve_input_model()` or `source()` directly
+- Base models reference source tables with `{{ source('tamanu', 'table_name') }}` directly
+- Dataset macros must use `ref()` to reference base models, never `source()` directly
 - If a source table has no base model yet, create one before referencing it in a dataset macro
 
 ## Documentation (doc blocks)

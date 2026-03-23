@@ -6,6 +6,12 @@ models:
     config:
       tags:
         - reference
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: gold
+      pii: false
+      classification: internal
     columns:
       - name: id
         data_type: character varying(255)
@@ -25,3 +31,6 @@ models:
       - name: visibility_status
         data_type: character varying(255)
         description: "{{ doc('generic__visibility_status') }} in invoice_products."
+      - name: external_code
+        data_type: character varying(255)
+        description: "External code from the linked lab test type or lab test panel, if applicable."

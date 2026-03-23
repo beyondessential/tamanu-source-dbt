@@ -6,5 +6,5 @@ select
     created_at,
     updated_at
 from
-    {{ resolve_input_model('refresh_tokens') }}
+    {{ source('tamanu', 'refresh_tokens') }}
 where deleted_at is null

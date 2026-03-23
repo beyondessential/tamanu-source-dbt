@@ -5,6 +5,12 @@ models:
     config:
       tags:
         - reference
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: internal
     columns:
       - name: id
         data_type: character varying(255)

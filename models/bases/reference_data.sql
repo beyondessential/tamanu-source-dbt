@@ -4,5 +4,5 @@ select
     name,
     type,
     visibility_status
-from {{ resolve_input_model('reference_data') }}
+from {{ source('tamanu', 'reference_data') }}
 where deleted_at is null

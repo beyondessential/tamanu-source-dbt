@@ -393,7 +393,7 @@ Facility, Area, Clinician, Booking type, Status
 
 **Report Description**
 
-This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on actual dispense records.
+This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on dispense records.
 
 **Filters**
 
@@ -828,7 +828,7 @@ Facility, Area, Clinician, Booking type, Status
 
 **Report Description**
 
-This report shows quantity of medication dispensed for a given drug within a specified date range, based on actual dispense records.
+This report shows quantity of medication dispensed for a given drug within a specified date range, based on dispense records.
 
 **Filters**
 

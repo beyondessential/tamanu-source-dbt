@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.50.4
+version: 2.50.5
 config-version: 2
 profile: tamanu_source_dbt
 
@@ -54,11 +54,6 @@ models:
       admin:
         +tags:
           - admin
-    reconstructs:
-      +incremental_strategy: merge
-      +materialized: incremental
-      +tags:
-        - reconstructed
     reports:
       +docs:
         show: false

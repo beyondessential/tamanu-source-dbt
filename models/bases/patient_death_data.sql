@@ -36,6 +36,6 @@ select
     pregnancy_moment,
     multiple_pregnancy,
     mother_condition_description
-from {{ resolve_input_model('patient_death_data') }}
+from {{ source('tamanu', 'patient_death_data') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'

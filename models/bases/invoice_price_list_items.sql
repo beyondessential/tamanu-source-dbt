@@ -4,5 +4,5 @@ select
     invoice_product_id,
     price,
     is_hidden
-from {{ resolve_input_model('invoice_price_list_items') }}
+from {{ source('tamanu', 'invoice_price_list_items') }}
 where deleted_at is null

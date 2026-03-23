@@ -47,7 +47,8 @@ select
     ip.insurable,
     ip.category,
     ip.source_record_id,
-    ip.visibility_status
+    ip.visibility_status,
+    coalesce(ltt.external_code, ltp.external_code) as external_code
     {%- for row in price_lists %}
     , pp.price_{{ loop.index }} as "Price: {{ row[1] }}"
     {%- endfor %}
@@ -65,3 +66,5 @@ select
 from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
+left join {{ ref('lab_test_types') }} ltt on ltt.id = ip.source_record_id
+left join {{ ref('lab_test_panels') }} ltp on ltp.id = ip.source_record_id
