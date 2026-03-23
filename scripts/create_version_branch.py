@@ -37,6 +37,21 @@ def gh_api(path: str, method: str = "GET", data: dict = None):
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
 
+def gh_api_paginate(path: str) -> list:
+    """Fetch all pages of a GitHub API list endpoint."""
+    cmd = ["gh", "api", "--paginate", path]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"gh api --paginate {path} failed:\n{result.stderr.strip()}")
+    # --paginate outputs one JSON array per page; concatenate them
+    items = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if line:
+            items.extend(json.loads(line))
+    return items
+
+
 def find_latest_tag_for_minor(refs: list[dict], major: int, minor: int) -> str | None:
     """Given a list of git ref objects, return the latest vX.Y.Z tag for the given major.minor.
 
@@ -126,7 +141,7 @@ def main():
     major = int(m.group(1))
     minor = int(m.group(2))
 
-    all_refs = gh_api(f"repos/{repo}/git/refs/tags") or []
+    all_refs = gh_api_paginate(f"repos/{repo}/git/refs/tags")
 
     if minor == 0:
         # Major bump: the previous minor lived in the previous major entirely.

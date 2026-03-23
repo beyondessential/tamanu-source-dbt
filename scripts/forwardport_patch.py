@@ -217,6 +217,7 @@ def forwardport_to_branch(
     git("checkout", "-B", pr_branch, f"origin/{target_branch}")
 
     # Cherry-pick patch commits
+    skipped_commits = 0
     for commit in patch_commits:
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
@@ -225,12 +226,14 @@ def forwardport_to_branch(
                 # Commit already applied on this branch — skip it
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
+                skipped_commits += 1
                 continue
             # Real conflict — abort and bail
             git("cherry-pick", "--abort", check=False)
             git("checkout", "-")
             print(f"    ❌ Cherry-pick conflict at {commit[:8]}, skipping branch")
             return
+    applied_commits = len(patch_commits) - skipped_commits
 
     # Override version to the correct next patch for this branch
     changed = update_version_in_files(new_target_version)
@@ -239,6 +242,13 @@ def forwardport_to_branch(
         result = git("diff", "--cached", "--name-only", check=False)
         if result.stdout.strip():
             git("commit", "-m", f"chore: bump version to {new_target_version}")
+
+    # Skip if nothing was actually committed
+    ahead = git_out("rev-list", "--count", f"origin/{target_branch}..HEAD")
+    if int(ahead) == 0:
+        print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
+        git("checkout", "-")
+        return
 
     # Push
     git("push", "origin", pr_branch, "--force-with-lease")
@@ -252,7 +262,7 @@ def forwardport_to_branch(
         "--body", (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picks {len(patch_commits)} commit(s) from `{new_patch_tag}`\n\n"
+            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         ),
