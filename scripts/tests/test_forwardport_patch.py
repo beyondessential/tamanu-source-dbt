@@ -198,6 +198,36 @@ def test_get_higher_minor_branches_ignores_other_major():
 
 
 # ---------------------------------------------------------------------------
+# forward-port skip condition  (forwardport_patch.py:319)
+# ---------------------------------------------------------------------------
+
+
+def test_skip_condition_same_minor():
+    # patch on same minor as main — should exit early
+    assert (2, 50) >= (2, 50)
+
+
+def test_skip_condition_newer_minor():
+    # patch on a newer minor than main — should exit early (shouldn't happen but guarded)
+    assert (2, 51) >= (2, 50)
+
+
+def test_skip_condition_cross_major_does_not_skip():
+    # patch on v2.49 while main is on v3.0 — must NOT exit early
+    assert not (2, 49) >= (3, 0)
+
+
+def test_skip_condition_older_minor_same_major():
+    # normal forward-port case: patch on older minor, main on newer — must NOT exit early
+    assert not (2, 49) >= (2, 50)
+
+
+def test_skip_condition_major_boundary():
+    # v2.99 patch while main is on v3.0 — must NOT exit early
+    assert not (2, 99) >= (3, 0)
+
+
+# ---------------------------------------------------------------------------
 # update_version_in_files
 # ---------------------------------------------------------------------------
 
