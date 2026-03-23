@@ -9,6 +9,7 @@ name: Build Reporting Assets
 # Requires:
 #   vars.TS_OAUTH_CLIENT_ID, vars.TS_TAGS, vars.TS_K8S_OPERATOR_HOSTNAME — Tailscale access
 #   GITHUB_TOKEN with contents:write (granted automatically by GHA)
+#   secrets.META_CERT, secrets.META_KEY, vars.META_URL — passed via secrets: inherit to publish-artifacts
 
 on:
   release:
