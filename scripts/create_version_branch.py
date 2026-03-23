@@ -39,17 +39,12 @@ def gh_api(path: str, method: str = "GET", data: dict = None):
 
 def gh_api_paginate(path: str) -> list:
     """Fetch all pages of a GitHub API list endpoint."""
-    cmd = ["gh", "api", "--paginate", path]
+    cmd = ["gh", "api", "--paginate", "--jq", ".[]", path]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"gh api --paginate {path} failed:\n{result.stderr.strip()}")
-    # --paginate outputs one JSON array per page; concatenate them
-    items = []
-    for line in result.stdout.splitlines():
-        line = line.strip()
-        if line:
-            items.extend(json.loads(line))
-    return items
+    # --jq '.[]' outputs one JSON object per line across all pages
+    return [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
 
 
 def find_latest_tag_for_minor(refs: list[dict], major: int, minor: int) -> str | None:

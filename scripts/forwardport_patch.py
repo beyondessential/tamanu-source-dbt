@@ -135,7 +135,7 @@ def get_previous_tag(new_tag: str, tags: list[str]) -> str | None:
 
 def get_patch_commits(prev_tag: str, new_tag: str) -> list[str]:
     """Return commit SHAs introduced in new_tag relative to prev_tag, oldest first."""
-    raw = git_out("log", f"{prev_tag}..{new_tag}", "--format=%H", "--reverse")
+    raw = git_out("log", f"{prev_tag}..{new_tag}", "--no-merges", "--format=%H", "--reverse")
     return [c for c in raw.splitlines() if c.strip()]
 
 
@@ -190,13 +190,6 @@ def forwardport_to_branch(
 ) -> None:
     print(f"\n  Target: {target_branch}")
 
-    target_version = get_branch_version(target_branch)
-    if not target_version:
-        print(f"    ⏭️  Cannot read version from '{target_branch}', skipping")
-        return
-
-    tmaj, tmin, tpatch = get_major_minor_patch(target_version)
-    new_target_version = f"{tmaj}.{tmin}.{tpatch + 1}"
     pr_branch = f"chore/forwardport-{new_patch_tag}-to-{target_branch.replace('/', '-')}"
 
     # Skip if PR already open
@@ -212,8 +205,18 @@ def forwardport_to_branch(
         print(f"    ⏭️  PR already open for branch '{pr_branch}'")
         return
 
-    # Checkout PR branch from the target
+    # Fetch before reading version so we compute against the latest state
     git("fetch", "origin", target_branch)
+
+    target_version = get_branch_version(target_branch)
+    if not target_version:
+        print(f"    ⏭️  Cannot read version from '{target_branch}', skipping")
+        return
+
+    tmaj, tmin, tpatch = get_major_minor_patch(target_version)
+    new_target_version = f"{tmaj}.{tmin}.{tpatch + 1}"
+
+    # Checkout PR branch from the target
     git("checkout", "-B", pr_branch, f"origin/{target_branch}")
 
     # Cherry-pick patch commits
@@ -222,7 +225,7 @@ def forwardport_to_branch(
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
             stderr = result.stderr + result.stdout
-            if "nothing to commit" in stderr or "empty" in stderr.lower():
+            if "nothing to commit" in stderr or "allow-empty" in stderr or "cherry-pick is now empty" in stderr:
                 # Commit already applied on this branch — skip it
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
@@ -254,7 +257,6 @@ def forwardport_to_branch(
     git("push", "origin", pr_branch, "--force-with-lease")
 
     # Create PR
-    base_branch = "main" if target_branch == "main" else target_branch
     pr_url = gh_out(
         "pr", "create",
         "--repo", repo,
@@ -267,7 +269,7 @@ def forwardport_to_branch(
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         ),
         "--head", pr_branch,
-        "--base", base_branch,
+        "--base", target_branch,
     )
     print(f"    ✅ PR: {pr_url}")
 
@@ -339,12 +341,9 @@ def main():
 
     # Collect target branches: all major.Y (Y > minor) + main
     target_branches = get_higher_minor_branches(major, minor)
-    if (mmaj, mmin) > (major, minor):
-        target_branches.append("main")
-
     if not target_branches:
-        print("No higher-minor branches found — nothing to forward-port")
-        sys.exit(0)
+        print("No higher-minor branches found — only forward-porting to main")
+    target_branches.append("main")
 
     print(f"Target branches: {', '.join(target_branches)}")
 
