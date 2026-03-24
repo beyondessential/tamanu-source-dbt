@@ -26,6 +26,10 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
     pad.mother_id,
     pad.father_id,
     pad.street_village,
@@ -55,3 +59,5 @@ left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_
 left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
 left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'
 left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join {{ ref("reference_data") }} subdivision on subdivision.id = pad.subdivision_id
+left join {{ ref("reference_data") }} division on division.id = pad.division_id
