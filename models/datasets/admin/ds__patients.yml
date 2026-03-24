@@ -91,6 +91,18 @@ models:
       - name: patient_billing_type
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} of the patient billing type."
+      - name: subdivision_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__subdivision_id') }}"
+      - name: subdivision
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's subdivision."
+      - name: division_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__division_id') }}"
+      - name: division
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's division."
       - name: mother_id
         data_type: character varying(255)
         description: "{{ doc('patient_additional_data__mother_id') }}"
