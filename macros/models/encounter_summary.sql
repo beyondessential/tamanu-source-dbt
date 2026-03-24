@@ -81,9 +81,6 @@ encounter_history_consolidated as (
         on d.id = eh.department_id
     join {{ ref('locations') }} l
         on l.id = eh.location_id
-    join {{ ref('facilities') }} f
-        on f.id = l.facility_id
-        and f.is_sensitive = {{ is_sensitive }}
     left join {{ ref('location_groups') }} lg
         on lg.id = l.location_group_id
 ),
@@ -284,16 +281,21 @@ encounter_lab_requests as (
 
 notes_raw as (
     select
-        id,
-        datetime,
-        content,
-        note_type,
-        record_type,
-        record_id,
-        updated_note_id,
-        visibility_status
-    from {{ ref('notes') }}
-    where record_type in ('Encounter', 'ImagingRequest')
+        n.id,
+        n.datetime,
+        n.content,
+        n.note_type,
+        n.record_type,
+        n.record_id,
+        n.updated_note_id,
+        n.visibility_status
+    from {{ ref('notes') }} n
+    left join {{ ref('imaging_requests') }} ir
+        on n.record_type = 'ImagingRequest'
+        and ir.id = n.record_id
+    join encounters_in_scope eis
+        on eis.encounter_id = coalesce(ir.encounter_id, n.record_id)
+    where n.record_type in ('Encounter', 'ImagingRequest')
 ),
 
 encounter_notes_deduped as (
