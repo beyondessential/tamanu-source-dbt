@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Sensitive recent diagnoses line list",
-  "notes": "This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities.",
+  "notes": "This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
