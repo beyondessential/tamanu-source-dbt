@@ -54,11 +54,6 @@ models:
       admin:
         +tags:
           - admin
-    reconstructs:
-      +incremental_strategy: merge
-      +materialized: incremental
-      +tags:
-        - reconstructed
     reports:
       +docs:
         show: false

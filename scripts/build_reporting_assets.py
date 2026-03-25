@@ -76,9 +76,6 @@ def main():
             execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
             generate_project_reports(language)
 
-        # List Tamanu reports
-        execute_command(f"python {SCRIPTS_DIR / 'list_tamanu_reports.py'}")
-
         cprint(f"\n✓ Build complete for version {VERSION}", "success")
 
     except Exception as e:

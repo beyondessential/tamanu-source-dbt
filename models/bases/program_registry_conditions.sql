@@ -4,5 +4,5 @@ select
     name,
     visibility_status,
     program_registry_id
-from {{ resolve_input_model('program_registry_conditions') }}
+from {{ source('tamanu', 'program_registry_conditions') }}
 where deleted_at is null

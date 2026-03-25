@@ -1,0 +1,39 @@
+name: Propagate Patch to Deployment Repos
+
+# Triggered automatically when a release is published, or manually for a specific tag.
+# Opens a PR in each deployment repo that is pinned to the same major.minor version.
+#
+# Requires: GH_DEPLOYMENT_TOKEN secret — a PAT with `repo` scope on all
+# repos listed in .github/deployment-repos.yml
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to propagate (e.g. v2.50.2)'
+        required: true
+        type: string
+
+jobs:
+  propagate:
+    name: Propagate patch release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Propagate patch to deployment repos
+        env:
+          GH_TOKEN: ${{ secrets.GH_TAMANU_DBT_DEPLOYMENT_TOKEN }}
+          NEW_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+        run: python scripts/propagate_patch.py

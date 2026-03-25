@@ -6,8 +6,8 @@ select
     ed.encounter_id,
     ed.diagnosis_id,
     ed.clinician_id as diagnosed_by_id
-from {{ resolve_input_model('encounter_diagnoses') }} ed
-join {{ resolve_input_model('encounters') }} e on e.id = ed.encounter_id
+from {{ source('tamanu', 'encounter_diagnoses') }} ed
+join {{ source('tamanu', 'encounters') }} e on e.id = ed.encounter_id
 where ed.deleted_at is null
     and ed.certainty not in ('disproven', 'error')
     and e.deleted_at is null

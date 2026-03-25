@@ -6,6 +6,12 @@ models:
     config:
       tags:
         - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: gold
+      pii: true
+      classification: restricted
     columns:
       - name: patient_id
         data_type: text

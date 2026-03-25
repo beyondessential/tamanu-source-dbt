@@ -1,0 +1,26 @@
+version: 2
+models:
+  - name: invoice_price_lists
+    description: "{{ doc('table__invoice_price_lists') }}"
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: internal
+    columns:
+      - name: id
+        data_type: text
+        description: "{{ doc('generic__id') }} in invoice_price_lists."
+      - name: name
+        data_type: character varying(255)
+        description: "{{ doc('invoice_price_lists__name') }}"
+      - name: code
+        data_type: character varying(255)
+        description: "{{ doc('invoice_price_lists__code') }}"
+      - name: visibility_status
+        data_type: text
+        description: "{{ doc('generic__visibility_status') }} in invoice_price_lists."

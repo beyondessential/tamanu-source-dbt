@@ -1,0 +1,15 @@
+# Deployment repos that receive patch propagation from tamanu-source-dbt.
+# When a new patch release is published, a PR will be opened in each repo
+# that is pinned to the same major.minor version.
+# Format: org/repo
+repos:
+  - beyondessential/tamanu-dbt-aspen
+  - beyondessential/tamanu-dbt-fiji
+  - beyondessential/tamanu-dbt-fsm
+  - beyondessential/tamanu-dbt-kiribati
+  - beyondessential/tamanu-dbt-msf-syria
+  - beyondessential/tamanu-dbt-msf-ethiopia
+  - beyondessential/tamanu-dbt-nauru
+  - beyondessential/tamanu-dbt-palau
+  - beyondessential/tamanu-dbt-samoa
+  - beyondessential/tamanu-dbt-tuvalu

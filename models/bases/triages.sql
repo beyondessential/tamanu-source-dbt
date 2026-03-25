@@ -9,8 +9,8 @@ select
     t.practitioner_id as clinician_id,
     t.chief_complaint_id,
     t.secondary_complaint_id
-from {{ resolve_input_model('triages') }} t
-join {{ resolve_input_model('encounters') }} e on e.id = t.encounter_id
+from {{ source('tamanu', 'triages') }} t
+join {{ source('tamanu', 'encounters') }} e on e.id = t.encounter_id
 where t.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'

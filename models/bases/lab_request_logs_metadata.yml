@@ -6,6 +6,12 @@ models:
       tags:
         - clinical
         - log
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: false
+      classification: restricted
     columns:
       - name: id
         data_type: character varying(255)

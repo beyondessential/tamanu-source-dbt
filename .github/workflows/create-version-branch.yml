@@ -1,0 +1,46 @@
+name: Create Version Branch
+
+# When a new minor release (vX.Y.0) is published, creates a maintenance branch
+# for the previous minor version (X.(Y-1)) pointing to the last vX.(Y-1).* tag.
+#
+# Example: publishing v2.51.0 creates branch '2.50' at the latest v2.50.* tag.
+#
+# Requires: GITHUB_TOKEN with contents:write (granted automatically by GHA).
+#
+# Note: GHA release events don't support tag-pattern filters. This triggers on
+# every release; the script exits early if the tag is not a vX.Y.0 minor release.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Minor release tag to process (e.g. v2.51.0)'
+        required: true
+        type: string
+
+jobs:
+  create-branch:
+    name: Create maintenance branch for previous minor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create maintenance branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: python scripts/create_version_branch.py
