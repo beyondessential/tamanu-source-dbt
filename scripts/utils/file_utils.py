@@ -172,7 +172,7 @@ def remove_directory(dir_path):
     """
     try:
         if os.path.exists(dir_path):
-            shutil.rmtree(dir_path, onerror=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
+            shutil.rmtree(dir_path, onexc=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
         else:
             cprint(f"Error: Directory not found: {dir_path}", "error")
     except Exception as e:
