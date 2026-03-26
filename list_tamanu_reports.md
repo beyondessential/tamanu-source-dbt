@@ -437,7 +437,6 @@ Facility, Village, Category, Vaccine
 
 ---
 
-
 ## Admin
 
 ### Admin audit patient details edits line list
