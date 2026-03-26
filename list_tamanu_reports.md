@@ -1,557 +1,4 @@
-# List of standard Tamanu reports
-
-## Admin
-
-### Admin audit patient details edits line list
-
-**Report Description**
-
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
-Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
-
-
----
-
-### Admin audit patient views line list
-
-**Report Description**
-
-This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. 
-Views are listed in chronological order. If multiple views are made to a patient's record within a logged session, these views will be grouped together and displayed as a single view in the report.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
-
-
----
-
-### Admin deceased patients line list
-
-**Report Description**
-
-This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
-The report includes all details documented in the patient death record. 
-
-**Filters**
-
-Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
-
-**Default date range**: 7days
-
-
----
-
-### Admin invoice products summary
-
-**Report Description**
-
-This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
-
-**Default date range**: allTime
-
-
----
-
-### Admin ongoing conditions line list
-
-**Report Description**
-
-This report lists all patients with ongoing conditions for the selected parameters.
-
-**Default date range**: 7days
-
-
----
-
-### Admin program registry line list
-
-**Report Description**
-
-This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
-Home village: Per patient details
-Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
-Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)
-Status: Current status of the patient per the 'status' function within the register.
-Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
-Registered by: Name of Tamanu user who added the patient to this registry
-Registering facility: Facility selected when patient is first added to the registry
-
-**Filters**
-
-Registry, Subdivision, Division
-
-**Default date range**: allTime
-
-
----
-
-### Admin program registry removed patients line list
-
-**Report Description**
-
-This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
-Home village: Per patient details
-Registering facility: Facility selected when patient is first added to the registry
-Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
-Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
-Registered by: Name of user who added the patient to the registry
-Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the first addition to the register.
-Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list the most recent removal)
-Removed by: Name of user who removed the patient from the registry
-
-**Filters**
-
-Registry
-
-**Default date range**: allTime
-
-
----
-
-### Admin registered births line list
-
-**Report Description**
-
-This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.
-
-**Filters**
-
-Facility, Village
-
-**Default date range**: 7days
-
-
----
-
-### Admin registered patients by dob line list
-
-**Report Description**
-
-This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
-
-**Default date range**: 7days
-
-
----
-
-### Admin registered patients daily summary
-
-**Report Description**
-
-This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. 
-
-**Default date range**: allTime
-
-
----
-
-### Admin registered patients line list
-
-**Report Description**
-
-This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
-
-**Default date range**: 7days
-
-
----
-
-### Admin upcoming vaccinations line list
-
-**Report Description**
-
-This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
-
-**Filters**
-
-Category, Vaccine, Vaccine status, Village
-
-**Default date range**: 18years
-
-
----
-
-### Admin usage quality metrics patient details
-
-**Report Description**
-
-This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
-
-**Default date range**: allTime
-
-
----
-
-### Admin usage quality metrics patient registrations
-
-**Report Description**
-
-This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
-
-**Default date range**: 30days
-
-
----
-
-
-## Sensitive
-
-### Sensitive admissions line list
-
-**Report Description**
-
-This report generates a list of all patients with a hospital admission started within the selected date range at sensitive facilities. The report includes both active and discharged admissions. Patients are listed in order of most recent admission by admission date and time. The discharge date is displayed if the patient has been discharged, 
-otherwise if the encounter is active this column will appear blank. 
-
-The below information is included for each hospital admission:
-- List of all assigned departments and the date and time a patient was assigned to each department.
-- List of all assigned areas and the date and time a patient was assigned to each area.
-- List of all assigned locations and the date and time a patient was assigned to each location.
-- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed', 'Suspected', or 'Emergency'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
-
-
-**Filters**
-
-Facility, Patient billing type, Admitting clinician, Area, Department, Admission status
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive audit outpatient appointments line list
-
-**Report Description**
-
-This report shows an audit log of all modifications and cancellations to outpatient appointments at sensitive facilities. Each row represents a change event, showing both the current appointment details and the previous values before the change. The report is designed to track which Tamanu users are creating and editing appointments. Status-only changes (e.g., Confirmed to Arrived) are excluded unless the status change is to Cancelled. If an appointment is changed multiple times, each modification will appear as a separate line.
-
-**Filters**
-
-Facility
-
-**Default date range**: 24hours
-
-
----
-
-### Sensitive encounter diets line list
-
-**Report Description**
-
-This report generates a list of all active encounters at sensitive facilities with their associated dietary requirements. The report includes:
-- Patient details and current location
-- Dietary requirements and restrictions.
-
-**Filters**
-
-Facility, Area
-
-**Default date range**: allTime
-
-
----
-
-### Sensitive encounter summary
-
-**Report Description**
-
-This report generates a list of all patients from a sensitive facility that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. 
-
-The below information is included for each encounter: 
-- Encounter start and end dates and times with length of stay. 
-- Facility at which the encounter occurred. 
-- List of encounter types assigned during each encounter. Triage encounters include details of the triage category, arrival mode and wait time. 
-- Encountering and discharging clinicians.
-- Discharge information including disposition, discharging department, area, and location with timestamps.
-- Complete history of all assigned departments, areas, and locations with date and time assignments.
-
-All clinical data is listed chronologically within each cell. The below is a summary of the clinical information included for each encounter: 
-- List of diagnoses. Diagnoses with a status of Disproven or Recorded in error are excluded from the report. 
-- List of medications prescribed. 
-- List of vaccinations recorded. 
-- List of procedures performed.
-- List of lab requests. Lab requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
-- List of imaging requests. Imaging requests with a status of Cancelled, Deleted or Entered in error are excluded from the report. 
-- All clinical notes recorded throughout the encounter.
-- Reason for encounter as documented.
-
-**Filters**
-
-Facility, Department, Area, Patient billing type, Supervising clinician
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive imaging requests line list
-
-**Report Description**
-
-This report generates a list of all patients that have had an imaging request created at sensitive facilities and details of that imaging request for the selected parameters. Patients are listed in chronological order based on the lab request date and time. 
-
-If an imaging request has more than one area to be imaged than the request will be reported across multiple lines. The report includes imaging requests with all statuses and if a request has been cancelled will display the reason for cancellation.  
-
-**Filters**
-
-Facility, Requesting clinician, Status, Imaging type
-
-**Default date range**: 24hours
-
-
----
-
-### Sensitive imaging requests summary
-
-**Report Description**
-
-This report generates a statistical summary of imaging requests at sensitive facilities by date, department and imaging type. Each indicator is reported by day. Dates are listed chronologically by department and imaging type. Imaging requests with a status of cancelled, deleted or entered in error are excluded from this report. 
-
-Details on how each indicator is calculated are provided below:
-- Total new requests = The number of imaging requests generated on the specified day. 
-- Total requests with a status of pending = The number of imaging requests with a status of pending. This number may include requests generated on a different date. 
-- Total requests completed = The number of imaging requests with status updated to completed on the specified day. 
-
-**Filters**
-
-Facility, Department, Imaging type
-
-**Default date range**: 30days
-
-
----
-
-### Sensitive incomplete referrals
-
-**Report Description**
-
-This report lists all patients that have a pending referral at sensitive facilities for the selected parameters.
-
-**Filters**
-
-Village, Doctor/Nurse
-
-**Default date range**: allTime
-
-
----
-
-### Sensitive lab requests line list
-
-**Report Description**
-
-This report generates a list of all patients that have had a lab request containing sensitive tests created and details of the request for the selected parameters. Patients are listed in chronological order based on the lab request date and time.  
-
-The report includes lab requests for all statuses and if a request has been cancelled will display the reason for cancellation. 
-
-**Filters**
-
-Requesting clinician, Test category, Status
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive lab tests line list
-
-**Report Description**
-
-This report generates a list of all patients that have had sensitive lab tests performed for the selected parameters. Patients are listed in chronological order based on the lab request date and time. Only lab tests marked as sensitive in the system are included in this report.
-
-The report includes detailed test results, verification status, and completion information for sensitive tests only.
-
-**Filters**
-
-Status, Test category
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive location bookings line list
-
-**Report Description**
-
-This report generates a list of all location bookings at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of booking
-
-**Filters**
-
-Facility, Area, Clinician, Booking type, Status
-
-**Default date range**: next30days
-
-
----
-
-### Sensitive medication dispensed summary
-
-**Report Description**
-
-This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on dispense records.
-
-**Filters**
-
-Facility, Drug
-
-**Default date range**: 30days
-
-
----
-
-### Sensitive outpatient appointments line list
-
-**Report Description**
-
-This report generates a list of all patients with a scheduled appointment at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment
-
-**Filters**
-
-Facility, Area, Clinician, Appointment type, Status
-
-**Default date range**: next30days
-
-
----
-
-### Sensitive patient emergency encounters summary
-
-**Report Description**
-
-This report generates a summary showing the number of triage (emergency room encounter) records per patient at sensitive facilities within a specified date range. The report defaults to the past 30 days and can be filtered by patient display ID. Patients are listed alphabetically by last name.
-
-**Filters**
-
-Patient (or leave blank for all patients)
-
-**Default date range**: 30days
-
-
----
-
-### Sensitive prescription line list
-
-**Report Description**
-
-This report generates a list of all prescription created in the selected date range from encounters at sensitive facilities. Prescriptions are listed in order of most recent prescribed date and time.
-
-**Filters**
-
-Facility
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive procedures line list
-
-**Report Description**
-
-This report pulls list of all patients that have documented procedures at sensitive facilities during the selected date period 
-
-**Filters**
-
-Facility, Procedure clinician, Department, Area, Location
-
-**Default date range**: 24hours
-
-
----
-
-### Sensitive recent diagnoses line list
-
-**Report Description**
-
-This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.
-
-**Filters**
-
-Facility, Village, Diagnosis, Diagnosis 2, Diagnosis 3, Diagnosis 4, Diagnosis 5, Clinician
-
-**Default date range**: 24hours
-
-
----
-
-### Sensitive user audit report
-
-**Report Description**
-
-This report generates a summary of user activity at sensitive facilities for all current and discharged inpatient, emergency and outpatient encounters for the selected date range. Encounters are listed in chronological order by encounter start date and time. 
-
-The following details are included for each encounter:
-- User name: The user assigned as the supervising clinician at the time of report generation or at time of discharge  
-- Role: The role of the supervising clinician 
-- Patient category: Patient billing type
-- Triage category: Triage category for the patient if an emergency encounter
-- Department: Assigned department at the time of report generation or at time of discharge  
-- Area: Assigned area at the time of report generation or at time of discharge  
-- Location: Assigned location at the time of report generation or at time of discharge
-- Notes start time: The time first note was completed (excludes system generated notes)
-- Notes end time: The time the final note was completed (excludes system generated notes)
-- Discharges: Specifies whether or not the patient has been discharged
-- Non-discharge by clinicians: If patient is automatically discharged, this column will display the name of the clinician who last authored a note or who the note was written on behalf of
-
-**Filters**
-
-Facility, Department, Area
-
-**Default date range**: 24hours
-
-
----
-
-### Sensitive vaccine audit line list
-
-**Report Description**
-
-This report generates a list of all patients that have a vaccination record deleted or updated from 'Not given' to 'Given' at sensitive facilities. Patients are listed alphabetically by last name and date of vaccination in chronological order. 
-
-The report includes the following information in addition to the vaccination date and name:
-Vaccination status: Where 'Recorded in error' is the status of a deleted record and 'Historical' is the status of a vaccine recorded as 'Not given' that is now recorded as 'Given'
-Vaccine recorded by: The username associated with the person logged into Tamanu at the time the vaccine record was originally created
-Given by: The healthcare worker that was recorded as administering the now deleted vaccination record 
-Record modified by: The username associated with the person logged into Tamanu at the time the vaccine record was deleted
-Record modification date: The date the vaccination record was deleted from Tamanu 
- 
-
-**Filters**
-
-Facility, Village, Category, Vaccine, Status
-
-**Default date range**: 7days
-
-
----
-
-### Sensitive vaccine line list
-
-**Report Description**
-
-This report generates a list of all patients that have had a vaccination recorded at sensitive facilities for the selected parameters. Patients are listed alphabetically by last name and date of vaccination in chronological order. 
-
-The report includes vaccinations with statuses of both 'Given' and 'Not given', and each vaccination recorded is listed on a single row. If a vaccination was initially recorded as 'Not given' and is later marked as 'Given', only the vaccination record with a status of 'Given' will be included in the report.
-
-**Filters**
-
-Facility, Village, Category, Vaccine
-
-**Default date range**: 7days
-
-
----
-
+# List of Tamanu reports
 
 ## Standard
 
@@ -986,6 +433,209 @@ The report includes vaccinations with statuses of both 'Given' and 'Not given', 
 Facility, Village, Category, Vaccine
 
 **Default date range**: 7days
+
+
+---
+
+
+## Admin
+
+### Admin audit patient details edits line list
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
+Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Admin audit patient views line list
+
+**Report Description**
+
+This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. 
+Views are listed in chronological order. If multiple views are made to a patient's record within a logged session, these views will be grouped together and displayed as a single view in the report.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Admin deceased patients line list
+
+**Report Description**
+
+This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
+The report includes all details documented in the patient death record. 
+
+**Filters**
+
+Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
+
+**Default date range**: 7days
+
+
+---
+
+### Admin invoice products summary
+
+**Report Description**
+
+This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
+
+**Default date range**: allTime
+
+
+---
+
+### Admin ongoing conditions line list
+
+**Report Description**
+
+This report lists all patients with ongoing conditions for the selected parameters.
+
+**Default date range**: 7days
+
+
+---
+
+### Admin program registry line list
+
+**Report Description**
+
+This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
+Home village: Per patient details
+Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)
+Status: Current status of the patient per the 'status' function within the register.
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
+Registered by: Name of Tamanu user who added the patient to this registry
+Registering facility: Facility selected when patient is first added to the registry
+
+**Filters**
+
+Registry, Subdivision, Division
+
+**Default date range**: allTime
+
+
+---
+
+### Admin program registry removed patients line list
+
+**Report Description**
+
+This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
+Home village: Per patient details
+Registering facility: Facility selected when patient is first added to the registry
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
+Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
+Registered by: Name of user who added the patient to the registry
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the first addition to the register.
+Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list the most recent removal)
+Removed by: Name of user who removed the patient from the registry
+
+**Filters**
+
+Registry
+
+**Default date range**: allTime
+
+
+---
+
+### Admin registered births line list
+
+**Report Description**
+
+This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.
+
+**Filters**
+
+Facility, Village
+
+**Default date range**: 7days
+
+
+---
+
+### Admin registered patients by dob line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
+
+**Default date range**: 7days
+
+
+---
+
+### Admin registered patients daily summary
+
+**Report Description**
+
+This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. 
+
+**Default date range**: allTime
+
+
+---
+
+### Admin registered patients line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
+
+**Default date range**: 7days
+
+
+---
+
+### Admin upcoming vaccinations line list
+
+**Report Description**
+
+This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
+
+**Filters**
+
+Category, Vaccine, Vaccine status, Village
+
+**Default date range**: 18years
+
+
+---
+
+### Admin usage quality metrics patient details
+
+**Report Description**
+
+This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
+
+**Default date range**: allTime
+
+
+---
+
+### Admin usage quality metrics patient registrations
+
+**Report Description**
+
+This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
+
+**Default date range**: 30days
 
 
 ---

@@ -21,19 +21,21 @@ def extract_and_write_to_md(base_path, output_file, report_type):
 
     with open(output_file, file_mode, encoding="utf-8") as file:
         if report_type == "Standard":
-            file.write("# List of standard Tamanu reports\n")
+            file.write("# List of Tamanu reports\n")
         else:
             file.write(f"\n## {report_type}\n")
 
-        # Group files by folder, sorted alphabetically
+        # Group files by folder, in specified order, excluding sensitive
+        folder_order = ['standard', 'admin', 'custom']
         folders = {}
         for root, _, files in os.walk(base_path):
             json_files = sorted(f for f in files if f.endswith(".json"))
             if json_files:
                 folder_name = os.path.relpath(root, base_path)
-                folders[folder_name] = [os.path.join(root, f) for f in json_files]
+                if folder_name not in ('sensitive', '.') and folder_name in folder_order:
+                    folders[folder_name] = [os.path.join(root, f) for f in json_files]
 
-        for folder_name in sorted(folders.keys()):
+        for folder_name in (f for f in folder_order if f in folders):
             file.write(f"\n## {folder_name.capitalize()}\n\n")
 
             for json_file_path in folders[folder_name]:
