@@ -13,7 +13,7 @@ models:
         data_type: character varying(255)
         description: "{{ doc('invoices__display_id') }}"
       - name: datetime
-        data_type: character(19)
+        data_type: timestamp
         description: "{{ doc('generic__date') }} in invoices."
       - name: status
         data_type: character varying(255)

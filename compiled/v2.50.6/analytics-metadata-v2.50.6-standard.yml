@@ -1198,7 +1198,7 @@
   - reference
 - columns:
     datetime:
-      data_type: character(19)
+      data_type: timestamp
       description: Local date for the record in invoices.
       name: datetime
     display_id:
