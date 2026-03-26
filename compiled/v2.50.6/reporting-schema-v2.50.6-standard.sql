@@ -2676,6 +2676,8 @@ join "reporting"."pharmacy_order_prescriptions" pop
     on pop.id = md.pharmacy_order_prescription_id
 join "reporting"."pharmacy_orders" po
     on po.id = pop.pharmacy_order_id
+-- prescription_id is not null on all pharmacy_order_prescriptions rows (enforced by source not_null test).
+-- ongoing_prescription_id is the nullable supplementary reference and is not used for the medication lookup
 join "reporting"."prescriptions" pr
     on pr.id = pop.prescription_id
 join "reporting"."reference_data" m
@@ -4927,6 +4929,8 @@ join "reporting"."pharmacy_order_prescriptions" pop
     on pop.id = md.pharmacy_order_prescription_id
 join "reporting"."pharmacy_orders" po
     on po.id = pop.pharmacy_order_id
+-- prescription_id is not null on all pharmacy_order_prescriptions rows (enforced by source not_null test).
+-- ongoing_prescription_id is the nullable supplementary reference and is not used for the medication lookup
 join "reporting"."prescriptions" pr
     on pr.id = pop.prescription_id
 join "reporting"."reference_data" m
