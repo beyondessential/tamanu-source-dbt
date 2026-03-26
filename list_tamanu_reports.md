@@ -1,5 +1,7 @@
-# List of Tamanu reports
-## Standard
+# List of standard Tamanu reports
+
+## Admin
+
 ### Admin audit patient details edits line list
 
 **Report Description**
@@ -200,6 +202,9 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
+
+## Sensitive
+
 ### Sensitive admissions line list
 
 **Report Description**
@@ -211,7 +216,7 @@ The below information is included for each hospital admission:
 - List of all assigned departments and the date and time a patient was assigned to each department.
 - List of all assigned areas and the date and time a patient was assigned to each area.
 - List of all assigned locations and the date and time a patient was assigned to each location.
-- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed' and 'Suspected'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
+- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed', 'Suspected', or 'Emergency'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
 
 
 **Filters**
@@ -468,7 +473,7 @@ Facility, Procedure clinician, Department, Area, Location
 
 **Report Description**
 
-This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities.
+This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.
 
 **Filters**
 
@@ -547,6 +552,9 @@ Facility, Village, Category, Vaccine
 
 ---
 
+
+## Standard
+
 ### Admissions line list
 
 **Report Description**
@@ -558,7 +566,7 @@ The below information is included for each hospital admission:
 - List of all assigned departments and the date and time a patient was assigned to each department.
 - List of all assigned areas and the date and time a patient was assigned to each area.
 - List of all assigned locations and the date and time a patient was assigned to each location.
-- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed' and 'Suspected'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
+- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed', 'Suspected', or 'Emergency'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. 
 
 
 **Filters**
@@ -903,7 +911,7 @@ Facility, Procedure clinician, Department, Area, Location
 
 **Report Description**
 
-This report lists all patients that have had the specified diagnosis/es recorded.
+This report lists all patients that have had the specified diagnosis/es recorded. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.
 
 **Filters**
 

@@ -21,37 +21,44 @@ def extract_and_write_to_md(base_path, output_file, report_type):
 
     with open(output_file, file_mode, encoding="utf-8") as file:
         if report_type == "Standard":
-            file.write(f"# List of Tamanu reports\n")
+            file.write("# List of standard Tamanu reports\n")
+        else:
+            file.write(f"\n## {report_type}\n")
 
-        file.write(f"## {report_type}\n")
-        
+        # Group files by folder, sorted alphabetically
+        folders = {}
         for root, _, files in os.walk(base_path):
-            for file_name in sorted(files):
-                if file_name.endswith(".json"):
-                    json_file_path = os.path.join(root, file_name)
+            json_files = sorted(f for f in files if f.endswith(".json"))
+            if json_files:
+                folder_name = os.path.relpath(root, base_path)
+                folders[folder_name] = [os.path.join(root, f) for f in json_files]
 
-                    with open(json_file_path, "r", encoding="utf-8") as json_file:
-                        data = json.load(json_file)
+        for folder_name in sorted(folders.keys()):
+            file.write(f"\n## {folder_name.capitalize()}\n\n")
 
-                    # Extract data
-                    report_id = os.path.basename(json_file_path)
-                    report_description = data.get("notes", "")
-                    default_date_range = data.get("queryOptions", {}).get(
-                        "defaultDateRange", ""
-                    )
-                    filters = ", ".join(
-                        param.get("label", "")
-                        for param in data.get("queryOptions", {}).get("parameters", [])
-                    )
+            for json_file_path in folders[folder_name]:
+                with open(json_file_path, "r", encoding="utf-8") as json_file:
+                    data = json.load(json_file)
 
-                    # Write to Markdown
-                    file.write(
-                        f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}\n\n"
-                    )
-                    file.write(f"**Report Description**\n\n{report_description}\n\n")
-                    file.write(f"**Filters**\n\n{filters}\n\n") if filters else ""
-                    file.write(f"**Default date range**: {default_date_range}\n\n")
-                    file.write("\n---\n\n")
+                # Extract data
+                report_id = os.path.basename(json_file_path)
+                report_description = data.get("notes", "")
+                default_date_range = data.get("queryOptions", {}).get(
+                    "defaultDateRange", ""
+                )
+                filters = ", ".join(
+                    param.get("label", "")
+                    for param in data.get("queryOptions", {}).get("parameters", [])
+                )
+
+                # Write to Markdown
+                file.write(
+                    f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}\n\n"
+                )
+                file.write(f"**Report Description**\n\n{report_description}\n\n")
+                file.write(f"**Filters**\n\n{filters}\n\n") if filters else ""
+                file.write(f"**Default date range**: {default_date_range}\n\n")
+                file.write("\n---\n\n")
 
 
 def main():
