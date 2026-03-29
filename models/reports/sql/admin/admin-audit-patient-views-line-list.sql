@@ -10,17 +10,17 @@ select
     user_email as "{{ translate_label('userEmail') }}",
     user_role as "{{ translate_label('userRole') }}",
     viewed_at_facility as "{{ translate_label('logAccessAtFacility') }}",
-    to_char(date_time_viewed, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime') }}"
+    to_char({{ to_user_selected_timezone('date_time_viewed') }}, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logAccessDatetime') }}"
 from {{ ref('ds__patients_access_logs') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else date_time_viewed >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else {{ to_user_selected_timezone('date_time_viewed') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else date_time_viewed <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else {{ to_user_selected_timezone('date_time_viewed') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case

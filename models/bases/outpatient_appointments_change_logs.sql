@@ -6,7 +6,7 @@ with appointment_changes as (
     select
         c.id as change_id,
         c.record_id as appointment_id,
-        c.logged_at as modified_datetime,
+        c.logged_at at time zone '{{ var("timezone") }}' as modified_datetime,
         c.updated_by_user_id as modified_by_user_id,
         -- Extract current values from the change log record_data
         (c.record_data ->> 'start_time')::timestamp as start_datetime,

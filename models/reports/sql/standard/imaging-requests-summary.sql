@@ -12,19 +12,19 @@ select
     ir.facility as "{{ translate_label('facility') }}",
     ir.department as "{{ translate_label('department') }}",
     ir.imaging_type as "{{ translate_label('imagingType') }}",
-    count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests') }}",
+    count(distinct ir.request_id) filter (where {{ to_user_selected_timezone('ir.requested_datetime') }}::date = rd.date) as "{{ translate_label('imagingTotalRequests') }}",
     count(distinct ir.request_id) filter (
-        where ir.requested_datetime::date <= rd.date
-        and (ir.completed_datetime::date > rd.date or ir.completed_datetime is null)
+        where {{ to_user_selected_timezone('ir.requested_datetime') }}::date <= rd.date
+        and ({{ to_user_selected_timezone('ir.completed_datetime') }}::date > rd.date or ir.completed_datetime is null)
     ) as "{{ translate_label('imagingPendingRequests') }}",
     count(distinct ir.request_id) filter (
-        where ir.completed_datetime::date = rd.date
+        where {{ to_user_selected_timezone('ir.completed_datetime') }}::date = rd.date
     ) as "{{ translate_label('imagingCompletedRequests') }}"
 from reporting_dates rd
 left join {{ ref('ds__imaging_requests') }} ir
     on ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
-    and ir.requested_datetime::date <= rd.date
-    and (ir.completed_datetime::date >= rd.date or ir.completed_datetime is null)
+    and {{ to_user_selected_timezone('ir.requested_datetime') }}::date <= rd.date
+    and ({{ to_user_selected_timezone('ir.completed_datetime') }}::date >= rd.date or ir.completed_datetime is null)
 where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and (ir.department_id is not null or ir.imaging_type is not null)
     and (

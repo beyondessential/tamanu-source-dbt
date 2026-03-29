@@ -11,7 +11,7 @@ select
         {'expr': 'date_of_birth::date', 'name': 'date_of_birth', 'is_direct_identifier': false},
         {'expr': 'date_of_death::timestamp', 'name': 'date_of_death', 'is_direct_identifier': false},
         {'expr': 'village_id', 'name': 'village_id', 'is_direct_identifier': false},
-        {'expr': 'created_at::date', 'name': 'registration_date', 'is_direct_identifier': false}
+        {'expr': "(created_at at time zone '" ~ var('timezone') ~ "')::date", 'name': 'registration_date', 'is_direct_identifier': false}
     ] -%}
     {%- for col in columns -%}
         {%- if not (is_analytics_target() and col.is_direct_identifier) -%}

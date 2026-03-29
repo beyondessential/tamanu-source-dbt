@@ -26,11 +26,11 @@ with encounters_in_scope as (
         {% endif %}
         and case
             when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-            else e.{{ date_field }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+            else {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
         end
         and case
             when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-            else e.{{ date_field }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+            else {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
         end
         and case
             when {{ parameter('facilityId') }} is null then true
@@ -91,7 +91,7 @@ encounter_changes as (
         
         -- Location changes: tracks all location changes throughout the encounter
         array_agg(
-            to_char(datetime, '{{ var("datetime_format") }}')
+            to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
         ) filter (where change_type isnull or 'location' = any(change_type)) as location_datetimes,
         array_agg(
@@ -105,7 +105,7 @@ encounter_changes as (
 
         -- Location group changes: tracks location group changes (only when group actually changes)
         array_agg(
-            to_char(datetime, '{{ var("datetime_format") }}')
+            to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
         ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
         array_agg(
@@ -119,7 +119,7 @@ encounter_changes as (
 
         -- Department changes: tracks all department changes throughout the encounter
         array_agg(
-            to_char(datetime, '{{ var("datetime_format") }}')
+            to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
         ) filter (where change_type isnull or 'department' = any(change_type)) as department_datetimes,
         array_agg(
@@ -379,7 +379,7 @@ encounter_notes as (
             'Note type: ',
             {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type') }},
             ', Content: ', n.content,
-            ', Note date: ', to_char(n.datetime, '{{ var("datetime_format") }}')
+            ', Note date: ', to_char({{ to_user_selected_timezone('n.datetime') }}, '{{ var("datetime_format") }}')
         ),
         E'\n'
         order by n.datetime) as notes
@@ -394,7 +394,7 @@ invoice_data as (
         max(
             case
                 when i.status = 'finalised'
-                    then to_char(i.datetime, '{{ var("datetime_format") }}')
+                    then to_char({{ to_user_selected_timezone('i.datetime') }}, '{{ var("datetime_format") }}')
             end
         ) as invoice_finalised_datetime,
         string_agg(distinct ip.category, ', ') as invoice_product_categories
@@ -417,13 +417,13 @@ select
     p.sex as "{{ translate_label('patientSex') }}",
     eth.name as "{{ translate_label('patientEthnicity') }}",
     bt.name as "{{ translate_label('patientBillingType') }}",
-    to_char(eis.start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
-    to_char(eis.end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
+    to_char({{ to_user_selected_timezone('eis.start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
+    to_char({{ to_user_selected_timezone('eis.end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
     case
         when eis.end_datetime is not null then
             case
-                when eis.end_datetime::date - eis.start_datetime::date < 1 then 1
-                else eis.end_datetime::date - eis.start_datetime::date
+                when {{ to_user_selected_timezone('eis.end_datetime') }}::date - {{ to_user_selected_timezone('eis.start_datetime') }}::date < 1 then 1
+                else {{ to_user_selected_timezone('eis.end_datetime') }}::date - {{ to_user_selected_timezone('eis.start_datetime') }}::date
             end
     end as "{{ translate_label('encounterLengthOfStay') }}",
     eis.facility as "{{ translate_label('facility') }}",

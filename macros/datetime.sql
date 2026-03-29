@@ -14,3 +14,11 @@
 {%- macro get_current_timestamp() -%}
     {{ _get_current('timestamp', 'now()') }}
 {%- endmacro -%}
+
+{%- macro to_user_selected_timezone(field) -%}
+{%- if flags.WHICH == 'compile' -%}
+(({{ field }} at time zone '{{ var("timezone") }}') at time zone coalesce(nullif(:timezone, ''), '{{ var("timezone") }}'))
+{%- else -%}
+(({{ field }} at time zone '{{ var("timezone") }}') at time zone '{{ var("timezone") }}')
+{%- endif -%}
+{%- endmacro -%}

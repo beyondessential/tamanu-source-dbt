@@ -8,23 +8,23 @@ select
     department as "{{ translate_label('department') }}",
     location_group as "{{ translate_label('locationGroup') }}",
     location as "{{ translate_label('location') }}",
-    to_char(encounter_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
-    to_char(encounter_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
-    to_char(first_note_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('noteStartDateTime') }}",
-    to_char(last_note_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('noteEndDateTime') }}",
+    to_char({{ to_user_selected_timezone('encounter_start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
+    to_char({{ to_user_selected_timezone('encounter_end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
+    to_char({{ to_user_selected_timezone('first_note_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('noteStartDateTime') }}",
+    to_char({{ to_user_selected_timezone('last_note_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('noteEndDateTime') }}",
     is_discharged as "{{ translate_label('encounterIsDischarged') }}",
     non_discharge_by_clinicians as "{{ translate_label('encounterNonDischargeClinician') }}"
 from {{ ref('ds__user_audit') }}
 where
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else encounter_start_datetime
+        else {{ to_user_selected_timezone('encounter_start_datetime') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else encounter_start_datetime
+        else {{ to_user_selected_timezone('encounter_start_datetime') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and

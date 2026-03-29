@@ -24,23 +24,23 @@ area_summary as (
         alh.location_group,
         lg.capacity,
         sum(
-            case when alh.end_datetime::date = alh.start_datetime::date then 1 else
+            case when {{ to_user_selected_timezone('alh.end_datetime') }}::date = {{ to_user_selected_timezone('alh.start_datetime') }}::date then 1 else
                     (least(
-                        coalesce(alh.end_datetime, current_date)::date,
+                        coalesce({{ to_user_selected_timezone('alh.end_datetime') }}, current_date)::date,
                         (rm.month + '1 month'::interval)::date
-                    ) - greatest(alh.start_datetime::date, rm.month))
+                    ) - greatest({{ to_user_selected_timezone('alh.start_datetime') }}::date, rm.month))
             end
         )::numeric as occupancy,
-        count(*) filter (where alh.admission and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as admissions,
-        count(*) filter (where alh.discharge and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as discharges,
-        count(*) filter (where alh.death and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as deaths,
-        count(*) filter (where alh.transfer_in and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_ins,
-        count(*) filter (where alh.transfer_out and alh.start_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
-        round(avg(alh.length_of_stay) filter (where alh.end_datetime::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
+        count(*) filter (where alh.admission and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as admissions,
+        count(*) filter (where alh.discharge and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as discharges,
+        count(*) filter (where alh.death and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as deaths,
+        count(*) filter (where alh.transfer_in and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_ins,
+        count(*) filter (where alh.transfer_out and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
+        round(avg(alh.length_of_stay) filter (where {{ to_user_selected_timezone('alh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
     from reporting_months rm
     join {{ ref('int__admission_history_location') }} alh
-        on alh.start_datetime::date <= (rm.month + '1 month'::interval - '1 day'::interval)
-        and (alh.end_datetime::date is null or alh.end_datetime::date >= rm.month)
+        on {{ to_user_selected_timezone('alh.start_datetime') }}::date <= (rm.month + '1 month'::interval - '1 day'::interval)
+        and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
     join area_capacity lg on lg.location_group_id = alh.location_group_id
     where rm.month <= current_date
     group by

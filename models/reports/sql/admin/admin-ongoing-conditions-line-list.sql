@@ -7,20 +7,20 @@ select
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     condition as "{{ translate_label('conditionOngoing') }}",
-    to_char(recorded_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('conditionRecordedDate') }}",
+    to_char({{ to_user_selected_timezone('recorded_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('conditionRecordedDate') }}",
     clinician as "{{ translate_label('conditionRecordedBy') }}",
     to_char(date_resolved, '{{ var("date_format") }}') as "{{ translate_label('conditionResolvedDate') }}",
     clinician_resolving as "{{ translate_label('conditionResolvedBy') }}"
 from {{ ref('ds__ongoing_conditions') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else recorded_datetime
+        else {{ to_user_selected_timezone('recorded_datetime') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else recorded_datetime
+        else {{ to_user_selected_timezone('recorded_datetime') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
 order by recorded_datetime
