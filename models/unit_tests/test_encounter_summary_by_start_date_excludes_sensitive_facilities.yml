@@ -1,5 +1,5 @@
 unit_tests:
-  - name: test_encounter_summary_by_start_date_excludes_sensitive_facilities
+  - name: test_encounter_summary_start_excludes_sensitive
     model: encounter-summary-by-start-date
     description: "Test that encounters at sensitive facilities are excluded from the non-sensitive by-start-date report"
     overrides:

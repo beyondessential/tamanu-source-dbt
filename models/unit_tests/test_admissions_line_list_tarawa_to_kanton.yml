@@ -1,0 +1,105 @@
+unit_tests:
+  - name: test_admissions_line_list_date_range_basic
+    model: admissions-line-list
+    description: >
+      Test fromDate/toDate filtering in UTC: enc_001 admission at 2024-03-15 is included with
+      fromDate=2024-03-01 and toDate=2024-03-31; enc_002 admission at 2024-02-10 is excluded
+      by fromDate.
+    overrides:
+      vars:
+        timezone: UTC
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2024-03-01'
+        toDate: '2024-03-31'
+    given:
+      - input: ref('ds__admissions')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as patient_id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth,
+            33::integer as age,
+            'Male'::text as sex,
+            null::text as village_id,
+            null::text as village,
+            null::text as billing_type_id,
+            null::text as billing_type,
+            'cli_001'::text as admitting_clinician_id,
+            'Dr. Alice Wilson'::text as admitting_clinician,
+            '2024-03-15 10:00:00'::timestamp as admission_datetime,
+            'active'::text as admission_status,
+            null::timestamp as discharge_datetime,
+            'fac_001'::text as facility_id,
+            'Central Hospital'::text as facility,
+            ARRAY['dept_001']::text[] as department_ids,
+            'Emergency'::text as departments,
+            '2024-03-15 10:00'::text as department_datetimes,
+            ARRAY['lg_001']::text[] as location_group_ids,
+            'Emergency Ward'::text as location_groups,
+            '2024-03-15 10:00'::text as location_group_datetimes,
+            ARRAY['loc_001']::text[] as location_ids,
+            'Room 101'::text as locations,
+            '2024-03-15 10:00'::text as location_datetimes,
+            null::text as primary_diagnoses,
+            null::text as secondary_diagnoses
+          union all
+          select
+            'pat_002'::text,
+            'P002'::text,
+            'Jane'::text,
+            'Smith'::text,
+            '1985-06-20'::date,
+            38::integer,
+            'Female'::text,
+            null::text,
+            null::text,
+            null::text,
+            null::text,
+            'cli_001'::text,
+            'Dr. Alice Wilson'::text,
+            '2024-02-10 14:00:00'::timestamp,
+            'active'::text,
+            null::timestamp,
+            'fac_001'::text,
+            'Central Hospital'::text,
+            ARRAY['dept_001']::text[],
+            'Emergency'::text,
+            '2024-02-10 14:00'::text,
+            ARRAY['lg_001']::text[],
+            'Emergency Ward'::text,
+            '2024-02-10 14:00'::text,
+            ARRAY['loc_001']::text[],
+            'Room 101'::text,
+            '2024-02-10 14:00'::text,
+            null::text,
+            null::text
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'               as "Patient ID",
+          'John'               as "First name",
+          'Doe'                as "Last name",
+          '1990-05-15'         as "Date of birth",
+          33                   as "Age",
+          'Male'               as "Sex",
+          null::text           as "Village",
+          null::text           as "Billing type",
+          'Dr. Alice Wilson'   as "Admitting clinician",
+          '2024-03-15 10:00'   as "Admission date and time",
+          'active'             as "Admission status",
+          null::text           as "Discharge date and time",
+          'Central Hospital'   as "Facility",
+          'Emergency'          as "Department history",
+          '2024-03-15 10:00'   as "Department history date and times",
+          'Emergency Ward'     as "Area history",
+          '2024-03-15 10:00'   as "Area history date and times",
+          'Room 101'           as "Location history",
+          '2024-03-15 10:00'   as "Location history date and times",
+          null::text           as "Primary diagnoses",
+          null::text           as "Secondary diagnoses"

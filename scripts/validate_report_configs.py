@@ -61,7 +61,7 @@ def find_config_files(config_dir: str) -> List[str]:
         print("  Ensure this script is run from the project root.")
         sys.exit(1)
     
-    json_files = list(config_path.glob("*.json"))
+    json_files = list(config_path.glob("**/*.json"))
     # Exclude the schema file itself
     json_files = [f for f in json_files if f.name != "report-config-schema.json"]
     
