@@ -51,9 +51,6 @@ models:
       sensitive:
         +tags:
           - restricted
-      admin:
-        +tags:
-          - admin
     reports:
       +docs:
         show: false
@@ -63,9 +60,6 @@ models:
         sensitive:
           +tags:
             - restricted
-        admin:
-          +tags:
-            - admin
 
 data_tests:
   +severity: warn

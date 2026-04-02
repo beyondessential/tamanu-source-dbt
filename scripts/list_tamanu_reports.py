@@ -27,8 +27,16 @@ def extract_and_write_to_md(base_path, output_file, report_type):
             file.write(f"\n## {report_type}\n\n")
             folder_heading = "###"
 
+        # Build set of report names that have a sensitive equivalent
+        sensitive_dir = os.path.join(base_path, 'sensitive')
+        sensitive_names = set()
+        if os.path.isdir(sensitive_dir):
+            for f in os.listdir(sensitive_dir):
+                if f.endswith(".json") and f.startswith("sensitive-"):
+                    sensitive_names.add(f[len("sensitive-"):])
+
         # Group files by folder, in specified order, excluding sensitive
-        folder_order = ['standard', 'admin', 'custom']
+        folder_order = ['standard', 'custom']
         folders = {}
         for root, _, files in os.walk(base_path):
             json_files = sorted(f for f in files if f.endswith(".json"))
@@ -56,8 +64,10 @@ def extract_and_write_to_md(base_path, output_file, report_type):
                 )
 
                 # Write to Markdown
+                has_sensitive = report_id in sensitive_names
+                sensitive_marker = " *(sensitive version available)*" if has_sensitive else ""
                 file.write(
-                    f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}\n\n"
+                    f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}{sensitive_marker}\n\n"
                 )
                 file.write(f"**Report Description**\n\n{report_description}\n\n")
                 file.write(f"**Filters**\n\n{filters}\n\n") if filters else ""
