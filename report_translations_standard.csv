@@ -140,12 +140,6 @@ report.reporting.imagingTotalRequests,Total new requests
 report.reporting.imagingType,Imaging type
 report.reporting.insurerId,Insurer ID
 report.reporting.insurerName,Name of insurer
-report.reporting.invoiceInsurerAmount,Total insurer amount
-report.reporting.invoiceInsurers,Insurer
-report.reporting.invoiceInsurerTotal,Insurer total
-report.reporting.invoiceNumber,Invoice number
-report.reporting.invoicePatientAmount,Total patient amount
-report.reporting.invoicePatientDiscount,Total patient discount
 report.reporting.invoiceProductCategory,Category
 report.reporting.invoiceProductCategoryId,Category ID
 report.reporting.invoiceProductId,ID
@@ -153,9 +147,6 @@ report.reporting.invoiceProductInsurable,Insurable
 report.reporting.invoiceProductName,Product name
 report.reporting.invoiceProductLabExternalCode,Lab external code
 report.reporting.invoiceProductVisibilityStatus,Visibility status
-report.reporting.invoiceRemainingInsurerBalance,Remaining balance (insurer payments)
-report.reporting.invoiceRemainingPatientBalance,Remaining balance (patient)
-report.reporting.invoiceTotalAmount,Total invoice amount
 report.reporting.labLaboratory,Laboratory
 report.reporting.labRequestCancellationReason,Reason for cancellation
 report.reporting.labRequestClinician,Requesting clinician

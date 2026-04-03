@@ -386,26 +386,6 @@ encounter_notes as (
     from encounter_notes_deduped n
     where n.row_number = 1
     group by n.record_id
-),
-
-invoice_data as (
-    select
-        i.encounter_id,
-        max(
-            case
-                when i.status = 'finalised'
-                    then to_char(i.datetime, '{{ var("datetime_format") }}')
-            end
-        ) as invoice_finalised_datetime,
-        string_agg(distinct ip.category, ', ') as invoice_product_categories
-    from {{ ref('invoices') }} i
-    join encounters_in_scope eis
-        on eis.encounter_id = i.encounter_id
-    left join {{ ref('invoice_items') }} ii
-        on ii.invoice_id = i.id
-    left join {{ ref('invoice_products') }} ip
-        on ip.id = ii.product_id
-    group by i.encounter_id
 )
 
 select
@@ -474,9 +454,7 @@ select
                 'FULL NOTES HISTORY', '' || E'\n' || '', left(en.notes, 32000)
             )
         else en.notes
-    end as "{{ translate_label('notes') }}",
-    invd.invoice_finalised_datetime as "{{ translate_label('invoiceFinalisedDateTime') }}",
-    invd.invoice_product_categories as "{{ translate_label('invoiceProductCategories') }}"
+    end as "{{ translate_label('notes') }}"
 from encounters_in_scope eis
 join {{ ref('patients') }} p
     on p.id = eis.patient_id
@@ -518,8 +496,6 @@ left join encounter_imaging_requests eir
     on eir.encounter_id = eis.encounter_id
 left join encounter_notes en
     on en.encounter_id = eis.encounter_id
-left join invoice_data invd
-    on invd.encounter_id = eis.encounter_id
 where
     case
         when {{ parameter('departmentId') }} is null then true
