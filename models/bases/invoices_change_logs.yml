@@ -43,7 +43,7 @@ models:
         description: Invoice status at the time of this change event.
 
       - name: encounter_id
-        description: ID of the encounter this invoice belongs to, as recorded at time of change.
+        description: ID of the encounter this invoice belongs to, sourced from the invoices table.
 
       - name: previous_status
         description: Invoice status from the immediately preceding change event. Null for the initial creation.

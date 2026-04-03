@@ -34,6 +34,9 @@ with appointment_changes as (
             order by c.logged_at
         ) as change_sequence
     from {{ source('logs__tamanu', 'changes') }} c
+    join {{ source('tamanu', 'appointments') }} a on a.id = c.record_id
+        and a.deleted_at is null
+        and a.patient_id != '{{ var("test_patient") }}'
     where c.table_name = 'appointments'
         and c.record_deleted_at is null
         and (c.record_data ->> 'appointment_type_id') is not null

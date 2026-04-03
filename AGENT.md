@@ -11,6 +11,45 @@
 
 Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data-staging` and deployment-specific `tamanu-dbt-*` repos.
 
+## Change log base models
+
+Change log base models extract from `{{ source('logs__tamanu', 'changes') }}` and must filter out test patient data. The pattern varies by how close the entity is to the patient:
+
+**Direct patient entity** (e.g. `patient_additional_data_change_logs`): `record_id` is the patient ID, so use the `base_history_from_log` macro and filter inline:
+
+```sql
+with filtered_changes as (
+    {{ base_history_from_log('patient_additional_data') }}
+        and record_id != '{{ var("test_patient") }}'
+)
+```
+
+**Patient-adjacent entity** (e.g. `outpatient_appointments_change_logs`): join to the entity's source table and filter on `patient_id` directly:
+
+```sql
+from {{ source('logs__tamanu', 'changes') }} c
+join {{ source('tamanu', 'appointments') }} a on a.id = c.record_id
+    and a.deleted_at is null
+    and a.patient_id != '{{ var("test_patient") }}'
+where c.table_name = 'appointments'
+    and c.record_deleted_at is null
+```
+
+**Encounter-adjacent entity** (e.g. `invoices_change_logs`): join through the entity to encounters to reach the patient:
+
+```sql
+from {{ source('logs__tamanu', 'changes') }} c
+join {{ source('tamanu', 'invoices') }} i on i.id = c.record_id
+    and i.deleted_at is null
+join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'
+where c.table_name = 'invoices'
+    and c.record_deleted_at is null
+```
+
+Always filter `c.record_deleted_at is null` regardless of pattern.
+
 ## Base model conventions
 
 - All base model `.yml` files require `config.tags: [reference]` — this applies to every base model, including junction/item-level tables
