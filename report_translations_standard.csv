@@ -86,6 +86,7 @@ report.reporting.diagnosisCertainty,Certainty
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
 report.reporting.dischargeDate,Discharged date
+report.reporting.dischargeAssignedTime,Time assigned to
 report.reporting.dischargeDateTime,Discharge date and time
 report.reporting.dischargeDepartment,Discharging department
 report.reporting.dischargeDisposition,Discharge disposition

@@ -162,7 +162,12 @@ encounter_changes as (
 
         -- Encountering clinician: actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
         min(updated_by_id) filter (where change_type is null and change_sequence = 1) as encountering_clinician_id,
-        min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician
+        min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician,
+
+        -- Discharge datetimes: the time the patient was last assigned to each dimension, falls back to encounter start time if never changed
+        to_char(coalesce(max(datetime) filter (where 'department' = any(change_type)), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_department_datetime,
+        to_char(coalesce(max(datetime) filter (where 'location' = any(change_type)), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_location_datetime,
+        to_char(coalesce(max(datetime) filter (where 'location' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_location_group_datetime
     from encounter_history_consolidated
     group by encounter_id
 ),
@@ -185,6 +190,7 @@ encounter_diagnoses as (
         on eis.encounter_id = ed.encounter_id
     join {{ ref('reference_data') }} d
         on d.id = ed.diagnosis_id
+    where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
 ),
 
@@ -397,6 +403,7 @@ select
     p.sex as "{{ translate_label('patientSex') }}",
     eth.name as "{{ translate_label('patientEthnicity') }}",
     bt.name as "{{ translate_label('patientBillingType') }}",
+    village.name as "{{ translate_label('patientVillage') }}",
     to_char(eis.start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
     to_char(eis.end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
     case
@@ -429,11 +436,11 @@ select
     ec.encountering_clinician as "{{ translate_label('encounterClinician') }}",
     c.display_name as "{{ translate_label('encounterSupervisingClinician') }}",
     dp.name as "{{ translate_label('dischargeDepartment') }}",
-    ec.department_datetimes[array_upper(ec.department_datetimes, 1)] as "{{ translate_label('dischargeDateTime') }} of {{ translate_label('dischargeDepartment') }}",
+    ec.discharge_department_datetime as "{{ translate_label('dischargeAssignedTime') }} {{ translate_label('dischargeDepartment') }}",
     lg.name as "{{ translate_label('dischargeLocationGroup') }}",
-    ec.location_group_datetimes[array_upper(ec.location_group_datetimes, 1)] as "{{ translate_label('dischargeDateTime') }} of {{ translate_label('dischargeLocationGroup') }}",
+    ec.discharge_location_group_datetime as "{{ translate_label('dischargeAssignedTime') }} {{ translate_label('dischargeLocationGroup') }}",
     l.name as "{{ translate_label('dischargeLocation') }}",
-    ec.location_datetimes[array_upper(ec.location_datetimes, 1)] as "{{ translate_label('dischargeDateTime') }} of {{ translate_label('dischargeLocation') }}",
+    ec.discharge_location_datetime as "{{ translate_label('dischargeAssignedTime') }} {{ translate_label('dischargeLocation') }}",
     ec.departments as "{{ translate_label('encounterDepartmentHistory') }}",
     array_to_string(ec.department_datetimes, ', ') as "{{ translate_label('encounterDepartmentHistoryDateTimes') }}",
     ec.location_groups as "{{ translate_label('encounterLocationGroupHistory') }}",
@@ -476,6 +483,8 @@ left join {{ ref('patient_additional_data') }} pad
     on pad.patient_id = eis.patient_id
 left join {{ ref('reference_data') }} eth
     on eth.id = pad.ethnicity_id
+left join {{ ref('reference_data') }} village
+    on village.id = p.village_id
 left join {{ ref('reference_data') }} bt
     on bt.id = eis.patient_billing_type_id
 left join {{ ref('reference_data') }} am
