@@ -93,43 +93,43 @@ encounter_changes as (
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or 'location' = any(change_type)) as location_datetimes,
+        ) filter (where change_type is null or 'location' = any(change_type)) as location_datetimes,
         array_agg(
             location_id
             order by datetime
-        ) filter (where change_type isnull or 'location' = any(change_type)) as location_ids,
+        ) filter (where change_type is null or 'location' = any(change_type)) as location_ids,
         string_agg(
             location_name, ', '
             order by datetime
-        ) filter (where change_type isnull or 'location' = any(change_type)) as locations,
+        ) filter (where change_type is null or 'location' = any(change_type)) as locations,
 
         -- Location group changes: tracks location group changes (only when group actually changes)
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
+        ) filter (where change_type is null or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_datetimes,
         array_agg(
             location_group_id
             order by datetime
-        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_ids,
+        ) filter (where change_type is null or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_group_ids,
         string_agg(
             location_group_name, ', '
             order by datetime
-        ) filter (where change_type isnull or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_groups,
+        ) filter (where change_type is null or ('location' = any(change_type) and location_group_id is distinct from prev_location_group_id)) as location_groups,
 
         -- Department changes: tracks all department changes throughout the encounter
         array_agg(
             to_char(datetime, '{{ var("datetime_format") }}')
             order by datetime
-        ) filter (where change_type isnull or 'department' = any(change_type)) as department_datetimes,
+        ) filter (where change_type is null or 'department' = any(change_type)) as department_datetimes,
         array_agg(
             department_id
             order by datetime
-        ) filter (where change_type isnull or 'department' = any(change_type)) as department_ids,
+        ) filter (where change_type is null or 'department' = any(change_type)) as department_ids,
         string_agg(
             department_name, ', '
             order by datetime
-        ) filter (where change_type isnull or 'department' = any(change_type)) as departments,
+        ) filter (where change_type is null or 'department' = any(change_type)) as departments,
 
         -- Encounter type changes: tracks encounter type progression (emergency types)
         string_agg(
@@ -139,7 +139,7 @@ encounter_changes as (
                 when encounter_type = 'emergency' then 'Emergency short stay'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_emergency,
+        ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_emergency,
 
         -- Encounter type changes: tracks encounter type progression (inpatient types)
         string_agg(
@@ -147,7 +147,7 @@ encounter_changes as (
                 when encounter_type = 'admission' then 'Hospital admission'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_inpatient,
+        ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_inpatient,
 
         -- Encounter type changes: tracks encounter type progression (outpatient types)
         string_agg(
@@ -158,7 +158,7 @@ encounter_changes as (
                 when encounter_type = 'vaccination' then 'Vaccination'
             end, ', '
             order by datetime
-        ) filter (where change_type isnull or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
+        ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
 
         -- Encountering clinician: actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
         min(updated_by_id) filter (where change_type is null and change_sequence = 1) as encountering_clinician_id,
@@ -278,7 +278,7 @@ encounter_lab_requests as (
         on ltp.id = ltpr.lab_test_panel_id
     left join {{ ref('lab_tests') }} lt
         on lt.lab_request_id = lr.id
-        and lr.lab_test_panel_request_id isnull
+        and lr.lab_test_panel_request_id is null
     left join {{ ref('lab_test_types') }} ltt
         on ltt.id = lt.lab_test_type_id
     where lr.status not in ('cancelled', 'deleted', 'entered-in-error')
