@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: invoices_change_logs
+    description: >
+      Base model for invoice change logs. Contains all changes to invoices extracted from
+      the logs.changes table, including the initial creation. Each row represents a change
+      event with the current status and previous status for transition tracking.
+    config:
+      tags:
+        - base
+        - admin
+        - audit
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: restricted
+    columns:
+      - name: change_id
+        description: Unique identifier for the change event.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: invoice_id
+        description: ID of the invoice that was changed.
+        data_tests:
+          - not_null
+
+      - name: logged_at
+        description: Timestamp when the change was recorded in the log.
+        data_tests:
+          - not_null
+
+      - name: updated_by_user_id
+        description: ID of the user who made the change.
+        data_tests:
+          - not_null
+
+      - name: status
+        description: Invoice status at the time of this change event.
+
+      - name: encounter_id
+        description: ID of the encounter this invoice belongs to, as recorded at time of change.
+
+      - name: previous_status
+        description: Invoice status from the immediately preceding change event. Null for the initial creation.
+
+      - name: change_sequence
+        description: Sequential position of this change event within the invoice's change history, ordered by logged_at.
+        data_tests:
+          - not_null
