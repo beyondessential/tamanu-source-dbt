@@ -2,15 +2,11 @@ version: 2
 
 models:
   - name: invoices_change_logs
-    description: >
-      Base model for invoice change logs. Contains all changes to invoices extracted from
-      the logs.changes table, including the initial creation. Each row represents a change
-      event with the current status and previous status for transition tracking.
+    description: "Change logs for {{ doc('table__invoices') }}"
     config:
       tags:
-        - base
-        - admin
-        - audit
+        - administration
+        - log
     meta:
       owner: bes-maui
       domain: admin
@@ -19,36 +15,63 @@ models:
       classification: restricted
     columns:
       - name: change_id
-        description: Unique identifier for the change event.
-        data_tests:
-          - unique
-          - not_null
+        data_type: uuid
+        description: "{{ doc('logs__changes__id') }}"
 
       - name: invoice_id
-        description: ID of the invoice that was changed.
-        data_tests:
-          - not_null
+        data_type: text
+        description: "{{ doc('logs__changes__record_id') }} in invoices."
 
       - name: logged_at
-        description: Timestamp when the change was recorded in the log.
-        data_tests:
-          - not_null
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at') }} in invoices history."
 
       - name: updated_by_user_id
-        description: ID of the user who made the change.
-        data_tests:
-          - not_null
+        data_type: text
+        description: "{{ doc('logs__changes__updated_by_user_id') }} in invoices history."
 
       - name: status
-        description: Invoice status at the time of this change event.
+        data_type: text
+        description: "{{ doc('invoices__status') }} from history."
 
       - name: encounter_id
-        description: ID of the encounter this invoice belongs to, sourced from the invoices table.
+        data_type: text
+        description: "{{ doc('invoices__encounter_id') }} Sourced from the invoices table."
 
       - name: previous_status
-        description: Invoice status from the immediately preceding change event. Null for the initial creation.
+        data_type: text
+        description: Invoice status from the immediately preceding change event. Null for the initial creation (change_sequence = 1).
 
       - name: change_sequence
-        description: Sequential position of this change event within the invoice's change history, ordered by logged_at.
-        data_tests:
-          - not_null
+        data_type: integer
+        description: Sequential number of this change for the invoice, ordered by logged_at. 1 = initial creation event.
+
+unit_tests:
+  - name: test_invoices_change_logs_window_functions
+    model: invoices_change_logs
+    description: >
+      Verifies that previous_status (LAG) and change_sequence (ROW_NUMBER) are
+      computed correctly across two change events for the same invoice.
+    given:
+      - input: source('logs__tamanu', 'changes')
+        format: csv
+        rows: |
+          id,logged_at,updated_by_user_id,record_id,table_name,record_deleted_at,record_data
+          chg_001,2025-01-10 09:00:00,user_001,inv_001,invoices,,"{""status"": ""in_progress""}"
+          chg_002,2025-01-15 14:00:00,user_002,inv_001,invoices,,"{""status"": ""finalised""}"
+      - input: source('tamanu', 'invoices')
+        format: csv
+        rows: |
+          id,encounter_id,deleted_at
+          inv_001,enc_001,
+      - input: source('tamanu', 'encounters')
+        format: csv
+        rows: |
+          id,patient_id,deleted_at
+          enc_001,pat_001,
+    expect:
+      format: csv
+      rows: |
+        change_id,invoice_id,logged_at,updated_by_user_id,status,encounter_id,previous_status,change_sequence
+        chg_001,inv_001,2025-01-10 09:00:00,user_001,in_progress,enc_001,,1
+        chg_002,inv_001,2025-01-15 14:00:00,user_002,finalised,enc_001,in_progress,2

@@ -52,7 +52,7 @@ Always filter `c.record_deleted_at is null` regardless of pattern.
 
 ## Base model conventions
 
-- All base model `.yml` files require `config.tags: [reference]` — this applies to every base model, including junction/item-level tables
+- All base model `.yml` files require a domain-specific `config.tags` — use the tag that matches the entity type: `clinical` (clinical entities), `reference` (reference/lookup data), `log` (change log models), `administration` (admin entities), `patient` (patient-specific models)
 - Do not add `data_tests` to base model `.yml` files — tests are already defined on source models and would run twice
 - Base models reference source tables with `{{ source('tamanu', 'table_name') }}` directly
 - Dataset macros must use `ref()` to reference base models, never `source()` directly
