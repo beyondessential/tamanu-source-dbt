@@ -23,7 +23,7 @@ models:
         description: "{{ doc('logs__changes__record_id') }} in invoices."
 
       - name: logged_at
-        data_type: timestamp
+        data_type: timestamptz
         description: "{{ doc('logs__changes__logged_at') }} in invoices history."
 
       - name: updated_by_user_id
@@ -35,7 +35,7 @@ models:
         description: "{{ doc('invoices__status') }} from history."
 
       - name: encounter_id
-        data_type: text
+        data_type: character varying(255)
         description: "{{ doc('invoices__encounter_id') }} Sourced from the invoices table."
 
       - name: previous_status
