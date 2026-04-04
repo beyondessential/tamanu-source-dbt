@@ -7,11 +7,11 @@ select
     i.encounter_id,
     lag(c.record_data ->> 'status') over (
         partition by c.record_id
-        order by c.logged_at
+        order by c.logged_at, c.id
     ) as previous_status,
     row_number() over (
         partition by c.record_id
-        order by c.logged_at
+        order by c.logged_at, c.id
     ) as change_sequence
 from {{ source('logs__tamanu', 'changes') }} c
 join {{ source('tamanu', 'invoices') }} i on i.id = c.record_id
