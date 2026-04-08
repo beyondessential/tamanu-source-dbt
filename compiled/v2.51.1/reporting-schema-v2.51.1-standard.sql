@@ -1879,6 +1879,10 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
     pad.mother_id,
     pad.father_id,
     pad.street_village,
@@ -1901,13 +1905,15 @@ from "reporting"."patients" p
 left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
 left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
 left join "reporting"."users" u on u.id = pad.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
-left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
-left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
-left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
-left join "reporting"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id
+left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id
+left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id
+left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id
+left join "reporting"."reference_data" religion on religion.id = pad.religion_id
+left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
 );
 create or replace view "reporting"."ds__patients_access_logs" as (
 with grouped_access_logs as (
