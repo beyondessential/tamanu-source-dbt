@@ -26,6 +26,10 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
     pad.mother_id,
     pad.father_id,
     pad.street_village,
@@ -48,10 +52,12 @@ from {{ ref("patients") }} p
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref("patient_birth_data") }} pbd on pbd.patient_id = p.id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
-left join {{ ref("reference_data") }} village on village.id = p.village_id and village.type = 'village'
-left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join {{ ref("reference_data") }} nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
-left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
-left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
-left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join {{ ref("reference_data") }} village on village.id = p.village_id
+left join {{ ref("reference_data") }} cob on cob.id = pad.country_of_birth_id
+left join {{ ref("reference_data") }} nationality on nationality.id = pad.nationality_id
+left join {{ ref("reference_data") }} ethnicity on ethnicity.id = pad.ethnicity_id
+left join {{ ref("reference_data") }} occupation on occupation.id = pad.occupation_id
+left join {{ ref("reference_data") }} religion on religion.id = pad.religion_id
+left join {{ ref("reference_data") }} billing on billing.id = pad.patient_billing_type_id
+left join {{ ref("reference_data") }} subdivision on subdivision.id = pad.subdivision_id
+left join {{ ref("reference_data") }} division on division.id = pad.division_id

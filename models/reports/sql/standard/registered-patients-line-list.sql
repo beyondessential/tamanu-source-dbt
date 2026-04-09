@@ -22,7 +22,9 @@ select
     ethnicity as "{{ translate_label('patientEthnicity') }}",
     occupation as "{{ translate_label('patientOccupation') }}",
     religion as "{{ translate_label('patientReligion') }}",
-    patient_billing_type as "{{ translate_label('patientBillingType') }}"
+    patient_billing_type as "{{ translate_label('patientBillingType') }}",
+    subdivision as "{{ translate_label('patientSubDivision') }}",
+    division as "{{ translate_label('patientDivision') }}"
 from {{ ref("ds__patients") }}
 where
     case

@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: invoices_change_logs
+    description: "Change logs for {{ doc('table__invoices') }}"
+    config:
+      tags:
+        - administration
+        - log
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: false
+      classification: restricted
+    columns:
+      - name: change_id
+        data_type: uuid
+        description: "{{ doc('logs__changes__id') }}"
+
+      - name: invoice_id
+        data_type: text
+        description: "{{ doc('logs__changes__record_id') }} in invoices."
+
+      - name: logged_at
+        data_type: timestamptz
+        description: "{{ doc('logs__changes__logged_at') }} in invoices history."
+
+      - name: updated_by_user_id
+        data_type: text
+        description: "{{ doc('logs__changes__updated_by_user_id') }} in invoices history."
+
+      - name: status
+        data_type: text
+        description: "{{ doc('invoices__status') }} from history."
+
+      - name: encounter_id
+        data_type: text
+        description: "{{ doc('invoices__encounter_id') }} Sourced from the invoices table."
+
+      - name: previous_status
+        data_type: text
+        description: Invoice status from the immediately preceding change event. Null for the initial creation (change_sequence = 1).
+
+      - name: change_sequence
+        data_type: integer
+        description: Sequential number of this change for the invoice, ordered by logged_at. 1 = initial creation event.

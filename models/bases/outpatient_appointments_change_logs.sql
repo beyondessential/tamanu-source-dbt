@@ -21,22 +21,23 @@ with appointment_changes as (
         -- Get creator from the first change_sequence (initial creation)
         first_value(c.updated_by_user_id) over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as created_by_user_id,
         -- Use LAG to get the previous record state
         lag(c.record_data) over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as previous_record_data,
         -- Track change sequence
         row_number() over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as change_sequence
     from {{ source('logs__tamanu', 'changes') }} c
     where c.table_name = 'appointments'
         and c.record_deleted_at is null
         and (c.record_data ->> 'appointment_type_id') is not null
+        and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
 )
 
 select
