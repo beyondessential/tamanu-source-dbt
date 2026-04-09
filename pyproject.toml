@@ -1,5 +1,7 @@
+# Don't build this as a package - it's a dbt project; hatchling is used only to
+# satisfy `uv pip install -e .` without the default build backend mis-discovering dbt directories.
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [project]
@@ -33,6 +35,5 @@ pythonpath = ["scripts"]
 [dependency-groups]
 dev = ["pytest"]
 
-# Don't build this as a package - it's a dbt project
 [tool.hatch.build.targets.wheel]
 packages = []
