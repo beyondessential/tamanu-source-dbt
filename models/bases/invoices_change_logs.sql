@@ -1,6 +1,6 @@
 select
     c.id as change_id,
-    c.record_id as invoice_id,
+    c.record_id::uuid as invoice_id,
     c.logged_at,
     c.updated_by_user_id,
     c.record_data ->> 'status' as status,
