@@ -26,8 +26,8 @@ dependencies = [
 testpaths = ["scripts/tests"]
 pythonpath = ["scripts"]
 
-[tool.uv]
-dev-dependencies = ["pytest"]
+[dependency-groups]
+dev = ["pytest"]
 
 # Don't build this as a package - it's a dbt project
 [tool.hatch.build.targets.wheel]
