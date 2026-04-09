@@ -9,7 +9,7 @@ unit_tests:
       occupancy values. Capacity = 10; Jan occupancy = 2/310 = 0.6%, Feb = 2/290 = 0.7%.
     overrides:
       vars:
-        timezone: UTC
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
         yearmonth_format: YYYY-MM
         fromDate: '2024-01-01'
         toDate: '2024-02-29'

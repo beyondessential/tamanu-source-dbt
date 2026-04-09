@@ -4,7 +4,7 @@ unit_tests:
     description: "Test basic output of encounter summary by end date: patient details, encounter datetimes, clinician, location/department history"
     overrides:
       vars:
-        timezone: UTC
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
         datetime_format: YYYY-MM-DD HH24:MI
         date_format: YYYY-MM-DD
     given:

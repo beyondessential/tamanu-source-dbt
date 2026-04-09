@@ -6,7 +6,7 @@ unit_tests:
       included; enc_002 starts 2024-02-10 (before fromDate 2024-03-01) and is excluded.
     overrides:
       vars:
-        timezone: UTC
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
         datetime_format: YYYY-MM-DD HH24:MI
         date_format: YYYY-MM-DD
         fromDate: '2024-03-01'

@@ -16,9 +16,11 @@
 {%- endmacro -%}
 
 {%- macro to_user_selected_timezone(field) -%}
+{# Note: in dbt test/run mode the field is returned as-is (no time zone conversion).
+   Cross-timezone conversion is only exercised via compiled SQL with the :timezone bind parameter. #}
 {%- if flags.WHICH == 'compile' -%}
 (({{ field }} at time zone '{{ var("timezone") }}') at time zone coalesce(nullif(:timezone, ''), '{{ var("timezone") }}'))
 {%- else -%}
-(({{ field }} at time zone '{{ var("timezone") }}') at time zone '{{ var("timezone") }}')
+{{ field }}
 {%- endif -%}
 {%- endmacro -%}

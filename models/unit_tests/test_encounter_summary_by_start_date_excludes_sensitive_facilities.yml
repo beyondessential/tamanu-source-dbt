@@ -4,7 +4,7 @@ unit_tests:
     description: "Test that encounters at sensitive facilities are excluded from the non-sensitive by-start-date report"
     overrides:
       vars:
-        timezone: UTC
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
         datetime_format: YYYY-MM-DD HH24:MI
         date_format: YYYY-MM-DD
     given:
