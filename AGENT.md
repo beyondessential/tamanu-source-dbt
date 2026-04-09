@@ -24,15 +24,13 @@ with filtered_changes as (
 )
 ```
 
-**Patient-adjacent entity** (e.g. `outpatient_appointments_change_logs`): join to the entity's source table and filter on `patient_id` directly:
+**Patient-adjacent entity** (e.g. `outpatient_appointments_change_logs`): filter on `patient_id` extracted from the historical `record_data` snapshot. This preserves change logs for soft-deleted records and reflects the patient association at the time of the change:
 
 ```sql
 from {{ source('logs__tamanu', 'changes') }} c
-join {{ source('tamanu', 'appointments') }} a on a.id = c.record_id
-    and a.deleted_at is null
-    and a.patient_id != '{{ var("test_patient") }}'
 where c.table_name = 'appointments'
     and c.record_deleted_at is null
+    and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
 ```
 
 **Encounter-adjacent entity** (e.g. `invoices_change_logs`): join through the entity to encounters to reach the patient:
