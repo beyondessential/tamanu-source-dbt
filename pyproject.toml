@@ -1,6 +1,6 @@
 [project]
 name = "tamanu-source-dbt"
-version = "2.50.6"
+version = "2.51.2"
 description = "A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -26,8 +26,8 @@ dependencies = [
 testpaths = ["scripts/tests"]
 pythonpath = ["scripts"]
 
-[tool.uv]
-dev-dependencies = ["pytest"]
+[dependency-groups]
+dev = ["pytest"]
 
 # Don't build this as a package - it's a dbt project
 [tool.hatch.build.targets.wheel]

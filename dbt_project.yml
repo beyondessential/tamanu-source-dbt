@@ -21,7 +21,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - tests
+  - data-tests
 seed-paths:
   - seeds
 macro-paths:
