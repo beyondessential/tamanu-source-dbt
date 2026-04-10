@@ -165,9 +165,9 @@ encounter_changes as (
         min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician,
 
         -- Discharge datetimes: the time the patient was last assigned to each dimension, falls back to encounter start time if never changed
-        to_char(coalesce(max(datetime) filter (where 'department' = any(change_type)), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_department_datetime,
-        to_char(coalesce(max(datetime) filter (where 'location' = any(change_type)), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_location_datetime,
-        to_char(coalesce(max(datetime) filter (where 'location' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null)), '{{ var("datetime_format") }}') as discharge_location_group_datetime
+        to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'department\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_department_datetime,
+        to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_datetime,
+        to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_group_datetime
     from encounter_history_consolidated
     group by encounter_id
 ),
