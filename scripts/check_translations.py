@@ -68,7 +68,7 @@ def main():
     file_referencing_translations = {}
 
     for folder in sql_folders:
-        for sql_file in folder.glob("*.sql"):
+        for sql_file in folder.rglob("*.sql"):
             labels = extract_translate_labels_from_file(sql_file)
             file_referencing_translations[str(sql_file)] = labels
             referenced_translations.update(labels)
