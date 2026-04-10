@@ -36,7 +36,7 @@ select
         {'expr': 'father_id', 'name': 'father_id', 'is_direct_identifier': false},
         {'expr': 'registered_by_id', 'name': 'registered_by_id', 'is_direct_identifier': false},
         {'expr': 'updated_at_by_field', 'name': 'updated_by_field', 'is_direct_identifier': false},
-        {'expr': 'created_at::date', 'name': 'registration_date', 'is_direct_identifier': false}
+        {'expr': "(created_at at time zone '" ~ var('timezone') ~ "')::date", 'name': 'registration_date', 'is_direct_identifier': false}
     ] -%}
     {%- for col in columns -%}
         {%- if not (is_analytics_target() and col.is_direct_identifier) -%}

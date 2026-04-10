@@ -1,5 +1,5 @@
 select
-    to_char(datetime, '{{ var("date_format") }}') as "{{ translate_label('prescriptionDate') }}",
+    to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("date_format") }}') as "{{ translate_label('prescriptionDate') }}",
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
@@ -23,10 +23,10 @@ select
 from {{ ref('ds__sensitive_encounter_prescriptions') }}
 where
     case when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and case when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else datetime <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('facilityId') }} is null then true
         else {{ parameter('facilityId') }} = facility_id

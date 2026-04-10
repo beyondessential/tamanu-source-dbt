@@ -1,7 +1,7 @@
 select
     lrl.id,
-    lrl.created_at as created_datetime,
-    lrl.updated_at as updated_datetime,
+    lrl.created_at at time zone '{{ var("timezone") }}' as created_datetime,
+    lrl.updated_at at time zone '{{ var("timezone") }}' as updated_datetime,
     lrl.lab_request_id,
     lrl.status,
     lrl.updated_by_id

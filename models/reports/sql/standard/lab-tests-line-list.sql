@@ -14,24 +14,24 @@ select
     status as "{{ translate_label('labRequestStatus') }}",
     lab_test_panel as "{{ translate_label('labTestPanel') }}",
     lab_test_category as "{{ translate_label('labTestCategory') }}",
-    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
+    to_char({{ to_user_selected_timezone('requested_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
     requested_by as "{{ translate_label('labRequestClinician') }}",
-    to_char(lab_request_published_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestPublishedDateTime') }}",
+    to_char({{ to_user_selected_timezone('lab_request_published_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestPublishedDateTime') }}",
     to_char(lab_test_date, '{{ var("date_format") }}') as "{{ translate_label('labTestDate') }}",
     result as "{{ translate_label('labTestResults') }}",
     verification as "{{ translate_label('labTestVerification') }}",
     lab_test_type as "{{ translate_label('labTestType') }}",
-    to_char(lab_test_completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
+    to_char({{ to_user_selected_timezone('lab_test_completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
 from {{ ref('ds__lab_tests') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else requested_datetime
+        else {{ to_user_selected_timezone('requested_datetime') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else requested_datetime
+        else {{ to_user_selected_timezone('requested_datetime') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and

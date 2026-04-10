@@ -6,7 +6,7 @@ select
     age as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
-    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
+    to_char({{ to_user_selected_timezone('vaccination_date') }}, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
     vaccine_name as "{{ translate_label('vaccineName') }}",
     vaccine_brand as "{{ translate_label('vaccineBrand') }}",
     disease as "{{ translate_label('vaccineDisease') }}",
@@ -15,20 +15,20 @@ select
     given_by as "{{ translate_label('vaccinationGivenBy') }}",
     recorded_by as "{{ translate_label('vaccinationRecordedBy') }}",
     modified_by as "{{ translate_label('vaccinationModifiedBy') }}",
-    to_char(updated_at, '{{ var("datetime_format") }}') as "{{ translate_label('vaccinationModifiedDate') }}"
+    to_char({{ to_user_selected_timezone('updated_at') }}, '{{ var("datetime_format") }}') as "{{ translate_label('vaccinationModifiedDate') }}"
 from {{ ref("ds__vaccinations") }}
 where
     vaccine_status in ('Recorded in error', 'Historical')
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else vaccination_date
+        else {{ to_user_selected_timezone('vaccination_date') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else vaccination_date
+        else {{ to_user_selected_timezone('vaccination_date') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and

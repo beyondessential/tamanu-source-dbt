@@ -7,8 +7,8 @@ select
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     billing_type as "{{ translate_label('patientBillingType') }}",
-    to_char(booking_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('bookingStartDateTime') }}",
-    to_char(booking_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('bookingEndDateTime') }}",
+    to_char({{ to_user_selected_timezone('booking_start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('bookingStartDateTime') }}",
+    to_char({{ to_user_selected_timezone('booking_end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('bookingEndDateTime') }}",
     case
         when extract(day from age(booking_end_datetime, booking_start_datetime)) >= 1
             then extract(day from age(booking_end_datetime, booking_start_datetime)) || ' nights'
@@ -24,12 +24,12 @@ select
 from {{ ref('ds__location_bookings') }}
 where case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else booking_start_datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else booking_end_datetime <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else {{ to_user_selected_timezone('booking_end_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and
     case
