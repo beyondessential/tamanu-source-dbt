@@ -21,7 +21,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - tests
+  - data-tests
 seed-paths:
   - seeds
 macro-paths:
@@ -51,9 +51,6 @@ models:
       sensitive:
         +tags:
           - restricted
-      admin:
-        +tags:
-          - admin
     reports:
       +docs:
         show: false
@@ -63,9 +60,6 @@ models:
         sensitive:
           +tags:
             - restricted
-        admin:
-          +tags:
-            - admin
 
 data_tests:
   +severity: warn

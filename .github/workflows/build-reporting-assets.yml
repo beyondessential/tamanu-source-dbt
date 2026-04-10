@@ -1,0 +1,122 @@
+name: Build Reporting Assets
+
+# Triggered automatically when a release is published, or manually for a specific tag.
+# Checks out the X.Y maintenance branch matching the release (falls back to main if the
+# branch doesn't exist yet), connects to the release database in k8s, runs
+# build_reporting_assets.py, attaches compiled assets to the GitHub release, then
+# publishes them to S3.
+#
+# Requires:
+#   vars.TS_OAUTH_CLIENT_ID, vars.TS_TAGS, vars.TS_K8S_OPERATOR_HOSTNAME — Tailscale access
+#   GITHUB_TOKEN with contents:write (granted automatically by GHA)
+#   secrets.META_CERT, secrets.META_KEY, vars.META_URL — passed via secrets: inherit to publish-artifacts
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (e.g. v2.50.5)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build and publish reporting assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # for Tailscale OIDC authentication
+
+    steps:
+      - name: Determine version and branch
+        id: version
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${TAG#v}"
+          MINOR_VERSION="$(echo "$VERSION" | cut -d. -f1,2)"
+
+          # Use the X.Y branch if it exists, otherwise fall back to main
+          if gh api "repos/${{ github.repository }}/branches/$MINOR_VERSION" --silent 2>/dev/null; then
+            REF="$MINOR_VERSION"
+            echo "Using branch '$MINOR_VERSION'"
+          else
+            REF="main"
+            echo "Branch '$MINOR_VERSION' does not exist yet — using main"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.version.outputs.ref }}
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: api.tailscale.com/${{ vars.TS_OAUTH_CLIENT_ID }}
+          tags: '${{ vars.TS_TAGS }}'
+
+      - name: Configure kubeconfig
+        run: |
+          sudo tailscale set --operator=$USER
+          tailscale configure kubeconfig ${{ vars.TS_K8S_OPERATOR_HOSTNAME }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: uv pip install --system -e .
+
+      - name: Build reporting assets
+        run: |
+          NS="${{ steps.version.outputs.namespace }}"
+
+          pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
+          echo "::add-mask::$pgpass"
+
+          kubectl port-forward -n "$NS" service/central-db-rw 5432:5432 &
+          pf_pid=$!
+          function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 5
+
+          TAMANU_RL_DB_URL=127.0.0.1 \
+          TAMANU_RL_DB_PORT=5432 \
+          TAMANU_RL_DB_USER=app \
+          TAMANU_RL_DB_PASSWORD="$pgpass" \
+          TAMANU_RL_DB_DATABASE=app \
+          python scripts/build_reporting_assets.py
+
+      - name: Attach compiled assets to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ steps.version.outputs.tag }}" \
+            compiled/v${{ steps.version.outputs.version }}/* \
+            --clobber
+
+  publish:
+    name: Publish artifacts to S3
+    needs: build
+    if: github.event_name == 'release'
+    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
