@@ -1083,6 +1083,63 @@
   - base
   - administration
 - columns:
+    change_id:
+      data_type: uuid
+      description: The ID of the change log row. UUID
+      name: change_id
+    change_sequence:
+      data_type: integer
+      description: Sequential number of this change for the invoice, ordered by logged_at.
+        1 = initial creation event.
+      name: change_sequence
+    encounter_id:
+      data_type: text
+      description: Reference to the [encounter](#!/source/source.tamanu.tamanu.encounters)
+        this invoice is a part of. Sourced from the invoices table.
+      name: encounter_id
+    invoice_id:
+      data_type: text
+      description: "The value of the `id` field of the change data.\r\n\r\nThis is\
+        \ extracted from the data to make it easier to query on. in invoices."
+      name: invoice_id
+    logged_at:
+      data_type: timestamptz
+      description: The timestamp this change was logged. in invoices history.
+      name: logged_at
+    previous_status:
+      data_type: text
+      description: Invoice status from the immediately preceding change event. Null
+        for the initial creation (change_sequence = 1).
+      name: previous_status
+    status:
+      data_type: text
+      description: "Status of the invoice.\r\n\r\nOne of:\r\n- `cancelled`\r\n- `in_progress`\r\
+        \n- `finalised` from history."
+      name: status
+    updated_by_user_id:
+      data_type: text
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in invoices\
+        \ history."
+      name: updated_by_user_id
+  config:
+    tags:
+    - base
+    - administration
+    - log
+  description: Change logs for Invoices related to encounters.
+  meta:
+    classification: restricted
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
+  name: invoices_change_logs
+  tags:
+  - base
+  - administration
+  - log
+- columns:
     id:
       data_type: character varying(255)
       description: Tamanu internal identifier (generally a UUID) in lab_request_logs.

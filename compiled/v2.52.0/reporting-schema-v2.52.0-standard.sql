@@ -254,6 +254,32 @@ where
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."invoices_change_logs" as (
+select
+    c.id as change_id,
+    c.record_id::uuid as invoice_id,
+    c.logged_at,
+    c.updated_by_user_id,
+    c.record_data ->> 'status' as status,
+    i.encounter_id,
+    lag(c.record_data ->> 'status') over (
+        partition by c.record_id
+        order by c.logged_at, c.record_updated_at, c.id
+    ) as previous_status,
+    row_number() over (
+        partition by c.record_id
+        order by c.logged_at, c.record_updated_at, c.id
+    ) as change_sequence
+from "logs"."changes" c
+join "public"."invoices" i on i.id = c.record_id::uuid
+    and i.deleted_at is null
+join "public"."encounters" e on e.id = i.encounter_id
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+where
+    c.table_name = 'invoices'
+    and c.record_deleted_at is null
+);
 create or replace view "reporting"."invoice_insurance_plans" as (
 select
     id,
@@ -603,22 +629,23 @@ with appointment_changes as (
         -- Get creator from the first change_sequence (initial creation)
         first_value(c.updated_by_user_id) over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as created_by_user_id,
         -- Use LAG to get the previous record state
         lag(c.record_data) over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as previous_record_data,
         -- Track change sequence
         row_number() over (
             partition by c.record_id
-            order by c.logged_at
+            order by c.logged_at, c.record_updated_at, c.id
         ) as change_sequence
     from "logs"."changes" c
     where c.table_name = 'appointments'
         and c.record_deleted_at is null
         and (c.record_data ->> 'appointment_type_id') is not null
+        and (c.record_data ->> 'patient_id') != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 )
 
 select
@@ -1852,6 +1879,10 @@ select
     occupation.name as occupation,
     religion.name as religion,
     billing.name as patient_billing_type,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
     pad.mother_id,
     pad.father_id,
     pad.street_village,
@@ -1874,13 +1905,15 @@ from "reporting"."patients" p
 left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
 left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
 left join "reporting"."users" u on u.id = pad.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id and village.type = 'village'
-left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id and cob.type = 'country'
-left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id and nationality.type = 'nationality'
-left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id and ethnicity.type = 'ethnicity'
-left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id and occupation.type = 'occupation'
-left join "reporting"."reference_data" religion on religion.id = pad.religion_id and religion.type = 'religion'
-left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id and billing.type = 'patientBillingType'
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id
+left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id
+left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id
+left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id
+left join "reporting"."reference_data" religion on religion.id = pad.religion_id
+left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
 );
 create or replace view "reporting"."ds__patients_access_logs" as (
 with grouped_access_logs as (
