@@ -103,13 +103,13 @@ Run: python scripts/generate_translation_macro.py
     with open(macro_path, "w", encoding="utf-8") as f:
         f.write(macro_content)
 
-    print(f"Generated {macro_path}")
-    print(f"Loaded {len(merged)} translations (standard + localised)")
+    cprint(f"Generated {macro_path}", "success")
+    cprint(f"Loaded {len(merged)} translations (standard + localised)", "success")
 
 
 if __name__ == "__main__":
     try:
         generate_translation_macro()
     except Exception as e:
-        print(f"Error: {e}")
+        cprint(f"Error: {e}", "error")
         sys.exit(1)
