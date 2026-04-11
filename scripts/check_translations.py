@@ -1,11 +1,10 @@
 import re
-import sys
 from pathlib import Path
 
 from utils.dbt_utils import get_deployment_name
 from utils.file_utils import read_file
 from utils.system_utils import cprint
-from utils.translation_utils import find_default_overrides_for_standard, read_translations_csv
+from utils.translation_utils import assert_no_default_overrides, read_translations_csv
 
 DEPLOYMENT = get_deployment_name()
 
@@ -16,24 +15,20 @@ def extract_translate_labels_from_file(file_path):
     return re.findall(pattern, content)
 
 
-def load_translations_from_file(file_path):
-    if file_path.exists():
-        df = read_file(file_path, file_type="csv")
-        return {
-            sid[len("report.reporting.") :]
-            for sid in df["stringId"]
-            if sid.startswith("report.reporting.")
-        }
-    else:
-        cprint(f"⚠️ File does not exist: {file_path}", "warning")
-        return set()
+def _short_ids(csv_dict):
+    return {
+        sid[len("report.reporting."):]
+        for sid in csv_dict
+        if sid.startswith("report.reporting.")
+    }
 
 
 def main():
     if DEPLOYMENT == "standard":
-        translations = load_translations_from_file(
-            Path("report_translations_standard.csv")
-        )
+        csv_path = Path("report_translations_standard.csv")
+        if not csv_path.exists():
+            cprint(f"⚠️ File does not exist: {csv_path}", "warning")
+        translations = _short_ids(read_translations_csv(csv_path))
         sql_folders = [Path("models/reports/sql")]
     else:
         standard_csv_path = Path(
@@ -44,26 +39,10 @@ def main():
         standard = read_translations_csv(standard_csv_path)
         localised = read_translations_csv(deployment_csv_path)
 
-        errors = find_default_overrides_for_standard(localised, standard)
-        if errors:
-            cprint(
-                f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
-                "error",
-            )
-            cprint(
-                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
-                "error",
-            )
-            for sid in sorted(errors):
-                cprint(f"  - {sid}", "error")
-            sys.exit(1)
+        assert_no_default_overrides(localised, standard)
 
-        translations_standard = {
-            sid[len("report.reporting."):] for sid in standard if sid.startswith("report.reporting.")
-        }
-        translations_deployment = {
-            sid[len("report.reporting."):] for sid in localised if sid.startswith("report.reporting.")
-        }
+        translations_standard = _short_ids(standard)
+        translations_deployment = _short_ids(localised)
 
         if not translations_deployment:
             cprint(

@@ -1,7 +1,7 @@
 import sys
 import os
 
-from utils import get_deployment_name, find_default_overrides_for_standard, read_translations_csv, cprint
+from utils import get_deployment_name, assert_no_default_overrides, read_translations_csv, cprint
 
 
 def generate_translation_macro():
@@ -18,19 +18,7 @@ def generate_translation_macro():
             )
         )
         localised = read_translations_csv(f"report_translations_{deployment}.csv")
-        errors = find_default_overrides_for_standard(localised, standard)
-        if errors:
-            cprint(
-                f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
-                "error",
-            )
-            cprint(
-                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
-                "error",
-            )
-            for sid in sorted(errors):
-                cprint(f"  - {sid}", "error")
-            sys.exit(1)
+        assert_no_default_overrides(localised, standard)
 
     # Merge standard and localised translations
     # For each string_id, merge language dicts with localised overriding standard
