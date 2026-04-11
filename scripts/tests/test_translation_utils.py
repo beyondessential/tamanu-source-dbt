@@ -1,4 +1,7 @@
+import pytest
+
 from utils.translation_utils import (
+    assert_no_default_overrides,
     find_default_overrides_for_standard,
     read_translations_csv,
 )
@@ -113,3 +116,15 @@ def test_multiple_errors_reported():
         "report.reporting.admissionDate",
         "report.reporting.admissionStatus",
     ]
+
+
+# ---------------------------------------------------------------------------
+# assert_no_default_overrides
+# ---------------------------------------------------------------------------
+
+
+def test_assert_no_default_overrides_exits():
+    localised = {"report.reporting.admissionDate": {"default": "Admission date"}}
+    with pytest.raises(SystemExit) as exc_info:
+        assert_no_default_overrides(localised, STANDARD)
+    assert exc_info.value.code == 1
