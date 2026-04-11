@@ -36,6 +36,8 @@ def main():
         )
         deployment_csv_path = Path(f"report_translations_{DEPLOYMENT}.csv")
 
+        if not standard_csv_path.exists():
+            cprint(f"⚠️ File does not exist: {standard_csv_path}", "warning")
         standard = read_translations_csv(standard_csv_path)
         localised = read_translations_csv(deployment_csv_path)
 
