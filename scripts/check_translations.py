@@ -1,4 +1,5 @@
 import re
+import sys
 from pathlib import Path
 
 from utils.dbt_utils import get_deployment_name
@@ -27,6 +28,40 @@ def load_translations_from_file(file_path):
         return set()
 
 
+def check_no_default_for_standard_strings(deployment_csv_path, standard_string_ids):
+    """Error if the project CSV defines 'default' for a stringId already in standard."""
+    if not deployment_csv_path.exists():
+        return False
+    df = read_file(deployment_csv_path, file_type="csv")
+    if "default" not in df.columns:
+        return False
+    errors = []
+    for _, row in df.iterrows():
+        string_id = str(row.get("stringId", ""))
+        if not string_id:
+            continue
+        short_id = (
+            string_id[len("report.reporting."):]
+            if string_id.startswith("report.reporting.")
+            else string_id
+        )
+        if short_id in standard_string_ids and row.get("default"):
+            errors.append(string_id)
+    if errors:
+        cprint(
+            f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
+            "error",
+        )
+        cprint(
+            "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
+            "error",
+        )
+        for sid in sorted(errors):
+            cprint(f"  - {sid}", "error")
+        return True
+    return False
+
+
 def main():
     if DEPLOYMENT == "standard":
         translations = load_translations_from_file(
@@ -37,22 +72,16 @@ def main():
         translations_standard = load_translations_from_file(
             Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
         )
-        translations_deployment = load_translations_from_file(
-            Path(f"report_translations_{DEPLOYMENT}.csv")
-        )
+        deployment_csv_path = Path(f"report_translations_{DEPLOYMENT}.csv")
+        translations_deployment = load_translations_from_file(deployment_csv_path)
 
-        if translations_deployment:
-            duplicates = translations_standard & translations_deployment
-            if duplicates:
-                cprint(
-                    f"\n⚠️ DUPLICATE TRANSLATIONS FOUND ({len(duplicates)}):", "warning"
-                )
-                for duplicate in sorted(duplicates):
-                    cprint(f"  - {duplicate}", "warning")
-                cprint(
-                    f"Using {DEPLOYMENT}-specific translations for duplicates.", "info"
-                )
-        else:
+        has_default_errors = check_no_default_for_standard_strings(
+            deployment_csv_path, translations_standard
+        )
+        if has_default_errors:
+            sys.exit(1)
+
+        if not translations_deployment:
             cprint(
                 f"\nℹ️ No deployment-specific translations file found for {DEPLOYMENT}, using standard translations only.",
                 "info",

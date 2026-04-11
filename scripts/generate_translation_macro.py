@@ -33,6 +33,24 @@ def read_csv(rel_path):
     return mapping
 
 
+def validate_no_default_for_standard_strings(localised, standard):
+    """Error if project CSV defines 'default' for a stringId that already exists in standard."""
+    errors = [
+        string_id
+        for string_id, lang_dict in localised.items()
+        if string_id in standard and "default" in lang_dict
+    ]
+    if errors:
+        print(
+            "Error: the following stringIds have a 'default' translation in the project CSV\n"
+            "but are already defined in tamanu-source-dbt standard translations.\n"
+            "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds:"
+        )
+        for sid in sorted(errors):
+            print(f"  - {sid}")
+        sys.exit(1)
+
+
 def generate_translation_macro():
     """Read CSV and generate a macro file with translations as a dictionary."""
     deployment = get_deployment_name()
@@ -47,6 +65,7 @@ def generate_translation_macro():
             )
         )
         localised = read_csv(f"report_translations_{deployment}.csv")
+        validate_no_default_for_standard_strings(localised, standard)
 
     # Merge standard and localised translations
     # For each string_id, merge language dicts with localised overriding standard
@@ -96,7 +115,7 @@ Run: python scripts/generate_translation_macro.py
 
     macros_dir = os.path.join(BASE_DIR, "macros")
     os.makedirs(macros_dir, exist_ok=True)
-    filename = "default_translations.sql"
+    filename = "translation.sql"
 
     if deployment != "standard":
         package_standard_macro = os.path.join(
@@ -104,10 +123,16 @@ Run: python scripts/generate_translation_macro.py
             "dbt_packages",
             "tamanu_source_dbt",
             "macros",
-            "default_translations.sql",
+            "translation.sql",
         )
         if os.path.exists(package_standard_macro):
             os.remove(package_standard_macro)
+
+    # Remove old default_translations.sql if it exists (renamed to translation.sql in v2.52).
+    # TODO: remove this block once all tamanu-dbt-* repos are on at least v2.52.
+    old_macro_path = os.path.join(macros_dir, "default_translations.sql")
+    if os.path.exists(old_macro_path):
+        os.remove(old_macro_path)
 
     macro_path = os.path.join(macros_dir, filename)
 
