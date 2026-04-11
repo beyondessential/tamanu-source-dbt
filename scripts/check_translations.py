@@ -5,6 +5,7 @@ from pathlib import Path
 from utils.dbt_utils import get_deployment_name
 from utils.file_utils import read_file
 from utils.system_utils import cprint
+from utils.translation_utils import find_default_overrides_for_standard, read_translations_csv
 
 DEPLOYMENT = get_deployment_name()
 
@@ -28,25 +29,11 @@ def load_translations_from_file(file_path):
         return set()
 
 
-def check_no_default_for_standard_strings(deployment_csv_path, standard_string_ids):
+def check_no_default_for_standard_strings(deployment_csv_path, standard_csv_path):
     """Error if the project CSV defines 'default' for a stringId already in standard."""
-    if not deployment_csv_path.exists():
-        return False
-    df = read_file(deployment_csv_path, file_type="csv")
-    if "default" not in df.columns:
-        return False
-    errors = []
-    for _, row in df.iterrows():
-        string_id = str(row.get("stringId", ""))
-        if not string_id:
-            continue
-        short_id = (
-            string_id[len("report.reporting."):]
-            if string_id.startswith("report.reporting.")
-            else string_id
-        )
-        if short_id in standard_string_ids and row.get("default"):
-            errors.append(string_id)
+    standard = read_translations_csv(standard_csv_path)
+    localised = read_translations_csv(deployment_csv_path)
+    errors = find_default_overrides_for_standard(localised, standard)
     if errors:
         cprint(
             f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
@@ -76,7 +63,8 @@ def main():
         translations_deployment = load_translations_from_file(deployment_csv_path)
 
         has_default_errors = check_no_default_for_standard_strings(
-            deployment_csv_path, translations_standard
+            deployment_csv_path,
+            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv"),
         )
         if has_default_errors:
             sys.exit(1)

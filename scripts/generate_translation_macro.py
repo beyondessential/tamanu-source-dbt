@@ -1,54 +1,10 @@
 import sys
 import os
-import csv
 
-from utils import get_deployment_name
+from utils import get_deployment_name, find_default_overrides_for_standard, read_translations_csv
 
 
 BASE_DIR = os.getcwd()
-
-
-def read_csv(rel_path):
-    """Read a CSV with stringId and language columns into a nested dict, escaping quotes for Jinja."""
-    path = os.path.join(BASE_DIR, rel_path)
-    if not os.path.exists(path):
-        return {}
-    mapping = {}
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            string_id = row.get("stringId")
-            if not string_id:
-                continue
-
-            # Initialize nested dict for this string_id if not exists
-            if string_id not in mapping:
-                mapping[string_id] = {}
-
-            # Add all language columns (skip stringId column)
-            for lang, text in row.items():
-                if lang != "stringId" and text:
-                    text_escaped = text.replace("\\", "\\\\").replace("'", "\\'")
-                    mapping[string_id][lang] = text_escaped
-    return mapping
-
-
-def validate_no_default_for_standard_strings(localised, standard):
-    """Error if project CSV defines 'default' for a stringId that already exists in standard."""
-    errors = [
-        string_id
-        for string_id, lang_dict in localised.items()
-        if string_id in standard and "default" in lang_dict
-    ]
-    if errors:
-        print(
-            "Error: the following stringIds have a 'default' translation in the project CSV\n"
-            "but are already defined in tamanu-source-dbt standard translations.\n"
-            "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds:"
-        )
-        for sid in sorted(errors):
-            print(f"  - {sid}")
-        sys.exit(1)
 
 
 def generate_translation_macro():
@@ -56,16 +12,25 @@ def generate_translation_macro():
     deployment = get_deployment_name()
 
     if deployment == "standard":
-        standard = read_csv("report_translations_standard.csv")
+        standard = read_translations_csv("report_translations_standard.csv")
         localised = {}
     else:
-        standard = read_csv(
+        standard = read_translations_csv(
             os.path.join(
                 "dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv"
             )
         )
-        localised = read_csv(f"report_translations_{deployment}.csv")
-        validate_no_default_for_standard_strings(localised, standard)
+        localised = read_translations_csv(f"report_translations_{deployment}.csv")
+        errors = find_default_overrides_for_standard(localised, standard)
+        if errors:
+            print(
+                "Error: the following stringIds have a 'default' translation in the project CSV\n"
+                "but are already defined in tamanu-source-dbt standard translations.\n"
+                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds:"
+            )
+            for sid in sorted(errors):
+                print(f"  - {sid}")
+            sys.exit(1)
 
     # Merge standard and localised translations
     # For each string_id, merge language dicts with localised overriding standard
