@@ -142,12 +142,15 @@ Quick search commands:
 ```bash
 # Find all models referencing a base model
 grep -r "ref('<model_name>')" models/
+# e.g. grep -r "ref('encounters')" models/
 
 # Find all models using a specific macro
 grep -r "{{ <macro_name>" models/ macros/
+# e.g. grep -r "{{ translate_label" models/ macros/
 
 # Find reports not yet using a macro (e.g. locate old patterns to replace)
 grep -r "<old_pattern>" models/reports/
+# e.g. grep -r "at time zone" models/reports/
 ```
 
 ---
