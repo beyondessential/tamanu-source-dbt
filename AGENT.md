@@ -111,3 +111,58 @@ python scripts/check_translations.py
 # if report_translations_standard.csv changed:
 python scripts/generate_translation_macro.py
 ```
+
+---
+
+## Codebase navigation
+
+Reference locations for common pattern lookups — use these as starting points rather than
+scanning the whole codebase:
+
+| What you need | Where to look |
+|---------------|---------------|
+| Base model example | `models/bases/encounters.sql` + `models/bases/encounters.yml` |
+| Standard report example | `models/reports/sql/standard/admissions-line-list.sql` |
+| Sensitive report example | `models/reports/sql/sensitive/sensitive-admissions-line-list.sql` |
+| Report config example | `models/reports/config/admissions-line-list.json` |
+| Datetime macros | `macros/datetime.sql` |
+| Translation macro | `macros/translations.sql`, `macros/default_translations.sql` |
+| Translation source | `report_translations_standard.csv` |
+| Source doc blocks | `models/sources/<table>.md` |
+| Deployment repo list | `.github/deployment-repos.yml` |
+
+Quick search commands:
+
+```bash
+# Find all models referencing a base model
+grep -r "ref('<model_name>')" models/
+
+# Find all models using a specific macro
+grep -r "{{ <macro_name>" models/ macros/
+
+# Find reports not yet using a macro (e.g. locate old patterns to replace)
+grep -r "<old_pattern>" models/reports/
+```
+
+---
+
+## Common multi-file workflows
+
+For full step-by-step guides, see `.maui/knowledge/runbooks/`. Summary of when to use
+parallel agents for each workflow:
+
+**Adding a new report pair (standard + sensitive):**
+Follow `.maui/knowledge/runbooks/new-report.md`. Before writing any SQL, search
+`models/reports/sql/standard/` for the closest existing report to use as a template.
+Check translation coverage in parallel with finding the template.
+
+**Rolling out a new macro to existing models:**
+Follow `.maui/knowledge/runbooks/macro-change-impact.md`. Search for all affected files
+before editing any of them — use parallel searches across model layers (bases, datasets,
+reports) to build the complete list first.
+
+**Creating a new base model:**
+Check in parallel: (1) does a source definition already exist in `models/sources/`?
+(2) does a doc block file exist in `models/sources/<table>.md`? (3) find a peer base
+model in the same domain tag (`clinical`, `reference`, `log`, `administration`, `patient`)
+to use as a reference. Only then create the new files.
