@@ -1,7 +1,5 @@
 import pytest
-
 from propagate_patch import bump_patch, find_revision, get_major_minor, replace_revision
-
 
 # ---------------------------------------------------------------------------
 # get_major_minor
@@ -165,7 +163,10 @@ def test_replace_revision_branch_name():
 
 
 def test_replace_revision_sha():
-    content = "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n    revision: abc1234def5678\n"
+    content = (
+        "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n"
+        "    revision: abc1234def5678\n"
+    )
     assert replace_revision(content, "v2.49.7") == content.replace("abc1234def5678", "v2.49.7")
 
 
@@ -179,6 +180,6 @@ def test_replace_revision_only_updates_tamanu_block():
     # Ensures the tamanu block update doesn't bleed into the preceding dbt-utils package
     result = replace_revision(PACKAGES_OTHER_FIRST, "v2.49.7")
     lines = result.splitlines()
-    dbt_utils_line = next(l for l in lines if "revision" in l and "v1.2.0" in l)
+    dbt_utils_line = next(line for line in lines if "revision" in line and "v1.2.0" in line)
     assert "v1.2.0" in dbt_utils_line
     assert "v2.49.7" not in dbt_utils_line

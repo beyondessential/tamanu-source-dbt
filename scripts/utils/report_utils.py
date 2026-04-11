@@ -1,15 +1,13 @@
-import json
 import os
 import re
 
 from .dbt_utils import (
-    get_dbt_project_vars,
     get_deployment_name,
     get_deployment_version,
     get_project_name,
 )
 from .file_utils import ensure_directory_exists, read_file, write_file
-from .system_utils import cprint, execute_command
+from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
@@ -70,7 +68,7 @@ def generate_project_reports(language):
     ]
 
     if not nodes:
-        cprint(f"No report models found", "error")
+        cprint("No report models found", "error")
         return
 
     ensure_directory_exists(VERSION_DIR)
@@ -188,7 +186,7 @@ def generate_reporting_schema_script():
     ]
 
     if not nodes:
-        cprint(f"No models found", "error")
+        cprint("No models found", "error")
         return
 
     processed = set()

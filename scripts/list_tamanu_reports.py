@@ -84,19 +84,19 @@ def main():
     standard_md_file = "dbt_packages/tamanu_source_dbt/list_tamanu_reports.md"
     output_file = "list_tamanu_reports.md"
     report_type = "Standard"
-    
+
     if os.path.exists(standard_md_file):
         # Copy the existing file to the current directory
         shutil.copy2(standard_md_file, output_file)
         cprint(f"Copied existing report list from {standard_md_file} to {output_file}", "success")
         report_type = "Custom"
         return
-        
+
     path = "models/reports/config"
-    
+
     # Extract data and write to Markdown
     extract_and_write_to_md(path, output_file, report_type)
-    
+
     cprint(f"{report_type} report list has been written to {output_file}", "success")
 
 

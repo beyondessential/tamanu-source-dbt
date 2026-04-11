@@ -29,7 +29,8 @@ def read_translations_csv(path):
 
 
 def find_default_overrides_for_standard(localised, standard):
-    """Return stringIds from localised that define 'default' but already exist in standard.
+    """Return stringIds from localised that define 'default' but already exist in
+    standard.
 
     Both arguments are dicts in the form {stringId: {lang: text}} as returned by
     read_translations_csv.
@@ -42,15 +43,18 @@ def find_default_overrides_for_standard(localised, standard):
 
 
 def assert_no_default_overrides(localised, standard):
-    """Print an error and exit(1) if localised defines 'default' for any standard stringId."""
+    """Print an error and exit(1) if localised defines 'default' for any standard
+    stringId."""
     errors = find_default_overrides_for_standard(localised, standard)
     if errors:
         cprint(
-            f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
+            f"\n❌ ERROR: 'default' translations defined for standard stringIds"
+            f" ({len(errors)}):",
             "error",
         )
         cprint(
-            "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
+            "Project CSVs should only add language-specific translations (e.g. 'en')"
+            " for standard stringIds.",
             "error",
         )
         for sid in sorted(errors):

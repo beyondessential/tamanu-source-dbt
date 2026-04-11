@@ -46,7 +46,8 @@ def main():
 
         if not translations_deployment:
             cprint(
-                f"\nℹ️ No deployment-specific translations file found for {DEPLOYMENT}, using standard translations only.",
+                f"\nℹ️ No deployment-specific translations file found for"
+                f" {DEPLOYMENT}, using standard translations only.",
                 "info",
             )
 
@@ -67,7 +68,8 @@ def main():
 
     cprint(f"Found {len(translations)} translations", "info")
     cprint(
-        f"Found {len(referenced_translations)} unique translate_label calls across all SQL files",
+        f"Found {len(referenced_translations)} unique translate_label calls"
+        " across all SQL files",
         "info",
     )
 
@@ -81,11 +83,12 @@ def main():
                 if missing_translation in translation_labels
             ]
             cprint(
-                f"  - {missing_translation} (used in: {', '.join(files_referencing_missing_translation)})",
+                f"  - {missing_translation} (used in:"
+                f" {', '.join(files_referencing_missing_translation)})",
                 "error",
             )
 
-        cprint(f"\nTo fix, add the following to the translation file:", "warning")
+        cprint("\nTo fix, add the following to the translation file:", "warning")
         for missing_translation in sorted(missing_translations):
             cprint(f"report.reporting.{missing_translation}", "warning")
     else:
@@ -104,7 +107,8 @@ def main():
         ]
         status = "❌" if missing_in_file else "✅"
         cprint(
-            f"{status} {file}: {len(translation_labels)} calls, {len(missing_in_file)} missing",
+            f"{status} {file}: {len(translation_labels)} calls,"
+            f" {len(missing_in_file)} missing",
             "info",
         )
         if missing_in_file:

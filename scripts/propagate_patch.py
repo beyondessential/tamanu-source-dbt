@@ -143,7 +143,7 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
 
     if branch_exists(repo, branch):
         branch_content, file_sha = get_packages_yml(repo, ref=branch)
-        print(f"  ♻️  reusing existing branch")
+        print("  ♻️  reusing existing branch")
     else:
         gh_api(f"repos/{repo}/git/refs", method="POST",
                data={"ref": f"refs/heads/{branch}", "sha": head_sha})
@@ -173,7 +173,9 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         if m:
             current_proj_version = m.group(1)
             new_proj_version = bump_patch(current_proj_version)
-            updated_dbt_proj = dbt_proj_content[:m.start(1)] + new_proj_version.lstrip("v") + dbt_proj_content[m.end(1):]
+            updated_dbt_proj = (
+                dbt_proj_content[: m.start(1)] + new_proj_version.lstrip("v") + dbt_proj_content[m.end(1) :]
+            )
             gh_api(f"repos/{repo}/contents/dbt_project.yml", method="PUT", data={
                 "message": f"chore: bump version to {new_proj_version}",
                 "content": base64.b64encode(updated_dbt_proj.encode()).decode(),

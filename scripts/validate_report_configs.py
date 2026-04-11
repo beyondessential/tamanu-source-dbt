@@ -5,11 +5,11 @@ Script to validate Tamanu report configuration files against the JSON schema.
 
 import json
 import os
-from jsonschema import validate, ValidationError
 import sys
 from pathlib import Path
 from typing import List, Tuple
 
+from jsonschema import ValidationError, validate
 from utils.dbt_utils import get_deployment_name
 
 DEPLOYMENT = get_deployment_name()
@@ -31,17 +31,17 @@ def load_schema(schema_path: str) -> dict:
 def validate_config_file(config_path: str, schema: dict) -> Tuple[bool, str]:
     """
     Validate a single configuration file against the schema.
-    
+
     Returns:
         Tuple of (is_valid, error_message)
     """
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config_data = json.load(f)
-        
+
         validate(instance=config_data, schema=schema)
         return True, ""
-        
+
     except FileNotFoundError:
         return False, f"File not found: {config_path}"
     except json.JSONDecodeError as e:
@@ -60,11 +60,11 @@ def find_config_files(config_dir: str) -> List[str]:
         print(f"  (current working directory: {Path.cwd()})")
         print("  Ensure this script is run from the project root.")
         sys.exit(1)
-    
+
     json_files = list(config_path.rglob("*.json"))
     # Exclude the schema file itself
     json_files = [f for f in json_files if f.name != "report-config-schema.json"]
-    
+
     return [str(f) for f in json_files]
 
 

@@ -133,7 +133,7 @@ def extract_bases_models(manifest: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def print_bases_models_summary(models: List[Dict[str, Any]]) -> None:
     """Print a summary of the extracted bases models."""
-    cprint(f"\n=== BASES MODELS SUMMARY ===", "info")
+    cprint("\n=== BASES MODELS SUMMARY ===", "info")
     cprint(f"Total models found: {len(models)}", "info")
     cprint(f"{'Model Name':<40} {'Columns':<10}", "info")
     cprint("-" * 60, "info")

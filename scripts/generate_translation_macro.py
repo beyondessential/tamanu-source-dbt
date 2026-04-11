@@ -1,7 +1,12 @@
-import sys
 import os
+import sys
 
-from utils import get_deployment_name, assert_no_default_overrides, read_translations_csv, cprint
+from utils import (
+    assert_no_default_overrides,
+    cprint,
+    get_deployment_name,
+    read_translations_csv,
+)
 
 
 def generate_translation_macro():
@@ -80,7 +85,8 @@ Run: python scripts/generate_translation_macro.py
         if os.path.exists(package_standard_macro):
             os.remove(package_standard_macro)
 
-    # Remove old default_translations.sql if it exists (renamed to translation.sql in v2.52).
+    # Remove old default_translations.sql if it exists (renamed to translation.sql in
+    # v2.52).
     # TODO: remove this block once all tamanu-dbt-* repos are on at least v2.52.
     old_macro_path = os.path.join(macros_dir, "default_translations.sql")
     if os.path.exists(old_macro_path):

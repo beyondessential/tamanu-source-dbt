@@ -1,9 +1,7 @@
 import os
 import textwrap
-from pathlib import Path
 
 import pytest
-
 from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor
 from forwardport_patch import (
     get_higher_minor_branches_from_list,
@@ -12,7 +10,6 @@ from forwardport_patch import (
     get_version_tags_for_minor_from_list,
     update_version_in_files,
 )
-
 
 # ---------------------------------------------------------------------------
 # get_major_minor_patch

@@ -33,7 +33,8 @@ def read_file(file_path, file_type="text"):
         file_type (str): The type of the file ('text', 'json', or 'excel'/'xlsx'). Defaults to 'text'.
 
     Returns:
-        str, dict, or DataFrame: The file content as a string (for text files), a dictionary (for JSON files), or a pandas DataFrame (for Excel files).
+        str, dict, or DataFrame: The file content as a string (for text files), a dictionary
+            (for JSON files), or a pandas DataFrame (for Excel files).
 
     Raises:
         FileNotFoundError: If the file does not exist.
