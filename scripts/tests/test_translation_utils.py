@@ -1,5 +1,4 @@
 import pytest
-
 from utils.translation_utils import (
     assert_no_default_overrides,
     find_default_overrides_for_standard,
