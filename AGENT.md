@@ -126,6 +126,7 @@ scanning the whole codebase:
 | What you need | Where to look |
 |---------------|---------------|
 | Base model example | `models/bases/encounters.sql` + `models/bases/encounters.yml` |
+| Dataset macro example | `macros/models/admissions.sql` |
 | Standard report example | `models/reports/sql/standard/admissions-line-list.sql` |
 | Sensitive report example | `models/reports/sql/sensitive/sensitive-admissions-line-list.sql` |
 | Report config example (standard) | `models/reports/config/standard/admissions-line-list.json` |
