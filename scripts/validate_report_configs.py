@@ -18,7 +18,7 @@ DEPLOYMENT = get_deployment_name()
 def load_schema(schema_path: str) -> dict:
     """Load the JSON schema from file."""
     try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"Error: Schema file not found at {schema_path}")
@@ -36,7 +36,7 @@ def validate_config_file(config_path: str, schema: dict) -> Tuple[bool, str]:
         Tuple of (is_valid, error_message)
     """
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config_data = json.load(f)
 
         validate(instance=config_data, schema=schema)

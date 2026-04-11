@@ -1,4 +1,3 @@
-
 from utils.translation_utils import (
     find_default_overrides_for_standard,
     read_translations_csv,
@@ -15,37 +14,27 @@ def test_missing_file_returns_empty(tmp_path):
 
 def test_basic_read(tmp_path):
     csv = tmp_path / "t.csv"
-    csv.write_text(
-        "stringId,default\nreport.reporting.foo,Foo label\n", encoding="utf-8"
-    )
-    assert read_translations_csv(csv) == {
-        "report.reporting.foo": {"default": "Foo label"}
-    }
+    csv.write_text("stringId,default\nreport.reporting.foo,Foo label\n", encoding="utf-8")
+    assert read_translations_csv(csv) == {"report.reporting.foo": {"default": "Foo label"}}
 
 
 def test_single_quote_is_escaped(tmp_path):
     csv = tmp_path / "t.csv"
-    csv.write_text(
-        "stringId,default\nreport.reporting.foo,It's a label\n", encoding="utf-8"
-    )
+    csv.write_text("stringId,default\nreport.reporting.foo,It's a label\n", encoding="utf-8")
     result = read_translations_csv(csv)
     assert result["report.reporting.foo"]["default"] == "It\\'s a label"
 
 
 def test_backslash_is_escaped(tmp_path):
     csv = tmp_path / "t.csv"
-    csv.write_text(
-        "stringId,default\nreport.reporting.foo,C:\\path\n", encoding="utf-8"
-    )
+    csv.write_text("stringId,default\nreport.reporting.foo,C:\\path\n", encoding="utf-8")
     result = read_translations_csv(csv)
     assert result["report.reporting.foo"]["default"] == "C:\\\\path"
 
 
 def test_empty_cell_is_omitted(tmp_path):
     csv = tmp_path / "t.csv"
-    csv.write_text(
-        "stringId,default,en\nreport.reporting.foo,,English label\n", encoding="utf-8"
-    )
+    csv.write_text("stringId,default,en\nreport.reporting.foo,,English label\n", encoding="utf-8")
     result = read_translations_csv(csv)
     assert "default" not in result["report.reporting.foo"]
     assert result["report.reporting.foo"]["en"] == "English label"
@@ -67,9 +56,7 @@ def test_multiple_languages(tmp_path):
         "stringId,default,en,fr\nreport.reporting.foo,Foo,Foo EN,Foo FR\n",
         encoding="utf-8",
     )
-    assert read_translations_csv(csv) == {
-        "report.reporting.foo": {"default": "Foo", "en": "Foo EN", "fr": "Foo FR"}
-    }
+    assert read_translations_csv(csv) == {"report.reporting.foo": {"default": "Foo", "en": "Foo EN", "fr": "Foo FR"}}
 
 
 STANDARD = {

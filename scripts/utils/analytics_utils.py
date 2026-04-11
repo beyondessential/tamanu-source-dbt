@@ -85,10 +85,8 @@ def extract_bases_models(manifest: Dict[str, Any]) -> List[Dict[str, Any]]:
         # Check if this is a model node and if it's in the bases folder
         if (
             node_data.get("resource_type") == "model"
-            and "models/bases/"
-            in Path(node_data.get("original_file_path", "")).as_posix()
+            and "models/bases/" in Path(node_data.get("original_file_path", "")).as_posix()
         ):
-
             # Extract relevant information
             config_data = node_data.get("config", {})
             config_tags = config_data.get("tags", [])
@@ -154,9 +152,7 @@ def generate_analytics_metadata():
     """Generate analytics metadata from dbt manifest."""
     # Set up paths - output to versioned directory with analytics_metadata prefix
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
-    output_path = os.path.join(
-        VERSION_DIR, f"analytics-metadata-v{VERSION}-{DEPLOYMENT}.yml"
-    )
+    output_path = os.path.join(VERSION_DIR, f"analytics-metadata-v{VERSION}-{DEPLOYMENT}.yml")
 
     try:
         # Load manifest and extract bases models

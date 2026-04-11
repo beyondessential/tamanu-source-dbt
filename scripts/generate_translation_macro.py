@@ -18,9 +18,7 @@ def generate_translation_macro():
         localised = {}
     else:
         standard = read_translations_csv(
-            os.path.join(
-                "dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv"
-            )
+            os.path.join("dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv")
         )
         localised = read_translations_csv(f"report_translations_{deployment}.csv")
         assert_no_default_overrides(localised, standard)

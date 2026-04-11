@@ -122,9 +122,7 @@ def copy_files_from_directory(source_dir, destination_dir, clear_destination=Fal
             if os.path.isfile(source_file):
                 shutil.copy2(source_file, dest_file)
     except Exception as e:
-        cprint(
-            f"Error copying files from {source_dir} to {destination_dir}: {e}", "error"
-        )
+        cprint(f"Error copying files from {source_dir} to {destination_dir}: {e}", "error")
         exit(1)
 
 
