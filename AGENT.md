@@ -131,7 +131,7 @@ scanning the whole codebase:
 | Report config example (standard) | `models/reports/config/standard/admissions-line-list.json` |
 | Report config example (sensitive) | `models/reports/config/sensitive/sensitive-admissions-line-list.json` |
 | Datetime macros | `macros/datetime.sql` |
-| Translation macro | `macros/translations.sql`, `macros/default_translations.sql` |
+| Translation macro | `macros/translations.sql` (hand-authored); `macros/default_translations.sql` is generated from the CSV — do not edit directly |
 | Translation source | `report_translations_standard.csv` |
 | Source doc blocks | `models/sources/<table>.md` |
 | Deployment repo list | `.github/deployment-repos.yml` |
