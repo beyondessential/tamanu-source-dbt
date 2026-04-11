@@ -29,26 +29,6 @@ def load_translations_from_file(file_path):
         return set()
 
 
-def check_no_default_for_standard_strings(deployment_csv_path, standard_csv_path):
-    """Error if the project CSV defines 'default' for a stringId already in standard."""
-    standard = read_translations_csv(standard_csv_path)
-    localised = read_translations_csv(deployment_csv_path)
-    errors = find_default_overrides_for_standard(localised, standard)
-    if errors:
-        cprint(
-            f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
-            "error",
-        )
-        cprint(
-            "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
-            "error",
-        )
-        for sid in sorted(errors):
-            cprint(f"  - {sid}", "error")
-        return True
-    return False
-
-
 def main():
     if DEPLOYMENT == "standard":
         translations = load_translations_from_file(
@@ -56,18 +36,34 @@ def main():
         )
         sql_folders = [Path("models/reports/sql")]
     else:
-        translations_standard = load_translations_from_file(
-            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
+        standard_csv_path = Path(
+            "dbt_packages/tamanu_source_dbt/report_translations_standard.csv"
         )
         deployment_csv_path = Path(f"report_translations_{DEPLOYMENT}.csv")
-        translations_deployment = load_translations_from_file(deployment_csv_path)
 
-        has_default_errors = check_no_default_for_standard_strings(
-            deployment_csv_path,
-            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv"),
-        )
-        if has_default_errors:
+        standard = read_translations_csv(standard_csv_path)
+        localised = read_translations_csv(deployment_csv_path)
+
+        errors = find_default_overrides_for_standard(localised, standard)
+        if errors:
+            cprint(
+                f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
+                "error",
+            )
+            cprint(
+                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
+                "error",
+            )
+            for sid in sorted(errors):
+                cprint(f"  - {sid}", "error")
             sys.exit(1)
+
+        translations_standard = {
+            sid[len("report.reporting."):] for sid in standard if sid.startswith("report.reporting.")
+        }
+        translations_deployment = {
+            sid[len("report.reporting."):] for sid in localised if sid.startswith("report.reporting.")
+        }
 
         if not translations_deployment:
             cprint(

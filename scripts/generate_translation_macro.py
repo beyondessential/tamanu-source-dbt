@@ -1,10 +1,7 @@
 import sys
 import os
 
-from utils import get_deployment_name, find_default_overrides_for_standard, read_translations_csv
-
-
-BASE_DIR = os.getcwd()
+from utils import get_deployment_name, find_default_overrides_for_standard, read_translations_csv, cprint
 
 
 def generate_translation_macro():
@@ -23,13 +20,16 @@ def generate_translation_macro():
         localised = read_translations_csv(f"report_translations_{deployment}.csv")
         errors = find_default_overrides_for_standard(localised, standard)
         if errors:
-            print(
-                "Error: the following stringIds have a 'default' translation in the project CSV\n"
-                "but are already defined in tamanu-source-dbt standard translations.\n"
-                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds:"
+            cprint(
+                f"\n❌ ERROR: 'default' translations defined for standard stringIds ({len(errors)}):",
+                "error",
+            )
+            cprint(
+                "Project CSVs should only add language-specific translations (e.g. 'en') for standard stringIds.",
+                "error",
             )
             for sid in sorted(errors):
-                print(f"  - {sid}")
+                cprint(f"  - {sid}", "error")
             sys.exit(1)
 
     # Merge standard and localised translations
@@ -78,13 +78,12 @@ Run: python scripts/generate_translation_macro.py
 {%- endmacro -%}
 """
 
-    macros_dir = os.path.join(BASE_DIR, "macros")
+    macros_dir = "macros"
     os.makedirs(macros_dir, exist_ok=True)
     filename = "translation.sql"
 
     if deployment != "standard":
         package_standard_macro = os.path.join(
-            BASE_DIR,
             "dbt_packages",
             "tamanu_source_dbt",
             "macros",
