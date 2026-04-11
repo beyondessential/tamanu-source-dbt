@@ -53,11 +53,7 @@ def find_latest_tag_for_minor(refs: list[dict], major: int, minor: int) -> str |
     Sorts by patch number numerically (not lexicographically) so v2.49.10 > v2.49.9.
     """
     prefix = f"refs/tags/v{major}.{minor}."
-    matching = [
-        r["ref"].removeprefix("refs/tags/")
-        for r in refs
-        if r["ref"].startswith(prefix)
-    ]
+    matching = [r["ref"].removeprefix("refs/tags/") for r in refs if r["ref"].startswith(prefix)]
     if not matching:
         return None
 
@@ -78,11 +74,7 @@ def find_latest_tag_for_major(refs: list[dict], major: int) -> str | None:
     different major version. Sorts by (minor, patch) numerically.
     """
     prefix = f"refs/tags/v{major}."
-    matching = [
-        r["ref"].removeprefix("refs/tags/")
-        for r in refs
-        if r["ref"].startswith(prefix)
-    ]
+    matching = [r["ref"].removeprefix("refs/tags/") for r in refs if r["ref"].startswith(prefix)]
     if not matching:
         return None
 
@@ -166,10 +158,14 @@ def main():
 
     sha = get_commit_sha_for_tag(repo, latest_tag)
 
-    gh_api(f"repos/{repo}/git/refs", method="POST", data={
-        "ref": f"refs/heads/{branch_name}",
-        "sha": sha,
-    })
+    gh_api(
+        f"repos/{repo}/git/refs",
+        method="POST",
+        data={
+            "ref": f"refs/heads/{branch_name}",
+            "sha": sha,
+        },
+    )
 
     print(f"✅ Created branch '{branch_name}' at {latest_tag} ({sha})")
 

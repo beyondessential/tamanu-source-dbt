@@ -16,11 +16,7 @@ def extract_translate_labels_from_file(file_path):
 
 
 def _short_ids(csv_dict):
-    return {
-        sid[len("report.reporting."):]
-        for sid in csv_dict
-        if sid.startswith("report.reporting.")
-    }
+    return {sid[len("report.reporting.") :] for sid in csv_dict if sid.startswith("report.reporting.")}
 
 
 def main():
@@ -31,9 +27,7 @@ def main():
         translations = _short_ids(read_translations_csv(csv_path))
         sql_folders = [Path("models/reports/sql")]
     else:
-        standard_csv_path = Path(
-            "dbt_packages/tamanu_source_dbt/report_translations_standard.csv"
-        )
+        standard_csv_path = Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
         deployment_csv_path = Path(f"report_translations_{DEPLOYMENT}.csv")
 
         standard = read_translations_csv(standard_csv_path)
@@ -68,8 +62,7 @@ def main():
 
     cprint(f"Found {len(translations)} translations", "info")
     cprint(
-        f"Found {len(referenced_translations)} unique translate_label calls"
-        " across all SQL files",
+        f"Found {len(referenced_translations)} unique translate_label calls across all SQL files",
         "info",
     )
 
@@ -83,8 +76,7 @@ def main():
                 if missing_translation in translation_labels
             ]
             cprint(
-                f"  - {missing_translation} (used in:"
-                f" {', '.join(files_referencing_missing_translation)})",
+                f"  - {missing_translation} (used in: {', '.join(files_referencing_missing_translation)})",
                 "error",
             )
 
@@ -102,13 +94,10 @@ def main():
 
     cprint("\n📊 SUMMARY BY FILE:", "info")
     for file, translation_labels in sorted(file_referencing_translations.items()):
-        missing_in_file = [
-            label for label in translation_labels if label not in translations
-        ]
+        missing_in_file = [label for label in translation_labels if label not in translations]
         status = "❌" if missing_in_file else "✅"
         cprint(
-            f"{status} {file}: {len(translation_labels)} calls,"
-            f" {len(missing_in_file)} missing",
+            f"{status} {file}: {len(translation_labels)} calls, {len(missing_in_file)} missing",
             "info",
         )
         if missing_in_file:

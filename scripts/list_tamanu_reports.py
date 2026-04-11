@@ -13,7 +13,7 @@ def extract_and_write_to_md(base_path, output_file, report_type):
         output_file (str): The path to the output Markdown file.
         report_type (str): The report_type being listed ('Standard' or 'Custom').
     """
-    if report_type == 'Standard':
+    if report_type == "Standard":
         file_mode = "w"
     else:
         file_mode = "a"
@@ -27,21 +27,21 @@ def extract_and_write_to_md(base_path, output_file, report_type):
             folder_heading = "###"
 
         # Build set of report names that have a sensitive equivalent
-        sensitive_dir = os.path.join(base_path, 'sensitive')
+        sensitive_dir = os.path.join(base_path, "sensitive")
         sensitive_names = set()
         if os.path.isdir(sensitive_dir):
             for f in os.listdir(sensitive_dir):
                 if f.endswith(".json") and f.startswith("sensitive-"):
-                    sensitive_names.add(f[len("sensitive-"):])
+                    sensitive_names.add(f[len("sensitive-") :])
 
         # Group files by folder, in specified order, excluding sensitive
-        folder_order = ['standard', 'custom']
+        folder_order = ["standard", "custom"]
         folders = {}
         for root, _, files in os.walk(base_path):
             json_files = sorted(f for f in files if f.endswith(".json"))
             if json_files:
                 folder_name = os.path.relpath(root, base_path)
-                if folder_name not in ('sensitive', '.') and folder_name in folder_order:
+                if folder_name not in ("sensitive", ".") and folder_name in folder_order:
                     folders[folder_name] = [os.path.join(root, f) for f in json_files]
 
         for folder_name in (f for f in folder_order if f in folders):
@@ -54,20 +54,15 @@ def extract_and_write_to_md(base_path, output_file, report_type):
                 # Extract data
                 report_id = os.path.basename(json_file_path)
                 report_description = data.get("notes", "")
-                default_date_range = data.get("queryOptions", {}).get(
-                    "defaultDateRange", ""
-                )
+                default_date_range = data.get("queryOptions", {}).get("defaultDateRange", "")
                 filters = ", ".join(
-                    param.get("label", "")
-                    for param in data.get("queryOptions", {}).get("parameters", [])
+                    param.get("label", "") for param in data.get("queryOptions", {}).get("parameters", [])
                 )
 
                 # Write to Markdown
                 has_sensitive = report_id in sensitive_names
                 sensitive_marker = " *(sensitive version available)*" if has_sensitive else ""
-                file.write(
-                    f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}{sensitive_marker}\n\n"
-                )
+                file.write(f"### {report_id.replace('-', ' ').replace('.json', '').capitalize()}{sensitive_marker}\n\n")
                 file.write(f"**Report Description**\n\n{report_description}\n\n")
                 file.write(f"**Filters**\n\n{filters}\n\n") if filters else ""
                 file.write(f"**Default date range**: {default_date_range}\n\n")

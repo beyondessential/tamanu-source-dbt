@@ -103,6 +103,7 @@ def test_get_previous_tag_large_patch():
 # find_latest_tag_for_minor  (from create_version_branch.py)
 # ---------------------------------------------------------------------------
 
+
 def _make_refs(*tags):
     return [{"ref": f"refs/tags/{t}"} for t in tags]
 

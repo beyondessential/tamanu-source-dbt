@@ -65,9 +65,7 @@ def main():
         generate_analytics_metadata()
 
         source_file = os.path.join(BASE_DIR, "target", "static_index.html")
-        target_file = os.path.join(
-            VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html"
-        )
+        target_file = os.path.join(VERSION_DIR, f"reporting-docs-v{VERSION}-{DEPLOYMENT}.html")
         move_file(source_file, target_file)
 
         # Generate language-specific reports

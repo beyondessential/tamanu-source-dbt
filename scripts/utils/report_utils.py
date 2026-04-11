@@ -63,8 +63,7 @@ def generate_project_reports(language):
     nodes = [
         key
         for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" in manifest["nodes"][key].get("tags", [])
+        if key.startswith("model") and "reports" in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
@@ -79,11 +78,7 @@ def generate_project_reports(language):
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
             os.path.join(
-                (
-                    DBT_PACKAGE_DIR
-                    if report["package_name"] != PROJECT_NAME
-                    else BASE_DIR
-                ),
+                (DBT_PACKAGE_DIR if report["package_name"] != PROJECT_NAME else BASE_DIR),
                 report["original_file_path"],
             )
             .replace(".sql", ".json")
@@ -181,8 +176,7 @@ def generate_reporting_schema_script():
     nodes = [
         key
         for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" not in manifest["nodes"][key].get("tags", [])
+        if key.startswith("model") and "reports" not in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
@@ -198,8 +192,7 @@ def generate_reporting_schema_script():
             for node in nodes
             if node not in processed
             and all(
-                dep.startswith("source") or dep in processed
-                for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+                dep.startswith("source") or dep in processed for dep in manifest["nodes"][node]["depends_on"]["nodes"]
             )
         ]
         if not current:
@@ -225,12 +218,8 @@ def generate_reporting_schema_script():
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         name = model.get("config", {}).get("alias") or model["name"]
-        scripts.append(
-            f'create or replace view "{SCHEMA}"."{name}" as (\n{cleaned_sql}\n);'
-        )
+        scripts.append(f'create or replace view "{SCHEMA}"."{name}" as (\n{cleaned_sql}\n);')
 
     ensure_directory_exists(VERSION_DIR)
-    output_file = os.path.join(
-        VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
-    )
+    output_file = os.path.join(VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql")
     write_file(output_file, "\n".join(scripts))

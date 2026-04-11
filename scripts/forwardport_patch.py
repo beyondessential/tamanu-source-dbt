@@ -194,11 +194,16 @@ def forwardport_to_branch(
 
     # Skip if PR already open
     existing = gh_out(
-        "pr", "list",
-        "--repo", repo,
-        "--head", pr_branch,
-        "--state", "open",
-        "--json", "url",
+        "pr",
+        "list",
+        "--repo",
+        repo,
+        "--head",
+        pr_branch,
+        "--state",
+        "open",
+        "--json",
+        "url",
         check=False,
     )
     if existing and existing.strip() not in ("", "[]"):
@@ -258,18 +263,24 @@ def forwardport_to_branch(
 
     # Create PR
     pr_url = gh_out(
-        "pr", "create",
-        "--repo", repo,
-        "--title", f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})",
-        "--body", (
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--title",
+        f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})",
+        "--body",
+        (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
             f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         ),
-        "--head", pr_branch,
-        "--base", target_branch,
+        "--head",
+        pr_branch,
+        "--base",
+        target_branch,
     )
     print(f"    ✅ PR: {pr_url}")
 
@@ -317,9 +328,7 @@ def main():
     mmaj, mmin, _ = get_major_minor_patch(main_version)
 
     if (major, minor) >= (mmaj, mmin):
-        print(
-            f"{new_tag} is at or above the current minor ({mmaj}.{mmin} on main) — nothing to forward-port"
-        )
+        print(f"{new_tag} is at or above the current minor ({mmaj}.{mmin} on main) — nothing to forward-port")
         sys.exit(0)
 
     print(f"Forward-porting {new_tag} ({major_minor}) to branches above minor {minor}...")

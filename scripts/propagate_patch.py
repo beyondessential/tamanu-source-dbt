@@ -145,8 +145,7 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
         branch_content, file_sha = get_packages_yml(repo, ref=branch)
         print("  ♻️  reusing existing branch")
     else:
-        gh_api(f"repos/{repo}/git/refs", method="POST",
-               data={"ref": f"refs/heads/{branch}", "sha": head_sha})
+        gh_api(f"repos/{repo}/git/refs", method="POST", data={"ref": f"refs/heads/{branch}", "sha": head_sha})
         branch_content, file_sha = default_content, get_packages_yml(repo, ref=branch)[1]
 
     updated_content = replace_revision(branch_content, new_tag)
@@ -156,12 +155,16 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
             "commit SHA, or revision: appears before git: in the entry"
         )
 
-    gh_api(f"repos/{repo}/contents/packages.yml", method="PUT", data={
-        "message": f"chore: bump tamanu-source-dbt to {new_tag}",
-        "content": base64.b64encode(updated_content.encode()).decode(),
-        "sha": file_sha,
-        "branch": branch,
-    })
+    gh_api(
+        f"repos/{repo}/contents/packages.yml",
+        method="PUT",
+        data={
+            "message": f"chore: bump tamanu-source-dbt to {new_tag}",
+            "content": base64.b64encode(updated_content.encode()).decode(),
+            "sha": file_sha,
+            "branch": branch,
+        },
+    )
 
     try:
         dbt_proj_content, dbt_proj_sha = get_file(repo, "dbt_project.yml", ref=branch)
@@ -176,24 +179,32 @@ def propagate(repo: str, new_tag: str, new_major_minor: str) -> None:
             updated_dbt_proj = (
                 dbt_proj_content[: m.start(1)] + new_proj_version.lstrip("v") + dbt_proj_content[m.end(1) :]
             )
-            gh_api(f"repos/{repo}/contents/dbt_project.yml", method="PUT", data={
-                "message": f"chore: bump version to {new_proj_version}",
-                "content": base64.b64encode(updated_dbt_proj.encode()).decode(),
-                "sha": dbt_proj_sha,
-                "branch": branch,
-            })
+            gh_api(
+                f"repos/{repo}/contents/dbt_project.yml",
+                method="PUT",
+                data={
+                    "message": f"chore: bump version to {new_proj_version}",
+                    "content": base64.b64encode(updated_dbt_proj.encode()).decode(),
+                    "sha": dbt_proj_sha,
+                    "branch": branch,
+                },
+            )
 
-    pr = gh_api(f"repos/{repo}/pulls", method="POST", data={
-        "title": f"chore: bump tamanu-source-dbt to {new_tag}",
-        "body": (
-            f"Bumps `tamanu-source-dbt` from `{current_revision}` to `{new_tag}`."
-            f" Patch update within `{current_major_minor}` — no schema changes expected.\n\n"
-            f"---\n"
-            f"🤖 _[patch propagation workflow](https://github.com/beyondessential/tamanu-source-dbt/actions)_"
-        ),
-        "head": branch,
-        "base": default_branch,
-    })
+    pr = gh_api(
+        f"repos/{repo}/pulls",
+        method="POST",
+        data={
+            "title": f"chore: bump tamanu-source-dbt to {new_tag}",
+            "body": (
+                f"Bumps `tamanu-source-dbt` from `{current_revision}` to `{new_tag}`."
+                f" Patch update within `{current_major_minor}` — no schema changes expected.\n\n"
+                f"---\n"
+                f"🤖 _[patch propagation workflow](https://github.com/beyondessential/tamanu-source-dbt/actions)_"
+            ),
+            "head": branch,
+            "base": default_branch,
+        },
+    )
     print(f"  ✅ PR: {pr['html_url']}")
 
 

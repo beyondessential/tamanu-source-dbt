@@ -38,11 +38,7 @@ def main():
     else:
         manifest = {"deploymentName": DEPLOYMENT, "versions": []}
 
-    manifest["versions"] = [
-        versions
-        for versions in manifest["versions"]
-        if versions["tamanu"] != entry["tamanu"]
-    ]
+    manifest["versions"] = [versions for versions in manifest["versions"] if versions["tamanu"] != entry["tamanu"]]
     manifest["versions"].append(entry)
     manifest["versions"].sort(key=lambda x: x["tamanu"], reverse=True)
 

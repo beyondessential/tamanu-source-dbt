@@ -139,19 +139,19 @@ def test_replace_revision_double_quoted():
 
 def test_replace_revision_preserves_other_package():
     result = replace_revision(PACKAGES_MULTI, "v2.49.7")
-    assert "revision: v2.49.7" in result      # tamanu-source-dbt updated
-    assert "revision: v1.2.0" in result        # dbt-utils untouched
+    assert "revision: v2.49.7" in result  # tamanu-source-dbt updated
+    assert "revision: v1.2.0" in result  # dbt-utils untouched
 
 
 def test_replace_revision_other_first_preserves_both():
     result = replace_revision(PACKAGES_OTHER_FIRST, "v2.49.7")
-    assert "revision: v1.2.0" in result        # dbt-utils untouched
-    assert "revision: v2.49.7" in result      # tamanu-source-dbt updated
+    assert "revision: v1.2.0" in result  # dbt-utils untouched
+    assert "revision: v2.49.7" in result  # tamanu-source-dbt updated
 
 
 def test_replace_revision_no_tamanu_unchanged():
     result = replace_revision(PACKAGES_NO_TAMANU, "v2.49.7")
-    assert result == PACKAGES_NO_TAMANU        # file not modified
+    assert result == PACKAGES_NO_TAMANU  # file not modified
     assert "v2.49.7" not in result
 
 
@@ -164,8 +164,7 @@ def test_replace_revision_branch_name():
 
 def test_replace_revision_sha():
     content = (
-        "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n"
-        "    revision: abc1234def5678\n"
+        "packages:\n  - git: https://github.com/beyondessential/tamanu-source-dbt/\n    revision: abc1234def5678\n"
     )
     assert replace_revision(content, "v2.49.7") == content.replace("abc1234def5678", "v2.49.7")
 
