@@ -1,7 +1,8 @@
 select
     ipp.id,
     ipp.invoice_payment_id,
-    ipp.method_id
+    ipp.method_id,
+    ipp.cheque_number
 from {{ source('tamanu', 'invoice_patient_payments') }} ipp
 join {{ source('tamanu', 'invoice_payments') }} ipay on ipay.id = ipp.invoice_payment_id
 join {{ source('tamanu', 'invoices') }} i on i.id = ipay.invoice_id

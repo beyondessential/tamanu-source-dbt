@@ -27,3 +27,6 @@ models:
       - name: amount
         data_type: numeric
         description: "{{ doc('invoice_payments__amount') }}"
+      - name: original_payment_id
+        data_type: uuid
+        description: "{{ doc('invoice_payments__original_payment_id') }}"

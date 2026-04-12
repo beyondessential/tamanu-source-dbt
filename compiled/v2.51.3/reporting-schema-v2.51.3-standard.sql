@@ -304,7 +304,8 @@ select
     iip.id,
     iip.invoice_payment_id,
     iip.insurer_id,
-    iip.status
+    iip.status,
+    iip.reason
 from "public"."invoice_insurer_payments" iip
 join "public"."invoice_payments" ipay on ipay.id = iip.invoice_payment_id
 join "public"."invoices" i on i.id = ipay.invoice_id
@@ -344,7 +345,8 @@ create or replace view "reporting"."invoice_patient_payments" as (
 select
     ipp.id,
     ipp.invoice_payment_id,
-    ipp.method_id
+    ipp.method_id,
+    ipp.cheque_number
 from "public"."invoice_patient_payments" ipp
 join "public"."invoice_payments" ipay on ipay.id = ipp.invoice_payment_id
 join "public"."invoices" i on i.id = ipay.invoice_id
@@ -362,7 +364,8 @@ select
     ipay.invoice_id,
     ipay.date,
     ipay.receipt_number,
-    ipay.amount
+    ipay.amount,
+    ipay.original_payment_id
 from "public"."invoice_payments" ipay
 join "public"."invoices" i on i.id = ipay.invoice_id
 join "public"."encounters" e on e.id = i.encounter_id
@@ -1847,6 +1850,8 @@ create or replace view "reporting"."ds__invoice_products" as (
 with price_pivot as (
     select
         invoice_product_id
+        , max(case when invoice_price_list_id = 'invoicePriceList-1' then price end)
+            as price_1
     from "reporting"."invoice_price_list_items"
     where is_hidden = false
     group by invoice_product_id
@@ -1855,6 +1860,10 @@ with price_pivot as (
 insurance_pivot as (
     select
         invoice_product_id
+        , max(case when invoice_insurance_plan_id = 'insurance-plan-1' then coverage_value end)
+            as cov_1
+        , max(case when invoice_insurance_plan_id = 'Insurance-plan-2' then coverage_value end)
+            as cov_2
     from "reporting"."invoice_insurance_plan_items"
     group by invoice_product_id
 )
@@ -1867,6 +1876,23 @@ select
     ip.source_record_id,
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
+    , pp.price_1 as "Price: Price List 1"
+    , case
+        when ip.insurable = false then 'n/a'
+        else cast(
+            coalesce(
+                insurp.cov_1,100
+            ) as text
+        )
+    end as "Insurance: Insurance Plan 1"
+    , case
+        when ip.insurable = false then 'n/a'
+        else cast(
+            coalesce(
+                insurp.cov_2,20
+            ) as text
+        )
+    end as "Insurance: Insurance Plan 2"
 from "reporting"."invoice_products" ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id

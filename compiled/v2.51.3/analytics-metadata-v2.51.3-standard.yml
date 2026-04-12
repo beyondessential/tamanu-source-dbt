@@ -853,6 +853,10 @@
       data_type: uuid
       description: The [payment](#!/source/source.tamanu.tamanu.invoice_payments).
       name: invoice_payment_id
+    reason:
+      data_type: character varying(255)
+      description: The reason for the payment. Generally this is used for rejections.
+      name: reason
     status:
       data_type: text
       description: "The status of this payment.\r\n\r\nOne of:\r\n- `unpaid`\r\n-\
@@ -942,6 +946,10 @@
   - base
   - administration
 - columns:
+    cheque_number:
+      data_type: character varying(255)
+      description: The cheque number for cheque payments.
+      name: cheque_number
     id:
       data_type: uuid
       description: Tamanu internal identifier (generally a UUID) in invoice_patient_payments.
@@ -986,6 +994,11 @@
       data_type: uuid
       description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
       name: invoice_id
+    original_payment_id:
+      data_type: uuid
+      description: Foreign key to the payment that this refund is reversing (null
+        for non-refund transactions)
+      name: original_payment_id
     receipt_number:
       data_type: text
       description: Receipt number. Usually auto-generated.

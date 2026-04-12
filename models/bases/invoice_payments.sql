@@ -3,7 +3,8 @@ select
     ipay.invoice_id,
     ipay.date,
     ipay.receipt_number,
-    ipay.amount
+    ipay.amount,
+    ipay.original_payment_id
 from {{ source('tamanu', 'invoice_payments') }} ipay
 join {{ source('tamanu', 'invoices') }} i on i.id = ipay.invoice_id
 join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id

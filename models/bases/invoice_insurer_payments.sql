@@ -2,7 +2,8 @@ select
     iip.id,
     iip.invoice_payment_id,
     iip.insurer_id,
-    iip.status
+    iip.status,
+    iip.reason
 from {{ source('tamanu', 'invoice_insurer_payments') }} iip
 join {{ source('tamanu', 'invoice_payments') }} ipay on ipay.id = iip.invoice_payment_id
 join {{ source('tamanu', 'invoices') }} i on i.id = ipay.invoice_id
