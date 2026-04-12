@@ -221,6 +221,7 @@ def forwardport_to_branch(
 
     # Cherry-pick patch commits
     skipped_commits = 0
+    conflict_commit = None
     for commit in patch_commits:
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
@@ -231,12 +232,12 @@ def forwardport_to_branch(
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
                 skipped_commits += 1
                 continue
-            # Real conflict — abort and bail
+            # Real conflict — abort and open a draft PR with what we have so far
             git("cherry-pick", "--abort", check=False)
-            git("checkout", "-")
-            print(f"    ❌ Cherry-pick conflict at {commit[:8]}, skipping branch")
-            return
-    applied_commits = len(patch_commits) - skipped_commits
+            conflict_commit = commit
+            print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
+            break
+    applied_commits = len(patch_commits) - skipped_commits - (1 if conflict_commit else 0)
 
     # Override version to the correct next patch for this branch
     changed = update_version_in_files(new_target_version)
@@ -249,29 +250,54 @@ def forwardport_to_branch(
     # Skip if nothing was actually committed
     ahead = git_out("rev-list", "--count", f"origin/{target_branch}..HEAD")
     if int(ahead) == 0:
-        print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
+        if conflict_commit:
+            print(f"    ⏭️  Conflict on first commit {conflict_commit[:8]} — nothing to push, skipping")
+        else:
+            print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
         git("checkout", "-")
         return
 
     # Push
     git("push", "origin", pr_branch, "--force-with-lease")
 
-    # Create PR
-    pr_url = gh_out(
-        "pr", "create",
-        "--repo", repo,
-        "--title", f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})",
-        "--body", (
+    # Build PR title and body
+    if conflict_commit:
+        title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version}) [CONFLICT]"
+        body = (
+            f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
+            f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
+            f"Commits from `{conflict_commit[:8]}` onward were not applied. To complete the forward-port:\n"
+            f"1. Check out this branch\n"
+            f"2. `git cherry-pick {conflict_commit}` and resolve the conflict\n"
+            f"3. Cherry-pick any remaining commits from `{new_patch_tag}`\n\n"
+            f"- Bumps version `{target_version}` → `{new_target_version}`\n"
+            f"- Cherry-picked {applied_commits} of {len(patch_commits)} commit(s) from `{new_patch_tag}` (1 conflicted)\n\n"
+            f"---\n"
+            f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
+        )
+        draft_args = ["--draft"]
+    else:
+        title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})"
+        body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
             f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
-        ),
+        )
+        draft_args = []
+
+    # Create PR
+    pr_url = gh_out(
+        "pr", "create",
+        "--repo", repo,
+        "--title", title,
+        "--body", body,
         "--head", pr_branch,
         "--base", target_branch,
+        *draft_args,
     )
-    print(f"    ✅ PR: {pr_url}")
+    print(f"    {'⚠️  Draft' if conflict_commit else '✅'} PR: {pr_url}")
 
     # Return to detached HEAD / previous branch
     git("checkout", "-")
