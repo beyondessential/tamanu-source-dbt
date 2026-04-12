@@ -1,0 +1,32 @@
+version: 2
+models:
+  - name: invoice_payments
+    description: "{{ doc('table__invoice_payments') }}"
+    config:
+      tags:
+        - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: silver
+      pii: true
+      classification: restricted
+    columns:
+      - name: id
+        data_type: uuid
+        description: "{{ doc('generic__id') }} in invoice_payments."
+        data_tests:
+          - unique
+          - not_null
+      - name: invoice_id
+        data_type: uuid
+        description: "{{ doc('invoice_payments__invoice_id') }}"
+      - name: date
+        data_type: date
+        description: "{{ doc('generic__date') }} in invoice_payments."
+      - name: receipt_number
+        data_type: text
+        description: "{{ doc('invoice_payments__receipt_number') }}"
+      - name: amount
+        data_type: numeric
+        description: "{{ doc('invoice_payments__amount') }}"
