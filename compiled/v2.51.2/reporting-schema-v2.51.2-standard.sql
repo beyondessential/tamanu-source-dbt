@@ -299,6 +299,15 @@ select
 from "public"."invoice_insurance_plan_items"
 where deleted_at is null
 );
+create or replace view "reporting"."invoice_insurer_payments" as (
+select
+    id,
+    invoice_payment_id,
+    insurer_id,
+    status
+from "public"."invoice_insurer_payments"
+where deleted_at is null
+);
 create or replace view "reporting"."invoice_items" as (
 select
     ii.id,
@@ -319,6 +328,30 @@ join "public"."invoices" i on i.id = ii.invoice_id
 join "public"."encounters" e on e.id = i.encounter_id
 where
     ii.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
+create or replace view "reporting"."invoice_patient_payments" as (
+select
+    id,
+    invoice_payment_id,
+    method_id
+from "public"."invoice_patient_payments"
+where deleted_at is null
+);
+create or replace view "reporting"."invoice_payments" as (
+select
+    ipay.id,
+    ipay.invoice_id,
+    ipay.date,
+    ipay.receipt_number,
+    ipay.amount
+from "public"."invoice_payments" ipay
+join "public"."invoices" i on i.id = ipay.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where
+    ipay.deleted_at is null
     and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'

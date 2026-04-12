@@ -841,6 +841,39 @@
   - base
   - reference
 - columns:
+    id:
+      data_type: uuid
+      description: Tamanu internal identifier (generally a UUID) in invoice_insurer_payments.
+      name: id
+    insurer_id:
+      data_type: text
+      description: The insurer ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
+      name: insurer_id
+    invoice_payment_id:
+      data_type: uuid
+      description: The [payment](#!/source/source.tamanu.tamanu.invoice_payments).
+      name: invoice_payment_id
+    status:
+      data_type: text
+      description: "The status of this payment.\r\n\r\nOne of:\r\n- `unpaid`\r\n-\
+        \ `paid`\r\n- `partial`\r\n- `rejected`"
+      name: status
+  config:
+    tags:
+    - base
+    - administration
+  description: Extra metadata about a payment when it was done by a patient.
+  meta:
+    classification: confidential
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
+  name: invoice_insurer_payments
+  tags:
+  - base
+  - administration
+- columns:
     approved:
       data_type: boolean
       description: A boolean field that enables clinicians to track the approval status
@@ -905,6 +938,71 @@
     - administration
   description: Items (products) on invoices.
   name: invoice_items
+  tags:
+  - base
+  - administration
+- columns:
+    id:
+      data_type: uuid
+      description: Tamanu internal identifier (generally a UUID) in invoice_patient_payments.
+      name: id
+    invoice_payment_id:
+      data_type: uuid
+      description: The [payment](#!/source/source.tamanu.tamanu.invoice_payments).
+      name: invoice_payment_id
+    method_id:
+      data_type: text
+      description: The method used to pay ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
+      name: method_id
+  config:
+    tags:
+    - base
+    - administration
+  description: Extra metadata about a payment when it was done by a patient.
+  meta:
+    classification: restricted
+    domain: admin
+    owner: bes-maui
+    pii: true
+    tier: silver
+  name: invoice_patient_payments
+  tags:
+  - base
+  - administration
+- columns:
+    amount:
+      data_type: numeric
+      description: Amount paid.
+      name: amount
+    date:
+      data_type: date
+      description: Local date for the record in invoice_payments.
+      name: date
+    id:
+      data_type: uuid
+      description: Tamanu internal identifier (generally a UUID) in invoice_payments.
+      name: id
+    invoice_id:
+      data_type: uuid
+      description: The [invoice](#!/source/source.tamanu.tamanu.invoices).
+      name: invoice_id
+    receipt_number:
+      data_type: text
+      description: Receipt number. Usually auto-generated.
+      name: receipt_number
+  config:
+    tags:
+    - base
+    - administration
+  description: "Individual payment against an invoice.\r\n\r\nInvoices can be paid\
+    \ in installments, by different parties, etc."
+  meta:
+    classification: restricted
+    domain: admin
+    owner: bes-maui
+    pii: true
+    tier: silver
+  name: invoice_payments
   tags:
   - base
   - administration
