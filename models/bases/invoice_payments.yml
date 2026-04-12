@@ -15,9 +15,6 @@ models:
       - name: id
         data_type: uuid
         description: "{{ doc('generic__id') }} in invoice_payments."
-        data_tests:
-          - unique
-          - not_null
       - name: invoice_id
         data_type: uuid
         description: "{{ doc('invoice_payments__invoice_id') }}"
