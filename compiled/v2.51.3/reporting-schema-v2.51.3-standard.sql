@@ -362,7 +362,7 @@ create or replace view "reporting"."invoice_payments" as (
 select
     ipay.id,
     ipay.invoice_id,
-    ipay.date,
+    ipay.date::date,
     ipay.receipt_number,
     ipay.amount,
     ipay.original_payment_id
