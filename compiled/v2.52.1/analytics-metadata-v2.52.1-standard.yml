@@ -878,6 +878,46 @@
   - base
   - administration
 - columns:
+    coverage_value_final:
+      data_type: numeric
+      description: "The finalised coverage percentage for this invoice item.\r\n\r\
+        \nThis value is copied from the insurance plan's coverage at the time the\
+        \ invoice item is finalised,\r\npreserving it for the record even if the insurance\
+        \ plan's coverage percentage changes later."
+      name: coverage_value_final
+    id:
+      data_type: text
+      description: Tamanu internal identifier (generally a UUID) in invoice_item_finalised_insurances.
+      name: id
+    invoice_insurance_plan_id:
+      data_type: text
+      description: The [insurance plan](#!/source/source.tamanu.tamanu.invoice_insurance_plans)
+        providing the coverage.
+      name: invoice_insurance_plan_id
+    invoice_item_id:
+      data_type: uuid
+      description: The [invoice item](#!/source/source.tamanu.tamanu.invoice_items)
+        this insurance coverage applies to.
+      name: invoice_item_id
+  config:
+    tags:
+    - base
+    - administration
+  description: "Finalised insurance coverage values for invoice items.\r\n\r\nThis\
+    \ table stores the insurance coverage amounts that were locked in when an invoice\
+    \ item is finalised, \r\npreserving the coverage percentage at that point in time\
+    \ even if the insurance plan's coverage changes later."
+  meta:
+    classification: confidential
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
+  name: invoice_item_finalised_insurances
+  tags:
+  - base
+  - administration
+- columns:
     approved:
       data_type: boolean
       description: A boolean field that enables clinicians to track the approval status
