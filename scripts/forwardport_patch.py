@@ -273,7 +273,7 @@ def forwardport_to_branch(
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
-            f"Commits from `{conflict_commit[:8]}` onward were not applied. To complete the forward-port:\n"
+            f"The following commit(s) were not applied. To complete the forward-port:\n"
             f"1. Check out this branch\n"
             f"2. `git cherry-pick {conflict_commit}` and resolve the conflict\n"
             + remaining_step + "\n"

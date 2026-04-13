@@ -319,8 +319,8 @@ def test_update_version_overrides_wrong_version(tmp_path):
 # ---------------------------------------------------------------------------
 
 _COMMITS = ["aaaa1111aaaa1111", "bbbb2222bbbb2222", "cccc3333cccc3333"]
-_CONFLICT_OUTPUT = ("CONFLICT (content): Merge conflict in foo.sql", "")
-_EMPTY_PICK_OUTPUT = ("", "cherry-pick is now empty")
+_CONFLICT_OUTPUT = ("CONFLICT (content): Merge conflict in foo.sql", "")  # (stderr, stdout)
+_EMPTY_PICK_OUTPUT = ("", "cherry-pick is now empty")  # (stderr, stdout)
 
 
 def _git_mock(cherry_pick_results=None):
