@@ -435,6 +435,21 @@ def test_applied_commits_correct_when_conflict_on_second():
     assert "Cherry-picked 1 of 3" in body
 
 
+def test_no_conflict_body_notes_already_applied_commits():
+    # One already-applied commit, two succeed — body should note 1 was skipped.
+    calls = _run({_COMMITS[0]: _EMPTY_PICK_OUTPUT}, rev_list_count="2")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "Cherry-picks 2 commit(s)" in body
+    assert "1 already applied on this branch" in body
+
+
+def test_no_conflict_body_no_skipped_note_when_all_applied():
+    # No already-applied commits — skipped note should be absent.
+    calls = _run({}, rev_list_count="3")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "already applied" not in body
+
+
 def test_conflict_body_lists_remaining_commits():
     # Conflict on first commit — the other two SHAs should appear as explicit cherry-pick steps.
     calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="1")

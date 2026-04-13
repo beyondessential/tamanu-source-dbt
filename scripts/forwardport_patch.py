@@ -275,7 +275,7 @@ def forwardport_to_branch(
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
-            f"The following commit(s) were not applied. To complete the forward-port:\n"
+            f"To complete the forward-port:\n"
             f"1. Check out this branch\n"
             f"2. `git cherry-pick {conflict_commit}` — resolve the conflict, then `git add <files> && git cherry-pick --continue`\n"
             + remaining_step + "\n"
@@ -287,10 +287,14 @@ def forwardport_to_branch(
         draft_args = ["--draft"]
     else:
         title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})"
+        skipped_note = (
+            f" ({already_applied_commits} already applied on this branch)"
+            if already_applied_commits else ""
+        )
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
+            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`{skipped_note}\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         )
