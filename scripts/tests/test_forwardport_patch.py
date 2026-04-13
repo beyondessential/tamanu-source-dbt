@@ -320,7 +320,7 @@ def test_update_version_overrides_wrong_version(tmp_path):
 
 _COMMITS = ["aaaa1111aaaa1111", "bbbb2222bbbb2222", "cccc3333cccc3333"]
 _CONFLICT_OUTPUT = ("CONFLICT (content): Merge conflict in foo.sql", "")
-_EMPTY_PICK_OUTPUT = ("cherry-pick is now empty", "")
+_EMPTY_PICK_OUTPUT = ("", "cherry-pick is now empty")
 
 
 def _git_mock(cherry_pick_results=None):
@@ -403,9 +403,14 @@ def test_conflict_later_commit_opens_draft_pr():
 
 
 def test_no_conflict_opens_normal_pr():
-    # No conflicts — PR opened without --draft.
+    # No conflicts — PR opened without --draft, body shows count without denominator.
     calls = _run({}, rev_list_count="3")
-    assert "--draft" not in _pr_args(calls)
+    args = _pr_args(calls)
+    assert "--draft" not in args
+    assert "[CONFLICT]" not in _get_arg(args, "--title")
+    body = _get_arg(args, "--body")
+    assert "Cherry-picks 3 commit(s)" in body
+    assert "of 3" not in body
 
 
 def test_conflict_pr_title_has_conflict_marker():
@@ -416,6 +421,8 @@ def test_conflict_pr_title_has_conflict_marker():
 
 def test_applied_commits_zero_when_conflict_on_first():
     # Conflict on first commit — applied_commits = 0, denominator = 3.
+    # rev_list_count="1" simulates a version-bump commit being present so the PR
+    # path is reached; in practice ahead=0 here would trigger the early-return.
     calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="1")
     body = _get_arg(_pr_args(calls), "--body")
     assert "Cherry-picked 0 of 3" in body

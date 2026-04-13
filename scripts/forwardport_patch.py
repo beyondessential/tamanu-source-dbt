@@ -283,7 +283,7 @@ def forwardport_to_branch(
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picks {applied_commits} of {new_commits} commit(s) from `{new_patch_tag}`\n\n"
+            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         )
