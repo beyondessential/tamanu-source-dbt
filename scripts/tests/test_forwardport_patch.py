@@ -1,11 +1,14 @@
 import os
 import textwrap
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+import forwardport_patch
 from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor
 from forwardport_patch import (
+    forwardport_to_branch,
     get_higher_minor_branches_from_list,
     get_major_minor_patch,
     get_previous_tag,
@@ -309,3 +312,128 @@ def test_update_version_overrides_wrong_version(tmp_path):
     finally:
         os.chdir(orig)
     assert "version: 2.50.5" in (tmp_path / "dbt_project.yml").read_text()
+
+
+# ---------------------------------------------------------------------------
+# forwardport_to_branch — conflict path
+# ---------------------------------------------------------------------------
+
+_COMMITS = ["aaaa1111aaaa1111", "bbbb2222bbbb2222", "cccc3333cccc3333"]
+_CONFLICT_OUTPUT = ("CONFLICT (content): Merge conflict in foo.sql", "")
+_EMPTY_PICK_OUTPUT = ("cherry-pick is now empty", "")
+
+
+def _git_mock(cherry_pick_results=None):
+    """Return a callable mock for git(). cherry_pick_results maps SHA -> (stderr, stdout)."""
+    cherry_pick_results = cherry_pick_results or {}
+
+    def _git(*args, **kwargs):
+        m = MagicMock()
+        m.returncode = 0
+        m.stdout = ""
+        m.stderr = ""
+        # Only intercept actual commit cherry-picks, not --abort / --skip flags
+        if args[0] == "cherry-pick" and len(args) > 1 and not args[1].startswith("-"):
+            sha = args[1]
+            if sha in cherry_pick_results:
+                m.returncode = 1
+                m.stderr, m.stdout = cherry_pick_results[sha]
+        return m
+
+    return _git
+
+
+def _git_out_mock(rev_list_count="1"):
+    def _git_out(*args):
+        if "rev-list" in args and "--count" in args:
+            return rev_list_count
+        return ""
+    return _git_out
+
+
+def _run(cherry_pick_results=None, rev_list_count="1"):
+    """Run forwardport_to_branch with mocked git/gh. Returns the args list of each gh pr create call."""
+    gh_create_calls = []
+
+    def fake_gh_out(*args, **kwargs):
+        if args[0] == "pr" and args[1] == "list":
+            return "[]"
+        if args[0] == "pr" and args[1] == "create":
+            gh_create_calls.append(list(args))
+            return "https://github.com/org/repo/pull/42"
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=_git_mock(cherry_pick_results)),
+        patch.object(forwardport_patch, "git_out", side_effect=_git_out_mock(rev_list_count)),
+        patch.object(forwardport_patch, "gh_out", side_effect=fake_gh_out),
+        patch.object(forwardport_patch, "get_branch_version", return_value="2.50.4"),
+        patch.object(forwardport_patch, "update_version_in_files", return_value=[]),
+    ):
+        forwardport_to_branch(
+            target_branch="2.50",
+            patch_commits=_COMMITS,
+            new_patch_tag="v2.49.9",
+            source_major_minor="2.49",
+            repo="org/repo",
+        )
+
+    return gh_create_calls
+
+
+def _pr_args(gh_create_calls):
+    assert len(gh_create_calls) == 1, f"Expected 1 pr create call, got {len(gh_create_calls)}"
+    return gh_create_calls[0]
+
+
+def _get_arg(args, flag):
+    return args[args.index(flag) + 1]
+
+
+def test_conflict_first_commit_no_pr_when_nothing_ahead():
+    # Conflict on first commit, nothing committed ahead — no PR should be opened.
+    calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="0")
+    assert calls == []
+
+
+def test_conflict_later_commit_opens_draft_pr():
+    # Conflict on second of three commits with 1 commit already ahead — draft PR opened.
+    calls = _run({_COMMITS[1]: _CONFLICT_OUTPUT}, rev_list_count="1")
+    assert "--draft" in _pr_args(calls)
+
+
+def test_no_conflict_opens_normal_pr():
+    # No conflicts — PR opened without --draft.
+    calls = _run({}, rev_list_count="3")
+    assert "--draft" not in _pr_args(calls)
+
+
+def test_conflict_pr_title_has_conflict_marker():
+    calls = _run({_COMMITS[1]: _CONFLICT_OUTPUT}, rev_list_count="1")
+    title = _get_arg(_pr_args(calls), "--title")
+    assert "[CONFLICT]" in title
+
+
+def test_applied_commits_zero_when_conflict_on_first():
+    # Conflict on first commit — applied_commits = 0, denominator = 3.
+    calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="1")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "Cherry-picked 0 of 3" in body
+
+
+def test_applied_commits_correct_when_conflict_on_second():
+    # First commit applied, second conflicts — applied_commits = 1, denominator = 3.
+    calls = _run({_COMMITS[1]: _CONFLICT_OUTPUT}, rev_list_count="2")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "Cherry-picked 1 of 3" in body
+
+
+def test_already_applied_commits_excluded_from_denominator():
+    # First commit already applied (empty pick), third conflicts.
+    # new_commits = 3 - 1 = 2; applied_commits = 1 (second succeeded).
+    calls = _run(
+        {_COMMITS[0]: _EMPTY_PICK_OUTPUT, _COMMITS[2]: _CONFLICT_OUTPUT},
+        rev_list_count="2",
+    )
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "Cherry-picked 1 of 2" in body

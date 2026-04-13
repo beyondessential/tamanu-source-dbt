@@ -221,6 +221,7 @@ def forwardport_to_branch(
 
     # Cherry-pick patch commits
     applied_commits = 0
+    already_applied_commits = 0
     conflict_commit = None
     for commit in patch_commits:
         result = git("cherry-pick", commit, check=False)
@@ -230,6 +231,7 @@ def forwardport_to_branch(
                 # Commit already applied on this branch — skip it
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
+                already_applied_commits += 1
                 continue
             # Real conflict — abort and open a draft PR with what we have so far
             git("cherry-pick", "--abort", check=False)
@@ -237,6 +239,7 @@ def forwardport_to_branch(
             print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
             break
         applied_commits += 1
+    new_commits = len(patch_commits) - already_applied_commits
 
     # Override version to the correct next patch for this branch
     changed = update_version_in_files(new_target_version)
@@ -270,7 +273,7 @@ def forwardport_to_branch(
             f"2. `git cherry-pick {conflict_commit}` and resolve the conflict\n"
             f"3. Cherry-pick any remaining commits from `{new_patch_tag}`\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picked {applied_commits} of {len(patch_commits)} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
+            f"- Cherry-picked {applied_commits} of {new_commits} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         )
@@ -280,7 +283,7 @@ def forwardport_to_branch(
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
+            f"- Cherry-picks {applied_commits} of {new_commits} commit(s) from `{new_patch_tag}`\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         )
