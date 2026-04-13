@@ -255,7 +255,7 @@ def forwardport_to_branch(
     ahead = git_out("rev-list", "--count", f"origin/{target_branch}..HEAD")
     if int(ahead) == 0:
         if conflict_commit:
-            print(f"    ⏭️  Conflict on first commit {conflict_commit[:8]} — nothing to push, skipping")
+            print(f"    ⏭️  Conflict at {conflict_commit[:8]} with nothing committed ahead — skipping")
         else:
             print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
         git("checkout", "-")
