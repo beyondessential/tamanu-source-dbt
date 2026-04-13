@@ -341,6 +341,23 @@ where
     and e.deleted_at is null
     and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
 );
+create or replace view "reporting"."invoice_item_finalised_insurances" as (
+select
+    iifi.id,
+    iifi.invoice_item_id,
+    iifi.invoice_insurance_plan_id,
+    iifi.coverage_value_final
+from "public"."invoice_item_finalised_insurances" iifi
+join "public"."invoice_items" ii on ii.id = iifi.invoice_item_id
+join "public"."invoices" i on i.id = ii.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where
+    iifi.deleted_at is null
+    and ii.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."invoice_patient_payments" as (
 select
     ipp.id,
