@@ -435,6 +435,21 @@ def test_applied_commits_correct_when_conflict_on_second():
     assert "Cherry-picked 1 of 3" in body
 
 
+def test_conflict_body_lists_remaining_commits():
+    # Conflict on first commit — the other two SHAs should appear as explicit cherry-pick steps.
+    calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="1")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert _COMMITS[1] in body
+    assert _COMMITS[2] in body
+
+
+def test_conflict_body_no_remaining_step_when_last_commit_conflicts():
+    # Conflict on last commit — no remaining commits to list, step 3 absent.
+    calls = _run({_COMMITS[2]: _CONFLICT_OUTPUT}, rev_list_count="2")
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "remaining commit" not in body
+
+
 def test_already_applied_commits_excluded_from_denominator():
     # First commit already applied (empty pick), third conflicts.
     # new_commits = 3 - 1 = 2; applied_commits = 1 (second succeeded).

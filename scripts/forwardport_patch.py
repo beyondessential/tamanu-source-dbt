@@ -265,13 +265,18 @@ def forwardport_to_branch(
     # Build PR title and body
     if conflict_commit:
         title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version}) [CONFLICT]"
+        remaining_commits = patch_commits[patch_commits.index(conflict_commit) + 1:]
+        remaining_step = (
+            f"3. Cherry-pick the remaining commit(s):\n"
+            + "".join(f"   - `git cherry-pick {sha}`\n" for sha in remaining_commits)
+        ) if remaining_commits else ""
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
             f"Commits from `{conflict_commit[:8]}` onward were not applied. To complete the forward-port:\n"
             f"1. Check out this branch\n"
             f"2. `git cherry-pick {conflict_commit}` and resolve the conflict\n"
-            f"3. Cherry-pick any remaining commits from `{new_patch_tag}`\n\n"
+            + remaining_step + "\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
             f"- Cherry-picked {applied_commits} of {new_commits} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
             f"---\n"
