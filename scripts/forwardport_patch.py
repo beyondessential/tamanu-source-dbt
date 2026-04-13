@@ -239,7 +239,7 @@ def forwardport_to_branch(
             print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
             break
         applied_commits += 1
-    new_commits = len(patch_commits) - already_applied_commits
+    applicable_commits = len(patch_commits) - already_applied_commits
 
     # Override version to the correct next patch for this branch
     changed = update_version_in_files(new_target_version)
@@ -275,10 +275,10 @@ def forwardport_to_branch(
             f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
             f"The following commit(s) were not applied. To complete the forward-port:\n"
             f"1. Check out this branch\n"
-            f"2. `git cherry-pick {conflict_commit}` and resolve the conflict\n"
+            f"2. `git cherry-pick {conflict_commit}` — resolve the conflict, then `git add <files> && git cherry-pick --continue`\n"
             + remaining_step + "\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picked {applied_commits} of {new_commits} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
+            f"- Cherry-picked {applied_commits} of {applicable_commits} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
             f"---\n"
             f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
         )
