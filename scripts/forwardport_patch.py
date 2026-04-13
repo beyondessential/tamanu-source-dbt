@@ -223,7 +223,8 @@ def forwardport_to_branch(
     applied_commits = 0
     already_applied_commits = 0
     conflict_commit = None
-    for commit in patch_commits:
+    conflict_index = None
+    for i, commit in enumerate(patch_commits):
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
             stderr = result.stderr + result.stdout
@@ -236,6 +237,7 @@ def forwardport_to_branch(
             # Real conflict — abort and open a draft PR with what we have so far
             git("cherry-pick", "--abort", check=False)
             conflict_commit = commit
+            conflict_index = i
             print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
             break
         applied_commits += 1
@@ -265,7 +267,7 @@ def forwardport_to_branch(
     # Build PR title and body
     if conflict_commit:
         title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version}) [CONFLICT]"
-        remaining_commits = patch_commits[patch_commits.index(conflict_commit) + 1:]
+        remaining_commits = patch_commits[conflict_index + 1:]
         remaining_step = (
             f"3. Cherry-pick the remaining commit(s):\n"
             + "".join(f"   - `git cherry-pick {sha}`\n" for sha in remaining_commits)

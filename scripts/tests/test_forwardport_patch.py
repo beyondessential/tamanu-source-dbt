@@ -319,8 +319,8 @@ def test_update_version_overrides_wrong_version(tmp_path):
 # ---------------------------------------------------------------------------
 
 _COMMITS = ["aaaa1111aaaa1111", "bbbb2222bbbb2222", "cccc3333cccc3333"]
-_CONFLICT_OUTPUT = ("CONFLICT (content): Merge conflict in foo.sql", "")  # (stderr, stdout)
-_EMPTY_PICK_OUTPUT = ("", "cherry-pick is now empty")  # (stderr, stdout)
+_CONFLICT_OUTPUT = ("", "CONFLICT (content): Merge conflict in foo.sql")  # (stderr, stdout)
+_EMPTY_PICK_OUTPUT = ("cherry-pick is now empty", "")  # (stderr, stdout)
 
 
 def _git_mock(cherry_pick_results=None):
@@ -452,7 +452,7 @@ def test_conflict_body_no_remaining_step_when_last_commit_conflicts():
 
 def test_already_applied_commits_excluded_from_denominator():
     # First commit already applied (empty pick), third conflicts.
-    # new_commits = 3 - 1 = 2; applied_commits = 1 (second succeeded).
+    # applicable_commits = 3 - 1 = 2; applied_commits = 1 (second succeeded).
     calls = _run(
         {_COMMITS[0]: _EMPTY_PICK_OUTPUT, _COMMITS[2]: _CONFLICT_OUTPUT},
         rev_list_count="2",
