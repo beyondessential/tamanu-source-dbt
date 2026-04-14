@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.52.1
+version: 2.52.2
 config-version: 2
 profile: tamanu_source_dbt
 
@@ -21,7 +21,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - data-tests
+  - data_tests
 seed-paths:
   - seeds
 macro-paths:
