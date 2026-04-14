@@ -280,6 +280,20 @@ where
     c.table_name = 'invoices'
     and c.record_deleted_at is null
 );
+create or replace view "reporting"."invoices_invoice_insurance_plans" as (
+select
+    iiip.id,
+    iiip.invoice_id,
+    iiip.invoice_insurance_plan_id
+from "public"."invoices_invoice_insurance_plans" iiip
+join "public"."invoices" i on i.id = iiip.invoice_id
+join "public"."encounters" e on e.id = i.encounter_id
+where
+    iiip.deleted_at is null
+    and i.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != 'h1627394-3778-4c31-a510-9fcb88efdbf3'
+);
 create or replace view "reporting"."invoice_insurance_plans" as (
 select
     id,

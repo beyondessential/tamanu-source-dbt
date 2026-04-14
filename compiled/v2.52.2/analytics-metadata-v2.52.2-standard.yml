@@ -981,6 +981,12 @@
     - base
     - administration
   description: Items (products) on invoices.
+  meta:
+    classification: confidential
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
   name: invoice_items
   tags:
   - base
@@ -1229,6 +1235,12 @@
     - base
     - administration
   description: Invoices related to encounters.
+  meta:
+    classification: confidential
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
   name: invoices
   tags:
   - base
@@ -1290,6 +1302,37 @@
   - base
   - administration
   - log
+- columns:
+    id:
+      data_type: text
+      description: Tamanu internal identifier (generally a UUID) in invoices_invoice_insurance_plans.
+      name: id
+    invoice_id:
+      data_type: uuid
+      description: Reference to the [invoice](#!/source/source.tamanu.tamanu.invoices)
+        that this insurance contract applies to.
+      name: invoice_id
+    invoice_insurance_plan_id:
+      data_type: text
+      description: Reference to the [insurance contract](#!/source/source.tamanu.tamanu.invoice_insurance_plans)
+        being applied to the invoice.
+      name: invoice_insurance_plan_id
+  config:
+    tags:
+    - base
+    - administration
+  description: Junction table linking invoices to insurance contracts. This many-to-many
+    relationship allows an invoice to be associated with multiple insurance contracts.
+  meta:
+    classification: confidential
+    domain: admin
+    owner: bes-maui
+    pii: false
+    tier: silver
+  name: invoices_invoice_insurance_plans
+  tags:
+  - base
+  - administration
 - columns:
     id:
       data_type: character varying(255)
