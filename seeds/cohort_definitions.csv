@@ -1,0 +1,2 @@
+cohort_definition_id,cohort_name,description,omop_concept_id,vocabulary_id
+1,ncd_registry,Non-communicable disease program registry (hypertension and/or diabetes),4214956,SNOMED

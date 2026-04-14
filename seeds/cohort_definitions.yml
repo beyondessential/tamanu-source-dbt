@@ -1,0 +1,26 @@
+version: 2
+
+seeds:
+  - name: cohort_definitions
+    description: >
+      Central registry of cohort definitions across all BES deployments.
+      Authoritative source of `cohort_definition_id` values — never assign
+      an ID locally in a deployment repo. Open a PR here to register a new
+      cohort before building deployment-specific `coh__` models.
+    columns:
+      - name: cohort_definition_id
+        description: Unique integer ID assigned sequentially. Never reused.
+        tests:
+          - not_null
+          - unique
+      - name: cohort_name
+        description: Short machine-readable name (e.g. `ncd_registry`).
+        tests:
+          - not_null
+          - unique
+      - name: description
+        description: Human-readable description of the cohort program.
+      - name: omop_concept_id
+        description: OMOP concept ID for the clinical domain (SNOMED preferred).
+      - name: vocabulary_id
+        description: Vocabulary source (e.g. `SNOMED`).
