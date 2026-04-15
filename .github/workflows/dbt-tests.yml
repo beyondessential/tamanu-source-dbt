@@ -1,0 +1,12 @@
+name: dbt Tests
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    uses: beyondessential/maui-team/.github/workflows/dbt-tests.yml@main
+    secrets: inherit
