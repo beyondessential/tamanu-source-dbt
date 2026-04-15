@@ -62,11 +62,18 @@ def generate_project_reports(language):
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
 
+    project_vars = get_dbt_project_vars()
+    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+
     nodes = [
         key
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
+        and (
+            has_sensitive_facility
+            or "restricted" not in manifest["nodes"][key].get("tags", [])
+        )
     ]
 
     if not nodes:
