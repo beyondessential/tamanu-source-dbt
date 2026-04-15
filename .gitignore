@@ -13,6 +13,7 @@ CLAUDE.md
 
 # Python
 __pycache__
+*.egg-info/
 
 # Dependencies
 dbt_packages/
@@ -22,7 +23,7 @@ uv.lock
 # Build and generated files
 compiled/*/*.json
 /logs/
-macros/default_translations.sql
+macros/translation.sql
 models/surveys/
 target/
 .temp/

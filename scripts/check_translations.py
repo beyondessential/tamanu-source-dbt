@@ -4,6 +4,7 @@ from pathlib import Path
 from utils.dbt_utils import get_deployment_name
 from utils.file_utils import read_file
 from utils.system_utils import cprint
+from utils.translation_utils import assert_no_default_overrides, read_translations_csv
 
 DEPLOYMENT = get_deployment_name()
 
@@ -14,47 +15,35 @@ def extract_translate_labels_from_file(file_path):
     return re.findall(pattern, content)
 
 
-def load_translations_from_file(file_path):
-    if file_path.exists():
-        df = read_file(file_path, file_type="csv")
-        return {
-            sid[len("report.reporting.") :]
-            for sid in df["stringId"]
-            if sid.startswith("report.reporting.")
-        }
-    else:
-        cprint(f"⚠️ File does not exist: {file_path}", "warning")
-        return set()
+def _short_ids(csv_dict):
+    return {sid[len("report.reporting.") :] for sid in csv_dict if sid.startswith("report.reporting.")}
 
 
 def main():
     if DEPLOYMENT == "standard":
-        translations = load_translations_from_file(
-            Path("report_translations_standard.csv")
-        )
+        csv_path = Path("report_translations_standard.csv")
+        if not csv_path.exists():
+            cprint(f"⚠️ File does not exist: {csv_path}", "warning")
+        translations = _short_ids(read_translations_csv(csv_path))
         sql_folders = [Path("models/reports/sql")]
     else:
-        translations_standard = load_translations_from_file(
-            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
-        )
-        translations_deployment = load_translations_from_file(
-            Path(f"report_translations_{DEPLOYMENT}.csv")
-        )
+        standard_csv_path = Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
+        deployment_csv_path = Path(f"report_translations_{DEPLOYMENT}.csv")
 
-        if translations_deployment:
-            duplicates = translations_standard & translations_deployment
-            if duplicates:
-                cprint(
-                    f"\n⚠️ DUPLICATE TRANSLATIONS FOUND ({len(duplicates)}):", "warning"
-                )
-                for duplicate in sorted(duplicates):
-                    cprint(f"  - {duplicate}", "warning")
-                cprint(
-                    f"Using {DEPLOYMENT}-specific translations for duplicates.", "info"
-                )
-        else:
+        if not standard_csv_path.exists():
+            cprint(f"⚠️ File does not exist: {standard_csv_path}", "warning")
+        standard = read_translations_csv(standard_csv_path)
+        localised = read_translations_csv(deployment_csv_path)
+
+        assert_no_default_overrides(localised, standard)
+
+        translations_standard = _short_ids(standard)
+        translations_deployment = _short_ids(localised)
+
+        if not translations_deployment:
             cprint(
-                f"\nℹ️ No deployment-specific translations file found for {DEPLOYMENT}, using standard translations only.",
+                f"\nℹ️ No deployment-specific translations file found for"
+                f" {DEPLOYMENT}, using standard translations only.",
                 "info",
             )
 
@@ -93,7 +82,7 @@ def main():
                 "error",
             )
 
-        cprint(f"\nTo fix, add the following to the translation file:", "warning")
+        cprint("\nTo fix, add the following to the translation file:", "warning")
         for missing_translation in sorted(missing_translations):
             cprint(f"report.reporting.{missing_translation}", "warning")
     else:
@@ -107,9 +96,7 @@ def main():
 
     cprint("\n📊 SUMMARY BY FILE:", "info")
     for file, translation_labels in sorted(file_referencing_translations.items()):
-        missing_in_file = [
-            label for label in translation_labels if label not in translations
-        ]
+        missing_in_file = [label for label in translation_labels if label not in translations]
         status = "❌" if missing_in_file else "✅"
         cprint(
             f"{status} {file}: {len(translation_labels)} calls, {len(missing_in_file)} missing",

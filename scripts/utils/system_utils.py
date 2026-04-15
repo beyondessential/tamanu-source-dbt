@@ -50,9 +50,7 @@ def execute_command_with_output(command, cwd=None):
         subprocess.CompletedProcess: The result object containing stdout, stderr, and return code
     """
     try:
-        return subprocess.run(
-            command, cwd=cwd, capture_output=True, text=True, shell=True
-        )
+        return subprocess.run(command, cwd=cwd, capture_output=True, text=True, shell=True)
     except Exception as e:
         cprint(f"Error while running command: {e}", "error")
         sys.exit(1)

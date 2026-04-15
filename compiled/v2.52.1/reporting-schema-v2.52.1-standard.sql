@@ -1878,10 +1878,8 @@ insurance_pivot as (
     select
         invoice_product_id
         , max(case when invoice_insurance_plan_id = 'insurance-plan-1' then coverage_value end)
-            as cov_1
     from "reporting"."invoice_insurance_plan_items"
     group by invoice_product_id
-)
 
 select
     ip.id,
@@ -1892,8 +1890,6 @@ select
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
     , pp.price_1 as "Price: Price List 1"
-    , case
-        when ip.insurable = false then 'n/a'
         else cast(
             coalesce(
                 insurp.cov_1,100
@@ -1902,7 +1898,6 @@ select
     end as "Insurance: Insurance Plan 1"
 from "reporting"."invoice_products" ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
-left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
 left join "reporting"."lab_test_types" ltt on ltt.id = ip.source_record_id
 left join "reporting"."lab_test_panels" ltp on ltp.id = ip.source_record_id
 );

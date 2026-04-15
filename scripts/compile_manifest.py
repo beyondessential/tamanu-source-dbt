@@ -1,8 +1,7 @@
-import os
 from pathlib import Path
 
 from utils.dbt_utils import get_deployment_name, get_deployment_version
-from utils.file_utils import ensure_directory_exists, read_file, write_file
+from utils.file_utils import read_file, write_file
 from utils.system_utils import cprint
 
 BASE_DIR = Path.cwd()
@@ -39,11 +38,7 @@ def main():
     else:
         manifest = {"deploymentName": DEPLOYMENT, "versions": []}
 
-    manifest["versions"] = [
-        versions
-        for versions in manifest["versions"]
-        if versions["tamanu"] != entry["tamanu"]
-    ]
+    manifest["versions"] = [versions for versions in manifest["versions"] if versions["tamanu"] != entry["tamanu"]]
     manifest["versions"].append(entry)
     manifest["versions"].sort(key=lambda x: x["tamanu"], reverse=True)
 

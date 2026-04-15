@@ -1,15 +1,13 @@
-import json
 import os
 import re
 
 from .dbt_utils import (
-    get_dbt_project_vars,
     get_deployment_name,
     get_deployment_version,
     get_project_name,
 )
 from .file_utils import ensure_directory_exists, read_file, write_file
-from .system_utils import cprint, execute_command
+from .system_utils import cprint
 
 SCHEMA = "reporting"
 ROLE = "reporting"
@@ -65,12 +63,11 @@ def generate_project_reports(language):
     nodes = [
         key
         for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" in manifest["nodes"][key].get("tags", [])
+        if key.startswith("model") and "reports" in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        cprint(f"No report models found", "error")
+        cprint("No report models found", "error")
         return
 
     ensure_directory_exists(VERSION_DIR)
@@ -81,11 +78,7 @@ def generate_project_reports(language):
         sql_file = os.path.join(BASE_DIR, report["compiled_path"])
         config_file = (
             os.path.join(
-                (
-                    DBT_PACKAGE_DIR
-                    if report["package_name"] != PROJECT_NAME
-                    else BASE_DIR
-                ),
+                (DBT_PACKAGE_DIR if report["package_name"] != PROJECT_NAME else BASE_DIR),
                 report["original_file_path"],
             )
             .replace(".sql", ".json")
@@ -183,12 +176,11 @@ def generate_reporting_schema_script():
     nodes = [
         key
         for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" not in manifest["nodes"][key].get("tags", [])
+        if key.startswith("model") and "reports" not in manifest["nodes"][key].get("tags", [])
     ]
 
     if not nodes:
-        cprint(f"No models found", "error")
+        cprint("No models found", "error")
         return
 
     processed = set()
@@ -200,8 +192,7 @@ def generate_reporting_schema_script():
             for node in nodes
             if node not in processed
             and all(
-                dep.startswith("source") or dep in processed
-                for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+                dep.startswith("source") or dep in processed for dep in manifest["nodes"][node]["depends_on"]["nodes"]
             )
         ]
         if not current:
@@ -227,12 +218,8 @@ def generate_reporting_schema_script():
         compiled_sql = read_file(os.path.join(BASE_DIR, model["compiled_path"]))
         cleaned_sql = re.sub(f'"{model["database"]}"\\.', "", compiled_sql)
         name = model.get("config", {}).get("alias") or model["name"]
-        scripts.append(
-            f'create or replace view "{SCHEMA}"."{name}" as (\n{cleaned_sql}\n);'
-        )
+        scripts.append(f'create or replace view "{SCHEMA}"."{name}" as (\n{cleaned_sql}\n);')
 
     ensure_directory_exists(VERSION_DIR)
-    output_file = os.path.join(
-        VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql"
-    )
+    output_file = os.path.join(VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql")
     write_file(output_file, "\n".join(scripts))

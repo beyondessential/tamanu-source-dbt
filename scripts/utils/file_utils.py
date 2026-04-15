@@ -33,7 +33,8 @@ def read_file(file_path, file_type="text"):
         file_type (str): The type of the file ('text', 'json', or 'excel'/'xlsx'). Defaults to 'text'.
 
     Returns:
-        str, dict, or DataFrame: The file content as a string (for text files), a dictionary (for JSON files), or a pandas DataFrame (for Excel files).
+        str, dict, or DataFrame: The file content as a string (for text files), a dictionary
+            (for JSON files), or a pandas DataFrame (for Excel files).
 
     Raises:
         FileNotFoundError: If the file does not exist.
@@ -121,9 +122,7 @@ def copy_files_from_directory(source_dir, destination_dir, clear_destination=Fal
             if os.path.isfile(source_file):
                 shutil.copy2(source_file, dest_file)
     except Exception as e:
-        cprint(
-            f"Error copying files from {source_dir} to {destination_dir}: {e}", "error"
-        )
+        cprint(f"Error copying files from {source_dir} to {destination_dir}: {e}", "error")
         exit(1)
 
 

@@ -1,36 +1,12 @@
-import sys
 import os
-import csv
+import sys
 
-from utils import get_deployment_name
-
-
-BASE_DIR = os.getcwd()
-
-
-def read_csv(rel_path):
-    """Read a CSV with stringId and language columns into a nested dict, escaping quotes for Jinja."""
-    path = os.path.join(BASE_DIR, rel_path)
-    if not os.path.exists(path):
-        return {}
-    mapping = {}
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            string_id = row.get("stringId")
-            if not string_id:
-                continue
-
-            # Initialize nested dict for this string_id if not exists
-            if string_id not in mapping:
-                mapping[string_id] = {}
-
-            # Add all language columns (skip stringId column)
-            for lang, text in row.items():
-                if lang != "stringId" and text:
-                    text_escaped = text.replace("\\", "\\\\").replace("'", "\\'")
-                    mapping[string_id][lang] = text_escaped
-    return mapping
+from utils import (
+    assert_no_default_overrides,
+    cprint,
+    get_deployment_name,
+    read_translations_csv,
+)
 
 
 def generate_translation_macro():
@@ -38,15 +14,14 @@ def generate_translation_macro():
     deployment = get_deployment_name()
 
     if deployment == "standard":
-        standard = read_csv("report_translations_standard.csv")
+        standard = read_translations_csv("report_translations_standard.csv")
         localised = {}
     else:
-        standard = read_csv(
-            os.path.join(
-                "dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv"
-            )
+        standard = read_translations_csv(
+            os.path.join("dbt_packages", "tamanu_source_dbt", "report_translations_standard.csv")
         )
-        localised = read_csv(f"report_translations_{deployment}.csv")
+        localised = read_translations_csv(f"report_translations_{deployment}.csv")
+        assert_no_default_overrides(localised, standard)
 
     # Merge standard and localised translations
     # For each string_id, merge language dicts with localised overriding standard
@@ -94,33 +69,39 @@ Run: python scripts/generate_translation_macro.py
 {%- endmacro -%}
 """
 
-    macros_dir = os.path.join(BASE_DIR, "macros")
+    macros_dir = "macros"
     os.makedirs(macros_dir, exist_ok=True)
-    filename = "default_translations.sql"
+    filename = "translation.sql"
 
     if deployment != "standard":
         package_standard_macro = os.path.join(
-            BASE_DIR,
             "dbt_packages",
             "tamanu_source_dbt",
             "macros",
-            "default_translations.sql",
+            "translation.sql",
         )
         if os.path.exists(package_standard_macro):
             os.remove(package_standard_macro)
+
+    # Remove old default_translations.sql if it exists (renamed to translation.sql in
+    # v2.52).
+    # TODO: remove this block once all tamanu-dbt-* repos are on at least v2.52.
+    old_macro_path = os.path.join(macros_dir, "default_translations.sql")
+    if os.path.exists(old_macro_path):
+        os.remove(old_macro_path)
 
     macro_path = os.path.join(macros_dir, filename)
 
     with open(macro_path, "w", encoding="utf-8") as f:
         f.write(macro_content)
 
-    print(f"Generated {macro_path}")
-    print(f"Loaded {len(merged)} translations (standard + localised)")
+    cprint(f"Generated {macro_path}", "success")
+    cprint(f"Loaded {len(merged)} translations (standard + localised)", "success")
 
 
 if __name__ == "__main__":
     try:
         generate_translation_macro()
     except Exception as e:
-        print(f"Error: {e}")
+        cprint(f"Error: {e}", "error")
         sys.exit(1)

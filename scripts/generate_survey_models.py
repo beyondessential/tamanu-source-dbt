@@ -10,7 +10,7 @@ from utils.system_utils import cprint
 
 def main():
     try:
-        cprint(f"Generating survey models", "info")
+        cprint("Generating survey models", "info")
 
         surveys = get_surveys_from_deployment()
         total = len(surveys)

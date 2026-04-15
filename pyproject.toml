@@ -33,7 +33,11 @@ testpaths = ["scripts/tests"]
 pythonpath = ["scripts"]
 
 [dependency-groups]
-dev = ["pytest"]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+extend = ".maui/ruff.toml"
+include = ["scripts/**/*.py"]
 
 [tool.setuptools]
 packages = []
