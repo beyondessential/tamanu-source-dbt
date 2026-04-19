@@ -269,7 +269,7 @@ def forwardport_to_branch(
         title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version}) [CONFLICT]"
         remaining_commits = patch_commits[conflict_index + 1:]
         remaining_step = (
-            f"3. Cherry-pick the remaining commit(s):\n"
+            f"3. Cherry-pick the remaining commit(s) (skip any that git reports as empty with `git cherry-pick --skip`):\n"
             + "".join(f"   - `git cherry-pick {sha}`\n" for sha in remaining_commits)
         ) if remaining_commits else ""
         body = (

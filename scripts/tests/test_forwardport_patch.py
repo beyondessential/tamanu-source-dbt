@@ -456,6 +456,7 @@ def test_conflict_body_lists_remaining_commits():
     body = _get_arg(_pr_args(calls), "--body")
     assert _COMMITS[1] in body
     assert _COMMITS[2] in body
+    assert "cherry-pick --skip" in body
 
 
 def test_conflict_body_no_remaining_step_when_last_commit_conflicts():
