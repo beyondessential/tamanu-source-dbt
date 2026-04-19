@@ -227,8 +227,8 @@ def forwardport_to_branch(
     for i, commit in enumerate(patch_commits):
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
-            stderr = result.stderr + result.stdout
-            if "nothing to commit" in stderr or "allow-empty" in stderr or "cherry-pick is now empty" in stderr:
+            combined_output = result.stderr + result.stdout
+            if "nothing to commit" in combined_output or "allow-empty" in combined_output or "cherry-pick is now empty" in combined_output:
                 # Commit already applied on this branch — skip it
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")

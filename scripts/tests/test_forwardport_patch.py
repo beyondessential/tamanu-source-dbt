@@ -420,9 +420,14 @@ def test_conflict_pr_title_has_conflict_marker():
 
 
 def test_applied_commits_zero_when_conflict_on_first():
-    # Conflict on first commit — applied_commits = 0, denominator = 3.
-    # rev_list_count="1" simulates a version-bump commit being present so the PR
-    # path is reached; in practice ahead=0 here would trigger the early-return.
+    """Verify the body shows 'Cherry-picked 0 of N' when the first commit conflicts.
+
+    In production, a conflict on the very first commit with no version-bump would
+    result in ahead=0 and the early-return path (no PR created). Here we force
+    rev_list_count="1" to bypass that guard and exercise the body-formatting logic
+    in isolation. This scenario is only reachable in practice if the version-bump
+    commit is the sole commit ahead of origin.
+    """
     calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="1")
     body = _get_arg(_pr_args(calls), "--body")
     assert "Cherry-picked 0 of 3" in body
