@@ -1,12 +1,12 @@
-# Don't build this as a package - it's a dbt project; hatchling is used only to
-# satisfy `uv pip install -e .` without the default build backend mis-discovering dbt directories.
+# Don't build this as a package - it's a dbt project; setuptools is used only to
+# satisfy `uv pip install -e .` without auto-discovering dbt directories as Python packages.
 [build-system]
-requires = ["hatchling>=1.18"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "tamanu-source-dbt"
-version = "2.51.2"
+version = "2.52.3"
 description = "A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -35,5 +35,5 @@ pythonpath = ["scripts"]
 [dependency-groups]
 dev = ["pytest"]
 
-[tool.hatch.build.targets.wheel]
+[tool.setuptools]
 packages = []

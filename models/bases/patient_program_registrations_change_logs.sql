@@ -9,7 +9,7 @@ with filtered_changes as (
 
 select
     fc.changelog_id,
-    fc.logged_at,
+    fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     fc.updated_by_user_id,
     fc.record_id as id,
     (fc.record_data ->> 'date')::timestamp as datetime,

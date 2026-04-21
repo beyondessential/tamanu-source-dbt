@@ -8,8 +8,8 @@ select
     contact_number as "{{ translate_label('patientContactNumber') }}",
     village as "{{ translate_label('patientVillage') }}",
     billing_type as "{{ translate_label('patientBillingType') }}",
-    to_char(appointment_start_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime') }}",
-    to_char(appointment_end_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentEndDateTime') }}",
+    to_char({{ to_user_selected_timezone('appointment_start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentDateTime') }}",
+    to_char({{ to_user_selected_timezone('appointment_end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentEndDateTime') }}",
     appointment_type as "{{ translate_label('appointmentType') }}",
     appointment_status as "{{ translate_label('appointmentStatus') }}",
     clinician as "{{ translate_label('appointmentClinician') }}",
@@ -24,12 +24,12 @@ select
 from {{ ref('ds__sensitive_outpatient_appointments') }}
 where case
         when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
-        else appointment_start_datetime >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
+        else {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2025-01-31', data_type='date') }} is null then true
-        else appointment_start_datetime <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
+        else {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
     end
     and
     case

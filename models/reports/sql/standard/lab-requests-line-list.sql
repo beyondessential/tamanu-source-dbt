@@ -12,17 +12,17 @@ select
     laboratory as "{{ translate_label('labLaboratory') }}",
     request_id as "{{ translate_label('labRequestId') }}",
     status as "{{ translate_label('labRequestStatus') }}",
-    to_char(requested_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
+    to_char({{ to_user_selected_timezone('requested_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestDateTime') }}",
     requested_by as "{{ translate_label('labRequestClinician') }}",
     requesting_department as "{{ translate_label('labRequestDepartment') }}",
     priority as "{{ translate_label('labRequestPriority') }}",
     lab_test_category as "{{ translate_label('labTestCategory') }}",
     tests as "{{ translate_label('labTestRequested') }}",
-    to_char(collected_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestSampleCollectionDateTime') }}",
+    to_char({{ to_user_selected_timezone('collected_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestSampleCollectionDateTime') }}",
     collected_by as "{{ translate_label('labRequestSampleCollectedBy') }}",
     specimen_type as "{{ translate_label('labRequestSpecimenType') }}",
     site as "{{ translate_label('labRequestSampleSite') }}",
-    to_char(completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestCompletedDateTime') }}",
+    to_char({{ to_user_selected_timezone('completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('labRequestCancellationReason') }}"
 from {{ ref('ds__lab_requests') }}
 where case
@@ -42,13 +42,13 @@ where case
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else requested_datetime
+        else {{ to_user_selected_timezone('requested_datetime') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else requested_datetime
+        else {{ to_user_selected_timezone('requested_datetime') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
 order by requested_datetime, last_name, first_name, tests

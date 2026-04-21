@@ -10,7 +10,7 @@ select
     department as "{{ translate_label('department') }}",
     location_group as "{{ translate_label('locationGroup') }}",
     location as "{{ translate_label('location') }}",
-    to_char(vaccination_date, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
+    to_char({{ to_user_selected_timezone('vaccination_date') }}, '{{ var("date_format") }}') as "{{ translate_label('vaccinationDate') }}",
     vaccine_category as "{{ translate_label('vaccineCategory') }}",
     vaccine_name as "{{ translate_label('vaccineName') }}",
     vaccine_brand as "{{ translate_label('vaccineBrand') }}",
@@ -30,13 +30,13 @@ where
     and
     case
         when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else vaccination_date
+        else {{ to_user_selected_timezone('vaccination_date') }}
             >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and
     case
         when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else vaccination_date
+        else {{ to_user_selected_timezone('vaccination_date') }}
             <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and

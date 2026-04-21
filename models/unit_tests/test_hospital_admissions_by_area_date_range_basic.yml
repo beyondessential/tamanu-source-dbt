@@ -1,0 +1,86 @@
+unit_tests:
+  - name: test_hospital_admissions_by_area_date_range_basic
+    model: hospital-admissions-by-area-summary
+    description: >
+      Test multi-month reporting in UTC: enc_001 is entirely in January 2024 (starts Jan 15,
+      ends Jan 17 — 1 admission, 2 patient days, avg LOS 2.0); enc_002 is entirely in
+      February 2024 (starts Feb 10, ends Feb 12 — 1 admission, 2 patient days, avg LOS 2.0).
+      Each month appears in the output with correct admission, discharge, occupancy, and bed
+      occupancy values. Capacity = 10; Jan occupancy = 2/310 = 0.6%, Feb = 2/290 = 0.7%.
+    overrides:
+      vars:
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
+        yearmonth_format: YYYY-MM
+        fromDate: '2024-01-01'
+        toDate: '2024-02-29'
+    given:
+      - input: ref('int__admission_history_location')
+        format: sql
+        rows: |
+          select
+            'enc_001'::text        as encounter_id,
+            'lg_001'::text         as location_group_id,
+            'Emergency Ward'::text as location_group,
+            'loc_001'::text        as location_id,
+            'Room 1'::text         as location,
+            'fac_001'::text        as facility_id,
+            'Central Hospital'::text as facility,
+            '2024-01-15 10:00:00'::timestamp as start_datetime,
+            '2024-01-17 10:00:00'::timestamp as end_datetime,
+            2::integer             as length_of_stay,
+            true                   as admission,
+            true                   as discharge,
+            false                  as transfer_in,
+            false                  as transfer_out,
+            false                  as death
+          union all
+          select
+            'enc_002',
+            'lg_001',
+            'Emergency Ward',
+            'loc_001',
+            'Room 1',
+            'fac_001',
+            'Central Hospital',
+            '2024-02-10 10:00:00'::timestamp,
+            '2024-02-12 10:00:00'::timestamp,
+            2,
+            true,
+            true,
+            false,
+            false,
+            false
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001'::text as id, 'Room 1'::text as name, 'lg_001'::text as location_group_id, 'fac_001'::text as facility_id, 10::integer as max_occupancy
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '2024-01'          as "Month",
+          'Central Hospital' as "Facility",
+          'Emergency Ward'   as "Area",
+          1                  as "Number of admissions",
+          1                  as "Number of discharges",
+          0                  as "Number of deaths",
+          0                  as "Number of transfers into location",
+          0                  as "Number of transfers out of location",
+          2.0                as "Average length of stay",
+          2                  as "Number of patient days",
+          '0.6%'             as "Bed occupancy (%)"
+        union all
+        select
+          '2024-02',
+          'Central Hospital',
+          'Emergency Ward',
+          1,
+          1,
+          0,
+          0,
+          0,
+          2.0,
+          2,
+          '0.7%'

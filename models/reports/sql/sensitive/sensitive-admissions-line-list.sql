@@ -8,9 +8,9 @@ select
     village as "{{ translate_label('patientVillage') }}",
     billing_type as "{{ translate_label('patientBillingType') }}",
     admitting_clinician as "{{ translate_label('admittingClinician') }}",
-    to_char(admission_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('admissionDateTime') }}",
+    to_char({{ to_user_selected_timezone('admission_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('admissionDateTime') }}",
     admission_status as "{{ translate_label('admissionStatus') }}",
-    to_char(discharge_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDateTime') }}",
+    to_char({{ to_user_selected_timezone('discharge_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDateTime') }}",
     facility as "{{ translate_label('facility') }}",
     departments as "{{ translate_label('encounterDepartmentHistory') }}",
     department_datetimes as "{{ translate_label('encounterDepartmentHistoryDateTimes') }}",
@@ -23,10 +23,10 @@ select
 from {{ ref('ds__sensitive_admissions') }}
 where
     case when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else admission_datetime >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        else {{ to_user_selected_timezone('admission_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
     and case when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else admission_datetime <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+        else {{ to_user_selected_timezone('admission_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     end
     and case when {{ parameter('locationGroupId') }} is null then true
         else {{ parameter('locationGroupId') }} = any(location_group_ids::text [])
