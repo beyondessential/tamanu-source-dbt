@@ -220,28 +220,23 @@ def forwardport_to_branch(
     git("checkout", "-B", pr_branch, f"origin/{target_branch}")
 
     # Cherry-pick patch commits
-    applied_commits = 0
-    already_applied_commits = 0
-    conflict_commit = None
-    conflict_index = None
-    for i, commit in enumerate(patch_commits):
+    skipped_commits = 0
+    for commit in patch_commits:
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
-            combined_output = result.stderr + result.stdout
-            if "nothing to commit" in combined_output or "allow-empty" in combined_output or "cherry-pick is now empty" in combined_output:
+            stderr = result.stderr + result.stdout
+            if "nothing to commit" in stderr or "allow-empty" in stderr or "cherry-pick is now empty" in stderr:
                 # Commit already applied on this branch — skip it
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
-                already_applied_commits += 1
+                skipped_commits += 1
                 continue
-            # Real conflict — abort and open a draft PR with what we have so far
+            # Real conflict — abort and bail
             git("cherry-pick", "--abort", check=False)
-            conflict_commit = commit
-            conflict_index = i
-            print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
-            break
-        applied_commits += 1
-    applicable_commits = len(patch_commits) - already_applied_commits
+            git("checkout", "-")
+            print(f"    ❌ Cherry-pick conflict at {commit[:8]}, skipping branch")
+            return
+    applied_commits = len(patch_commits) - skipped_commits
 
     # Override version to the correct next patch for this branch
     changed = update_version_in_files(new_target_version)
@@ -254,63 +249,29 @@ def forwardport_to_branch(
     # Skip if nothing was actually committed
     ahead = git_out("rev-list", "--count", f"origin/{target_branch}..HEAD")
     if int(ahead) == 0:
-        if conflict_commit:
-            print(f"    ⏭️  Conflict at {conflict_commit[:8]} with nothing committed ahead — skipping")
-        else:
-            print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
+        print(f"    ⏭️  No changes to forward-port to '{target_branch}', skipping")
         git("checkout", "-")
         return
 
     # Push
     git("push", "origin", pr_branch, "--force-with-lease")
 
-    # Build PR title and body
-    if conflict_commit:
-        title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version}) [CONFLICT]"
-        remaining_commits = patch_commits[conflict_index + 1:]
-        remaining_step = (
-            f"3. Cherry-pick the remaining commit(s) (skip any that git reports as empty with `git cherry-pick --skip`):\n"
-            + "".join(f"   - `git cherry-pick {sha}`\n" for sha in remaining_commits)
-        ) if remaining_commits else ""
-        body = (
-            f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
-            f"⚠️ **Cherry-pick conflict on `{conflict_commit[:8]}`** — manual resolution required before merging.\n\n"
-            f"To complete the forward-port:\n"
-            f"1. Check out this branch\n"
-            f"2. `git cherry-pick {conflict_commit}` — resolve the conflict, then `git add <files> && git cherry-pick --continue`\n"
-            + remaining_step + "\n"
-            f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picked {applied_commits} of {applicable_commits} commit(s) from `{new_patch_tag}` (stopped at conflict on `{conflict_commit[:8]}`)\n\n"
-            f"---\n"
-            f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
-        )
-        draft_args = ["--draft"]
-    else:
-        title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})"
-        skipped_note = (
-            f" ({already_applied_commits} already applied on this branch)"
-            if already_applied_commits else ""
-        )
-        body = (
-            f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
-            f"- Bumps version `{target_version}` → `{new_target_version}`\n"
-            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`{skipped_note}\n\n"
-            f"---\n"
-            f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
-        )
-        draft_args = []
-
     # Create PR
     pr_url = gh_out(
         "pr", "create",
         "--repo", repo,
-        "--title", title,
-        "--body", body,
+        "--title", f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})",
+        "--body", (
+            f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
+            f"- Bumps version `{target_version}` → `{new_target_version}`\n"
+            f"- Cherry-picks {applied_commits} commit(s) from `{new_patch_tag}`\n\n"
+            f"---\n"
+            f"🤖 _[forwardport patch workflow](https://github.com/{repo}/actions)_"
+        ),
         "--head", pr_branch,
         "--base", target_branch,
-        *draft_args,
     )
-    print(f"    {'⚠️  Draft' if conflict_commit else '✅'} PR: {pr_url}")
+    print(f"    ✅ PR: {pr_url}")
 
     # Return to detached HEAD / previous branch
     git("checkout", "-")
