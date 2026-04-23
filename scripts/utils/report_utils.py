@@ -52,6 +52,9 @@ def compile_report(database, sql_file, config_file, output_file):
 def generate_project_reports(language):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
+    Nodes tagged "restricted" (i.e. sensitive-facility dataset views) are excluded when
+    has_sensitive_facility is false. has_sensitive_facility is read from dbt_project.yml via get_dbt_project_vars(),
+    not from the dbt runtime context.
 
     Args:
         language (str): The language to use for report generation.
@@ -62,11 +65,18 @@ def generate_project_reports(language):
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
 
+    project_vars = get_dbt_project_vars()
+    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+
     nodes = [
         key
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
+        and (
+            has_sensitive_facility
+            or "restricted" not in manifest["nodes"][key].get("tags", [])
+        )
     ]
 
     if not nodes:
@@ -169,7 +179,9 @@ def generate_reporting_schema_script():
 
     The script is generated based on the model nodes that do not have the "reports" tag and
     are compiled in the project. Dependencies between models are resolved before generating
-    the views in the schema.
+    the views in the schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset views) are excluded when
+    has_sensitive_facility is false. has_sensitive_facility is read from dbt_project.yml via get_dbt_project_vars(),
+    not from the dbt runtime context.
 
     Args:
         target (str): The target tag to filter models for generating views.
@@ -180,11 +192,18 @@ def generate_reporting_schema_script():
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
 
+    project_vars = get_dbt_project_vars()
+    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+
     nodes = [
         key
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" not in manifest["nodes"][key].get("tags", [])
+        and (
+            has_sensitive_facility
+            or "restricted" not in manifest["nodes"][key].get("tags", [])
+        )
     ]
 
     if not nodes:
