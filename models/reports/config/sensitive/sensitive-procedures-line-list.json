@@ -6,7 +6,7 @@
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
-    "dataSources": ["allFacilities"],
+    "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {
         "parameterField": "FacilityField",
