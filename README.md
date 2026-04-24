@@ -63,6 +63,16 @@ The generated assets are saved in the `compiled/` folder. The documentation is v
 - Import script: `compiled/reports/importReports.js`
 - Versioned documentation: `compiled/v{VERSION}/reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
 
+## Sensitive Facility Reporting
+
+Set `has_sensitive_facility: true` in the `vars` block of `dbt_project.yml` to include models
+tagged `restricted` (sensitive-facility dataset views) when generating reports and the reporting
+schema script. When `false` (the default), those models are silently excluded from both
+`generate_project_reports()` and `generate_reporting_schema_script()`.
+
+The flag is read at script run-time from `dbt_project.yml` via `get_dbt_project_vars()`, not
+from the dbt runtime context, so it must be set in the file before running the build scripts.
+
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:
 ```
