@@ -213,6 +213,9 @@ def generate_reporting_schema_script():
     processed = set()
     ordered = []
 
+    # Assumes no non-restricted model lists a restricted model in depends_on.nodes.
+    # Restricted nodes filtered above are never added to `processed`, so any such
+    # cross-tier dependency would stall this loop and exit with the error below.
     while len(processed) < len(nodes):
         current = [
             node
