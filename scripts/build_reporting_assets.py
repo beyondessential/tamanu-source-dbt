@@ -31,6 +31,19 @@ def main():
     cprint(f"\nBuilding Tamanu reporting assets v{VERSION} ({DEPLOYMENT})", "info")
 
     try:
+        # Build reporting assets
+        config = get_dbt_project_config()
+        supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
+
+        cprint(f"Building for languages: {', '.join(supported_languages)}", "info")
+
+        ensure_directory_exists(VERSION_DIR)
+        execute_command("dbt clean")
+        execute_command("dbt deps")
+
+        # Generate translation macro before any dbt compilation
+        generate_translation_macro()
+
         # Generate survey models (only for non-standard deployments)
         if DEPLOYMENT != "standard":
             cprint("Generating survey models...", "info")
@@ -43,18 +56,6 @@ def main():
         # Process translations
         cprint("Processing translations...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'check_translations.py'}")
-        
-        # Build reporting assets
-        config = get_dbt_project_config()
-        supported_languages = config.get("vars", {}).get("supported_languages", ["default"])
-
-        cprint(f"Building for languages: {', '.join(supported_languages)}", "info")
-
-        ensure_directory_exists(VERSION_DIR)
-        execute_command("dbt clean")
-        execute_command("dbt deps")
-
-        generate_translation_macro()
 
         execute_command("dbt run --profiles-dir config")
         execute_command("dbt docs generate --profiles-dir config --static")
