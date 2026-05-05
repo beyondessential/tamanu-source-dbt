@@ -38,8 +38,8 @@ def main():
         cprint(f"Building for languages: {', '.join(supported_languages)}", "info")
 
         ensure_directory_exists(VERSION_DIR)
-        execute_command("dbt clean")
-        execute_command("dbt deps")
+        execute_command("dbt clean --profiles-dir config")
+        execute_command("dbt deps --profiles-dir config")
 
         # Generate translation macro before any dbt compilation
         generate_translation_macro()
