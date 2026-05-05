@@ -94,7 +94,24 @@ jobs:
           pf_pid=$!
           function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
           trap cleanup EXIT
-          sleep 5
+
+          # Wait for port-forward to be ready
+          for i in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+              echo "Port-forward ready"
+              break
+            fi
+            if ! kill -0 "$pf_pid" 2>/dev/null; then
+              echo "::error::Port-forward process died"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+            echo "::error::Port-forward not ready after 30s"
+            exit 1
+          fi
 
           TAMANU_RL_DB_URL=127.0.0.1 \
           TAMANU_RL_DB_PORT=5432 \
