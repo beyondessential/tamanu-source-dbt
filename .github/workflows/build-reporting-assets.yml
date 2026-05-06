@@ -94,11 +94,16 @@ jobs:
           echo "::add-mask::$pgpass"
 
           for i in $(seq 1 10); do
-            pg_isready -h "$DB_HOST" -p 5432 -q && break
+            if pg_isready -h "$DB_HOST" -p 5432 -q; then
+              break
+            fi
+            if [ "$i" -eq 10 ]; then
+              echo "::error::Database not reachable at $DB_HOST:5432 after 30s"
+              exit 1
+            fi
             echo "Waiting for database at $DB_HOST:5432 (attempt $i/10)..."
             sleep 3
           done
-          pg_isready -h "$DB_HOST" -p 5432 -q || { echo "::error::Database not reachable at $DB_HOST:5432 after 30s"; exit 1; }
 
           TAMANU_RL_DB_URL="$DB_HOST" \
           TAMANU_RL_DB_PORT=5432 \
