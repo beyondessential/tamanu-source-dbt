@@ -93,7 +93,12 @@ jobs:
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
-          pg_isready -h "$DB_HOST" -p 5432 -q || { echo "::error::Database not reachable at $DB_HOST:5432"; exit 1; }
+          for i in $(seq 1 10); do
+            pg_isready -h "$DB_HOST" -p 5432 -q && break
+            echo "Waiting for database at $DB_HOST:5432 (attempt $i/10)..."
+            sleep 3
+          done
+          pg_isready -h "$DB_HOST" -p 5432 -q || { echo "::error::Database not reachable at $DB_HOST:5432 after 30s"; exit 1; }
 
           TAMANU_RL_DB_URL="$DB_HOST" \
           TAMANU_RL_DB_PORT=5432 \
