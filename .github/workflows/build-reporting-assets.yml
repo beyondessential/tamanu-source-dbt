@@ -52,7 +52,6 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
-          echo "db_host=k8s-pg-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -88,24 +87,38 @@ jobs:
         run: |
           NS="${{ steps.version.outputs.namespace }}"
 
-          DB_HOST="${{ steps.version.outputs.db_host }}"
-
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
-          for i in $(seq 1 10); do
-            if pg_isready -h "$DB_HOST" -p 5432 -q; then
+          primary=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=central-db,role=primary -o jsonpath='{.items[0].metadata.name}')
+          if [ -z "$primary" ]; then
+            echo "::error::No primary pod found for central-db in namespace $NS"
+            exit 1
+          fi
+          echo "Port-forwarding to primary pod: $primary"
+          kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 &
+          pf_pid=$!
+          function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+
+          for i in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+              echo "Port-forward ready"
               break
             fi
-            if [ "$i" -eq 10 ]; then
-              echo "::error::Database not reachable at $DB_HOST:5432 after 30s"
+            if ! kill -0 "$pf_pid" 2>/dev/null; then
+              echo "::error::Port-forward process died"
               exit 1
             fi
-            echo "Waiting for database at $DB_HOST:5432 (attempt $i/10)..."
-            sleep 3
+            sleep 1
           done
 
-          TAMANU_RL_DB_URL="$DB_HOST" \
+          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+            echo "::error::Port-forward not ready after 30s"
+            exit 1
+          fi
+
+          TAMANU_RL_DB_URL=127.0.0.1 \
           TAMANU_RL_DB_PORT=5432 \
           TAMANU_RL_DB_USER=app \
           TAMANU_RL_DB_PASSWORD="$pgpass" \
