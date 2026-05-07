@@ -90,13 +90,7 @@ jobs:
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
-          primary=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=central-db,role=primary -o jsonpath='{.items[0].metadata.name}')
-          if [ -z "$primary" ]; then
-            echo "::error::No primary pod found for central-db in namespace $NS"
-            exit 1
-          fi
-          echo "Port-forwarding to primary pod: $primary"
-          kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 &
+          kubectl port-forward -n "$NS" service/central-db-rw 5432:5432 &
           pf_pid=$!
           function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
           trap cleanup EXIT
