@@ -95,6 +95,8 @@ jobs:
             echo "::error::No primary pod found for central-db in namespace $NS"
             exit 1
           fi
+          # Pinned to the primary pod (not service/central-db-rw) so reads are guaranteed
+          # to hit the writeable instance; trade-off is no failover during the build.
           echo "Port-forwarding to primary pod: $primary"
           kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 >/tmp/pf.log 2>&1 &
           pf_pid=$!
