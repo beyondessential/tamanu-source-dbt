@@ -52,6 +52,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
+          echo "db_host=k8s-pg-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,6 +88,8 @@ jobs:
         run: |
           NS="${{ steps.version.outputs.namespace }}"
 
+          DB_HOST="${{ steps.version.outputs.db_host }}"
+
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
@@ -101,19 +104,15 @@ jobs:
               echo "Port-forward ready"
               break
             fi
-            if ! kill -0 "$pf_pid" 2>/dev/null; then
-              echo "::error::Port-forward process died"
+            if [ "$i" -eq 10 ]; then
+              echo "::error::Database not reachable at $DB_HOST:5432 after 30s"
               exit 1
             fi
-            sleep 1
+            echo "Waiting for database at $DB_HOST:5432 (attempt $i/10)..."
+            sleep 3
           done
 
-          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
-            echo "::error::Port-forward not ready after 30s"
-            exit 1
-          fi
-
-          TAMANU_RL_DB_URL=127.0.0.1 \
+          TAMANU_RL_DB_URL="$DB_HOST" \
           TAMANU_RL_DB_PORT=5432 \
           TAMANU_RL_DB_USER=app \
           TAMANU_RL_DB_PASSWORD="$pgpass" \
