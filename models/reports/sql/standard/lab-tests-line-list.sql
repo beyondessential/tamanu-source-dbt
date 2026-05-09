@@ -23,17 +23,11 @@ select
     lab_test_type as "{{ translate_label('labTestType') }}",
     to_char({{ to_user_selected_timezone('lab_test_completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labTestCompletedDateTime') }}"
 from {{ ref('ds__lab_tests') }}
-where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('requested_datetime') }}
-            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+where {{ to_user_selected_timezone('requested_datetime') }}
+        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('requested_datetime') }}
-            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('requested_datetime') }}
+        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('statusId') }} is null then true

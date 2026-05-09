@@ -30,15 +30,9 @@ select
 from {{ ref('ds__sensitive_outpatient_appointments_audit') }}
 where
     -- Date range filter on appointment datetime
-    case
-        when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2025-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
     -- Facility filter
     and
     case
