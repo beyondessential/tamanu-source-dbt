@@ -22,15 +22,9 @@ select
     booking_type as "{{ translate_label('bookingType') }}",
     booking_status as "{{ translate_label('bookingStatus') }}"
 from {{ ref('ds__location_bookings') }}
-where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+where {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('booking_end_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('booking_end_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('locationGroupId') }} is null then true

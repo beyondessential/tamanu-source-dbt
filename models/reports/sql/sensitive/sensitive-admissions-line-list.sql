@@ -22,12 +22,8 @@ select
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}"
 from {{ ref('ds__sensitive_admissions') }}
 where
-    case when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('admission_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
-    and case when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('admission_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('admission_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    and {{ to_user_selected_timezone('admission_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case when {{ parameter('locationGroupId') }} is null then true
         else {{ parameter('locationGroupId') }} = any(location_group_ids::text [])
     end

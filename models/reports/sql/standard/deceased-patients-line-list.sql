@@ -38,16 +38,8 @@ select
     death_within_day_of_birth as "{{ translate_label('deathWithinDayOfBirth') }}",
     hours_survived_since_birth as "{{ translate_label('deathHoursSurvivedSinceBirth') }}"
 from {{ ref('ds__deaths') }}
-where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null
-            then true
-        else date_of_death >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
-    and case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null
-            then true
-        else date_of_death <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+where date_of_death >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    and date_of_death <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case
         when {{ parameter('causeOfDeath') }} is null
             then true

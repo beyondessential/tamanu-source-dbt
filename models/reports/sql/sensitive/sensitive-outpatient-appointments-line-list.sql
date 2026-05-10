@@ -22,15 +22,8 @@ select
     to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}",
     created_by as "{{ translate_label('appointmentCreatedBy') }}"
 from {{ ref('ds__sensitive_outpatient_appointments') }}
-where case
-        when {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
-    end
-    and
-    case
-        when {{ parameter('toDate', default_value='2025-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
-    end
+where {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
+    and {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
     and
     case
         when {{ parameter('locationGroupId') }} is null then true

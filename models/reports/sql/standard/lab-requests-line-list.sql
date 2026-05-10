@@ -40,15 +40,9 @@ where case
         else status_id = {{ parameter('statusId') }}
     end
     and
-    case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('requested_datetime') }}
-            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('requested_datetime') }}
+        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('requested_datetime') }}
-            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('requested_datetime') }}
+        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
 order by requested_datetime, last_name, first_name, tests
