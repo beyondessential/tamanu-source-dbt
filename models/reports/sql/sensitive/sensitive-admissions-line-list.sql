@@ -23,7 +23,7 @@ select
     primary_diagnoses_names as "{{ translate_label('diagnosesPrimaryNames') }}",
     primary_diagnoses_codes as "{{ translate_label('diagnosesPrimaryCodes') }}",
     secondary_diagnoses_names as "{{ translate_label('diagnosesSecondaryNames') }}",
-    secondary_diagnoses_codes as "{{ translate_label('diagnosesecondaryCodes') }}"
+    secondary_diagnoses_codes as "{{ translate_label('diagnosesSecondaryCodes') }}"
 from {{ ref('ds__sensitive_admissions') }}
 where
     {{ to_user_selected_timezone('admission_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
