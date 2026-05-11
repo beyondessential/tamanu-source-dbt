@@ -19,7 +19,11 @@ select
     locations as "{{ translate_label('encounterLocationHistory') }}",
     location_datetimes as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     primary_diagnoses as "{{ translate_label('diagnosesPrimary') }}",
-    secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}"
+    secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}",
+    primary_diagnoses_names as "{{ translate_label('diagnosesPrimaryNames') }}",
+    primary_diagnoses_codes as "{{ translate_label('diagnosesPrimaryCodes') }}",
+    secondary_diagnoses_names as "{{ translate_label('diagnosesSecondaryNames') }}",
+    secondary_diagnoses_codes as "{{ translate_label('diagnosesecondaryCodes') }}"
 from {{ ref('ds__admissions') }}
 where
     {{ to_user_selected_timezone('admission_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

@@ -178,7 +178,17 @@ encounter_diagnoses as (
             ),
             E'\n'
             order by ed.is_primary desc, ed.datetime asc
-        ) as diagnoses
+        ) as diagnoses,
+        string_agg(
+            d.name,
+            '; '
+            order by ed.is_primary desc, ed.datetime asc
+        ) as diagnosis_names,
+        string_agg(
+            d.code,
+            '; '
+            order by ed.is_primary desc, ed.datetime asc
+        ) as diagnosis_codes
     from {{ ref('encounter_diagnoses') }} ed
     join encounters_in_scope eis
         on eis.encounter_id = ed.encounter_id
@@ -443,6 +453,8 @@ select
     array_to_string(ec.location_datetimes, ', ') as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     eis.reason_for_encounter as "{{ translate_label('encounterReasonForEncounter') }}",
     ed.diagnoses as "{{ translate_label('diagnoses') }}",
+    ed.diagnosis_names as "{{ translate_label('diagnosisNames') }}",
+    ed.diagnosis_codes as "{{ translate_label('diagnosisCodes') }}",
     ep.medications as "{{ translate_label('medications') }}",
     ev.vaccinations as "{{ translate_label('vaccinations') }}",
     epr.procedures as "{{ translate_label('procedures') }}",
