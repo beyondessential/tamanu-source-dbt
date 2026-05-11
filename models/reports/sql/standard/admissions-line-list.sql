@@ -20,9 +20,7 @@ select
     location_datetimes as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     primary_diagnoses as "{{ translate_label('diagnosesPrimary') }}",
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}",
-    primary_diagnoses_names as "{{ translate_label('diagnosesPrimaryNames') }}",
     primary_diagnoses_codes as "{{ translate_label('diagnosesPrimaryCodes') }}",
-    secondary_diagnoses_names as "{{ translate_label('diagnosesSecondaryNames') }}",
     secondary_diagnoses_codes as "{{ translate_label('diagnosesSecondaryCodes') }}"
 from {{ ref('ds__admissions') }}
 where
