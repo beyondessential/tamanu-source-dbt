@@ -1,0 +1,83 @@
+{
+  "query": "replace this",
+  "name": "Emergency Department admissions with diagnoses line list",
+  "status": "published",
+  "notes": "This report generates a detailed list of all hospital admissions with individual diagnosis rows. Each diagnosis appears as a separate row with the diagnosis name and ICD-10 code in distinct columns, making it easy to analyze diagnosis patterns.\n\nKey features:\n- Each patient admission may have multiple rows (one per diagnosis)\n- Diagnosis name and ICD-10 code are in separate columns for easy filtering and analysis\n- Includes age groups for demographic analysis\n- Shows the areas (location groups) where patients were admitted\n- Filters by admission date within the selected date range\n- Includes both primary and secondary diagnoses\n- Excludes diagnoses marked as 'Disproven' or 'Recorded in error'\n\nUse this report to:\n- Identify top causes of admission by diagnosis\n- Analyze diagnosis patterns by age group and sex\n- Track which areas are admitting patients\n- Export data for further analysis in Excel or other tools\n",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "thisMonth",
+    "dataSources": ["thisFacility", "allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": { "filterByFacility": true }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Patient billing type",
+        "name": "patientBillingTypeId",
+        "suggesterEndpoint": "patientBillingType"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Admitting clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Admission status",
+        "name": "admissionStatus",
+        "options": [
+          {
+            "label": "Active",
+            "value": "active"
+          },
+          {
+            "label": "Discharged",
+            "value": "discharged"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Diagnosis type",
+        "name": "diagnosisType",
+        "options": [
+          {
+            "label": "All",
+            "value": null
+          },
+          {
+            "label": "Primary only",
+            "value": "Primary"
+          },
+          {
+            "label": "Secondary only",
+            "value": "Secondary"
+          }
+        ]
+      }
+    ]
+  }
+}
