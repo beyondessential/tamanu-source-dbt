@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 from .dbt_utils import get_deployment_name
@@ -32,13 +33,14 @@ def read_db_translations():
     Fetch all rows from translated_strings via dbt run-operation and return a
     nested dict of {string_id: {language: text}} (raw text; repr() when writing the macro).
 
-    Uses the get_translations_from_db macro which logs each row as:
-        TRANSLATION_DATA:<string_id>~|~<language>~|~<text>
+    Uses the get_translations_from_db macro, which logs a single JSON array:
+        TRANSLATION_DATA_JSON:[{"string_id": "...", "language": "...", "text": "..."}, ...]
 
     Returns an empty dict if the dbt command fails, so the caller degrades
     gracefully when no DB connection is available.
     """
     mapping = {}
+    prefix = "TRANSLATION_DATA_JSON:"
     cmd = "dbt run-operation get_translations_from_db --profiles-dir config"
 
     try:
@@ -52,16 +54,29 @@ def read_db_translations():
             return mapping
 
         for line in (result.stdout + result.stderr).split("\n"):
-            if "TRANSLATION_DATA:" not in line:
+            if prefix not in line:
                 continue
-            # maxsplit=2 preserves any ~|~ that appears inside the text value
-            parts = line.split("TRANSLATION_DATA:")[1].split("~|~", 2)
-            if len(parts) != 3:
+            payload = line.split(prefix, 1)[1].strip()
+            try:
+                rows = json.loads(payload)
+            except json.JSONDecodeError:
                 continue
-            string_id, language, text = parts[0].strip(), parts[1].strip(), parts[2].strip()
-            if not string_id or not language:
+            if not isinstance(rows, list):
                 continue
-            mapping.setdefault(string_id, {})[language] = text
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                string_id = (row.get("string_id") or "").strip()
+                language = (row.get("language") or "").strip()
+                text = row.get("text")
+                if text is None:
+                    text = ""
+                elif not isinstance(text, str):
+                    text = str(text)
+                if not string_id or not language:
+                    continue
+                mapping.setdefault(string_id, {})[language] = text
+            break
 
     except Exception as e:
         cprint(f"Error fetching translations from database: {e}", "error")

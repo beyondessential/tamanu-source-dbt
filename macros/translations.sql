@@ -66,23 +66,29 @@
 {%- macro get_translations_from_db() -%}
     {%- set prefixes = get_enum_prefix().values() | list -%}
     {%- set query %}
-        SELECT string_id, language, text
-        FROM {{ source('tamanu', 'translated_strings') }}
-        WHERE deleted_at IS NULL
-          AND string_id LIKE ANY(ARRAY[
+        select string_id, language, text
+        from {{ source('tamanu', 'translated_strings') }}
+        where deleted_at is null
+          and string_id like any(array[
               'report.reporting.%'
               {%- for prefix in prefixes -%}
               , '{{ prefix }}.%'
               {%- endfor %}
           ])
-        ORDER BY string_id, language
+        order by string_id, language
     {%- endset %}
 
-    {%- set results = run_query(query) -%}
     {%- if execute -%}
+        {%- set results = run_query(query) -%}
+        {%- set rows = [] -%}
         {%- for row in results -%}
-            {{ log("TRANSLATION_DATA:" ~ row[0] ~ "~|~" ~ row[1] ~ "~|~" ~ row[2], info=true) }}
+            {%- do rows.append({
+                'string_id': row[0] | string,
+                'language': row[1] | string,
+                'text': row[2] | string
+            }) -%}
         {%- endfor -%}
+        {{ log('TRANSLATION_DATA_JSON:' ~ tojson(rows), info=true) }}
     {%- endif -%}
 {%- endmacro -%}
 
