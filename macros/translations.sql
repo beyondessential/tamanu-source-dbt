@@ -13,8 +13,8 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro get_translation_prefix(prefix_key) -%}
-    {%- set mapping = {
+{%- macro get_enum_prefix() -%}
+    {%- set enum_prefixes = {
         'APPOINTMENT_STATUSES': 'appointment.property.status',
         'ATTENDANT_OF_BIRTH_LABELS': 'birth.property.attendantOfBirth',
         'ASSET_NAME_LABELS': 'asset.property.name',
@@ -59,43 +59,49 @@
         'VACCINE_CATEGORY_LABELS': 'vaccine.property.category',
         'VACCINE_STATUS_LABELS': 'vaccine.property.status'
     } -%}
-    
-    {%- if prefix_key in mapping -%}
-        {{- mapping[prefix_key] -}}
-    {%- else -%}
-        {{- '' -}}
-    {%- endif -%}
+    {{- return(enum_prefixes) -}}
 {%- endmacro -%}
 
-{%- macro translate_value(prefix_key, value, language=var("language", "default")) -%}
-    {%- set translations = get_translations() -%}
-    {%- set prefix = get_translation_prefix(prefix_key) -%}
-    {%- set string_id = prefix ~ '.' ~ value -%}
 
-    {%- if string_id in translations -%}
-        {%- set lang_dict = translations[string_id] -%}
-        {{- lang_dict.get(language, lang_dict.get('default', value)) -}}
-    {%- else -%}
-        {{- value -}}
+{%- macro get_translations_from_db() -%}
+    {%- set prefixes = get_enum_prefix().values() | list -%}
+    {%- set query %}
+        SELECT string_id, language, text
+        FROM {{ source('tamanu', 'translated_strings') }}
+        WHERE deleted_at IS NULL
+          AND string_id LIKE ANY(ARRAY[
+              'report.reporting.%'
+              {%- for prefix in prefixes -%}
+              , '{{ prefix }}.%'
+              {%- endfor %}
+          ])
+        ORDER BY string_id, language
+    {%- endset %}
+
+    {%- set results = run_query(query) -%}
+    {%- if execute -%}
+        {%- for row in results -%}
+            {{ log("TRANSLATION_DATA:" ~ row[0] ~ "~|~" ~ row[1] ~ "~|~" ~ row[2], info=true) }}
+        {%- endfor -%}
     {%- endif -%}
 {%- endmacro -%}
 
 {%- macro translate_column_value(prefix_key, column_name, language=var("language", "default")) -%}
     {%- set translations = get_translations() -%}
-    {%- set prefix = get_translation_prefix(prefix_key) -%}
-    {%- set has_translations = false -%}
+    {%- set prefix = get_enum_prefix().get(prefix_key, '') -%}
+    {%- set ns = namespace(has_translations=false) -%}
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
-            {%- set has_translations = true -%}
+            {%- set ns.has_translations = true -%}
             {%- break -%}
         {%- endif -%}
     {%- endfor -%}
-    {%- if has_translations -%}
+    {%- if ns.has_translations -%}
     case
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
             {%- set value = string_id.replace(prefix ~ '.', '') -%}
-            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") -%}
+            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") %}
         when {{ column_name }} = '{{ value }}' then '{{ translated_text }}'
         {%- endif -%}
     {%- endfor %}
