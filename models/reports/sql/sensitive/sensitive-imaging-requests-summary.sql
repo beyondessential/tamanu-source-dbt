@@ -11,7 +11,7 @@ select
     to_char(rd.date, '{{ var("date_format") }}') as "{{ translate_label('reportingDate') }}",
     ir.facility as "{{ translate_label('facility') }}",
     ir.department as "{{ translate_label('department') }}",
-    ir.imaging_type as "{{ translate_label('imagingType') }}",
+    {{ translate_column_value('IMAGING_TYPES', 'ir.imaging_type') }} as "{{ translate_label('imagingType') }}",
     count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests') }}",
     count(distinct ir.request_id) filter (
         where ir.requested_datetime::date <= rd.date
@@ -33,7 +33,7 @@ where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and (
         case
             when {{ parameter('imagingType') }} is null then true
-            else ir.imaging_type_id = {{ parameter('imagingType') }}
+            else ir.imaging_type = {{ parameter('imagingType') }}
         end
     )
 group by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type
