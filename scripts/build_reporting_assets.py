@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from pathlib import Path
 
 from utils import (
@@ -7,8 +7,9 @@ from utils import (
     ensure_directory_exists,
     execute_command,
     generate_analytics_metadata,
-    generate_reporting_schema_script,
     generate_project_reports,
+    generate_reporting_schema_script,
+    generate_translation_macro,
     get_dbt_project_config,
     get_deployment_name,
     get_deployment_version,
@@ -16,8 +17,6 @@ from utils import (
     hide_tests_from_docs,
     move_file,
 )
-from generate_translation_macro import generate_translation_macro
-
 
 BASE_DIR = os.getcwd()
 DEPLOYMENT = get_deployment_name()
@@ -43,7 +42,7 @@ def main():
         # Process translations
         cprint("Processing translations...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'check_translations.py'}")
-        
+
         # Build reporting assets
         config = get_dbt_project_config()
         supported_languages = config.get("vars", {}).get("supported_languages", ["default"])

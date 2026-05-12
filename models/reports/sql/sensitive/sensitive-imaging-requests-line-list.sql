@@ -14,7 +14,7 @@ select
     supervising_clinician as "{{ translate_label('imagingSupervisingClinician') }}",
     requesting_clinician as "{{ translate_label('imagingRequestingClinician') }}",
     priority as "{{ translate_label('imagingPriority') }}",
-    imaging_type as "{{ translate_label('imagingType') }}",
+    {{ translate_column_value('IMAGING_TYPES', 'imaging_type') }} as "{{ translate_label('imagingType') }}",
     imaging_area as "{{ translate_label('imagingArea') }}",
     status as "{{ translate_label('imagingStatus') }}",
     to_char(completed_datetime, '{{ var("datetime_format") }}') as "{{ translate_label('imagingCompletedDateTime') }}",
@@ -39,7 +39,7 @@ where case
     and
     case
         when {{ parameter('imagingType') }} is null then true
-        else imaging_type_id = {{ parameter('imagingType') }}
+        else imaging_type = {{ parameter('imagingType') }}
     end
     and
     case

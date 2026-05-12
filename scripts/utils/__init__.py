@@ -25,3 +25,4 @@ from .survey_utils import (
     generate_survey_doc,
 )
 from .system_utils import cprint, execute_command, execute_command_with_output
+from .translation_utils import generate_translation_macro
