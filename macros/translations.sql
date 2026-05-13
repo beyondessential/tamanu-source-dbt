@@ -63,34 +63,52 @@
     {%- if prefix_key in mapping -%}
         {{- mapping[prefix_key] -}}
     {%- else -%}
-        {{- '' -}}
+        {{- exceptions.raise_compiler_error("Unknown translation prefix key: " ~ prefix_key) -}}
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro translate_value(prefix_key, value, language=var("language", "default")) -%}
-    {%- set translations = get_translations() -%}
-    {%- set prefix = get_translation_prefix(prefix_key) -%}
-    {%- set string_id = prefix ~ '.' ~ value -%}
-
-    {%- if string_id in translations -%}
-        {%- set lang_dict = translations[string_id] -%}
-        {{- lang_dict.get(language, lang_dict.get('default', value)) -}}
+{%- macro get_translation_lookup(prefix_key=none, language=var("language", "default")) -%}
+    {%- if prefix_key is none -%}
+        {%- set key_list = [] -%}
+    {%- elif prefix_key is string -%}
+        {%- set key_list = [prefix_key] -%}
     {%- else -%}
-        {{- value -}}
+        {%- set key_list = prefix_key | list -%}
     {%- endif -%}
+    {%- set ns = namespace(where_clauses=[]) -%}
+    {%- for key in key_list -%}
+        {%- set p = get_translation_prefix(key) -%}
+        {%- set escaped = p.replace("'", "''") -%}
+        {%- set ns.where_clauses = ns.where_clauses + ["string_id like '" ~ escaped ~ ".%'"] -%}
+    {%- endfor -%}
+    select
+        string_id,
+        {%- if language == 'default' %}
+        max(text) filter (where language = 'default') as text
+        {%- else %}
+        coalesce(
+            max(text) filter (where language = '{{ language }}'),
+            max(text) filter (where language = 'default')
+        ) as text
+        {%- endif %}
+    from {{ ref('translated_strings') }}
+    {%- if ns.where_clauses | length > 0 %}
+    where {{ ns.where_clauses | join('\n       or ') }}
+    {%- endif %}
+    group by string_id
 {%- endmacro -%}
 
 {%- macro translate_column_value(prefix_key, column_name, language=var("language", "default")) -%}
     {%- set translations = get_translations() -%}
     {%- set prefix = get_translation_prefix(prefix_key) -%}
-    {%- set has_translations = false -%}
+    {%- set ns = namespace(has_translations=false) -%}
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
-            {%- set has_translations = true -%}
+            {%- set ns.has_translations = true -%}
             {%- break -%}
         {%- endif -%}
     {%- endfor -%}
-    {%- if has_translations -%}
+    {%- if ns.has_translations -%}
     case
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}

@@ -285,6 +285,7 @@ notes_raw as (
         n.datetime,
         n.content,
         n.note_type,
+        n.note_type_id,
         n.record_type,
         n.record_id,
         n.updated_note_id,
@@ -310,7 +311,7 @@ encounter_notes_deduped as (
     from notes_raw
     where
         record_type = 'Encounter'
-        and note_type != 'system'
+        and note_type_id != 'notetype-system'
 ),
 
 imaging_request_areas as (
@@ -340,12 +341,12 @@ imaging_request_areas as (
                 order by area.name
             ),
             string_agg(case
-                when n.note_type = 'areaToBeImaged' then n.content
+                when n.note_type_id = 'notetype-areaToBeImaged' then n.content
             end, ', '
             order by n.datetime)
         ) as areas_to_be_imaged,
         string_agg(case
-            when n.note_type = 'other' then n.content
+            when n.note_type_id = 'notetype-other' then n.content
         end, ','
         order by n.datetime) as notes
     from {{ ref('imaging_requests') }} ir
@@ -377,7 +378,7 @@ encounter_notes as (
         n.record_id as encounter_id,
         string_agg(concat(
             'Note type: ',
-            {{ translate_column_value('NOTE_TYPE_LABELS', 'n.note_type') }},
+            n.note_type,
             ', Content: ', n.content,
             ', Note date: ', to_char({{ to_user_selected_timezone('n.datetime') }}, '{{ var("datetime_format") }}')
         ),

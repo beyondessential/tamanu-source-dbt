@@ -1,3 +1,6 @@
+with _translations as (
+    {{ get_translation_lookup(prefix_key='IMAGING_TYPES') }}
+)
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -14,12 +17,14 @@ select
     supervising_clinician as "{{ translate_label('imagingSupervisingClinician') }}",
     requesting_clinician as "{{ translate_label('imagingRequestingClinician') }}",
     priority as "{{ translate_label('imagingPriority') }}",
-    imaging_type as "{{ translate_label('imagingType') }}",
+    coalesce(t_imaging_type.text, imaging_type) as "{{ translate_label('imagingType') }}",
     imaging_area as "{{ translate_label('imagingArea') }}",
     status as "{{ translate_label('imagingStatus') }}",
     to_char({{ to_user_selected_timezone('completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('imagingCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('imagingCancellationReason') }}"
 from {{ ref('ds__imaging_requests') }}
+left join _translations t_imaging_type
+    on t_imaging_type.string_id = '{{ get_translation_prefix("IMAGING_TYPES") }}.' || imaging_type
 where {{ to_user_selected_timezone('requested_datetime') }}
         >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
@@ -33,7 +38,7 @@ where {{ to_user_selected_timezone('requested_datetime') }}
     and
     case
         when {{ parameter('imagingType') }} is null then true
-        else imaging_type_id = {{ parameter('imagingType') }}
+        else imaging_type = {{ parameter('imagingType') }}
     end
     and
     case

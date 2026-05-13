@@ -80,9 +80,6 @@ models:
       - name: priority
         data_type: character varying(255)
         description: "{{ doc('imaging_requests__priority') }}"
-      - name: imaging_type_id
-        data_type: character varying(31)
-        description: "{{ doc('imaging_requests__imaging_type') }}"
       - name: imaging_type
         data_type: character varying(31)
         description: "{{ doc('imaging_requests__imaging_type') }}"
