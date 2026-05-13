@@ -67,6 +67,22 @@
     {%- endif -%}
 {%- endmacro -%}
 
+{%- macro get_translation_lookup(language=var("language", "default")) -%}
+    select
+        string_id,
+        {%- if language == 'default' %}
+        max(text) filter (where language = 'default') as text
+        {%- else %}
+        coalesce(
+            max(text) filter (where language = '{{ language }}'),
+            max(text) filter (where language = 'default')
+        ) as text
+        {%- endif %}
+    from {{ source('tamanu', 'translated_strings') }}
+    where deleted_at is null
+    group by string_id
+{%- endmacro -%}
+
 {%- macro translate_value(prefix_key, value, language=var("language", "default")) -%}
     {%- set translations = get_translations() -%}
     {%- set prefix = get_translation_prefix(prefix_key) -%}
