@@ -14,7 +14,7 @@ imaging_area_notes as (
         string_agg(content, ', ' order by datetime) as imaging_area
     from {{ ref('notes') }}
     where record_type = 'ImagingRequest'
-        and note_type = 'areaToBeImaged'
+        and note_type_id = 'notetype-areaToBeImaged'
     group by record_id
 ),
 

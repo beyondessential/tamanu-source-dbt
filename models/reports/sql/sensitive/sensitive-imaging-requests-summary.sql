@@ -1,4 +1,8 @@
-with reporting_dates as (
+with _translations as (
+    {{ get_translation_lookup(prefix_key='IMAGING_TYPES') }}
+),
+
+reporting_dates as (
     select date::date as date
     from generate_series(
         {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }},
@@ -11,7 +15,7 @@ select
     to_char(rd.date, '{{ var("date_format") }}') as "{{ translate_label('reportingDate') }}",
     ir.facility as "{{ translate_label('facility') }}",
     ir.department as "{{ translate_label('department') }}",
-    {{ translate_column_value('IMAGING_TYPES', 'ir.imaging_type') }} as "{{ translate_label('imagingType') }}",
+    coalesce(t_imaging_type.text, ir.imaging_type) as "{{ translate_label('imagingType') }}",
     count(distinct ir.request_id) filter (where ir.requested_datetime::date = rd.date) as "{{ translate_label('imagingTotalRequests') }}",
     count(distinct ir.request_id) filter (
         where ir.requested_datetime::date <= rd.date
@@ -25,6 +29,8 @@ left join {{ ref('ds__sensitive_imaging_requests') }} ir
     on ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and ir.requested_datetime::date <= rd.date
     and (ir.completed_datetime::date >= rd.date or ir.completed_datetime is null)
+left join _translations t_imaging_type
+    on t_imaging_type.string_id = '{{ get_translation_prefix("IMAGING_TYPES") }}.' || ir.imaging_type
 where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and (ir.department_id is not null or ir.imaging_type is not null)
     and (
@@ -36,5 +42,5 @@ where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
             else ir.imaging_type = {{ parameter('imagingType') }}
         end
     )
-group by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type
-order by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type
+group by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type, t_imaging_type.text
+order by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type, t_imaging_type.text
