@@ -448,7 +448,7 @@ select
     array_to_string(ec.location_datetimes, ', ') as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     eis.reason_for_encounter as "{{ translate_label('encounterReasonForEncounter') }}",
     ed.diagnoses as "{{ translate_label('diagnoses') }}",
-    ed.diagnosis_codes as "{{ translate_label('diagnosisCodes') }}",
+    ed.diagnosis_codes as "{{ translate_label('diagnosesCodes') }}",
     ep.medications as "{{ translate_label('medications') }}",
     ev.vaccinations as "{{ translate_label('vaccinations') }}",
     epr.procedures as "{{ translate_label('procedures') }}",
