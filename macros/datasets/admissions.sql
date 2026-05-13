@@ -176,19 +176,19 @@ encounter_diagnoses as (
             order by ed.datetime
         ) as primary_diagnoses,
         string_agg(
-            case when not ed.is_primary
-                    then rd.name || ' (' || rd.code || ')'
-            end,
-            '; '
-            order by ed.datetime
-        ) as secondary_diagnoses,
-        string_agg(
             case when ed.is_primary
                     then rd.code
             end,
             '; '
             order by ed.datetime
         ) as primary_diagnoses_codes,
+        string_agg(
+            case when not ed.is_primary
+                    then rd.name || ' (' || rd.code || ')'
+            end,
+            '; '
+            order by ed.datetime
+        ) as secondary_diagnoses,
         string_agg(
             case when not ed.is_primary
                     then rd.code
@@ -265,8 +265,8 @@ select
     lc.locations,
     lc.location_datetimes,
     ed.primary_diagnoses,
-    ed.secondary_diagnoses,
     ed.primary_diagnoses_codes,
+    ed.secondary_diagnoses,
     ed.secondary_diagnoses_codes
 from patient_data pd
 left join admitting_clinicians ac
