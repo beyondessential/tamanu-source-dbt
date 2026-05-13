@@ -14,7 +14,7 @@ imaging_area_notes as (
         string_agg(content, ', ' order by datetime) as imaging_area
     from {{ ref('notes') }}
     where record_type = 'ImagingRequest'
-        and note_type = 'areaToBeImaged'
+        and note_type_id = 'notetype-areaToBeImaged'
     group by record_id
 ),
 
@@ -62,24 +62,7 @@ select
         when ir.priority = 'today' then 'Today'
         else ir.priority
     end as priority,
-    ir.imaging_type as imaging_type_id,
-    case
-        when ir.imaging_type = 'xRay' then 'X-Ray'
-        when ir.imaging_type = 'ctScan' then 'CT Scan'
-        when ir.imaging_type = 'ultrasound' then 'Ultrasound'
-        when ir.imaging_type = 'mri' then 'MRI'
-        when ir.imaging_type = 'ecg' then 'ECG'
-        when ir.imaging_type = 'holterMonitor' then 'Holter Monitor'
-        when ir.imaging_type = 'echocardiogram' then 'Echocardiogram'
-        when ir.imaging_type = 'mammogram' then 'Mammogram'
-        when ir.imaging_type = 'endoscopy' then 'Endoscopy'
-        when ir.imaging_type = 'fluroscopy' then 'Fluroscopy'
-        when ir.imaging_type = 'angiogram' then 'Angiogram'
-        when ir.imaging_type = 'colonoscopy' then 'Colonoscopy'
-        when ir.imaging_type = 'vascularStudy' then 'Vascular Study'
-        when ir.imaging_type = 'stressTest' then 'Stress Test'
-        else ir.imaging_type
-    end as imaging_type,
+    ir.imaging_type,
     areas.imaging_area,
     ir.status as status_id,
     case

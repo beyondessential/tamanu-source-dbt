@@ -9,7 +9,7 @@ with non_system_notes as (
     from {{ ref('notes') }} n
     left join {{ ref('users') }} author on author.id = n.authored_by_id
     left join {{ ref('users') }} on_behalf on on_behalf.id = n.on_behalf_of_id
-    where n.note_type != 'system'
+    where n.note_type_id != 'notetype-system'
     window w as (
         partition by n.record_id
         order by n.datetime

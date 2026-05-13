@@ -158,7 +158,7 @@ unit_tests:
       - input: ref('notes')
         format: sql
         rows: |
-          select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::text as visibility_status where false
+          select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as note_type_id, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::text as visibility_status where false
 
     expect:
       format: sql
