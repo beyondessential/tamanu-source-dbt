@@ -4,7 +4,7 @@ select
     n.date::timestamp as datetime,
     n.content,
     n.note_type_id,
-    rd.code as note_type,
+    rd.name as note_type,
     n.record_type,
     n.record_id,
     n.author_id as authored_by_id,

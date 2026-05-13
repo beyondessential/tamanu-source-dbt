@@ -13,8 +13,8 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro get_enum_prefix() -%}
-    {%- set enum_prefixes = {
+{%- macro get_translation_prefix(prefix_key) -%}
+    {%- set mapping = {
         'APPOINTMENT_STATUSES': 'appointment.property.status',
         'ATTENDANT_OF_BIRTH_LABELS': 'birth.property.attendantOfBirth',
         'ASSET_NAME_LABELS': 'asset.property.name',
@@ -59,36 +59,48 @@
         'VACCINE_CATEGORY_LABELS': 'vaccine.property.category',
         'VACCINE_STATUS_LABELS': 'vaccine.property.status'
     } -%}
-    {{- return(enum_prefixes) -}}
+    
+    {%- if prefix_key in mapping -%}
+        {{- mapping[prefix_key] -}}
+    {%- else -%}
+        {{- exceptions.raise_compiler_error("Unknown translation prefix key: " ~ prefix_key) -}}
+    {%- endif -%}
 {%- endmacro -%}
 
-
-{%- macro get_translations_from_db() -%}
-    {%- set prefixes = get_enum_prefix().values() | list -%}
-    {%- set query %}
-        SELECT string_id, language, text
-        FROM {{ source('tamanu', 'translated_strings') }}
-        WHERE deleted_at IS NULL
-          AND string_id LIKE ANY(ARRAY[
-              'report.reporting.%'
-              {%- for prefix in prefixes -%}
-              , '{{ prefix }}.%'
-              {%- endfor %}
-          ])
-        ORDER BY string_id, language
-    {%- endset %}
-
-    {%- set results = run_query(query) -%}
-    {%- if execute -%}
-        {%- for row in results -%}
-            {{ log("TRANSLATION_DATA:" ~ row[0] ~ "~|~" ~ row[1] ~ "~|~" ~ row[2], info=true) }}
-        {%- endfor -%}
+{%- macro get_translation_lookup(prefix_key=none, language=var("language", "default")) -%}
+    {%- if prefix_key is none -%}
+        {%- set key_list = [] -%}
+    {%- elif prefix_key is string -%}
+        {%- set key_list = [prefix_key] -%}
+    {%- else -%}
+        {%- set key_list = prefix_key | list -%}
     {%- endif -%}
+    {%- set ns = namespace(where_clauses=[]) -%}
+    {%- for key in key_list -%}
+        {%- set p = get_translation_prefix(key) -%}
+        {%- set escaped = p.replace("'", "''") -%}
+        {%- set ns.where_clauses = ns.where_clauses + ["string_id like '" ~ escaped ~ ".%'"] -%}
+    {%- endfor -%}
+    select
+        string_id,
+        {%- if language == 'default' %}
+        max(text) filter (where language = 'default') as text
+        {%- else %}
+        coalesce(
+            max(text) filter (where language = '{{ language }}'),
+            max(text) filter (where language = 'default')
+        ) as text
+        {%- endif %}
+    from {{ ref('translated_strings') }}
+    {%- if ns.where_clauses | length > 0 %}
+    where {{ ns.where_clauses | join('\n       or ') }}
+    {%- endif %}
+    group by string_id
 {%- endmacro -%}
 
 {%- macro translate_column_value(prefix_key, column_name, language=var("language", "default")) -%}
     {%- set translations = get_translations() -%}
-    {%- set prefix = get_enum_prefix().get(prefix_key, '') -%}
+    {%- set prefix = get_translation_prefix(prefix_key) -%}
     {%- set ns = namespace(has_translations=false) -%}
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
@@ -101,7 +113,7 @@
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
             {%- set value = string_id.replace(prefix ~ '.', '') -%}
-            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") %}
+            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") -%}
         when {{ column_name }} = '{{ value }}' then '{{ translated_text }}'
         {%- endif -%}
     {%- endfor %}
