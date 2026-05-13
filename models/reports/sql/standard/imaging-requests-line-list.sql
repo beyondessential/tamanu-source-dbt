@@ -21,10 +21,10 @@ select
     reason_for_cancellation as "{{ translate_label('imagingCancellationReason') }}"
 from {{ ref('ds__imaging_requests') }}
 where {{ to_user_selected_timezone('requested_datetime') }}
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('requested_datetime') }}
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('requestedById') }} is null then true

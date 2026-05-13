@@ -15,8 +15,8 @@ where
     end
     and
     {{ to_user_selected_timezone('ed.start_datetime') }}
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('ed.start_datetime') }}
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
 order by ed.location_group, ed.location, ed.patient_name

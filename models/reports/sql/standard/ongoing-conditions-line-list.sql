@@ -13,8 +13,8 @@ select
     clinician_resolving as "{{ translate_label('conditionResolvedBy') }}"
 from {{ ref('ds__ongoing_conditions') }}
 where {{ to_user_selected_timezone('recorded_datetime') }}
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('recorded_datetime') }}
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
 order by recorded_datetime

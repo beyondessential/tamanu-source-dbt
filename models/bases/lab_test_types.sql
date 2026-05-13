@@ -8,8 +8,7 @@ select
     male_max,
     female_min,
     female_max,
-    range_text
-    as result_type,
+    range_text as result_type,
     options,
     lab_test_category_id,
     visibility_status,

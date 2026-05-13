@@ -28,10 +28,10 @@ select
 from {{ ref('ds__procedures') }}
 where
     procedure_date
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     procedure_date
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('facilityId') }} is null then true

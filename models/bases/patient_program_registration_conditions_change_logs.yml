@@ -53,13 +53,16 @@ unit_tests:
   - name: test_patient_program_registration_conditions_change_logs
     model: patient_program_registration_conditions_change_logs
     description: Test basic functionality of patient_program_registration_conditions_change_logs model
+    overrides:
+      vars:
+        timezone: UTC
     given:
       - input: source('logs__tamanu', 'changes')
         format: csv
         rows: |
           id,logged_at,updated_by_user_id,record_id,table_name,version,record_created_at,record_updated_at,record_data
-          550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00,user_001,cond_001,patient_program_registration_conditions,2.33.0,2024-01-15 09:00:00,2024-01-15 09:00:00,"{""id"": ""cond_001"", ""date"": ""2024-01-15T09:00:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""primary"", ""reason_for_change"": ""initial_registration"", ""clinician_id"": ""cli_001"", ""deletion_date"": null, ""deletion_clinician_id"": null}"
-          550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00,user_002,cond_001,patient_program_registration_conditions,2.33.1,2024-01-16 13:30:00,2024-01-16 13:30:00,"{""id"": ""cond_001"", ""date"": ""2024-01-16T13:30:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""secondary"", ""reason_for_change"": ""condition_category_updated"", ""clinician_id"": ""cli_002"", ""deletion_date"": ""2024-01-16T15:00:00Z"", ""deletion_clinician_id"": ""cli_003""}"
+          550e8400-e29b-41d4-a716-446655440001,2025-06-20 10:00:00+00:00,user_001,cond_001,patient_program_registration_conditions,2.33.0,2024-01-15 09:00:00,2024-01-15 09:00:00,"{""id"": ""cond_001"", ""date"": ""2024-01-15T09:00:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""primary"", ""reason_for_change"": ""initial_registration"", ""clinician_id"": ""cli_001"", ""deletion_date"": null, ""deletion_clinician_id"": null}"
+          550e8400-e29b-41d4-a716-446655440002,2025-06-20 14:30:00+00:00,user_002,cond_001,patient_program_registration_conditions,2.33.1,2024-01-16 13:30:00,2024-01-16 13:30:00,"{""id"": ""cond_001"", ""date"": ""2024-01-16T13:30:00Z"", ""program_registry_condition_id"": ""prog_cond_001"", ""patient_program_registration_id"": ""reg_001"", ""program_registry_condition_category_id"": ""secondary"", ""reason_for_change"": ""condition_category_updated"", ""clinician_id"": ""cli_002"", ""deletion_date"": ""2024-01-16T15:00:00Z"", ""deletion_clinician_id"": ""cli_003""}"
 
       - input: source('tamanu', 'patient_program_registration_conditions')
         format: csv

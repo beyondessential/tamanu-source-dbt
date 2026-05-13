@@ -80,9 +80,12 @@ report.reporting.department,Department
 report.reporting.departments,Departments
 report.reporting.diagnoses,Diagnoses
 report.reporting.diagnosesPrimary,Primary diagnoses
+report.reporting.diagnosesPrimaryCodes,Primary diagnosis codes
 report.reporting.diagnosesSecondary,Secondary diagnoses
+report.reporting.diagnosesSecondaryCodes,Secondary diagnosis codes
 report.reporting.diagnosis,Diagnosis
 report.reporting.diagnosisCertainty,Certainty
+report.reporting.diagnosisCodes,Diagnosis codes
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
 report.reporting.dischargeDate,Discharged date
