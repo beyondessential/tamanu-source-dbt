@@ -15,8 +15,8 @@ where
     end
     and
     {{ to_user_selected_timezone('md.dispensed_at') }}
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
     and
     {{ to_user_selected_timezone('md.dispensed_at') }}
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
 group by md.medication_id, md.medication, md.medication_code

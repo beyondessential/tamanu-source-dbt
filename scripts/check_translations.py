@@ -32,7 +32,7 @@ def main():
         translations = load_translations_from_file(
             Path("report_translations_standard.csv")
         )
-        sql_folders = [Path("models/reports/sql")]
+        sql_folders = [Path("models/reports/sql"), Path("macros/reports")]
     else:
         translations_standard = load_translations_from_file(
             Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
@@ -61,7 +61,9 @@ def main():
         translations = translations_standard | translations_deployment
         sql_folders = [
             Path("models/reports/sql"),
+            Path("macros/reports"),
             Path("dbt_packages/tamanu_source_dbt/models/reports/sql"),
+            Path("dbt_packages/tamanu_source_dbt/macros/reports"),
         ]
 
     referenced_translations = set()

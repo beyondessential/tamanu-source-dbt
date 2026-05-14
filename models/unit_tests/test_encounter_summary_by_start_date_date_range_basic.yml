@@ -22,7 +22,7 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'pat_001' as id, 'P001' as display_id, 'Kevin' as first_name, 'Lee' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+          select 'pat_001' as id, 'P001' as display_id, 'Kevin' as first_name, 'Lee' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex, null::text as village_id
 
       - input: ref('encounter_history')
         format: sql
@@ -192,6 +192,7 @@ unit_tests:
           'male'               as "Sex",
           null::text           as "Ethnicity",
           null::text           as "Billing type",
+          null::text           as "Village",
           '2024-03-15 10:00'   as "Encounter start date and time",
           null::text           as "Encounter end date and time",
           null::integer        as "Length of stay (days)",
@@ -219,6 +220,7 @@ unit_tests:
           '2024-03-15 10:00'   as "Location history date and times",
           null::text           as "Reason for encounter",
           null::text           as "Diagnoses",
+          null::text           as "Diagnosis codes",
           null::text           as "Medications",
           null::text           as "Vaccinations",
           null::text           as "Procedures",

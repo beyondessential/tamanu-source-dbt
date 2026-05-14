@@ -79,8 +79,11 @@ report.reporting.deathWithinDayOfBirth,Death within day of birth
 report.reporting.department,Department
 report.reporting.departments,Departments
 report.reporting.diagnoses,Diagnoses
+report.reporting.diagnosesCodes,Diagnosis codes
 report.reporting.diagnosesPrimary,Primary diagnoses
+report.reporting.diagnosesPrimaryCodes,Primary diagnosis codes
 report.reporting.diagnosesSecondary,Secondary diagnoses
+report.reporting.diagnosesSecondaryCodes,Secondary diagnosis codes
 report.reporting.diagnosis,Diagnosis
 report.reporting.diagnosisCertainty,Certainty
 report.reporting.diagnosisDateTime,Date & time

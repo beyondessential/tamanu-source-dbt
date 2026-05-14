@@ -9,11 +9,14 @@ with base as (
         on f.id = l.facility_id
     where not f.is_sensitive
 ),
+
 dataset as (
     select count(*) as total_requests
     from {{ ref('ds__imaging_requests') }}
 )
-select base.total_requests as base_total_requests,
-       dataset.total_requests as dataset_total_requests
+
+select
+    base.total_requests as base_total_requests,
+    dataset.total_requests as dataset_total_requests
 from base
 join dataset on dataset.total_requests != base.total_requests

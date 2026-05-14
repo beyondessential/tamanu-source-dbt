@@ -45,7 +45,9 @@ unit_tests:
             'Room 101'::text as locations,
             '2024-03-15 10:00'::text as location_datetimes,
             null::text as primary_diagnoses,
-            null::text as secondary_diagnoses
+            null::text as primary_diagnoses_codes,
+            null::text as secondary_diagnoses,
+            null::text as secondary_diagnoses_codes
           union all
           select
             'pat_002'::text,
@@ -76,6 +78,8 @@ unit_tests:
             'Room 101'::text,
             '2024-02-10 14:00'::text,
             null::text,
+            null::text,
+            null::text,
             null::text
 
     expect:
@@ -102,4 +106,6 @@ unit_tests:
           'Room 101'           as "Location history",
           '2024-03-15 10:00'   as "Location history date and times",
           null::text           as "Primary diagnoses",
-          null::text           as "Secondary diagnoses"
+          null::text           as "Primary diagnosis codes",
+          null::text           as "Secondary diagnoses",
+          null::text           as "Secondary diagnosis codes"

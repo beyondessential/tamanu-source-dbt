@@ -29,10 +29,10 @@ where
     vaccine_status in ('Given', 'Not Given')
     and
     {{ to_user_selected_timezone('vaccination_date') }}
-        >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('vaccination_date') }}
-        <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('villageId') }} is null then true
