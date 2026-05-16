@@ -14,17 +14,11 @@ select
     is_primary as "{{ translate_label('diagnosisIsPrimary') }}"
 from {{ ref('ds__diagnoses') }}
 where
-    case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('diagnosis_datetime') }}
-            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('diagnosis_datetime') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('diagnosis_datetime') }}
-            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('diagnosis_datetime') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('facilityId') }} is null then true

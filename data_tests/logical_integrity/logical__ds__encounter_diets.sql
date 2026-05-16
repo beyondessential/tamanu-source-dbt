@@ -8,11 +8,14 @@ with base as (
         and not f.is_sensitive
     where e.end_datetime is null
 ),
+
 dataset as (
     select count(*) as total_patients
     from {{ ref('ds__encounter_diets') }}
 )
-select base.total_patients as base_total_patients,
-       dataset.total_patients as dataset_total_patients
+
+select
+    base.total_patients as base_total_patients,
+    dataset.total_patients as dataset_total_patients
 from base
 join dataset on dataset.total_patients != base.total_patients

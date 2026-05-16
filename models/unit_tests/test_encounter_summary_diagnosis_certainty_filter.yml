@@ -215,6 +215,7 @@ unit_tests:
           || E'\n' ||
           'Name: Suspected Disease, Code: S02, Is primary: secondary, Certainty: suspected'
           as "Diagnoses",
+          'C01; S02' as "Diagnosis codes",
           null::text as "Medications",
           null::text as "Vaccinations",
           null::text as "Procedures",

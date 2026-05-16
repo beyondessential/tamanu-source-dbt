@@ -90,11 +90,39 @@ jobs:
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
-          kubectl port-forward -n "$NS" service/central-db-rw 5432:5432 &
+          primary=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=central-db,role=primary -o jsonpath='{.items[0].metadata.name}')
+          if [ -z "$primary" ]; then
+            echo "::error::No primary pod found for central-db in namespace $NS"
+            exit 1
+          fi
+          # Pinned to the primary pod (not service/central-db-rw) so reads are guaranteed
+          # to hit the writeable instance; trade-off is no failover during the build.
+          echo "Port-forwarding to primary pod: $primary"
+          kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 >/tmp/pf.log 2>&1 &
           pf_pid=$!
           function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
           trap cleanup EXIT
-          sleep 5
+
+          for i in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+              echo "Port-forward ready"
+              break
+            fi
+            if ! kill -0 "$pf_pid" 2>/dev/null; then
+              echo "::error::Port-forward process died"
+              echo "--- kubectl port-forward output ---"
+              cat /tmp/pf.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+            echo "::error::Port-forward not ready after 30s"
+            echo "--- kubectl port-forward output ---"
+            cat /tmp/pf.log
+            exit 1
+          fi
 
           TAMANU_RL_DB_URL=127.0.0.1 \
           TAMANU_RL_DB_PORT=5432 \

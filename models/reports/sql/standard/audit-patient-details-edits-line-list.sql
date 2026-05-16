@@ -11,15 +11,9 @@ select
     to_char({{ to_user_selected_timezone('edited_datetime') }}, '{{ var("datetime_without_seconds_format") }}') as "{{ translate_label('logChangeDateTime') }}"
 from {{ ref('ds__patients_change_logs') }}
 where
-    case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('edited_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('edited_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('edited_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('edited_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
         when {{ parameter('patientId') }} is null then true

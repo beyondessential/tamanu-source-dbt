@@ -8,11 +8,14 @@ with base as (
     where not f.is_sensitive
         and e.encounter_type = 'admission'
 ),
+
 dataset as (
     select count(*) as total_admissions
     from {{ ref('ds__admissions') }}
 )
-select base.total_admissions as base_total_admissions,
-       dataset.total_admissions as dataset_total_admissions
+
+select
+    base.total_admissions as base_total_admissions,
+    dataset.total_admissions as dataset_total_admissions
 from base
 join dataset on dataset.total_admissions != base.total_admissions

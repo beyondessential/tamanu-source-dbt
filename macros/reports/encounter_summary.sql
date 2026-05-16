@@ -24,14 +24,8 @@ with encounters_in_scope as (
         {% if date_field == 'end_datetime' %}
         and e.end_datetime is not null
         {% endif %}
-        and case
-            when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-            else {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-        end
-        and case
-            when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-            else {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-        end
+        and {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+        and {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
         and case
             when {{ parameter('facilityId') }} is null then true
             else f.id = {{ parameter('facilityId') }}
@@ -184,7 +178,12 @@ encounter_diagnoses as (
             ),
             E'\n'
             order by ed.is_primary desc, ed.datetime asc
-        ) as diagnoses
+        ) as diagnoses,
+        string_agg(
+            d.code,
+            '; '
+            order by ed.is_primary desc, ed.datetime asc
+        ) as diagnosis_codes
     from {{ ref('encounter_diagnoses') }} ed
     join encounters_in_scope eis
         on eis.encounter_id = ed.encounter_id
@@ -449,6 +448,7 @@ select
     array_to_string(ec.location_datetimes, ', ') as "{{ translate_label('encounterLocationHistoryDateTimes') }}",
     eis.reason_for_encounter as "{{ translate_label('encounterReasonForEncounter') }}",
     ed.diagnoses as "{{ translate_label('diagnoses') }}",
+    ed.diagnosis_codes as "{{ translate_label('diagnosesCodes') }}",
     ep.medications as "{{ translate_label('medications') }}",
     ev.vaccinations as "{{ translate_label('vaccinations') }}",
     epr.procedures as "{{ translate_label('procedures') }}",

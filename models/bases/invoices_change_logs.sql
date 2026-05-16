@@ -14,9 +14,11 @@ select
         order by c.logged_at, c.record_updated_at, c.id
     ) as change_sequence
 from {{ source('logs__tamanu', 'changes') }} c
-join {{ source('tamanu', 'invoices') }} i on i.id = c.record_id::uuid
+join {{ source('tamanu', 'invoices') }} i
+    on i.id = c.record_id::uuid
     and i.deleted_at is null
-join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id
+join {{ source('tamanu', 'encounters') }} e
+    on e.id = i.encounter_id
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
 where

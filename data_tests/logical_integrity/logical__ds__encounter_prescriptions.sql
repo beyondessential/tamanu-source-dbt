@@ -9,11 +9,14 @@ with base as (
         on f.id = l.facility_id
     where not f.is_sensitive
 ),
+
 dataset as (
     select count(*) as total_prescriptions
     from {{ ref('ds__encounter_prescriptions') }}
 )
-select base.total_prescriptions as base_total_prescriptions,
-       dataset.total_prescriptions as dataset_total_prescriptions
+
+select
+    base.total_prescriptions as base_total_prescriptions,
+    dataset.total_prescriptions as dataset_total_prescriptions
 from base
 join dataset on dataset.total_prescriptions != base.total_prescriptions
