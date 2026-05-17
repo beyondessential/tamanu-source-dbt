@@ -52,7 +52,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
-          echo "db_host=k8s-pg-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
+          echo "db_host=k8s-pg-release-${MINOR_VERSION//./-}.tail53aef.ts.net" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v4
