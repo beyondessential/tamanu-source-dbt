@@ -1,6 +1,7 @@
 {%- set price_lists_query %}
     select id, name
     from {{ ref('invoice_price_lists') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
