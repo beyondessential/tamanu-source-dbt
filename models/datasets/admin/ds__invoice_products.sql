@@ -8,6 +8,7 @@
 {%- set insurance_plans_query %}
     select id, name, default_coverage
     from {{ ref('invoice_insurance_plans') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 

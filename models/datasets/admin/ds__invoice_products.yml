@@ -30,7 +30,7 @@ models:
         description: "{{ doc('invoice_products__source_record_id') }}"
       - name: available_facilities
         data_type: text
-        description: "Comma-separated list of facility names where this product is available. NULL means the product is available at all facilities."
+        description: "{{ doc('ds__invoice_products__available_facilities') }}"
       - name: visibility_status
         data_type: character varying(255)
         description: "{{ doc('generic__visibility_status') }} in invoice_products."

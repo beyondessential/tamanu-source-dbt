@@ -1,12 +1,14 @@
 {%- set price_lists_query %}
     select name
     from {{ ref('invoice_price_lists') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
 {%- set insurance_plans_query %}
     select name
     from {{ ref('invoice_insurance_plans') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
