@@ -27,3 +27,6 @@ models:
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in reference_data."
+      - name: available_facilities
+        data_type: jsonb
+        description: "{{ doc('reference_data__available_facilities') }}"
