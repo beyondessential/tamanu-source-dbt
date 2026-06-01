@@ -57,3 +57,6 @@ models:
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in lab_test_types."
+      - name: available_facilities
+        data_type: jsonb
+        description: "{{ doc('lab_test_types__available_facilities') }}"
