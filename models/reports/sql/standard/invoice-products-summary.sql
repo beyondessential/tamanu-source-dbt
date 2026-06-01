@@ -1,12 +1,14 @@
 {%- set price_lists_query %}
     select name
     from {{ ref('invoice_price_lists') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
 {%- set insurance_plans_query %}
     select name
     from {{ ref('invoice_insurance_plans') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
@@ -24,6 +26,7 @@ select
     insurable as "{{ translate_label('invoiceProductInsurable') }}",
     category as "{{ translate_label('invoiceProductCategory') }}",
     source_record_id as "{{ translate_label('invoiceProductCategoryId') }}",
+    available_facilities as "{{ translate_label('invoiceProductAvailableFacilities') }}",
     visibility_status as "{{ translate_label('invoiceProductVisibilityStatus') }}",
     external_code as "{{ translate_label('invoiceProductLabExternalCode') }}"
     {%- for name in price_list_names %}
