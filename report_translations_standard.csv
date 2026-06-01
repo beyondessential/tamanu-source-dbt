@@ -145,6 +145,7 @@ report.reporting.imagingType,Imaging type
 report.reporting.insurerId,Insurer ID
 report.reporting.insurerName,Name of insurer
 report.reporting.invoiceProductCategory,Category
+report.reporting.invoiceProductAvailableFacilities,Available facilities
 report.reporting.invoiceProductCategoryId,Category ID
 report.reporting.invoiceProductId,ID
 report.reporting.invoiceProductInsurable,Insurable
