@@ -18,7 +18,7 @@ models:
         description: "{{ doc('generic__id') }} in users."
       - name: user_display_id
         data_type: character varying(255)
-        description: "{{ doc('users__display_id') }}"
+        description: "{{ doc('ds__user_access_audit__user_display_id') }}"
       - name: user_name
         data_type: character varying(255)
         description: "{{ doc('users__display_name') }}"
@@ -30,10 +30,10 @@ models:
         description: "{{ doc('roles__name') }}"
       - name: user_designations
         data_type: text
-        description: Comma-separated list of user designations
+        description: "{{ doc('ds__user_access_audit__user_designations') }}"
       - name: role_permissions
         data_type: text
-        description: Comma-separated list of permissions associated with the user's role (format verb:noun)
+        description: "{{ doc('ds__user_access_audit__role_permissions') }}"
       - name: visibility_status
         data_type: character varying(255)
         description: "{{ doc('generic__visibility_status') }} in users."
