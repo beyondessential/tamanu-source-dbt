@@ -307,9 +307,12 @@ report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
 report.reporting.triageRecordCount,Number of triage records
 report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
+report.reporting.userDesignations,Designations
+report.reporting.userDisplayId,User ID
 report.reporting.userEmail,User email
 report.reporting.userName,User name
 report.reporting.userRole,User role
+report.reporting.rolePermissions,Role permissions
 report.reporting.vaccinationBatch,Batch
 report.reporting.vaccinationDate,Vaccination date
 report.reporting.vaccinationDueDate,Vaccination due date

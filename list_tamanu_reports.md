@@ -604,6 +604,29 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
+### User access audit report *(sensitive version available)*
+
+**Report Description**
+
+This report generates a comprehensive list of all active users in the system for auditing purposes. The report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions. Users are listed alphabetically by name.
+
+The following details are included for each user:
+- User name: The display name of the user
+- User ID: The unique identifier for the user
+- Email address: The user's email address
+- Role: The role assigned to the user
+- Designations: All designations assigned to the user (comma-separated if multiple)
+- Role permissions: All permissions associated with the user's role, displayed in verb:noun format (e.g., read:Patient, write:Encounter)
+
+**Filters**
+
+Role
+
+**Default date range**: N/A (not date-based)
+
+
+---
+
 ### User audit report *(sensitive version available)*
 
 **Report Description**

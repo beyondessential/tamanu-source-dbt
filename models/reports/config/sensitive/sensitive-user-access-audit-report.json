@@ -1,0 +1,18 @@
+{
+  "query": "replace this",
+  "name": "Sensitive user access audit report",
+  "notes": "This report generates a comprehensive list of all active users in the system for auditing purposes, including users from sensitive facilities. The report includes user identification, contact information, roles, designations, and associated permissions.\n\nThe following details are included for each user:\n- User name: The display name of the user\n- User ID: The unique identifier for the user\n- Email address: The user's email address\n- Role: The role assigned to the user\n- Designations: All designations assigned to the user (comma-separated if multiple)\n- Role permissions: All permissions associated with the user's role, displayed in verb:noun format (e.g., read:Patient, write:Encounter)\n\nThis report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "dataSources": ["allFacilities"],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Role",
+        "name": "roleId",
+        "suggesterEndpoint": "role"
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: ds__sensitive_user_access_audit
+    description: Sensitive user access audit dataset containing all active users with their roles, designations, email addresses, and permissions (includes sensitive facility data)
+    config:
+      tags:
+        - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      tier: gold
+      pii: true
+      classification: restricted
+    columns:
+      - name: user_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in users."
+      - name: user_display_id
+        data_type: character varying(255)
+        description: "{{ doc('users__display_id') }}"
+      - name: user_name
+        data_type: character varying(255)
+        description: "{{ doc('users__display_name') }}"
+      - name: user_email
+        data_type: character varying(255)
+        description: "{{ doc('users__email') }}"
+      - name: user_role
+        data_type: character varying(255)
+        description: "{{ doc('roles__name') }}"
+      - name: user_designations
+        data_type: text
+        description: Comma-separated list of user designations
+      - name: role_permissions
+        data_type: text
+        description: Comma-separated list of permissions associated with the user's role (format verb:noun)
+      - name: visibility_status
+        data_type: character varying(255)
+        description: "{{ doc('generic__visibility_status') }} in users."
