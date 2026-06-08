@@ -219,6 +219,7 @@
             "reaction",
             "referralSource",
             "religion",
+            "role",
             "secondaryIdType",
             "sensitiveLabTestCategory",
             "settlement",
