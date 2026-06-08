@@ -2,9 +2,10 @@
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/sql-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
-@./.maui/knowledge/standards/metadata.md
-@./.maui/knowledge/standards/tamanu-conventions.md
-@./.maui/knowledge/standards/agent-patterns.md
+@./.maui/knowledge/standards/dbt-metadata.md
+@./.maui/knowledge/standards/tamanu-dbt-conventions.md
+@./.maui/knowledge/standards/parallel-agents.md
+@./.maui/knowledge/standards/sdd-conventions.md
 
 ---
 
