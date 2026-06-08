@@ -6,9 +6,12 @@ select
     user_designations as "{{ translate_label('userDesignations') }}",
     role_permissions as "{{ translate_label('rolePermissions') }}"
 from {{ ref('ds__user_access_audit') }}
+-- BL-010: optional roleId parameter; null = no filter
+-- BL-011: filter on role FK, not role name, so renames don't break audit history
 where
     case
         when {{ parameter('roleId') }} is null then true
-        else user_role = (select name from {{ ref('roles') }} where id = {{ parameter('roleId') }})
+        else user_role_id = {{ parameter('roleId') }}
     end
+-- BL-009: sort by user display name ascending
 order by user_name

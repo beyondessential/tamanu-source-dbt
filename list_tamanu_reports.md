@@ -604,11 +604,11 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
-### User access audit report *(sensitive version available)*
+### User access audit report
 
 **Report Description**
 
-This report generates a comprehensive list of all active users in the system for auditing purposes. The report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions. Users are listed alphabetically by name.
+This report generates a comprehensive list of all active users in the system for auditing purposes. The report includes user identification, contact information, roles, designations, and associated permissions.
 
 The following details are included for each user:
 - User name: The display name of the user
@@ -618,11 +618,13 @@ The following details are included for each user:
 - Designations: All designations assigned to the user (comma-separated if multiple)
 - Role permissions: All permissions associated with the user's role, displayed in verb:noun format (e.g., read:Patient, write:Encounter)
 
+This report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions.
+
 **Filters**
 
 Role
 
-**Default date range**: N/A (not date-based)
+**Default date range**: 
 
 
 ---

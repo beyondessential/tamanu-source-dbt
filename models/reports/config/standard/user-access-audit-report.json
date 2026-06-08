@@ -5,6 +5,7 @@
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
+    "defaultDateRange": "allTime",
     "dataSources": ["allFacilities"],
     "parameters": [
       {

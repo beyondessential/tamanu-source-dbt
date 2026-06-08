@@ -9,22 +9,35 @@ models:
     meta:
       owner: bes-maui
       domain: admin
-      tier: gold
       pii: true
       classification: restricted
     columns:
       - name: user_id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in users."
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('users')
+                field: id
       - name: user_display_id
         data_type: character varying(255)
         description: "{{ doc('ds__user_access_audit__user_display_id') }}"
+        data_tests:
+          - not_null
       - name: user_name
         data_type: character varying(255)
         description: "{{ doc('users__display_name') }}"
+        data_tests:
+          - not_null
       - name: user_email
         data_type: character varying(255)
         description: "{{ doc('users__email') }}"
+      - name: user_role_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in roles. Used by the report parameter filter."
       - name: user_role
         data_type: character varying(255)
         description: "{{ doc('roles__name') }}"
