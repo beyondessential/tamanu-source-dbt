@@ -6,7 +6,8 @@
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
-    "dataSources": ["allFacilities"],
+    "dateRangeLabel": "Not in use, users are included based on current visibility status",
+    "dataSources": ["thisFacility", "allFacilities"],
     "parameters": [
       {
         "parameterField": "ParameterAutocompleteField",
