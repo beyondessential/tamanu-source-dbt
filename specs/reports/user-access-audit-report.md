@@ -8,7 +8,7 @@
 | **Type** | dbt model (Tamanu report + supporting dataset) |
 | **Layer** | `report` (built on `ds__`) |
 | **Materialisation** | `view` |
-| **Status** | `review` |
+| **Status** | `implemented` |
 | **Owner** | @julianam-w |
 | **Linear issue** | [MAUI-6642](https://linear.app/bes/issue/MAUI-6642/create-new-user-management-audit-report-for-palau-team) |
 | **Repo** | `tamanu-source-dbt` |
