@@ -9,7 +9,6 @@ models:
     meta:
       owner: bes-maui
       domain: admin
-      tier: gold
       pii: true
       classification: restricted
     columns:
