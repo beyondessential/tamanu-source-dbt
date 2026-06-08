@@ -3634,7 +3634,7 @@ select
 from "reporting"."users" u
 left join "reporting"."roles" r on r.id = u.role
 left join user_designations_agg ud on ud.user_id = u.id
--- BL-008: permissions are role-scoped; no user-level overrides
+-- BL-008: permissions are role-scoped. no user-level overrides
 left join role_permissions_agg rp on rp.role_id = u.role
 where u.visibility_status = 'current'
 );
