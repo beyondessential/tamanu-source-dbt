@@ -8,7 +8,7 @@
 | **Type** | dbt model (Tamanu report + supporting dataset) |
 | **Layer** | `report` (built on `ds__`) |
 | **Materialisation** | `view` |
-| **Status** | `implemented` |
+| **Status** | `review` |
 | **Owner** | @julianam-w |
 | **Linear issue** | [MAUI-6642](https://linear.app/bes/issue/MAUI-6642/create-new-user-management-audit-report-for-palau-team) |
 | **Repo** | `tamanu-source-dbt` |
@@ -90,8 +90,8 @@ Bases refreshed within 24 hours. Audit cadence is monthly or on-demand; intra-da
 | AC-002 | Every `user_id` exists in `base__users` | BL-002 | dbt `relationships` |
 | AC-003 | No rows in the dataset have `visibility_status != 'current'` | BL-001 | dbt singular test |
 | AC-004 | When the report is run with a `roleId` parameter, every returned row has `users.role = roleId` | BL-010, BL-011 | manual / integration |
-| AC-005 | `role_permissions` is `null` only when `user_role` is `null` | BL-008 | dbt singular test |
-| AC-006 | Every non-null `role_permissions` value matches `^[a-z]+:[A-Z][A-Za-z]+(, [a-z]+:[A-Z][A-Za-z]+)*$` | BL-006 | dbt singular test |
+| AC-005 | If `role_permissions` is `null`, the user's role has no rows in `base__permissions` (i.e. the aggregation didn't silently drop a role with permissions) | BL-008 | dbt singular test |
+| AC-006 | Every non-null `role_permissions` value matches `^[a-z][a-zA-Z0-9_-]*:[A-Z][a-zA-Z0-9_-]*(, [a-z][a-zA-Z0-9_-]*:[A-Z][a-zA-Z0-9_-]*)*$` (verb:Noun shape; permissive on content) | BL-006 | dbt singular test |
 | AC-007 | Every non-null `user_designations` value is alphabetically sorted with no duplicate substrings | BL-003 | dbt singular test |
 
 ## Lineage

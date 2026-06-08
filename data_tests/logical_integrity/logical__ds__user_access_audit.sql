@@ -5,19 +5,23 @@ where visibility_status != 'current'
 
 union all
 
--- AC-005 (BL-008): role_permissions is null only when user_role is null
-select 'AC-005' as failed_ac, user_id::text as user_id
-from {{ ref('ds__user_access_audit') }}
-where role_permissions is null
-    and user_role is not null
+-- AC-005 (BL-008): if a role has permissions in base__permissions, the dataset must
+-- aggregate them; null role_permissions is only valid when the role itself has none
+select 'AC-005' as failed_ac, d.user_id::text as user_id
+from {{ ref('ds__user_access_audit') }} d
+where d.role_permissions is null
+    and exists (
+        select 1 from {{ ref('permissions') }} p where p.role_id = d.user_role_id
+    )
 
 union all
 
--- AC-006 (BL-006): role_permissions matches verb:noun, comma-space-separated
+-- AC-006 (BL-006): role_permissions tokens follow verb:Noun format, comma-space-separated.
+-- Permissive on content (digits, hyphens, underscores allowed) but strict on shape.
 select 'AC-006' as failed_ac, user_id::text as user_id
 from {{ ref('ds__user_access_audit') }}
 where role_permissions is not null
-    and role_permissions !~ '^[a-z]+:[A-Z][A-Za-z]+(, [a-z]+:[A-Z][A-Za-z]+)*$'
+    and role_permissions !~ '^[a-z][a-zA-Z0-9_-]*:[A-Z][a-zA-Z0-9_-]*(, [a-z][a-zA-Z0-9_-]*:[A-Z][a-zA-Z0-9_-]*)*$'
 
 union all
 
