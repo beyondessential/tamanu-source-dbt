@@ -6,7 +6,7 @@
 |---|---|
 | **Name** | `der__cohort_ncd_registry` |
 | **Type** | dbt model (canonical definition) |
-| **Layer** | `der` (`der__cohort_<program>_registry`) |
+| **Layer** | `der` |
 | **Materialisation** | view |
 | **Status** | `approved` |
 | **Owner** | Maui team |
@@ -84,12 +84,14 @@ verbatim):
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | `cohort_id = 'cohort_ncd_registry'` on every row | grain | dbt `accepted_values` |
-| AC-002 | `id` is `not_null` and `unique`; `subject_id` equals `id` | grain | dbt `not_null` + `unique`; equality test |
-| AC-003 | No row has `clinical_status_id = 'prClinicalStatus-ncdwaitlist'` | BL-002 | dbt `expression_is_true` |
-| AC-004 | Condition columns only non-null when the corresponding registration condition row exists | BL-003 | dbt unit test |
-| AC-005 | `exit_recorded_date` and `exit_status` are paired (both null or both non-null) | BL-004 | dbt `expression_is_true` |
-| AC-006 | When `active_status_date` is non-null, the patient has a change-log Active-status row at that timestamp and no earlier such row | BL-005 | dbt unit test |
-| AC-007 | Composite `address` is null when all five components are null/empty; composite `contact_number` is null when both source numbers are null/empty | BL-006 | dbt singular test |
+| AC-002 | `id` is `not_null` and `unique` | grain | dbt `not_null` + `unique` |
+| AC-003 | `subject_id` equals `id` on every row | grain | dbt `expression_is_true` |
+| AC-004 | No row has `clinical_status_id = 'prClinicalStatus-ncdwaitlist'` | BL-002 | dbt `expression_is_true` |
+| AC-005 | Condition columns only non-null when the corresponding registration condition row exists | BL-003 | dbt unit test |
+| AC-006 | `exit_recorded_date` and `exit_status` are paired (both null or both non-null) | BL-004 | dbt `expression_is_true` |
+| AC-007 | When `active_status_date` is non-null, the patient has a change-log Active-status row at that timestamp and no earlier such row | BL-005 | dbt unit test |
+| AC-008 | Composite `address` is null when all five source components are null/empty | BL-006 | dbt singular test |
+| AC-009 | Composite `contact_number` is null when both source numbers are null/empty | BL-006 | dbt singular test |
 
 ## Registry entry
 
@@ -108,7 +110,7 @@ verbatim):
 
 | Deployment | Repo | Implementation spec |
 |---|---|---|
-| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/der__cohort_ncd_registry.md`](../../../tamanu-dbt-msf-syria/specs/dbt-model/der__cohort_ncd_registry.md) |
+| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/der__cohort_ncd_registry.md`](https://github.com/beyondessential/tamanu-dbt-msf-syria/blob/main/specs/dbt-model/der__cohort_ncd_registry.md) |
 
 Currently the model SQL lives only in the deployment repo. When a second
 deployment adopts the cohort or the implementation is canonicalised, the

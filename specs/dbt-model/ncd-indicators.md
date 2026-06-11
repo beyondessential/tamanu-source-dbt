@@ -114,7 +114,7 @@ as the corresponding canonical implementation lands in
 
 | Deployment | Repo | Implementation spec |
 |---|---|---|
-| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/ncd-indicators-migration.md`](../../../tamanu-dbt-msf-syria/specs/dbt-model/ncd-indicators-migration.md) |
+| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/ncd-indicators-migration.md`](https://github.com/beyondessential/tamanu-dbt-msf-syria/blob/main/specs/dbt-model/ncd-indicators-migration.md) |
 
 Currently the indicator implementations live only in the deployment repo
 as two grouped `metric__` views over deployment-specific `int__` chains.
