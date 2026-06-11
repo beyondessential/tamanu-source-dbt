@@ -41,7 +41,6 @@ seeds:
         definition_source: text
         definition_source_code: text
         definition_rationale: text
-        tupaia_code: text
         unit: text
         subject_grain: text
         disaggregations: text
@@ -86,8 +85,6 @@ seeds:
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
         description: Short justification — for external standards, why this one over others; for `BES`/`MSF`, why an internal definition.
-      - name: tupaia_code
-        description: Legacy Tupaia indicator code being replaced. NULL when no legacy code exists.
       - name: unit
         description: Unit of measure (`count`, `percentage`, `rate_per_1000`, …). Metrics only.
       - name: subject_grain
