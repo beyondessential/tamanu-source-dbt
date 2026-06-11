@@ -18,7 +18,7 @@ seeds:
       `tamanu-dbt-<deployment>/seeds/metric_definitions_<deployment>.csv`.
 
       Schema per Maui data architecture D5
-      (`@.maui/knowledge/architecture/data-architecture/decisions.md`).
+      (`.maui/knowledge/architecture/data-architecture/decisions.md`).
       Status lifecycle: `draft` → `approved` → `deprecated`. PR review checks
       that the corresponding `metric__` model output matches the registered
       shape (disaggregations, subject_grain, unit) before a row promotes from
@@ -95,6 +95,10 @@ seeds:
         description: Comma-separated list of disaggregation column names the artefact produces.
       - name: variant_of
         description: Parent `metric_id` if this row is a deployment-specific definition variant; else NULL. Metrics only.
+        tests:
+          - relationships:
+              to: ref('metric_definitions')
+              field: metric_id
       - name: owner
         description: Team or individual responsible for the artefact.
         tests:

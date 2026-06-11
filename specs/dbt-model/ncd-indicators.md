@@ -8,7 +8,7 @@
 | **Type** | dbt model suite (canonical definitions) |
 | **Layer** | `metric` |
 | **Materialisation** | view |
-| **Status** | `approved` (definitions); deployment-only implementations |
+| **Status** | `approved` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-11 |
