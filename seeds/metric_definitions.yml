@@ -74,9 +74,11 @@ seeds:
       - name: denominator_description
         description: Denominator in words. Metrics only — NULL for count metrics and for `der__` rows.
       - name: data_source
-        description: Source system the artefact derives from (`tamanu`, `msupply`, `senaite`, …).
+        description: Source system the artefact derives from (`tamanu`, `msupply`, `senaite`, `weather`).
         tests:
           - not_null
+          - accepted_values:
+              values: ['tamanu', 'msupply', 'senaite', 'weather']
       - name: definition_source
         description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions.
         tests:
@@ -88,7 +90,10 @@ seeds:
       - name: definition_rationale
         description: Short justification — for external standards, why this one over others; for `BES`/`MSF`, why an internal definition.
       - name: unit
-        description: Unit of measure (`count`, `percentage`, `rate_per_1000`, …). Metrics only.
+        description: Unit of measure (`count`, `percentage`, `rate_per_1000`). Metrics only — NULL for non-metric kinds.
+        tests:
+          - accepted_values:
+              values: ['count', 'percentage', 'rate_per_1000']
       - name: subject_grain
         description: Grain of `subject_id` in the metric output — `patient`, `encounter`, `facility`, etc.
         tests:
