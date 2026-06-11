@@ -125,7 +125,4 @@ deployment specs collapse to override notes.
 
 ## Open questions
 
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | `facility_id` semantics differ across indicators (registering vs encounter vs referring). Documented per-metric in the registry, but a future cross-metric consumer joining on facility could be surprised. Worth surfacing in the registry schema or splitting into separate disaggregation columns. | Maui team | first cross-metric consumer |
-| OQ-002 | Some indicators are likely to align with WHO PEN, WHO Core 100, IHCI, or MSF's own published NCD operational standards. Cross-mapping is worth doing once so the registry can record `definition_source_code` against the external reference. | Maui team | metric promotion from `draft` to `approved` |
+None outstanding.
