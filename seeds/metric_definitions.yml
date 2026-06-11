@@ -67,6 +67,8 @@ seeds:
           - not_null
       - name: description
         description: Plain-English description of what the artefact measures.
+        tests:
+          - not_null
       - name: numerator_description
         description: Numerator in words. Metrics only — NULL for `der__` rows.
       - name: denominator_description
