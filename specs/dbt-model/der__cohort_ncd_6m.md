@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `der` (`der__cohort_<program>`) |
 | **Materialisation** | view |
-| **Status** | `approved` (definition); deployment-only implementation |
+| **Status** | `approved` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-11 |
