@@ -125,7 +125,4 @@ override note.
 
 ## Open questions
 
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | Per-patient-per-month grain deviates from strict OMOP `cohort` shape (one row per subject × start × end). Defer the strict-shape variant until a consumer needs it. | Maui team | first OMOP-tool consumer |
-| OQ-002 | The observations surface carries `value_boolean` only — raw measurement and date are dropped upstream. Surface `observation_date` and `value_numeric` if a consumer needs trend or precision. | Maui team | when a consumer needs raw values |
+None outstanding.
