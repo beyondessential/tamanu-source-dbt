@@ -80,6 +80,8 @@ seeds:
         description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions.
         tests:
           - not_null
+          - accepted_values:
+              values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'MSF', 'BES']
       - name: definition_source_code
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
