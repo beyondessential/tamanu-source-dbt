@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `der` |
 | **Materialisation** | view |
-| **Status** | `approved` |
+| **Status** | `draft` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-11 |
@@ -67,7 +67,7 @@ Additional canonical columns:
 | `patient_id` | Same as `subject_id`; preserved for legacy consumers |
 | `active_status_date` | Date the patient first became `ncdactive` |
 | `exit_recorded_date` | Exit-survey date (null when still active) |
-| `age`, `sex`, `facility_id` | Demographics + facility at the reporting month |
+| `age_group`, `sex`, `facility_id` | Demographics + facility at the reporting month |
 | `has_htn_diagnosis`, `has_diabetes_diagnosis` | Diagnosis flags |
 | `ethnicity_id`, `dhis_ncd_category` | Program proxies |
 | `bp_controlled`, `hba1c_controlled` | Quality-of-care flags (see sibling observations model) |

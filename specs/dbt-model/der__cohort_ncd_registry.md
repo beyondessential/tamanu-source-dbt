@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `der` |
 | **Materialisation** | view |
-| **Status** | `approved` |
+| **Status** | `draft` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-11 |
