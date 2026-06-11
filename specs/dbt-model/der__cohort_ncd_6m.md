@@ -6,7 +6,7 @@
 |---|---|
 | **Name** | `der__cohort_ncd_6m` |
 | **Type** | dbt model (canonical definition) |
-| **Layer** | `der` (`der__cohort_<program>`) |
+| **Layer** | `der` |
 | **Materialisation** | view |
 | **Status** | `approved` |
 | **Owner** | Maui team |
@@ -115,7 +115,7 @@ cohort layer structure.
 
 | Deployment | Repo | Implementation spec |
 |---|---|---|
-| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/der__cohort_ncd_6m.md`](../../../tamanu-dbt-msf-syria/specs/dbt-model/der__cohort_ncd_6m.md) |
+| MSF Syria | `tamanu-dbt-msf-syria` | [`specs/dbt-model/der__cohort_ncd_6m.md`](https://github.com/beyondessential/tamanu-dbt-msf-syria/blob/main/specs/dbt-model/der__cohort_ncd_6m.md) |
 
 Currently the model SQL lives only in the deployment repo. When a second
 deployment adopts the cohort or the implementation is canonicalised, the
