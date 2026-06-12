@@ -31,7 +31,7 @@ indicators answer "how many NCD patients are enrolled / active / exited
 
 **Clinical context.** MSF deployments run a chronic NCD program registry
 within Tamanu. Indicators are computed monthly for DHIS2 reporting and
-for ad-hoc analyses. The 27 indicators cover three indicator families:
+for ad-hoc analyses. The 27 indicators cover four indicator families:
 
 | Family | Indicators |
 |---|---|
