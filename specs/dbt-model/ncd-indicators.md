@@ -75,7 +75,7 @@ D5 wide format. Each `metric__` view emits:
 | `value_numeric` | numeric | Count for count indicators; rounded percentage (one decimal) for `*_percent` indicators |
 | `value_boolean` | boolean | NULL — reserved for binary metrics |
 | `dhis_ncd_category` | text | Disease category — disease-segmented indicators only |
-| `age_group` | text | NCD age band |
+| `age_group` | text | Age group label (joins to `lkp__age_group` once the standard lookup lands; MSF NCD reporting uses the same banding) |
 | `sex` | text | Patient sex |
 | `facility_id` | uuid | Facility associated with the metric — semantics per registry row |
 
