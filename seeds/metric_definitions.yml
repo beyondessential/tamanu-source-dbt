@@ -118,3 +118,5 @@ seeds:
               values: ['draft', 'approved', 'deprecated']
       - name: spec_path
         description: Repo-relative path to the SDD spec for this artefact.
+        tests:
+          - not_null
