@@ -1,0 +1,146 @@
+version: 2
+
+unit_tests:
+  - name: test_user_access_audit_aggregates_designations_and_permissions
+    model: ds__user_access_audit
+    description: >
+      Verifies that the user access audit dataset correctly:
+      1. Aggregates multiple user designations into a comma-separated list (BL-003)
+      2. Aggregates role permissions into a comma-separated list (verb:noun format) (BL-006)
+      3. Joins users with their roles
+      4. Filters to only current (active) users (BL-001)
+      5. Exposes the user role id for parameter filtering (BL-011)
+    given:
+      - input: ref('users')
+        format: csv
+        rows: |
+          id,display_id,display_name,email,phone_number,role,visibility_status
+          user_001,U001,Alice Admin,alice@example.com,555-0001,role_001,current
+          user_002,U002,Bob Doctor,bob@example.com,555-0002,role_002,current
+          user_003,U003,Charlie Nurse,charlie@example.com,555-0003,role_003,current
+          user_005,U005,Inactive User,inactive@example.com,555-0005,role_002,historical
+
+      - input: ref('roles')
+        format: csv
+        rows: |
+          id,name
+          role_001,Administrator
+          role_002,Clinician
+          role_003,Nurse
+
+      - input: ref('user_designations')
+        format: csv
+        rows: |
+          id,user_id,designation_id
+          ud_001,user_001,desg_001
+          ud_002,user_002,desg_002
+          ud_003,user_002,desg_003
+          ud_004,user_003,desg_001
+
+      - input: ref('reference_data')
+        format: csv
+        rows: |
+          id,code,name,type,visibility_status,available_facilities
+          desg_001,SURG,Surgeon,designation,current,[]
+          desg_002,GP,General Practitioner,designation,current,[]
+          desg_003,EMER,Emergency Medicine,designation,current,[]
+          desg_004,CARD,Cardiologist,designation,current,[]
+
+      - input: ref('permissions')
+        format: csv
+        rows: |
+          id,role_id,verb,noun,object_id
+          perm_001,role_001,read,Patient,
+          perm_002,role_001,write,Patient,
+          perm_003,role_001,read,Encounter,
+          perm_004,role_001,write,Encounter,
+          perm_005,role_002,read,Patient,
+          perm_006,role_002,write,Encounter,
+          perm_007,role_003,read,Patient,
+
+    expect:
+      format: csv
+      rows: |
+        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
+        user_001,U001,Alice Admin,alice@example.com,role_001,Administrator,Surgeon,"read:Encounter, read:Patient, write:Encounter, write:Patient",current
+        user_002,U002,Bob Doctor,bob@example.com,role_002,Clinician,"Emergency Medicine, General Practitioner","read:Patient, write:Encounter",current
+        user_003,U003,Charlie Nurse,charlie@example.com,role_003,Nurse,Surgeon,read:Patient,current
+
+  - name: test_user_access_audit_handles_users_without_designations
+    model: ds__user_access_audit
+    description: >
+      Verifies that users without any designations are still included in the
+      report with NULL designation field, and that the LEFT JOIN works correctly.
+    given:
+      - input: ref('users')
+        format: csv
+        rows: |
+          id,display_id,display_name,email,phone_number,role,visibility_status
+          user_001,U001,No Designation User,nodesig@example.com,555-0001,role_001,current
+
+      - input: ref('roles')
+        format: csv
+        rows: |
+          id,name
+          role_001,Administrator
+
+      - input: ref('user_designations')
+        format: csv
+        rows: |
+          id,user_id,designation_id
+
+      - input: ref('reference_data')
+        format: csv
+        rows: |
+          id,code,name,type,visibility_status,available_facilities
+
+      - input: ref('permissions')
+        format: csv
+        rows: |
+          id,role_id,verb,noun,object_id
+          perm_001,role_001,read,Patient,
+
+    expect:
+      format: csv
+      rows: |
+        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
+        user_001,U001,No Designation User,nodesig@example.com,role_001,Administrator,,read:Patient,current
+
+  - name: test_user_access_audit_handles_roles_without_permissions
+    model: ds__user_access_audit
+    description: >
+      Verifies that users with roles that have no permissions are still included
+      with NULL permissions field, demonstrating the LEFT JOIN behavior.
+    given:
+      - input: ref('users')
+        format: csv
+        rows: |
+          id,display_id,display_name,email,phone_number,role,visibility_status
+          user_001,U001,No Perms User,noperms@example.com,555-0001,role_001,current
+
+      - input: ref('roles')
+        format: csv
+        rows: |
+          id,name
+          role_001,Guest
+
+      - input: ref('user_designations')
+        format: csv
+        rows: |
+          id,user_id,designation_id
+
+      - input: ref('reference_data')
+        format: csv
+        rows: |
+          id,code,name,type,visibility_status,available_facilities
+
+      - input: ref('permissions')
+        format: csv
+        rows: |
+          id,role_id,verb,noun,object_id
+
+    expect:
+      format: csv
+      rows: |
+        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
+        user_001,U001,No Perms User,noperms@example.com,role_001,Guest,,,current
