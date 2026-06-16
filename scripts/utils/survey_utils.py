@@ -111,6 +111,8 @@ models:
         description: '{{{{ doc("encounters__patient_id") }}}}'
       - name: start_datetime
         description: '{{{{ doc("survey_responses__start_time") }}}}'
+      - name: end_datetime
+        description: '{{{{ doc("survey_responses__end_time") }}}}'
       - name: result_text
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
