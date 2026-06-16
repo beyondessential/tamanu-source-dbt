@@ -17,6 +17,7 @@ from utils import (
     move_file,
 )
 from generate_translation_macro import generate_translation_macro
+from generate_metric_definitions_macro import generate_metric_definitions_macro
 
 
 BASE_DIR = os.getcwd()
@@ -41,8 +42,9 @@ def main():
         execute_command("dbt clean --profiles-dir config")
         execute_command("dbt deps --profiles-dir config")
 
-        # Generate translation macro before any dbt compilation
+        # Generate translation and metric-definitions macros before any dbt compilation
         generate_translation_macro()
+        generate_metric_definitions_macro()
 
         # Generate survey models (only for non-standard deployments)
         if DEPLOYMENT != "standard":

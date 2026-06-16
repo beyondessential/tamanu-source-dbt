@@ -1,6 +1,6 @@
 version: 2
 
-seeds:
+models:
   - name: metric_definitions
     description: |
       Canonical registry of `metric__` indicators and `der__` derived elements
@@ -8,14 +8,20 @@ seeds:
       this package — deployments inherit the catalogue automatically via
       `ref('metric_definitions')` without redeclaring anything.
 
+      The registry is authored in `metric_definitions.csv` and compiled inline
+      by the `get_metric_definitions()` macro, so it materialises as a view in
+      the production bundle rather than a seed table. Regenerate the macro with
+      `python scripts/generate_metric_definitions_macro.py` after editing the
+      CSV.
+
       Each row defines one indicator: identifier, plain-English description,
       numerator/denominator, source standard, output shape (subject grain,
       disaggregations, unit), and lifecycle status. Definitions here are the
       single source of truth — implementation overrides (a deployment uses a
       different upstream survey for the same metric) are invisible at this
       layer; only definition variances (different rules, different numbers) are
-      flagged, via `variant_of` on a deployment-specific extension seed at
-      `tamanu-dbt-<deployment>/seeds/metric_definitions_<deployment>.csv`.
+      flagged, via `variant_of` on a deployment-specific extension at
+      `tamanu-dbt-<deployment>/metric_definitions_<deployment>.csv`.
 
       Schema per Maui data architecture D5
       (`.maui/knowledge/architecture/data-architecture/decisions.md`).
@@ -25,29 +31,12 @@ seeds:
       `draft` to `approved`.
 
     config:
+      materialized: view
       meta:
         owner: "bes-maui"
         domain: "clinical"
         pii: false
         classification: "internal"
-      column_types:
-        metric_id: text
-        kind: text
-        name: text
-        description: text
-        numerator_description: text
-        denominator_description: text
-        data_source: text
-        definition_source: text
-        definition_source_code: text
-        definition_rationale: text
-        unit: text
-        subject_grain: text
-        disaggregations: text
-        variant_of: text
-        owner: text
-        status: text
-        spec_path: text
 
     columns:
       - name: metric_id
