@@ -49,7 +49,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['metric', 'cohort', 'condition_era', 'drug_era', 'dose_era', 'episode']
+              arguments:
+                values: ['metric', 'cohort', 'condition_era', 'drug_era', 'dose_era', 'episode']
       - name: name
         description: Human-readable label shown in catalogues and dashboards.
         tests:
@@ -67,13 +68,15 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['tamanu', 'msupply', 'senaite', 'weather']
+              arguments:
+                values: ['tamanu', 'msupply', 'senaite', 'weather']
       - name: definition_source
         description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `WHO_PEN`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions.
         tests:
           - not_null
           - accepted_values:
-              values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'MSF', 'BES']
+              arguments:
+                values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'MSF', 'BES']
       - name: definition_source_code
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
@@ -82,7 +85,8 @@ models:
         description: Unit of measure (`count`, `percentage`, `rate_per_1000`). Metrics only — NULL for non-metric kinds.
         tests:
           - accepted_values:
-              values: ['count', 'percentage', 'rate_per_1000']
+              arguments:
+                values: ['count', 'percentage', 'rate_per_1000']
       - name: subject_grain
         description: Grain of `subject_id` in the metric output — `patient`, `encounter`, `facility`, etc.
         tests:
@@ -93,8 +97,9 @@ models:
         description: Parent `metric_id` if this row is a deployment-specific definition variant; else NULL. Metrics only.
         tests:
           - relationships:
-              to: ref('metric_definitions')
-              field: metric_id
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
       - name: owner
         description: Team or individual responsible for the artefact.
         tests:
@@ -104,7 +109,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['draft', 'approved', 'deprecated']
+              arguments:
+                values: ['draft', 'approved', 'deprecated']
       - name: spec_path
         description: Repo-relative path to the SDD spec for this artefact.
         tests:
