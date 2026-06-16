@@ -30,15 +30,15 @@ def load_translations_from_file(file_path):
 def main():
     if DEPLOYMENT == "standard":
         translations = load_translations_from_file(
-            Path("report_translations_standard.csv")
+            Path("csv/report_translations_standard.csv")
         )
         sql_folders = [Path("models/reports/sql"), Path("macros/reports")]
     else:
         translations_standard = load_translations_from_file(
-            Path("dbt_packages/tamanu_source_dbt/report_translations_standard.csv")
+            Path("dbt_packages/tamanu_source_dbt/csv/report_translations_standard.csv")
         )
         translations_deployment = load_translations_from_file(
-            Path(f"report_translations_{DEPLOYMENT}.csv")
+            Path(f"csv/report_translations_{DEPLOYMENT}.csv")
         )
 
         if translations_deployment:
