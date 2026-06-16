@@ -15,7 +15,7 @@
 | **Last updated** | 2026-06-11 |
 
 Canonical definition of the MSF NCD 6-month evaluation cohort. Registered in
-`seeds/metric_definitions.csv` as `cohort_ncd_6m` (kind `cohort`).
+`csv/metric_definitions.csv` as `cohort_ncd_6m` (kind `cohort`).
 Implementations are deployment-specific (see § Implementations).
 
 ## Purpose
@@ -100,7 +100,7 @@ cohort layer structure.
 
 ## Registry entry
 
-`seeds/metric_definitions.csv` row:
+`csv/metric_definitions.csv` row:
 
 | Column | Value |
 |---|---|
