@@ -22,7 +22,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install pyyaml pytest
+        # boto3 + pandas + pyyaml cover the scripts/utils import chain used by the
+        # generators; pytest runs the unit tests. dbt/sqlfluff are not needed here.
+        run: pip install boto3 pandas pyyaml pytest
 
       - name: Run script unit tests
         run: pytest scripts/tests -q

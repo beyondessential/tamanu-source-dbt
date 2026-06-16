@@ -2,8 +2,6 @@ import sys
 import os
 import csv
 
-from utils import get_deployment_name
-
 
 BASE_DIR = os.getcwd()
 
@@ -100,6 +98,10 @@ from (
 
 def generate_metric_definitions_macro():
     """Read the metric definitions CSV(s) and generate a macro emitting a VALUES relation."""
+    # Imported lazily so the pure helpers above stay importable (e.g. by unit
+    # tests) without pulling in the heavier utils dependency chain.
+    from utils import get_deployment_name
+
     deployment = get_deployment_name()
 
     if deployment == "standard":
