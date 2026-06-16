@@ -16,15 +16,18 @@
 {% macro get_survey(survey_id) %}
     {%- set query = get_survey_columns(survey_id) -%}
     {%- set columns = dbt_utils.get_query_results_as_dict(query) -%}
-    SELECT 
+    {%- set reserved = ['encounter_id', 'response_id', 'patient_id',
+                        'start_datetime', 'end_datetime', 'result_text'] -%}
+    SELECT
         sr.encounter_id,
-        sra.response_id, 
+        sra.response_id,
         e.patient_id,
         sr.start_datetime,
         sr.end_datetime,
         sr.result_text
-    {%- for id, code in zip(columns['id'], columns['code']) %},
-            MAX(CASE WHEN sra.data_element_id = '{{ id }}' THEN NULLIF(sra.body,'') END) AS "{{ code }}"
+    {%- for id, code in zip(columns['id'], columns['code']) %}
+        {%- set alias = (code ~ '_answer') if code in reserved else code %},
+            MAX(CASE WHEN sra.data_element_id = '{{ id }}' THEN NULLIF(sra.body,'') END) AS "{{ alias }}"
     {% endfor %}
     FROM {{ ref('survey_responses') }} sr 
     JOIN {{ ref('survey_response_answers') }} sra 
