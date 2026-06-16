@@ -31,7 +31,7 @@ COLUMNS = [
 
 
 def read_csv(rel_path):
-    """Read a metric_definitions CSV into a dict keyed by metric_id, preserving file order."""
+    """Read a metric_definitions CSV into a dict keyed by metric_id."""
     path = os.path.join(BASE_DIR, rel_path)
     if not os.path.exists(path):
         return {}
@@ -46,6 +46,13 @@ def read_csv(rel_path):
     return rows
 
 
+def merge_definitions(standard, localised):
+    """Merge localised rows over standard, keyed on metric_id (localised wins)."""
+    merged = dict(standard)
+    merged.update(localised)
+    return merged
+
+
 def sql_literal(value):
     """Render a CSV cell as a SQL literal — empty cells become NULL, others quoted text."""
     if value == "":
@@ -54,26 +61,9 @@ def sql_literal(value):
     return f"'{escaped}'"
 
 
-def generate_metric_definitions_macro():
-    """Read the metric definitions CSV(s) and generate a macro emitting a VALUES relation."""
-    deployment = get_deployment_name()
-
-    if deployment == "standard":
-        standard = read_csv(os.path.join("csv", "metric_definitions.csv"))
-        localised = {}
-    else:
-        standard = read_csv(
-            os.path.join(
-                "dbt_packages", "tamanu_source_dbt", "csv", "metric_definitions.csv"
-            )
-        )
-        localised = read_csv(os.path.join("csv", f"metric_definitions_{deployment}.csv"))
-
-    # Localised rows extend the catalogue (variants) or override by metric_id.
-    merged = dict(standard)
-    merged.update(localised)
-
-    rows = sorted(merged.values(), key=lambda r: r["metric_id"])
+def build_macro_content(definitions):
+    """Render the macro source for a dict of metric definitions, sorted by metric_id."""
+    rows = sorted(definitions.values(), key=lambda r: r["metric_id"])
 
     # Cast every column to text — a VALUES column that is NULL in all rows is
     # otherwise typed `unknown`, which fails when the model materialises as a view.
@@ -86,7 +76,7 @@ def generate_metric_definitions_macro():
         value_rows.append(f"        ({cells})")
     values_block = ",\n".join(value_rows)
 
-    macro_content = f"""{{#
+    return f"""{{#
 Auto-generated macro containing the canonical metric definitions registry.
 Generated from csv/metric_definitions.csv and any deployment-specific extension.
 
@@ -106,6 +96,25 @@ from (
 )
 {{%- endmacro -%}}
 """
+
+
+def generate_metric_definitions_macro():
+    """Read the metric definitions CSV(s) and generate a macro emitting a VALUES relation."""
+    deployment = get_deployment_name()
+
+    if deployment == "standard":
+        standard = read_csv(os.path.join("csv", "metric_definitions.csv"))
+        localised = {}
+    else:
+        standard = read_csv(
+            os.path.join(
+                "dbt_packages", "tamanu_source_dbt", "csv", "metric_definitions.csv"
+            )
+        )
+        localised = read_csv(os.path.join("csv", f"metric_definitions_{deployment}.csv"))
+
+    merged = merge_definitions(standard, localised)
+    macro_content = build_macro_content(merged)
 
     macros_dir = os.path.join(BASE_DIR, "macros")
     os.makedirs(macros_dir, exist_ok=True)

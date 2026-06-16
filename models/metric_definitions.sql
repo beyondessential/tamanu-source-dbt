@@ -1,5 +1,3 @@
-{{ config(materialized='view') }}
-
 -- Canonical metric definitions registry. The data lives in metric_definitions.csv
 -- and is compiled inline by get_metric_definitions() so this ships as a view in the
 -- production bundle rather than a seed table. Regenerate the macro with

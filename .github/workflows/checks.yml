@@ -1,0 +1,45 @@
+name: Checks
+
+# Runs on every PR: unit tests for the helper scripts, plus a guard that the
+# committed generated macros (translations, metric definitions) are still in
+# sync with their source CSVs. Both macros are generated but committed, so they
+# can silently drift if someone edits a CSV and forgets to regenerate.
+
+on:
+  pull_request:
+
+jobs:
+  checks:
+    name: Unit tests and generated-macro sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml pytest
+
+      - name: Run script unit tests
+        run: pytest scripts/tests -q
+
+      - name: Regenerate committed macros
+        run: |
+          python scripts/generate_translation_macro.py
+          python scripts/generate_metric_definitions_macro.py
+
+      - name: Fail if generated macros drift from their CSVs
+        run: |
+          if ! git diff --quiet -- macros/default_translations.sql macros/metric_definitions.sql; then
+            echo "::error::Generated macros are out of sync with their source CSVs."
+            echo "Run the generators and commit the result:"
+            echo "  python scripts/generate_translation_macro.py"
+            echo "  python scripts/generate_metric_definitions_macro.py"
+            git diff -- macros/default_translations.sql macros/metric_definitions.sql
+            exit 1
+          fi
+          echo "Generated macros are in sync."
