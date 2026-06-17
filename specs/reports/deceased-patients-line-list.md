@@ -130,5 +130,4 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-06-17 | Maui team | Initial retrospective spec; default to all time and treat 1970-01-01 floor as unbounded (MAUI-6671) |
-| 2026-06-17 | Maui team | Rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped (MAUI-6671) |
+| 2026-06-17 | Maui team | Initial retrospective spec (MAUI-6671): default the report to all time, treat the 1970-01-01 floor as unbounded, and rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped |
