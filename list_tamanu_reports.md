@@ -83,7 +83,7 @@ The report includes all details documented in the patient death record.
 
 Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
 
-**Default date range**: 7days
+**Default date range**: allTime
 
 
 ---
@@ -624,7 +624,7 @@ This report is designed to support government auditing requirements by providing
 
 Role
 
-**Default date range**: 
+**Default date range**: allTime
 
 
 ---
