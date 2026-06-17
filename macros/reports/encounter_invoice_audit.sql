@@ -158,6 +158,8 @@ item_resolved_price as materialized (
         on ip.id = ii.product_id
     left join encounter_price_list epl
         on epl.encounter_id = eis.encounter_id
+    -- One price-list item per (price list and product) is guaranteed by a DB
+    -- unique constraint on invoice_price_list_items, so this join cannot fan out.
     left join {{ ref('invoice_price_list_items') }} ipli
         on ipli.invoice_price_list_id = epl.invoice_price_list_id
         and ipli.invoice_product_id = ii.product_id
@@ -188,8 +190,11 @@ invoice_items_agg as (
 
 invoice_payments_agg as (
     -- BL-012: refunds are stored as positive amounts with
-    -- original_payment_id set; negate them so sum gives the net patient
-    -- payment total.
+    -- original_payment_id set and negated so the sum gives the net patient
+    -- payment total. The ipp.id filter keeps only patient payments, so a
+    -- refund is netted only when it shares the patient-payment linkage of the
+    -- payment it reverses. Insurer-payment refunds (no invoice_patient_payments
+    -- row) are intentionally excluded, matching the patient-payment scope.
     select
         ipay.invoice_id,
         sum(
