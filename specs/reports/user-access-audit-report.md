@@ -9,7 +9,7 @@
 | **Layer** | `report` (built on `ds__`) |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
-| **Owner** | @julianam-w |
+| **Owner** | Maui team |
 | **Linear issue** | [MAUI-6642](https://linear.app/bes/issue/MAUI-6642/create-new-user-management-audit-report-for-palau-team) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-08 |

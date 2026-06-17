@@ -9,7 +9,7 @@
 | **Layer** | `report` (built on `ds__`) |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
-| **Owner** | @julianam-w |
+| **Owner** | Maui team |
 | **Linear issue** | [MAUI-6671](https://linear.app/bes/issue/MAUI-6671/update-deceased-patients-line-list-to-show-all-records) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
