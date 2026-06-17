@@ -1,9 +1,10 @@
 name: Checks
 
 # Runs on every PR: unit tests for the helper scripts, plus a guard that the
-# committed generated macros (translations, metric definitions) are still in
-# sync with their source CSVs. Both macros are generated but committed, so they
-# can silently drift if someone edits a CSV and forgets to regenerate.
+# committed generated artefacts (translation + metric-definition macros, and the
+# report list) are still in sync with their sources. All are generated but
+# committed, so they can silently drift if someone edits a CSV or a report config
+# and forgets to regenerate.
 
 on:
   pull_request:
@@ -29,10 +30,11 @@ jobs:
       - name: Run script unit tests
         run: pytest scripts/tests -q
 
-      - name: Regenerate committed macros
+      - name: Regenerate committed artefacts
         run: |
           python scripts/generate_translation_macro.py
           python scripts/generate_metric_definitions_macro.py
+          python scripts/list_tamanu_reports.py
 
       - name: Fail if generated macros drift from their CSVs
         run: |
@@ -45,3 +47,14 @@ jobs:
             exit 1
           fi
           echo "Generated macros are in sync."
+
+      - name: Fail if report list drifts from report configs
+        run: |
+          if ! git diff --quiet -- list_tamanu_reports.md; then
+            echo "::error::list_tamanu_reports.md is out of sync with the report configs."
+            echo "Run the generator and commit the result:"
+            echo "  python scripts/list_tamanu_reports.py"
+            git diff -- list_tamanu_reports.md
+            exit 1
+          fi
+          echo "Report list is in sync."
