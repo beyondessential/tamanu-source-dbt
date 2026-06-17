@@ -26,12 +26,15 @@ details) for mortality review and reporting.
 **Business context:** A deceased-patients line list is low-volume, so the
 default view should surface every record rather than a recent window. The card
 (MAUI-6671) sets the default date range to "all time" and notes that Tamanu
-floors a blank "From date" at `1970-01-01 00:00:00`.
+floors a blank "From date" at `1970-01-01 00:00:00`. A patient is considered
+deceased when `patients.date_of_death` is set; a completed death form
+(`patient_death_data`) is part of the death workflow but is not guaranteed —
+partial-workflow and migrated deaths may have no form.
 
 ## Grain
 
-**One row per:** deceased patient death record (one row per patient with a
-recorded death).
+**One row per:** deceased patient (a patient with `date_of_death` set). Death-record
+detail columns are null when no death form exists.
 
 ## Inputs
 
@@ -39,7 +42,7 @@ recorded death).
 
 | Reference | Why we need it |
 |---|---|
-| `{{ ref('ds__deaths') }}` | Patient demographics, death details, cause/manner of death, location, and surgery/perinatal fields |
+| `{{ ref('ds__deaths') }}` | Patient demographics, death details, cause/manner of death, location, and surgery/perinatal fields. Lists every deceased patient; death-detail columns are null when no death form exists |
 
 ### Freshness expectations
 
@@ -63,6 +66,19 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
 `hours_survived_since_birth`).
 
 ## Business logic
+
+### Dataset (`ds__deaths`)
+
+- **BL-009:** Include every patient with `date_of_death` set, driving from
+  `patients` and left-joining death-record detail; a patient is not excluded
+  for lacking a `patient_death_data` row.
+- **BL-010:** Use only the `current` death record, and where more than one
+  current record exists for a patient, prefer a finalised one; this keeps the
+  dataset at one row per patient.
+- **BL-011:** Death-record detail columns (cause, manner, surgery, perinatal)
+  are null for patients without a death form.
+
+### Report (`deceased-patients-line-list`)
 
 - **BL-001:** When the supplied `fromDate` is the "all time" sentinel
   (`1970-01-01` or earlier), apply no lower bound on `date_of_death`; otherwise
@@ -89,14 +105,17 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | With `defaultDateRange = allTime` and no dates entered, records with `date_of_death = 1900-01-01` are returned | BL-001 | manual / integration |
-| AC-002 | With a `fromDate` later than `1970-01-01`, every returned row has `date_of_death >= fromDate` | BL-001 | manual / integration |
-| AC-003 | When run with a `causeOfDeath` / `mannerOfDeath` / `facilityId` parameter, every returned row matches that filter | BL-003, BL-004, BL-005 | manual / integration |
+| AC-001 | `patient_id` is `not_null` and `unique` in `ds__deaths` | BL-009, BL-010 | dbt schema test |
+| AC-002 | A deceased patient with no `patient_death_data` row appears in `ds__deaths` with null death-detail columns | BL-009, BL-011 | manual / integration |
+| AC-003 | With `defaultDateRange = allTime` and no dates entered, records with `date_of_death = 1900-01-01` are returned | BL-001 | manual / integration |
+| AC-004 | With a `fromDate` later than `1970-01-01`, every returned row has `date_of_death >= fromDate` | BL-001 | manual / integration |
+| AC-005 | When run with a `causeOfDeath` / `mannerOfDeath` / `facilityId` parameter, every returned row matches that filter | BL-003, BL-004, BL-005 | manual / integration |
 
 ## Lineage
 
 ```
-ds__deaths ──► deceased-patients-line-list
+patients ───────────┐
+patient_death_data ──┴──► ds__deaths ──► deceased-patients-line-list
 ```
 
 ## Open questions
@@ -111,4 +130,5 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-06-17 | @julianam-w | Initial retrospective spec; default to all time and treat 1970-01-01 floor as unbounded (MAUI-6671) |
+| 2026-06-17 | Maui team | Initial retrospective spec; default to all time and treat 1970-01-01 floor as unbounded (MAUI-6671) |
+| 2026-06-17 | Maui team | Rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped (MAUI-6671) |

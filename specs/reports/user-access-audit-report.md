@@ -118,4 +118,4 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-06-08 | @julianam-w | Initial retrospective draft (MAUI-6642) |
+| 2026-06-08 | Maui team | Initial retrospective draft (MAUI-6642) |
