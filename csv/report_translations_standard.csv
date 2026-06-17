@@ -141,8 +141,13 @@ report.reporting.imagingStatus,Status
 report.reporting.imagingSupervisingClinician,Supervising clinician
 report.reporting.imagingTotalRequests,Total new requests
 report.reporting.imagingType,Imaging type
+report.reporting.insuranceCoverage,Insurance coverage
 report.reporting.insurerId,Insurer ID
 report.reporting.insurerName,Name of insurer
+report.reporting.invoiceFinalisedDateTime,Invoice finalised date and time
+report.reporting.invoicePatientPayment,Patient payment
+report.reporting.invoicePatientSubtotal,Patient subtotal
+report.reporting.invoicePatientTotal,Patient total
 report.reporting.invoiceProductAvailableFacilities,Available facilities
 report.reporting.invoiceProductCategory,Category
 report.reporting.invoiceProductCategoryId,Category ID
@@ -151,6 +156,8 @@ report.reporting.invoiceProductInsurable,Insurable
 report.reporting.invoiceProductLabExternalCode,Lab external code
 report.reporting.invoiceProductName,Product name
 report.reporting.invoiceProductVisibilityStatus,Visibility status
+report.reporting.invoiceProductsNoCategory,Invoice products with no category
+report.reporting.invoiceTotal,Invoice total
 report.reporting.labLaboratory,Laboratory
 report.reporting.labRequestCancellationReason,Reason for cancellation
 report.reporting.labRequestClinician,Requesting clinician
