@@ -1,10 +1,10 @@
 unit_tests:
-  - name: test_encounter_invoice_audit_refund_netting
-    model: encounter-invoice-audit-line-list
+  - name: test_ds__encounter_invoices_refund_netting
+    model: ds__encounter_invoices
     description: >
-      Patient payment nets payments minus refunds. A $100 payment followed
-      by a $100 refund (original_payment_id set) should produce $0 net
-      patient_payment. A separate $40 payment remains.
+      patient_payment nets payments minus refunds. A $100 payment followed by a
+      $100 refund (original_payment_id set) produces $0 net for that pair; a
+      separate $40 payment remains, so net patient_payment is $40.
     given:
       - input: ref('encounters')
         format: sql
@@ -26,20 +26,10 @@ unit_tests:
         rows: |
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
 
-      - input: ref('departments')
+      - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select 'dept_001' as id, 'Medicine' as name
-
-      - input: ref('users')
-        format: sql
-        rows: |
-          select null::text as id, null::text as display_name where false
-
-      - input: ref('reference_data')
-        format: sql
-        rows: |
-          select null::text as id, null::text as name where false
+          select null::text as patient_id, null::text as patient_billing_type_id where false
 
       - input: ref('invoices')
         format: sql
@@ -59,7 +49,7 @@ unit_tests:
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, 'Consultation' as category, false as insurable
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -83,7 +73,7 @@ unit_tests:
       - input: ref('invoice_item_finalised_insurances')
         format: sql
         rows: |
-          select null::text as invoice_item_id, null::numeric as coverage_value_final where false
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
 
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
@@ -103,17 +93,17 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type where false
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage where false
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
 
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          select null::text as id, null::text as code, null::jsonb as rules, null::text as visibility_status where false
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
 
       - input: ref('invoice_price_list_items')
         format: sql
@@ -124,23 +114,13 @@ unit_tests:
       format: sql
       rows: |
         select
-          'P001' as "Patient ID",
-          'John' as "First name",
-          'Doe' as "Last name",
-          '1990-01-01' as "Date of birth",
-          34 as "Age",
-          'male' as "Sex",
-          null::text as "Billing type",
-          '2024-01-14 09:00:00' as "Encounter start date and time",
-          '2024-01-15 11:00:00' as "Encounter end date and time",
-          1 as "Length of stay (days)",
-          'General Hospital' as "Facility",
-          'Medicine' as "Discharging department",
-          null::text as "Supervising clinician",
-          null::text as "Invoice finalised date and time",
-          50.00::numeric as "Invoice total",
-          null::numeric as "Insurance coverage",
-          50.00::numeric as "Patient subtotal",
-          40.00::numeric as "Patient payment",
-          10.00::numeric as "Patient total",
-          null::text as "Invoice products with no category"
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          50.00::numeric as invoice_total,
+          null::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          40.00::numeric as patient_payment,
+          null::text as products_no_category

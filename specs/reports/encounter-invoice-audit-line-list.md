@@ -55,12 +55,7 @@ One row per encounter that matches the parameter filters. An encounter without a
 | `ref('locations')`, `ref('facilities')` | Facility for each encounter |
 | `ref('patients')` | Patient demographics + DOB for age |
 | `ref('departments')`, `ref('users')`, `ref('reference_data')` | Discharging department, supervising clinician, billing type labels |
-| `ref('invoices')`, `ref('invoice_items')`, `ref('invoice_products')` | Invoice line items |
-| `ref('invoice_price_lists')`, `ref('invoice_price_list_items')` | Price-list resolution and unit prices |
-| `ref('invoice_item_discounts')`, `ref('invoice_discounts')` | Item-level and invoice-level discounts |
-| `ref('invoices_change_logs')` | Status-change history for finalisation timestamp |
-| `ref('invoice_item_finalised_insurances')`, `ref('invoices_invoice_insurance_plans')`, `ref('invoice_insurance_plans')`, `ref('invoice_insurance_plan_items')` | Insurance coverage (snapshotted + live) |
-| `ref('invoice_payments')`, `ref('invoice_patient_payments')` | Patient payments and refunds |
+| `ref('ds__encounter_invoices')` | Per-invoice financials (totals, coverage, discounts, payments, finalisation). Resolves the price-list/coverage/discount logic — see its spec at `specs/dbt-model/ds__encounter_invoices.md` |
 
 ## Output schema
 
@@ -89,23 +84,17 @@ One row per encounter that matches the parameter filters. An encounter without a
 
 ## Business logic
 
-- **BL-001:** Exclude the test patient (`patient_id != var('test_patient')`).
-- **BL-002:** Restrict to encounters whose `start_datetime` (in the viewer's selected timezone) falls within `[fromDate, toDate]`. A null bound disables that side of the range.
+- **BL-001:** Exclude the test patient (enforced upstream by `base__encounters`).
+- **BL-002:** Restrict to encounters whose `start_datetime` (in the viewer's selected timezone) falls within `[fromDate, toDate]`. Both bounds are always supplied.
 - **BL-003:** Include non-discharged encounters (those with null `end_datetime`) when `includeOpenEncounters = 'yes'`; exclude them when `'no'`. Default is `'yes'`.
 - **BL-004:** Apply optional restrictions on facility, department, patient billing type, and supervising clinician. A null parameter disables that filter.
 - **BL-005:** Length of stay is `end_datetime::date − start_datetime::date`, with a minimum of 1 day. For in-progress encounters, use `current_date − start_datetime::date` with the same minimum.
-- **BL-006:** Resolve exactly one price list per encounter, mirroring Tamanu's `getIdForPatientEncounter`: match on facility (direct match, or no facility rule and no other current price list claims this facility), patient billing type, and patient age in completed years at encounter start (exact value, or min/max range). Tie-break by `code` ascending then `id`.
-- **BL-007:** Item unit price falls back through `invoice_items.price_final` → `invoice_items.manual_entry_price` → `invoice_price_list_items.price` → `0`. The price-list item must be non-hidden and bound to the encounter's resolved price list and the item's product.
-- **BL-008:** Item discount is applied to `unit_price × quantity`: `percentage` discounts multiply by `(1 − amount)`; `amount` discounts subtract `amount` with a floor of 0. With no discount, the result is `unit_price × quantity`.
-- **BL-009:** Invoice total per encounter sums BL-008 across all non-cancelled invoices.
-- **BL-010:** Insurance coverage per insurable item uses snapshotted finalised coverage when present, otherwise the live plan coverage (per-product override, falling back to plan default coverage, falling back to 0). The applied coverage is `min(discounted_total × total_pct / 100, discounted_total)` — capped at the discounted total to handle combined percentages above 100. Sum across insurable items on non-cancelled invoices per encounter, rounded to 2 decimal places.
-- **BL-011:** Invoice-level discount applies `invoice_discount_percentage` to each invoice's patient subtotal (`item_total − insurance_coverage`), summed across non-cancelled invoices per encounter, rounded to 2 decimal places. Mirrors Tamanu's `getInvoiceLevelDiscountAmount`, which discounts the post-insurance subtotal, not the gross item total.
-- **BL-012:** Patient payment is `sum(payments) − sum(refunds)` on non-cancelled invoices, restricted to payments linked to an `invoice_patient_payments` row. Refunds are identified by `original_payment_id is not null` and subtracted.
+- **BL-006 to BL-012, BL-015, BL-016 (per-invoice financials):** Price-list resolution, item pricing and discount, invoice total, insurance coverage, invoice-level discount, patient-payment netting, finalisation timestamp, and the no-category product list are realised per invoice in `ds__encounter_invoices` (see `specs/dbt-model/ds__encounter_invoices.md`).
 - **BL-013:** Patient subtotal is `invoiceTotal − insuranceCoverage − invoiceDiscount`.
 - **BL-014:** Patient total is `patientSubtotal − patientPayment`.
-- **BL-015:** Invoice finalised datetime per invoice is the most recent `logged_at` from `logs.changes` where `status = 'finalised'` and the previous status was not `'finalised'`, presented in the deployment timezone (`var('timezone')`). When an encounter has multiple invoices, the column shows the maximum across them.
-- **BL-016:** `invoiceProductsNoCategory` concatenates the `product_name_final` of items on non-cancelled invoices whose product has no category, ordered by item `date` then invoice `datetime, id`.
 - **BL-017:** Facility scope is partitioned by the `is_sensitive` macro argument: the standard variant covers non-sensitive facilities (`is_sensitive = false`); the sensitive variant covers sensitive facilities (`is_sensitive = true`).
+- **BL-018:** Aggregate `ds__encounter_invoices` to one row per in-scope encounter, excluding cancelled invoices: invoice total, insurance coverage, invoice discount and patient payment are summed; finalised datetime is the maximum; no-category products are concatenated (ordered by invoice datetime then id). Encounters with no non-cancelled invoices still appear with null invoice columns. An encounter that has a non-cancelled invoice with no items reads a total of 0; an encounter with no invoice at all stays null.
+- **BL-019:** Money columns (invoice total, insurance coverage, patient subtotal, patient payment, patient total) are rounded to 2 decimal places for display, matching the application's `formatDisplayPrice`. NULL is preserved.
 
 ## Acceptance criteria
 
@@ -116,9 +105,9 @@ One row per encounter that matches the parameter filters. An encounter without a
 | AC-003 | When `includeOpenEncounters = 'no'`, no rows have `end_datetime is null`. When `'yes'` (or null), rows with `end_datetime is null` may appear. | BL-003 |
 | AC-004 | When a parameter filter is non-null, every row matches it (facility, department, billing type, clinician). | BL-004 |
 | AC-005 | `encounterLengthOfStay >= 1` for every row. | BL-005 |
-| AC-006 | Each encounter resolves to at most one `invoice_price_list_id`. | BL-006 |
-| AC-007 | `invoiceTotal` equals the sum of per-item `discounted_total` for non-cancelled invoices on the encounter. | BL-007, BL-008, BL-009 |
-| AC-008 | `insuranceCoverage <= invoiceTotal` for every row. | BL-010 |
+| AC-006 | `invoiceTotal` equals the sum of `ds__encounter_invoices.invoice_total` for the encounter's non-cancelled invoices; cancelled invoices are excluded. | BL-018 |
+| AC-007 | An encounter with no non-cancelled invoices has null invoice columns but still appears. | BL-018 |
+| AC-008 | `insuranceCoverage <= invoiceTotal` for every row. | BL-010, BL-018 |
 | AC-009 | `invoicePatientSubtotal = invoiceTotal − coalesce(insuranceCoverage, 0) − coalesce(invoiceDiscount, 0)`. | BL-013 |
 | AC-010 | `invoicePatientTotal = invoicePatientSubtotal − coalesce(invoicePatientPayment, 0)`. | BL-014 |
 | AC-011 | `invoiceFinalisedDateTime` is null for encounters whose invoices never transitioned to `finalised`. | BL-015 |
@@ -134,4 +123,4 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-06-17 | Maui team | Initial spec for the report ported from `tamanu-dbt-fsm` into the shared standard/sensitive macro pattern. |
+| 2026-06-18 | Maui team | Initial spec for the report, ported from `tamanu-dbt-fsm` into the shared standard/sensitive macro pattern. Per-invoice financials live in `ds__encounter_invoices`; the report aggregates that dataset per encounter (BL-018). |

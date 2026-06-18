@@ -1,11 +1,12 @@
 unit_tests:
-  - name: test_encounter_invoice_audit_invoice_level_discount
-    model: encounter-invoice-audit-line-list
+  - name: test_ds__encounter_invoices_price_list_priority
+    model: ds__encounter_invoices
     description: >
-      An invoice-level discount of 20% reduces the patient subtotal and
-      patient total. Item total is $100 (no item-level discount), no
-      insurance coverage. Invoice discount = 100 * 0.2 = 20. Patient
-      subtotal = 100 - 0 - 20 = 80. Patient total = 80 - 0 = 80.
+      When two current price lists both match an invoice, the lowest
+      evaluation_order wins -- ahead of created_at (mirroring
+      getIdForPatientEncounter). pl_priority (evaluation_order 1, price 60) is
+      chosen over pl_other (evaluation_order 2, price 90) despite pl_priority
+      having the later created_at, so invoice_total = 60.
     given:
       - input: ref('encounters')
         format: sql
@@ -27,20 +28,10 @@ unit_tests:
         rows: |
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
 
-      - input: ref('departments')
+      - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select 'dept_001' as id, 'Medicine' as name
-
-      - input: ref('users')
-        format: sql
-        rows: |
-          select null::text as id, null::text as display_name where false
-
-      - input: ref('reference_data')
-        format: sql
-        rows: |
-          select null::text as id, null::text as name where false
+          select null::text as patient_id, null::text as patient_billing_type_id where false
 
       - input: ref('invoices')
         format: sql
@@ -55,12 +46,12 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -75,7 +66,7 @@ unit_tests:
       - input: ref('invoice_item_finalised_insurances')
         format: sql
         rows: |
-          select null::text as invoice_item_id, null::numeric as coverage_value_final where false
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
 
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
@@ -95,45 +86,40 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type where false
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          -- 20% invoice-level discount
-          select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 0.2::numeric as percentage
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
 
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          select null::text as id, null::text as code, null::jsonb as rules, null::text as visibility_status where false
+          -- Both match facility fac_001; evaluation_order decides ahead of created_at.
+          -- pl_priority has the lower evaluation_order but the later created_at.
+          select 'pl_priority' as id, 'pl_priority' as code, '{"facilityId": "fac_001"}'::jsonb as rules, 1::integer as evaluation_order, '2024-02-01 00:00:00'::timestamp as created_at, 'current' as visibility_status
+          union all
+          select 'pl_other', 'pl_other', '{"facilityId": "fac_001"}'::jsonb, 2::integer, '2024-01-01 00:00:00'::timestamp, 'current'
 
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+          select 'pl_priority' as invoice_price_list_id, 'prod_001' as invoice_product_id, 60.00::numeric as price, false as is_hidden
+          union all
+          select 'pl_other', 'prod_001', 90.00::numeric, false
 
     expect:
       format: sql
       rows: |
         select
-          'P001' as "Patient ID",
-          'John' as "First name",
-          'Doe' as "Last name",
-          '1990-01-01' as "Date of birth",
-          34 as "Age",
-          'male' as "Sex",
-          null::text as "Billing type",
-          '2024-01-14 09:00:00' as "Encounter start date and time",
-          '2024-01-15 11:00:00' as "Encounter end date and time",
-          1 as "Length of stay (days)",
-          'General Hospital' as "Facility",
-          'Medicine' as "Discharging department",
-          null::text as "Supervising clinician",
-          null::text as "Invoice finalised date and time",
-          100.00::numeric as "Invoice total",
-          null::numeric as "Insurance coverage",
-          80.00::numeric as "Patient subtotal",
-          null::numeric as "Patient payment",
-          80.00::numeric as "Patient total",
-          'Consultation' as "Invoice products with no category"
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'in_progress' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          60.00::numeric as invoice_total,
+          null::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          null::text as products_no_category

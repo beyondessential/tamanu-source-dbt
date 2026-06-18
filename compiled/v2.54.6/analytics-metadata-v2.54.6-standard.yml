@@ -1198,6 +1198,14 @@
       description: Unique identifier code for the price list. Used for referencing
         the price list in business logic and integrations.
       name: code
+    created_at:
+      data_type: timestamp without time zone
+      description: Timestamp of when record was created in invoice_price_lists.
+      name: created_at
+    evaluation_order:
+      data_type: integer
+      description: Order to evaluate invoice price list
+      name: evaluation_order
     id:
       data_type: text
       description: Tamanu internal identifier (generally a UUID) in invoice_price_lists.

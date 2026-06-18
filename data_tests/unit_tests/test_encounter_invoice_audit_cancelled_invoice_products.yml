@@ -2,8 +2,9 @@ unit_tests:
   - name: test_encounter_invoice_audit_cancelled_products
     model: encounter-invoice-audit-line-list
     description: >
-      invoice_products_no_category must not include items from cancelled invoices.
-      Items with no product category from in_progress or finalised invoices should appear.
+      The report excludes cancelled invoices when aggregating per encounter:
+      their totals and products must not appear. Only the in_progress invoice's
+      $50 total and "Manual Fee" product surface.
     given:
       - input: ref('encounters')
         format: sql
@@ -40,79 +41,13 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name where false
 
-      - input: ref('invoices')
+      - input: ref('ds__encounter_invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as datetime
+          -- Cancelled invoice must be excluded; in_progress invoice surfaces
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 10.00::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, 'Cancelled Fee' as products_no_category
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp
-
-      - input: ref('invoices_change_logs')
-        format: sql
-        rows: |
-          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
-
-      - input: ref('invoice_items')
-        format: sql
-        rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Cancelled Fee' as product_name_final, '2024-01-10'::date as date, null::text as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
-          union all
-          select 'item_002'::text, '00000000-0000-0000-0000-000000000002', 'Manual Fee', '2024-01-10'::date, null::text, 25.00::numeric, null::numeric, 2::integer
-
-      - input: ref('invoice_products')
-        format: sql
-        rows: |
-          select null::text as id, null::text as category, null::boolean as insurable where false
-
-      - input: ref('invoice_payments')
-        format: sql
-        rows: |
-          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
-
-      - input: ref('invoice_patient_payments')
-        format: sql
-        rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
-
-      - input: ref('invoice_item_finalised_insurances')
-        format: sql
-        rows: |
-          select null::text as invoice_item_id, null::numeric as coverage_value_final where false
-
-      - input: ref('invoices_invoice_insurance_plans')
-        format: sql
-        rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
-
-      - input: ref('invoice_insurance_plan_items')
-        format: sql
-        rows: |
-          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
-
-      - input: ref('invoice_insurance_plans')
-        format: sql
-        rows: |
-          select null::text as id, null::numeric as default_coverage where false
-
-      - input: ref('invoice_item_discounts')
-        format: sql
-        rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type where false
-
-      - input: ref('invoice_discounts')
-        format: sql
-        rows: |
-          select null::uuid as invoice_id, null::numeric as percentage where false
-
-      - input: ref('invoice_price_lists')
-        format: sql
-        rows: |
-          select null::text as id, null::text as code, null::jsonb as rules, null::text as visibility_status where false
-
-      - input: ref('invoice_price_list_items')
-        format: sql
-        rows: |
-          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp, null::timestamp, 50.00::numeric, null::numeric, 0.00::numeric, null::numeric, 'Manual Fee'
 
     expect:
       format: sql

@@ -1,12 +1,11 @@
 unit_tests:
-  - name: test_encounter_invoice_audit_exact_age_match
-    model: encounter-invoice-audit-line-list
+  - name: test_ds__encounter_invoices_exact_age_match
+    model: ds__encounter_invoices
     description: >
-      A price list with an exact numeric patientAge rule (34) matches only
-      the patient who is 34 at encounter start. Patient A (born 1990-01-01,
-      encounter 2024-01-14) is 34 and gets the $100 price list price.
-      Patient B (born 1989-01-01, encounter 2024-01-14) is 35 and the price
-      list is skipped, so the item falls through to $0.
+      A price list with an exact numeric patientAge rule (34) matches only the
+      patient who is 34 at the invoice date. Patient A (born 1990-01-01) is 34
+      and gets the $100 price-list price. Patient B (born 1989-01-01) is 35, the
+      price list is skipped, and the item falls through to $0.
     given:
       - input: ref('encounters')
         format: sql
@@ -32,20 +31,10 @@ unit_tests:
           union all
           select 'pat_002', 'P002', 'Bob', 'Elder', '1989-01-01'::date, 'male'
 
-      - input: ref('departments')
+      - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select 'dept_001' as id, 'Medicine' as name
-
-      - input: ref('users')
-        format: sql
-        rows: |
-          select null::text as id, null::text as display_name where false
-
-      - input: ref('reference_data')
-        format: sql
-        rows: |
-          select null::text as id, null::text as name where false
+          select null::text as patient_id, null::text as patient_billing_type_id where false
 
       - input: ref('invoices')
         format: sql
@@ -69,7 +58,7 @@ unit_tests:
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable
+          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -84,7 +73,7 @@ unit_tests:
       - input: ref('invoice_item_finalised_insurances')
         format: sql
         rows: |
-          select null::text as invoice_item_id, null::numeric as coverage_value_final where false
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
 
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
@@ -104,18 +93,18 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type where false
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage where false
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
 
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
           -- Exact age match: only 34-year-olds qualify
-          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientAge": 34}'::jsonb as rules, 'current' as visibility_status
+          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientAge": 34}'::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, 'current' as visibility_status
 
       - input: ref('invoice_price_list_items')
         format: sql
@@ -127,33 +116,26 @@ unit_tests:
       rows: |
         -- enc_001 (Alice, age 34): price list matches, invoice_total = 100
         select
-          'P001' as "Patient ID",
-          'Alice' as "First name",
-          'Young' as "Last name",
-          '1990-01-01' as "Date of birth",
-          34 as "Age",
-          'female' as "Sex",
-          null::text as "Billing type",
-          '2024-01-14 09:00:00' as "Encounter start date and time",
-          '2024-01-15 11:00:00' as "Encounter end date and time",
-          1 as "Length of stay (days)",
-          'General Hospital' as "Facility",
-          'Medicine' as "Discharging department",
-          null::text as "Supervising clinician",
-          null::text as "Invoice finalised date and time",
-          100.00::numeric as "Invoice total",
-          null::numeric as "Insurance coverage",
-          100.00::numeric as "Patient subtotal",
-          null::numeric as "Patient payment",
-          100.00::numeric as "Patient total",
-          'Consultation' as "Invoice products with no category"
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'in_progress' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          100.00::numeric as invoice_total,
+          null::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          'Consultation' as products_no_category
         union all
         -- enc_002 (Bob, age 35): price list skipped, invoice_total = 0
         select
-          'P002', 'Bob', 'Elder', '1989-01-01', 35, 'male',
-          null::text,
-          '2024-01-14 09:00:00', '2024-01-14 16:00:00', 1,
-          'General Hospital', 'Medicine', null::text,
-          null::text,
-          0::numeric, null::numeric, 0.00::numeric, null::numeric, 0.00::numeric,
+          '00000000-0000-0000-0000-000000000002',
+          'enc_002',
+          'in_progress',
+          '2024-01-14 09:00:00'::timestamp,
+          null::timestamp,
+          0::numeric,
+          null::numeric,
+          0.00::numeric,
+          null::numeric,
           'Consultation'
