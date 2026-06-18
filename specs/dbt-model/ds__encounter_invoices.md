@@ -8,12 +8,12 @@
 | **Type** | Consumer-shaped dataset (`ds__`) |
 | **Layer** | `ds__` |
 | **Materialisation** | env-aware (view in the production bundle) |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | _none_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-18 |
-| **Last updated** | 2026-06-18 |
+| **Last updated** | 2026-06-19 |
 | **Consumed by** | `encounter-invoice-audit-line-list` report (`specs/reports/encounter-invoice-audit-line-list.md`) |
 
 ## Purpose

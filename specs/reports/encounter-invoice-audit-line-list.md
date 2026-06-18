@@ -8,12 +8,12 @@
 | **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`) |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | _none_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-06-17 |
+| **Last updated** | 2026-06-19 |
 
 ## Purpose
 
