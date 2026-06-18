@@ -1,0 +1,142 @@
+unit_tests:
+  - name: test_encounter_invoice_audit_price_list_fallback
+    model: encounter-invoice-audit-line-list
+    description: >
+      Items without price_final or manual_entry_price resolve their price
+      from invoice_price_list_items matched by facility and patient age.
+      Patient is 34 (born 1990, encounter 2024) at facility fac_001. The
+      price list rule matches facilityId=fac_001 and age max 64. Item has
+      no price_final or manual_entry_price, so the price list price ($75)
+      is used. invoice_total = 75 * 2 = 150.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Medicine' as name
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          -- No price_final or manual_entry_price; price resolved from price list
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'X-Ray' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Imaging' as category, false as insurable
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::numeric as percentage where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          -- Price list matches facility fac_001 and age <= 64
+          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientAge": {"max": 64}}'::jsonb as rules, 'current' as visibility_status
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select 'pl_001' as invoice_price_list_id, 'prod_001' as invoice_product_id, 75.00::numeric as price, false as is_hidden
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001' as "Patient ID",
+          'John' as "First name",
+          'Doe' as "Last name",
+          '1990-01-01' as "Date of birth",
+          34 as "Age",
+          'male' as "Sex",
+          null::text as "Billing type",
+          '2024-01-14 09:00:00' as "Encounter start date and time",
+          '2024-01-15 11:00:00' as "Encounter end date and time",
+          1 as "Length of stay (days)",
+          'General Hospital' as "Facility",
+          'Medicine' as "Discharging department",
+          null::text as "Supervising clinician",
+          null::text as "Invoice finalised date and time",
+          150.00::numeric as "Invoice total",
+          null::numeric as "Insurance coverage",
+          150.00::numeric as "Patient subtotal",
+          null::numeric as "Patient payment",
+          150.00::numeric as "Patient total",
+          null::text as "Invoice products with no category"
