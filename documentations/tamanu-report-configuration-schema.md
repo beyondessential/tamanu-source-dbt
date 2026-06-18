@@ -16,14 +16,14 @@ Every report configuration file must be a valid JSON object with the following s
 
 - **`query`** (string): The SQL query or placeholder for the report. Must be at least 1 character long.
 - **`status`** (enum): Publication status of the report. Must be either `"draft"` or `"published"`.
-- **`dbSchema`** (enum): Database schema to use for the report. Must be either `"raw"` or `"reporting"`.
+- **`dbSchema`** (enum): Database schema to use for the report. Must be `"reporting"`.
 - **`queryOptions`** (object): Configuration options for the report query (see detailed structure below).
 
 #### Optional Properties
 
 - **`notes`** (string): Detailed description and notes about the report's purpose and functionality.
 - **`reportDefinitionId`** (string): Unique identifier for the report definition.
-- **`dhis2DataSet`** (string): DHIS2 dataset identifier.
+- **`dhis2DataSet`** (string): DHIS2 dataset identifier. Must be a valid DHIS2 UID — 11 characters matching the pattern `^[a-zA-Z][a-zA-Z0-9]{10}$` (a letter followed by 10 alphanumerics).
 
 ### Query Options Structure
 
@@ -53,7 +53,7 @@ For a report generated on **2025-07-01 12:00:00**, the default date ranges would
 - **`"7days"`**: From 2025-06-24 00:00:00 to 2025-07-01 12:00:00
 - **`"30days"`**: From 2025-06-01 00:00:00 to 2025-07-01 12:00:00
 - **`"18years"`**: From 2007-07-01 00:00:00 to 2025-07-01 12:00:00
-- **`"next30days"`**: From 2025-07-02 00:00:00 to 2025-07-31 23:59:59
+- **`"next30days"`**: From 2025-07-02 00:00:00 to 2025-08-01 23:59:59
 
 #### Optional Properties
 
@@ -107,25 +107,26 @@ Provides autocomplete functionality using predefined API endpoints.
     - `filterByFacility` (boolean): Filter suggestions by facility
 
 **Available Suggester Endpoints:**
-- `additionalInvoiceProduct`, `allergy`, `angiogramImagingArea`, `appointmentType`, `arrivalMode`
-- `bookableLocationGroup`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `condition`
-- `contactRelationship`, `country`, `ctScanImagingArea`, `department`, `designation`
-- `diagnosis`, `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
-- `ecgImagingArea`, `echocardiogramImagingArea`, `endoscopyImagingArea`, `ethnicity`
-- `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscoptyImagingArea`
-- `holterMonitorImagingArea`, `imagingType`, `insurer`, `invoiceProducts`, `labSampleSite`
-- `labTestCategory`, `labTestLaboratory`, `labTestMethod`, `labTestPanel`, `labTestPriority`
-- `labTestType`, `location`, `locationGroup`, `mammogramDiagImagingArea`, `mamogramImagingArea`
-- `mamogramScreenImagingArea`, `manufacturer`, `medicalArea`, `mriImagingArea`
-- `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `nursingZone`
-- `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
-- `patientLabTestCategories`, `patientLabTestPanelTypes`, `patientType`, `paymentMethod`
-- `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`, `programRegistryClinicalStatus`
-- `programRegistryCondition`, `reaction`, `referralSource`, `religion`, `secondaryIdType`
-- `sensitiveLabTestCategory`, `settlement`, `specimenTest`, `stressTestImagingArea`
-- `subdivision`, `survey`, `taskDeletionReason`, `taskNotCompletedReason`, `taskSet`
-- `taskTemplate`, `template`, `triageReason`, `ultrasoundImagingArea`, `vaccine`
-- `vaccineCircumstance`, `vaccineNotGivenReason`, `vascularStudyImagingArea`, `village`, `xRayImagingArea`
+- `allergy`, `angiogramImagingArea`, `appointmentType`, `arrivalMode`, `bookableLocationGroup`
+- `bookingType`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `contactRelationship`
+- `country`, `ctScanImagingArea`, `department`, `designation`, `diagnosis`
+- `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
+- `ecgImagingArea`, `echocardiogramImagingArea`, `encounter`, `endoscopyImagingArea`, `ethnicity`
+- `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscopyImagingArea`, `holterMonitorImagingArea`
+- `imagingType`, `insurer`, `invoiceInsurancePlan`, `invoicePriceList`, `invoiceProduct`
+- `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`, `labTestPanel`
+- `labTestPriority`, `labTestType`, `location`, `locationGroup`, `mammogramDiagImagingArea`
+- `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`, `medicationNotGivenReason`
+- `medicationSet`, `medicationTemplate`, `mriImagingArea`, `multiReferenceData`, `nationality`
+- `nonSensitiveLabTestCategory`, `noteType`, `nursingZone`, `occupation`, `orthopantomographyImagingArea`
+- `patient`, `patientBillingType`, `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`
+- `paymentMethod`, `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`
+- `programRegistryClinicalStatus`, `programRegistryCondition`, `reaction`, `referenceData`, `referralSource`
+- `religion`, `reportDefinition`, `role`, `secondaryIdType`, `sensitiveLabTestCategory`
+- `settlement`, `specimenType`, `stressTestImagingArea`, `subdivision`, `survey`
+- `taskDeletionReason`, `taskNotCompletedReason`, `taskSet`, `taskTemplate`, `template`
+- `timeZone`, `triageReason`, `ultrasoundImagingArea`, `vaccineCircumstance`, `vaccineNotGivenReason`
+- `vascularStudyImagingArea`, `village`, `xRayImagingArea`
 
 ### 3. ParameterMultiselectField
 
