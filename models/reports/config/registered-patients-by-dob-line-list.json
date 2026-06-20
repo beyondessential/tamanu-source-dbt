@@ -1,7 +1,8 @@
 {
     "query": "replace this",
-    "status": "published",
+    "name": "Registered patients by DOB line list",
     "notes": "This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. ",
+    "status": "published",
     "dbSchema": "reporting",
     "queryOptions": {
       "defaultDateRange": "7days",

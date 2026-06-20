@@ -101,4 +101,3 @@ sources:
           - name: migration_context
             data_type: text
             description: "{{ doc('logs__changes__migration_context') }}"
-      - name: changes_backup
