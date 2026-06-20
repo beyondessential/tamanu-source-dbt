@@ -1,8 +1,8 @@
 {
   "query": "place query here",
-  "status": "published",
   "name": "Ongoing conditions line list",
   "notes": "This report lists all patients with ongoing conditions for the selected parameters.",
+  "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",

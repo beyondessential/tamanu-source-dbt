@@ -1,6 +1,7 @@
 {
   "query": "replace this",
   "status": "published",
+  "name": "Incomplete referrals",
   "notes": "This report lists all patients that have a pending referral for the selected parameters.",
   "dbSchema": "reporting",
   "queryOptions": {
