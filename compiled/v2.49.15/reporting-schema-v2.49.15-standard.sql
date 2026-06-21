@@ -1554,625 +1554,6 @@ select
     fc.record_data ->> 'not_given_reason_id' as not_given_reason_id
 from filtered_changes fc
 );
-create or replace view "reporting"."ds__births" as (
-select
-    pbd.registration_date,
-    case
-        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
-    end as registered_by,
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    p.sex,
-    rd_ethnicity.name as ethnicity,
-    rd_nationality.name as nationality,
-    p.village_id,
-    rd_village.name as village,
-    case
-        when
-            p_mother.id is not null
-            then concat(p_mother.first_name, ' ', p_mother.last_name, ' (', p_mother.display_id, ')')
-    end as mother,
-    case
-        when
-            p_father.id is not null
-            then concat(p_father.first_name, ' ', p_father.last_name, ' (', p_father.display_id, ')')
-    end as father,
-    pbd.birth_time,
-    pbd.gestational_age_estimate,
-    case when pbd.registered_birth_place = 'health_facility' then 'Health facility'
-        when pbd.registered_birth_place = 'home' then 'Home'
-        when pbd.registered_birth_place = 'other' then 'Other'
-        else pbd.registered_birth_place
-    end as registered_birth_place,
-    f.id as birth_facility_id,
-    f.name as birth_facility,
-    case when pbd.attendant_at_birth = 'doctor' then 'Doctor'
-        when pbd.attendant_at_birth = 'midwife' then 'Midwife'
-        when pbd.attendant_at_birth = 'nurse' then 'Nurse'
-        when pbd.attendant_at_birth = 'traditional_birth_attentdant' then 'Traditional birth attendant'
-        when pbd.attendant_at_birth = 'other' then 'Other'
-        else pbd.attendant_at_birth
-    end as attendant_at_birth,
-    pbd.name_of_attendant_at_birth,
-    case
-        when pbd.birth_delivery_type = 'normal_vaginal_delivery' then 'Normal vaginal delivery'
-        when pbd.birth_delivery_type = 'breech' then 'Breech'
-        when pbd.birth_delivery_type = 'emergency_c_section' then 'Emergency C-section'
-        when pbd.birth_delivery_type = 'elective_c_section' then 'Elective C-section'
-        when pbd.birth_delivery_type = 'vacuum_extraction' then 'Vacuum extraction'
-        when pbd.birth_delivery_type = 'forceps' then 'Forceps'
-        when pbd.birth_delivery_type = 'other' then 'Other'
-        else pbd.birth_delivery_type
-    end as birth_delivery_type,
-    initcap(pbd.birth_type::text) as birth_type,
-    pbd.birth_weight,
-    pbd.birth_length,
-    pbd.apgar_score_one_minute,
-    pbd.apgar_score_five_minutes,
-    pbd.apgar_score_ten_minutes
-from "reporting"."patient_birth_data" pbd
-join "reporting"."patients" p on p.id = pbd.patient_id
-left join "reporting"."reference_data" rd_village on rd_village.id = p.village_id
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
-left join "reporting"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
-left join "reporting"."patients" p_mother on p_mother.id = pad.mother_id
-left join "reporting"."patients" p_father on p_father.id = pad.father_id
-left join "reporting"."facilities" f on f.id = pbd.birth_facility_id
-left join "reporting"."users" u on u.id = pad.registered_by_id
-);
-create or replace view "reporting"."ds__deaths" as (
-with contributing_death_causes as (
-    select
-        cdc.patient_death_data_id,
-        array_agg(
-            cdc.condition_id
-            order by cdc.time_after_onset
-        ) as other_conditions
-    from "reporting"."contributing_death_causes" cdc
-    group by cdc.patient_death_data_id
-),
-
-encounters_with_death as (
-    select distinct on (e.patient_id)
-        e.patient_id,
-        e.start_datetime,
-        e.end_datetime,
-        e.location_id,
-        e.department_id,
-        e.clinician_id
-    from "reporting"."encounters" e
-    join "reporting"."patients" p
-        on p.id = e.patient_id
-        and p.date_of_death between e.start_datetime and e.end_datetime
-    order by e.patient_id asc, e.end_datetime desc
-)
-
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(p.date_of_death::date, p.date_of_birth::date)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    nationality.id as nationality_id,
-    nationality.name as nationality,
-    case
-        when pdd.was_outside_health_facility then 'Died outside health facility'
-        else facility.name
-    end as place_of_death,
-    facility.id as facility_id,
-    department.id as department_id,
-    department.name as department,
-    location_group.id as location_group_id,
-    location_group.name as location_group,
-    location.id as location_id,
-    location.name as location,
-    p.date_of_death,
-    clinician.id as attending_clinician_id,
-    clinician.display_name as attending_clinician,
-    primary_condition.id as primary_cause_condition_id,
-    primary_condition.name as primary_cause_condition,
-    case
-        when pdd.primary_cause_mins_after_onset is null or pdd.primary_cause_mins_after_onset = 0
-            then '0 minutes'
-        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 365)) = 0
-            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 365), ' years')
-        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 30)) = 0
-            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 30), ' months')
-        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 7)) = 0
-            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 7), ' weeks')
-        when mod(pdd.primary_cause_mins_after_onset, (60 * 24)) = 0
-            then concat(pdd.primary_cause_mins_after_onset / (60 * 24), ' days')
-        when mod(pdd.primary_cause_mins_after_onset, 60) = 0
-            then concat(pdd.primary_cause_mins_after_onset / 60, ' hours')
-        else concat(pdd.primary_cause_mins_after_onset, ' minutes')
-    end as time_between_onset_and_death,
-    antecedent_condition_1.id as antecedent_cause_1_id,
-    antecedent_condition_1.name as antecedent_cause_1,
-    antecedent_condition_2.id as antecedent_cause_2_id,
-    antecedent_condition_2.name as antecedent_cause_2,
-    other_condition_1.id as other_condition_1_id,
-    other_condition_1.name as other_condition_1,
-    other_condition_2.id as other_condition_2_id,
-    other_condition_2.name as other_condition_2,
-    other_condition_3.id as other_condition_3_id,
-    other_condition_3.name as other_condition_3,
-    other_condition_4.id as other_condition_4_id,
-    other_condition_4.name as other_condition_4,
-    initcap(pdd.had_recent_surgery) as had_recent_surgery,
-    pdd.last_surgery_date,
-    surgery_reason.id as reason_for_surgery_id,
-    surgery_reason.name as reason_for_surgery,
-    pdd.manner as manner_of_death,
-    pdd.external_cause_date,
-    pdd.external_cause_location,
-    initcap(pdd.was_pregnant) as was_pregnant,
-    pdd.pregnancy_contributed,
-    case
-        when pdd.was_fetal_or_infant then 'Yes'
-        else 'No'
-    end as was_fetal_or_infant,
-    initcap(pdd.was_stillborn) as was_stillborn,
-    pdd.birth_weight,
-    pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
-    pdd.carrier_age as age_of_mother,
-    carrier_condition.name as condition_in_mother_affecting_fetus_or_newborn,
-    case
-        when pdd.was_within_day_of_birth then 'Yes'
-        else 'No'
-    end as death_within_day_of_birth,
-    pdd.hours_survived_since_birth
-from "reporting"."patient_death_data" pdd
-join "reporting"."patients" p
-    on p.id = pdd.patient_id
-left join "reporting"."patient_additional_data" pd
-    on pd.patient_id = p.id
-left join "reporting"."reference_data" village
-    on village.id = p.village_id
-left join "reporting"."reference_data" nationality
-    on nationality.id = pd.nationality_id
-left join "reporting"."reference_data" primary_condition
-    on primary_condition.id = pdd.primary_cause_condition_id
-left join "reporting"."reference_data" antecedent_condition_1
-    on antecedent_condition_1.id = pdd.antecedent_cause1_condition_id
-left join "reporting"."reference_data" antecedent_condition_2
-    on antecedent_condition_2.id = pdd.antecedent_cause2_condition_id
-left join contributing_death_causes cdc
-    on cdc.patient_death_data_id = pdd.id
-left join "reporting"."reference_data" other_condition_1
-    on other_condition_1.id = cdc.other_conditions[1]
-left join "reporting"."reference_data" other_condition_2
-    on other_condition_2.id = cdc.other_conditions[2]
-left join "reporting"."reference_data" other_condition_3
-    on other_condition_3.id = cdc.other_conditions[3]
-left join "reporting"."reference_data" other_condition_4
-    on other_condition_4.id = cdc.other_conditions[4]
-left join "reporting"."reference_data" surgery_reason
-    on surgery_reason.id = pdd.last_surgery_reason_id
-left join "reporting"."reference_data" carrier_condition
-    on carrier_condition.id = pdd.carrier_existing_condition_id
-left join encounters_with_death ewd
-    on ewd.patient_id = p.id
-left join "reporting"."facilities" facility
-    on facility.id = pdd.facility_id
-left join "reporting"."departments" department
-    on department.id = ewd.department_id
-left join "reporting"."locations" location
-    on location.id = ewd.location_id
-left join "reporting"."location_groups" location_group
-    on location_group.id = location.location_group_id
-left join "reporting"."users" clinician
-    on clinician.id = pdd.recorded_by_id
-where pdd.visibility_status = 'current'
-    and pdd.is_final
-);
-create or replace view "reporting"."ds__invoice_products" as (
-
-
-with price_pivot as (
-    select
-        invoice_product_id
-    from "reporting"."invoice_price_list_items"
-    where is_hidden = false
-    group by invoice_product_id
-),
-
-insurance_pivot as (
-    select
-        invoice_product_id
-    from "reporting"."invoice_insurance_plan_items"
-    group by invoice_product_id
-)
-
-select
-    ip.id,
-    ip.name,
-    ip.insurable,
-    ip.category,
-    ip.source_record_id,
-    ip.visibility_status,
-    coalesce(ltt.external_code, ltp.external_code) as external_code
-from "reporting"."invoice_products" ip
-left join price_pivot pp on pp.invoice_product_id = ip.id
-left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
-left join "reporting"."lab_test_types" ltt on ltt.id = ip.source_record_id
-left join "reporting"."lab_test_panels" ltp on ltp.id = ip.source_record_id
-);
-create or replace view "reporting"."ds__ongoing_conditions" as (
-select
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    date_part('year', age(pc.recorded_datetime::date, p.date_of_birth)) as age,
-    p.sex,
-    village.name as village,
-    village.id as village_id,
-    conditions.name as condition,
-    conditions.id as condition_id,
-    pc.recorded_datetime,
-    clinician.id as clinician_id,
-    clinician.display_name as clinician,
-    case when pc.is_resolved then pc.resolved_datetime end as date_resolved,
-    case when pc.is_resolved then resolving_clinician.display_name end as clinician_resolving
-from "reporting"."patient_conditions" pc
-join "reporting"."patients" p on p.id = pc.patient_id
-join "reporting"."reference_data" conditions on conditions.id = pc.condition_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."users" clinician on clinician.id = pc.recorded_by_id
-left join "reporting"."users" resolving_clinician
-    on resolving_clinician.id = pc.resolved_by_id
-);
-create or replace view "reporting"."ds__patients" as (
-select
-    p.created_datetime as registration_date,
-    u.display_name as registered_by,
-    p.id as patient_id,
-    p.first_name,
-    p.middle_name,
-    p.last_name,
-    p.cultural_name,
-    p.display_id,
-    p.sex,
-    p.village_id,
-    village.name as village,
-    p.date_of_birth,
-    p.date_of_death,
-    pad.birth_certificate,
-    pad.driving_license,
-    pad.passport,
-    pad.blood_type,
-    pad.title,
-    pad.marital_status,
-    pad.primary_contact_number,
-    pad.secondary_contact_number,
-    cob.name as country_of_birth,
-    nationality.name as nationality,
-    ethnicity.name as ethnicity,
-    occupation.name as occupation,
-    religion.name as religion,
-    billing.name as patient_billing_type,
-    subdivision.id as subdivision_id,
-    subdivision.name as subdivision,
-    division.id as division_id,
-    division.name as division,
-    pad.mother_id,
-    pad.father_id,
-    pad.street_village,
-    case
-        when pbd.patient_id is null then 'Patient'
-        else 'Birth'
-    end as registration_type,
-    date_part(
-        'year',
-        age(
-            coalesce(p.date_of_death::date, current_date),
-            p.date_of_birth
-        )
-    ) as age,
-    case
-        when p.date_of_death is not null then 'Deceased'
-        else 'Alive'
-    end as status
-from "reporting"."patients" p
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
-left join "reporting"."users" u on u.id = pad.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id
-left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id
-left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id
-left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id
-left join "reporting"."reference_data" religion on religion.id = pad.religion_id
-left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id
-left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
-left join "reporting"."reference_data" division on division.id = pad.division_id
-);
-create or replace view "reporting"."ds__patients_access_logs" as (
-with grouped_access_logs as (
-    select
-        lap.patient_id,
-        lap.user_id,
-        lap.facility_id,
-        date_trunc('minute', min(lap.logged_at)) as date_time_viewed,
-        -- Take the first values for fields that might vary within the same minute
-        lap.is_mobile,
-        lap.session_id,
-        lap.device_id
-    from "reporting"."patients_access_logs" lap
-    group by
-        lap.patient_id,
-        lap.user_id,
-        lap.facility_id,
-        lap.is_mobile,
-        lap.session_id,
-        lap.device_id
-)
-
-select
-    gal.patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    p.sex,
-    p.village_id,
-    village.name as village,
-    gal.user_id as viewed_by_user_id,
-    u.display_name as viewed_by_user,
-    u.email as user_email,
-    u.role as user_role,
-    f.name as viewed_at_facility,
-    gal.date_time_viewed,
-    gal.facility_id,
-    gal.is_mobile,
-    gal.session_id,
-    gal.device_id
-from grouped_access_logs gal
-join "reporting"."patients" p on p.id = gal.patient_id
-left join "reporting"."users" u on u.id = gal.user_id
-left join "reporting"."facilities" f on f.id = gal.facility_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-);
-create or replace view "reporting"."ds__patients_change_logs" as (
-with patient_edits as (
-    -- Patient details edits
-    select
-        lcp.id as patient_id,
-        lcp.display_id,
-        lcp.first_name,
-        lcp.last_name,
-        lcp.date_of_birth,
-        lcp.sex,
-        lcp.village_id,
-        lcp.updated_by_user_id,
-        lcp.logged_at
-    from "reporting"."patients_change_logs" lcp
-
-    union all
-
-    -- Patient additional data edits
-    select
-        lcpad.patient_id,
-        p.display_id,
-        p.first_name,
-        p.last_name,
-        p.date_of_birth,
-        p.sex,
-        p.village_id,
-        lcpad.updated_by_user_id,
-        lcpad.logged_at
-    from "reporting"."patient_additional_data_change_logs" lcpad
-    left join "reporting"."patients" p on p.id = lcpad.patient_id
-),
-
-grouped_edits as (
-    select
-        pe.patient_id,
-        pe.display_id,
-        pe.first_name,
-        pe.last_name,
-        pe.date_of_birth,
-        pe.sex,
-        pe.village_id,
-        pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at) as edited_datetime
-    from patient_edits pe
-    group by
-        pe.patient_id,
-        pe.display_id,
-        pe.first_name,
-        pe.last_name,
-        pe.date_of_birth,
-        pe.sex,
-        pe.village_id,
-        pe.updated_by_user_id,
-        date_trunc('minute', pe.logged_at)
-)
-
-select
-    ge.patient_id,
-    ge.display_id,
-    ge.first_name,
-    ge.last_name,
-    ge.date_of_birth,
-    ge.sex,
-    ge.village_id,
-    village.name as village,
-    ge.updated_by_user_id as edited_by_user_id,
-    u.display_name as edited_by_user,
-    u.email as user_email,
-    u.role as user_role,
-    ge.edited_datetime
-from grouped_edits ge
-left join "reporting"."users" u on u.id = ge.updated_by_user_id
-left join "reporting"."reference_data" village on village.id = ge.village_id
-);
-create or replace view "reporting"."ds__patient_program_registrations" as (
-with related_conditions as (
-    select
-        ppr.id as patient_program_registration_id,
-        string_agg(
-            prc.name, '; '
-            order by pprc.datetime
-        ) as conditions,
-        array_agg(
-            pprc.program_registry_condition_id
-            order by pprc.datetime
-        ) as condition_ids,
-        string_agg(
-            prcc.name, '; '
-            order by pprc.datetime
-        ) as condition_categories,
-        array_agg(
-            pprc.program_registry_condition_category_id
-            order by pprc.datetime
-        ) as condition_category_ids
-    from "reporting"."patient_program_registration_conditions" pprc
-    join "reporting"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
-    left join "reporting"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
-    left join "reporting"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
-    group by ppr.id
-)
-
-select
-    ppr.id as patient_program_registration_id,
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    registering_facility.id as registering_facility_id,
-    registering_facility.name as registering_facility,
-    registered_by.id as registered_by_id,
-    registered_by.display_name as registered_by,
-    case
-        when pr.currently_at_type = 'facility' then currently_at_facility.name
-        when pr.currently_at_type = 'village' then currently_at_village.name
-    end as currently_at,
-    pr.currently_at_type,
-    c.condition_ids as related_condition_ids,
-    c.conditions as related_conditions,
-    c.condition_category_ids as related_condition_category_ids,
-    c.condition_categories as related_condition_categories,
-    prcs.id as clinical_status_id,
-    prcs.name as clinical_status,
-    ppr.registration_status,
-    ppr.program_registry_id,
-    subdivision.id as subdivision_id,
-    subdivision.name as subdivision,
-    division.id as division_id,
-    division.name as division,
-    ppr.datetime as registration_datetime,
-    ppr.deactivated_by_id,
-    deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime,
-    pad.primary_contact_number,
-    pad.secondary_contact_number,
-    pad.emergency_contact_name,
-    pad.emergency_contact_number
-from "reporting"."patient_program_registrations" ppr
-join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
-join "reporting"."patients" p on p.id = ppr.patient_id
-left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
-left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
-left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-left join "reporting"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
-left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
-left join "reporting"."reference_data" division on division.id = pad.division_id
-left join "reporting"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
-left join related_conditions c on c.patient_program_registration_id = ppr.id
-left join "reporting"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
-left join "reporting"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
-);
-create or replace view "reporting"."ds__patient_vaccinations_upcoming" as (
-select
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.id as patient_id,
-    p.date_of_birth,
-    date_part('year', age(p.date_of_birth)) as age,
-    p.sex,
-    village.id as village_id,
-    village.name as village,
-    pvu.due_date,
-    pvu.vaccine_category,
-    pvu.vaccine_schedules_id,
-    sv.label as vaccine_name,
-    sv.dose_label as vaccine_schedule,
-    pvu.status as vaccine_status
-from "reporting"."patient_vaccinations_upcoming" pvu
-join "reporting"."patients" p on p.id = pvu.patient_id
-join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
-left join "reporting"."reference_data" village on village.id = p.village_id
-where p.date_of_death is null
-);
-create or replace view "reporting"."ds__usage_quality_metrics_patient_details" as (
-with data as (
-    select
-        p.id as patient_id,
-        pm.id as patient_merged_id,
-        coalesce(nullif(trim(p.first_name), ''), nullif(trim(pm.first_name), '')) as first_name,
-        coalesce(nullif(trim(p.last_name), ''), nullif(trim(pm.last_name), '')) as last_name,
-        coalesce(p.date_of_birth, pm.date_of_birth) as date_of_birth,
-        coalesce(nullif(trim(p.village_id), ''), nullif(trim(pm.village_id), '')) as village_id,
-        nullif(trim(pad.nursing_zone_id), '') as nursing_zone_id,
-        nullif(trim(pad.medical_area_id), '') as medical_area_id,
-        nullif(trim(pad.subdivision_id), '') as subdivision_id,
-        nullif(trim(pad.division_id), '') as division_id,
-        nullif(trim(pad.primary_contact_number), '') as primary_contact_number,
-        nullif(trim(pad.secondary_contact_number), '') as secondary_contact_number
-    from "reporting"."patients" p
-    full join "reporting"."patients_merged" pm
-        on pm.id = p.id
-    left join "reporting"."patient_additional_data" pad
-        on pad.patient_id = coalesce(p.id, pm.id)
-)
-
-select
-    count(*) as total_patients,
-    count(*) filter (where first_name is null or last_name is null) as total_patients_with_incomplete_name,
-    count(*) filter (where date_of_birth is null) as total_patients_with_missing_dob,
-    count(*) filter (where date_of_birth <= '1900-01-01' or date_of_birth > now()::date) as total_patients_with_invalid_dob,
-    count(*) filter (where coalesce(village_id, nursing_zone_id, medical_area_id, subdivision_id, division_id) is null) as total_patients_with_missing_location,
-    count(*) filter (where coalesce(primary_contact_number, secondary_contact_number) is null) as total_patients_with_missing_contact,
-    count(patient_merged_id) as total_patients_merged
-from data
-);
-create or replace view "reporting"."ds__usage_quality_metrics_patient_registrations" as (
-with data as (
-    select
-        p.created_datetime as registration_date,
-        p.id as registration_patient_id,
-        pbd.patient_id as birth_patient_id,
-        p.date_of_birth,
-        age(p.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
-    from "reporting"."patients" p
-    left join "reporting"."patient_birth_data" pbd
-        on pbd.patient_id = p.id
-)
-
-select
-    registration_date,
-    count(*) filter (where birth_patient_id is null) as total_patient_registrations,
-    count(birth_patient_id) as total_birth_registrations,
-    count(*) filter (where birth_patient_id is null and age_under_6m_at_registration) as total_incorrect_registrations_for_patient_under_6mth
-from data
-group by registration_date
-);
 create or replace view "reporting"."ds__sensitive_admissions" as (
 
 
@@ -3689,6 +3070,225 @@ left join encounter_diagnoses ed
 
 
 );
+create or replace view "reporting"."ds__births" as (
+select
+    pbd.registration_date,
+    case
+        when left(pbd.registration_date::text, 10) = left(pad.registration_date::text, 10) then u.display_name
+    end as registered_by,
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    rd_ethnicity.name as ethnicity,
+    rd_nationality.name as nationality,
+    p.village_id,
+    rd_village.name as village,
+    case
+        when
+            p_mother.id is not null
+            then concat(p_mother.first_name, ' ', p_mother.last_name, ' (', p_mother.display_id, ')')
+    end as mother,
+    case
+        when
+            p_father.id is not null
+            then concat(p_father.first_name, ' ', p_father.last_name, ' (', p_father.display_id, ')')
+    end as father,
+    pbd.birth_time,
+    pbd.gestational_age_estimate,
+    case when pbd.registered_birth_place = 'health_facility' then 'Health facility'
+        when pbd.registered_birth_place = 'home' then 'Home'
+        when pbd.registered_birth_place = 'other' then 'Other'
+        else pbd.registered_birth_place
+    end as registered_birth_place,
+    f.id as birth_facility_id,
+    f.name as birth_facility,
+    case when pbd.attendant_at_birth = 'doctor' then 'Doctor'
+        when pbd.attendant_at_birth = 'midwife' then 'Midwife'
+        when pbd.attendant_at_birth = 'nurse' then 'Nurse'
+        when pbd.attendant_at_birth = 'traditional_birth_attentdant' then 'Traditional birth attendant'
+        when pbd.attendant_at_birth = 'other' then 'Other'
+        else pbd.attendant_at_birth
+    end as attendant_at_birth,
+    pbd.name_of_attendant_at_birth,
+    case
+        when pbd.birth_delivery_type = 'normal_vaginal_delivery' then 'Normal vaginal delivery'
+        when pbd.birth_delivery_type = 'breech' then 'Breech'
+        when pbd.birth_delivery_type = 'emergency_c_section' then 'Emergency C-section'
+        when pbd.birth_delivery_type = 'elective_c_section' then 'Elective C-section'
+        when pbd.birth_delivery_type = 'vacuum_extraction' then 'Vacuum extraction'
+        when pbd.birth_delivery_type = 'forceps' then 'Forceps'
+        when pbd.birth_delivery_type = 'other' then 'Other'
+        else pbd.birth_delivery_type
+    end as birth_delivery_type,
+    initcap(pbd.birth_type::text) as birth_type,
+    pbd.birth_weight,
+    pbd.birth_length,
+    pbd.apgar_score_one_minute,
+    pbd.apgar_score_five_minutes,
+    pbd.apgar_score_ten_minutes
+from "reporting"."patient_birth_data" pbd
+join "reporting"."patients" p on p.id = pbd.patient_id
+left join "reporting"."reference_data" rd_village on rd_village.id = p.village_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."reference_data" rd_nationality on rd_nationality.id = pad.nationality_id
+left join "reporting"."reference_data" rd_ethnicity on rd_ethnicity.id = pad.ethnicity_id
+left join "reporting"."patients" p_mother on p_mother.id = pad.mother_id
+left join "reporting"."patients" p_father on p_father.id = pad.father_id
+left join "reporting"."facilities" f on f.id = pbd.birth_facility_id
+left join "reporting"."users" u on u.id = pad.registered_by_id
+);
+create or replace view "reporting"."ds__deaths" as (
+with contributing_death_causes as (
+    select
+        cdc.patient_death_data_id,
+        array_agg(
+            cdc.condition_id
+            order by cdc.time_after_onset
+        ) as other_conditions
+    from "reporting"."contributing_death_causes" cdc
+    group by cdc.patient_death_data_id
+),
+
+encounters_with_death as (
+    select distinct on (e.patient_id)
+        e.patient_id,
+        e.start_datetime,
+        e.end_datetime,
+        e.location_id,
+        e.department_id,
+        e.clinician_id
+    from "reporting"."encounters" e
+    join "reporting"."patients" p
+        on p.id = e.patient_id
+        and p.date_of_death between e.start_datetime and e.end_datetime
+    order by e.patient_id asc, e.end_datetime desc
+)
+
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(p.date_of_death::date, p.date_of_birth::date)) as age,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    nationality.id as nationality_id,
+    nationality.name as nationality,
+    case
+        when pdd.was_outside_health_facility then 'Died outside health facility'
+        else facility.name
+    end as place_of_death,
+    facility.id as facility_id,
+    department.id as department_id,
+    department.name as department,
+    location_group.id as location_group_id,
+    location_group.name as location_group,
+    location.id as location_id,
+    location.name as location,
+    p.date_of_death,
+    clinician.id as attending_clinician_id,
+    clinician.display_name as attending_clinician,
+    primary_condition.id as primary_cause_condition_id,
+    primary_condition.name as primary_cause_condition,
+    case
+        when pdd.primary_cause_mins_after_onset is null or pdd.primary_cause_mins_after_onset = 0
+            then '0 minutes'
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 365)) = 0
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 365), ' years')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 30)) = 0
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 30), ' months')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24 * 7)) = 0
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24 * 7), ' weeks')
+        when mod(pdd.primary_cause_mins_after_onset, (60 * 24)) = 0
+            then concat(pdd.primary_cause_mins_after_onset / (60 * 24), ' days')
+        when mod(pdd.primary_cause_mins_after_onset, 60) = 0
+            then concat(pdd.primary_cause_mins_after_onset / 60, ' hours')
+        else concat(pdd.primary_cause_mins_after_onset, ' minutes')
+    end as time_between_onset_and_death,
+    antecedent_condition_1.id as antecedent_cause_1_id,
+    antecedent_condition_1.name as antecedent_cause_1,
+    antecedent_condition_2.id as antecedent_cause_2_id,
+    antecedent_condition_2.name as antecedent_cause_2,
+    other_condition_1.id as other_condition_1_id,
+    other_condition_1.name as other_condition_1,
+    other_condition_2.id as other_condition_2_id,
+    other_condition_2.name as other_condition_2,
+    other_condition_3.id as other_condition_3_id,
+    other_condition_3.name as other_condition_3,
+    other_condition_4.id as other_condition_4_id,
+    other_condition_4.name as other_condition_4,
+    initcap(pdd.had_recent_surgery) as had_recent_surgery,
+    pdd.last_surgery_date,
+    surgery_reason.id as reason_for_surgery_id,
+    surgery_reason.name as reason_for_surgery,
+    pdd.manner as manner_of_death,
+    pdd.external_cause_date,
+    pdd.external_cause_location,
+    initcap(pdd.was_pregnant) as was_pregnant,
+    pdd.pregnancy_contributed,
+    case
+        when pdd.was_fetal_or_infant then 'Yes'
+        else 'No'
+    end as was_fetal_or_infant,
+    initcap(pdd.was_stillborn) as was_stillborn,
+    pdd.birth_weight,
+    pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
+    pdd.carrier_age as age_of_mother,
+    carrier_condition.name as condition_in_mother_affecting_fetus_or_newborn,
+    case
+        when pdd.was_within_day_of_birth then 'Yes'
+        else 'No'
+    end as death_within_day_of_birth,
+    pdd.hours_survived_since_birth
+from "reporting"."patient_death_data" pdd
+join "reporting"."patients" p
+    on p.id = pdd.patient_id
+left join "reporting"."patient_additional_data" pd
+    on pd.patient_id = p.id
+left join "reporting"."reference_data" village
+    on village.id = p.village_id
+left join "reporting"."reference_data" nationality
+    on nationality.id = pd.nationality_id
+left join "reporting"."reference_data" primary_condition
+    on primary_condition.id = pdd.primary_cause_condition_id
+left join "reporting"."reference_data" antecedent_condition_1
+    on antecedent_condition_1.id = pdd.antecedent_cause1_condition_id
+left join "reporting"."reference_data" antecedent_condition_2
+    on antecedent_condition_2.id = pdd.antecedent_cause2_condition_id
+left join contributing_death_causes cdc
+    on cdc.patient_death_data_id = pdd.id
+left join "reporting"."reference_data" other_condition_1
+    on other_condition_1.id = cdc.other_conditions[1]
+left join "reporting"."reference_data" other_condition_2
+    on other_condition_2.id = cdc.other_conditions[2]
+left join "reporting"."reference_data" other_condition_3
+    on other_condition_3.id = cdc.other_conditions[3]
+left join "reporting"."reference_data" other_condition_4
+    on other_condition_4.id = cdc.other_conditions[4]
+left join "reporting"."reference_data" surgery_reason
+    on surgery_reason.id = pdd.last_surgery_reason_id
+left join "reporting"."reference_data" carrier_condition
+    on carrier_condition.id = pdd.carrier_existing_condition_id
+left join encounters_with_death ewd
+    on ewd.patient_id = p.id
+left join "reporting"."facilities" facility
+    on facility.id = pdd.facility_id
+left join "reporting"."departments" department
+    on department.id = ewd.department_id
+left join "reporting"."locations" location
+    on location.id = ewd.location_id
+left join "reporting"."location_groups" location_group
+    on location_group.id = location.location_group_id
+left join "reporting"."users" clinician
+    on clinician.id = pdd.recorded_by_id
+where pdd.visibility_status = 'current'
+    and pdd.is_final
+);
 create or replace view "reporting"."ds__diagnoses" as (
 
 
@@ -4013,6 +3613,38 @@ left join results irs on irs.imaging_request_id = ir.id
 
 
 );
+create or replace view "reporting"."ds__invoice_products" as (
+
+
+with price_pivot as (
+    select
+        invoice_product_id
+    from "reporting"."invoice_price_list_items"
+    where is_hidden = false
+    group by invoice_product_id
+),
+
+insurance_pivot as (
+    select
+        invoice_product_id
+    from "reporting"."invoice_insurance_plan_items"
+    group by invoice_product_id
+)
+
+select
+    ip.id,
+    ip.name,
+    ip.insurable,
+    ip.category,
+    ip.source_record_id,
+    ip.visibility_status,
+    coalesce(ltt.external_code, ltp.external_code) as external_code
+from "reporting"."invoice_products" ip
+left join price_pivot pp on pp.invoice_product_id = ip.id
+left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
+left join "reporting"."lab_test_types" ltt on ltt.id = ip.source_record_id
+left join "reporting"."lab_test_panels" ltp on ltp.id = ip.source_record_id
+);
 create or replace view "reporting"."ds__lab_requests" as (
 
 
@@ -4253,6 +3885,32 @@ join "reporting"."facilities" f
 
 
 );
+create or replace view "reporting"."ds__ongoing_conditions" as (
+select
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    date_part('year', age(pc.recorded_datetime::date, p.date_of_birth)) as age,
+    p.sex,
+    village.name as village,
+    village.id as village_id,
+    conditions.name as condition,
+    conditions.id as condition_id,
+    pc.recorded_datetime,
+    clinician.id as clinician_id,
+    clinician.display_name as clinician,
+    case when pc.is_resolved then pc.resolved_datetime end as date_resolved,
+    case when pc.is_resolved then resolving_clinician.display_name end as clinician_resolving
+from "reporting"."patient_conditions" pc
+join "reporting"."patients" p on p.id = pc.patient_id
+join "reporting"."reference_data" conditions on conditions.id = pc.condition_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."users" clinician on clinician.id = pc.recorded_by_id
+left join "reporting"."users" resolving_clinician
+    on resolving_clinician.id = pc.resolved_by_id
+);
 create or replace view "reporting"."ds__outpatient_appointments" as (
 
 
@@ -4453,6 +4111,295 @@ join "reporting"."facilities" f on f.id = lg.facility_id
 
 
 );
+create or replace view "reporting"."ds__patients" as (
+select
+    p.created_datetime as registration_date,
+    u.display_name as registered_by,
+    p.id as patient_id,
+    p.first_name,
+    p.middle_name,
+    p.last_name,
+    p.cultural_name,
+    p.display_id,
+    p.sex,
+    p.village_id,
+    village.name as village,
+    p.date_of_birth,
+    p.date_of_death,
+    pad.birth_certificate,
+    pad.driving_license,
+    pad.passport,
+    pad.blood_type,
+    pad.title,
+    pad.marital_status,
+    pad.primary_contact_number,
+    pad.secondary_contact_number,
+    cob.name as country_of_birth,
+    nationality.name as nationality,
+    ethnicity.name as ethnicity,
+    occupation.name as occupation,
+    religion.name as religion,
+    billing.name as patient_billing_type,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
+    pad.mother_id,
+    pad.father_id,
+    pad.street_village,
+    case
+        when pbd.patient_id is null then 'Patient'
+        else 'Birth'
+    end as registration_type,
+    date_part(
+        'year',
+        age(
+            coalesce(p.date_of_death::date, current_date),
+            p.date_of_birth
+        )
+    ) as age,
+    case
+        when p.date_of_death is not null then 'Deceased'
+        else 'Alive'
+    end as status
+from "reporting"."patients" p
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."patient_birth_data" pbd on pbd.patient_id = p.id
+left join "reporting"."users" u on u.id = pad.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."reference_data" cob on cob.id = pad.country_of_birth_id
+left join "reporting"."reference_data" nationality on nationality.id = pad.nationality_id
+left join "reporting"."reference_data" ethnicity on ethnicity.id = pad.ethnicity_id
+left join "reporting"."reference_data" occupation on occupation.id = pad.occupation_id
+left join "reporting"."reference_data" religion on religion.id = pad.religion_id
+left join "reporting"."reference_data" billing on billing.id = pad.patient_billing_type_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
+);
+create or replace view "reporting"."ds__patients_access_logs" as (
+with grouped_access_logs as (
+    select
+        lap.patient_id,
+        lap.user_id,
+        lap.facility_id,
+        date_trunc('minute', min(lap.logged_at)) as date_time_viewed,
+        -- Take the first values for fields that might vary within the same minute
+        lap.is_mobile,
+        lap.session_id,
+        lap.device_id
+    from "reporting"."patients_access_logs" lap
+    group by
+        lap.patient_id,
+        lap.user_id,
+        lap.facility_id,
+        lap.is_mobile,
+        lap.session_id,
+        lap.device_id
+)
+
+select
+    gal.patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    p.village_id,
+    village.name as village,
+    gal.user_id as viewed_by_user_id,
+    u.display_name as viewed_by_user,
+    u.email as user_email,
+    u.role as user_role,
+    f.name as viewed_at_facility,
+    gal.date_time_viewed,
+    gal.facility_id,
+    gal.is_mobile,
+    gal.session_id,
+    gal.device_id
+from grouped_access_logs gal
+join "reporting"."patients" p on p.id = gal.patient_id
+left join "reporting"."users" u on u.id = gal.user_id
+left join "reporting"."facilities" f on f.id = gal.facility_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+);
+create or replace view "reporting"."ds__patients_change_logs" as (
+with patient_edits as (
+    -- Patient details edits
+    select
+        lcp.id as patient_id,
+        lcp.display_id,
+        lcp.first_name,
+        lcp.last_name,
+        lcp.date_of_birth,
+        lcp.sex,
+        lcp.village_id,
+        lcp.updated_by_user_id,
+        lcp.logged_at
+    from "reporting"."patients_change_logs" lcp
+
+    union all
+
+    -- Patient additional data edits
+    select
+        lcpad.patient_id,
+        p.display_id,
+        p.first_name,
+        p.last_name,
+        p.date_of_birth,
+        p.sex,
+        p.village_id,
+        lcpad.updated_by_user_id,
+        lcpad.logged_at
+    from "reporting"."patient_additional_data_change_logs" lcpad
+    left join "reporting"."patients" p on p.id = lcpad.patient_id
+),
+
+grouped_edits as (
+    select
+        pe.patient_id,
+        pe.display_id,
+        pe.first_name,
+        pe.last_name,
+        pe.date_of_birth,
+        pe.sex,
+        pe.village_id,
+        pe.updated_by_user_id,
+        date_trunc('minute', pe.logged_at) as edited_datetime
+    from patient_edits pe
+    group by
+        pe.patient_id,
+        pe.display_id,
+        pe.first_name,
+        pe.last_name,
+        pe.date_of_birth,
+        pe.sex,
+        pe.village_id,
+        pe.updated_by_user_id,
+        date_trunc('minute', pe.logged_at)
+)
+
+select
+    ge.patient_id,
+    ge.display_id,
+    ge.first_name,
+    ge.last_name,
+    ge.date_of_birth,
+    ge.sex,
+    ge.village_id,
+    village.name as village,
+    ge.updated_by_user_id as edited_by_user_id,
+    u.display_name as edited_by_user,
+    u.email as user_email,
+    u.role as user_role,
+    ge.edited_datetime
+from grouped_edits ge
+left join "reporting"."users" u on u.id = ge.updated_by_user_id
+left join "reporting"."reference_data" village on village.id = ge.village_id
+);
+create or replace view "reporting"."ds__patient_program_registrations" as (
+with related_conditions as (
+    select
+        ppr.id as patient_program_registration_id,
+        string_agg(
+            prc.name, '; '
+            order by pprc.datetime
+        ) as conditions,
+        array_agg(
+            pprc.program_registry_condition_id
+            order by pprc.datetime
+        ) as condition_ids,
+        string_agg(
+            prcc.name, '; '
+            order by pprc.datetime
+        ) as condition_categories,
+        array_agg(
+            pprc.program_registry_condition_category_id
+            order by pprc.datetime
+        ) as condition_category_ids
+    from "reporting"."patient_program_registration_conditions" pprc
+    join "reporting"."patient_program_registrations" ppr on ppr.id = pprc.patient_program_registration_id
+    left join "reporting"."program_registry_conditions" prc on prc.id = pprc.program_registry_condition_id
+    left join "reporting"."program_registry_condition_categories" prcc on prcc.id = pprc.program_registry_condition_category_id
+    group by ppr.id
+)
+
+select
+    ppr.id as patient_program_registration_id,
+    p.id as patient_id,
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.date_of_birth,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    registering_facility.id as registering_facility_id,
+    registering_facility.name as registering_facility,
+    registered_by.id as registered_by_id,
+    registered_by.display_name as registered_by,
+    case
+        when pr.currently_at_type = 'facility' then currently_at_facility.name
+        when pr.currently_at_type = 'village' then currently_at_village.name
+    end as currently_at,
+    pr.currently_at_type,
+    c.condition_ids as related_condition_ids,
+    c.conditions as related_conditions,
+    c.condition_category_ids as related_condition_category_ids,
+    c.condition_categories as related_condition_categories,
+    prcs.id as clinical_status_id,
+    prcs.name as clinical_status,
+    ppr.registration_status,
+    ppr.program_registry_id,
+    subdivision.id as subdivision_id,
+    subdivision.name as subdivision,
+    division.id as division_id,
+    division.name as division,
+    ppr.datetime as registration_datetime,
+    ppr.deactivated_by_id,
+    deactivated_by.display_name as deactivated_by,
+    ppr.deactivated_datetime,
+    pad.primary_contact_number,
+    pad.secondary_contact_number,
+    pad.emergency_contact_name,
+    pad.emergency_contact_number
+from "reporting"."patient_program_registrations" ppr
+join "reporting"."program_registries" pr on pr.id = ppr.program_registry_id
+join "reporting"."patients" p on p.id = ppr.patient_id
+left join "reporting"."patient_additional_data" pad on pad.patient_id = p.id
+left join "reporting"."facilities" registering_facility on registering_facility.id = ppr.registering_facility_id
+left join "reporting"."users" registered_by on registered_by.id = ppr.registered_by_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+left join "reporting"."facilities" currently_at_facility on currently_at_facility.id = ppr.facility_id
+left join "reporting"."reference_data" subdivision on subdivision.id = pad.subdivision_id
+left join "reporting"."reference_data" division on division.id = pad.division_id
+left join "reporting"."reference_data" currently_at_village on currently_at_village.id = ppr.village_id
+left join related_conditions c on c.patient_program_registration_id = ppr.id
+left join "reporting"."program_registry_clinical_statuses" prcs on prcs.id = ppr.clinical_status_id
+left join "reporting"."users" deactivated_by on deactivated_by.id = ppr.deactivated_by_id
+);
+create or replace view "reporting"."ds__patient_vaccinations_upcoming" as (
+select
+    p.display_id,
+    p.first_name,
+    p.last_name,
+    p.id as patient_id,
+    p.date_of_birth,
+    date_part('year', age(p.date_of_birth)) as age,
+    p.sex,
+    village.id as village_id,
+    village.name as village,
+    pvu.due_date,
+    pvu.vaccine_category,
+    pvu.vaccine_schedules_id,
+    sv.label as vaccine_name,
+    sv.dose_label as vaccine_schedule,
+    pvu.status as vaccine_status
+from "reporting"."patient_vaccinations_upcoming" pvu
+join "reporting"."patients" p on p.id = pvu.patient_id
+join "reporting"."vaccine_schedules" sv on sv.id = pvu.vaccine_schedules_id
+left join "reporting"."reference_data" village on village.id = p.village_id
+where p.date_of_death is null
+);
 create or replace view "reporting"."ds__procedures" as (
 
 
@@ -4602,6 +4549,59 @@ join "reporting"."departments" d on d.id = e.department_id
 left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
 
 
+);
+create or replace view "reporting"."ds__usage_quality_metrics_patient_details" as (
+with data as (
+    select
+        p.id as patient_id,
+        pm.id as patient_merged_id,
+        coalesce(nullif(trim(p.first_name), ''), nullif(trim(pm.first_name), '')) as first_name,
+        coalesce(nullif(trim(p.last_name), ''), nullif(trim(pm.last_name), '')) as last_name,
+        coalesce(p.date_of_birth, pm.date_of_birth) as date_of_birth,
+        coalesce(nullif(trim(p.village_id), ''), nullif(trim(pm.village_id), '')) as village_id,
+        nullif(trim(pad.nursing_zone_id), '') as nursing_zone_id,
+        nullif(trim(pad.medical_area_id), '') as medical_area_id,
+        nullif(trim(pad.subdivision_id), '') as subdivision_id,
+        nullif(trim(pad.division_id), '') as division_id,
+        nullif(trim(pad.primary_contact_number), '') as primary_contact_number,
+        nullif(trim(pad.secondary_contact_number), '') as secondary_contact_number
+    from "reporting"."patients" p
+    full join "reporting"."patients_merged" pm
+        on pm.id = p.id
+    left join "reporting"."patient_additional_data" pad
+        on pad.patient_id = coalesce(p.id, pm.id)
+)
+
+select
+    count(*) as total_patients,
+    count(*) filter (where first_name is null or last_name is null) as total_patients_with_incomplete_name,
+    count(*) filter (where date_of_birth is null) as total_patients_with_missing_dob,
+    count(*) filter (where date_of_birth <= '1900-01-01' or date_of_birth > now()::date) as total_patients_with_invalid_dob,
+    count(*) filter (where coalesce(village_id, nursing_zone_id, medical_area_id, subdivision_id, division_id) is null) as total_patients_with_missing_location,
+    count(*) filter (where coalesce(primary_contact_number, secondary_contact_number) is null) as total_patients_with_missing_contact,
+    count(patient_merged_id) as total_patients_merged
+from data
+);
+create or replace view "reporting"."ds__usage_quality_metrics_patient_registrations" as (
+with data as (
+    select
+        p.created_datetime as registration_date,
+        p.id as registration_patient_id,
+        pbd.patient_id as birth_patient_id,
+        p.date_of_birth,
+        age(p.created_datetime, p.date_of_birth) < interval '6 months' as age_under_6m_at_registration
+    from "reporting"."patients" p
+    left join "reporting"."patient_birth_data" pbd
+        on pbd.patient_id = p.id
+)
+
+select
+    registration_date,
+    count(*) filter (where birth_patient_id is null) as total_patient_registrations,
+    count(birth_patient_id) as total_birth_registrations,
+    count(*) filter (where birth_patient_id is null and age_under_6m_at_registration) as total_incorrect_registrations_for_patient_under_6mth
+from data
+group by registration_date
 );
 create or replace view "reporting"."ds__user_audit" as (
 
