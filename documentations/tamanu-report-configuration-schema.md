@@ -15,7 +15,7 @@ Every report configuration file must be a valid JSON object with the following s
 #### Required Properties
 
 - **`query`** (string): The SQL query or placeholder for the report. Must be at least 1 character long.
-- **`name`** (string): Display name of the report as shown in the Tamanu reporting interface. Every report must define a `name` at the **root level**. Note: the JSON schema does not yet enforce this (it only allows a legacy `name` under `queryOptions`), but it is a required convention — all report configs define a root-level `name` and the reporting tooling relies on it.
+- **`name`** (string): Display name of the report as shown in the Tamanu reporting interface. Every report must define a `name` at the **root level**. The JSON schema enforces this as a required root-level property (`minLength: 1`). A legacy `name` under `queryOptions` is still permitted but deprecated.
 - **`status`** (enum): Publication status of the report. Must be either `"draft"` or `"published"`.
 - **`dbSchema`** (enum): Database schema to use for the report. Must be either `"raw"` or `"reporting"`.
 - **`queryOptions`** (object): Configuration options for the report query (see detailed structure below).
