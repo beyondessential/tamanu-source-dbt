@@ -405,7 +405,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
-### Audit outpatient appointments line list
+### Audit outpatient appointments
 
 **Report Description**
 
