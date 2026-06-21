@@ -1,6 +1,5 @@
 # IDE and editor files
 .claude/
-CLAUDE.md
 .idea
 .vscode
 
@@ -10,9 +9,11 @@ CLAUDE.md
 # Environment and config
 .env
 .user.yml
+CLAUDE.md
 
 # Python
 __pycache__
+*.egg-info/
 
 # Dependencies
 dbt_packages/
