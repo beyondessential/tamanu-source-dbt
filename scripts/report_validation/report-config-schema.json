@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "query",
+    "name",
     "status",
     "dbSchema",
     "queryOptions"
@@ -14,6 +15,11 @@
     "query": {
       "type": "string",
       "description": "SQL query or placeholder for the report",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the report shown in the Tamanu reporting interface",
       "minLength": 1
     },
     "status": {
@@ -72,7 +78,8 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the report"
+          "description": "Deprecated: legacy display name. Use the root-level \"name\" property instead. Retained for backwards compatibility only.",
+          "deprecated": true
         },
         "parameters": {
           "type": "array",
