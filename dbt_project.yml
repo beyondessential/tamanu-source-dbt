@@ -53,9 +53,6 @@ models:
       sensitive:
         +tags:
           - restricted
-      admin:
-        +tags:
-          - admin
       standard:
         +tags:
           - standard
@@ -73,9 +70,6 @@ models:
         sensitive:
           +tags:
             - restricted
-        admin:
-          +tags:
-            - admin
         standard:
           +tags:
             - standard
