@@ -1,6 +1,6 @@
 version: 2
 
-seeds:
+models:
   - name: metric_definitions
     description: |
       Canonical registry of `metric__` indicators and `der__` derived elements
@@ -8,14 +8,20 @@ seeds:
       this package — deployments inherit the catalogue automatically via
       `ref('metric_definitions')` without redeclaring anything.
 
+      The registry is authored in `metric_definitions.csv` and compiled inline
+      by the `get_metric_definitions()` macro, so it materialises as a view in
+      the production bundle rather than a seed table. Regenerate the macro with
+      `python scripts/generate_metric_definitions_macro.py` after editing the
+      CSV.
+
       Each row defines one indicator: identifier, plain-English description,
       numerator/denominator, source standard, output shape (subject grain,
       disaggregations, unit), and lifecycle status. Definitions here are the
       single source of truth — implementation overrides (a deployment uses a
       different upstream survey for the same metric) are invisible at this
       layer; only definition variances (different rules, different numbers) are
-      flagged, via `variant_of` on a deployment-specific extension seed at
-      `tamanu-dbt-<deployment>/seeds/metric_definitions_<deployment>.csv`.
+      flagged, via `variant_of` on a deployment-specific extension at
+      `tamanu-dbt-<deployment>/metric_definitions_<deployment>.csv`.
 
       Schema per Maui data architecture D5
       (`.maui/knowledge/architecture/data-architecture/decisions.md`).
@@ -25,29 +31,12 @@ seeds:
       `draft` to `approved`.
 
     config:
+      materialized: view
       meta:
         owner: "bes-maui"
         domain: "clinical"
         pii: false
         classification: "internal"
-      column_types:
-        metric_id: text
-        kind: text
-        name: text
-        description: text
-        numerator_description: text
-        denominator_description: text
-        data_source: text
-        definition_source: text
-        definition_source_code: text
-        definition_rationale: text
-        unit: text
-        subject_grain: text
-        disaggregations: text
-        variant_of: text
-        owner: text
-        status: text
-        spec_path: text
 
     columns:
       - name: metric_id
@@ -60,7 +49,8 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: ['metric', 'cohort', 'condition_era', 'drug_era', 'dose_era', 'episode']
+              arguments:
+                values: ['metric', 'cohort', 'condition_era', 'drug_era', 'dose_era', 'episode']
       - name: name
         description: Human-readable label shown in catalogues and dashboards.
         tests:
@@ -78,13 +68,15 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: ['tamanu', 'msupply', 'senaite', 'weather']
+              arguments:
+                values: ['tamanu', 'msupply', 'senaite', 'weather']
       - name: definition_source
         description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `WHO_PEN`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions.
         tests:
           - not_null
           - accepted_values:
-              values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'MSF', 'BES']
+              arguments:
+                values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'MSF', 'BES']
       - name: definition_source_code
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
@@ -93,7 +85,8 @@ seeds:
         description: Unit of measure (`count`, `percentage`, `rate_per_1000`). Metrics only — NULL for non-metric kinds.
         tests:
           - accepted_values:
-              values: ['count', 'percentage', 'rate_per_1000']
+              arguments:
+                values: ['count', 'percentage', 'rate_per_1000']
       - name: subject_grain
         description: Grain of `subject_id` in the metric output — `patient`, `encounter`, `facility`, etc.
         tests:
@@ -104,8 +97,9 @@ seeds:
         description: Parent `metric_id` if this row is a deployment-specific definition variant; else NULL. Metrics only.
         tests:
           - relationships:
-              to: ref('metric_definitions')
-              field: metric_id
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
       - name: owner
         description: Team or individual responsible for the artefact.
         tests:
@@ -115,7 +109,8 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: ['draft', 'approved', 'deprecated']
+              arguments:
+                values: ['draft', 'approved', 'deprecated']
       - name: spec_path
         description: Repo-relative path to the SDD spec for this artefact.
         tests:

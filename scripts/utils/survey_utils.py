@@ -6,6 +6,19 @@ from .system_utils import cprint, execute_command_with_output
 BASE_DIR = Path.cwd()
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
 
+# Base columns emitted by the get_survey macro. A survey data element whose
+# normalised code matches one of these is aliased to "<code>_answer" in the
+# model SQL to avoid a duplicate-column collision; keep this in sync with the
+# `reserved` list in macros/surveys.sql.
+RESERVED_COLUMNS = {
+    "encounter_id",
+    "response_id",
+    "patient_id",
+    "start_datetime",
+    "end_datetime",
+    "result_text",
+}
+
 
 def get_surveys_from_deployment():
     """
@@ -98,6 +111,8 @@ models:
         description: '{{{{ doc("encounters__patient_id") }}}}'
       - name: start_datetime
         description: '{{{{ doc("survey_responses__start_time") }}}}'
+      - name: end_datetime
+        description: '{{{{ doc("survey_responses__end_time") }}}}'
       - name: result_text
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
@@ -107,8 +122,10 @@ models:
         doc_id = id.replace("-", "_")
         prefixed_doc_id = f"{survey_id}__{doc_id}"
         
+        column_name = f"{code}_answer" if code in RESERVED_COLUMNS else code
+
         doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")
-        yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
+        yml_parts.append(f"""\n      - name: {column_name}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")
 
     # Assuming 'doc' was initialized as an empty string  
     doc = "\n\n".join(doc_parts)  

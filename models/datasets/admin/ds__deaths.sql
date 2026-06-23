@@ -9,6 +9,17 @@ with contributing_death_causes as (
     group by cdc.patient_death_data_id
 ),
 
+-- BL-010: latest current death record per patient; the death workflow keeps at
+-- most one current row but there is no unique constraint on patient_id so dedupe
+-- defensively and prefer a finalised record when more than one current row exists
+death_data as (
+    select distinct on (patient_id)
+        *
+    from {{ ref("patient_death_data") }}
+    where visibility_status = 'current'
+    order by patient_id asc, is_final desc nulls last, id
+),
+
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
@@ -88,23 +99,27 @@ select
     pdd.external_cause_location,
     initcap(pdd.was_pregnant) as was_pregnant,
     pdd.pregnancy_contributed,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_fetal_or_infant then 'Yes'
-        else 'No'
+        when pdd.was_fetal_or_infant = false then 'No'
     end as was_fetal_or_infant,
     initcap(pdd.was_stillborn) as was_stillborn,
     pdd.birth_weight,
     pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
     pdd.carrier_age as age_of_mother,
     pdd.mother_condition_description as condition_in_mother_affecting_fetus_or_newborn,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_within_day_of_birth then 'Yes'
-        else 'No'
+        when pdd.was_within_day_of_birth = false then 'No'
     end as death_within_day_of_birth,
     pdd.hours_survived_since_birth
-from {{ ref("patient_death_data") }} pdd
-join {{ ref("patients") }} p
-    on p.id = pdd.patient_id
+-- BL-009: drive from patients so every deceased patient is listed, with death
+-- record detail left-joined and null where no death form exists
+from {{ ref("patients") }} p
+left join death_data pdd
+    on pdd.patient_id = p.id
 left join {{ ref("patient_additional_data") }} pd
     on pd.patient_id = p.id
 left join {{ ref("reference_data") }} village
@@ -141,5 +156,4 @@ left join {{ ref("location_groups") }} location_group
     on location_group.id = location.location_group_id
 left join {{ ref("users") }} clinician
     on clinician.id = pdd.recorded_by_id
-where pdd.visibility_status = 'current'
-    and pdd.is_final
+where p.date_of_death is not null

@@ -27,7 +27,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: contributing_death_causes
   tags:
   - base
@@ -70,7 +69,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: departments
   tags:
   - base
@@ -112,7 +110,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: discharges
   tags:
   - base
@@ -157,7 +154,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: document_metadata
   tags:
   - base
@@ -205,7 +201,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounter_diagnoses
   tags:
   - base
@@ -236,7 +231,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounter_diagnoses_metadata
   tags:
   - base
@@ -269,7 +263,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounter_diets
   tags:
   - base
@@ -328,7 +321,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounter_history
   tags:
   - base
@@ -360,7 +352,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: encounter_prescriptions
   tags:
   - base
@@ -447,7 +438,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounters
   tags:
   - base
@@ -476,7 +466,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: encounters_metadata
   tags:
   - base
@@ -552,7 +541,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: facilities
   tags:
   - base
@@ -596,7 +584,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: imaging_area_external_codes
   tags:
   - base
@@ -624,7 +611,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: imaging_request_areas
   tags:
   - base
@@ -704,7 +690,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: imaging_requests
   tags:
   - base
@@ -760,7 +745,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: imaging_results
   tags:
   - base
@@ -806,7 +790,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_discounts
   tags:
   - base
@@ -839,7 +822,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_insurance_plan_items
   tags:
   - base
@@ -881,7 +863,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_insurance_plans
   tags:
   - base
@@ -918,7 +899,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_insurer_payments
   tags:
   - base
@@ -955,7 +935,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_item_discounts
   tags:
   - base
@@ -995,7 +974,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_item_finalised_insurances
   tags:
   - base
@@ -1069,7 +1047,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_items
   tags:
   - base
@@ -1101,7 +1078,6 @@
     domain: admin
     owner: bes-maui
     pii: true
-    tier: silver
   name: invoice_patient_payments
   tags:
   - base
@@ -1143,7 +1119,6 @@
     domain: admin
     owner: bes-maui
     pii: true
-    tier: silver
   name: invoice_payments
   tags:
   - base
@@ -1187,7 +1162,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_price_list_items
   tags:
   - base
@@ -1235,7 +1209,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_price_lists
   tags:
   - base
@@ -1281,7 +1254,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoice_products
   tags:
   - base
@@ -1329,7 +1301,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoices
   tags:
   - base
@@ -1385,7 +1356,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoices_change_logs
   tags:
   - base
@@ -1417,7 +1387,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: invoices_invoice_insurance_plans
   tags:
   - base
@@ -1451,7 +1420,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_request_logs
   tags:
   - base
@@ -1482,7 +1450,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_request_logs_metadata
   tags:
   - base
@@ -1597,7 +1564,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_requests
   tags:
   - base
@@ -1626,7 +1592,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_requests_metadata
   tags:
   - base
@@ -1654,7 +1619,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_test_panel_lab_test_types
   tags:
   - base
@@ -1684,7 +1648,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_test_panel_requests
   tags:
   - base
@@ -1743,7 +1706,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_test_panels
   tags:
   - base
@@ -1835,7 +1797,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_test_types
   tags:
   - base
@@ -1891,7 +1852,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: lab_tests
   tags:
   - base
@@ -1952,7 +1912,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: location_bookings
   tags:
   - base
@@ -1995,7 +1954,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: location_groups
   tags:
   - base
@@ -2047,7 +2005,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: locations
   tags:
   - base
@@ -2091,7 +2048,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: medication_dispenses
   tags:
   - base
@@ -2164,7 +2120,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: notes
   tags:
   - base
@@ -2285,7 +2240,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: outpatient_appointments
   tags:
   - base
@@ -2392,7 +2346,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: outpatient_appointments_change_logs
   tags:
   - base
@@ -2570,7 +2523,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patient_additional_data
   tags:
   - base
@@ -2776,7 +2728,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patient_additional_data_change_logs
   tags:
   - base
@@ -2817,7 +2768,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_allergies
   tags:
   - base
@@ -2907,7 +2857,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_birth_data
   tags:
   - base
@@ -2947,7 +2896,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_care_plans
   tags:
   - base
@@ -3008,7 +2956,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_conditions
   tags:
   - base
@@ -3042,7 +2989,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_death_contributing_causes
   tags:
   - base
@@ -3234,7 +3180,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_death_data
   tags:
   - base
@@ -3273,7 +3218,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_facilities
   tags:
   - base
@@ -3322,7 +3266,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_family_histories
   tags:
   - base
@@ -3351,7 +3294,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patient_field_values
   tags:
   - base
@@ -3407,7 +3349,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_program_registration_conditions
   tags:
   - base
@@ -3484,7 +3425,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_program_registration_conditions_change_logs
   tags:
   - base
@@ -3558,7 +3498,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_program_registrations
   tags:
   - base
@@ -3649,7 +3588,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_program_registrations_change_logs
   tags:
   - base
@@ -3703,7 +3641,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: patient_vaccinations_upcoming
   tags:
   - base
@@ -3755,7 +3692,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patients
   tags:
   - base
@@ -3818,7 +3754,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: patients_access_logs
   tags:
   - base
@@ -3891,7 +3826,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patients_change_logs
   tags:
   - base
@@ -3950,7 +3884,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patients_merged
   tags:
   - base
@@ -3979,7 +3912,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: patients_metadata
   tags:
   - base
@@ -4079,7 +4011,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: pharmacy_order_prescriptions
   tags:
   - base
@@ -4124,7 +4055,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: pharmacy_orders
   tags:
   - base
@@ -4244,7 +4174,6 @@
     domain: clinical
     owner: bes-maui
     pii: true
-    tier: silver
   name: prescriptions
   tags:
   - base
@@ -4330,7 +4259,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: procedures
   tags:
   - base
@@ -4359,7 +4287,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: procedures_metadata
   tags:
   - base
@@ -4412,7 +4339,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: program_data_elements
   tags:
   - base
@@ -4462,7 +4388,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: program_registries
   tags:
   - base
@@ -4511,7 +4436,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: program_registry_clinical_statuses
   tags:
   - base
@@ -4556,7 +4480,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: program_registry_condition_categories
   tags:
   - base
@@ -4599,7 +4522,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: program_registry_conditions
   tags:
   - base
@@ -4628,7 +4550,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: programs
   tags:
   - base
@@ -4685,7 +4606,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: reference_data
   tags:
   - base
@@ -4735,7 +4655,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: referrals
   tags:
   - base
@@ -4771,7 +4690,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: refresh_tokens
   tags:
   - base
@@ -4798,7 +4716,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: roles
   tags:
   - base
@@ -4834,7 +4751,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: survey_response_answers
   tags:
   - base
@@ -4893,7 +4809,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: survey_responses
   tags:
   - base
@@ -4980,7 +4895,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: survey_screen_components
   tags:
   - base
@@ -5042,7 +4956,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: surveys
   tags:
   - base
@@ -5103,7 +5016,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: triages
   tags:
   - base
@@ -5188,7 +5100,6 @@
     domain: admin
     owner: bes-maui
     pii: true
-    tier: silver
   name: users
   tags:
   - base
@@ -5217,7 +5128,6 @@
     domain: admin
     owner: bes-maui
     pii: false
-    tier: silver
   name: users_metadata
   tags:
   - base
@@ -5337,7 +5247,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: vaccine_administrations
   tags:
   - base
@@ -5485,7 +5394,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: vaccine_administrations_change_logs
   tags:
   - base
@@ -5572,7 +5480,6 @@
     domain: clinical
     owner: bes-maui
     pii: false
-    tier: silver
   name: vaccine_schedules
   tags:
   - base
