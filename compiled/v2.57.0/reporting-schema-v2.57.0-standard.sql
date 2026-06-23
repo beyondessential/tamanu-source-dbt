@@ -2,6 +2,80 @@ drop schema if exists reporting cascade;
 create schema reporting;
 grant usage on schema reporting to reporting;
 alter default privileges in schema reporting grant select on tables to reporting;
+create or replace view "reporting"."metric_definitions" as (
+-- Canonical metric definitions registry. The data lives in metric_definitions.csv
+-- and is compiled inline by get_metric_definitions() so this ships as a view in the
+-- production bundle rather than a seed table. Regenerate the macro with
+-- python scripts/generate_metric_definitions_macro.py after editing the CSV.
+select
+    metric_id::text as metric_id,
+    kind::text as kind,
+    name::text as name,
+    description::text as description,
+    numerator_description::text as numerator_description,
+    denominator_description::text as denominator_description,
+    data_source::text as data_source,
+    definition_source::text as definition_source,
+    definition_source_code::text as definition_source_code,
+    definition_rationale::text as definition_rationale,
+    unit::text as unit,
+    subject_grain::text as subject_grain,
+    disaggregations::text as disaggregations,
+    variant_of::text as variant_of,
+    owner::text as owner,
+    status::text as status,
+    spec_path::text as spec_path
+from (
+    values
+        ('cohort_6m_diabetes_active', 'metric', '6-month cohort — active diabetic patients', 'Cohort diabetic patients still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients with a diabetes diagnosis still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_bp_control_percent', 'metric', '6-month cohort diabetes BP control rate', 'Percentage of active cohort diabetic patients whose 6-month BP is controlled. Emitted only when measurements exist.', 'Distinct active cohort diabetes patients with controlled BP', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_bp_measured_percent', 'metric', '6-month cohort diabetes BP measured percent', 'Percentage of active cohort diabetic patients with a BP measurement in the 6-month window.', 'Distinct active cohort diabetes patients with a BP measurement', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_hba1c_control_percent', 'metric', '6-month cohort diabetes HbA1c control rate', 'Percentage of active cohort diabetic patients whose 6-month HbA1c is controlled. Emitted only when measurements exist.', 'Distinct active cohort diabetes patients with controlled HbA1c', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_hba1c_measured_percent', 'metric', '6-month cohort diabetes HbA1c measured percent', 'Percentage of active cohort diabetic patients with an HbA1c test in the 6-month window.', 'Distinct active cohort diabetes patients with an HbA1c test', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_active', 'metric', '6-month cohort — active hypertensive patients', 'Cohort hypertensive patients still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients with a hypertension diagnosis still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_bp_control_percent', 'metric', '6-month cohort HTN BP control rate', 'Percentage of active cohort hypertensive patients whose 6-month BP is controlled. Emitted only when measurements exist.', 'Distinct active cohort HTN patients with controlled BP', 'Distinct active cohort HTN patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_bp_measured_percent', 'metric', '6-month cohort HTN BP measured percent', 'Percentage of active cohort hypertensive patients with a BP measurement in the 6-month window.', 'Distinct active cohort HTN patients with a BP measurement', 'Distinct active cohort HTN patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_patients_active', 'metric', '6-month cohort — active patients', 'Cohort patients (active 9 months prior) still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_retention_percent', 'metric', '6-month cohort retention rate', 'Percentage of cohort patients still active at the 6-month evaluation point.', 'Distinct cohort patients still active', 'Distinct cohort patients in the cohort', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_ncd_6m', 'cohort', '6-month NCD cohort', 'NCD-registry patients whose registration first became ncdactive 9 months before the reporting month and who were still in the program at the 6-month evaluation point.', null, null, 'tamanu', 'MSF', null, 'MSF NCD program 6-month evaluation cohort', null, 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/der__cohort_ncd_6m.md'),
+        ('cohort_ncd_registry', 'cohort', 'NCD program registry cohort', 'NCD-registry patients (all clinical statuses except waitlist) with conditions pivoted to columns and the latest exit-survey info.', null, null, 'tamanu', 'MSF', null, 'MSF NCD program registry definition', null, 'patient', 'sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/der__cohort_ncd_registry.md'),
+        ('consultations_followup', 'metric', 'Follow-up NCD consultations', 'Patients with a second or later consultation in the NCD program during the reporting month.', 'Patients with at least one prior NCD consultation who attend another consultation in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('consultations_new', 'metric', 'New NCD consultations', 'Patients whose first lifetime consultation in the NCD program falls in the reporting month.', 'Patients attending their first lifetime NCD consultation in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_bp_controlled', 'metric', 'Diabetes patients with controlled BP', 'Diabetes patients with a controlled blood-pressure measurement in the reporting month.', 'Distinct diabetes patients with a controlled blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_bp_measured', 'metric', 'Diabetes patients with BP measured', 'Diabetes patients with at least one blood-pressure measurement in the reporting month.', 'Distinct diabetes patients with at least one recorded blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_hba1c_controlled', 'metric', 'Diabetes patients with controlled HbA1c', 'Diabetes patients with a controlled HbA1c measurement in the reporting month.', 'Distinct diabetes patients with a controlled HbA1c measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_hba1c_measured', 'metric', 'Diabetes patients with HbA1c measured', 'Diabetes patients with at least one HbA1c test in the reporting month.', 'Distinct diabetes patients with at least one recorded HbA1c measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diagnoses', 'metric', 'Patients with active NCD diagnosis', 'Patients with an active NCD registration carrying the given condition by the end of the reporting month.', 'Distinct patients with an active NCD registration carrying the given condition by the end of the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diagnoses_new', 'metric', 'New NCD diagnoses', 'Patients whose NCD registration first transitioned to ncdactive carrying the given condition during the reporting month.', 'Distinct patients whose NCD registration first became active carrying the given condition in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_deceased', 'metric', 'NCD exits — deceased', 'Patients exited from the NCD program as deceased during the reporting month.', 'Distinct patients exited from the NCD program as deceased in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_ltfu', 'metric', 'NCD exits — lost to follow-up', 'Patients exited from the NCD program as lost-to-follow-up during the reporting month.', 'Distinct patients exited from the NCD program as lost-to-follow-up in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_other', 'metric', 'NCD exits — other', 'Patients exited from the NCD program for other reasons (clinically discharged, voluntary exit, other) during the reporting month.', 'Distinct patients exited from the NCD program in the reporting month for other reasons (clinically discharged, voluntary exit, other)', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_transferred', 'metric', 'NCD exits — transferred or referred out', 'Patients exited from the NCD program as transferred or referred out during the reporting month.', 'Distinct patients exited from the NCD program as transferred or referred out in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('htn_bp_controlled', 'metric', 'Hypertension patients with controlled BP', 'Hypertension patients with a controlled blood-pressure measurement in the reporting month.', 'Distinct hypertension patients with a controlled blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('htn_bp_measured', 'metric', 'Hypertension patients with BP measured', 'Hypertension patients with at least one blood-pressure measurement in the reporting month.', 'Distinct hypertension patients with at least one recorded blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('patients_active', 'metric', 'Active NCD patients', 'Patients with an active NCD registration as of the reporting month.', 'Distinct patients with an active NCD registration as of month end (active before month end and exit not yet recorded)', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('patients_new', 'metric', 'Newly enrolled NCD patients', 'Patients whose NCD registration first transitioned to ncdactive during the reporting month and were still active at month end.', 'Distinct patients whose NCD registration first became active in the reporting month and who were still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('referred_specialist', 'metric', 'NCD specialist referrals', 'Patients referred to a specialist via the NCDRef001 form during the reporting month.', 'Distinct patients referred to a specialist via the NCDRef001 form in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md')
+) as md (
+        metric_id,
+        kind,
+        name,
+        description,
+        numerator_description,
+        denominator_description,
+        data_source,
+        definition_source,
+        definition_source_code,
+        definition_rationale,
+        unit,
+        subject_grain,
+        disaggregations,
+        variant_of,
+        owner,
+        status,
+        spec_path
+)
+);
 create or replace view "reporting"."contributing_death_causes" as (
 select
     cdc.id,
@@ -450,6 +524,8 @@ select
     name,
     code,
     rules,
+    evaluation_order,
+    created_at at time zone 'Australia/Sydney' as created_at,
     visibility_status
 from "public"."invoice_price_lists"
 where deleted_at is null
@@ -1799,6 +1875,17 @@ with contributing_death_causes as (
     group by cdc.patient_death_data_id
 ),
 
+-- BL-010: latest current death record per patient; the death workflow keeps at
+-- most one current row but there is no unique constraint on patient_id so dedupe
+-- defensively and prefer a finalised record when more than one current row exists
+death_data as (
+    select distinct on (patient_id)
+        *
+    from "reporting"."patient_death_data"
+    where visibility_status = 'current'
+    order by patient_id asc, is_final desc nulls last, id
+),
+
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
@@ -1878,23 +1965,27 @@ select
     pdd.external_cause_location,
     initcap(pdd.was_pregnant) as was_pregnant,
     pdd.pregnancy_contributed,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_fetal_or_infant then 'Yes'
-        else 'No'
+        when pdd.was_fetal_or_infant = false then 'No'
     end as was_fetal_or_infant,
     initcap(pdd.was_stillborn) as was_stillborn,
     pdd.birth_weight,
     pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
     pdd.carrier_age as age_of_mother,
     pdd.mother_condition_description as condition_in_mother_affecting_fetus_or_newborn,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_within_day_of_birth then 'Yes'
-        else 'No'
+        when pdd.was_within_day_of_birth = false then 'No'
     end as death_within_day_of_birth,
     pdd.hours_survived_since_birth
-from "reporting"."patient_death_data" pdd
-join "reporting"."patients" p
-    on p.id = pdd.patient_id
+-- BL-009: drive from patients so every deceased patient is listed, with death
+-- record detail left-joined and null where no death form exists
+from "reporting"."patients" p
+left join death_data pdd
+    on pdd.patient_id = p.id
 left join "reporting"."patient_additional_data" pd
     on pd.patient_id = p.id
 left join "reporting"."reference_data" village
@@ -1931,8 +2022,313 @@ left join "reporting"."location_groups" location_group
     on location_group.id = location.location_group_id
 left join "reporting"."users" clinician
     on clinician.id = pdd.recorded_by_id
-where pdd.visibility_status = 'current'
-    and pdd.is_final
+where p.date_of_death is not null
+);
+create or replace view "reporting"."ds__encounter_invoices" as (
+with invoice_finalised as (
+    -- BL-015: most recent transition into finalised status per invoice
+    select
+        icl.invoice_id,
+        max(icl.logged_at at time zone 'Australia/Sydney') as finalised_at
+    from "reporting"."invoices_change_logs" icl
+    where
+        icl.status = 'finalised'
+        and (icl.previous_status is null or icl.previous_status != 'finalised')
+    group by icl.invoice_id
+),
+
+invoice_context as materialized (
+    -- Per-invoice context for price-list resolution, mirroring the inputs the
+    -- app passes to getIdForPatientEncounter. Facility-agnostic: the consumer
+    -- applies any facility or sensitivity scoping. Billing type falls back to
+    -- the patient's additional data when the encounter has none.
+    -- `materialized` is load-bearing: it is referenced once, so without the hint
+    -- Postgres inlines it and drives the `cross join invoice_price_lists` from
+    -- the encounters table (exploding to ~745k rows). Materialising bounds the
+    -- cross join to the invoice count (3.6x faster on the all-time view).
+    select
+        i.id as invoice_id,
+        f.id as facility_id,
+        coalesce(e.patient_billing_type_id, pad.patient_billing_type_id) as patient_billing_type_id,
+        -- BL-006: patient age in completed years at the invoice date, computed once
+        date_part('year', age(i.datetime, p.date_of_birth)) as age_at_invoice
+    from "reporting"."invoices" i
+    join "reporting"."encounters" e
+        on e.id = i.encounter_id
+    join "reporting"."locations" l
+        on l.id = e.location_id
+    join "reporting"."facilities" f
+        on f.id = l.facility_id
+    join "reporting"."patients" p
+        on p.id = e.patient_id
+    left join "reporting"."patient_additional_data" pad
+        on pad.patient_id = e.patient_id
+),
+
+claimed_facilities as (
+    -- Facilities explicitly claimed by a current price list -- computed once
+    -- so the facility-exclusion check below is a small anti-join rather than a
+    -- correlated re-scan of invoice_price_lists per invoice.
+    select distinct ipl.rules ->> 'facilityId' as facility_id
+    from "reporting"."invoice_price_lists" ipl
+    where ipl.visibility_status = 'current'
+        and (ipl.rules ->> 'facilityId') is not null
+),
+
+invoice_price_list as (
+    -- BL-006: resolve the single matching price list per invoice, mirroring
+    -- getIdForPatientEncounter. Matches on facility (with exclusionary logic),
+    -- patient billing type, and patient age in completed years at the invoice
+    -- date (the app resolves at invoice time). When several match, the lowest
+    -- evaluation_order wins, then earliest created_at, then code -- mirroring
+    -- the application ordering (Postgres asc is nulls-last, so price lists with
+    -- no evaluation_order fall back to created_at/code, as the app intends).
+    select distinct on (ic.invoice_id)
+        ic.invoice_id,
+        ipl.id as invoice_price_list_id
+    from invoice_context ic
+    cross join "reporting"."invoice_price_lists" ipl
+    where ipl.visibility_status = 'current'
+        -- Facility: direct match, or no facility rule and this facility
+        -- is not explicitly claimed by another price list
+        and (
+            (ipl.rules ->> 'facilityId') = ic.facility_id
+            or (
+                (ipl.rules ->> 'facilityId') is null
+                and not exists (
+                    select 1 from claimed_facilities cf
+                    where cf.facility_id = ic.facility_id
+                )
+            )
+        )
+        -- Patient billing type
+        and (
+            (ipl.rules ->> 'patientType') is null
+            or (ipl.rules ->> 'patientType') = ic.patient_billing_type_id
+        )
+        -- Patient age at the invoice date: exact numeric or min/max range
+        and (
+            (ipl.rules -> 'patientAge') is null
+            or (
+                jsonb_typeof(ipl.rules -> 'patientAge') = 'number'
+                and ic.age_at_invoice
+                = (ipl.rules ->> 'patientAge')::integer
+            )
+            or (
+                jsonb_typeof(ipl.rules -> 'patientAge') = 'object'
+                and (
+                    (ipl.rules -> 'patientAge' ->> 'min') is null
+                    or ic.age_at_invoice
+                    >= (ipl.rules -> 'patientAge' ->> 'min')::integer
+                )
+                and (
+                    (ipl.rules -> 'patientAge' ->> 'max') is null
+                    or ic.age_at_invoice
+                    <= (ipl.rules -> 'patientAge' ->> 'max')::integer
+                )
+            )
+        )
+    order by ic.invoice_id asc, ipl.evaluation_order asc, ipl.created_at asc, ipl.code asc
+),
+
+item_unit_price as (
+    -- BL-007: mirrors getInvoiceItemPrice. Resolves the unit price once
+    -- (price_final, else manual entry, else the resolved price-list price, else 0).
+    select
+        ii.id as invoice_item_id,
+        ii.invoice_id,
+        ii.product_id,
+        ii.date,
+        -- product_name_final is snapshotted at finalisation, so it is null for
+        -- in-progress invoices -- fall back to the live product name
+        coalesce(ii.product_name_final, ip.name) as product_name,
+        ii.quantity,
+        ip.category,
+        ip.insurable,
+        coalesce(
+            ii.price_final,
+            ii.manual_entry_price,
+            ipli.price,
+            0
+        ) as price
+    from "reporting"."invoice_items" ii
+    left join "reporting"."invoice_products" ip
+        on ip.id = ii.product_id
+    left join invoice_price_list ipl_match
+        on ipl_match.invoice_id = ii.invoice_id
+    -- One price-list item per (price list and product) is guaranteed by a DB
+    -- unique constraint on invoice_price_list_items, so this join cannot fan out.
+    left join "reporting"."invoice_price_list_items" ipli
+        on ipli.invoice_price_list_id = ipl_match.invoice_price_list_id
+        and ipli.invoice_product_id = ii.product_id
+        and ipli.is_hidden = false
+),
+
+item_resolved_price as (
+    -- BL-008: mirrors getInvoiceItemTotalDiscountedPrice. Applies the item-level
+    -- discount (percentage or flat amount) to unit price x quantity.
+    select
+        iup.invoice_item_id,
+        iup.invoice_id,
+        iup.product_id,
+        iup.date,
+        iup.product_name,
+        iup.quantity,
+        iup.category,
+        iup.insurable,
+        iup.price,
+        case
+            when iid.type = 'percentage'
+                then iup.price * iup.quantity * (1 - coalesce(iid.amount, 0))
+            when iid.type = 'amount'
+                -- flat amount subtracted with no floor, so an over-large discount
+                -- can take the line total negative (matching the application)
+                then iup.price * iup.quantity - coalesce(iid.amount, 0)
+            else iup.price * iup.quantity
+        end as discounted_total
+    from item_unit_price iup
+    -- Tamanu enforces one discount per item (application logic, no DB
+    -- unique constraint) and the id tie-break makes distinct on
+    -- deterministic if unexpected duplicates exist
+    left join (
+        select distinct on (invoice_item_id)
+            invoice_item_id,
+            amount,
+            type
+        from "reporting"."invoice_item_discounts"
+        order by invoice_item_id, id
+    ) iid on iid.invoice_item_id = iup.invoice_item_id
+),
+
+item_coverage as (
+    -- BL-010: mirrors getInvoiceItemCoveragePercentage applied per plan (as the
+    -- app does over invoiceForResponse's insurancePlanItems). For each insurance
+    -- plan currently linked to the invoice, coverage is the finalised snapshot
+    -- for that (item, plan) when present, otherwise the live per-product
+    -- coverage, falling back to the plan default, then 0. Summed across the
+    -- item's plans. Driving from the linked plans (not the finalised rows) keeps
+    -- finalised a per-plan override, so a mix of finalised and live plans, or a
+    -- plan unlinked after finalisation, resolves exactly as the app does.
+    select
+        irp.invoice_item_id,
+        sum(coalesce(
+            -- Finalised: snapshotted per-plan coverage, immune to plan changes
+            fin.coverage_value_final,
+            -- Live: per-product coverage, then the plan default
+            iipi.coverage_value,
+            iip.default_coverage,
+            0
+        )) as total_pct
+    from item_resolved_price irp
+    join "reporting"."invoices_invoice_insurance_plans" iiip
+        on iiip.invoice_id = irp.invoice_id
+    join "reporting"."invoice_insurance_plans" iip
+        on iip.id = iiip.invoice_insurance_plan_id
+    left join "reporting"."invoice_insurance_plan_items" iipi
+        on iipi.invoice_insurance_plan_id = iiip.invoice_insurance_plan_id
+        and iipi.invoice_product_id = irp.product_id
+    left join "reporting"."invoice_item_finalised_insurances" fin
+        on fin.invoice_item_id = irp.invoice_item_id
+        and fin.invoice_insurance_plan_id = iiip.invoice_insurance_plan_id
+    where irp.insurable = true
+    group by irp.invoice_item_id
+),
+
+insurance_coverage_agg as (
+    -- BL-010: per-invoice insurance coverage, mirroring
+    -- getInsuranceCoverageTotalAmount. Applies the combined coverage percentage
+    -- to each insurable item's discounted price, capping per-item coverage at
+    -- the discounted total (handles combined percentages over 100%). No filter
+    -- on the sign of the discounted total -- the app includes negatively
+    -- discounted items, where the cap pins coverage to the (negative) total.
+    select
+        irp.invoice_id,
+        round(sum(least(
+            irp.discounted_total * ic.total_pct / 100,
+            irp.discounted_total
+        )), 2) as insurance_coverage
+    from item_resolved_price irp
+    join item_coverage ic
+        on ic.invoice_item_id = irp.invoice_item_id
+    group by irp.invoice_id
+),
+
+invoice_items_agg as (
+    -- BL-009: invoice item total and BL-016: the products with no category
+    select
+        irp.invoice_id,
+        string_agg(
+            irp.product_name, ', '
+            order by irp.date
+        ) filter (where irp.category is null) as products_no_category,
+        sum(irp.discounted_total) as item_total
+    from item_resolved_price irp
+    group by irp.invoice_id
+),
+
+invoice_discount_pct as (
+    -- BL-011: Tamanu enforces one discount per invoice (application logic, no DB
+    -- unique constraint) and if unexpected duplicates exist the most recently
+    -- applied one wins deterministically
+    select distinct on (invoice_id)
+        invoice_id,
+        percentage
+    from "reporting"."invoice_discounts"
+    order by invoice_id, applied_time desc, id
+),
+
+invoice_payments_agg as (
+    -- BL-012: refunds are stored as positive amounts with
+    -- original_payment_id set and negated so the sum gives the net patient
+    -- payment total. The ipp.id filter keeps only patient payments, so a
+    -- refund is netted only when it shares the patient-payment linkage of the
+    -- payment it reverses. Insurer-payment refunds (no invoice_patient_payments
+    -- row) are intentionally excluded, matching the patient-payment scope.
+    select
+        ipay.invoice_id,
+        sum(
+            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
+        ) filter (where ipp.id is not null) as patient_payment
+    from "reporting"."invoice_payments" ipay
+    left join "reporting"."invoice_patient_payments" ipp
+        on ipp.invoice_payment_id = ipay.id
+    group by ipay.invoice_id
+)
+
+-- One row per invoice. The status column lets consumers filter (e.g. exclude
+-- cancelled) and aggregate; the snapshot-over-live coverage rule means a single
+-- dataset serves both finalised and in-progress invoices.
+select
+    i.id as invoice_id,
+    i.encounter_id,
+    i.status,
+    i.datetime as invoice_datetime,
+    -- BL-015: finalisation timestamp, in deployment-local time (null until finalised)
+    inf.finalised_at as invoice_finalised_datetime,
+    -- BL-009: invoice total (sum of discounted item totals)
+    iia.item_total as invoice_total,
+    ica.insurance_coverage,
+    -- BL-011: invoice-level discount amount, percentage applied to the patient
+    -- subtotal (item total less insurance coverage), mirroring
+    -- getInvoiceLevelDiscountAmount over patientSubtotal
+    round(
+        (coalesce(iia.item_total, 0) - coalesce(ica.insurance_coverage, 0))
+        * coalesce(idsc.percentage, 0),
+        2
+    ) as invoice_discount,
+    ipa.patient_payment,
+    iia.products_no_category
+from "reporting"."invoices" i
+left join invoice_finalised inf
+    on inf.invoice_id = i.id
+left join invoice_items_agg iia
+    on iia.invoice_id = i.id
+left join insurance_coverage_agg ica
+    on ica.invoice_id = i.id
+left join invoice_discount_pct idsc
+    on idsc.invoice_id = i.id
+left join invoice_payments_agg ipa
+    on ipa.invoice_id = i.id
 );
 create or replace view "reporting"."ds__invoice_products" as (
 
