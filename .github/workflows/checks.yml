@@ -1,0 +1,60 @@
+name: Checks
+
+# Runs on every PR: unit tests for the helper scripts, plus a guard that the
+# committed generated artefacts (translation + metric-definition macros, and the
+# report list) are still in sync with their sources. All are generated but
+# committed, so they can silently drift if someone edits a CSV or a report config
+# and forgets to regenerate.
+
+on:
+  pull_request:
+
+jobs:
+  checks:
+    name: Unit tests and generated-macro sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        # boto3 + pandas + pyyaml cover the scripts/utils import chain used by the
+        # generators; pytest runs the unit tests. dbt/sqlfluff are not needed here.
+        run: pip install boto3 pandas pyyaml pytest
+
+      - name: Run script unit tests
+        run: pytest scripts/tests -q
+
+      - name: Regenerate committed artefacts
+        run: |
+          python scripts/generate_translation_macro.py
+          python scripts/generate_metric_definitions_macro.py
+          python scripts/list_tamanu_reports.py
+
+      - name: Fail if generated macros drift from their CSVs
+        run: |
+          if ! git diff --quiet -- macros/default_translations.sql macros/metric_definitions.sql; then
+            echo "::error::Generated macros are out of sync with their source CSVs."
+            echo "Run the generators and commit the result:"
+            echo "  python scripts/generate_translation_macro.py"
+            echo "  python scripts/generate_metric_definitions_macro.py"
+            git diff -- macros/default_translations.sql macros/metric_definitions.sql
+            exit 1
+          fi
+          echo "Generated macros are in sync."
+
+      - name: Fail if report list drifts from report configs
+        run: |
+          if ! git diff --quiet -- list_tamanu_reports.md; then
+            echo "::error::list_tamanu_reports.md is out of sync with the report configs."
+            echo "Run the generator and commit the result:"
+            echo "  python scripts/list_tamanu_reports.py"
+            git diff -- list_tamanu_reports.md
+            exit 1
+          fi
+          echo "Report list is in sync."

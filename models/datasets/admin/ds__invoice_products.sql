@@ -1,12 +1,14 @@
 {%- set price_lists_query %}
     select id, name
     from {{ ref('invoice_price_lists') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
 {%- set insurance_plans_query %}
     select id, name, default_coverage
     from {{ ref('invoice_insurance_plans') }}
+    where visibility_status = 'current'
     order by name
 {%- endset %}
 
@@ -39,6 +41,38 @@ insurance_pivot as (
         {%- endfor %}
     from {{ ref('invoice_insurance_plan_items') }}
     group by invoice_product_id
+),
+
+-- available_facilities lives on the originating reference data row.
+-- For drugs, procedure types and imaging areas, source_record_id points
+-- at reference_data and for lab products it points at lab_test_panels
+-- or lab_test_types and only one of these joins will match per product.
+product_available_facility_ids as (
+    select
+        ip.id as invoice_product_id,
+        coalesce(
+            rd.available_facilities,
+            ltp.available_facilities,
+            ltt.available_facilities
+        ) as available_facility_ids
+    from {{ ref('invoice_products') }} ip
+    left join {{ ref('reference_data') }} rd
+        on rd.id = ip.source_record_id
+    left join {{ ref('lab_test_panels') }} ltp
+        on ltp.id = ip.source_record_id
+    left join {{ ref('lab_test_types') }} ltt
+        on ltt.id = ip.source_record_id
+),
+
+product_available_facilities as (
+    select
+        pafi.invoice_product_id,
+        string_agg(f.name, ', ' order by f.name) as available_facilities
+    from product_available_facility_ids pafi
+    cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) as fid
+    join {{ ref('facilities') }} f
+        on f.id = fid
+    group by pafi.invoice_product_id
 )
 
 select
@@ -47,6 +81,7 @@ select
     ip.insurable,
     ip.category,
     ip.source_record_id,
+    paf.available_facilities,
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
     {%- for row in price_lists %}
@@ -66,5 +101,6 @@ select
 from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
+left join product_available_facilities paf on paf.invoice_product_id = ip.id
 left join {{ ref('lab_test_types') }} ltt on ltt.id = ip.source_record_id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = ip.source_record_id

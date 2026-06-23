@@ -25,7 +25,35 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
-### Audit outpatient appointments line list *(sensitive version available)*
+### Audit encounter invoice *(sensitive version available)*
+
+**Report Description**
+
+Audit report for reviewing invoices against encounters. The date range filters on encounter start date, so each row represents an encounter that started within the range. Use the 'Include in-progress encounters' filter (defaults to Yes) to include non-discharged encounters; included rows appear with an empty encounter end date. Test patients and sensitive facilities are excluded.
+
+Columns included:
+- Patient identification (ID, name, date of birth, age, sex, billing type).
+- Encounter start and end dates and times with length of stay.
+- Facility and discharging department.
+- Supervising clinician.
+- Invoice finalised date and time.
+- Invoice total — sum of price × quantity for all items on non-cancelled invoices.
+- Insurance coverage — calculated from insurance plan coverage percentages applied to insurable items on non-cancelled invoices. Uses finalised coverage values where available and falls back to current plan values for in-progress invoices.
+- Patient subtotal — invoice total minus insurance coverage minus invoice-level discount.
+- Patient payment — net patient payments (payments minus refunds) against non-cancelled invoices.
+- Patient total — patient subtotal minus patient payment (outstanding balance).
+- Invoice products with no category — items on non-cancelled invoices that have no product category assigned, which typically indicates manually added fees (e.g. encounter fees added outside the product catalogue) or products with a broken category reference.
+
+**Filters**
+
+Facility, Department, Patient billing type, Supervising clinician, Include in-progress encounters (default Yes)
+
+**Default date range**: 7days
+
+
+---
+
+### Audit outpatient appointments *(sensitive version available)*
 
 **Report Description**
 
@@ -40,7 +68,7 @@ Facility
 
 ---
 
-### Audit patient details edits line list
+### Audit patient details edit
 
 **Report Description**
 
@@ -56,7 +84,7 @@ Patient, User
 
 ---
 
-### Audit patient views line list
+### Audit patient views
 
 **Report Description**
 
@@ -83,7 +111,7 @@ The report includes all details documented in the patient death record.
 
 Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
 
-**Default date range**: 7days
+**Default date range**: allTime
 
 
 ---
@@ -604,7 +632,32 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
-### User audit report *(sensitive version available)*
+### User access audit report
+
+**Report Description**
+
+This report generates a comprehensive list of all active users in the system for auditing purposes. The report includes user identification, contact information, roles, designations, and associated permissions.
+
+The following details are included for each user:
+- User name: The display name of the user
+- User ID: The unique identifier for the user
+- Email address: The user's email address
+- Role: The role assigned to the user
+- Designations: All designations assigned to the user (comma-separated if multiple)
+- Role permissions: All permissions associated with the user's role, displayed in verb:noun format (e.g., read:Patient, write:Encounter)
+
+This report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions.
+
+**Filters**
+
+Role
+
+**Default date range**: allTime
+
+
+---
+
+### User audit line list *(sensitive version available)*
 
 **Report Description**
 

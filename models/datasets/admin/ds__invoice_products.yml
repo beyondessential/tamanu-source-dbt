@@ -9,7 +9,6 @@ models:
     meta:
       owner: bes-maui
       domain: admin
-      tier: gold
       pii: false
       classification: internal
     columns:
@@ -28,6 +27,9 @@ models:
       - name: source_record_id
         data_type: character varying(255)
         description: "{{ doc('invoice_products__source_record_id') }}"
+      - name: available_facilities
+        data_type: text
+        description: "{{ doc('ds__invoice_products__available_facilities') }}"
       - name: visibility_status
         data_type: character varying(255)
         description: "{{ doc('generic__visibility_status') }} in invoice_products."

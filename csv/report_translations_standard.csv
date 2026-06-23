@@ -7,14 +7,13 @@ report.reporting.appointmentClinician,Clinician
 report.reporting.appointmentCreatedBy,Appointment created by
 report.reporting.appointmentDateTime,Appointment date and time
 report.reporting.appointmentEndDateTime,Appointment end date and time
+report.reporting.appointmentIsCancelled,Appointment cancelled
 report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
 report.reporting.appointmentPriority,Priority appointment
-report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentRepeatingEndDate,Repeating appointment end date
 report.reporting.appointmentStatus,Appointment status
 report.reporting.appointmentType,Appointment type
-report.reporting.appointmentIsCancelled,Appointment cancelled
 report.reporting.auditChangeNumber,Change number
 report.reporting.auditCreatedBy,Appointment created by
 report.reporting.auditModifiedBy,Appointment modified by
@@ -88,8 +87,8 @@ report.reporting.diagnosis,Diagnosis
 report.reporting.diagnosisCertainty,Certainty
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
-report.reporting.dischargeDate,Discharged date
 report.reporting.dischargeAssignedTime,Time assigned to
+report.reporting.dischargeDate,Discharged date
 report.reporting.dischargeDateTime,Discharge date and time
 report.reporting.dischargeDepartment,Discharging department
 report.reporting.dischargeDisposition,Discharge disposition
@@ -142,21 +141,29 @@ report.reporting.imagingStatus,Status
 report.reporting.imagingSupervisingClinician,Supervising clinician
 report.reporting.imagingTotalRequests,Total new requests
 report.reporting.imagingType,Imaging type
+report.reporting.insuranceCoverage,Insurance coverage
 report.reporting.insurerId,Insurer ID
 report.reporting.insurerName,Name of insurer
+report.reporting.invoiceFinalisedDateTime,Invoice finalised date and time
+report.reporting.invoicePatientPayment,Patient payment
+report.reporting.invoicePatientSubtotal,Patient subtotal
+report.reporting.invoicePatientTotal,Patient total
+report.reporting.invoiceProductAvailableFacilities,Available facilities
 report.reporting.invoiceProductCategory,Category
 report.reporting.invoiceProductCategoryId,Category ID
 report.reporting.invoiceProductId,ID
 report.reporting.invoiceProductInsurable,Insurable
-report.reporting.invoiceProductName,Product name
 report.reporting.invoiceProductLabExternalCode,Lab external code
+report.reporting.invoiceProductName,Product name
 report.reporting.invoiceProductVisibilityStatus,Visibility status
+report.reporting.invoiceProductsNoCategory,Invoice products with no category
+report.reporting.invoiceTotal,Invoice total
 report.reporting.labLaboratory,Laboratory
 report.reporting.labRequestCancellationReason,Reason for cancellation
 report.reporting.labRequestClinician,Requesting clinician
 report.reporting.labRequestCompletedDateTime,Completed date and time
-report.reporting.labRequestDates,Lab request dates
 report.reporting.labRequestDateTime,Lab request date and time
+report.reporting.labRequestDates,Lab request dates
 report.reporting.labRequestDepartment,Requesting department
 report.reporting.labRequestId,Request ID
 report.reporting.labRequestNewCount,Total new requests
@@ -164,12 +171,12 @@ report.reporting.labRequestPendingCount,Total requests with a status of results 
 report.reporting.labRequestPriority,Priority
 report.reporting.labRequestPublishedCount,Total requests published
 report.reporting.labRequestPublishedDateTime,Lab request published date and time
-report.reporting.labRequests,Lab requests
 report.reporting.labRequestSampleCollectedBy,Sample collected by
 report.reporting.labRequestSampleCollectionDateTime,Sample collection date and time
 report.reporting.labRequestSampleSite,Site
 report.reporting.labRequestSpecimenType,Specimen type
 report.reporting.labRequestStatus,Status
+report.reporting.labRequests,Lab requests
 report.reporting.labTestCategory,Test category
 report.reporting.labTestCompletedDateTime,Lab test completed date and time
 report.reporting.labTestDate,Lab test date
@@ -190,8 +197,8 @@ report.reporting.logChangeDateTime,Date and time edited
 report.reporting.logChangeRecordCreatedDateTime,Date and time created
 report.reporting.medications,Medications
 report.reporting.noteEndDateTime,Notes end date and time
-report.reporting.notes,Notes
 report.reporting.noteStartDateTime,Notes start date and time
+report.reporting.notes,Notes
 report.reporting.patientAge,Age
 report.reporting.patientAllergies,Allergies
 report.reporting.patientBillingType,Billing type
@@ -231,9 +238,9 @@ report.reporting.patientRegisteredBy,Registered by
 report.reporting.patientRegistrationDate,Registration date
 report.reporting.patientRegistrationType,Registration type
 report.reporting.patientReligion,Religion
+report.reporting.patientSSN,Social security number
 report.reporting.patientSecondaryContactNumber,Secondary contact number
 report.reporting.patientSex,Sex
-report.reporting.patientSSN,Social security number
 report.reporting.patientStreetVillage,Street / Village
 report.reporting.patientSubDivision,Sub-division
 report.reporting.patientTitle,Title
@@ -278,10 +285,10 @@ report.reporting.procedureFacility,Procedure facility
 report.reporting.procedureIsCompleted,Procedure marked as completed
 report.reporting.procedureLocation,Procedure location
 report.reporting.procedureLocationGroup,Procedure area
-report.reporting.procedures,Procedures
 report.reporting.procedureStartDateTime,Procedure start (date and time)
 report.reporting.procedureTimeIn,Procedure time in
 report.reporting.procedureTimeOut,Procedure time out
+report.reporting.procedures,Procedures
 report.reporting.referralCompletedBy,Referring doctor
 report.reporting.referralDate,Referral date
 report.reporting.referralType,Referral name
@@ -302,10 +309,13 @@ report.reporting.registryRegistrationStatus,Registration status
 report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
+report.reporting.rolePermissions,Role permissions
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
 report.reporting.triageRecordCount,Number of triage records
 report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
+report.reporting.userDesignations,Designations
+report.reporting.userDisplayId,User ID
 report.reporting.userEmail,User email
 report.reporting.userName,User name
 report.reporting.userRole,User role
@@ -322,8 +332,8 @@ report.reporting.vaccinationNotGivenClinician,"If not given, Supervising clinici
 report.reporting.vaccinationNotGivenDate,Date vaccine not given
 report.reporting.vaccinationNotGivenReason,"If not given, Reason not given"
 report.reporting.vaccinationRecordedBy,Recorded by
-report.reporting.vaccinations,Vaccinations
 report.reporting.vaccinationStatus,Vaccine status
+report.reporting.vaccinations,Vaccinations
 report.reporting.vaccineBrand,"If category of Other, Vaccine brand"
 report.reporting.vaccineCategory,Vaccine category
 report.reporting.vaccineDisease,"If category of Other, Disease"
