@@ -53,7 +53,10 @@ invoice_data as (
     -- encounter with no invoice at all stays null via the outer left join.
     select
         ei.encounter_id,
-        to_char(max(ei.invoice_finalised_datetime), '{{ var("datetime_format") }}') as invoice_finalised_datetime,
+        -- carried as a raw naive-central timestamp; localised in the final
+        -- select like the encounter datetimes (max before the tz shift is safe:
+        -- the shift is monotonic per row)
+        max(ei.invoice_finalised_datetime) as invoice_finalised_datetime,
         string_agg(
             ei.products_no_category, ', '
             order by ei.invoice_datetime, ei.invoice_id
@@ -103,7 +106,7 @@ select
     eis.facility as "{{ translate_label('facility') }}",
     dp.name as "{{ translate_label('dischargeDepartment') }}",
     c.display_name as "{{ translate_label('encounterSupervisingClinician') }}",
-    invd.invoice_finalised_datetime as "{{ translate_label('invoiceFinalisedDateTime') }}",
+    to_char({{ to_user_selected_timezone('invd.invoice_finalised_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('invoiceFinalisedDateTime') }}",
     -- BL-019: money columns rounded to 2dp for display, matching the app's
     -- formatDisplayPrice (the dataset carries full-precision values)
     round(invd.invoice_total, 2) as "{{ translate_label('invoiceTotal') }}",
