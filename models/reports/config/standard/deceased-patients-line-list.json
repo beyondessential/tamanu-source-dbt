@@ -4,7 +4,8 @@
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
-    "defaultDateRange": "7days",
+    "defaultDateRange": "allTime",
+    "dateRangeLabel": "Enter date of death range (or leave blank for all)",
     "dataSources": [
       "thisFacility",
       "allFacilities"

@@ -2,7 +2,10 @@ version: 2
 
 models:
   - name: ds__deaths
-    description: Deaths
+    description: >
+      One row per deceased patient (patients with a recorded date of death).
+      Death-record detail columns are null when no death form has been
+      completed, as a death form is not guaranteed for every deceased patient.
     config:
       tags:
         - clinical
@@ -15,6 +18,9 @@ models:
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('patient_death_data__patient_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: first_name
         data_type: character varying(255)
         description: "{{ doc('patients__first_name') }}"

@@ -2,6 +2,80 @@ drop schema if exists reporting cascade;
 create schema reporting;
 grant usage on schema reporting to reporting;
 alter default privileges in schema reporting grant select on tables to reporting;
+create or replace view "reporting"."metric_definitions" as (
+-- Canonical metric definitions registry. The data lives in metric_definitions.csv
+-- and is compiled inline by get_metric_definitions() so this ships as a view in the
+-- production bundle rather than a seed table. Regenerate the macro with
+-- python scripts/generate_metric_definitions_macro.py after editing the CSV.
+select
+    metric_id::text as metric_id,
+    kind::text as kind,
+    name::text as name,
+    description::text as description,
+    numerator_description::text as numerator_description,
+    denominator_description::text as denominator_description,
+    data_source::text as data_source,
+    definition_source::text as definition_source,
+    definition_source_code::text as definition_source_code,
+    definition_rationale::text as definition_rationale,
+    unit::text as unit,
+    subject_grain::text as subject_grain,
+    disaggregations::text as disaggregations,
+    variant_of::text as variant_of,
+    owner::text as owner,
+    status::text as status,
+    spec_path::text as spec_path
+from (
+    values
+        ('cohort_6m_diabetes_active', 'metric', '6-month cohort — active diabetic patients', 'Cohort diabetic patients still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients with a diabetes diagnosis still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_bp_control_percent', 'metric', '6-month cohort diabetes BP control rate', 'Percentage of active cohort diabetic patients whose 6-month BP is controlled. Emitted only when measurements exist.', 'Distinct active cohort diabetes patients with controlled BP', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_bp_measured_percent', 'metric', '6-month cohort diabetes BP measured percent', 'Percentage of active cohort diabetic patients with a BP measurement in the 6-month window.', 'Distinct active cohort diabetes patients with a BP measurement', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_hba1c_control_percent', 'metric', '6-month cohort diabetes HbA1c control rate', 'Percentage of active cohort diabetic patients whose 6-month HbA1c is controlled. Emitted only when measurements exist.', 'Distinct active cohort diabetes patients with controlled HbA1c', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_diabetes_hba1c_measured_percent', 'metric', '6-month cohort diabetes HbA1c measured percent', 'Percentage of active cohort diabetic patients with an HbA1c test in the 6-month window.', 'Distinct active cohort diabetes patients with an HbA1c test', 'Distinct active cohort diabetes patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_active', 'metric', '6-month cohort — active hypertensive patients', 'Cohort hypertensive patients still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients with a hypertension diagnosis still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_bp_control_percent', 'metric', '6-month cohort HTN BP control rate', 'Percentage of active cohort hypertensive patients whose 6-month BP is controlled. Emitted only when measurements exist.', 'Distinct active cohort HTN patients with controlled BP', 'Distinct active cohort HTN patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_htn_bp_measured_percent', 'metric', '6-month cohort HTN BP measured percent', 'Percentage of active cohort hypertensive patients with a BP measurement in the 6-month window.', 'Distinct active cohort HTN patients with a BP measurement', 'Distinct active cohort HTN patients', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_patients_active', 'metric', '6-month cohort — active patients', 'Cohort patients (active 9 months prior) still active at the 6-month evaluation point in the reporting month.', 'Distinct cohort patients active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_6m_retention_percent', 'metric', '6-month cohort retention rate', 'Percentage of cohort patients still active at the 6-month evaluation point.', 'Distinct cohort patients still active', 'Distinct cohort patients in the cohort', 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'percentage', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('cohort_ncd_6m', 'cohort', '6-month NCD cohort', 'NCD-registry patients whose registration first became ncdactive 9 months before the reporting month and who were still in the program at the 6-month evaluation point.', null, null, 'tamanu', 'MSF', null, 'MSF NCD program 6-month evaluation cohort', null, 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/der__cohort_ncd_6m.md'),
+        ('cohort_ncd_registry', 'cohort', 'NCD program registry cohort', 'NCD-registry patients (all clinical statuses except waitlist) with conditions pivoted to columns and the latest exit-survey info.', null, null, 'tamanu', 'MSF', null, 'MSF NCD program registry definition', null, 'patient', 'sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/der__cohort_ncd_registry.md'),
+        ('consultations_followup', 'metric', 'Follow-up NCD consultations', 'Patients with a second or later consultation in the NCD program during the reporting month.', 'Patients with at least one prior NCD consultation who attend another consultation in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('consultations_new', 'metric', 'New NCD consultations', 'Patients whose first lifetime consultation in the NCD program falls in the reporting month.', 'Patients attending their first lifetime NCD consultation in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_bp_controlled', 'metric', 'Diabetes patients with controlled BP', 'Diabetes patients with a controlled blood-pressure measurement in the reporting month.', 'Distinct diabetes patients with a controlled blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_bp_measured', 'metric', 'Diabetes patients with BP measured', 'Diabetes patients with at least one blood-pressure measurement in the reporting month.', 'Distinct diabetes patients with at least one recorded blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_hba1c_controlled', 'metric', 'Diabetes patients with controlled HbA1c', 'Diabetes patients with a controlled HbA1c measurement in the reporting month.', 'Distinct diabetes patients with a controlled HbA1c measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diabetes_hba1c_measured', 'metric', 'Diabetes patients with HbA1c measured', 'Diabetes patients with at least one HbA1c test in the reporting month.', 'Distinct diabetes patients with at least one recorded HbA1c measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diagnoses', 'metric', 'Patients with active NCD diagnosis', 'Patients with an active NCD registration carrying the given condition by the end of the reporting month.', 'Distinct patients with an active NCD registration carrying the given condition by the end of the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('diagnoses_new', 'metric', 'New NCD diagnoses', 'Patients whose NCD registration first transitioned to ncdactive carrying the given condition during the reporting month.', 'Distinct patients whose NCD registration first became active carrying the given condition in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_deceased', 'metric', 'NCD exits — deceased', 'Patients exited from the NCD program as deceased during the reporting month.', 'Distinct patients exited from the NCD program as deceased in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_ltfu', 'metric', 'NCD exits — lost to follow-up', 'Patients exited from the NCD program as lost-to-follow-up during the reporting month.', 'Distinct patients exited from the NCD program as lost-to-follow-up in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_other', 'metric', 'NCD exits — other', 'Patients exited from the NCD program for other reasons (clinically discharged, voluntary exit, other) during the reporting month.', 'Distinct patients exited from the NCD program in the reporting month for other reasons (clinically discharged, voluntary exit, other)', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('exit_transferred', 'metric', 'NCD exits — transferred or referred out', 'Patients exited from the NCD program as transferred or referred out during the reporting month.', 'Distinct patients exited from the NCD program as transferred or referred out in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('htn_bp_controlled', 'metric', 'Hypertension patients with controlled BP', 'Hypertension patients with a controlled blood-pressure measurement in the reporting month.', 'Distinct hypertension patients with a controlled blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('htn_bp_measured', 'metric', 'Hypertension patients with BP measured', 'Hypertension patients with at least one blood-pressure measurement in the reporting month.', 'Distinct hypertension patients with at least one recorded blood-pressure measurement in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('patients_active', 'metric', 'Active NCD patients', 'Patients with an active NCD registration as of the reporting month.', 'Distinct patients with an active NCD registration as of month end (active before month end and exit not yet recorded)', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('patients_new', 'metric', 'Newly enrolled NCD patients', 'Patients whose NCD registration first transitioned to ncdactive during the reporting month and were still active at month end.', 'Distinct patients whose NCD registration first became active in the reporting month and who were still active at month end', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md'),
+        ('referred_specialist', 'metric', 'NCD specialist referrals', 'Patients referred to a specialist via the NCDRef001 form during the reporting month.', 'Distinct patients referred to a specialist via the NCDRef001 form in the reporting month', null, 'tamanu', 'MSF', null, 'MSF NCD program operational definition', 'count', 'patient', 'dhis_ncd_category,age_group,sex,facility_id', null, 'bes-maui', 'draft', 'specs/dbt-model/ncd-indicators.md')
+) as md (
+        metric_id,
+        kind,
+        name,
+        description,
+        numerator_description,
+        denominator_description,
+        data_source,
+        definition_source,
+        definition_source_code,
+        definition_rationale,
+        unit,
+        subject_grain,
+        disaggregations,
+        variant_of,
+        owner,
+        status,
+        spec_path
+)
+);
 create or replace view "reporting"."contributing_death_causes" as (
 select
     cdc.id,
@@ -1799,6 +1873,17 @@ with contributing_death_causes as (
     group by cdc.patient_death_data_id
 ),
 
+-- BL-010: latest current death record per patient; the death workflow keeps at
+-- most one current row but there is no unique constraint on patient_id so dedupe
+-- defensively and prefer a finalised record when more than one current row exists
+death_data as (
+    select distinct on (patient_id)
+        *
+    from "reporting"."patient_death_data"
+    where visibility_status = 'current'
+    order by patient_id asc, is_final desc nulls last, id
+),
+
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
@@ -1878,23 +1963,27 @@ select
     pdd.external_cause_location,
     initcap(pdd.was_pregnant) as was_pregnant,
     pdd.pregnancy_contributed,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_fetal_or_infant then 'Yes'
-        else 'No'
+        when pdd.was_fetal_or_infant = false then 'No'
     end as was_fetal_or_infant,
     initcap(pdd.was_stillborn) as was_stillborn,
     pdd.birth_weight,
     pdd.carrier_pregnancy_weeks as completed_weeks_of_pregnancy,
     pdd.carrier_age as age_of_mother,
     pdd.mother_condition_description as condition_in_mother_affecting_fetus_or_newborn,
+    -- BL-011: null when no death form recorded (rather than defaulting to 'No')
     case
         when pdd.was_within_day_of_birth then 'Yes'
-        else 'No'
+        when pdd.was_within_day_of_birth = false then 'No'
     end as death_within_day_of_birth,
     pdd.hours_survived_since_birth
-from "reporting"."patient_death_data" pdd
-join "reporting"."patients" p
-    on p.id = pdd.patient_id
+-- BL-009: drive from patients so every deceased patient is listed, with death
+-- record detail left-joined and null where no death form exists
+from "reporting"."patients" p
+left join death_data pdd
+    on pdd.patient_id = p.id
 left join "reporting"."patient_additional_data" pd
     on pd.patient_id = p.id
 left join "reporting"."reference_data" village
@@ -1931,8 +2020,7 @@ left join "reporting"."location_groups" location_group
     on location_group.id = location.location_group_id
 left join "reporting"."users" clinician
     on clinician.id = pdd.recorded_by_id
-where pdd.visibility_status = 'current'
-    and pdd.is_final
+where p.date_of_death is not null
 );
 create or replace view "reporting"."ds__invoice_products" as (
 
