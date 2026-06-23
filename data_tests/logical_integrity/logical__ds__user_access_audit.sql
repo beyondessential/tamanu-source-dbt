@@ -6,7 +6,7 @@ where visibility_status != 'current'
 union all
 
 -- AC-005 (BL-008): if a role has permissions in base__permissions, the dataset must
--- aggregate them; null role_permissions is only valid when the role itself has none
+-- aggregate them, and null role_permissions is only valid when the role itself has none
 select 'AC-005' as failed_ac, d.user_id::text as user_id
 from {{ ref('ds__user_access_audit') }} d
 where d.role_permissions is null

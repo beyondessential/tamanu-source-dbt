@@ -1,0 +1,75 @@
+unit_tests:
+  - name: test_encounter_invoice_audit_cancelled_products
+    model: audit-encounter-invoice
+    description: >
+      The report excludes cancelled invoices when aggregating per encounter:
+      their totals and products must not appear. Only the in_progress invoice's
+      $50 total and "Manual Fee" product surface.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-10 08:00:00'::timestamp as start_datetime, '2024-01-11 10:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Medicine' as name
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('ds__encounter_invoices')
+        format: sql
+        rows: |
+          -- Cancelled invoice must be excluded; in_progress invoice surfaces
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 10.00::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, 'Cancelled Fee' as products_no_category
+          union all
+          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp, null::timestamp, 50.00::numeric, null::numeric, 0.00::numeric, null::numeric, 'Manual Fee'
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001' as "Patient ID",
+          'John' as "First name",
+          'Doe' as "Last name",
+          '1990-01-01' as "Date of birth",
+          34 as "Age",
+          'male' as "Sex",
+          null::text as "Billing type",
+          '2024-01-10 08:00:00' as "Encounter start date and time",
+          '2024-01-11 10:00:00' as "Encounter end date and time",
+          1 as "Length of stay (days)",
+          'General Hospital' as "Facility",
+          'Medicine' as "Discharging department",
+          null::text as "Supervising clinician",
+          null::text as "Invoice finalised date and time",
+          50.00::numeric as "Invoice total",
+          null::numeric as "Insurance coverage",
+          50.00::numeric as "Patient subtotal",
+          null::numeric as "Patient payment",
+          50.00::numeric as "Patient total",
+          'Manual Fee' as "Invoice products with no category"
