@@ -1,10 +1,10 @@
-# Report Spec: `encounter-invoice-audit-line-list`
+# Report Spec: `audit-encounter-invoice`
 
 ## Identity
 
 | Field | Value |
 |---|---|
-| **Name** | `encounter-invoice-audit-line-list` |
+| **Name** | `audit-encounter-invoice` |
 | **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`) |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
@@ -13,7 +13,7 @@
 | **Linear issue** | _none_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-06-19 |
+| **Last updated** | 2026-06-23 |
 
 ## Purpose
 
@@ -124,3 +124,4 @@ _None._
 | Date | Author | Change |
 |---|---|---|
 | 2026-06-18 | Maui team | Initial spec for the report, ported from `tamanu-dbt-fsm` into the shared standard/sensitive macro pattern. Per-invoice financials live in `ds__encounter_invoices`; the report aggregates that dataset per encounter (BL-018). |
+| 2026-06-23 | Maui team | Renamed report from `encounter-invoice-audit-line-list` to `audit-encounter-invoice` (config/SQL `audit-encounter-invoice.*`, display name "Audit - encounter invoice"). No logic change. |

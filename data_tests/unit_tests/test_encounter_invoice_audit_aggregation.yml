@@ -1,6 +1,6 @@
 unit_tests:
   - name: test_encounter_invoice_audit_aggregation
-    model: encounter-invoice-audit-line-list
+    model: audit-encounter-invoice
     description: >
       Per-encounter aggregation across multiple invoices. enc_001 has two
       finalised invoices: totals, coverage, discount and payments sum; the
