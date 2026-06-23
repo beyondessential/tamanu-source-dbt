@@ -1,6 +1,6 @@
 unit_tests:
   - name: test_encounter_invoice_audit_cancelled_products
-    model: encounter-invoice-audit-line-list
+    model: audit-encounter-invoice
     description: >
       The report excludes cancelled invoices when aggregating per encounter:
       their totals and products must not appear. Only the in_progress invoice's
