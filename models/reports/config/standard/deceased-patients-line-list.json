@@ -1,5 +1,6 @@
 {
   "query": "query here",
+  "name": "Deceased patients line list",
   "notes": "This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. \nThe report includes all details documented in the patient death record. ",
   "status": "published",
   "dbSchema": "reporting",

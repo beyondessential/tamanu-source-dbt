@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: ds__encounter_invoices
+    description: "{{ doc('ds__encounter_invoices') }}"
+    config:
+      tags:
+        - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      pii: false
+      classification: confidential
+    columns:
+      - name: invoice_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in invoices."
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('invoices')
+                field: id
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('invoices__encounter_id') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('encounters')
+                field: id
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('invoices__status') }}"
+      - name: invoice_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('ds__encounter_invoices__invoice_datetime') }}"
+      - name: invoice_finalised_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('ds__encounter_invoices__invoice_finalised_datetime') }}"
+      - name: invoice_total
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__invoice_total') }}"
+      - name: insurance_coverage
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__insurance_coverage') }}"
+      - name: invoice_discount
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__invoice_discount') }}"
+      - name: patient_payment
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__patient_payment') }}"
+      - name: products_no_category
+        data_type: text
+        description: "{{ doc('ds__encounter_invoices__products_no_category') }}"
