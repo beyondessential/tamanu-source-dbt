@@ -23,6 +23,9 @@ models:
       - name: dispensed_at
         data_type: timestamp
         description: "{{ doc('medication_dispenses__dispensed_at') }}"
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
       - name: facility_id
         data_type: character varying(255)
         description: "{{ doc('generic__facility_id') }} where the medication was dispensed."
