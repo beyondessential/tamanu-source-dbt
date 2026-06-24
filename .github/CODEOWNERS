@@ -1,0 +1,7 @@
+# Code owners for this repository.
+# See https://docs.github.com/articles/about-code-owners
+#
+# Changes to files under .github/ (CI workflows, deployment config,
+# this CODEOWNERS file) require review from the team below.
+
+/.github/ @beyondessential/maui
