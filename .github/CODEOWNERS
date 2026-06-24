@@ -5,3 +5,6 @@
 # this CODEOWNERS file) require review from the team below.
 
 /.github/ @beyondessential/maui
+
+# Any Python file requires review from the team below.
+*.py @beyondessential/maui
