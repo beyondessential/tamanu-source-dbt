@@ -85,6 +85,7 @@ report.reporting.diagnosesSecondary,Secondary diagnoses
 report.reporting.diagnosesSecondaryCodes,Secondary diagnosis codes
 report.reporting.diagnosis,Diagnosis
 report.reporting.diagnosisCertainty,Certainty
+report.reporting.diagnosisDate,Date of diagnosis
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
 report.reporting.dischargeAssignedTime,Time assigned to
