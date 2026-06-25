@@ -51,9 +51,6 @@ models:
       sensitive:
         +tags:
           - restricted
-      admin:
-        +tags:
-          - admin
     reports:
       +docs:
         show: false
