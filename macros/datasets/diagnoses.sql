@@ -9,6 +9,7 @@ select
     p.first_name,
     p.last_name,
     p.display_id,
+    p.date_of_birth,
     date_part('year', age(ed.datetime::date, p.date_of_birth)) as age,
     p.sex,
     coalesce(pad.primary_contact_number, pad.secondary_contact_number) as contact_number,
@@ -22,6 +23,7 @@ select
     l.name as location,
     f.id as facility_id,
     f.name as facility,
+    e.encounter_type,
     initcap(ed.certainty) as certainty,
     case when ed.is_primary = true then 'Yes' else 'No' end as is_primary
 from {{ ref('encounter_diagnoses') }} ed
