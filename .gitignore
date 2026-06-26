@@ -13,6 +13,7 @@ CLAUDE.md
 
 # Python
 __pycache__
+tamanu_source_dbt.egg-info/
 
 # Dependencies
 dbt_packages/
