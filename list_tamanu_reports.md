@@ -25,7 +25,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
-### Audit outpatient appointments line list
+### Audit outpatient appointments
 
 **Report Description**
 
@@ -36,6 +36,54 @@ This report shows an audit log of all modifications and cancellations to outpati
 Facility
 
 **Default date range**: 24hours
+
+
+---
+
+### Audit patient details edit
+
+**Report Description**
+
+This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
+Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Audit patient views
+
+**Report Description**
+
+This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. 
+Views are listed in chronological order. If multiple views are made to a patient's record within a logged session, these views will be grouped together and displayed as a single view in the report.
+
+**Filters**
+
+Patient, User
+
+**Default date range**: 24hours
+
+
+---
+
+### Deceased patients line list
+
+**Report Description**
+
+This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
+The report includes all details documented in the patient death record. 
+
+**Filters**
+
+Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
+
+**Default date range**: 7days
 
 
 ---
@@ -252,6 +300,17 @@ Village, Doctor/Nurse
 
 ---
 
+### Invoice products summary
+
+**Report Description**
+
+This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
+
+**Default date range**: allTime
+
+
+---
+
 ### Lab requests line list
 
 **Report Description**
@@ -329,6 +388,17 @@ Facility, Drug
 
 ---
 
+### Ongoing conditions line list
+
+**Report Description**
+
+This report lists all patients with ongoing conditions for the selected parameters.
+
+**Default date range**: 7days
+
+
+---
+
 ### Outpatient appointments line list
 
 **Report Description**
@@ -389,6 +459,51 @@ Facility, Procedure clinician, Department, Area, Location
 
 ---
 
+### Program registry line list
+
+**Report Description**
+
+This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
+Home village: Per patient details
+Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)
+Status: Current status of the patient per the 'status' function within the register.
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
+Registered by: Name of Tamanu user who added the patient to this registry
+Registering facility: Facility selected when patient is first added to the registry
+
+**Filters**
+
+Registry, Subdivision, Division
+
+**Default date range**: allTime
+
+
+---
+
+### Program registry removed patients line list
+
+**Report Description**
+
+This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
+Home village: Per patient details
+Registering facility: Facility selected when patient is first added to the registry
+Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
+Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
+Registered by: Name of user who added the patient to the registry
+Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the first addition to the register.
+Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list the most recent removal)
+Removed by: Name of user who removed the patient from the registry
+
+**Filters**
+
+Registry
+
+**Default date range**: allTime
+
+
+---
+
 ### Recent diagnoses line list
 
 **Report Description**
@@ -404,7 +519,92 @@ Facility, Village, Diagnosis, Diagnosis 2, Diagnosis 3, Diagnosis 4, Diagnosis 5
 
 ---
 
-### User audit report
+### Registered births line list
+
+**Report Description**
+
+This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.
+
+**Filters**
+
+Facility, Village
+
+**Default date range**: 7days
+
+
+---
+
+### Registered patients by dob line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
+
+**Default date range**: 7days
+
+
+---
+
+### Registered patients daily summary
+
+**Report Description**
+
+This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. 
+
+**Default date range**: allTime
+
+
+---
+
+### Registered patients line list
+
+**Report Description**
+
+This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
+
+**Default date range**: 7days
+
+
+---
+
+### Upcoming vaccinations line list
+
+**Report Description**
+
+This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
+
+**Filters**
+
+Category, Vaccine, Vaccine status, Village
+
+**Default date range**: 18years
+
+
+---
+
+### Usage quality metrics patient details
+
+**Report Description**
+
+This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
+
+**Default date range**: allTime
+
+
+---
+
+### Usage quality metrics patient registrations
+
+**Report Description**
+
+This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
+
+**Default date range**: 30days
+
+
+---
+
+### User audit line list
 
 **Report Description**
 
@@ -468,208 +668,6 @@ The report includes vaccinations with statuses of both 'Given' and 'Not given', 
 Facility, Village, Category, Vaccine
 
 **Default date range**: 7days
-
-
----
-
-## Admin
-
-### Admin audit patient details edits line list
-
-**Report Description**
-
-This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.
-Edits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
-
-
----
-
-### Admin audit patient views line list
-
-**Report Description**
-
-This report lists all of the users that have viewed the selected patient's record for the selected date range and parameters. A patient 'view' is defined as a single access to a patient record where a patient record can be accessed from a patient listing table such as the 'All patients' table, the 'Active lab requests' table, or the 'Immunisation register'. A patient record can also be accessed via features such as the 'Recently viewed patients' and the scheduling module. 
-Views are listed in chronological order. If multiple views are made to a patient's record within a logged session, these views will be grouped together and displayed as a single view in the report.
-
-**Filters**
-
-Patient, User
-
-**Default date range**: 24hours
-
-
----
-
-### Admin deceased patients line list
-
-**Report Description**
-
-This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. 
-The report includes all details documented in the patient death record. 
-
-**Filters**
-
-Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
-
-**Default date range**: 7days
-
-
----
-
-### Admin invoice products summary
-
-**Report Description**
-
-This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
-
-**Default date range**: allTime
-
-
----
-
-### Admin ongoing conditions line list
-
-**Report Description**
-
-This report lists all patients with ongoing conditions for the selected parameters.
-
-**Default date range**: 7days
-
-
----
-
-### Admin program registry line list
-
-**Report Description**
-
-This report generates the same data that appears on the Registry page. This report will include all people registered within the date range selected in order of the newest (most recent) registration to the oldest. Any patients removed from the register should not be included in this report (see another report called Program Registry Removed Patients).
-Home village: Per patient details
-Currently in: Can be village or facility, depends how the register is confugured. Will only be completed if a form associated with the register includes this field.
-Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of report generation, any conditions removed previously are not included)
-Status: Current status of the patient per the 'status' function within the register.
-Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the date of the current addition to the register.
-Registered by: Name of Tamanu user who added the patient to this registry
-Registering facility: Facility selected when patient is first added to the registry
-
-**Filters**
-
-Registry, Subdivision, Division
-
-**Default date range**: allTime
-
-
----
-
-### Admin program registry removed patients line list
-
-**Report Description**
-
-This report generates a list of all patients who have been removed from the registry. This report will include all people removed via workflow 'patient active -> remove' (i.e. does not include patients who were deleted from the registry using workflow 'patient active -> delete') within the date range selected in order of the newest removal to the oldest. Those still active on the register are not included in this report.
-Home village: Per patient details
-Registering facility: Facility selected when patient is first added to the registry
-Related conditions: Lists all related conditions associated with the patient and the register they are on (conditions listed at the time of removal)
-Status: Last status of the patient per the 'status' function within the register at the time of removal from the register.
-Registered by: Name of user who added the patient to the registry
-Date of registration: Date the patient was added to this registry. If patient has been added to this registry more than once (i.e. added, removed, added again), the date listed is the first addition to the register.
-Date of removal: Date the patient was removed from the registry (if patient is added to a registry, removed, later added again and removed again, the report will list the most recent removal)
-Removed by: Name of user who removed the patient from the registry
-
-**Filters**
-
-Registry
-
-**Default date range**: allTime
-
-
----
-
-### Admin registered births line list
-
-**Report Description**
-
-This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.
-
-**Filters**
-
-Facility, Village
-
-**Default date range**: 7days
-
-
----
-
-### Admin registered patients by dob line list
-
-**Report Description**
-
-This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
-
-**Default date range**: 7days
-
-
----
-
-### Admin registered patients daily summary
-
-**Report Description**
-
-This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. 
-
-**Default date range**: allTime
-
-
----
-
-### Admin registered patients line list
-
-**Report Description**
-
-This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
-
-**Default date range**: 7days
-
-
----
-
-### Admin upcoming vaccinations line list
-
-**Report Description**
-
-This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
-
-**Filters**
-
-Category, Vaccine, Vaccine status, Village
-
-**Default date range**: 18years
-
-
----
-
-### Admin usage quality metrics patient details
-
-**Report Description**
-
-This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.
-
-**Default date range**: allTime
-
-
----
-
-### Admin usage quality metrics patient registrations
-
-**Report Description**
-
-This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.
-
-**Default date range**: 30days
 
 
 ---

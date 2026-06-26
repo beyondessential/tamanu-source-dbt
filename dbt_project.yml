@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.50.10
+version: 2.50.11
 config-version: 2
 profile: tamanu_source_dbt
 
@@ -51,9 +51,6 @@ models:
       sensitive:
         +tags:
           - restricted
-      admin:
-        +tags:
-          - admin
     reports:
       +docs:
         show: false
@@ -63,9 +60,6 @@ models:
         sensitive:
           +tags:
             - restricted
-        admin:
-          +tags:
-            - admin
 
 data_tests:
   +severity: warn
