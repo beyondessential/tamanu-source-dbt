@@ -25,7 +25,7 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
-### Audit outpatient appointments line list *(sensitive version available)*
+### Audit outpatient appointments *(sensitive version available)*
 
 **Report Description**
 
@@ -40,7 +40,7 @@ Facility
 
 ---
 
-### Audit patient details edits line list
+### Audit patient details edit
 
 **Report Description**
 
@@ -56,7 +56,7 @@ Patient, User
 
 ---
 
-### Audit patient views line list
+### Audit patient views
 
 **Report Description**
 
@@ -604,7 +604,7 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
-### User audit report *(sensitive version available)*
+### User audit line list *(sensitive version available)*
 
 **Report Description**
 
