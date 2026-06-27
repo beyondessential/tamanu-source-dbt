@@ -37,12 +37,12 @@ Columns included:
 - Facility and discharging department.
 - Supervising clinician.
 - Invoice finalised date and time.
-- Invoice total — sum of price × quantity for all items on non-cancelled invoices.
-- Insurance coverage — calculated from insurance plan coverage percentages applied to insurable items on non-cancelled invoices. Uses finalised coverage values where available and falls back to current plan values for in-progress invoices.
-- Patient subtotal — invoice total minus insurance coverage minus invoice-level discount.
-- Patient payment — net patient payments (payments minus refunds) against non-cancelled invoices.
-- Patient total — patient subtotal minus patient payment (outstanding balance).
-- Invoice products with no category — items on non-cancelled invoices that have no product category assigned, which typically indicates manually added fees (e.g. encounter fees added outside the product catalogue) or products with a broken category reference.
+- Invoice total - sum of price x quantity for all items on non-cancelled invoices.
+- Insurance coverage - calculated from insurance plan coverage percentages applied to insurable items on non-cancelled invoices. Uses finalised coverage values where available and falls back to current plan values for in-progress invoices.
+- Patient subtotal - invoice total minus insurance coverage minus invoice-level discount.
+- Patient payment - net patient payments (payments minus refunds) against non-cancelled invoices.
+- Patient total - patient subtotal minus patient payment (outstanding balance).
+- Invoice products with no category - items on non-cancelled invoices that have no product category assigned, which typically indicates manually added fees (e.g. encounter fees added outside the product catalogue) or products with a broken category reference.
 
 **Filters**
 

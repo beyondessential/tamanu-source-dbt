@@ -6,7 +6,10 @@
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",
@@ -32,7 +35,9 @@
         "name": "locationGroupId",
         "suggesterEndpoint": "locationGroup",
         "suggesterOptions": {
-          "baseQueryParameters": { "filterByFacility": true }
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
         }
       },
       {
@@ -41,7 +46,9 @@
         "name": "departmentId",
         "suggesterEndpoint": "department",
         "suggesterOptions": {
-          "baseQueryParameters": { "filterByFacility": true }
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
         }
       },
       {
