@@ -15,6 +15,7 @@ Every report configuration file must be a valid JSON object with the following s
 #### Required Properties
 
 - **`query`** (string): The SQL query or placeholder for the report. Must be at least 1 character long.
+- **`name`** (string): Display name of the report as shown in the Tamanu reporting interface. Every report must define a `name` at the **root level**. The JSON schema enforces this as a required root-level property (`minLength: 1`). A legacy `name` under `queryOptions` is still permitted but deprecated.
 - **`status`** (enum): Publication status of the report. Must be either `"draft"` or `"published"`.
 - **`dbSchema`** (enum): Database schema to use for the report. Must be either `"raw"` or `"reporting"`.
 - **`queryOptions`** (object): Configuration options for the report query (see detailed structure below).
@@ -24,6 +25,37 @@ Every report configuration file must be a valid JSON object with the following s
 - **`notes`** (string): Detailed description and notes about the report's purpose and functionality.
 - **`reportDefinitionId`** (string): Unique identifier for the report definition.
 - **`dhis2DataSet`** (string): DHIS2 dataset identifier.
+
+### Recommended Field Ordering
+
+For consistency across all report configuration files, define properties in the following order. This applies to both `standard` and `sensitive` reports.
+
+**Root level:**
+
+1. `query`
+2. `name`
+3. `status`
+4. `notes`
+5. `dbSchema`
+6. `reportDefinitionId` *(if present)*
+7. `dhis2DataSet` *(if present)*
+8. `queryOptions`
+
+**Within `queryOptions`:**
+
+1. `defaultDateRange`
+2. `dateRangeLabel` *(if present)*
+3. `dataSources`
+4. `parameters`
+
+**Within each parameter object:**
+
+1. `parameterField`
+2. `label`
+3. `name`
+4. Type-specific properties (e.g. `suggesterEndpoint`, `suggesterOptions`, `options`, `filterBySelectedFacility`)
+
+Use 2-space indentation throughout.
 
 ### Query Options Structure
 
@@ -58,7 +90,7 @@ For a report generated on **2025-07-01 12:00:00**, the default date ranges would
 #### Optional Properties
 
 - **`dateRangeLabel`** (string): Custom label for the date range input field
-- **`name`** (string): Display name of the report
+- **`name`** (string): *(legacy)* Display name nested under `queryOptions`. New and existing reports should define the display name as a **root-level** `name` property instead (see [Required Properties](#required-properties)). This nested field is retained only for backwards compatibility and should not be used.
 
 ## Parameter Types
 
@@ -230,13 +262,13 @@ Here's a comprehensive example of a valid report configuration:
 ```json
 {
   "query": "SELECT p.display_id, p.first_name, p.last_name, e.start_date FROM patients p JOIN encounters e ON p.id = e.patient_id WHERE e.start_date >= :startDate AND e.start_date <= :endDate AND (:facilityId IS NULL OR e.location_id IN (SELECT id FROM locations WHERE facility_id = :facilityId)) AND (:departmentId IS NULL OR e.department_id = :departmentId)",
+  "name": "Patient Encounters Report",
   "status": "published",
   "notes": "Patient encounter report showing all encounters within the selected date range, with optional filtering by facility and department. Useful for tracking patient flow and departmental activity.",
   "dbSchema": "reporting",
   "reportDefinitionId": "patient-encounters-detailed",
   "dhis2DataSet": "abcdefghijk",
   "queryOptions": {
-    "name": "Patient Encounters Report",
     "defaultDateRange": "30days",
     "dateRangeLabel": "Encounter date range",
     "dataSources": ["thisFacility", "allFacilities"],
