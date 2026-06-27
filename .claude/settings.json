@@ -10,5 +10,18 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "maui-team": {
+      "source": {
+        "source": "directory",
+        "path": "./.maui"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "maui-tamanu@maui-team": true,
+    "maui-internal@maui-team": true,
+    "maui-core@maui-team": true
   }
 }
