@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Registered births line list",
-  "notes": "This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.",
   "status": "published",
+  "notes": "This report generates a list of all registered births for the selected parameters. Patients are listed in chronological order by date and time of birth. The report also includes key demographic information and birth details for each patient.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",

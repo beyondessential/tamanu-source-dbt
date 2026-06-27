@@ -6,7 +6,10 @@
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "VillageField",

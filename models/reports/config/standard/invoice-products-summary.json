@@ -1,12 +1,15 @@
 {
   "query": "replace this",
-  "status": "published",
   "name": "Invoice products summary",
+  "status": "published",
   "notes": "This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
-    "dataSources": ["allFacilities", "thisFacility"],
+    "dataSources": [
+      "allFacilities",
+      "thisFacility"
+    ],
     "parameters": []
   }
 }

@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Usage quality metrics - patient registrations",
-  "notes": "This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.",
   "status": "published",
+  "notes": "This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "30days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": []
   }
 }

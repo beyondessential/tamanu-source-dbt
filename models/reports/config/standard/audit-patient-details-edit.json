@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Audit - patient details edit",
-  "notes": "This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.\nEdits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.",
   "status": "published",
+  "notes": "This report lists all of the users that have edited the selected patient's personal details for the selected date range and parameters. Specifically the report tracks edits to the patient 'Details' component where personally identifiable information is recorded such as name, date of birth, contact information and insurance details.\nEdits are listed in chronological order. If multiple changes are made to an individual patient's details within a minute, these changes will be grouped together and displayed as a single edit in the report.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "PatientField",

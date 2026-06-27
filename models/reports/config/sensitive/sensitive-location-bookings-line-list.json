@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Sensitive location bookings line list",
-  "notes": "This report generates a list of all location bookings at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of booking",
   "status": "published",
+  "notes": "This report generates a list of all location bookings at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of booking",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "next30days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",
