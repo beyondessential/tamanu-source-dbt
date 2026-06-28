@@ -49,6 +49,18 @@ models:
       +materialized: view
       +tags:
         - reference
+    maps:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
+    clinical:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - clinical
     datasets:
       +docs:
         show: true

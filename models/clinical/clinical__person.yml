@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: clinical__person
+    description: "{{ doc('clinical__person') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of the patient; the OMOP person_id."
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__person_person_id_not_null
+          - unique:
+              name: ac_002_clinical__person_person_id_unique
+      - name: person_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__person__person_source_value') }}"
+        tags:
+          - direct_identifier
+      - name: gender_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__person__gender_concept_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__person_gender_concept_id_mapped
+              arguments:
+                to: ref('map__omop_sex')
+                field: concept_id
+      - name: gender_source_value
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: year_of_birth
+        data_type: integer
+        description: "{{ doc('clinical__person__year_of_birth') }}"
+      - name: month_of_birth
+        data_type: integer
+        description: "{{ doc('clinical__person__month_of_birth') }}"
+      - name: day_of_birth
+        data_type: integer
+        description: "{{ doc('clinical__person__day_of_birth') }}"
+      - name: birth_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__person__birth_datetime') }}"
+      - name: ethnicity_source_value
+        data_type: character varying(255)
+        description: "{{ doc('patient_additional_data__ethnicity_id') }}"
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__person__location_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_005_clinical__person_location_id_in_ref_location
+              arguments:
+                to: ref('ref__location')
+                field: location_id
