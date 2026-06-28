@@ -11,6 +11,7 @@ on:
 jobs:
   sync:
     uses: beyondessential/maui-team/.github/workflows/sync-codeowners.yml@main
+    secrets: inherit
     permissions:
       contents: write
       pull-requests: write
