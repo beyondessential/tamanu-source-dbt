@@ -43,6 +43,12 @@ models:
         - base
     intermediate:
       +materialized: ephemeral
+    ref:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
     datasets:
       +docs:
         show: true
