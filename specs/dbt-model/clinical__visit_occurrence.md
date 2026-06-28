@@ -125,10 +125,17 @@ row (D5, dbt-conventions § Documentation).
   `ref__care_site` canonical lookup. A future `ref__care_site` model (wrapping
   `bases/departments` and `bases/facilities`) should be added so the FK can be
   validated. Until then, AC on this column is deferred.
-- **OQ-2:** Mid-encounter department and location changes (tracked in
-  `encounter_history`) are not surfaced here. OMOP handles this via
-  `VISIT_DETAIL` rows — a future `clinical__visit_detail` model could expose
-  the full ward-transfer history from `int__admission_history_*`.
+- **OQ-2:** Mid-encounter transitions — department/location transfers *and*
+  encounter-type changes (e.g. `triage` → `emergency` → `admission`) — are
+  tracked in `encounter_history` but not surfaced here. In Tamanu, an ER-to-
+  admission flow is a **single encounter** whose type changes over time; there
+  is no second encounter record, so `preceding_visit_occurrence_id` does not
+  apply. `VISIT_OCCURRENCE` correctly reflects the final/current type. OMOP
+  handles the intra-visit phases via `VISIT_DETAIL` rows — a future
+  `clinical__visit_detail` model should expose one row per `encounter_history`
+  segment (carrying `encounter_type`, department, location, and datetime range
+  per segment) built from `int__admission_history_*` and the `encounter_type`
+  column in `bases/encounter_history`.
 - **OQ-3:** `surveyResponse` encounters are included with `visit_concept_id = NULL`
   (no OMOP equivalent). If downstream models should exclude survey encounters,
   they can filter on `visit_source_value != 'surveyResponse'` or on non-null
