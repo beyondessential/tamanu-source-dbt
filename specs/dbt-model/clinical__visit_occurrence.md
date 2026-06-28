@@ -72,7 +72,8 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
   type, looked up from `map__omop_visit_type` on
   `lower(encounter_type) = local_code`. The local value is preserved verbatim as
   `visit_source_value`. An unmapped type yields a NULL concept — the row is kept,
-  never dropped.
+  never dropped. `observation` maps to 9203 (Emergency Room Visit) because it is
+  part of the Tamanu emergency workflow, not a standalone outpatient encounter.
 - **BL-003:** `visit_type_concept_id` is the constant 32817 ("EHR administration
   record") for every row. All Tamanu encounters originate from EHR entry; no
   deployment-specific override is needed (unlike ethnicity or billing mappings).

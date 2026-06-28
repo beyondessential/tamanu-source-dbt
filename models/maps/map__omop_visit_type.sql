@@ -15,7 +15,7 @@ from (
         ('clinic',          'Outpatient Clinic',    9202, 'Outpatient Visit',          'Visit'),
         ('imaging',         'Imaging',              9202, 'Outpatient Visit',          'Visit'),
         ('emergency',       'Emergency',            9203, 'Emergency Room Visit',      'Visit'),
-        ('observation',     'Observation',          9202, 'Outpatient Visit',          'Visit'),
+        ('observation',     'Observation',          9203, 'Emergency Room Visit',      'Visit'),
         ('triage',          'Triage',               9203, 'Emergency Room Visit',      'Visit'),
         ('surveyResponse',  'Survey Response',         0, 'No matching concept',       'Visit'),
         ('vaccination',     'Vaccination',          9202, 'Outpatient Visit',          'Visit')
