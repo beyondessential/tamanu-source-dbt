@@ -69,11 +69,19 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 - **BL-001:** One row per encounter, sourced from `{{ ref('encounters') }}` only — never
   `public.*` (D10). Deleted / test-patient filtering is inherited from the base model.
 - **BL-002:** `visit_concept_id` is the OMOP standard Visit concept for the encounter
-  type, looked up from `map__omop_visit_type` on
-  `lower(encounter_type) = local_code`. The local value is preserved verbatim as
+  type. For all types except `admission` it is looked up from `map__omop_visit_type`
+  on `encounter_type = local_code`. The local value is preserved verbatim as
   `visit_source_value`. An unmapped type yields a NULL concept — the row is kept,
   never dropped. `observation` maps to 9203 (Emergency Room Visit) because it is
   part of the Tamanu emergency workflow, not a standalone outpatient encounter.
+  For `admission` encounters, the concept depends on encounter history: if
+  `encounter_history` contains a prior `emergency`, `triage`, or `observation`
+  phase for the same encounter, `visit_concept_id` is 262 (Emergency Room and
+  Inpatient Visit); otherwise it is 9201 (Inpatient Visit). This reflects the OMOP
+  CDM convention that a single ER-to-inpatient episode is one visit with concept 262,
+  not two separate visit occurrences. The 262 concept is registered in
+  `map__omop_visit_type` under `local_code = 'admission_from_emergency'` so the
+  referential-integrity test on `visit_concept_id` (AC-004) covers it.
 - **BL-003:** `visit_type_concept_id` is the constant 32817 ("EHR administration
   record") for every row. All Tamanu encounters originate from EHR entry; no
   deployment-specific override is needed (unlike ethnicity or billing mappings).
@@ -117,6 +125,7 @@ row (D5, dbt-conventions § Documentation).
 | Ref | Layer | Role |
 |---|---|---|
 | `encounters` | `bases/` | Encounter identity, type, datetimes, clinician, department |
+| `encounter_history` | `bases/` | Prior encounter types per encounter; used to detect ER→admission transitions (BL-002) |
 | `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept (universal) |
 | `clinical__person` | `clinical/` | Parent PERSON domain; `person_id` FK target |
 

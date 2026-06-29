@@ -12,6 +12,10 @@ select
 from (
     values
         ('admission',       'Inpatient Admission',  9201, 'Inpatient Visit',          'Visit'),
+        -- concept 262 is not a direct encounter_type lookup; it is applied by
+        -- clinical__visit_occurrence when an admission encounter had a prior
+        -- emergency/triage/observation phase in encounter_history (BL-002)
+        ('admission_from_emergency', 'Emergency Room and Inpatient Admission', 262, 'Emergency Room and Inpatient Visit', 'Visit'),
         ('clinic',          'Outpatient Clinic',    9202, 'Outpatient Visit',          'Visit'),
         ('imaging',         'Imaging',              9202, 'Outpatient Visit',          'Visit'),
         ('emergency',       'Emergency',            9203, 'Emergency Room Visit',      'Visit'),
