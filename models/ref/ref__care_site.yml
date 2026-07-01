@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: ref__care_site
+    description: "{{ doc('ref__care_site') }}"
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: care_site_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__care_site_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__care_site_care_site_id_not_null
+          - unique:
+              name: ac_002_ref__care_site_care_site_id_unique
+      - name: care_site_type
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__care_site_type') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_ref__care_site_care_site_type_not_null
+          - accepted_values:
+              name: ac_006_ref__care_site_care_site_type_values
+              arguments:
+                values: ["department", "ward"]
+      - name: care_site_name
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__care_site_name') }}"
+      - name: care_site_source_value
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__care_site_source_value') }}"
+      - name: place_of_service_concept_id
+        data_type: integer
+        description: "{{ doc('ref__care_site__place_of_service_concept_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_005_ref__care_site_place_of_service_concept_id_mapped
+              arguments:
+                to: ref('map__omop_place_of_service')
+                field: concept_id
+      - name: place_of_service_source_value
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__place_of_service_source_value') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__facility_id') }}"
+      - name: facility_name
+        data_type: character varying(255)
+        description: "{{ doc('ref__care_site__facility_name') }}"

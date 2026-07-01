@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-06-28 |
+| **Last updated** | 2026-07-01 |
 
 The OMOP-lite `VISIT_OCCURRENCE` domain — the canonical encounter surface every
 `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to for visit
@@ -37,6 +37,7 @@ analytics expect a single canonical `VISIT_OCCURRENCE` row per encounter keyed b
 
 **Who reads it.** Every downstream canonical model that needs a visit anchor:
 `clinical__condition_occurrence` and future event tables (via `visit_occurrence_id`),
+`clinical__visit_detail` (the intra-visit phase breakdown, keyed by `visit_occurrence_id`),
 `derived__cohort_*` (visit counts, admission windows), `metric__` calculations
 (admission rates, length-of-stay distributions), and `dataset__` encounter summaries.
 
@@ -61,7 +62,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_end_datetime` | timestamp | `encounters.end_datetime`. NULL for open encounters |
 | `visit_type_concept_id` | integer | Constant 32817 (EHR administration record) — all encounters originate from the Tamanu EHR |
 | `provider_id` | uuid | `encounters.clinician_id`. The attending clinician at encounter creation. NULL when no clinician recorded |
-| `care_site_id` | uuid | `encounters.department_id`. The department the encounter is assigned to. NULL when no department recorded |
+| `care_site_id` | uuid | `encounters.department_id`. FK to `ref__care_site.care_site_id` (the department). NULL when no department recorded |
 | `visit_source_value` | text | `encounters.encounter_type`. Tamanu local code, retained alongside the concept ID (D1) |
 
 ## Business logic
@@ -95,9 +96,10 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
   creation; mid-encounter clinician changes tracked in `encounter_history` are not
   reflected here (they belong to a future `clinical__provider_visit` event if needed).
 - **BL-006:** `care_site_id` is `department_id` from `bases/encounters`. It represents
-  the department the encounter is assigned to at creation. No `ref__care_site` model
-  exists yet; `care_site_id` is carried as a raw UUID FK so future joins are
-  forward-compatible when `ref__care_site` is built.
+  the department the encounter is assigned to at creation, and is an FK to
+  `ref__care_site.care_site_id` (the OMOP `CARE_SITE` wrapper over Tamanu departments).
+  The referential-integrity test on the column is AC-008. NULL when no department is
+  recorded (NULLs are excluded from the relationship test).
 - **BL-007:** `visit_source_value` carries the raw Tamanu `encounter_type` value
   alongside the OMOP concept. It is not a direct identifier and is not withheld on
   analytics targets.
@@ -110,9 +112,10 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | AC-002 | `visit_occurrence_id` is `unique` | grain | dbt `unique` |
 | AC-003 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
 | AC-004 | Every non-null `visit_concept_id` exists in `map__omop_visit_type.concept_id` | BL-002 | dbt `relationships` |
-| AC-005 | `visit_type_concept_id` is `not_null` and always 32817 | BL-003 | dbt `not_null` |
+| AC-005 | `visit_type_concept_id` is `not_null` and always 32817 | BL-003 | dbt `not_null` + `accepted_values` |
 | AC-006 | `visit_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
 | AC-007 | When `visit_end_datetime` is non-null, `visit_end_datetime >= visit_start_datetime` | BL-004 | dbt singular test |
+| AC-008 | Every non-null `care_site_id` exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
 
 ## Registry entry
 
@@ -128,25 +131,4 @@ row (D5, dbt-conventions § Documentation).
 | `encounter_history` | `bases/` | Prior encounter types per encounter; used to detect ER→admission transitions (BL-002) |
 | `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept (universal) |
 | `clinical__person` | `clinical/` | Parent PERSON domain; `person_id` FK target |
-
-## Open questions
-
-- **OQ-1:** `care_site_id` references `department_id` without a corresponding
-  `ref__care_site` canonical lookup. A future `ref__care_site` model (wrapping
-  `bases/departments` and `bases/facilities`) should be added so the FK can be
-  validated. Until then, AC on this column is deferred.
-- **OQ-2:** Mid-encounter transitions — department/location transfers *and*
-  encounter-type changes (e.g. `triage` → `emergency` → `admission`) — are
-  tracked in `encounter_history` but not surfaced here. In Tamanu, an ER-to-
-  admission flow is a **single encounter** whose type changes over time; there
-  is no second encounter record, so `preceding_visit_occurrence_id` does not
-  apply. `VISIT_OCCURRENCE` correctly reflects the final/current type. OMOP
-  handles the intra-visit phases via `VISIT_DETAIL` rows — a future
-  `clinical__visit_detail` model should expose one row per `encounter_history`
-  segment (carrying `encounter_type`, department, location, and datetime range
-  per segment) built from `int__admission_history_*` and the `encounter_type`
-  column in `bases/encounter_history`.
-- **OQ-3:** `surveyResponse` encounters are included with `visit_concept_id = NULL`
-  (no OMOP equivalent). If downstream models should exclude survey encounters,
-  they can filter on `visit_source_value != 'surveyResponse'` or on non-null
-  `visit_concept_id`.
+| `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its department-type rows (AC-008). (`ref__care_site` also holds ward rows, used by `clinical__visit_detail`.) |

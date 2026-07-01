@@ -61,12 +61,23 @@ models:
         data_tests:
           - not_null:
               name: ac_005_clinical__visit_occurrence_visit_type_concept_id_not_null
+          - accepted_values:
+              name: ac_005_clinical__visit_occurrence_visit_type_concept_id_is_ehr
+              arguments:
+                values: [32817]
+                quote: false
       - name: provider_id
         data_type: character varying(255)
         description: "{{ doc('encounters__examiner_id') }}"
       - name: care_site_id
         data_type: character varying(255)
         description: "{{ doc('clinical__visit_occurrence__care_site_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_008_clinical__visit_occurrence_care_site_id_in_ref__care_site
+              arguments:
+                to: ref('ref__care_site')
+                field: care_site_id
       - name: visit_source_value
         data_type: character varying(255)
         description: "{{ doc('encounters__encounter_type') }}"

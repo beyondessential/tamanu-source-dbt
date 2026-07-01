@@ -60,6 +60,8 @@ select
     -- location: FK to ref__location (patient's village) (BL-007)
     p.village_id as location_id
 from patients p
+-- enrichment joins are all left joins so a missing record yields NULL rather than
+-- dropping the patient; only the patient record itself is required (BL-005)
 left join additional a on a.patient_id = p.id
 left join birth b on b.patient_id = p.id
 left join sex_map sm on sm.local_code = lower(p.sex)

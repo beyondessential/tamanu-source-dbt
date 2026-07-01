@@ -1,0 +1,85 @@
+version: 2
+
+models:
+  - name: clinical__visit_detail
+    description: "{{ doc('clinical__visit_detail') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: visit_detail_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__visit_detail_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__visit_detail_visit_detail_id_not_null
+          - unique:
+              name: ac_002_clinical__visit_detail_visit_detail_id_unique
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__visit_occurrence_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__visit_detail_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: visit_detail_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__visit_detail__visit_detail_concept_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_005_clinical__visit_detail_visit_detail_concept_id_mapped
+              arguments:
+                to: ref('map__omop_visit_type')
+                field: concept_id
+      - name: visit_detail_start_date
+        data_type: date
+        description: "{{ doc('clinical__visit_detail__visit_detail_start_date') }}"
+      - name: visit_detail_start_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__visit_detail__visit_detail_start_datetime') }}"
+      - name: visit_detail_end_date
+        data_type: date
+        description: "{{ doc('clinical__visit_detail__visit_detail_end_date') }}"
+      - name: visit_detail_end_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__visit_detail__visit_detail_end_datetime') }}"
+      - name: care_site_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__care_site_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__visit_detail_care_site_id_in_ref__care_site
+              arguments:
+                to: ref('ref__care_site')
+                field: care_site_id
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__department_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_008_clinical__visit_detail_department_id_in_ref__care_site
+              arguments:
+                to: ref('ref__care_site')
+                field: care_site_id
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__location_id') }}"
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__examiner_id') }}"
+      - name: visit_detail_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__visit_detail_source_value') }}"
+      - name: preceding_visit_detail_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_detail__preceding_visit_detail_id') }}"

@@ -12,8 +12,9 @@ with recursive places as (
         type as level
     from {{ ref('reference_data') }}
     -- every level of the address hierarchy is kept so the ancestor chain above a
-    -- village stays connected, even though only villages are emitted (BL-002)
-    where type in ('village', 'subdivision', 'division', 'country')
+    -- village stays connected even where an intermediate level (e.g. settlement)
+    -- sits between two emitted levels, though only villages are emitted (BL-002)
+    where type in ('village', 'settlement', 'subdivision', 'division', 'country')
 ),
 
 -- parent links where both ends are geographic places, so the walk stays inside
