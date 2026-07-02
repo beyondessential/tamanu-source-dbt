@@ -132,20 +132,27 @@ bundle rather than a seed table:
 Run the tests whenever `propagate_patch.py` or its test file changes:
 
 ```bash
-cd scripts && python -m pytest tests/test_propagate_patch.py -v
+cd scripts && uv run --env-file ../.env python -m pytest tests/test_propagate_patch.py -v
 ```
+
+## Running commands
+
+Run project commands through `uv run --env-file .env <cmd>` — `uv` syncs the virtualenv
+from `pyproject.toml` and `--env-file .env` loads the DB credentials plus `DBT_PROFILES_DIR`
+(so no `--profiles-dir` flag is needed). Run `uv run --env-file .env dbt deps` once first.
+See README § Local development. There is no session-start hook or manual `venv` activation.
 
 ## Pre-commit checklist
 
 ```bash
-sqlfluff fix .
-dbt test --profiles-dir config
-python scripts/validate_report_configs.py
-python scripts/check_translations.py
+uv run --env-file .env sqlfluff fix .
+uv run --env-file .env dbt test
+uv run --env-file .env python scripts/validate_report_configs.py
+uv run --env-file .env python scripts/check_translations.py
 # if csv/report_translations_standard.csv changed:
-python scripts/generate_translation_macro.py
+uv run --env-file .env python scripts/generate_translation_macro.py
 # if csv/metric_definitions.csv changed:
-python scripts/generate_metric_definitions_macro.py
+uv run --env-file .env python scripts/generate_metric_definitions_macro.py
 ```
 
 ---
