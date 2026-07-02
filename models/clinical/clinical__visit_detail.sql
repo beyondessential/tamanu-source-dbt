@@ -62,10 +62,28 @@ synthesized_segments as (
     )
 ),
 
+-- columns listed explicitly (by name from each branch) so reordering either CTE can't
+-- silently mis-map the union
 segments as (
-    select * from history_segments
+    select
+        visit_detail_id,
+        visit_occurrence_id,
+        visit_detail_start_datetime,
+        department_id,
+        location_id,
+        provider_id,
+        visit_detail_source_value
+    from history_segments
     union all
-    select * from synthesized_segments
+    select
+        visit_detail_id,
+        visit_occurrence_id,
+        visit_detail_start_datetime,
+        department_id,
+        location_id,
+        provider_id,
+        visit_detail_source_value
+    from synthesized_segments
 ),
 
 -- close each segment at the next segment's start, falling back to the encounter end for

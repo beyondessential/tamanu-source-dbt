@@ -3,8 +3,8 @@ unit_tests:
     model: ref__care_site
     description: >-
       A department becomes a care_site_type='department' row, denormalised with its
-      parent facility name and place-of-service concept from the map (BL-001, BL-002,
-      BL-003, BL-005).
+      parent facility name and place-of-service source value (BL-001, BL-002, BL-003,
+      BL-005).
     given:
       - input: ref('departments')
         format: sql
@@ -18,17 +18,13 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'General Hospital' as name, 'hospital' as type
-      - input: ref('map__omop_place_of_service')
-        format: sql
-        rows: |
-          select 'hospital' as local_code, 9201 as concept_id
     expect:
       format: sql
       rows: |
         select
           'dep1' as care_site_id, 'department' as care_site_type,
           'Emergency Dept' as care_site_name, 'DEP1' as care_site_source_value,
-          9201 as place_of_service_concept_id, 'hospital' as place_of_service_source_value,
+          'hospital' as place_of_service_source_value,
           'fac1' as facility_id, 'General Hospital' as facility_name
 
   - name: test_ref__care_site_ward_from_location_group
@@ -49,17 +45,13 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'General Hospital' as name, 'hospital' as type
-      - input: ref('map__omop_place_of_service')
-        format: sql
-        rows: |
-          select 'hospital' as local_code, 9201 as concept_id
     expect:
       format: sql
       rows: |
         select
           'ward1' as care_site_id, 'ward' as care_site_type,
           'Paediatric Ward' as care_site_name, 'WRD1' as care_site_source_value,
-          9201 as place_of_service_concept_id, 'hospital' as place_of_service_source_value,
+          'hospital' as place_of_service_source_value,
           'fac1' as facility_id, 'General Hospital' as facility_name
 
   - name: test_ref__care_site_orphan_care_site_yields_nulls
@@ -80,15 +72,11 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'General Hospital' as name, 'hospital' as type
-      - input: ref('map__omop_place_of_service')
-        format: sql
-        rows: |
-          select 'hospital' as local_code, 9201 as concept_id
     expect:
       format: sql
       rows: |
         select
           'dep2' as care_site_id, 'department' as care_site_type,
           'Roving Clinic' as care_site_name, 'DEP2' as care_site_source_value,
-          null::integer as place_of_service_concept_id, null::varchar as place_of_service_source_value,
+          null::varchar as place_of_service_source_value,
           'fac_gone' as facility_id, null::varchar as facility_name

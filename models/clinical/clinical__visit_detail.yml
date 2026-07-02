@@ -32,6 +32,12 @@ models:
       - name: person_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_009_clinical__visit_detail_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
       - name: visit_detail_concept_id
         data_type: integer
         description: "{{ doc('clinical__visit_detail__visit_detail_concept_id') }}"

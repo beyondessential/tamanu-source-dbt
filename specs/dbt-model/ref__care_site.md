@@ -74,12 +74,15 @@ denormalised `facility_id` / `facility_name` columns without a second model.
 | `care_site_type` | text | `'department'` or `'ward'` — which Tamanu entity the row represents. Lets consumers pick the grain |
 | `care_site_name` | text | `departments.name` or `location_groups.name`. OMOP `CARE_SITE.care_site_name` |
 | `care_site_source_value` | text | `departments.code` or `location_groups.code`. OMOP `CARE_SITE.care_site_source_value` |
-| `place_of_service_concept_id` | integer | OMOP place-of-service concept from `map__omop_place_of_service` (a deployment-overridable baseline). NULL when the facility type is unmapped or absent. OMOP `CARE_SITE.place_of_service_concept_id` |
-| `place_of_service_source_value` | text | `facilities.type`, retained alongside the concept shadow (D1). OMOP `CARE_SITE.place_of_service_source_value`. NULL when the department has no facility |
+| `place_of_service_source_value` | text | `facilities.type`. OMOP `CARE_SITE.place_of_service_source_value`. NULL when the care site has no facility |
 | `facility_id` | uuid | `departments.facility_id`. Parent facility FK, denormalised. NULL when unset |
 | `facility_name` | text | `facilities.name`. Parent facility name, denormalised. NULL when the facility is unset/removed |
 
 OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.
+`place_of_service_concept_id` is also omitted: OMOP's Place of Service vocabulary has no
+standard concepts, so there is nothing domain-correct to populate. `facilities.type` is
+retained as `place_of_service_source_value`; a deployment that has a place-of-service
+vocabulary can derive the concept downstream.
 
 ## Business logic
 
@@ -89,15 +92,13 @@ OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.
   location_group id spaces are disjoint, so the union preserves a unique `care_site_id`;
   the facility join is many-to-one, so grain is preserved.
 - **BL-002:** OMOP column naming is applied — `id → care_site_id`, `name → care_site_name`,
-  `code → care_site_source_value` — for both departments and location_groups. The
-  parent facility's `type` is carried verbatim as `place_of_service_source_value`, and
-  its OMOP `place_of_service_concept_id` shadow is looked up from
-  `map__omop_place_of_service` on `local_code = facilities.type` (concept alongside
-  source value, never replacing it — D1). `map__omop_place_of_service` is a **baseline
-  default** shipped in the production bundle: `facilities.type` is free text in Tamanu
-  core, so a deployment overrides that map in its `tamanu-dbt-<deployment>` project with
-  its real type values. An unmapped type yields a NULL concept — never a wrong one — and
-  the row is kept.
+  `code → care_site_source_value` — for both departments and location_groups. The parent
+  facility's `type` is carried verbatim as `place_of_service_source_value`. No
+  `place_of_service_concept_id` is emitted: OMOP's Place of Service vocabulary has no
+  standard concepts, so there is no domain-correct concept to populate (using a
+  Visit-domain concept would be a domain mismatch a DQD run flags). The source value is
+  retained so a deployment with a place-of-service vocabulary can derive the concept
+  downstream without a schema change here.
 - **BL-003:** The parent facility is denormalised onto each care site via a `left join`
   on `facility_id = facilities.id`, exposing `facility_id` and `facility_name`. The join
   is a **left** join so a care site with a missing or soft-deleted facility is still
@@ -125,12 +126,11 @@ OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | `care_site_id` is `not_null` | grain | dbt `not_null` |
-| AC-002 | `care_site_id` is `unique` (one row per care site across both grains) | grain | dbt `unique` |
+| AC-002 | `care_site_id` is `unique` (one row per care site across both grains — relies on the disjoint department / location_group UUID spaces, BL-001) | grain | dbt `unique` |
 | AC-003 | A department denormalises into a `care_site_type='department'` row carrying `facility_id`, `facility_name`, and `place_of_service_source_value` | BL-002, BL-003, BL-005 | dbt unit test (`test_ref__care_site_department_denormalises_facility`) |
-| AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name`, `place_of_service_source_value`, and `place_of_service_concept_id` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
-| AC-005 | Every non-null `place_of_service_concept_id` exists in `map__omop_place_of_service.concept_id` | BL-002 | dbt `relationships` |
-| AC-006 | `care_site_type` is `not_null` and one of `department` / `ward` | BL-005 | dbt `not_null` + `accepted_values` |
-| AC-007 | A location_group denormalises into a `care_site_type='ward'` row carrying its facility and place-of-service concept | BL-002, BL-005 | dbt unit test (`test_ref__care_site_ward_from_location_group`) |
+| AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
+| AC-005 | `care_site_type` is `not_null` and one of `department` / `ward` | BL-005 | dbt `not_null` + `accepted_values` |
+| AC-006 | A location_group denormalises into a `care_site_type='ward'` row carrying its facility | BL-002, BL-005 | dbt unit test (`test_ref__care_site_ward_from_location_group`) |
 
 ## Registry entry
 
@@ -144,7 +144,6 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
 | `location_groups` | `bases/` | Ward care sites (id, code, name) and parent facility link |
 | `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
-| `map__omop_place_of_service` | `maps/` | facility type → OMOP place-of-service concept (baseline default, deployment-overridable) |
 
 ## Consumers
 

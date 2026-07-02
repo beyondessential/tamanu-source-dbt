@@ -86,7 +86,10 @@ encounter is represented by at least one row.
   — falling back to the encounter `end_datetime` for the final (open) segment. Ordering
   breaks ties on `visit_detail_id` for determinism. `visit_detail_start_date` /
   `visit_detail_end_date` are the date components of the respective datetimes, mirroring
-  `clinical__visit_occurrence`.
+  `clinical__visit_occurrence`. **Zero-length segments are possible:** when two
+  `encounter_history` events share a timestamp, a segment's `end` equals its `start`
+  (AC-006 permits `>=`), so length-of-stay-by-segment math should expect the occasional
+  zero-duration phase rather than assume every segment spans a positive interval.
 - **BL-003:** `visit_detail_concept_id` reuses `map__omop_visit_type` on the segment's
   `encounter_type` (same map as `clinical__visit_occurrence` BL-002), applied per segment
   rather than once per encounter — so an ER phase and a subsequent inpatient phase of one
@@ -127,6 +130,7 @@ encounter is represented by at least one row.
 | AC-006 | When `visit_detail_end_datetime` is non-null, it is `>= visit_detail_start_datetime` | BL-002 | dbt singular test (`data_test__clinical__visit_detail`) |
 | AC-007 | Segments of one encounter do not overlap: each ends where the next begins, the last at the encounter end | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
 | AC-008 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-007 | dbt `relationships` |
+| AC-009 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
 
 `test_clinical__visit_detail_synthesized_segment` additionally covers BL-005
 (history-less encounter → one whole-visit segment).
@@ -145,4 +149,5 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | `locations` | `bases/` | Room → `location_group` (ward) lookup for `care_site_id` (BL-006) |
 | `map__omop_visit_type` | `maps/` | encounter_type → OMOP Visit concept, per segment |
 | `clinical__visit_occurrence` | `clinical/` | Parent VISIT_OCCURRENCE; `visit_occurrence_id` FK target (AC-003) |
+| `clinical__person` | `clinical/` | `person_id` FK target (AC-009) |
 | `ref__care_site` | `ref/` | `care_site_id` (ward) and `department_id` FK target (AC-004, AC-008) |

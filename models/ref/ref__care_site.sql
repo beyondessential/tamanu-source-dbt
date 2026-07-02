@@ -19,10 +19,6 @@ facilities as (
     select * from {{ ref('facilities') }}
 ),
 
-place_of_service_map as (
-    select * from {{ ref('map__omop_place_of_service') }}
-),
-
 -- organizational care unit (BL-001, BL-005)
 department_sites as (
     select
@@ -58,11 +54,10 @@ select
     cs.care_site_name,
     cs.care_site_source_value,
 
-    -- place of service: concept shadow + retained source value (BL-002). Concept comes
-    -- from the baseline map__omop_place_of_service (deployment-overridable); an unmapped
-    -- facility type yields a NULL concept, never a wrong one
-    pos.concept_id as place_of_service_concept_id,
-    f.type         as place_of_service_source_value,
+    -- place of service: source value only. No place_of_service_concept_id — OMOP's Place
+    -- of Service vocabulary has no standard concepts, so there is nothing domain-correct to
+    -- populate; the source value is retained for deployments that map it downstream (BL-002)
+    f.type as place_of_service_source_value,
 
     -- parent facility, denormalised onto the care site (BL-003)
     cs.facility_id as facility_id,
@@ -71,4 +66,3 @@ select
 from care_sites cs
 -- left join so a care site whose facility is missing/soft-deleted is still emitted (BL-003)
 left join facilities f on f.id = cs.facility_id
-left join place_of_service_map pos on pos.local_code = f.type
