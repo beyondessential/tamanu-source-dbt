@@ -33,8 +33,10 @@ OMOP-named surface (`location_id`, `location_source_value`) so they join to
 `ref__location`, not to raw `reference_data` — keeping the layer contract intact and
 portable across OMOP tooling (D2).
 
-**Who reads it.** `clinical__person` (patient location FK); future `ref__care_site`
-(facility address) and any geographic disaggregation in `metric__` / `dataset__`.
+**Who reads it.** `clinical__person` (patient location FK) and any geographic
+disaggregation in `metric__` / `dataset__`. (`ref__care_site` does not currently join
+here — Tamanu facilities carry no `reference_data` geographic link; see
+[`ref__care_site` OQ-2](ref__care_site.md#open-questions).)
 
 ## Grain
 

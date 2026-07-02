@@ -57,7 +57,7 @@ models:
         description: "{{ doc('clinical__person__location_id') }}"
         data_tests:
           - relationships:
-              name: ac_005_clinical__person_location_id_in_ref_location
+              name: ac_005_clinical__person_location_id_in_ref__location
               arguments:
                 to: ref('ref__location')
                 field: location_id

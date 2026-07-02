@@ -33,6 +33,5 @@ record) for Tamanu-sourced encounters.
 {% enddocs %}
 
 {% docs clinical__visit_occurrence__care_site_id %}
-UUID of the department the encounter is assigned to. Forward-compatible FK to a
-future ref__care_site model.
+UUID of the department the encounter is assigned to. FK to ref__care_site.care_site_id.
 {% enddocs %}

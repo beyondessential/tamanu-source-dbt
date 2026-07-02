@@ -35,6 +35,39 @@ unit_tests:
           'Division One' as state,
           'Countryland' as country_source_value
 
+  - name: test_ref__location_walks_through_intermediate_settlement
+    model: ref__location
+    description: >-
+      An intermediate level (settlement) sitting between a village and its subdivision
+      is walked through, not dropped, so the ancestor chain stays connected and county
+      still resolves from the subdivision above the settlement (BL-002). Guards against
+      the working set omitting settlement, which would silently break the chain.
+    given:
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v3' as id, 'VIL3' as code, 'Vila Three' as name, 'village' as type
+          union all
+          select 'st1', 'SET', 'Settlement One', 'settlement'
+          union all
+          select 'sd1', 'SUB', 'Subdistrict', 'subdivision'
+      - input: ref('reference_data_relations')
+        format: sql
+        rows: |
+          select 'v3' as reference_data_id, 'st1' as reference_data_parent_id
+          union all
+          select 'st1', 'sd1'
+    expect:
+      format: sql
+      rows: |
+        select
+          'v3' as location_id,
+          'VIL3' as location_source_value,
+          'Vila Three' as city,
+          'Subdistrict' as county,
+          null as state,
+          null as country_source_value
+
   - name: test_ref__location_partial_hierarchy_yields_nulls
     model: ref__location
     description: >-
