@@ -12,6 +12,25 @@ This project includes AI rules for AI assistants located in the `ai/` directory.
 
 To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
 
+## Local development
+
+Python and dbt dependencies are managed with [uv](https://docs.astral.sh/uv/) from
+`pyproject.toml`. Run project commands through `uv run` — it syncs the virtualenv
+automatically — and pass `--env-file .env` to load the database credentials and
+`DBT_PROFILES_DIR`:
+
+```bash
+cp .env.example .env                    # then fill in real values
+uv run --env-file .env dbt deps         # one-time: install dbt packages (from hub.getdbt.com)
+uv run --env-file .env dbt build        # build + test
+uv run --env-file .env sqlfluff lint models
+```
+
+`.env` (copied from `.env.example`) provides the DB connection vars plus
+`DBT_PROFILES_DIR=config`, so dbt finds `config/profiles.yml` without a `--profiles-dir`
+flag. Run `dbt deps` once before building or linting. There is no session-start hook or
+manual `venv` activation — `uv run` handles the environment.
+
 ## SQL linting
 
 We use SQLFluff and the configuration file is located in the root folder and is named `.sqlfluff`.
