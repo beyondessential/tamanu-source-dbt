@@ -56,11 +56,11 @@ def find_config_files(config_dir: str) -> List[str]:
     """Find all JSON configuration files in the specified directory."""
     config_path = Path(config_dir)
     if not config_path.exists():
-        print(f"Error: Configuration directory not found: {config_dir}")
-        print(f"  (current working directory: {Path.cwd()})")
-        print("  Ensure this script is run from the project root.")
-        sys.exit(1)
-    
+        # Deployments with no custom report configs may not have the directory.
+        # Treat this as "nothing to validate" rather than a hard error.
+        print(f"Configuration directory not found: {config_dir} (no reports to validate)")
+        return []
+
     json_files = list(config_path.rglob("*.json"))
     # Exclude the schema file itself
     json_files = [f for f in json_files if f.name != "report-config-schema.json"]
