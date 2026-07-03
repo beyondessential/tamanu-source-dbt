@@ -83,6 +83,12 @@ models:
       - name: provider_id
         data_type: character varying(255)
         description: "{{ doc('encounters__examiner_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_010_clinical__visit_detail_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
       - name: visit_detail_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__visit_detail__visit_detail_source_value') }}"

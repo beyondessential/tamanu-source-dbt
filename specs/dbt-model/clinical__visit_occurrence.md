@@ -116,6 +116,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | AC-006 | `visit_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
 | AC-007 | When `visit_end_datetime` is non-null, `visit_end_datetime >= visit_start_datetime` | BL-004 | dbt singular test |
 | AC-008 | Every non-null `care_site_id` exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
+| AC-009 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-005 | dbt `relationships` |
 
 ## Registry entry
 
@@ -132,3 +133,4 @@ row (D5, dbt-conventions § Documentation).
 | `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept (universal) |
 | `clinical__person` | `clinical/` | Parent PERSON domain; `person_id` FK target |
 | `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its department-type rows (AC-008). (`ref__care_site` also holds ward rows, used by `clinical__visit_detail`.) |
+| `ref__provider` | `ref/` | OMOP PROVIDER wrapper over users; `provider_id` FK target (AC-009) |

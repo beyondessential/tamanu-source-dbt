@@ -131,6 +131,7 @@ encounter is represented by at least one row.
 | AC-007 | Segments of one encounter do not overlap: each ends where the next begins, the last at the encounter end | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
 | AC-008 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-007 | dbt `relationships` |
 | AC-009 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
+| AC-010 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-007 | dbt `relationships` |
 
 `test_clinical__visit_detail_synthesized_segment` additionally covers BL-005
 (history-less encounter → one whole-visit segment).
@@ -151,3 +152,4 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | `clinical__visit_occurrence` | `clinical/` | Parent VISIT_OCCURRENCE; `visit_occurrence_id` FK target (AC-003) |
 | `clinical__person` | `clinical/` | `person_id` FK target (AC-009) |
 | `ref__care_site` | `ref/` | `care_site_id` (ward) and `department_id` FK target (AC-004, AC-008) |
+| `ref__provider` | `ref/` | `provider_id` FK target (AC-010) |
