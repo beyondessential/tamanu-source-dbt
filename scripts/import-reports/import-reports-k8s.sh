@@ -39,7 +39,33 @@
 set -euo pipefail
 
 usage() {
-  sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//'
+  cat <<'EOF'
+import-reports-k8s.sh — import Tamanu reports (and optionally a reporting schema)
+into a central server on K8s. Defaults to a read-only PLAN; nothing is written
+until you pass --apply. macOS/Linux counterpart of import-reports-k8s.ps1.
+
+Usage:
+  import-reports-k8s.sh --namespace NS [options] [--apply]
+
+Options:
+  --namespace NS       (required) target K8s namespace
+  --reports-dir DIR    folder of *.json reports (required unless --schema-only)
+  --schema-sql FILE    reporting-schema .sql to apply first (omit to skip schema)
+  --schema-svc LIST    comma-separated *-db-rw services for schema (default: central-db-rw)
+  --schema-only        apply schema only, skip report import (requires --schema-sql)
+  --pod NAME           override the central pod (default: resolve by --selector)
+  --container NAME     container name for multi-container pods
+  --selector SEL       label selector to find the central pod
+  --workdir DIR        working dir in the pod for `node dist` (default: .)
+  --db-svc SVC         service used for the before/after snapshot (default: central-db-rw)
+  --db-name NAME       database name (default: app)
+  --db-role ROLE       role the schema is applied as via SET ROLE (default: app)
+  --db-container NAME  Postgres container in the CNPG pod (default: postgres)
+  --apply              actually write (prompts for namespace confirmation)
+  -h, --help           show this help
+
+See scripts/import-reports/README.md for details and examples.
+EOF
   exit "${1:-0}"
 }
 
@@ -104,7 +130,7 @@ if ! $SCHEMA_ONLY; then
   # Collect *.json sorted by name (nullglob so a no-match glob yields nothing).
   shopt -s nullglob
   while IFS= read -r f; do reports+=("$f"); done < <(
-    for j in "$REPORTS_DIR"/*.json; do echo "$j"; done | sort
+    for j in "$REPORTS_DIR"/*.json; do echo "$j"; done | LC_ALL=C sort
   )
   shopt -u nullglob
   [[ ${#reports[@]} -gt 0 ]] || { echo "ERROR: no .json files in $REPORTS_DIR" >&2; exit 1; }
@@ -124,7 +150,8 @@ fi
 invoke_node_dist() {
   # $1 = args passed to `node dist`
   local dist_args="$1"
-  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]}" -- sh -lc "cd '$WORKDIR' && node dist $dist_args"
+  # "${cexec[@]+...}" guards against an empty array under `set -u` on bash 3.2 (stock macOS).
+  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- sh -lc "cd '$WORKDIR' && node dist $dist_args"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password).
@@ -252,13 +279,13 @@ else
     expected="$(wc -c < "$r" | tr -d '[:space:]')"
     staged=false
     for ((attempt = 1; attempt <= max_stage_attempts; attempt++)); do
-      if ! base64 < "$r" | kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]}" -- \
+      if ! base64 < "$r" | kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
              sh -lc "base64 -d > '/tmp/$bn'"; then
         echo "   stage attempt $attempt/$max_stage_attempts failed (kubectl error)"
         continue
       fi
       # Verify the staged file is intact before importing (catches a truncated transfer).
-      if ! size="$(kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]}" -- \
+      if ! size="$(kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
                    sh -lc "wc -c < '/tmp/$bn'")"; then
         echo "   verify attempt $attempt/$max_stage_attempts failed (kubectl error)"
         continue
