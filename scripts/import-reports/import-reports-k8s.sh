@@ -252,6 +252,11 @@ read -r -p "Type the namespace to confirm: " confirm
 [[ "$confirm" == "$NAMESPACE" ]] || { echo "Confirmation did not match. Aborting." >&2; exit 1; }
 
 # 1) Reporting schema FIRST (if provided), on each target service, as the app role
+# NOTE: the schema is streamed over the same kubectl stdin pipe that can short-write
+# on the network, but unlike reports it is NOT base64-verified. --single-transaction
+# + ON_ERROR_STOP=1 is the safety net: a truncated file almost certainly fails to parse
+# and the whole transaction rolls back, so a short write aborts rather than partially
+# applying. It does not verify the transfer itself.
 if [[ -n "$SCHEMA_SQL" ]]; then
   for svc in "${svcs[@]}"; do
     echo ">> Applying reporting schema to svc/$svc as role $DB_ROLE ..."
@@ -270,6 +275,12 @@ else
   max_stage_attempts=3
   for r in "${reports[@]}"; do
     bn="$(basename "$r")"
+    # $bn is interpolated into a remote `sh -lc "... '/tmp/$bn'"`, so reject anything
+    # outside a safe charset to keep the single-quoting intact (compiled report names
+    # are controlled, but a stray quote or space would break the command).
+    case "$bn" in
+      *[!A-Za-z0-9._-]*) echo "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)" >&2; exit 1 ;;
+    esac
     echo ">> Importing $bn ..."
     # Stage via base64 (pure ASCII; immune to encoding/newline/stdin-flush truncation
     # that silently produced empty files with a raw `cat | cat >` pipe).
@@ -299,6 +310,9 @@ else
       exit 1
     fi
     invoke_node_dist "importReport -f '/tmp/$bn' -v"
+    # Remove the staged temp file so nothing is left behind in the pod (best-effort).
+    kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
+      sh -lc "rm -f '/tmp/$bn'" || echo "   (could not remove /tmp/$bn)"
   done
 fi
 

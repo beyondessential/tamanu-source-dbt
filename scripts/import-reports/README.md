@@ -97,8 +97,20 @@ chmod +x import-reports-k8s.sh   # first time only
 2. **Reports**: each `.json` is staged into the pod as base64 (immune to
    encoding/newline truncation), the transferred byte count is verified against the
    source (retried up to 3× on a short write), then imported with
-   `node dist importReport -f … -v`.
+   `node dist importReport -f … -v`. The staged `/tmp/<name>.json` is removed after
+   each import.
 3. **Snapshot** of report definitions and their latest/published versions is printed
    before and after.
 
 After applying, verify per the runbook (active versions + spot-check that a report runs).
+
+> **Note on the schema transfer.** The schema `.sql` is streamed over the same
+> `kubectl exec` stdin pipe as reports, but — unlike reports — it is *not* base64-staged
+> or byte-count-verified. The safety net there is `--single-transaction` +
+> `ON_ERROR_STOP=1`: a truncated file almost certainly fails to parse and the whole
+> transaction rolls back, so a short write aborts rather than partially applying. It
+> catches a bad transfer via the transaction, not by verifying the transfer itself.
+>
+> Report filenames must match `[A-Za-z0-9._-]+` (they are interpolated into a remote
+> shell command); the scripts reject anything outside that charset. Compiled report
+> names already conform.

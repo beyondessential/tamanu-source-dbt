@@ -184,6 +184,11 @@ $confirm = Read-Host "Type the namespace to confirm"
 if ($confirm -ne $Namespace) { throw "Confirmation did not match. Aborting." }
 
 # 1) Reporting schema FIRST (if provided), on each target service, as the app role
+# NOTE: the schema is streamed over the same kubectl stdin pipe that can short-write
+# on the network, but unlike reports it is NOT base64-verified. --single-transaction
+# + ON_ERROR_STOP=1 is the safety net: a truncated file almost certainly fails to parse
+# and the whole transaction rolls back, so a short write aborts rather than partially
+# applying. It does not verify the transfer itself.
 if ($SchemaSql) {
   foreach ($svc in $svcs) {
     Write-Host ">> Applying reporting schema to svc/$svc as role $DbRole ..."
@@ -204,6 +209,12 @@ if ($SchemaOnly) {
   $maxStageAttempts = 3
   foreach ($r in $reports) {
     $bn = $r.Name
+    # $bn is interpolated into a remote `sh -lc "... '/tmp/$bn'"`, so reject anything
+    # outside a safe charset to keep the single-quoting intact (compiled report names
+    # are controlled, but a stray quote or space would break the command).
+    if ($bn -notmatch '^[A-Za-z0-9._-]+$') {
+      throw "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)"
+    }
     Write-Host ">> Importing $bn ..."
     # Stage via base64 (pure ASCII; immune to encoding/newline/stdin-flush truncation
     # that silently produced empty files with a raw `Get-Content | cat >` pipe).
@@ -232,6 +243,9 @@ if ($SchemaOnly) {
       throw "ERROR: failed to stage $bn intact after $maxStageAttempts attempts (expected $expected bytes). Aborting."
     }
     Invoke-NodeDist "importReport -f '/tmp/$bn' -v"
+    # Remove the staged temp file so nothing is left behind in the pod (best-effort).
+    kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc "rm -f '/tmp/$bn'"
+    if ($LASTEXITCODE -ne 0) { Write-Host "   (could not remove /tmp/$bn)" }
   }
 }
 
