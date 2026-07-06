@@ -6,6 +6,10 @@
 # server on K8s. Mechanical plumbing only; the runbook owns decisions. This is the
 # macOS/Linux counterpart of import-reports-k8s.ps1 and behaves identically.
 #
+# The active kubectl context is switched before any cluster call so the run targets the
+# intended cluster. It defaults to the demo cluster (--context demo); pass --context to
+# target a different cluster.
+#
 # Default mode is PLAN (read-only): resolves the pod, prints the current report state,
 # and shows what WOULD be applied. Nothing is written until you pass --apply. There is no
 # native dry run on the importReport CLI, so this plan/apply split is the safety net.
@@ -61,6 +65,7 @@ Options:
   --db-name NAME       database name (default: app)
   --db-role ROLE       role the schema is applied as via SET ROLE (default: app)
   --db-container NAME  Postgres container in the CNPG pod (default: postgres)
+  --context NAME       kubectl context to switch to first (default: demo)
   --apply              actually write (prompts for namespace confirmation)
   -h, --help           show this help
 
@@ -82,6 +87,7 @@ DB_SVC="central-db-rw"
 DB_NAME="app"
 DB_ROLE="app"
 DB_CONTAINER="postgres"
+CONTEXT="demo"
 SCHEMA_ONLY=false
 APPLY=false
 
@@ -100,6 +106,7 @@ while [[ $# -gt 0 ]]; do
     --db-name)       DB_NAME="$2"; shift 2 ;;
     --db-role)       DB_ROLE="$2"; shift 2 ;;
     --db-container)  DB_CONTAINER="$2"; shift 2 ;;
+    --context)       CONTEXT="$2"; shift 2 ;;
     --schema-only)   SCHEMA_ONLY=true; shift ;;
     --apply)         APPLY=true; shift ;;
     -h|--help)       usage 0 ;;
@@ -135,6 +142,13 @@ if ! $SCHEMA_ONLY; then
   shopt -u nullglob
   [[ ${#reports[@]} -gt 0 ]] || { echo "ERROR: no .json files in $REPORTS_DIR" >&2; exit 1; }
 fi
+
+# ---- switch cluster context -------------------------------------------------------
+# Switch the active kubectl context so every subsequent kubectl call (pod resolution,
+# snapshot, schema apply, report import) runs against the intended cluster, not whatever
+# context happened to be selected. Defaults to the demo cluster; override with --context.
+echo ">> Switching kubectl context to '$CONTEXT' ..."
+kubectl config use-context "$CONTEXT"
 
 # ---- resolve the central pod (only needed for report import) ----------------------
 if ! $SCHEMA_ONLY && [[ -z "$POD" ]]; then
@@ -201,6 +215,7 @@ svcs_joined="$(IFS=', '; echo "${svcs[*]}")"
 
 echo "=================================================================="
 echo " PLAN"
+echo "   kube context   : $CONTEXT"
 echo "   namespace      : $NAMESPACE"
 if $SCHEMA_ONLY; then
   echo "   central pod    : (skipped - schema-only run)"

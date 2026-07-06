@@ -4,6 +4,12 @@ Import Tamanu report definitions (and optionally a reporting schema) into a cent
 server running on Kubernetes. This is **mechanical plumbing only** — the deployment
 runbook owns the decisions about *what* and *when*.
 
+> **Cluster.** These scripts switch the active `kubectl` context before doing anything,
+> and **default to the demo cluster** (`--context demo` / `-Context demo`). They are
+> intended for the demo cluster; to target another cluster, pass `--context` / `-Context`
+> explicitly. The chosen context is printed at the top of the PLAN so you can confirm it
+> before applying.
+
 Two equivalent scripts are provided so the same workflow runs on any machine:
 
 | Platform      | Script                | Run with          |
@@ -87,6 +93,7 @@ chmod +x import-reports-k8s.sh   # first time only
 | `-DbName`         | `--db-name`       | `app`                                | Database name. |
 | `-DbRole`         | `--db-role`       | `app`                                | Role the schema is applied as (`SET ROLE`). |
 | `-DbContainer`    | `--db-container`  | `postgres`                           | Postgres container name in the CNPG pod. |
+| `-Context`        | `--context`       | `demo`                               | kubectl context switched to before any cluster call. Defaults to the demo cluster. |
 | `-Apply`          | `--apply`         | off (plan only)                      | Actually write. Prompts for namespace confirmation. |
 
 ## What it does on apply

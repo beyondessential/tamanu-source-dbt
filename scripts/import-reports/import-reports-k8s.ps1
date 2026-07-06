@@ -5,6 +5,10 @@
   the runbook owns decisions.
 
 .DESCRIPTION
+  The active kubectl context is switched before any cluster call so the run targets the
+  intended cluster. It defaults to the demo cluster (-Context demo); pass -Context to
+  target a different cluster.
+
   Default mode is PLAN (read-only): resolves the pod, prints the current report state,
   and shows what WOULD be applied. Nothing is written until you pass -Apply. There is no
   native dry run on the importReport CLI, so this plan/apply split is the safety net.
@@ -53,6 +57,7 @@ param(
   [string]$DbName = "app",
   [string]$DbRole = "app",
   [string]$DbContainer = "postgres",
+  [string]$Context = "demo",
   [switch]$SchemaOnly,
   [switch]$Apply
 )
@@ -79,6 +84,14 @@ if (-not $SchemaOnly) {
   $reports = @(Get-ChildItem -LiteralPath $ReportsDir -Filter *.json -File | Sort-Object Name)
   if ($reports.Count -eq 0) { throw "ERROR: no .json files in $ReportsDir" }
 }
+
+# ---- switch cluster context -------------------------------------------------------
+# Switch the active kubectl context so every subsequent kubectl call (pod resolution,
+# snapshot, schema apply, report import) runs against the intended cluster, not whatever
+# context happened to be selected. Defaults to the demo cluster; override with -Context.
+Write-Host ">> Switching kubectl context to '$Context' ..."
+kubectl config use-context $Context
+Assert-LastExit "kubectl config use-context $Context"
 
 # ---- resolve the central pod (only needed for report import) ----------------------
 if (-not $SchemaOnly -and -not $Pod) {
@@ -133,6 +146,7 @@ $svcs = $SchemaSvc.Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_
 
 Write-Host "=================================================================="
 Write-Host " PLAN"
+Write-Host "   kube context   : $Context"
 Write-Host "   namespace      : $Namespace"
 if ($SchemaOnly) {
   Write-Host "   central pod    : (skipped - schema-only run)"
