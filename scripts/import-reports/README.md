@@ -104,8 +104,9 @@ chmod +x import-reports-k8s.sh   # first time only
 2. **Reports**: each `.json` is staged into the pod as base64 (immune to
    encoding/newline truncation), the transferred byte count is verified against the
    source (retried up to 3× on a short write), then imported with
-   `node dist importReport -f … -v`. The staged `/tmp/<name>.json` is removed after
-   each import.
+   `node dist importReport -f … -v`. On success the staged `/tmp/<name>.json` is removed;
+   if an import fails the run aborts and the file is deliberately left in the pod for
+   inspection / re-run.
 3. **Snapshot** of report definitions and their latest/published versions is printed
    before and after.
 

@@ -325,7 +325,9 @@ else
       exit 1
     fi
     invoke_node_dist "importReport -f '/tmp/$bn' -v"
-    # Remove the staged temp file so nothing is left behind in the pod (best-effort).
+    # Clean up the staged temp file on the success path only. If importReport above fails,
+    # `set -e` aborts the run before this line, deliberately leaving /tmp/$bn in the pod so
+    # you can inspect or re-run the import against it. The `|| echo` only reports an rm error.
     kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
       sh -lc "rm -f '/tmp/$bn'" || echo "   (could not remove /tmp/$bn)"
   done

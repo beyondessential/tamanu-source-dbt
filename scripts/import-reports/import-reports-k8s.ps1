@@ -257,7 +257,9 @@ if ($SchemaOnly) {
       throw "ERROR: failed to stage $bn intact after $maxStageAttempts attempts (expected $expected bytes). Aborting."
     }
     Invoke-NodeDist "importReport -f '/tmp/$bn' -v"
-    # Remove the staged temp file so nothing is left behind in the pod (best-effort).
+    # Clean up the staged temp file on the success path only. If importReport above fails,
+    # Invoke-NodeDist throws (ErrorActionPreference=Stop) before this line, deliberately
+    # leaving /tmp/$bn in the pod so you can inspect or re-run the import against it.
     kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc "rm -f '/tmp/$bn'"
     if ($LASTEXITCODE -ne 0) { Write-Host "   (could not remove /tmp/$bn)" }
   }
