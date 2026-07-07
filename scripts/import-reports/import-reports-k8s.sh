@@ -185,7 +185,7 @@ invoke_psql_svc() {
 }
 
 read -r -d '' SNAPSHOT_SQL <<'SQL' || true
-SELECT rd.name, rd.db_schema,
+SELECT rd.id AS definition_id, rd.name, rd.db_schema,
   max(rdv.version_number) AS latest,
   max(rdv.version_number) FILTER (WHERE rdv.status='published') AS latest_published
 FROM report_definitions rd
