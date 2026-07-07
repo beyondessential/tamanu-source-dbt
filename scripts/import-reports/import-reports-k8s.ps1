@@ -86,9 +86,7 @@ if (-not $SchemaOnly) {
 }
 
 # ---- switch cluster context -------------------------------------------------------
-# Switch the active kubectl context so every subsequent kubectl call (pod resolution,
-# snapshot, schema apply, report import) runs against the intended cluster, not whatever
-# context happened to be selected. Defaults to the demo cluster; override with -Context.
+# So every kubectl call runs against the intended cluster, not whatever was selected.
 Write-Host ">> Switching kubectl context to '$Context' ..."
 kubectl config use-context $Context
 Assert-LastExit "kubectl config use-context $Context"
@@ -197,12 +195,9 @@ Write-Host "This writes to the live database(s) and has NO dry run."
 $confirm = Read-Host "Type the namespace to confirm"
 if ($confirm -ne $Namespace) { throw "Confirmation did not match. Aborting." }
 
-# 1) Reporting schema FIRST (if provided), on each target service, as the app role
-# NOTE: the schema is streamed over the same kubectl stdin pipe that can short-write
-# on the network, but unlike reports it is NOT base64-verified. --single-transaction
-# + ON_ERROR_STOP=1 is the safety net: a truncated file almost certainly fails to parse
-# and the whole transaction rolls back, so a short write aborts rather than partially
-# applying. It does not verify the transfer itself.
+# 1) Reporting schema FIRST (if provided), on each target service, as the app role.
+# Unlike reports the schema is not byte-count-verified; --single-transaction +
+# ON_ERROR_STOP=1 is the safety net, so a short write fails to parse and rolls back.
 if ($SchemaSql) {
   foreach ($svc in $svcs) {
     Write-Host ">> Applying reporting schema to svc/$svc as role $DbRole ..."
@@ -223,18 +218,14 @@ if ($SchemaOnly) {
   $maxStageAttempts = 3
   foreach ($r in $reports) {
     $bn = $r.Name
-    # $bn is interpolated into a remote `sh -lc "... '/tmp/$bn'"`, so reject anything
-    # outside a safe charset to keep the single-quoting intact (compiled report names
-    # are controlled, but a stray quote or space would break the command).
+    # $bn is interpolated into a remote `sh -lc "... '/tmp/$bn'"`; reject anything outside
+    # a safe charset so a stray quote or space can't break the quoting.
     if ($bn -notmatch '^[A-Za-z0-9._-]+$') {
       throw "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)"
     }
     Write-Host ">> Importing $bn ..."
-    # Stage via base64 (pure ASCII; immune to encoding/newline/stdin-flush truncation
-    # that silently produced empty files with a raw `Get-Content | cat >` pipe).
-    # The streamed stdin pipe can occasionally short-write over the network, so retry
-    # the stage+verify a few times; a transient truncation self-heals instead of
-    # aborting the whole run.
+    # Stage as base64 (pure ASCII, immune to newline/encoding truncation), then verify the
+    # byte count and retry — the stdin pipe can short-write over the network.
     $expected = (Get-Item -LiteralPath $r.FullName).Length
     $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($r.FullName))
     $staged = $false
@@ -256,9 +247,8 @@ if ($SchemaOnly) {
     if (-not $staged) {
       throw "ERROR: failed to stage $bn intact after $maxStageAttempts attempts (expected $expected bytes). Aborting."
     }
-    # finally{} ALWAYS removes the staged temp file (Option B) — even if the import throws
-    # — so nothing is left in the pod. catch{} re-throws with the report name so the CLI
-    # says which report failed.
+    # finally{} always removes the staged temp file, even if the import throws; catch{}
+    # re-throws naming the report so the CLI says which one failed.
     try {
       Invoke-NodeDist "importReport -f '/tmp/$bn' -v"
     } catch {
