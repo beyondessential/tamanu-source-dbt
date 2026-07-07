@@ -245,6 +245,8 @@ if ($SchemaOnly) {
       Write-Host "   staged $bn is $size bytes, expected $expected (attempt $attempt/$maxStageAttempts); retrying"
     }
     if (-not $staged) {
+      # Drop the partial/failed temp file before aborting so nothing is left in the pod.
+      kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc "rm -f '/tmp/$bn'" | Out-Null
       throw "ERROR: failed to stage $bn intact after $maxStageAttempts attempts (expected $expected bytes). Aborting."
     }
     # finally{} always removes the staged temp file, even if the import throws; catch{}

@@ -312,6 +312,9 @@ else
       echo "   staged $bn is $size bytes, expected $expected (attempt $attempt/$max_stage_attempts); retrying"
     done
     if ! $staged; then
+      # Drop the partial/failed temp file before aborting so nothing is left in the pod.
+      kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
+        sh -lc "rm -f '/tmp/$bn'" || true
       echo "ERROR: failed to stage $bn intact after $max_stage_attempts attempts (expected $expected bytes). Aborting." >&2
       exit 1
     fi
