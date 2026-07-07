@@ -110,6 +110,18 @@ To generate a report list:
 python list_tamanu_reports.py
 ```
 
+## Importing reports to a deployment
+
+To import the compiled report definitions (and optionally a reporting schema) into a
+central server running on Kubernetes, use the scripts in
+[scripts/import-reports/](scripts/import-reports/). There is a PowerShell version for
+Windows (`import-reports-k8s.ps1`) and an equivalent Bash version for macOS/Linux
+(`import-reports-k8s.sh`). They switch the kubectl context first and **default to the
+demo cluster** (configurable via `--context` / `-Context`), and default to a read-only
+plan, only writing when re-run with `-Apply` / `--apply`. See
+[scripts/import-reports/README.md](scripts/import-reports/README.md) for prerequisites,
+options, and examples.
+
 ## Versioning
 
 We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number will mirror Tamanu's release
