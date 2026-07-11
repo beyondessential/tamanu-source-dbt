@@ -37,6 +37,9 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
       - name: age
         data_type: integer
         description: "{{ doc('generic__patients_age') }} at the time of diagnosis."
@@ -76,6 +79,9 @@ models:
       - name: location
         data_type: character varying(255)
         description: "{{ doc('generic__location') }} where the encounter is currently active or has ended."
+      - name: encounter_type
+        data_type: character varying(255)
+        description: "{{ doc('encounters__encounter_type') }}"
       - name: certainty
         data_type: character varying(255)
         description: "{{ doc('encounter_diagnoses__certainty') }}"

@@ -1,7 +1,7 @@
 # IDE and editor files
-.claude/*
-!.claude/settings.json
-!.claude/hooks/
+# Track .claude/ (settings.json, hooks/, commands/, skills/, agents/) so team-shared
+# Claude config is version-controlled; keep only per-developer files local.
+.claude/settings.local.json
 CLAUDE.md
 .idea
 .vscode

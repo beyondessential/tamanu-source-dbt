@@ -1,12 +1,14 @@
 {
   "query": "replace this",
-  "status": "published",
   "name": "Registered patients daily summary",
+  "status": "published",
   "notes": "This report generates a summary of the number of patients that have been registered by date and sex for the selected date range. ",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",
-    "dataSources": ["allFacilities"],
+    "dataSources": [
+      "allFacilities"
+    ],
     "parameters": []
   }
 }

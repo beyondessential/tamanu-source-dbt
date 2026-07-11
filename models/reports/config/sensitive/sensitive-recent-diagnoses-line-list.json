@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Sensitive recent diagnoses line list",
-  "notes": "This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.",
   "status": "published",
+  "notes": "This report lists all patients that have had the specified diagnosis/es recorded at sensitive facilities. Diagnoses with a certainty of 'Confirmed', 'Suspected', or 'Emergency' are included. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",

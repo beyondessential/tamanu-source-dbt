@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Procedures line list",
-  "notes": "This report pulls list of all patients that have documented procedures during the selected date period ",
   "status": "published",
+  "notes": "This report pulls list of all patients that have documented procedures during the selected date period ",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "24hours",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",
@@ -26,7 +29,9 @@
         "name": "departmentId",
         "suggesterEndpoint": "department",
         "suggesterOptions": {
-          "baseQueryParameters": { "filterByFacility": true }
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
         }
       },
       {
@@ -35,7 +40,9 @@
         "name": "locationGroupId",
         "suggesterEndpoint": "locationGroup",
         "suggesterOptions": {
-          "baseQueryParameters": { "filterByFacility": true }
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
         }
       },
       {
@@ -44,7 +51,9 @@
         "name": "locationId",
         "suggesterEndpoint": "location",
         "suggesterOptions": {
-          "baseQueryParameters": { "filterByFacility": true }
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
         }
       }
     ]
