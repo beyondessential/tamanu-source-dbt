@@ -25,7 +25,7 @@
       string. Defaults to the monthly format
       to_char(m.period_start, var('yearmonth_format')). Weekly reports pass
       their own expression (e.g. an epi_yearweek column carried on the
-      metric view or joined from generate_epi_weeks output).
+      metric view or joined from msf_generate_epi_weeks output).
     - value_expr (optional): defaults to m.value_numeric.
     - facility_column (optional): defaults to facility_id.
 
