@@ -1,4 +1,4 @@
-{% macro calculate_bp_controlled(sbp, dbp, has_diabetes, has_htn) %}
+{% macro msf_calculate_bp_controlled(sbp, dbp, has_diabetes, has_htn) %}
 {#
     Blood-pressure control flag for MSF NCD quality-of-care indicators.
 

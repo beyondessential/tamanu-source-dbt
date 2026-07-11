@@ -1,4 +1,4 @@
-{% macro calculate_age_group(age_column, categorisation='ncd') %}
+{% macro msf_calculate_age_group(age_column, categorisation='ncd') %}
 {#
     Age-band CASE expression for MSF DHIS2 reporting disaggregations.
 

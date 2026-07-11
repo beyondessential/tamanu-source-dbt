@@ -1,4 +1,4 @@
-{% macro generate_epi_weeks(start_dow, from_year, label_infix='W', pad=2) %}
+{% macro msf_generate_epi_weeks(start_dow, from_year, label_infix='W', pad=2) %}
 {#
     Epidemiological-week lookup relation: one row per epi week.
 
@@ -24,7 +24,7 @@
     Consumers join on `date between week_start and week_end`.
 
     Usage (deployment repo, ephemeral model):
-        {{ generate_epi_weeks(start_dow=1, from_year=2026) }}
+        {{ msf_generate_epi_weeks(start_dow=1, from_year=2026) }}
 #}
 with epi_years as (
     select
