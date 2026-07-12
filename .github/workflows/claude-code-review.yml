@@ -91,6 +91,9 @@ jobs:
           track_progress: true
           use_sticky_comment: true
           prompt: "/review"
+          # PRs opened by automation (e.g. release/version-bump workflows) are authored by
+          # github-actions[bot]; allow that bot so the run is not rejected.
+          allowed_bots: "github-actions[bot]"
           claude_args: |
             --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
             --append-system-prompt "Read ${{ steps.review.outputs.path }} and follow all instructions in it."
