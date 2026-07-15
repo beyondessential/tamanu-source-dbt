@@ -32,6 +32,18 @@ with price_pivot as (
     group by invoice_product_id
 ),
 
+price_list_charging_pivot as (
+    select
+        invoice_product_id
+        {%- for row in price_lists %}
+        , bool_or(case when invoice_price_list_id = '{{ row[0] }}' then is_fixed_price end)
+            as charging_{{ loop.index }}
+        {%- endfor %}
+    from {{ ref('invoice_price_list_items') }}
+    where is_hidden = false
+    group by invoice_product_id
+),
+
 insurance_pivot as (
     select
         invoice_product_id
@@ -98,9 +110,13 @@ select
         )
     end as "Insurance: {{ row[1] }}"
     {%- endfor %}
+    {%- for row in price_lists %}
+    , plcp.charging_{{ loop.index }} as "Price List Charging: {{ row[1] }}"
+    {%- endfor %}
 from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
+left join price_list_charging_pivot plcp on plcp.invoice_product_id = ip.id
 left join product_available_facilities paf on paf.invoice_product_id = ip.id
 left join {{ ref('lab_test_types') }} ltt on ltt.id = ip.source_record_id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = ip.source_record_id

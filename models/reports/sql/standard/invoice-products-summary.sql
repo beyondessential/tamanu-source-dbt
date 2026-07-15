@@ -35,5 +35,8 @@ select
     {%- for name in insurance_plan_names %}
     , "Insurance: {{ name }}"
     {%- endfor %}
+    {%- for name in price_list_names %}
+    , "Price List Charging: {{ name }}"
+    {%- endfor %}
 from {{ ref('ds__invoice_products') }}
 order by name
