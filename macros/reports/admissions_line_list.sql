@@ -34,7 +34,7 @@ where
         else {{ parameter('locationGroupId') }} = any(location_group_ids::text [])
     end
     and case when {{ parameter('facilityId') }} is null then true
-        else {{ parameter('facilityId') }} = facility_id
+        else facility_id = {{ parameter('facilityId') }}
     end
     and case when {{ parameter('departmentId') }} is null then true
         else {{ parameter('departmentId') }} = any(department_ids::text [])
