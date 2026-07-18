@@ -42,9 +42,18 @@ def main():
         execute_command("dbt clean --profiles-dir config")
         execute_command("dbt deps --profiles-dir config")
 
-        # Generate translation and metric-definitions macros before any dbt compilation
+        # Generate translation macro before any dbt compilation
         generate_translation_macro()
-        generate_metric_definitions_macro()
+
+        # Generate the metric-definitions macro only for the standard package
+        # build. Deployment repos consume the package's canonical
+        # get_metric_definitions macro directly (via macro-paths); running
+        # this here for a deployment would regenerate a local
+        # macros/metric_definitions.sql and delete the package's copy,
+        # reintroducing a duplicate-macro collision on the deployment's next
+        # `dbt deps` (see tamanu-dbt-msf-kule OQ-10).
+        if DEPLOYMENT == "standard":
+            generate_metric_definitions_macro()
 
         # Generate survey models (only for non-standard deployments)
         if DEPLOYMENT != "standard":
