@@ -1,5 +1,11 @@
 name: Claude Code Review
 
+# Inlined rather than calling beyondessential/maui-team's reusable workflow: this repo is
+# public and maui-team is private, and GitHub does not let a public repo call a reusable
+# workflow in a private repo (the call fails at resolution with "workflow was not found").
+# The steps below mirror that reusable workflow. Keep in sync with
+# .maui/.github/workflows/claude-code-review.yml when it changes.
+
 on:
   pull_request:
     types: [opened]
@@ -15,5 +21,79 @@ jobs:
         contains(github.event.comment.body, '/review') &&
         github.event.comment.author_association != 'NONE' &&
         github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
-    uses: beyondessential/maui-team/.github/workflows/claude-code-review.yml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+
+    steps:
+      # .maui is a private submodule (maui-team); mint a short-lived read token scoped to
+      # maui-team so the submodule can be fetched (REVIEW.md lives at .maui/REVIEW.md).
+      - name: Mint maui-team read token
+        id: maui-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MAUI_APP_ID }}
+          private-key: ${{ secrets.MAUI_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: maui-team
+
+      - name: Authenticate git for the private maui-team submodule
+        env:
+          MAUI_TOKEN: ${{ steps.maui-token.outputs.token }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${MAUI_TOKEN}@github.com/beyondessential/maui-team".insteadOf \
+            "https://github.com/beyondessential/maui-team"
+
+      - name: Resolve PR head SHA
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          PR_SHA=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER" --jq '.head.sha')
+          echo "sha=$PR_SHA" >> "$GITHUB_OUTPUT"
+
+      # submodules: false so checkout's GITHUB_TOKEN auth is not applied to the maui-team
+      # fetch; .maui is initialised explicitly below using the App-token URL rewrite above.
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+          fetch-depth: 0
+          submodules: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Initialise .maui submodule
+        run: git submodule update --init .maui
+
+      - name: Resolve review reference file
+        id: review
+        run: |
+          if [ -f REVIEW.md ]; then
+            echo "path=REVIEW.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=.maui/REVIEW.md" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: "/review"
+          # PRs opened by automation (e.g. release/version-bump workflows) are authored by
+          # github-actions[bot]; allow that bot so the run is not rejected.
+          allowed_bots: "github-actions[bot]"
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
+            --append-system-prompt "Read ${{ steps.review.outputs.path }} and follow all instructions in it."

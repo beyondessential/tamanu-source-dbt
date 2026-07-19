@@ -12,6 +12,25 @@ This project includes AI rules for AI assistants located in the `ai/` directory.
 
 To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
 
+## Local development
+
+Python and dbt dependencies are managed with [uv](https://docs.astral.sh/uv/) from
+`pyproject.toml`. Run project commands through `uv run` — it syncs the virtualenv
+automatically — and pass `--env-file .env` to load the database credentials and
+`DBT_PROFILES_DIR`:
+
+```bash
+cp .env.example .env                    # then fill in real values
+uv run --env-file .env dbt deps         # one-time: install dbt packages (from hub.getdbt.com)
+uv run --env-file .env dbt build        # build + test
+uv run --env-file .env sqlfluff lint models
+```
+
+`.env` (copied from `.env.example`) provides the DB connection vars plus
+`DBT_PROFILES_DIR=config`, so dbt finds `config/profiles.yml` without a `--profiles-dir`
+flag. Run `dbt deps` once before building or linting. There is no session-start hook or
+manual `venv` activation — `uv run` handles the environment.
+
 ## SQL linting
 
 We use SQLFluff and the configuration file is located in the root folder and is named `.sqlfluff`.
@@ -90,6 +109,18 @@ To generate a report list:
 ```
 python list_tamanu_reports.py
 ```
+
+## Importing reports to a deployment
+
+To import the compiled report definitions (and optionally a reporting schema) into a
+central server running on Kubernetes, use the scripts in
+[scripts/import-reports/](scripts/import-reports/). There is a PowerShell version for
+Windows (`import-reports-k8s.ps1`) and an equivalent Bash version for macOS/Linux
+(`import-reports-k8s.sh`). They switch the kubectl context first and **default to the
+demo cluster** (configurable via `--context` / `-Context`), and default to a read-only
+plan, only writing when re-run with `-Apply` / `--apply`. See
+[scripts/import-reports/README.md](scripts/import-reports/README.md) for prerequisites,
+options, and examples.
 
 ## Versioning
 

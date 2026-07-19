@@ -18,13 +18,15 @@ select
     is_prn as "{{ translate_label('prescriptionIsPRN') }}",
     is_variable_dose as "{{ translate_label('prescriptionIsVariableDose') }}",
     dose_amount as "{{ translate_label('prescriptionDoseAmount') }}",
-    units as "{{ translate_label('prescriptionUnits') }}",
+    dosing_unit as "{{ translate_label('prescriptionDosingUnit') }}",
+    dispensing_unit as "{{ translate_label('prescriptionDispensingUnit') }}",
+    unit_conversion as "{{ translate_label('prescriptionUnitConversion') }}",
     frequency as "{{ translate_label('prescriptionFrequency') }}"
 from {{ ref('ds__encounter_prescriptions') }}
 where
     {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case when {{ parameter('facilityId') }} is null then true
-        else {{ parameter('facilityId') }} = facility_id
+        else facility_id = {{ parameter('facilityId') }}
     end
 order by datetime desc
