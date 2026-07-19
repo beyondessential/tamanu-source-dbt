@@ -75,5 +75,7 @@ select
     max(event_date) as observation_period_end_date,    -- BL-002
     -- 44814724 = "Period covering healthcare encounters" (BL-004)
     44814724 as period_type_concept_id
+-- no outer join to clinical__person, so an event-less patient contributes no
+-- rows here and is correctly absent from the output (BL-005)
 from event_dates
 group by person_id
