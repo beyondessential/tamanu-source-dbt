@@ -80,7 +80,7 @@ is preserved.
 | `measurement_datetime` | timestamp | Vitals: response `start_time`. Labs: `lab_tests.completed_datetime` (→ published/requested). Birth: birth datetime (→ registration date) |
 | `measurement_type_source_value` | text | `'vitals survey'`, `'lab'`, or `'birth data'` — provenance / union discriminator |
 | `value_as_number` | numeric | The value cast to numeric when numeric; **NULL for categorical results** (BL-003, BL-006, BL-007) |
-| `value_source_value` | text | The recorded value, retained verbatim. Always populated — the canonical value for categorical results |
+| `value_source_value` | text | The recorded value, whitespace-trimmed. Always populated — the canonical value for categorical results |
 | `unit_source_value` | text | Unit of measure. Labs: `lab_test_types.unit`. NULL for vitals (units implicit, not stored per answer) |
 | `provider_id` | uuid | Vitals: response submitter. Labs: requesting clinician. Birth: NULL (no user recorded). FK to `ref__provider.provider_id` |
 | `visit_occurrence_id` | uuid | The source's `encounter_id`; **NULL for birth measurements** (patient-level). FK to `clinical__visit_occurrence.visit_occurrence_id` |
