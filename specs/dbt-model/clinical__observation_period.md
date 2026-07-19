@@ -75,7 +75,10 @@ Exactly the OMOP v5.4 `OBSERVATION_PERIOD` columns:
   carries no end-date column), and observation dates. End-type dates count because
   OMOP's EHR convention bounds the period by the *"end date of the last occurrence"*
   of a clinical event. NULL dates are excluded leg-by-leg; open visits therefore
-  contribute only their start.
+  contribute only their start. Future-dated ends (e.g. a prescription with an
+  end date after the replica snapshot date) are **not** capped — the raw `max()`
+  is taken as recorded, so `observation_period_end_date` can extend into the
+  future. This is a deliberate design decision, not a placeholder.
 - **BL-003:** `observation_period_id` equals `person_id`. With exactly one period per
   person the person key is the natural period key; no synthetic id is minted (D1). If
   period-splitting is ever introduced, the id becomes a derived key and this clause
@@ -119,6 +122,4 @@ row (D5, dbt-conventions § Documentation).
 
 ## Open questions
 
-- **OQ-1:** Whether to cap `observation_period_end_date` at the replica snapshot date —
-  a prescription with a future end date currently extends the period into the future.
-  Revisit if future-dated ends prove material in real data.
+None outstanding.
