@@ -95,6 +95,7 @@ used" principle, derived-elements-conventions § map__omop seeds).
 | AC-002 | `location_id` is `unique` (one row per village) | grain | dbt `unique` |
 | AC-003 | A village whose ancestry runs village → subdivision → division → country denormalises into one row with `city`, `county`, `state`, and `country_source_value` all populated | BL-003, BL-004 | dbt unit test (`test_ref__location_denormalises_full_hierarchy`) |
 | AC-004 | A level absent from a village's ancestry comes through NULL (e.g. parent is a division directly: `county` and `country_source_value` NULL, `state` populated) | BL-004 | dbt unit test (`test_ref__location_partial_hierarchy_yields_nulls`) |
+| AC-005 | An intermediate level (settlement) between a village and its subdivision is walked through, not dropped, so `county` still resolves from the subdivision above it | BL-002 | dbt unit test (`test_ref__location_walks_through_intermediate_settlement`) |
 
 ## Registry entry
 

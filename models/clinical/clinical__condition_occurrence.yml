@@ -55,7 +55,7 @@ models:
         description: "{{ doc('clinical__condition_occurrence__is_primary') }}"
       - name: provider_id
         data_type: character varying(255)
-        description: "{{ doc('encounters__examiner_id') }}"
+        description: "{{ doc('encounter_diagnoses__clinician_id') }}"
         data_tests:
           - relationships:
               name: ac_005_clinical__condition_occurrence_provider_id_in_ref__provider

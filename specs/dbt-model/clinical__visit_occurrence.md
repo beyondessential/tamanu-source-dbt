@@ -110,7 +110,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 |---|---|---|---|
 | AC-001 | `visit_occurrence_id` is `not_null` | grain | dbt `not_null` |
 | AC-002 | `visit_occurrence_id` is `unique` | grain | dbt `unique` |
-| AC-003 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
+| AC-003 | `person_id` is `not_null` and every value exists in `clinical__person.person_id` | BL-001 | dbt `not_null` + `relationships` |
 | AC-004 | Every non-null `visit_concept_id` exists in `map__omop_visit_type.concept_id` | BL-002 | dbt `relationships` |
 | AC-005 | `visit_type_concept_id` is `not_null` and always 32817 | BL-003 | dbt `not_null` + `accepted_values` |
 | AC-006 | `visit_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
