@@ -140,6 +140,8 @@ def get_patch_commits(prev_tag: str, new_tag: str) -> list[str]:
 
 
 VERSION_LINE_RE = re.compile(
+    # dbt_project.yml: version: 2.50.4 or version: "2.50.4" (quotes optional in yaml)
+    # pyproject.toml: version = "2.50.4" (toml strings are always quoted)
     r'^[+-](\s*version:\s*"?\d+\.\d+\.\d+"?\s*|\s*version\s*=\s*"\d+\.\d+\.\d+"\s*)$'
 )
 
@@ -180,7 +182,48 @@ def try_autoresolve_version_conflict(commit: str) -> bool:
         git("checkout", "--ours", f)
         git("add", f)
     result = git("-c", "core.editor=true", "cherry-pick", "--continue", check=False)
-    return result.returncode == 0
+    if result.returncode == 0:
+        return True
+    # Keeping "ours" for every changed file can leave nothing to commit (e.g. a
+    # pure version-bump commit with no other content) — the version re-bump right
+    # after the cherry-pick loop covers this anyway, so treat it as resolved.
+    if "cherry-pick is now empty" in result.stdout + result.stderr:
+        skip_result = git("cherry-pick", "--skip", check=False)
+        return skip_result.returncode == 0
+    return False
+
+
+COMPILED_DIR = "compiled/"
+
+
+def strip_compiled_output_from_head() -> str:
+    """Drop any compiled/ changes the current HEAD commit carries, amending it.
+
+    compiled/ is version-stamped build output regenerated per release (e.g.
+    compiled/v2.54.17/...); forward-porting another branch's compiled artifacts
+    onto a different version line is never meaningful, so any compiled/ changes a
+    cherry-picked commit carries are dropped, keeping the rest of the commit intact.
+
+    Returns "stripped" if the commit still has other changes and was amended,
+    "dropped" if removing compiled/ left it empty and it was undone entirely, or
+    "" if the commit didn't touch compiled/ at all.
+    """
+    diff = git_out("diff", "--name-status", "HEAD~1", "HEAD", "--", COMPILED_DIR)
+    lines = [line for line in diff.splitlines() if line.strip()]
+    if not lines:
+        return ""
+    for line in lines:
+        status, path = line.split("\t", 1)
+        if status.startswith("A"):
+            git("rm", "-f", "--", path)
+        else:
+            git("checkout", "HEAD~1", "--", path)
+    remaining = git_out("diff", "--cached", "--name-only", "HEAD~1")
+    if remaining.strip():
+        git("commit", "--amend", "--no-edit")
+        return "stripped"
+    git("reset", "--hard", "HEAD~1")
+    return "dropped"
 
 
 # ---------------------------------------------------------------------------
@@ -266,8 +309,19 @@ def forwardport_to_branch(
     # Cherry-pick patch commits
     applied_commits = 0
     already_applied_commits = 0
+    compiled_only_commits = 0
     conflict_commit = None
     conflict_index = None
+
+    def _handle_compiled_output(commit: str) -> None:
+        nonlocal compiled_only_commits
+        outcome = strip_compiled_output_from_head()
+        if outcome == "dropped":
+            print(f"    🧹 {commit[:8]} was compiled-output-only — dropped, nothing to forward-port")
+            compiled_only_commits += 1
+        elif outcome == "stripped":
+            print(f"    🧹 Dropped compiled/ output from {commit[:8]}")
+
     for i, commit in enumerate(patch_commits):
         result = git("cherry-pick", commit, check=False)
         if result.returncode != 0:
@@ -282,6 +336,7 @@ def forwardport_to_branch(
                 # Version-line-only clash in dbt_project.yml/pyproject.toml — the
                 # per-branch version bump below overwrites it correctly anyway.
                 print(f"    🔧 Auto-resolved version-file conflict in {commit[:8]}")
+                _handle_compiled_output(commit)
                 applied_commits += 1
                 continue
             # Real conflict — abort and open a draft PR with what we have so far
@@ -290,6 +345,7 @@ def forwardport_to_branch(
             conflict_index = i
             print(f"    ⚠️  Cherry-pick conflict at {commit[:8]}, will open draft PR")
             break
+        _handle_compiled_output(commit)
         applied_commits += 1
     applicable_commits = len(patch_commits) - already_applied_commits
 
@@ -337,10 +393,12 @@ def forwardport_to_branch(
         draft_args = ["--draft"]
     else:
         title = f"chore: forwardport {new_patch_tag} to {target_branch} (→ {new_target_version})"
-        skipped_note = (
-            f" ({already_applied_commits} already applied on this branch)"
-            if already_applied_commits else ""
-        )
+        skip_reasons = []
+        if already_applied_commits:
+            skip_reasons.append(f"{already_applied_commits} already applied on this branch")
+        if compiled_only_commits:
+            skip_reasons.append(f"{compiled_only_commits} were compiled-output-only")
+        skipped_note = f" ({', '.join(skip_reasons)})" if skip_reasons else ""
         body = (
             f"Forward-ports patch `{new_patch_tag}` (from `{source_major_minor}`) to `{target_branch}`.\n\n"
             f"- Bumps version `{target_version}` → `{new_target_version}`\n"

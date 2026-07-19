@@ -15,6 +15,7 @@ from forwardport_patch import (
     get_unmerged_files,
     get_version_tags_for_minor_from_list,
     is_version_only_diff,
+    strip_compiled_output_from_head,
     try_autoresolve_version_conflict,
     update_version_in_files,
 )
@@ -442,6 +443,170 @@ def test_try_autoresolve_fails_when_diff_has_extra_changes():
 def test_try_autoresolve_fails_when_no_unmerged_files():
     with patch.object(forwardport_patch, "git_out", return_value=""):
         assert not try_autoresolve_version_conflict("b031e6c")
+
+
+def test_try_autoresolve_skips_when_continue_reports_empty():
+    # A pure version-bump commit: after keeping "ours" for both files, there's
+    # nothing left to commit, so `cherry-pick --continue` fails with "now empty".
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        if args[:2] == ("-c", "core.editor=true"):
+            m.returncode = 1
+            m.stdout = "The previous cherry-pick is now empty, possibly due to conflict resolution.\n"
+            m.stderr = ""
+        else:
+            m.returncode = 0
+            m.stdout = ""
+            m.stderr = ""
+        return m
+
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert try_autoresolve_version_conflict("b031e6c")
+
+    assert ("cherry-pick", "--skip") in git_calls
+
+
+def test_try_autoresolve_fails_when_continue_fails_for_other_reason():
+    def fake_git(*args, **kwargs):
+        m = MagicMock()
+        if args[:2] == ("-c", "core.editor=true"):
+            m.returncode = 1
+            m.stdout = ""
+            m.stderr = "error: something else went wrong\n"
+        else:
+            m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert not try_autoresolve_version_conflict("b031e6c")
+
+
+# ---------------------------------------------------------------------------
+# strip_compiled_output_from_head
+# ---------------------------------------------------------------------------
+
+
+def test_strip_compiled_output_noop_when_nothing_touched():
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", return_value=""),
+    ):
+        assert strip_compiled_output_from_head() == ""
+    assert git_calls == []
+
+
+def test_strip_compiled_output_drops_commit_when_compiled_only():
+    # Everything the commit touched was under compiled/ — after removing it,
+    # nothing differs from the parent, so the whole commit is undone.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "A\tcompiled/v2.54.17/foo.json\nA\tcompiled/v2.54.17/bar.json"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return ""  # nothing left staged relative to HEAD~1
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert strip_compiled_output_from_head() == "dropped"
+
+    assert ("rm", "-f", "--", "compiled/v2.54.17/foo.json") in git_calls
+    assert ("rm", "-f", "--", "compiled/v2.54.17/bar.json") in git_calls
+    assert ("reset", "--hard", "HEAD~1") in git_calls
+    assert not any(c[0] == "commit" for c in git_calls)
+
+
+def test_strip_compiled_output_amends_when_other_changes_remain():
+    # Commit has both a compiled/ addition and a real dbt model change — keep the
+    # latter, drop the former, and amend rather than reset.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "A\tcompiled/v2.54.17/foo.json"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return "models/some_model.sql"  # still changes remaining after strip
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert strip_compiled_output_from_head() == "stripped"
+
+    assert ("rm", "-f", "--", "compiled/v2.54.17/foo.json") in git_calls
+    assert ("commit", "--amend", "--no-edit") in git_calls
+    assert not any(c[0] == "reset" for c in git_calls)
+
+
+def test_strip_compiled_output_restores_modified_not_removed():
+    # Modified (not added) compiled/ paths should be restored to HEAD~1's content
+    # via checkout, not `rm`.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "M\tcompiled/v2.54.17/reporting-schema.sql"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return ""
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        strip_compiled_output_from_head()
+
+    assert ("checkout", "HEAD~1", "--", "compiled/v2.54.17/reporting-schema.sql") in git_calls
+    assert not any(c[0] == "rm" for c in git_calls)
 
 
 # ---------------------------------------------------------------------------
