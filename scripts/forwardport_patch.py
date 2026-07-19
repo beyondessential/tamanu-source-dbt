@@ -139,6 +139,50 @@ def get_patch_commits(prev_tag: str, new_tag: str) -> list[str]:
     return [c for c in raw.splitlines() if c.strip()]
 
 
+VERSION_LINE_RE = re.compile(
+    r'^[+-](\s*version:\s*"?\d+\.\d+\.\d+"?\s*|\s*version\s*=\s*"\d+\.\d+\.\d+"\s*)$'
+)
+
+
+def is_version_only_diff(commit: str, filepath: str) -> bool:
+    """True if commit's diff for filepath touches only the version line."""
+    diff = git_out("show", commit, "--", filepath)
+    changed = [
+        line for line in diff.splitlines()
+        if line[:1] in ("+", "-") and not line.startswith(("+++", "---"))
+    ]
+    return bool(changed) and all(VERSION_LINE_RE.match(line) for line in changed)
+
+
+def get_unmerged_files() -> list[str]:
+    raw = git_out("diff", "--name-only", "--diff-filter=U")
+    return [f for f in raw.splitlines() if f.strip()]
+
+
+def try_autoresolve_version_conflict(commit: str) -> bool:
+    """Auto-resolve a cherry-pick conflict that is purely a version-line clash.
+
+    dbt_project.yml/pyproject.toml always conflict when cherry-picking a version
+    bump onto a branch already at a different version — the forward-port re-bumps
+    both files to the correct target version afterward regardless, so the incoming
+    change is always going to be overwritten. If every unmerged file is one of
+    VERSION_FILES and the commit's diff for it is only the version line, keep the
+    target branch's current content (git's "ours") and continue the cherry-pick.
+    Anything broader (other unmerged files, or extra changes bundled into a
+    version-file diff) is left for a human to resolve.
+    """
+    unmerged = get_unmerged_files()
+    if not unmerged or any(f not in VERSION_FILES for f in unmerged):
+        return False
+    if not all(is_version_only_diff(commit, f) for f in unmerged):
+        return False
+    for f in unmerged:
+        git("checkout", "--ours", f)
+        git("add", f)
+    result = git("-c", "core.editor=true", "cherry-pick", "--continue", check=False)
+    return result.returncode == 0
+
+
 # ---------------------------------------------------------------------------
 # Branch helpers
 # ---------------------------------------------------------------------------
@@ -233,6 +277,12 @@ def forwardport_to_branch(
                 git("cherry-pick", "--skip", check=False)
                 print(f"    ℹ️  Skipped already-applied commit {commit[:8]}")
                 already_applied_commits += 1
+                continue
+            if try_autoresolve_version_conflict(commit):
+                # Version-line-only clash in dbt_project.yml/pyproject.toml — the
+                # per-branch version bump below overwrites it correctly anyway.
+                print(f"    🔧 Auto-resolved version-file conflict in {commit[:8]}")
+                applied_commits += 1
                 continue
             # Real conflict — abort and open a draft PR with what we have so far
             git("cherry-pick", "--abort", check=False)
