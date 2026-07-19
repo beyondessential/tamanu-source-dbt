@@ -1,0 +1,34 @@
+{
+  "query": "with  __dbt__cte__int__admission_history_department as (\nwith admission_department_log as (\nselect\neh.id,\neh.encounter_id,\neh.datetime as start_datetime,\neh.department_id,\ncase\nwhen eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'\nelse 'transfer-in'\nend as type\nfrom \"reporting\".\"encounter_history\" eh\nwhere (eh.change_type isnull or eh.change_type && array['department', 'encounter_type'])\nand eh.encounter_type = 'admission'\n)\nselect\ndl.encounter_id,\ndl.department_id,\nd.name as department,\nd.facility_id,\nf.name as facility,\ndl.start_datetime,\ncoalesce(lead(dl.start_datetime) over w, e.end_datetime) as end_datetime,\ncase\nwhen coalesce(lead(dl.start_datetime::date) over w, e.end_datetime::date) - dl.start_datetime::date < 1 then 1\nelse coalesce(lead(dl.start_datetime::date) over w, e.end_datetime::date) - dl.start_datetime::date\nend as length_of_stay,\ncoalesce(dl.type = 'admission', false) as admission,\ncoalesce(lead(dl.department_id) over w isnull and e.end_datetime notnull, false) as discharge,\ncoalesce(dl.type = 'transfer-in', false) as transfer_in,\ncoalesce(lead(dl.department_id) over w notnull, false) as transfer_out,\ncoalesce(lead(dl.start_datetime) over w isnull and e.end_datetime::date = p.date_of_death, false) as death\nfrom admission_department_log dl\njoin \"reporting\".\"encounters\" e on e.id = dl.encounter_id\njoin \"reporting\".\"patients\" p on p.id = e.patient_id\njoin \"reporting\".\"departments\" d on d.id = dl.department_id\njoin \"reporting\".\"facilities\" f on f.id = d.facility_id\nwindow w as (\npartition by encounter_id\norder by dl.start_datetime\n)\n), reporting_months as (\nselect month::date\nfrom generate_series(\nconcat(left( \n:fromDate, 7), '-01')::date,\nconcat(left( \n:toDate, 7), '-01')::date,\n'1 month'::interval\n) month\n)\nselect\nto_char(rm.month, 'YYYY-MM') as \"Month\",\nadh.facility as \"Facility\",\nadh.department as \"Department\",\ncount(*) filter (where adh.admission) as \"Number of admissions\",\ncount(*) filter (where adh.discharge) as \"Number of discharges\",\ncount(*) filter (where adh.death) as \"Number of deaths\",\ncount(*) filter (where adh.transfer_in) as \"Number of transfers into department\",\ncount(*) filter (where adh.transfer_out) as \"Number of transfers out of department\",\nround(avg(adh.length_of_stay), 1) as \"Average length of stay\"\nfrom reporting_months rm\nleft join __dbt__cte__int__admission_history_department adh\non ((adh.start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)\nwhere adh.facility_id notnull\nand case\nwhen \n:departmentId is null then true\nelse adh.department_id = \n:departmentId\nend\ngroup by\nrm.month,\nadh.facility_id,\nadh.facility,\nadh.department_id,\nadh.department\norder by rm.month, adh.facility, adh.department",
+  "name": "Hospital admissions by department summary",
+  "notes": "This report provides a statistical summary of hospital admissions by department for the selected parameters. Indicators are reported chronologically by month. E.g. if user selects range 10/01/23 -20/02/23 the report should pull in all details for whole of January (Jan 1 to Jan 31) and partial details for Feb (Feb 1 to Feb 20). \n\nDetails on how each indicator is calculated are provided below:\n- Number of admissions = Number of hospital admissions for specified month by department. Where department is the last department the patient was assigned prior to discharge/at reporting. \n- Number of discharges = Number of patients discharged from a hospital admission for specified month by department. Where department is the last department the patient was assigned prior to discharge. \n- Number of deaths = Number of deceased patients that had an active hospital admission for specified month by department when their death was recorded. Where department is the last department the patient was assigned prior to death. \n- Number of transfers into department = Number of patients assigned to department during a hospital admission for the specified month. \n- Number of transfers out of department = Number of patients moved from department to another department during a hospital admission for the specified month.\n- Average length of stay: LOS for single patient = Date of discharge - Date of admission. If these are the same dates, then LOS = 1. Therefore, ALOS = (Sum of LOS for patients discharged in specified month by department)/(Number of patients discharged in specified month by department). ALOS is reported to the accuracy of tenths, i.e. 0.1. Source - https://gateway.euro.who.int/en/indicators/hfa_540-6100-average-length-of-stay-all-hospitals/#:~:text=Total%20number%20of%20occupied%20hospital,is%20set%20to%20one%20day",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dateRangeLabel": "Enter dates or leave blank for last full month and current month",
+    "dataSources": [
+      "thisFacility"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
