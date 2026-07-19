@@ -1,0 +1,77 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\nnationality as \"Nationality\",\nplace_of_death as \"Place of death\",\ndepartment as \"Department\",\nlocation_group as \"Area\",\nlocation as \"Location\",\nto_char(date_of_death, 'YYYY-MM-DD') as \"Date of death\",\nattending_clinician as \"Attending clinician\",\nprimary_cause_condition as \"Primary cause of death\",\ntime_between_onset_and_death as \"Time between onset and death\",\nantecedent_cause_1 as \"Antecedent cause 1\",\nantecedent_cause_2 as \"Antecedent cause 2\",\nother_condition_1 as \"Other condition 1\",\nother_condition_2 as \"Other condition 2\",\nother_condition_3 as \"Other condition 3\",\nother_condition_4 as \"Other condition 4\",\nhad_recent_surgery as \"Had recent surgery\",\nto_char(last_surgery_date, 'YYYY-MM-DD') as \"Last surgery date\",\nreason_for_surgery as \"Reason for surgery\",\nmanner_of_death as \"Manner of death\",\nto_char(external_cause_date, 'YYYY-MM-DD') as \"External cause date\",\nexternal_cause_location as \"External cause location\",\nwas_pregnant as \"Was pregnant\",\npregnancy_contributed as \"Pregnancy contributed\",\nwas_fetal_or_infant as \"Was fetal or infant\",\nwas_stillborn as \"Was stillborn\",\nbirth_weight as \"Birth weight (kg)\",\ncompleted_weeks_of_pregnancy as \"Completed weeks of pregnancy\",\nage_of_mother as \"Age of mother\",\ncondition_in_mother_affecting_fetus_or_newborn as \"Condition in mother affecting fetus or newborn\",\ndeath_within_day_of_birth as \"Death within day of birth\",\nhours_survived_since_birth as \"Hours survived since birth\"\nfrom \"reporting\".\"ds__deaths\"\nwhere date_of_death >= \n:fromDate\nand date_of_death <= \n:toDate\nand case\nwhen \n:causeOfDeath is null\nthen true\nelse primary_cause_condition_id = \n:causeOfDeath\nend\nand case\nwhen \n:mannerOfDeath is null\nthen true\nelse manner_of_death = \n:mannerOfDeath\nend\nand case\nwhen \n:facilityId is null\nthen true\nelse facility_id = \n:facilityId\nend\nand case\nwhen \n:antecedentCause is null\nthen true\nelse antecedent_cause_1_id = \n:antecedentCause\nor antecedent_cause_2_id = \n:antecedentCause\nend\nand case\nwhen \n:otherContributingCondition is null\nthen true\nelse other_condition_1_id = \n:otherContributingCondition\nor other_condition_2_id = \n:otherContributingCondition\nor other_condition_3_id = \n:otherContributingCondition\nor other_condition_4_id = \n:otherContributingCondition\nend\norder by date_of_death",
+  "name": "Deceased patients line list",
+  "notes": "This report generates a list of all deceased patients within the selected parameters. Patients are listed in chronological order by date and time of death. \nThe report includes all details documented in the patient death record. ",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Facility",
+        "name": "facilityId",
+        "suggesterEndpoint": "facility"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Cause of death",
+        "name": "causeOfDeath"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Due to (or as a consequence of)",
+        "name": "antecedentCause"
+      },
+      {
+        "parameterField": "DiagnosisField",
+        "label": "Other contributing condition",
+        "name": "otherContributingCondition"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Manner of death",
+        "name": "mannerOfDeath",
+        "options": [
+          {
+            "label": "Disease",
+            "value": "Disease"
+          },
+          {
+            "label": "Assault",
+            "value": "Assault"
+          },
+          {
+            "label": "Accident",
+            "value": "Accident"
+          },
+          {
+            "label": "Legal Intervention",
+            "value": "Legal Intervention"
+          },
+          {
+            "label": "Pending Investigation",
+            "value": "Pending Investigation"
+          },
+          {
+            "label": "Intentional Self Harm",
+            "value": "Intentional Self Harm"
+          },
+          {
+            "label": "War",
+            "value": "War"
+          },
+          {
+            "label": "Unknown/Could not be determined",
+            "value": "Unknown/Could not be determined"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
