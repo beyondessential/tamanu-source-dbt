@@ -1,0 +1,48 @@
+unit_tests:
+  - name: test_clinical__observation_period_spans_all_domains
+    model: clinical__observation_period
+    description: >-
+      Period bounds span all five event domains (AC-007). pat_1's start comes from
+      the earliest event (an observation) and its end from a drug-exposure end
+      datetime, with visit / condition / measurement dates in between. pat_2 has only
+      a visit-less birth measurement and still gets a (single-day) period. pat_3 has
+      only an open visit (no end), which contributes just its start date (BL-002,
+      BL-005).
+    given:
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, '2024-01-10'::date as visit_start_date, '2024-01-12'::date as visit_end_date
+          union all
+          select 'pat_3', '2024-06-01'::date, null::date
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, '2024-01-11'::date as condition_start_date
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, '2024-03-05'::date as measurement_date
+          union all
+          select 'pat_2', '2024-05-01'::date
+      - input: ref('clinical__drug_exposure')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, '2024-02-01'::date as drug_exposure_start_date, '2024-04-01 10:00:00'::timestamp as drug_exposure_end_datetime
+      - input: ref('clinical__observation')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, '2023-12-25'::date as observation_date
+    expect:
+      format: sql
+      rows: |
+        select
+          'pat_1' as observation_period_id,
+          'pat_1' as person_id,
+          '2023-12-25'::date as observation_period_start_date,
+          '2024-04-01'::date as observation_period_end_date,
+          44814724 as period_type_concept_id
+        union all
+        select 'pat_2', 'pat_2', '2024-05-01'::date, '2024-05-01'::date, 44814724
+        union all
+        select 'pat_3', 'pat_3', '2024-06-01'::date, '2024-06-01'::date, 44814724
