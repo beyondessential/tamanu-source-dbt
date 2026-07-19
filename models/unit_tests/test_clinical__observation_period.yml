@@ -46,3 +46,41 @@ unit_tests:
         select 'pat_2', 'pat_2', '2024-05-01'::date, '2024-05-01'::date, 44814724
         union all
         select 'pat_3', 'pat_3', '2024-06-01'::date, '2024-06-01'::date, 44814724
+
+  - name: test_clinical__observation_period_does_not_cap_future_dated_ends
+    model: clinical__observation_period
+    description: >-
+      A future-dated event end flows through as observation_period_end_date
+      uncapped (AC-008). pat_4's only event is a drug exposure whose end datetime
+      is far in the future; the model takes the raw max() with no snapshot-date
+      cap, per BL-002's deliberate no-cap design decision.
+    given:
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select null::text as person_id, null::date as visit_start_date, null::date as visit_end_date where false
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select null::text as person_id, null::date as condition_start_date where false
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select null::text as person_id, null::date as measurement_date where false
+      - input: ref('clinical__drug_exposure')
+        format: sql
+        rows: |
+          select 'pat_4' as person_id, '2024-01-01'::date as drug_exposure_start_date, '2030-06-15 12:00:00'::timestamp as drug_exposure_end_datetime
+      - input: ref('clinical__observation')
+        format: sql
+        rows: |
+          select null::text as person_id, null::date as observation_date where false
+    expect:
+      format: sql
+      rows: |
+        select
+          'pat_4' as observation_period_id,
+          'pat_4' as person_id,
+          '2024-01-01'::date as observation_period_start_date,
+          '2030-06-15'::date as observation_period_end_date,
+          44814724 as period_type_concept_id

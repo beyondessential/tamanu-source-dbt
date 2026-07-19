@@ -42,7 +42,12 @@ periods — they belong to `derived__episode_<name>` (derived-elements-conventio
 
 **Who reads it.** `derived__` incidence / prevalence / LTFU logic (denominator
 person-time), `metric__` rate calculations, and any analysis needing "was this
-patient observable during period X".
+patient observable during period X". **This model is the whole-history, reusable
+input** — a cohort-scoped LTFU/incidence denominator (registration-to-exit) must
+still wrap it (or build its own bounds) via an `int__<name>_observation_period`
+ephemeral per derived-elements-conventions § Observation period. Consuming this
+model directly as a cohort denominator would overstate person-time to the patient's
+entire recorded history, not the cohort's enrolment window.
 
 ## Grain
 
@@ -102,6 +107,7 @@ Exactly the OMOP v5.4 `OBSERVATION_PERIOD` columns:
 | AC-005 | `period_type_concept_id` is `not_null` and always 44814724 | BL-004 | dbt `not_null` + `accepted_values` |
 | AC-006 | `observation_period_end_date >= observation_period_start_date` on every row | BL-002 | dbt singular test |
 | AC-007 | Bounds span all domains: start from the earliest event (any domain), end from the latest (including a drug-exposure end date); a visit-less patient (e.g. birth measurements only) still gets a period; an open visit contributes only its start | BL-001, BL-002, BL-005 | dbt unit test (`test_clinical__observation_period_spans_all_domains`) |
+| AC-008 | A future-dated event end (e.g. a drug exposure end date after today) flows through as `observation_period_end_date` uncapped | BL-002 | dbt unit test (`test_clinical__observation_period_does_not_cap_future_dated_ends`) |
 
 ## Registry entry
 
