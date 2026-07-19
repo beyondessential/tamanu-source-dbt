@@ -122,8 +122,3 @@ row (D5, dbt-conventions § Documentation).
 - **OQ-1:** Whether to cap `observation_period_end_date` at the replica snapshot date —
   a prescription with a future end date currently extends the period into the future.
   Revisit if future-dated ends prove material in real data.
-- **OQ-2:** Period splitting on genuine capture discontinuities (e.g. a patient absent
-  from the deployment's catchment for years). Permitted by OMOP; deferred until a
-  concrete discontinuity signal exists in Tamanu. Clinical episodes such as
-  pregnancies are explicitly **not** a splitting criterion — they belong to
-  `derived__episode_pregnancy`.
