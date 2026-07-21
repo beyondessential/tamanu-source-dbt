@@ -12,7 +12,11 @@ from forwardport_patch import (
     get_higher_minor_branches_from_list,
     get_major_minor_patch,
     get_previous_tag,
+    get_unmerged_files,
     get_version_tags_for_minor_from_list,
+    is_version_only_diff,
+    strip_compiled_output_from_head,
+    try_autoresolve_version_conflict,
     update_version_in_files,
 )
 
@@ -312,6 +316,297 @@ def test_update_version_overrides_wrong_version(tmp_path):
     finally:
         os.chdir(orig)
     assert "version: 2.50.5" in (tmp_path / "dbt_project.yml").read_text()
+
+
+# ---------------------------------------------------------------------------
+# is_version_only_diff / get_unmerged_files / try_autoresolve_version_conflict
+# ---------------------------------------------------------------------------
+
+DBT_PROJECT_VERSION_DIFF = textwrap.dedent("""\
+    diff --git a/dbt_project.yml b/dbt_project.yml
+    index b4a2a0d..e5bf381 100644
+    --- a/dbt_project.yml
+    +++ b/dbt_project.yml
+    @@ -1,5 +1,5 @@
+     name: tamanu_source_dbt
+    -version: 2.54.16
+    +version: 2.54.17
+     config-version: 2
+     profile: tamanu_source_dbt
+""")
+
+PYPROJECT_VERSION_DIFF = textwrap.dedent("""\
+    diff --git a/pyproject.toml b/pyproject.toml
+    index 477eae9..751f09a 100644
+    --- a/pyproject.toml
+    +++ b/pyproject.toml
+    @@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
+     [project]
+     name = "tamanu-source-dbt"
+    -version = "2.54.16"
+    +version = "2.54.17"
+     description = "..."
+""")
+
+DBT_PROJECT_MIXED_DIFF = textwrap.dedent("""\
+    diff --git a/dbt_project.yml b/dbt_project.yml
+    index b4a2a0d..e5bf381 100644
+    --- a/dbt_project.yml
+    +++ b/dbt_project.yml
+    @@ -1,5 +1,5 @@
+    -name: tamanu_source_dbt
+    +name: tamanu_source_dbt_renamed
+    -version: 2.54.16
+    +version: 2.54.17
+     config-version: 2
+     profile: tamanu_source_dbt
+""")
+
+
+def test_is_version_only_diff_dbt_project():
+    with patch.object(forwardport_patch, "git_out", return_value=DBT_PROJECT_VERSION_DIFF):
+        assert is_version_only_diff("b031e6c", "dbt_project.yml")
+
+
+def test_is_version_only_diff_pyproject():
+    with patch.object(forwardport_patch, "git_out", return_value=PYPROJECT_VERSION_DIFF):
+        assert is_version_only_diff("b031e6c", "pyproject.toml")
+
+
+def test_is_version_only_diff_false_when_other_lines_change():
+    with patch.object(forwardport_patch, "git_out", return_value=DBT_PROJECT_MIXED_DIFF):
+        assert not is_version_only_diff("b031e6c", "dbt_project.yml")
+
+
+def test_is_version_only_diff_false_when_no_diff():
+    with patch.object(forwardport_patch, "git_out", return_value=""):
+        assert not is_version_only_diff("b031e6c", "dbt_project.yml")
+
+
+def test_get_unmerged_files_parses_output():
+    with patch.object(forwardport_patch, "git_out", return_value="dbt_project.yml\npyproject.toml\n"):
+        assert get_unmerged_files() == ["dbt_project.yml", "pyproject.toml"]
+
+
+def test_get_unmerged_files_empty():
+    with patch.object(forwardport_patch, "git_out", return_value=""):
+        assert get_unmerged_files() == []
+
+
+def test_try_autoresolve_succeeds_on_version_only_conflict():
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml\npyproject.toml"
+        if args[0] == "show":
+            return DBT_PROJECT_VERSION_DIFF if args[-1] == "dbt_project.yml" else PYPROJECT_VERSION_DIFF
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert try_autoresolve_version_conflict("b031e6c")
+
+    assert ("checkout", "--ours", "dbt_project.yml") in git_calls
+    assert ("checkout", "--ours", "pyproject.toml") in git_calls
+    assert ("-c", "core.editor=true", "cherry-pick", "--continue") in git_calls
+
+
+def test_try_autoresolve_fails_when_other_file_unmerged():
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml\ncompiled/reporting-schema.sql"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with patch.object(forwardport_patch, "git_out", side_effect=fake_git_out):
+        assert not try_autoresolve_version_conflict("b031e6c")
+
+
+def test_try_autoresolve_fails_when_diff_has_extra_changes():
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml"
+        return DBT_PROJECT_MIXED_DIFF
+
+    with patch.object(forwardport_patch, "git_out", side_effect=fake_git_out):
+        assert not try_autoresolve_version_conflict("b031e6c")
+
+
+def test_try_autoresolve_fails_when_no_unmerged_files():
+    with patch.object(forwardport_patch, "git_out", return_value=""):
+        assert not try_autoresolve_version_conflict("b031e6c")
+
+
+def test_try_autoresolve_skips_when_continue_reports_empty():
+    # A pure version-bump commit: after keeping "ours" for both files, there's
+    # nothing left to commit, so `cherry-pick --continue` fails with "now empty".
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        if args[:2] == ("-c", "core.editor=true"):
+            m.returncode = 1
+            m.stdout = "The previous cherry-pick is now empty, possibly due to conflict resolution.\n"
+            m.stderr = ""
+        else:
+            m.returncode = 0
+            m.stdout = ""
+            m.stderr = ""
+        return m
+
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert try_autoresolve_version_conflict("b031e6c")
+
+    assert ("cherry-pick", "--skip") in git_calls
+
+
+def test_try_autoresolve_fails_when_continue_fails_for_other_reason():
+    def fake_git(*args, **kwargs):
+        m = MagicMock()
+        if args[:2] == ("-c", "core.editor=true"):
+            m.returncode = 1
+            m.stdout = ""
+            m.stderr = "error: something else went wrong\n"
+        else:
+            m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:2] == ("diff", "--name-only"):
+            return "dbt_project.yml"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert not try_autoresolve_version_conflict("b031e6c")
+
+
+# ---------------------------------------------------------------------------
+# strip_compiled_output_from_head
+# ---------------------------------------------------------------------------
+
+
+def test_strip_compiled_output_noop_when_nothing_touched():
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", return_value=""),
+    ):
+        assert strip_compiled_output_from_head() == ""
+    assert git_calls == []
+
+
+def test_strip_compiled_output_drops_commit_when_compiled_only():
+    # Everything the commit touched was under compiled/ — after removing it,
+    # nothing differs from the parent, so the whole commit is undone.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "A\tcompiled/v2.54.17/foo.json\nA\tcompiled/v2.54.17/bar.json"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return ""  # nothing left staged relative to HEAD~1
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert strip_compiled_output_from_head() == "dropped"
+
+    assert ("rm", "-f", "--", "compiled/v2.54.17/foo.json") in git_calls
+    assert ("rm", "-f", "--", "compiled/v2.54.17/bar.json") in git_calls
+    assert ("reset", "--hard", "HEAD~1") in git_calls
+    assert not any(c[0] == "commit" for c in git_calls)
+
+
+def test_strip_compiled_output_amends_when_other_changes_remain():
+    # Commit has both a compiled/ addition and a real dbt model change — keep the
+    # latter, drop the former, and amend rather than reset.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "A\tcompiled/v2.54.17/foo.json"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return "models/some_model.sql"  # still changes remaining after strip
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        assert strip_compiled_output_from_head() == "stripped"
+
+    assert ("rm", "-f", "--", "compiled/v2.54.17/foo.json") in git_calls
+    assert ("commit", "--amend", "--no-edit") in git_calls
+    assert not any(c[0] == "reset" for c in git_calls)
+
+
+def test_strip_compiled_output_restores_modified_not_removed():
+    # Modified (not added) compiled/ paths should be restored to HEAD~1's content
+    # via checkout, not `rm`.
+    git_calls = []
+
+    def fake_git(*args, **kwargs):
+        git_calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        return m
+
+    def fake_git_out(*args):
+        if args[:3] == ("diff", "--name-status", "HEAD~1"):
+            return "M\tcompiled/v2.54.17/reporting-schema.sql"
+        if args[:3] == ("diff", "--cached", "--name-only"):
+            return ""
+        return ""
+
+    with (
+        patch.object(forwardport_patch, "git", side_effect=fake_git),
+        patch.object(forwardport_patch, "git_out", side_effect=fake_git_out),
+    ):
+        strip_compiled_output_from_head()
+
+    assert ("checkout", "HEAD~1", "--", "compiled/v2.54.17/reporting-schema.sql") in git_calls
+    assert not any(c[0] == "rm" for c in git_calls)
 
 
 # ---------------------------------------------------------------------------
