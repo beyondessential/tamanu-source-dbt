@@ -48,6 +48,10 @@ sources:
               - relationships:
                   to: source('tamanu', 'users')
                   field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: devices, package: tamanu_source_dbt}
           - name: name
             data_type: text
             description: "{{ doc('devices__name') }}"

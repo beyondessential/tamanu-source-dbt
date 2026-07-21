@@ -31,6 +31,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'invoice_items')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: invoice_item_discounts, package: tamanu_source_dbt}
           - name: amount
             data_type: numeric
             description: "{{ doc('invoice_item_discounts__amount') }}"

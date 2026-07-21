@@ -46,6 +46,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}
           - name: discharger_id
             data_type: character varying(255)
             description: "{{ doc('discharges__discharger_id') }}"
@@ -54,6 +58,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}
           - name: disposition_id
             data_type: character varying(255)
             description: "{{ doc('discharges__disposition_id') }}"
@@ -63,6 +71,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'dischargeDisposition'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in discharges."
@@ -76,6 +88,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: name
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}
           - name: facility_address
             data_type: character varying(255)
             description: "{{ doc('discharges__facility_address') }}"
@@ -84,6 +100,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: street_address
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}
           - name: facility_town
             data_type: character varying(255)
             description: "{{ doc('discharges__facility_town') }}"
@@ -92,3 +112,7 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: city_town
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: discharges, package: tamanu_source_dbt}

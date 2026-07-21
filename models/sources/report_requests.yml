@@ -70,6 +70,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: report_requests, package: tamanu_source_dbt}
           - name: error
             data_type: text
             description: "{{ doc('report_requests__error') }}"
@@ -87,6 +91,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: report_requests, package: tamanu_source_dbt}
           - name: export_format
             data_type: character varying(255)
             description: "{{ doc('report_requests__export_format') }}"
@@ -105,6 +113,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'report_definition_versions')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: report_requests, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in report_requests."

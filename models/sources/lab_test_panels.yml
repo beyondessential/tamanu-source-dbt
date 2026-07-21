@@ -62,6 +62,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'labTestCategory'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: lab_test_panels, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in lab_test_panels."

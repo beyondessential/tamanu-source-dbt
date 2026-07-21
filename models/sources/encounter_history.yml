@@ -52,6 +52,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: encounter_history, package: tamanu_source_dbt}
           - name: department_id
             data_type: character varying(255)
             description: "{{ doc('encounter_history__department_id') }}"
@@ -61,6 +65,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'departments')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: encounter_history, package: tamanu_source_dbt}
           - name: location_id
             data_type: character varying(255)
             description: "{{ doc('encounter_history__location_id') }}"
@@ -70,6 +78,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'locations')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: encounter_history, package: tamanu_source_dbt}
           - name: examiner_id
             data_type: character varying(255)
             description: "{{ doc('encounter_history__examiner_id') }}"
@@ -79,6 +91,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: encounter_history, package: tamanu_source_dbt}
           - name: encounter_type
             data_type: character varying(255)
             description: "{{ doc('encounter_history__encounter_type') }}"
@@ -108,6 +124,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: encounter_history, package: tamanu_source_dbt}
           - name: change_type
             data_type: array
             description: "{{ doc('encounter_history__change_type') }}"

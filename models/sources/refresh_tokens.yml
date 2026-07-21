@@ -40,6 +40,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: refresh_tokens, package: tamanu_source_dbt}
           - name: expires_at
             data_type: timestamp with time zone
             description: "{{ doc('refresh_tokens__expires_at') }}"

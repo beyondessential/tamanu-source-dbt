@@ -46,6 +46,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'vaccine'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: certifiable_vaccines, package: tamanu_source_dbt}
           - name: manufacturer_id
             data_type: character varying(255)
             description: "{{ doc('certifiable_vaccines__manufacturer_id') }}"
@@ -55,6 +59,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'manufacturer'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: certifiable_vaccines, package: tamanu_source_dbt}
           - name: icd11_drug_code
             data_type: character varying(255)
             description: "{{ doc('certifiable_vaccines__icd11_drug_code') }}"

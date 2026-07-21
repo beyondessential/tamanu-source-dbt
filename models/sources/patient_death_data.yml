@@ -32,6 +32,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: clinician_id
             data_type: character varying(255)
             description: "{{ doc('patient_death_data__clinician_id') }}"
@@ -41,6 +45,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: facility_id
             data_type: character varying(255)
             description: "{{ doc('patient_death_data__facility_id') }}"
@@ -49,6 +57,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: manner
             data_type: character varying(255)
             description: "{{ doc('patient_death_data__manner') }}"
@@ -76,6 +88,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: external_cause_date
             data_type: character(10)
             description: "{{ doc('patient_death_data__external_cause_date') }}"
@@ -150,6 +166,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: created_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in patient_death_data."
@@ -179,6 +199,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: antecedent_cause1_time_after_onset
             data_type: integer
             description: "{{ doc('patient_death_data__antecedent_cause1_time_after_onset') }}"
@@ -196,6 +220,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: antecedent_cause2_time_after_onset
             data_type: integer
             description: "{{ doc('patient_death_data__antecedent_cause2_time_after_onset') }}"
@@ -213,6 +241,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}
           - name: external_cause_date_legacy
             data_type: timestamp with time zone
             description: "{{ doc('patient_death_data__external_cause_date_legacy') }}"
@@ -255,3 +287,7 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'diagnosis'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_death_data, package: tamanu_source_dbt}

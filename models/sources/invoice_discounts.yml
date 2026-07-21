@@ -31,6 +31,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'invoices')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: invoice_discounts, package: tamanu_source_dbt}
           - name: percentage
             data_type: numeric
             description: "{{ doc('invoice_discounts__percentage') }}"
@@ -56,6 +60,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: invoice_discounts, package: tamanu_source_dbt}
           - name: applied_time
             data_type: character(19)
             description: "{{ doc('invoice_discounts__applied_time') }}"

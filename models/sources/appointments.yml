@@ -51,6 +51,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: clinician_id
             data_type: character varying(255)
             description: "{{ doc('appointments__clinician_id') }}"
@@ -59,6 +63,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: location_id
             data_type: character varying(255)
             description: "{{ doc('appointments__location_id') }}"
@@ -67,6 +75,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'locations')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: type_legacy
             data_type: character varying(255)
             description: "{{ doc('appointments__type_legacy') }}"
@@ -109,6 +121,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'location_groups')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in appointments."
@@ -123,6 +139,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'bookingType'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: appointment_type_id
             data_type: character varying(255)
             description: "{{ doc('appointments__appointment_type_id') }}"
@@ -132,6 +152,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'appointmentType'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: appointments, package: tamanu_source_dbt}
           - name: is_high_priority
             data_type: boolean
             description: "{{ doc('appointments__is_high_priority') }}"

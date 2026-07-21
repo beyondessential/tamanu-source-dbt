@@ -39,6 +39,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_birth_data, package: tamanu_source_dbt}
           - name: birth_weight
             data_type: numeric
             description: "{{ doc('patient_birth_data__birth_weight') }}"
@@ -136,6 +140,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_birth_data, package: tamanu_source_dbt}
           - name: registered_birth_place
             data_type: character varying(255)
             description: "{{ doc('patient_birth_data__registered_birth_place') }}"

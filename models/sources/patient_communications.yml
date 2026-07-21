@@ -76,6 +76,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_communications, package: tamanu_source_dbt}
           - name: destination
             data_type: character varying(255)
             description: "{{ doc('patient_communications__destination') }}"

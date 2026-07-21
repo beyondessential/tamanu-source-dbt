@@ -27,6 +27,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: one_time_logins, package: tamanu_source_dbt}
           - name: token
             data_type: character varying(255)
             description: "{{ doc('one_time_logins__token') }}"

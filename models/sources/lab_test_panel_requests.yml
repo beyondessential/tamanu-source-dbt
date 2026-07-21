@@ -44,6 +44,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'lab_test_panels')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: lab_test_panel_requests, package: tamanu_source_dbt}
           - name: encounter_id
             data_type: character varying(255)
             description: "{{ doc('lab_test_panel_requests__encounter_id') }}"
@@ -53,6 +57,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: lab_test_panel_requests, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in lab_test_panel_requests."

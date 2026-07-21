@@ -58,6 +58,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'surveys')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: survey_responses, package: tamanu_source_dbt}
           - name: encounter_id
             data_type: character varying(255)
             description: "{{ doc('survey_responses__encounter_id') }}"
@@ -66,6 +70,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: survey_responses, package: tamanu_source_dbt}
           - name: result_text
             data_type: text
             description: "{{ doc('survey_responses__result_text') }}"
@@ -80,6 +88,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: survey_responses, package: tamanu_source_dbt}
           - name: start_time_legacy
             data_type: timestamp with time zone
             description: "{{ doc('survey_responses__start_time_legacy') }}"

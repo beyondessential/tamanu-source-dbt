@@ -54,6 +54,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: changes, package: tamanu_source_dbt}
           - name: device_id
             data_type: text
             description: "{{ doc('logs__changes__device_id') }}"

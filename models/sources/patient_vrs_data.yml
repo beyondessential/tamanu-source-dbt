@@ -48,6 +48,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_vrs_data, package: tamanu_source_dbt}
           - name: is_deleted_by_remote
             data_type: boolean
             description: "{{ doc('patient_vrs_data__is_deleted_by_remote') }}"

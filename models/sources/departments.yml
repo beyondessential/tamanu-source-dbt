@@ -49,6 +49,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: departments, package: tamanu_source_dbt}
           - name: visibility_status
             data_type: text
             description: "{{ doc('generic__visibility_status') }} in departments."

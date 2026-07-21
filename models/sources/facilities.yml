@@ -77,6 +77,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'catchment'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: facilities, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in facilities."

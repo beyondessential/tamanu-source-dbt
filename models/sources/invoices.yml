@@ -55,6 +55,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: invoices, package: tamanu_source_dbt}
           - name: created_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__created_at') }} in invoices."

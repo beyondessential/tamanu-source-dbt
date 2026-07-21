@@ -46,6 +46,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: referrals, package: tamanu_source_dbt}
           - name: completing_encounter_id
             data_type: character varying(255)
             description: "{{ doc('referrals__completing_encounter_id') }}"
@@ -54,6 +58,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: referrals, package: tamanu_source_dbt}
           - name: survey_response_id
             data_type: character varying(255)
             description: "{{ doc('referrals__survey_response_id') }}"
@@ -62,6 +70,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'survey_responses')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: referrals, package: tamanu_source_dbt}
           - name: status
             data_type: character varying(255)
             description: "{{ doc('referrals__status') }}"

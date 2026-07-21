@@ -76,6 +76,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: vital_logs, package: tamanu_source_dbt}
           - name: answer_id
             data_type: character varying(255)
             description: "{{ doc('vital_logs__answer_id') }}"
@@ -85,6 +89,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'survey_response_answers')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: vital_logs, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in vital_logs."

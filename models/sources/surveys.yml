@@ -49,6 +49,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'programs')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: surveys, package: tamanu_source_dbt}
           - name: survey_type
             data_type: character varying(255)
             description: "{{ doc('surveys__survey_type') }}"

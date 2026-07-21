@@ -78,6 +78,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'scheduled_vaccines')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: administered_vaccines, package: tamanu_source_dbt}
           - name: encounter_id
             data_type: character varying(255)
             description: "{{ doc('administered_vaccines__encounter_id') }}"
@@ -86,6 +90,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'encounters')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: administered_vaccines, package: tamanu_source_dbt}
           - name: injection_site
             data_type: character varying(255)
             description: "{{ doc('administered_vaccines__injection_site') }}"
@@ -137,6 +145,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'vaccineNotGivenReason'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: administered_vaccines, package: tamanu_source_dbt}
           - name: given_elsewhere
             data_type: boolean
             description: "{{ doc('administered_vaccines__given_elsewhere') }}"

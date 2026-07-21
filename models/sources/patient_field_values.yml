@@ -46,6 +46,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patient_field_definitions')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_field_values, package: tamanu_source_dbt}
           - name: patient_id
             data_type: character varying(255)
             description: "{{ doc('patient_field_values__patient_id') }}"
@@ -55,6 +59,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_field_values, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in patient_field_values."

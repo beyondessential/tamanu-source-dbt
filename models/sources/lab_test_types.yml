@@ -88,6 +88,10 @@ sources:
                     to: source('tamanu', 'reference_data')
                     field: id
                     to_condition: type = 'labTestCategory'
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: lab_test_types, package: tamanu_source_dbt}
           - name: visibility_status
             data_type: text
             description: "{{ doc('generic__visibility_status') }} in lab_test_types."

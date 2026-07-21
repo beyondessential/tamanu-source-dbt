@@ -38,6 +38,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'facilities')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_facilities, package: tamanu_source_dbt}
           - name: patient_id
             data_type: character varying(255)
             description: "{{ doc('patient_facilities__patient_id') }}"
@@ -47,6 +51,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: patient_facilities, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in patient_facilities."

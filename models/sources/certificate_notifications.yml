@@ -56,6 +56,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'patients')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: certificate_notifications, package: tamanu_source_dbt}
           - name: forward_address
             data_type: character varying(255)
             description: "{{ doc('certificate_notifications__forward_address') }}"
@@ -70,6 +74,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'lab_tests')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: certificate_notifications, package: tamanu_source_dbt}
           - name: status
             data_type: character varying(255)
             description: "{{ doc('certificate_notifications__status') }}"
@@ -96,6 +104,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'lab_requests')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: certificate_notifications, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in certificate_notifications."

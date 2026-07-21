@@ -1,3 +1,5 @@
+{{ config(meta={'dagster': {'ref': {'name': 'users', 'package': 'tamanu_source_dbt'}}}) }}
+
 select u.role
 from {{ source("tamanu", "users") }} u
 left join {{ source("tamanu", "roles") }} r on r.id = u.role

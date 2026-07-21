@@ -58,6 +58,10 @@ sources:
                   arguments:
                     to: source('tamanu', 'program_registries')
                     field: id
+                  config:
+                    meta:
+                      dagster:
+                        ref: {name: program_registry_conditions, package: tamanu_source_dbt}
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in program_registry_conditions."
