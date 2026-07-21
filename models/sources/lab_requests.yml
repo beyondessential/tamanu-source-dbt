@@ -109,7 +109,7 @@ sources:
                   arguments:
                     to: source('tamanu', 'reference_data')
                     field: id
-                  to_condition: type = 'labTestCategory'
+                    to_condition: type = 'labTestCategory'
                   config:
                     meta:
                       dagster:
