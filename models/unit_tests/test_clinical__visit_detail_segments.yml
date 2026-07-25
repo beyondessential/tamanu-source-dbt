@@ -1,0 +1,119 @@
+unit_tests:
+  - name: test_clinical__visit_detail_segments_do_not_overlap
+    model: clinical__visit_detail
+    description: >-
+      A two-phase encounter (emergency then admission) unfolds into two non-overlapping
+      segments: the first ends exactly where the second starts, the last ends at the
+      encounter end, each carries its own per-segment concept, its ward via the location
+      lookup (BL-006), its department attribute (BL-007), and the second points back at
+      the first via preceding_visit_detail_id (AC-006, AC-007, BL-002, BL-003, BL-004).
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            'e1' as id,
+            '2024-01-01 10:00:00'::timestamp as start_datetime,
+            '2024-01-02 09:00:00'::timestamp as end_datetime,
+            'p1' as patient_id,
+            'depB' as department_id,
+            'locB' as location_id,
+            'clinY' as clinician_id,
+            'admission' as encounter_type
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'h1' as id, 'e1' as encounter_id, '2024-01-01 10:00:00'::timestamp as datetime,
+                 'depA' as department_id, 'locA' as location_id, 'clinX' as clinician_id, 'emergency' as encounter_type
+          union all
+          select 'h2', 'e1', '2024-01-01 14:00:00'::timestamp,
+                 'depB', 'locB', 'clinY', 'admission'
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'locA' as id, 'wardA' as location_group_id
+          union all
+          select 'locB', 'wardB'
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'emergency' as local_code, 9203 as concept_id
+          union all
+          select 'admission', 9201
+    expect:
+      format: sql
+      rows: |
+        select
+          'h1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id,
+          9203 as visit_detail_concept_id,
+          '2024-01-01'::date as visit_detail_start_date,
+          '2024-01-01 10:00:00'::timestamp as visit_detail_start_datetime,
+          '2024-01-01'::date as visit_detail_end_date,
+          '2024-01-01 14:00:00'::timestamp as visit_detail_end_datetime,
+          'wardA' as care_site_id, 'depA' as department_id, 'locA' as location_id,
+          'clinX' as provider_id,
+          'emergency' as visit_detail_source_value,
+          null::varchar as preceding_visit_detail_id
+        union all
+        select
+          'h2', 'e1', 'p1',
+          9201,
+          '2024-01-01'::date,
+          '2024-01-01 14:00:00'::timestamp,
+          '2024-01-02'::date,
+          '2024-01-02 09:00:00'::timestamp,
+          'wardB', 'depB', 'locB',
+          'clinY',
+          'admission',
+          'h1'
+
+  - name: test_clinical__visit_detail_synthesized_segment
+    model: clinical__visit_detail
+    description: >-
+      An encounter with no encounter_history rows gets one synthesized whole-visit segment
+      keyed on the encounter id (BL-005). Its location has no location_group, so the ward
+      care_site_id comes through NULL while the department attribute is retained (BL-006,
+      BL-007). encounter_history is left empty.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            'e2' as id,
+            '2024-03-01 08:00:00'::timestamp as start_datetime,
+            '2024-03-01 12:00:00'::timestamp as end_datetime,
+            'p2' as patient_id,
+            'depC' as department_id,
+            'locC' as location_id,
+            'clinZ' as clinician_id,
+            'clinic' as encounter_type
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select
+            null::varchar as id, null::varchar as encounter_id, null::timestamp as datetime,
+            null::varchar as department_id, null::varchar as location_id,
+            null::varchar as clinician_id, null::varchar as encounter_type
+          where false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'locC' as id, null::varchar as location_group_id
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'clinic' as local_code, 9202 as concept_id
+    expect:
+      format: sql
+      rows: |
+        select
+          'e2' as visit_detail_id, 'e2' as visit_occurrence_id, 'p2' as person_id,
+          9202 as visit_detail_concept_id,
+          '2024-03-01'::date as visit_detail_start_date,
+          '2024-03-01 08:00:00'::timestamp as visit_detail_start_datetime,
+          '2024-03-01'::date as visit_detail_end_date,
+          '2024-03-01 12:00:00'::timestamp as visit_detail_end_datetime,
+          null::varchar as care_site_id, 'depC' as department_id, 'locC' as location_id,
+          'clinZ' as provider_id,
+          'clinic' as visit_detail_source_value,
+          null::varchar as preceding_visit_detail_id

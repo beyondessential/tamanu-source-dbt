@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: ref__location
+    description: "{{ doc('ref__location') }}"
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: location_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__location_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__location_location_id_not_null
+          - unique:
+              name: ac_002_ref__location_location_id_unique
+      - name: location_source_value
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__location_source_value') }}"
+      - name: city
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__city') }}"
+      - name: county
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__county') }}"
+      - name: state
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__state') }}"
+      - name: country_source_value
+        data_type: character varying(255)
+        description: "{{ doc('ref__location__country_source_value') }}"
