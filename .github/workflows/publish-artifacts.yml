@@ -159,7 +159,7 @@ jobs:
           # Canonical artifacts: standard only, uploaded to the top-level folder
           if [ "$DEPLOYMENT" = "standard" ]; then
             for artifact in analytics-metadata reporting-schema reporting-docs; do
-              file=$(ls compiled/v$VERSION/$artifact-* 2>/dev/null | head -1)
+              file=$(ls compiled/v$VERSION/$artifact-* 2>/dev/null | head -1 || true)
               [ -z "$file" ] && continue
               filename=$(basename "$file")
               renamed="${filename//v$VERSION/v$VX}"
