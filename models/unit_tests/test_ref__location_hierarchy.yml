@@ -1,0 +1,97 @@
+unit_tests:
+  - name: test_ref__location_denormalises_full_hierarchy
+    model: ref__location
+    description: >-
+      A village whose reference_data_relations chain runs village -> subdivision ->
+      division -> country denormalises into one ref__location row with city, county,
+      state, and country_source_value all populated (BL-003, BL-004).
+    given:
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v1' as id, 'VIL' as code, 'Vila' as name, 'village' as type
+          union all
+          select 'sd1', 'SUB', 'Subdistrict', 'subdivision'
+          union all
+          select 'dv1', 'DIV', 'Division One', 'division'
+          union all
+          select 'cty1', 'CTY', 'Countryland', 'country'
+      - input: ref('reference_data_relations')
+        format: sql
+        rows: |
+          select 'v1' as reference_data_id, 'sd1' as reference_data_parent_id
+          union all
+          select 'sd1', 'dv1'
+          union all
+          select 'dv1', 'cty1'
+    expect:
+      format: sql
+      rows: |
+        select
+          'v1' as location_id,
+          'VIL' as location_source_value,
+          'Vila' as city,
+          'Subdistrict' as county,
+          'Division One' as state,
+          'Countryland' as country_source_value
+
+  - name: test_ref__location_walks_through_intermediate_settlement
+    model: ref__location
+    description: >-
+      An intermediate level (settlement) sitting between a village and its subdivision
+      is walked through, not dropped, so the ancestor chain stays connected and county
+      still resolves from the subdivision above the settlement (BL-002). Guards against
+      the working set omitting settlement, which would silently break the chain.
+    given:
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v3' as id, 'VIL3' as code, 'Vila Three' as name, 'village' as type
+          union all
+          select 'st1', 'SET', 'Settlement One', 'settlement'
+          union all
+          select 'sd1', 'SUB', 'Subdistrict', 'subdivision'
+      - input: ref('reference_data_relations')
+        format: sql
+        rows: |
+          select 'v3' as reference_data_id, 'st1' as reference_data_parent_id
+          union all
+          select 'st1', 'sd1'
+    expect:
+      format: sql
+      rows: |
+        select
+          'v3' as location_id,
+          'VIL3' as location_source_value,
+          'Vila Three' as city,
+          'Subdistrict' as county,
+          null as state,
+          null as country_source_value
+
+  - name: test_ref__location_partial_hierarchy_yields_nulls
+    model: ref__location
+    description: >-
+      Levels absent from a village's ancestry come through NULL. Here the village's
+      parent is a division directly (no subdivision, no country), so county and
+      country_source_value are NULL while state is populated (BL-004).
+    given:
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v2' as id, 'VIL2' as code, 'Vila Two' as name, 'village' as type
+          union all
+          select 'dv1', 'DIV', 'Division One', 'division'
+      - input: ref('reference_data_relations')
+        format: sql
+        rows: |
+          select 'v2' as reference_data_id, 'dv1' as reference_data_parent_id
+    expect:
+      format: sql
+      rows: |
+        select
+          'v2' as location_id,
+          'VIL2' as location_source_value,
+          'Vila Two' as city,
+          null as county,
+          'Division One' as state,
+          null as country_source_value

@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: clinical__visit_occurrence
+    description: "{{ doc('clinical__visit_occurrence') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-007: a visit's end must not precede its start (BL-004). or_equal
+      # permits zero-length visits (end == start); NULL end (open visit) is
+      # excluded by the row_condition.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_007_clinical__visit_occurrence_end_at_or_after_start
+          arguments:
+            column_A: visit_end_datetime
+            column_B: visit_start_datetime
+            or_equal: true
+            row_condition: "visit_end_datetime is not null"
+    columns:
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of the encounter; the OMOP visit_occurrence_id."
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__visit_occurrence_visit_occurrence_id_not_null
+          - unique:
+              name: ac_002_clinical__visit_occurrence_visit_occurrence_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_clinical__visit_occurrence_person_id_not_null
+          - relationships:
+              name: ac_003_clinical__visit_occurrence_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: visit_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__visit_occurrence__visit_concept_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__visit_occurrence_visit_concept_id_mapped
+              arguments:
+                to: ref('map__omop_visit_type')
+                field: concept_id
+      - name: visit_start_date
+        data_type: date
+        description: "{{ doc('clinical__visit_occurrence__visit_start_date') }}"
+      - name: visit_start_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__visit_occurrence__visit_start_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__visit_occurrence_visit_start_datetime_not_null
+      - name: visit_end_date
+        data_type: date
+        description: "{{ doc('clinical__visit_occurrence__visit_end_date') }}"
+      - name: visit_end_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__visit_occurrence__visit_end_datetime') }}"
+      - name: visit_type_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__visit_occurrence__visit_type_concept_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_clinical__visit_occurrence_visit_type_concept_id_not_null
+          - accepted_values:
+              name: ac_005_clinical__visit_occurrence_visit_type_concept_id_is_ehr
+              arguments:
+                values: [32817]
+                quote: false
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__examiner_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_009_clinical__visit_occurrence_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+      - name: care_site_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__visit_occurrence__care_site_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_008_clinical__visit_occurrence_care_site_id_in_ref__care_site
+              arguments:
+                to: ref('ref__care_site')
+                field: care_site_id
+      - name: visit_source_value
+        data_type: character varying(255)
+        description: "{{ doc('encounters__encounter_type') }}"
