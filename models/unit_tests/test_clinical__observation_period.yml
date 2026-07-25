@@ -47,7 +47,7 @@ unit_tests:
         union all
         select 'pat_3', 'pat_3', '2024-06-01'::date, '2024-06-01'::date, 44814724
 
-  - name: test_clinical__observation_period_does_not_cap_future_dated_ends
+  - name: test_clinical__observation_period_no_cap_future_ends
     model: clinical__observation_period
     description: >-
       A future-dated event end flows through as observation_period_end_date

@@ -4085,18 +4085,10 @@
       data_type: character varying(255)
       description: If the prescription was discontinued, why that happened.
       name: discontinuing_reason
-    dispensing_unit:
-      data_type: character varying(255)
-      description: The dispensing units of the prescription.
-      name: dispensing_unit
     dose_amount:
       data_type: numeric
       description: Numeric field to record dose amount
       name: dose_amount
-    dosing_unit:
-      data_type: character varying(255)
-      description: The dosing units of the prescription.
-      name: dosing_unit
     duration_unit:
       data_type: character varying(255)
       description: The duration unit of the prescription
@@ -4176,10 +4168,10 @@
       data_type: timestamp
       description: The start date of the prescription
       name: start_datetime
-    unit_conversion:
-      data_type: numeric
-      description: Number of dosing unit to equal 1 unit of the dispensing unit.
-      name: unit_conversion
+    units:
+      data_type: character varying(255)
+      description: The units of the prescription
+      name: units
   config:
     tags:
     - base
