@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.60.2
+version: 2.60.3
 config-version: 2
 profile: tamanu_source_dbt
 
@@ -43,6 +43,24 @@ models:
         - base
     intermediate:
       +materialized: ephemeral
+    ref:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
+    maps:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
+    clinical:
+      +docs:
+        show: true
+      +materialized: "{{ 'view' if target.name.startswith('reporting_') else 'table' }}"
+      +tags:
+        - clinical
     datasets:
       +docs:
         show: true

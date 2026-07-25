@@ -1,0 +1,94 @@
+version: 2
+
+models:
+  - name: clinical__condition_occurrence
+    description: "{{ doc('clinical__condition_occurrence') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-007: encounter diagnoses are point-in-time, so the model hardcodes the end
+      # columns to NULL (clinical__condition_occurrence.sql). Assert that invariant
+      # directly. The previous end >= start pair test was scoped to
+      # "condition_end_datetime is not null", which matches zero rows and asserted
+      # nothing; if a future override ever populates an end, this test flags it for a
+      # deliberate revisit rather than passing silently (BL-004).
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_007_clinical__condition_occurrence_end_datetime_null
+          arguments:
+            column_name: condition_end_datetime
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_007a_clinical__condition_occurrence_end_date_null
+          arguments:
+            column_name: condition_end_date
+    columns:
+      - name: condition_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__condition_occurrence_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__condition_occurrence_condition_occurrence_id_not_null
+          - unique:
+              name: ac_002_clinical__condition_occurrence_condition_occurrence_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__condition_occurrence_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: condition_start_date
+        data_type: date
+        description: "{{ doc('clinical__condition_occurrence__condition_start_date') }}"
+      - name: condition_start_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__condition_occurrence__condition_start_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__condition_occurrence_condition_start_datetime_not_null
+      - name: condition_end_date
+        data_type: date
+        description: "{{ doc('clinical__condition_occurrence__condition_end_date') }}"
+      - name: condition_end_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__condition_occurrence__condition_end_datetime') }}"
+      - name: condition_type_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__condition_type_source_value') }}"
+      - name: condition_status_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__condition_status_source_value') }}"
+      - name: is_primary
+        data_type: boolean
+        description: "{{ doc('clinical__condition_occurrence__is_primary') }}"
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('encounter_diagnoses__clinician_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_005_clinical__condition_occurrence_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__visit_occurrence_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__condition_occurrence_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: condition_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__condition_source_value') }}"
+      - name: condition_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__condition_occurrence__condition_source_name') }}"
