@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-07-01 |
+| **Last updated** | 2026-07-22 |
 
 The OMOP-lite `VISIT_DETAIL` domain — the intra-visit phase breakdown that sits **below**
 [`clinical__visit_occurrence`](clinical__visit_occurrence.md). Where `VISIT_OCCURRENCE`
@@ -127,7 +127,7 @@ encounter is represented by at least one row.
 | AC-003 | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | BL-001 | dbt `relationships` |
 | AC-004 | Every non-null `care_site_id` (ward) exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
 | AC-005 | Every non-null `visit_detail_concept_id` exists in `map__omop_visit_type.concept_id` | BL-003 | dbt `relationships` |
-| AC-006 | When `visit_detail_end_datetime` is non-null, it is `>= visit_detail_start_datetime` | BL-002 | dbt singular test (`data_test__clinical__visit_detail`) |
+| AC-006 | When `visit_detail_end_datetime` is non-null, it is `>= visit_detail_start_datetime` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-007 | Segments of one encounter do not overlap: each ends where the next begins, the last at the encounter end | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
 | AC-008 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-007 | dbt `relationships` |
 | AC-009 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |

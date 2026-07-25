@@ -11,6 +11,15 @@ models:
       domain: clinical
       pii: true
       classification: restricted
+    data_tests:
+      # AC-006: the period must not end before it starts (BL-002). or_equal
+      # permits a single-day period; both bounds are not-null (AC-004).
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_006_clinical__observation_period_end_at_or_after_start
+          arguments:
+            column_A: observation_period_end_date
+            column_B: observation_period_start_date
+            or_equal: true
     columns:
       - name: observation_period_id
         data_type: character varying(255)

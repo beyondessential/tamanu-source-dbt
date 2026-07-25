@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-09 |
-| **Last updated** | 2026-07-09 |
+| **Last updated** | 2026-07-22 |
 
 The OMOP-lite `DRUG_EXPOSURE` domain — one row per drug exposure, unioning three standard
 sources: **medication prescriptions** (the clinical intent to treat), **vaccine
@@ -64,16 +64,17 @@ to union those in. This is by design, not an omission; the standard model stays 
 
 ## Grain
 
-**One row per:** medication prescription (PK `prescriptions.id`), vaccine administration with
-`status = 'GIVEN'` (PK `administered_vaccines.id`), or pharmacy dispense (PK
-`medication_dispenses.id`), unioned. The three id spaces are disjoint, so `drug_exposure_id`
-is unique across the union; all joins are many-to-one, so grain is preserved.
+**One row per:** medication prescription linked to an encounter (PK
+`encounter_prescriptions.id` — see BL-006), vaccine administration with `status = 'GIVEN'`
+(PK `administered_vaccines.id`), or pharmacy dispense (PK `medication_dispenses.id`), unioned.
+The three id spaces are disjoint, so `drug_exposure_id` is unique across the union; all joins
+are many-to-one relative to the row's own PK, so grain is preserved.
 
 ## Output schema
 
 | Column | Type | Notes |
 |---|---|---|
-| `drug_exposure_id` | uuid | `prescriptions.id` (prescription), `administered_vaccines.id` (vaccination), or `medication_dispenses.id` (dispense). PK (D1) |
+| `drug_exposure_id` | uuid | `encounter_prescriptions.id` (prescription — not `prescriptions.id`, see BL-006), `administered_vaccines.id` (vaccination), or `medication_dispenses.id` (dispense). PK (D1) |
 | `person_id` | uuid | `encounters.patient_id` via the source's encounter. FK to `clinical__person.person_id` |
 | `drug_exposure_start_date` | date | Date component of the start datetime |
 | `drug_exposure_start_datetime` | timestamp | Prescription: `start_date` (→ `date`). Vaccination: `date`. Dispense: `dispensed_at` |
@@ -124,10 +125,14 @@ is unique across the union; all joins are many-to-one, so grain is preserved.
 - **BL-006 (prescription branch):** Every `prescriptions` row is included, joined to its
   encounter through `encounter_prescriptions` and to `reference_data` via `medication_id` for
   the drug code/name — a plain id join, not filtered on `type = 'drug'`, since `medication_id`
-  only ever references a drug-type row by Tamanu's own referential convention. Discontinued
-  prescriptions are **kept** — the exposure still occurred — with `stop_reason` carrying
-  `discontinuing_reason`; `quantity`, `refills` (`repeats`), and `route` come from the
-  prescription.
+  only ever references a drug-type row by Tamanu's own referential convention. `drug_exposure_id`
+  is `encounter_prescriptions.id`, not `prescriptions.id`: a prescription carries no
+  `encounter_id` of its own — the association is only reachable through
+  `encounter_prescriptions` — and only that table's own `id` is declared unique (not
+  `prescription_id`), so a prescription genuinely linked to more than one encounter must not
+  collide on the exposure's primary key. Discontinued prescriptions are **kept** — the
+  exposure still occurred — with `stop_reason` carrying `discontinuing_reason`; `quantity`,
+  `refills` (`repeats`), and `route` come from the prescription.
 - **BL-007 (vaccination branch):** Only `vaccine_administrations` rows with `status = 'GIVEN'`
   are included. `NOT_GIVEN` is not an exposure (it belongs in `clinical__observation`),
   `RECORDED_IN_ERROR` is a deleted GIVEN, and `HISTORICAL` is a hidden shadow of a separate
@@ -153,7 +158,8 @@ is unique across the union; all joins are many-to-one, so grain is preserved.
 | AC-005 | Every non-null `provider_id` on a `prescription`/`dispense` row exists in `ref__provider.provider_id` (vaccination excluded — `given_by` fallback is free text) | BL-002 | dbt `dbt_utils.relationships_where` |
 | AC-006 | `drug_exposure_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
 | AC-007 | `drug_exposure_type_source_value` is one of `prescription` / `vaccination` / `dispense` | BL-005 | dbt `accepted_values` |
-| AC-008 | `drug_source_name` is `not_null` (every exposure names a drug/vaccine) | BL-003 | dbt `not_null` |
+| AC-008 | `drug_source_name` is `not_null` (every exposure names a drug/vaccine) — a data-quality signal at project `warn` severity: a failure means a `medication_id` / `vaccine_name` didn't resolve (e.g. a soft-deleted or absent `reference_data` row), not that the row should be dropped | BL-003 | dbt `not_null` |
+| AC-009 | When `drug_exposure_end_datetime` is non-null, `drug_exposure_end_datetime >= drug_exposure_start_datetime` | BL-004 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 
 ## Registry entry
 
@@ -165,7 +171,7 @@ elements — only `metric__` / `derived__` artefacts get a `metric_definitions.c
 | Ref | Layer | Role |
 |---|---|---|
 | `prescriptions` | `bases/` | Prescription drug, prescriber, dose/route, dates, discontinuation (prescription branch) |
-| `encounter_prescriptions` | `bases/` | Links a prescription to its encounter (person + visit) |
+| `encounter_prescriptions` | `bases/` | Links a prescription to its encounter (person + visit); its own `id` is the prescription branch's `drug_exposure_id` (BL-006) |
 | `reference_data` | `bases/` | Drug code + name (`type = 'drug'`) for prescription / dispense branches |
 | `vaccine_administrations` | `bases/` | Vaccine event, status, `vaccine_name`, encounter, vaccinator (vaccination branch) |
 | `vaccine_schedules` | `bases/` | Resolves `scheduled_vaccine_id` to `reference_data.id` (vaccination branch's code) |

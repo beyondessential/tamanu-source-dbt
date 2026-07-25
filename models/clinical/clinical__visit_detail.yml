@@ -11,6 +11,17 @@ models:
       domain: clinical
       pii: true
       classification: restricted
+    data_tests:
+      # AC-006: a segment's end must not precede its start (BL-002). or_equal
+      # permits zero-length segments (end == start); NULL end (open final
+      # segment) is excluded by the row_condition.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_006_clinical__visit_detail_end_at_or_after_start
+          arguments:
+            column_A: visit_detail_end_datetime
+            column_B: visit_detail_start_datetime
+            or_equal: true
+            row_condition: "visit_detail_end_datetime is not null"
     columns:
       - name: visit_detail_id
         data_type: character varying(255)

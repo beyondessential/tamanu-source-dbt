@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-07-01 |
+| **Last updated** | 2026-07-22 |
 
 The OMOP-lite `VISIT_OCCURRENCE` domain — the canonical encounter surface every
 `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to for visit
@@ -114,7 +114,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | AC-004 | Every non-null `visit_concept_id` exists in `map__omop_visit_type.concept_id` | BL-002 | dbt `relationships` |
 | AC-005 | `visit_type_concept_id` is `not_null` and always 32817 | BL-003 | dbt `not_null` + `accepted_values` |
 | AC-006 | `visit_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
-| AC-007 | When `visit_end_datetime` is non-null, `visit_end_datetime >= visit_start_datetime` | BL-004 | dbt singular test |
+| AC-007 | When `visit_end_datetime` is non-null, `visit_end_datetime >= visit_start_datetime` | BL-004 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-008 | Every non-null `care_site_id` exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
 | AC-009 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-005 | dbt `relationships` |
 

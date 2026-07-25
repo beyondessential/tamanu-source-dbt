@@ -11,6 +11,17 @@ models:
       domain: clinical
       pii: true
       classification: restricted
+    data_tests:
+      # AC-009: an exposure's end must not precede its start (BL-004). or_equal
+      # permits point events (vaccination / dispense end == start); NULL end
+      # (open prescription) is excluded by the row_condition.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_009_clinical__drug_exposure_end_at_or_after_start
+          arguments:
+            column_A: drug_exposure_end_datetime
+            column_B: drug_exposure_start_datetime
+            or_equal: true
+            row_condition: "drug_exposure_end_datetime is not null"
     columns:
       - name: drug_exposure_id
         data_type: character varying(255)

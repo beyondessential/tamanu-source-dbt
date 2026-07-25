@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-03 |
-| **Last updated** | 2026-07-03 |
+| **Last updated** | 2026-07-22 |
 
 The OMOP-lite `CONDITION_OCCURRENCE` domain — one row per recorded diagnosis. First clinical
 **event** table hanging off the `visit_occurrence_id` hub. This iteration covers **encounter
@@ -107,6 +107,7 @@ likewise deferred (BL-005, BL-006): only the source values are populated for now
 | AC-004 | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | BL-002 | dbt `relationships` |
 | AC-005 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-002 | dbt `relationships` |
 | AC-006 | `condition_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
+| AC-007 | When `condition_end_datetime` is non-null, `condition_end_datetime >= condition_start_datetime` | BL-004 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 
 ## Registry entry
 

@@ -40,12 +40,30 @@ models:
       - name: year_of_birth
         data_type: integer
         description: "{{ doc('clinical__person__year_of_birth') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_006_clinical__person_year_of_birth_in_range
+              arguments:
+                min_value: 1900
+                max_value: "{{ run_started_at.year }}"
       - name: month_of_birth
         data_type: integer
         description: "{{ doc('clinical__person__month_of_birth') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_007_clinical__person_month_of_birth_in_range
+              arguments:
+                min_value: 1
+                max_value: 12
       - name: day_of_birth
         data_type: integer
         description: "{{ doc('clinical__person__day_of_birth') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_008_clinical__person_day_of_birth_in_range
+              arguments:
+                min_value: 1
+                max_value: 31
       - name: birth_datetime
         data_type: timestamp
         description: "{{ doc('clinical__person__birth_datetime') }}"

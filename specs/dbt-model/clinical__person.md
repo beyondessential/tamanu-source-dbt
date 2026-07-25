@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-06-29 |
+| **Last updated** | 2026-07-22 |
 
 The OMOP-lite `PERSON` domain — the canonical patient-demographics surface every
 other `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to. First
@@ -106,6 +106,9 @@ violation of that invariant.
 | AC-003 | Every non-null `gender_concept_id` exists in `map__omop_sex.concept_id` | BL-002 | dbt `relationships` |
 | AC-004 | When `birth_datetime` is non-null, its date equals `make_date(year_of_birth, month_of_birth, day_of_birth)` | BL-003 | dbt singular test |
 | AC-005 | Every non-null `location_id` exists in `ref__location.location_id` | BL-007 | dbt `relationships` |
+| AC-006 | `year_of_birth` is between `1900` and the current year (no future births); NULL passes | BL-003 | `dbt_expectations.expect_column_values_to_be_between` |
+| AC-007 | `month_of_birth` is between `1` and `12`; NULL passes | BL-003 | `dbt_expectations.expect_column_values_to_be_between` |
+| AC-008 | `day_of_birth` is between `1` and `31`; NULL passes | BL-003 | `dbt_expectations.expect_column_values_to_be_between` |
 
 ## Registry entry
 
