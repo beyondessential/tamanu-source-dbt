@@ -132,6 +132,7 @@ encounter is represented by at least one row.
 | AC-008 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-007 | dbt `relationships` |
 | AC-009 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
 | AC-010 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-007 | dbt `relationships` |
+| AC-011 | Each visit's earliest segment starts no later than the visit's own `visit_start_datetime`, so the opening phase is always covered (assumes Tamanu records an initial `encounter_history` row at encounter creation) | BL-002, BL-005 | singular test (`data_test__clinical__visit_detail`) |
 
 `test_clinical__visit_detail_synthesized_segment` additionally covers BL-005
 (history-less encounter → one whole-visit segment).

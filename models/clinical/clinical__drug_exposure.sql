@@ -42,10 +42,13 @@ encounters as (
     select * from {{ ref('encounters') }}
 ),
 
--- prescription branch: every prescription, joined to its encounter and drug (BL-006)
+-- prescription branch: every prescription, joined to its encounter and drug (BL-006).
+-- grain is the encounter_prescriptions link row, not the prescription: encounter_prescriptions
+-- permits a prescription to be linked to more than one encounter, so keying on p.id would
+-- emit duplicate drug_exposure_ids (failing ac_002). ep.id is unique per (encounter, prescription).
 prescription_exposures as (
     select
-        p.id::varchar as drug_exposure_id,
+        ep.id::varchar as drug_exposure_id,
         e.patient_id::varchar as person_id,
         coalesce(p.start_datetime, p.datetime)::date as drug_exposure_start_date,
         coalesce(p.start_datetime, p.datetime) as drug_exposure_start_datetime,
