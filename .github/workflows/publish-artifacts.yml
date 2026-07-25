@@ -12,7 +12,9 @@ name: Publish Artifacts
 #               M.m.x/reporting-standard/                  (reports)
 #   deployment: M.m.x/<deployment>/reporting-<deployment>/ (reports only)
 #
-# list-reports only runs for the standard repo on its latest release.
+# list-reports only runs for the standard repo on its latest release, and only
+# when that release was cut from main; it regenerates list_tamanu_reports.md
+# and commits the result straight back to main.
 
 on:
   release:
@@ -80,16 +82,25 @@ jobs:
           PYEOF
 
   # -------------------------------------------------------------------------
-  # Only runs for the standard (tamanu-source-dbt) repo on its latest release.
+  # Only runs for the standard (tamanu-source-dbt) repo on its latest release,
+  # and only when that release was cut from main (not a maintenance branch) --
+  # the regenerated list is committed straight back to main below.
   # -------------------------------------------------------------------------
   list-reports:
     name: List Tamanu Reports
     needs: setup
-    if: needs.setup.outputs.is_latest == 'true' && needs.setup.outputs.deployment == 'standard'
+    if: >-
+      needs.setup.outputs.is_latest == 'true' &&
+      needs.setup.outputs.deployment == 'standard' &&
+      github.event.release.target_commitish == 'main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -104,6 +115,19 @@ jobs:
 
       - name: List Tamanu Reports
         run: python scripts/list_tamanu_reports.py
+
+      - name: Commit updated report list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- list_tamanu_reports.md; then
+            echo "list_tamanu_reports.md already up to date"
+          else
+            git add list_tamanu_reports.md
+            git commit -m "chore: update list_tamanu_reports.md [skip ci]"
+            git push origin HEAD:main
+          fi
 
   # -------------------------------------------------------------------------
   # Runs for every release in every repo.
