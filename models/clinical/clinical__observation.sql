@@ -60,7 +60,8 @@ survey_answers as (
     join surveys s on s.id = sr.survey_id and s.survey_type in ('programs', 'referral')
     join program_data_elements pde
         on pde.id = sra.data_element_id
-        and pde.type not in ('PatientData', 'UserData', 'Instruction')
+        -- coalesce so a NULL type means "keep" rather than silently dropping the answer
+        and coalesce(pde.type, '') not in ('PatientData', 'UserData', 'Instruction')
     where sra.body is not null and trim(sra.body) != ''
 ),
 

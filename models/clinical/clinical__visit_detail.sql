@@ -91,7 +91,10 @@ bounded as (
         s.visit_detail_start_datetime,
         coalesce(
             lead(s.visit_detail_start_datetime) over w,
-            e.end_datetime
+            -- final (open) segment closes at the encounter end; greatest() guards the case
+            -- where a history row's datetime is later than e.end_datetime, which would
+            -- otherwise give the last segment end < start and fail ac_006 (BL-002)
+            greatest(e.end_datetime, s.visit_detail_start_datetime)
         ) as visit_detail_end_datetime,
         s.department_id,
         s.location_id,

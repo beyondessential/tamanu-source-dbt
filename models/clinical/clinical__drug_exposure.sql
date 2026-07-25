@@ -117,7 +117,9 @@ dispense_exposures as (
     join pharmacy_order_prescriptions pop on pop.id = md.pharmacy_order_prescription_id
     join pharmacy_orders po on po.id = pop.pharmacy_order_id
     join encounters e on e.id = po.encounter_id
-    join prescriptions p on p.id = pop.prescription_id
+    -- left join: the prescription only supplies route + drug identity, so a dispense whose
+    -- prescription row is soft-deleted should still appear (with NULL drug) rather than vanish
+    left join prescriptions p on p.id = pop.prescription_id
     left join reference_data rd on rd.id = p.medication_id
 )
 

@@ -98,8 +98,9 @@ lab_measurements as (
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
     where lt.result is not null and trim(lt.result) != ''
-      -- drop requests that never produced a valid result even if a stale value lingers (BL-007)
-      and lr.status not in ('deleted', 'sample-not-collected', 'entered-in-error')
+      -- drop requests that never produced a valid result even if a stale value lingers (BL-007).
+      -- coalesce so a NULL status means "keep" rather than silently dropping the row
+      and coalesce(lr.status, '') not in ('deleted', 'sample-not-collected', 'entered-in-error')
 ),
 
 -- birth anthropometry, unpivoted upstream by int__patient_birth_measurements (BL-008).
