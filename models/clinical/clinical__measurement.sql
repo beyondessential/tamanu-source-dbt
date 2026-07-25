@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__measurement -- OMOP-lite MEASUREMENT domain. One row per clinical measurement,
 -- unioning three standard sources: vitals via the Tamanu Vitals survey (BL-006), completed
 -- lab-test results (BL-007), and birth anthropometry unpivoted from patient_birth_data

@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__visit_detail -- OMOP-lite VISIT_DETAIL domain. One row per encounter segment
 -- (BL-001): a contiguous department/location/encounter_type phase within a single
 -- encounter. Segments walk the unified encounter_history timeline (BL-002); encounters

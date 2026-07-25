@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__drug_exposure -- OMOP-lite DRUG_EXPOSURE domain. One row per drug exposure,
 -- unioning three standard sources: medication prescriptions (BL-006), vaccine
 -- administrations with status = 'GIVEN' (BL-007), and pharmacy dispenses (BL-008). Drug

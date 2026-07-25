@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__condition_occurrence -- OMOP-lite CONDITION_OCCURRENCE domain. One row per
 -- encounter diagnosis (BL-001). FK graph anchored on the encounter (BL-002); the ICD-10
 -- code is retained as the source value and condition_concept_id is deferred to the future

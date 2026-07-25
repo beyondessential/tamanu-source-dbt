@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__person -- OMOP-lite PERSON domain. One row per patient (BL-001).
 -- Concept-ID shadow columns sit alongside local source values; native UUID PK
 -- (D1 OMOP-lite). Sources only from bases/ (D10).

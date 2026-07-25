@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__observation -- OMOP-lite OBSERVATION domain. One row per clinical fact that is
 -- neither a measurement nor a drug exposure, unioning three standard sources:
 -- program/referral-survey answers (BL-006), vaccinations not given (BL-007), and triage

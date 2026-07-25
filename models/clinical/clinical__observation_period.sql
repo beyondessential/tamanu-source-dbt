@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__observation_period -- OMOP-lite OBSERVATION_PERIOD domain. One row per
 -- patient with recorded clinical activity (BL-001) and bounds are the min/max event
 -- dates across the five event domains (BL-002), per the OMOP EHR convention.

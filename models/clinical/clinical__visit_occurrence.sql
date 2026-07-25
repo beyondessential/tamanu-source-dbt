@@ -1,8 +1,3 @@
-{{ config(
-    materialized = ('view' if target.name.startswith('reporting_') else 'table'),
-    tags = ['clinical'],
-) }}
-
 -- clinical__visit_occurrence -- OMOP-lite VISIT_OCCURRENCE domain. One row per encounter (BL-001).
 -- Visit-concept shadow column sits alongside local encounter_type source value; native UUID PK
 -- (D1 OMOP-lite). Sources only from bases/ (D10).
