@@ -8,7 +8,7 @@
 | **Type** | dbt model (consumer-shaped dataset) |
 | **Layer** | `ds` |
 | **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (spun off from `clinical__cost` OQ-001 — item-level billing detail) |
 | **Repo** | `tamanu-source-dbt` |
@@ -54,7 +54,7 @@ preserved.
 
 | Reference | Why we need it |
 |---|---|
-| `{{ ref('int__encounter_invoice_item_amounts') }}` | **To be extracted (BL-001).** The shared per-item arithmetic (price resolution, item discount, per-item coverage) currently inline in `int__encounter_invoice_amounts` |
+| `{{ ref('int__encounter_invoice_item_amounts') }}` | The shared per-item arithmetic (the `invoice_item_amounts()` macro): price resolution, item discount/adjustment, per-item coverage (BL-001) |
 | `{{ ref('invoices') }}` | `status`, `datetime`, `encounter_id` for the item's invoice context |
 
 ### Required input columns
@@ -82,7 +82,7 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
 | `category` | text | Product category (null for uncategorised products) | |
 | `quantity` | numeric | Line quantity | |
 | `unit_price` | numeric | Resolved unit price (BL-002) | |
-| `item_discount_amount` | numeric | Item-level discount applied to `unit_price × quantity` (BL-003); 0 when none | |
+| `item_adjustment` | numeric | Signed item adjustment `discounted_total − unit_price × quantity` — negative for a discount, positive for a markup, mirroring the app's `getItemAdjustmentAmount`; 0 when none (BL-003) | |
 | `discounted_total` | numeric | `unit_price × quantity` after the item discount (BL-003) | `not_null` |
 | `insurance_coverage` | numeric | Per-item insurance coverage, capped at `discounted_total` (BL-004) | |
 | `source_record_type` **[ext]** | text | Originating clinical record type: `Prescription` / `LabTest` / `Procedure` / `ImagingRequestArea`, or null for manually-added products (BL-006) | |
@@ -90,24 +90,28 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
 
 ## Business logic
 
-- **BL-001:** One row per invoice item, sourced from a new ephemeral
-  `int__encounter_invoice_item_amounts`. That intermediate is the **per-item arithmetic
-  extracted from `int__encounter_invoice_amounts`** (its `item_unit_price` /
-  `item_resolved_price` / `item_coverage` CTEs); `int__encounter_invoice_amounts` is then
-  refactored to *aggregate* from it rather than recompute — one definition of per-item
-  pricing shared by the invoice-level and item-level consumers, the same
-  single-source-of-truth move as `clinical__cost`'s extraction, one level deeper. The
-  refactor is behaviour-preserving for `int__encounter_invoice_amounts` (same invoice
-  totals). Sources from `bases/` only — never `public.*`, never a `ds__` dataset.
+- **BL-001:** One row per invoice item, sourced from the ephemeral
+  `int__encounter_invoice_item_amounts`, which is the **`invoice_item_amounts()` macro**.
+  The macro holds the per-item arithmetic (price-list resolution, unit price, item
+  discount, per-item coverage) and is embedded verbatim by both consumers:
+  `int__encounter_invoice_item_amounts` exposes it one row per item, and
+  `int__encounter_invoice_amounts` embeds it as `with items as (…)` and *aggregates* to
+  invoice grain. One definition, no drift. Embedding via a macro (rather than one
+  intermediate `ref()`-ing the other) keeps `invoice_items` / price lists / discounts as
+  direct refs of `int__encounter_invoice_amounts`, so its unit tests mock the same bases
+  and stay unchanged (AC-008). Sources from `bases/` only — never `public.*`, never a
+  `ds__` dataset.
 - **BL-002:** `unit_price` falls back through `invoice_items.price_final` →
   `invoice_items.manual_entry_price` → the resolved `invoice_price_list_items.price` → `0`,
   mirroring `getInvoiceItemPrice`. Price-list resolution reuses the invoice's single
   matched price list (as in `int__encounter_invoice_amounts` BL-006).
 - **BL-003:** `discounted_total` applies the item discount to `unit_price × quantity`:
   `percentage` discounts multiply by `(1 − amount)`; `amount` discounts subtract `amount`
-  with no floor (a negative line total is possible, mirroring the app). `item_discount_amount`
-  is the difference `unit_price × quantity − discounted_total` (0 when no discount).
-  Mirrors `getInvoiceItemTotalDiscountedPrice`.
+  with no floor (a negative line total is possible, mirroring the app). Mirrors
+  `getInvoiceItemTotalDiscountedPrice`. `item_adjustment` is the **signed** difference
+  `discounted_total − unit_price × quantity` — negative for a discount, positive for a
+  markup, `0` when neither — mirroring the app's `getItemAdjustmentAmount` (OQ-002
+  resolved: match the app's signed convention rather than a positive discount magnitude).
 - **BL-004:** `insurance_coverage` is the per-item coverage — for each insurance plan linked
   to the invoice, the finalised snapshot for that (item, plan) when present, else the live
   per-product coverage, else the plan default, else 0; summed across plans and capped at the
@@ -138,7 +142,7 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
 | AC-005 | `insurance_coverage <= discounted_total` per item (cap) | BL-004 | dbt singular test |
 | AC-006 | `invoice_status` is one of `in_progress` / `finalised` / `cancelled` | BL-008 | dbt `accepted_values` |
 | AC-007 | `discounted_total` is `not_null` | BL-003 | dbt `not_null` |
-| AC-008 | The extraction is behaviour-preserving: `int__encounter_invoice_amounts` output (invoice totals, coverage) is unchanged by consuming the new item intermediate | BL-001 | existing `test_int__encounter_invoice_amounts_*` unit tests stay green |
+| AC-008 | The extraction is behaviour-preserving: `int__encounter_invoice_amounts` output (invoice totals, coverage) is unchanged by embedding the shared macro | BL-001 | existing `test_int__encounter_invoice_amounts_*` unit tests stay green |
 
 ACs are realised by `test_ds__encounter_invoice_items_*` (item grain) plus the reconciliation
 singular tests; the per-item arithmetic is unit-tested on `int__encounter_invoice_item_amounts`.
@@ -156,19 +160,18 @@ invoices, invoice_items,  ──►  int__encounter_        ──┬──►  
 | ID | Question | Owner | Due |
 |---|---|---|---|
 | OQ-001 | Should `ds__encounter_invoice_items` also surface the resolved `invoice_price_list_id` / price-list code per line, for pricing audits? Cheap to add if a consumer wants it. | Maui team | — |
-| OQ-002 | Item-adjustment sign convention: expose `item_discount_amount` as a positive discount magnitude (current plan) or as a signed adjustment (negative for discount, positive for markup, mirroring the app's `getItemAdjustmentAmount`)? Confirm with the first consumer. | Maui team | — |
 
 ## Divergence from current code
 
-Greenfield — no `ds__encounter_invoice_items` exists yet. One refactor of existing code is
-required by BL-001 and tracked here as it touches a tested, in-use model:
+Resolved during implementation — none outstanding.
 
 | ID | Divergence | Resolution |
 |---|---|---|
-| DV-001 | The per-item arithmetic currently lives inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not in a shared intermediate | Extract it into `int__encounter_invoice_item_amounts`; refactor `int__encounter_invoice_amounts` to aggregate from it. Must be behaviour-preserving (AC-008): the existing `test_int__encounter_invoice_amounts_*` unit tests and `ds__encounter_invoices` output stay unchanged. |
+| DV-001 | The per-item arithmetic lived inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not shared | **Resolved:** extracted into the `invoice_item_amounts()` macro, embedded by both `int__encounter_invoice_item_amounts` and `int__encounter_invoice_amounts`. Behaviour-preserving (AC-008): the existing `test_int__encounter_invoice_amounts_*` unit tests are unchanged (only the two new `source_record_*` columns added to their `invoice_items` mocks) and green. |
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-07-26 | Maui team | Initial draft — item-grain billing detail spun off from `clinical__cost` OQ-001. Item detail is a Tamanu (non-OMOP) construct, so it lives in `ds__`/`int__`; per-item arithmetic extracted into a shared `int__encounter_invoice_item_amounts`; payments intentionally stay invoice-grained. |
+| 2026-07-26 | Maui team | Initial draft — item-grain billing detail spun off from `clinical__cost` OQ-001. Item detail is a Tamanu (non-OMOP) construct, so it lives in `ds__`/`int__`; per-item arithmetic shared via the `invoice_item_amounts()` macro; payments intentionally stay invoice-grained. |
+| 2026-07-26 | Maui team | Implemented: `invoice_item_amounts()` macro, `int__encounter_invoice_item_amounts`, `ds__encounter_invoice_items` (+ yml/docs), reconciliation singular tests and an item-grain unit test; OQ-002 resolved (signed adjustment). AC tests run green against the 2.57 replica; status → `implemented`. |

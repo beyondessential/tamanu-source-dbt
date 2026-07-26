@@ -46,7 +46,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql

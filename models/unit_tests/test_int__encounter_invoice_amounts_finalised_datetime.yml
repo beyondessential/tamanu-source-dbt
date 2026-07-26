@@ -67,7 +67,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity where false
+          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity, null::text as source_record_type, null::text as source_record_id where false
 
       - input: ref('invoice_products')
         format: sql

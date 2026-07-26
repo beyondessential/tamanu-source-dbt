@@ -45,9 +45,9 @@ unit_tests:
         format: sql
         rows: |
           -- Two items: 30 * 2 = 60, 40 * 1 = 40, total = 100. Product is insurable with 60% coverage.
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation A' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 30.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation A' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 30.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity, null::text as source_record_type, null::text as source_record_id
           union all
-          select 'item_002'::text, '00000000-0000-0000-0000-000000000001', 'Consultation B', '2024-01-15'::date, 'prod_001', 40.00::numeric, null::numeric, 1::integer
+          select 'item_002'::text, '00000000-0000-0000-0000-000000000001', 'Consultation B', '2024-01-15'::date, 'prod_001', 40.00::numeric, null::numeric, 1::integer, null::text, null::text
 
       - input: ref('invoice_products')
         format: sql
