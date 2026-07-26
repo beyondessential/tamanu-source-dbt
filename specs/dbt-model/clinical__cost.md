@@ -84,16 +84,25 @@ explicitly rejected — it would let the two definitions drift (see **Decisions 
 `cost_domain_id` is the constant `'Visit'`. Invoice-level grain is chosen over
 item-level because:
 
-- Tamanu payments (patient and insurer) are recorded at the **invoice** level,
-  not the item level — item-level `COST` rows would require allocating payments
-  across items, which is lossy and not represented in the source.
-- Item → clinical-event linkage (invoice_product → `clinical__drug_exposure` /
-  a future `clinical__procedure_occurrence`) does not exist in the omop-lite
-  layer yet, so item-level `cost_event_id` could not point at a real event.
+- **Payments are invoice-level (the binding reason).** Tamanu records patient and
+  insurer payments against the **invoice**, not the item, so the `paid_by_patient`
+  / `paid_by_payer` / `total_paid` columns cannot be allocated to item rows without
+  a lossy, source-unsupported split. Item-level grain would leave every paid column
+  unassignable — so the money side stays invoice-grained regardless of charges.
+- **Only charges could go item-level, and only partway.** The item→event link
+  *does* exist — `invoice_items.source_record_type` / `source_record_id` is a
+  polymorphic FK (observed values: `Prescription`, `LabTest`, `Procedure`,
+  `ImagingRequestArea`, plus null for manually-added products). But the OMOP
+  targets are only partly built: `Prescription` → `clinical__drug_exposure` and
+  `LabTest` → `clinical__measurement` exist (and still need id-mapping), while
+  `Procedure` and `ImagingRequestArea` have **no** `clinical__` model yet, and
+  null-source items have no event at all. So an item-level `cost_event_id` would
+  resolve for only some items and fall back to the visit for the rest.
 
 Item-level costing (one COST row per invoice item, `cost_event_id` → the item's
-own drug/procedure event) is the **intended** future grain — invoice-level is a
-stepping stone used until invoice items link to clinical events (OQ-001). Grain is
+own event) therefore remains a future extension — not for lack of a source link,
+but because payments can't be item-allocated and half the item types lack an OMOP
+event target (OQ-001). Grain is
 preserved: the shared `int__encounter_invoice_amounts` is one row per invoice
 (its `invoice_id` is `not_null` + `unique`), and every join below is many-to-one.
 
@@ -249,7 +258,7 @@ schema, and the payment-method / layering decisions under **Decisions taken**.)
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's drug/procedure event) — **confirmed as the intended future grain**; blocked until invoice items link to clinical events, so invoice-level grain is used until then. | Maui team | future |
+| OQ-001 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's event). The source link exists (`invoice_items.source_record_type`/`source_record_id`: `Prescription`, `LabTest`, `Procedure`, `ImagingRequestArea`, null). Blocked on two fronts: (a) payments are invoice-level and can't be item-allocated, so a charge-only item model or visit-anchored payments would be needed; (b) only `Prescription`→`clinical__drug_exposure` and `LabTest`→`clinical__measurement` have OMOP targets — `Procedure`/`ImagingRequestArea` need new `clinical__` models first. Revisit when a `clinical__procedure_occurrence` exists and metric demand is clear. | Maui team | future |
 | OQ-002 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code
