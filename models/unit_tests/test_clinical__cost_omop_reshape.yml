@@ -1,0 +1,48 @@
+unit_tests:
+  - name: test_clinical__cost_omop_reshape
+    model: clinical__cost
+    description: >
+      clinical__cost reshapes the shared int__encounter_invoice_amounts row into
+      OMOP COST columns. Row 1 (fully populated) checks the mapping: total_paid =
+      paid_by_patient + paid_by_payer (BL-007, AC-005), and total_charge /
+      amount_allowed / discount_amount pass through (BL-003/004/008). Row 2 (a
+      cancelled invoice with all money null) checks BL-010 (money defaults to 0,
+      AC-006) and that invoice_status carries cancelled through (BL-001, AC-009).
+    given:
+      - input: ref('int__encounter_invoice_amounts')
+        format: sql
+        rows: |
+          select 'inv1' as invoice_id, 'enc1' as encounter_id, 'finalised' as status, '2024-01-01'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 8.00::numeric as invoice_discount, 25.00::numeric as patient_payment, 55.00::numeric as insurer_payment, null::text as products_no_category
+          union all
+          select 'inv2', 'enc2', 'cancelled', '2024-01-02'::timestamp, null::timestamp, null::numeric, null::numeric, null::numeric, null::numeric, null::numeric, null::text
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select 'inv1' as id, 'INV-1' as display_id
+          union all
+          select 'inv2', 'INV-2'
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'inv1' as cost_id,
+          'enc1' as cost_event_id,
+          'Visit' as cost_domain_id,
+          'finalised' as invoice_status,
+          0 as cost_type_concept_id,
+          null::integer as currency_concept_id,
+          100.00::numeric as total_charge,
+          80.00::numeric as total_paid,
+          25.00::numeric as paid_by_patient,
+          55.00::numeric as paid_by_payer,
+          60.00::numeric as amount_allowed,
+          8.00::numeric as discount_amount,
+          null::varchar as payer_plan_period_id,
+          'INV-1' as cost_source_value
+        union all
+        select
+          'inv2', 'enc2', 'Visit', 'cancelled', 0, null::integer,
+          0::numeric, 0::numeric, 0::numeric, 0::numeric, 0::numeric, 0::numeric,
+          null::varchar, 'INV-2'

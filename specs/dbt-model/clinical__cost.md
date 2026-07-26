@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
 | **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
-| **Status** | `implemented` |
+| **Status** | `review` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (design spun off from the Queen of Sheba End-of-day Invoice Report) |
 | **Repo** | `tamanu-source-dbt` |
@@ -24,15 +24,17 @@ Health Economics. See
 
 > **Decisions taken (this spec answered its gating question).** OMOP `COST`
 > cannot carry the payment-method breakdown (Cash / Mobile Money / Card / …)
-> the End-of-day Invoice Report needs (OQ-001), so **that report is built
+> the End-of-day Invoice Report needs, so **that report is built
 > non-omop on `ds__encounter_invoices` + a deployment-local payment model**,
 > not on `clinical__cost`. `clinical__cost` is nonetheless built as the
 > totals-only canonical billing surface for cost / coverage metrics and
 > dashboards. The layering conflict (OQ-007) was resolved by extracting the
 > shared arithmetic into `int__encounter_invoice_amounts`. Model, yml, docs and
-> tests are implemented on branch `feature/maui-6734-clinical-cost`, and the
-> `AC` tests have been run green against the release-2.57 replica via
-> `dbt build --select int__encounter_invoice_amounts ds__encounter_invoices clinical__cost`.
+> tests are implemented on branch `feature/maui-6734-clinical-cost`; the `AC`
+> tests are runnable but have **not yet been executed against a database**
+> (authored without a replica connection). Run
+> `dbt build --select int__encounter_invoice_amounts ds__encounter_invoices clinical__cost`
+> and confirm green before bumping status to `implemented`.
 
 ## Purpose
 
@@ -110,8 +112,8 @@ canonical billing surface must not lose information the source carries.
 
 | Column | Type | Notes |
 |---|---|---|
-| `cost_id` | uuid | `invoices.id`. Native UUID PK — no remap to OMOP integer IDs (D1) |
-| `cost_event_id` | uuid | `invoice.encounter_id` → `clinical__visit_occurrence.visit_occurrence_id`. The billed encounter |
+| `cost_id` | character varying(255) | `invoices.id`. Native Tamanu string ID — no remap to OMOP integer IDs (D1) |
+| `cost_event_id` | character varying(255) | `invoice.encounter_id` → `clinical__visit_occurrence.visit_occurrence_id`. The billed encounter |
 | `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-004) |
 | `invoice_status` **[ext]** | text | Invoice lifecycle status (`in_progress` / `finalised` / `cancelled`) from `int__encounter_invoice_amounts.status`, carried so consumers can exclude cancelled invoices. OMOP `COST` has no status field |
 | `cost_type_concept_id` | integer | Constant provenance concept — the invoice originates in the Tamanu billing system. Concept TBD (OQ-005) |
@@ -133,7 +135,8 @@ canonical billing surface must not lose information the source carries.
 
 **Not representable in this schema at all:** the **payment-method** split
 (Cash / Mobile Money / Card / Bank Transfer / Insurance). OMOP `COST` has no
-payment-instrument dimension. This is the central design tension — see OQ-001.
+payment-instrument dimension. This was the central design tension, resolved by
+keeping `clinical__cost` totals-only (see **Decisions taken** above).
 
 ## Business logic
 
@@ -229,15 +232,16 @@ clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
 
 ## Open questions
 
+(Numbering continues from OQ-002; earlier resolved questions are recorded under
+**Decisions taken** at the top, not repeated here.)
+
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | **Resolved (option a).** OMOP `COST` has no payment-method dimension. `clinical__cost` stays totals-only; the MAUI-6734 report gets its Cash / Mobile Money / Card / Bank Transfer / Insurance split from a deployment-local payment model, not from `clinical__cost`. A future `clinical__payment` companion (method-grained) remains an option if metrics need the split — not built now. | Data Lead | done |
-| OQ-002 | How does a universal source-repo model carry deployment currency? `map__omop_currency` seed vs project var vs leave NULL and set per-deployment. Queen of Sheba is GHS. | Data Lead | — |
-| OQ-003 | Does "Total item adjustments" mean invoice-level discount only (available directly), or item-level + invoice-level discounts combined? If combined, `total_charge` must be gross (pre-discount) to avoid double counting. Confirm with the MAUI-6734 PM. | @erin | — |
-| OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → drug/procedure event) — worthwhile future extension, or does invoice-level grain suffice indefinitely? Depends on Tupaia / metric demand for cost-per-service. | Data Lead | — |
-| OQ-005 | Which OMOP concept for `cost_type_concept_id` best encodes "Tamanu billing system origin"? | Data Lead | — |
-| OQ-006 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Data Lead | — |
-| OQ-007 | **Resolved.** Extracted the per-invoice arithmetic into `int__encounter_invoice_amounts` (ephemeral) and reduced `ds__encounter_invoices` to a thin projection over it — behaviour-preserving (same columns, order, semantics), so its existing `.yml`, tests and downstream refs are untouched. Reviewer must still confirm the refactor of this tested, in-use dataset is acceptable. | Data Lead | done |
+| OQ-002 | How does a universal source-repo model carry deployment currency? `map__omop_currency` seed vs project var vs leave NULL and set per-deployment. Queen of Sheba is GHS. | Maui team | — |
+| OQ-003 | Does "Total item adjustments" mean invoice-level discount only (available directly), or item-level + invoice-level discounts combined? If combined, `total_charge` must be gross (pre-discount) to avoid double counting. Confirm with the MAUI-6734 PM. | Maui team | — |
+| OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → drug/procedure event) — worthwhile future extension, or does invoice-level grain suffice indefinitely? Depends on Tupaia / metric demand for cost-per-service. | Maui team | — |
+| OQ-005 | Which OMOP concept for `cost_type_concept_id` best encodes "Tamanu billing system origin"? | Maui team | — |
+| OQ-006 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code
 

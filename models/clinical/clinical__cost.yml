@@ -13,7 +13,7 @@ models:
       classification: confidential
     columns:
       - name: cost_id
-        data_type: uuid
+        data_type: character varying(255)
         description: "{{ doc('clinical__cost__cost_id') }}"
         data_tests:
           - not_null:
@@ -21,7 +21,7 @@ models:
           - unique:
               name: ac_002_clinical__cost_cost_id_unique
       - name: cost_event_id
-        data_type: uuid
+        data_type: character varying(255)
         description: "{{ doc('clinical__cost__cost_event_id') }}"
         data_tests:
           - not_null:

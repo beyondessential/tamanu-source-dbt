@@ -18,7 +18,7 @@ ac_005 as (
 -- AC-007: no invoice dropped or duplicated versus the shared arithmetic (BL-001).
 ac_007 as (
     select
-        cast(null as uuid) as cost_id,
+        cast(null as varchar) as cost_id,
         'AC-007' as failed_ac
     where (select count(*) from cost)
         != (select count(*) from {{ ref('int__encounter_invoice_amounts') }})
