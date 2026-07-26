@@ -63,9 +63,10 @@ necessarily an amount received.
 {% enddocs %}
 
 {% docs clinical__cost__discount_amount %}
-The invoice-level discount amount only. Item-level discounts are already netted
-into total_charge and are not included here; folding them in is an open question
-(spec OQ-003).
+The invoice-level discount amount only. Tamanu applies discounts at two levels:
+per-item discounts (already netted into total_charge) and a per-invoice discount
+(this column). They are separate quantities in the app, so nothing is
+double-counted; total_charge stays on the net basis.
 {% enddocs %}
 
 {% docs clinical__cost__payer_plan_period_id %}

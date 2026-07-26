@@ -91,7 +91,9 @@ item-level because:
   a future `clinical__procedure_occurrence`) does not exist in the omop-lite
   layer yet, so item-level `cost_event_id` could not point at a real event.
 
-Item-level costing is a documented future extension — see OQ-004. Grain is
+Item-level costing (one COST row per invoice item, `cost_event_id` → the item's
+own drug/procedure event) is the **intended** future grain — invoice-level is a
+stepping stone used until invoice items link to clinical events (OQ-004). Grain is
 preserved: the shared `int__encounter_invoice_amounts` is one row per invoice
 (its `invoice_id` is `not_null` + `unique`), and every join below is many-to-one.
 
@@ -116,13 +118,13 @@ canonical billing surface must not lose information the source carries.
 | `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-004) |
 | `invoice_status` **[ext]** | text | Invoice lifecycle status (`in_progress` / `finalised` / `cancelled`) from `int__encounter_invoice_amounts.status`, carried so consumers can exclude cancelled invoices. OMOP `COST` has no status field |
 | `cost_type_concept_id` | integer | Constant provenance concept — the invoice originates in the Tamanu billing system. Concept TBD (OQ-005) |
-| `currency_concept_id` | integer | Deployment currency (e.g. GHS for Queen of Sheba). Universal model cannot hardcode one currency — see OQ-002. NULL until resolved |
+| `currency_concept_id` | integer | Deployment currency (e.g. GHS for Queen of Sheba), resolved per deployment via a `map__omop_currency` seed or project var. NULL in the universal source-repo model |
 | `total_charge` | numeric | Invoice value: `int__encounter_invoice_amounts.invoice_total` (sum of discounted item totals) |
 | `total_paid` | numeric | Money actually received: `paid_by_patient` + `paid_by_payer` |
 | `paid_by_patient` | numeric | Net patient payment (payments less refunds): `int__encounter_invoice_amounts.patient_payment` |
 | `paid_by_payer` | numeric | Insurer payments **actually received**: `int__encounter_invoice_amounts.insurer_payment` (sum of `invoice_payments.amount` linked to `invoice_insurer_payments`, refunds netted). Distinct from `amount_allowed` |
 | `amount_allowed` | numeric | Insurance **coverage** (expected, not necessarily paid): `int__encounter_invoice_amounts.insurance_coverage` |
-| `discount_amount` **[ext]** | numeric | Total adjustments (discounts). OMOP `COST` has no discount field — retained for billing consumers. Invoice-level discount from `int__encounter_invoice_amounts.invoice_discount`; item-level scope is OQ-003 |
+| `discount_amount` **[ext]** | numeric | The **invoice-level** discount (`int__encounter_invoice_amounts.invoice_discount`). OMOP `COST` has no discount field — retained for billing consumers. Item-level discounts are already netted into `total_charge`, not double-counted here (BL-008) |
 | `payer_plan_period_id` | varchar | FK to a future `clinical__payer_plan_period`. Typed `varchar` (cast NULL) pending that model — see OQ-006 |
 | `cost_source_value` **[ext]** | text | `invoices.display_id` — the human-facing invoice number, for traceability |
 
@@ -172,12 +174,21 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
   received against the invoice, patient and insurer. This is the value the
   invoice report surfaces as "Total received".
 - **BL-008:** `discount_amount` is `int__encounter_invoice_amounts.invoice_discount`
-  (the invoice-level discount). Whether item-level discounts should also be
-  folded in is OQ-003; if so, `total_charge` must switch to a gross basis to
-  avoid double-counting.
-- **BL-009:** `currency_concept_id` is the deployment's billing currency. The
-  universal source-repo model leaves it NULL; a deployment override supplies the
-  concept via a `map__omop_currency` seed or a project var (OQ-002).
+  — the **invoice-level** discount only. Tamanu applies discounts at two distinct
+  levels (verified in `packages/utils/src/invoice/`): a per-**item** discount
+  (`invoice_item_discounts`, `getInvoiceItemTotalDiscountedPrice`) that is baked
+  into each line and therefore already netted into `total_charge`, and a per-
+  **invoice** discount (`invoice_discounts`, `getInvoiceLevelDiscountAmount`) — a
+  percentage applied to the patient subtotal. These are separate quantities in the
+  app (`getInvoiceSummary` exposes item adjustments and the invoice discount as
+  different lines), so there is **no double-counting**: `total_charge` stays on the
+  net (post-item-discount) basis and `discount_amount` carries only the invoice
+  discount. Surfacing the item-adjustment total as its own `[ext]` column is a
+  possible future extension, not needed now.
+- **BL-009:** `currency_concept_id` is the deployment's billing currency, resolved
+  **per deployment**: the universal source-repo model leaves it NULL, and a
+  deployment override supplies the concept via a `map__omop_currency` seed or a
+  project var.
 - **BL-010:** Money columns default to 0, not NULL, when the invoice has no
   charge / payment / coverage of that kind, so downstream sums never need
   `coalesce`. (An invoice with no items has `total_charge = 0`, etc.)
@@ -231,15 +242,14 @@ clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
 
 ## Open questions
 
-(Numbering continues from OQ-002; earlier resolved questions are recorded under
-**Decisions taken** at the top, not repeated here.)
+(Only still-open items are listed. Resolved questions are recorded in the spec
+body: currency-per-deployment in BL-009, the item-vs-invoice discount split in
+BL-008, and the payment-method / layering decisions under **Decisions taken**.)
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-002 | How does a universal source-repo model carry deployment currency? `map__omop_currency` seed vs project var vs leave NULL and set per-deployment. Queen of Sheba is GHS. | Maui team | — |
-| OQ-003 | Does "Total item adjustments" mean invoice-level discount only (available directly), or item-level + invoice-level discounts combined? If combined, `total_charge` must be gross (pre-discount) to avoid double counting. Confirm with the MAUI-6734 PM. | Maui team | — |
-| OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → drug/procedure event) — worthwhile future extension, or does invoice-level grain suffice indefinitely? Depends on Tupaia / metric demand for cost-per-service. | Maui team | — |
-| OQ-005 | Which OMOP concept for `cost_type_concept_id` best encodes "Tamanu billing system origin"? | Maui team | — |
+| OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's drug/procedure event) — **confirmed as the intended future grain**; blocked until invoice items link to clinical events, so invoice-level grain is used until then. | Maui team | future |
+| OQ-005 | `cost_type_concept_id` — which OMOP concept encodes "Tamanu billing-system origin"? Candidate: a **balance-bill** concept vs an EHR/billing-provenance type concept. Needs a concept id resolved through the future `vocab__` layer; `0` (no matching concept) until then. | Maui team | — |
 | OQ-006 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code

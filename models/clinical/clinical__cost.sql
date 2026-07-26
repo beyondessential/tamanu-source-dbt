@@ -35,7 +35,7 @@ select
     0 as cost_type_concept_id,
 
     -- deployment currency: universal model leaves it unset; deployments override
-    -- via map__omop_currency or a var (BL-009, spec OQ-002)
+    -- per deployment via map__omop_currency or a var (BL-009)
     cast(null as integer) as currency_concept_id,
 
     -- charged, paid and expected-coverage amounts. Default to 0 so downstream sums
