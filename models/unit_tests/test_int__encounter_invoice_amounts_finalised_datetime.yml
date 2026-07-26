@@ -3,9 +3,15 @@ unit_tests:
     model: int__encounter_invoice_amounts
     description: >
       invoice_finalised_datetime is the most recent transition into finalised
-      status from logs.changes, in deployment-local time (Pohnpei, UTC+11). A
-      re-finalisation (previous_status already finalised) is excluded. An
-      invoice that never finalises shows null.
+      status from logs.changes, in deployment-local time. A re-finalisation
+      (previous_status already finalised) is excluded. An invoice that never
+      finalises shows null. This test pins var('timezone') to UTC so the
+      finalised-timestamp assertion is deterministic across engines; the actual
+      deployment-local shift (at time zone) is exercised against real Postgres by
+      dbt build, not here.
+    overrides:
+      vars:
+        timezone: UTC
     given:
       - input: ref('encounters')
         format: sql
@@ -48,7 +54,8 @@ unit_tests:
         rows: |
           select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
           union all
-          -- First finalisation: logged_at UTC 03:00 = Pohnpei 14:00 (UTC+11)
+          -- First finalisation at 03:00 UTC; with timezone pinned to UTC the
+          -- local-time conversion is a no-op, so the expected value is 03:00
           select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
           union all
           -- Re-finalisation: previous_status = 'finalised' so excluded
@@ -130,7 +137,7 @@ unit_tests:
           'enc_001' as encounter_id,
           'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
-          '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime,
+          '2024-01-15 03:00:00'::timestamp as invoice_finalised_datetime,
           null::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
