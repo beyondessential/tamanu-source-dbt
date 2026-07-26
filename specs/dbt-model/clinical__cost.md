@@ -117,7 +117,7 @@ canonical billing surface must not lose information the source carries.
 | `cost_event_id` | character varying(255) | `invoice.encounter_id` → `clinical__visit_occurrence.visit_occurrence_id`. The billed encounter |
 | `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-004) |
 | `invoice_status` **[ext]** | text | Invoice lifecycle status (`in_progress` / `finalised` / `cancelled`) from `int__encounter_invoice_amounts.status`, carried so consumers can exclude cancelled invoices. OMOP `COST` has no status field |
-| `cost_type_concept_id` | integer | Constant provenance concept — the invoice originates in the Tamanu billing system. Concept TBD (OQ-005) |
+| `cost_type_concept_id` | integer | Constant `32821` ("EHR billing record", OMOP Type Concept) — the cost is derived from the Tamanu billing subsystem |
 | `currency_concept_id` | integer | Deployment currency (e.g. GHS for Queen of Sheba), resolved per deployment via a `map__omop_currency` seed or project var. NULL in the universal source-repo model |
 | `total_charge` | numeric | Invoice value: `int__encounter_invoice_amounts.invoice_total` (sum of discounted item totals) |
 | `total_paid` | numeric | Money actually received: `paid_by_patient` + `paid_by_payer` |
@@ -244,12 +244,12 @@ clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
 
 (Only still-open items are listed. Resolved questions are recorded in the spec
 body: currency-per-deployment in BL-009, the item-vs-invoice discount split in
-BL-008, and the payment-method / layering decisions under **Decisions taken**.)
+BL-008, `cost_type_concept_id = 32821` ("EHR billing record") in the output
+schema, and the payment-method / layering decisions under **Decisions taken**.)
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
 | OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's drug/procedure event) — **confirmed as the intended future grain**; blocked until invoice items link to clinical events, so invoice-level grain is used until then. | Maui team | future |
-| OQ-005 | `cost_type_concept_id` — which OMOP concept encodes "Tamanu billing-system origin"? Candidate: a **balance-bill** concept vs an EHR/billing-provenance type concept. Needs a concept id resolved through the future `vocab__` layer; `0` (no matching concept) until then. | Maui team | — |
 | OQ-006 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code

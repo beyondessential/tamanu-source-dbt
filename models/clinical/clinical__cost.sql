@@ -31,8 +31,9 @@ select
     -- this is a Tamanu extension column (BL-001) [ext]
     a.status as invoice_status,
 
-    -- provenance: constant, concept TBD (spec OQ-005). 0 = no matching concept
-    0 as cost_type_concept_id,
+    -- provenance: 32821 = "EHR billing record" (OMOP Type Concept) -- the cost is
+    -- derived from the Tamanu billing subsystem
+    32821 as cost_type_concept_id,
 
     -- deployment currency: universal model leaves it unset; deployments override
     -- per deployment via map__omop_currency or a var (BL-009)

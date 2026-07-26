@@ -30,8 +30,8 @@ COST has no status field.
 {% enddocs %}
 
 {% docs clinical__cost__cost_type_concept_id %}
-OMOP concept indicating how the cost was derived. Reserved for a billing-system
-provenance concept; currently 0 (no matching concept).
+OMOP concept indicating the provenance of the cost record. Constant 32821
+("EHR billing record") — the cost is derived from the Tamanu billing subsystem.
 {% enddocs %}
 
 {% docs clinical__cost__currency_concept_id %}

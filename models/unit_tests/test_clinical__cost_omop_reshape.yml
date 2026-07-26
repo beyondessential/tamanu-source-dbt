@@ -31,7 +31,7 @@ unit_tests:
           'enc1' as cost_event_id,
           'Visit' as cost_domain_id,
           'finalised' as invoice_status,
-          0 as cost_type_concept_id,
+          32821 as cost_type_concept_id,
           null::integer as currency_concept_id,
           100.00::numeric as total_charge,
           80.00::numeric as total_paid,
@@ -43,6 +43,6 @@ unit_tests:
           'INV-1' as cost_source_value
         union all
         select
-          'inv2', 'enc2', 'Visit', 'cancelled', 0, null::integer,
+          'inv2', 'enc2', 'Visit', 'cancelled', 32821, null::integer,
           0::numeric, 0::numeric, 0::numeric, 0::numeric, 0::numeric, 0::numeric,
           null::varchar, 'INV-2'
