@@ -45,9 +45,9 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp
+          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp, 'INV'
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -143,7 +143,8 @@ unit_tests:
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
           null::numeric as insurer_payment,
-          null::text as products_no_category
+          null::text as products_no_category,
+          'INV' as display_id
         union all
         select
           '00000000-0000-0000-0000-000000000002',
@@ -156,4 +157,5 @@ unit_tests:
           0.00::numeric,
           null::numeric,
           null::numeric,
-          null::text
+          null::text,
+          'INV'

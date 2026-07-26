@@ -62,47 +62,60 @@ invoice_discount_pct as (
         invoice_id,
         percentage
     from {{ ref('invoice_discounts') }}
-    order by invoice_id, applied_time desc, id
+    order by invoice_id asc, applied_time desc, id asc
 ),
 
 invoice_payments_agg as (
-    -- BL-012: refunds are stored as positive amounts with
-    -- original_payment_id set and negated so the sum gives the net patient
-    -- payment total. The ipp.id filter keeps only patient payments, so a
-    -- refund is netted only when it shares the patient-payment linkage of the
-    -- payment it reverses. Insurer-payment refunds (no invoice_patient_payments
-    -- row) are intentionally excluded, matching the patient-payment scope.
+    -- BL-012: net patient payment. A payment counts when it carries an
+    -- invoice_patient_payments row. A refund reverses the *entire* original payment
+    -- (Tamanu has no partial refund) and is stored as a separate payment with
+    -- original_payment_id set. Mirroring the app's getInvoiceSummary, the net is the
+    -- sum of payments that are neither a reversal (original_payment_id set) nor
+    -- themselves reversed (a reversal points at them) -- a refunded pair nets to 0 by
+    -- excluding both sides.
     select
         ipay.invoice_id,
-        sum(
-            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
-        ) filter (where ipp.id is not null) as patient_payment
+        sum(ipay.amount) as patient_payment
     from {{ ref('invoice_payments') }} ipay
-    left join {{ ref('invoice_patient_payments') }} ipp
-        on ipp.invoice_payment_id = ipay.id
+    where exists (
+            select 1 from {{ ref('invoice_patient_payments') }} ipp
+            where ipp.invoice_payment_id = ipay.id
+        )
+        and ipay.original_payment_id is null
+        and not exists (
+            select 1 from {{ ref('invoice_payments') }} refund
+            where refund.original_payment_id = ipay.id
+        )
     group by ipay.invoice_id
 ),
 
 invoice_insurer_payments_agg as (
-    -- BL-013: insurer payments actually received per invoice, mirroring the
-    -- refund netting used for patient payments. A payment counts as an insurer
-    -- payment when it carries an invoice_insurer_payments row.
+    -- BL-013: net insurer payment received. A payment counts when it carries an
+    -- invoice_insurer_payments row. Unlike patient refunds, an insurer payment
+    -- reversal does NOT get its own invoice_insurer_payments row (Tamanu has no
+    -- insurer-refund endpoint that creates one), so a negative-reversal netting
+    -- could never see it. Instead -- as the app's getInvoiceSummary does -- exclude a
+    -- reversed insurer payment: sum insurer payments that are neither a reversal nor
+    -- themselves reversed, so a reversed pair nets to 0.
     --
     -- No status filter: invoice_payments.amount is the amount actually paid, and
     -- invoice_insurer_payments.status is *derived from* it in the app
     -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
     -- partial), so a rejected payment already contributes 0 and a partial one
-    -- contributes its real received value. Tamanu's own insurer-received total
-    -- (getSpecificInsurerPaymentRemainingBalance) sums amount across all insurer
-    -- payments with no status filter -- this mirrors that exactly.
+    -- contributes its real received value.
     select
         ipay.invoice_id,
-        sum(
-            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
-        ) filter (where iip.id is not null) as insurer_payment
+        sum(ipay.amount) as insurer_payment
     from {{ ref('invoice_payments') }} ipay
-    left join {{ ref('invoice_insurer_payments') }} iip
-        on iip.invoice_payment_id = ipay.id
+    where exists (
+            select 1 from {{ ref('invoice_insurer_payments') }} iip
+            where iip.invoice_payment_id = ipay.id
+        )
+        and ipay.original_payment_id is null
+        and not exists (
+            select 1 from {{ ref('invoice_payments') }} refund
+            where refund.original_payment_id = ipay.id
+        )
     group by ipay.invoice_id
 )
 
@@ -130,7 +143,10 @@ select
     ipa.patient_payment,
     -- BL-013: net insurer payment actually received
     iipa.insurer_payment,
-    iia.products_no_category
+    iia.products_no_category,
+    -- human-facing invoice number, carried for consumers (e.g. clinical__cost
+    -- cost_source_value) so they need not re-join invoices
+    i.display_id
 from {{ ref('invoices') }} i
 left join invoice_finalised inf
     on inf.invoice_id = i.id

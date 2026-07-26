@@ -12,16 +12,9 @@ unit_tests:
       - input: ref('int__encounter_invoice_amounts')
         format: sql
         rows: |
-          select 'inv1' as invoice_id, 'enc1' as encounter_id, 'finalised' as status, '2024-01-01'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 8.00::numeric as invoice_discount, 25.00::numeric as patient_payment, 55.00::numeric as insurer_payment, null::text as products_no_category
+          select 'inv1' as invoice_id, 'enc1' as encounter_id, 'finalised' as status, '2024-01-01'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 8.00::numeric as invoice_discount, 25.00::numeric as patient_payment, 55.00::numeric as insurer_payment, null::text as products_no_category, 'INV-1' as display_id
           union all
-          select 'inv2', 'enc2', 'cancelled', '2024-01-02'::timestamp, null::timestamp, null::numeric, null::numeric, null::numeric, null::numeric, null::numeric, null::text
-
-      - input: ref('invoices')
-        format: sql
-        rows: |
-          select 'inv1' as id, 'INV-1' as display_id
-          union all
-          select 'inv2', 'INV-2'
+          select 'inv2', 'enc2', 'cancelled', '2024-01-02'::timestamp, null::timestamp, null::numeric, null::numeric, null::numeric, null::numeric, null::numeric, null::text, 'INV-2'
 
     expect:
       format: sql

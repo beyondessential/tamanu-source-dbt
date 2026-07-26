@@ -11,10 +11,6 @@
 
 with invoice_amounts as (
     select * from {{ ref('int__encounter_invoice_amounts') }}
-),
-
-invoices as (
-    select * from {{ ref('invoices') }}
 )
 
 select
@@ -37,23 +33,21 @@ select
 
     -- deployment currency: universal model leaves it unset; deployments override
     -- per deployment via map__omop_currency or a var (BL-009)
-    cast(null as integer) as currency_concept_id,
+    null::integer as currency_concept_id,
 
     -- charged, paid and expected-coverage amounts. Default to 0 so downstream sums
     -- never need coalesce (BL-010)
-    coalesce(a.invoice_total, 0)                              as total_charge,      -- BL-003
+    coalesce(a.invoice_total, 0) as total_charge,      -- BL-003
     coalesce(a.patient_payment, 0) + coalesce(a.insurer_payment, 0) as total_paid,  -- BL-007
-    coalesce(a.patient_payment, 0)                            as paid_by_patient,   -- BL-005
-    coalesce(a.insurer_payment, 0)                           as paid_by_payer,     -- BL-006
-    coalesce(a.insurance_coverage, 0)                        as amount_allowed,    -- BL-004
-    coalesce(a.invoice_discount, 0)                         as discount_amount,   -- BL-008 [ext]
+    coalesce(a.patient_payment, 0) as paid_by_patient,   -- BL-005
+    coalesce(a.insurer_payment, 0) as paid_by_payer,     -- BL-006
+    coalesce(a.insurance_coverage, 0) as amount_allowed,    -- BL-004
+    coalesce(a.invoice_discount, 0) as discount_amount,   -- BL-008 [ext]
 
     -- payer plan period: future clinical__payer_plan_period (spec OQ-002)
-    cast(null as varchar) as payer_plan_period_id,
+    null::varchar as payer_plan_period_id,
 
     -- human-facing invoice number, retained for traceability [ext]
-    i.display_id as cost_source_value
+    a.display_id as cost_source_value
 
 from invoice_amounts a
-left join invoices i
-    on i.id = a.invoice_id

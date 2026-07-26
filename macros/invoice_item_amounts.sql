@@ -179,7 +179,7 @@ item_resolved_price as (
             amount,
             type
         from {{ ref('invoice_item_discounts') }}
-        order by invoice_item_id, id
+        order by invoice_item_id asc, id asc
     ) iid on iid.invoice_item_id = iup.invoice_item_id
 ),
 

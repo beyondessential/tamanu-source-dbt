@@ -2,14 +2,15 @@ unit_tests:
   - name: test_int__encounter_invoice_amounts_insurer_payment
     model: int__encounter_invoice_amounts
     description: >
-      insurer_payment nets insurer payments minus refunds, with NO status filter
-      (BL-013). invoice_payments.amount is the amount actually paid and the insurer
-      status is derived from it, so a rejected payment (amount 0) contributes 0 and
-      a partial payment contributes its real received value. Here: a $100 paid
-      payment, a $30 partial, a $0 rejected, and a $100 refund of the paid one
-      (original_payment_id set) net to insurer_payment = 100 + 30 + 0 - 100 = 30.
-      A separate $25 patient payment stays on patient_payment, proving the two
-      aggregates are disjoint.
+      insurer_payment sums insurer payments and nets refunds by EXCLUDING the reversed
+      original (BL-013), with NO status filter (amount is the actual amount paid; status
+      is derived from it, so a $0 rejected contributes 0 and a partial its real value).
+      Here: a $100 paid, a $30 partial, a $0 rejected, and a $100 refund of the paid one.
+      The refund has original_payment_id set but -- unlike a patient refund -- carries no
+      invoice_insurer_payments row, so the model excludes the reversed $100 original and
+      the reversal itself, giving insurer_payment = 30 + 0 = 30. (The old negate-by-own-
+      link approach would wrongly return 130.) A separate $25 patient payment stays on
+      patient_payment, proving the two aggregates are disjoint.
     given:
       - input: ref('encounters')
         format: sql
@@ -39,7 +40,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -73,14 +74,16 @@ unit_tests:
       - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
-          -- status is unused by the model (derived from amount in the app) -- shown for clarity
+          -- status is unused by the model (derived from amount in the app) -- shown for clarity.
+          -- The $100 refund (payment ...013) deliberately has NO row here: an insurer
+          -- reversal does not get its own invoice_insurer_payments row (Tamanu has no
+          -- insurer-refund endpoint), so the model must net it by excluding the reversed
+          -- original (...010), not by finding the reversal's own insurer link.
           select '00000000-0000-0000-0000-000000000030'::uuid as id, '00000000-0000-0000-0000-000000000010'::uuid as invoice_payment_id, 'paid' as status
           union all
           select '00000000-0000-0000-0000-000000000031'::uuid, '00000000-0000-0000-0000-000000000011'::uuid, 'partial'
           union all
           select '00000000-0000-0000-0000-000000000032'::uuid, '00000000-0000-0000-0000-000000000012'::uuid, 'rejected'
-          union all
-          select '00000000-0000-0000-0000-000000000033'::uuid, '00000000-0000-0000-0000-000000000013'::uuid, 'paid'
 
       - input: ref('invoice_patient_payments')
         format: sql
@@ -141,4 +144,5 @@ unit_tests:
           0.00::numeric as invoice_discount,
           25.00::numeric as patient_payment,
           30.00::numeric as insurer_payment,
-          null::text as products_no_category
+          null::text as products_no_category,
+          'INV' as display_id

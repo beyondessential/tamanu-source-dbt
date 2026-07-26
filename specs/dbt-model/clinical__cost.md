@@ -173,14 +173,15 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
   — the net patient payment (refunds already netted upstream).
 - **BL-006:** `paid_by_payer` is `int__encounter_invoice_amounts.insurer_payment`
   — the sum of `invoice_payments.amount` for payments carrying an
-  `invoice_insurer_payments` row, refunds netted by the same `original_payment_id`
-  rule as the patient-payment aggregate. Aggregated in the shared ephemeral (not
-  here) so patient and insurer receipts have one definition. **No status
-  filter:** `invoice_payments.amount` is the amount *actually* paid and the
-  insurer `status` is derived from it in the app (`getInvoiceInsurerPaymentStatus`:
-  0 → rejected, full → paid, part → partial), so rejected rows contribute 0 and
-  partial rows contribute their real received value — mirroring Tamanu's own
-  `getSpecificInsurerPaymentRemainingBalance`, which sums unconditionally.
+  `invoice_insurer_payments` row, with reversed payments netted by **excluding the
+  reversed original** (an insurer reversal, unlike a patient refund, carries no
+  `invoice_insurer_payments` row of its own, so it cannot be found by a
+  negative-reversal lookup). Aggregated in the shared ephemeral (not here) so
+  patient and insurer receipts have one definition, mirroring the app's
+  `getInvoiceSummary`. **No status filter:** `invoice_payments.amount` is the amount
+  *actually* paid and the insurer `status` is derived from it in the app
+  (`getInvoiceInsurerPaymentStatus`: 0 → rejected, full → paid, part → partial), so
+  rejected rows contribute 0 and partial rows contribute their real received value.
 - **BL-007:** `total_paid` is `paid_by_patient + paid_by_payer` — all money
   received against the invoice, patient and insurer. This is the value the
   invoice report surfaces as "Total received".
