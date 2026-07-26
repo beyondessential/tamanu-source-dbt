@@ -102,7 +102,9 @@ item-level because:
 Item-level costing (one COST row per invoice item, `cost_event_id` → the item's
 own event) therefore remains a future extension — not for lack of a source link,
 but because payments can't be item-allocated and half the item types lack an OMOP
-event target (OQ-001). Grain is
+event target (OQ-001). The *non-OMOP* per-line billing detail (charges, discounts,
+coverage per item) is served instead by `ds__encounter_invoice_items`
+(`specs/dbt-model/ds__encounter_invoice_items.md`). Grain is
 preserved: the shared `int__encounter_invoice_amounts` is one row per invoice
 (its `invoice_id` is `not_null` + `unique`), and every join below is many-to-one.
 
@@ -258,7 +260,7 @@ schema, and the payment-method / layering decisions under **Decisions taken**.)
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's event). The source link exists (`invoice_items.source_record_type`/`source_record_id`: `Prescription`, `LabTest`, `Procedure`, `ImagingRequestArea`, null). Blocked on two fronts: (a) payments are invoice-level and can't be item-allocated, so a charge-only item model or visit-anchored payments would be needed; (b) only `Prescription`→`clinical__drug_exposure` and `LabTest`→`clinical__measurement` have OMOP targets — `Procedure`/`ImagingRequestArea` need new `clinical__` models first. Revisit when a `clinical__procedure_occurrence` exists and metric demand is clear. | Maui team | future |
+| OQ-001 | **OMOP per-event cost** — a `COST` row per clinical *event* (`cost_event_id` → `drug_exposure` / a future `procedure_occurrence`), the OMOP-native way to cost per service. The source link exists (`invoice_items.source_record_type`/`source_record_id`: `Prescription`, `LabTest`, `Procedure`, `ImagingRequestArea`, null), but it is blocked on: (a) payments are invoice-level and can't be item-allocated; (b) only `Prescription`→`clinical__drug_exposure` and `LabTest`→`clinical__measurement` have OMOP targets — `Procedure`/`ImagingRequestArea` need new `clinical__` models first. Revisit when `clinical__procedure_occurrence` exists. (The *non-OMOP* per-invoice-item billing detail is handled separately by `ds__encounter_invoice_items`.) | Maui team | future |
 | OQ-002 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code
