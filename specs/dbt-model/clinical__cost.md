@@ -94,6 +94,14 @@ Item-level costing is a documented future extension — see OQ-004. Grain is
 preserved: the shared `int__encounter_invoice_amounts` is one row per invoice
 (its `invoice_id` is `not_null` + `unique`), and every join below is many-to-one.
 
+**Performance caveat.** `int__encounter_invoice_amounts` is `ephemeral`, so its
+arithmetic (notably the price-list cross join) is now inlined into **both**
+`clinical__cost` and `ds__encounter_invoices`; in the `reporting_*` bundle both
+are views, so that arithmetic re-executes per downstream query rather than once.
+This is accepted for now — if it surfaces in `reporting_*` timings, materialise
+the intermediate as a table on the replica (env-aware) so both consumers read it
+once.
+
 ## Output schema
 
 Columns follow OMOP CDM v5.4 `COST` naming. Tamanu-specific extension columns

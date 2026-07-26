@@ -4486,7 +4486,7 @@ window w as (
 create or replace view "reporting"."int__encounter_invoice_amounts" as (
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
 -- One row per invoice: price-list resolution, item discounts, insurance coverage,
--- invoice-level discount, net patient payment. Extracted from ds__encounter_invoices
+-- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
 -- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
@@ -4759,6 +4759,29 @@ invoice_payments_agg as (
     left join "reporting"."invoice_patient_payments" ipp
         on ipp.invoice_payment_id = ipay.id
     group by ipay.invoice_id
+),
+
+invoice_insurer_payments_agg as (
+    -- BL-013: insurer payments actually received per invoice, mirroring the
+    -- refund netting used for patient payments. A payment counts as an insurer
+    -- payment when it carries an invoice_insurer_payments row.
+    --
+    -- No status filter: invoice_payments.amount is the amount actually paid, and
+    -- invoice_insurer_payments.status is *derived from* it in the app
+    -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
+    -- partial), so a rejected payment already contributes 0 and a partial one
+    -- contributes its real received value. Tamanu's own insurer-received total
+    -- (getSpecificInsurerPaymentRemainingBalance) sums amount across all insurer
+    -- payments with no status filter -- this mirrors that exactly.
+    select
+        ipay.invoice_id,
+        sum(
+            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
+        ) filter (where iip.id is not null) as insurer_payment
+    from "reporting"."invoice_payments" ipay
+    left join "reporting"."invoice_insurer_payments" iip
+        on iip.invoice_payment_id = ipay.id
+    group by ipay.invoice_id
 )
 
 -- One row per invoice. The status column lets consumers filter (e.g. exclude
@@ -4783,6 +4806,8 @@ select
         2
     ) as invoice_discount,
     ipa.patient_payment,
+    -- BL-013: net insurer payment actually received
+    iipa.insurer_payment,
     iia.products_no_category
 from "reporting"."invoices" i
 left join invoice_finalised inf
@@ -4795,6 +4820,8 @@ left join invoice_discount_pct idsc
     on idsc.invoice_id = i.id
 left join invoice_payments_agg ipa
     on ipa.invoice_id = i.id
+left join invoice_insurer_payments_agg iipa
+    on iipa.invoice_id = i.id
 );
 create or replace view "reporting"."int__lab_requests_history" as (
 select distinct on (lr.id, coalesce(lrl.status, lr.status))
@@ -5100,10 +5127,11 @@ from users u
 );
 create or replace view "reporting"."clinical__cost" as (
 -- clinical__cost -- OMOP-lite COST domain. One row per invoice (BL-001), anchored to
--- the encounter's visit_occurrence via cost_event_id. Charges, coverage and net
--- patient payment come from the shared int__encounter_invoice_amounts arithmetic;
--- insurer payments actually received are aggregated here from bases/ (D10). Native
--- UUID keys (D1). See specs/dbt-model/clinical__cost.md for BL-001..BL-010.
+-- the encounter's visit_occurrence via cost_event_id. Charges, coverage, net patient
+-- payment and net insurer payment all come from the shared
+-- int__encounter_invoice_amounts arithmetic (single source of truth, OQ-007); this
+-- model only reshapes them into OMOP COST columns. Native UUID keys (D1).
+-- See specs/dbt-model/clinical__cost.md for BL-001..BL-010.
 --
 -- Note: the payment-method split (Cash/Mobile Money/Card/...) is intentionally NOT
 -- modelled here -- OMOP COST has no payment-instrument dimension (spec OQ-001).
@@ -5111,7 +5139,7 @@ create or replace view "reporting"."clinical__cost" as (
 with  __dbt__cte__int__encounter_invoice_amounts as (
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
 -- One row per invoice: price-list resolution, item discounts, insurance coverage,
--- invoice-level discount, net patient payment. Extracted from ds__encounter_invoices
+-- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
 -- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
@@ -5384,6 +5412,29 @@ invoice_payments_agg as (
     left join "reporting"."invoice_patient_payments" ipp
         on ipp.invoice_payment_id = ipay.id
     group by ipay.invoice_id
+),
+
+invoice_insurer_payments_agg as (
+    -- BL-013: insurer payments actually received per invoice, mirroring the
+    -- refund netting used for patient payments. A payment counts as an insurer
+    -- payment when it carries an invoice_insurer_payments row.
+    --
+    -- No status filter: invoice_payments.amount is the amount actually paid, and
+    -- invoice_insurer_payments.status is *derived from* it in the app
+    -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
+    -- partial), so a rejected payment already contributes 0 and a partial one
+    -- contributes its real received value. Tamanu's own insurer-received total
+    -- (getSpecificInsurerPaymentRemainingBalance) sums amount across all insurer
+    -- payments with no status filter -- this mirrors that exactly.
+    select
+        ipay.invoice_id,
+        sum(
+            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
+        ) filter (where iip.id is not null) as insurer_payment
+    from "reporting"."invoice_payments" ipay
+    left join "reporting"."invoice_insurer_payments" iip
+        on iip.invoice_payment_id = ipay.id
+    group by ipay.invoice_id
 )
 
 -- One row per invoice. The status column lets consumers filter (e.g. exclude
@@ -5408,6 +5459,8 @@ select
         2
     ) as invoice_discount,
     ipa.patient_payment,
+    -- BL-013: net insurer payment actually received
+    iipa.insurer_payment,
     iia.products_no_category
 from "reporting"."invoices" i
 left join invoice_finalised inf
@@ -5420,28 +5473,14 @@ left join invoice_discount_pct idsc
     on idsc.invoice_id = i.id
 left join invoice_payments_agg ipa
     on ipa.invoice_id = i.id
+left join invoice_insurer_payments_agg iipa
+    on iipa.invoice_id = i.id
 ), invoice_amounts as (
     select * from __dbt__cte__int__encounter_invoice_amounts
 ),
 
 invoices as (
     select * from "reporting"."invoices"
-),
-
-insurer_payments_agg as (
-    -- BL-006: insurer payments actually received per invoice. A payment counts as
-    -- an insurer payment when it carries an invoice_insurer_payments row. Refunds
-    -- (original_payment_id set) are negated so the sum is the net insurer receipt,
-    -- mirroring the patient-payment netting in int__encounter_invoice_amounts.
-    select
-        ipay.invoice_id,
-        sum(
-            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
-        ) filter (where iip.id is not null) as insurer_payment
-    from "reporting"."invoice_payments" ipay
-    left join "reporting"."invoice_insurer_payments" iip
-        on iip.invoice_payment_id = ipay.id
-    group by ipay.invoice_id
 )
 
 select
@@ -5452,6 +5491,11 @@ select
     a.encounter_id as cost_event_id,
     'Visit' as cost_domain_id,
 
+    -- invoice lifecycle status, carried so consumers can exclude cancelled
+    -- invoices (which still carry a charge). OMOP COST has no status field, so
+    -- this is a Tamanu extension column (BL-011) [ext]
+    a.status as invoice_status,
+
     -- provenance: constant, concept TBD (spec OQ-005). 0 = no matching concept
     0 as cost_type_concept_id,
 
@@ -5461,12 +5505,12 @@ select
 
     -- charged, paid and expected-coverage amounts. Default to 0 so downstream sums
     -- never need coalesce (BL-010)
-    coalesce(a.invoice_total, 0)                                as total_charge,      -- BL-003
-    coalesce(a.patient_payment, 0) + coalesce(ipa.insurer_payment, 0) as total_paid,  -- BL-007
-    coalesce(a.patient_payment, 0)                             as paid_by_patient,   -- BL-005
-    coalesce(ipa.insurer_payment, 0)                          as paid_by_payer,     -- BL-006
-    coalesce(a.insurance_coverage, 0)                         as amount_allowed,    -- BL-004
-    coalesce(a.invoice_discount, 0)                          as discount_amount,   -- BL-008 [ext]
+    coalesce(a.invoice_total, 0)                              as total_charge,      -- BL-003
+    coalesce(a.patient_payment, 0) + coalesce(a.insurer_payment, 0) as total_paid,  -- BL-007
+    coalesce(a.patient_payment, 0)                            as paid_by_patient,   -- BL-005
+    coalesce(a.insurer_payment, 0)                           as paid_by_payer,     -- BL-006
+    coalesce(a.insurance_coverage, 0)                        as amount_allowed,    -- BL-004
+    coalesce(a.invoice_discount, 0)                         as discount_amount,   -- BL-008 [ext]
 
     -- payer plan period: future clinical__payer_plan_period (spec OQ-006)
     cast(null as varchar) as payer_plan_period_id,
@@ -5475,8 +5519,6 @@ select
     i.display_id as cost_source_value
 
 from invoice_amounts a
-left join insurer_payments_agg ipa
-    on ipa.invoice_id = a.invoice_id
 left join invoices i
     on i.id = a.invoice_id
 );
@@ -5937,7 +5979,7 @@ create or replace view "reporting"."ds__encounter_invoices" as (
 with __dbt__cte__int__encounter_invoice_amounts as (
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
 -- One row per invoice: price-list resolution, item discounts, insurance coverage,
--- invoice-level discount, net patient payment. Extracted from ds__encounter_invoices
+-- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
 -- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
@@ -6210,6 +6252,29 @@ invoice_payments_agg as (
     left join "reporting"."invoice_patient_payments" ipp
         on ipp.invoice_payment_id = ipay.id
     group by ipay.invoice_id
+),
+
+invoice_insurer_payments_agg as (
+    -- BL-013: insurer payments actually received per invoice, mirroring the
+    -- refund netting used for patient payments. A payment counts as an insurer
+    -- payment when it carries an invoice_insurer_payments row.
+    --
+    -- No status filter: invoice_payments.amount is the amount actually paid, and
+    -- invoice_insurer_payments.status is *derived from* it in the app
+    -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
+    -- partial), so a rejected payment already contributes 0 and a partial one
+    -- contributes its real received value. Tamanu's own insurer-received total
+    -- (getSpecificInsurerPaymentRemainingBalance) sums amount across all insurer
+    -- payments with no status filter -- this mirrors that exactly.
+    select
+        ipay.invoice_id,
+        sum(
+            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
+        ) filter (where iip.id is not null) as insurer_payment
+    from "reporting"."invoice_payments" ipay
+    left join "reporting"."invoice_insurer_payments" iip
+        on iip.invoice_payment_id = ipay.id
+    group by ipay.invoice_id
 )
 
 -- One row per invoice. The status column lets consumers filter (e.g. exclude
@@ -6234,6 +6299,8 @@ select
         2
     ) as invoice_discount,
     ipa.patient_payment,
+    -- BL-013: net insurer payment actually received
+    iipa.insurer_payment,
     iia.products_no_category
 from "reporting"."invoices" i
 left join invoice_finalised inf
@@ -6246,6 +6313,8 @@ left join invoice_discount_pct idsc
     on idsc.invoice_id = i.id
 left join invoice_payments_agg ipa
     on ipa.invoice_id = i.id
+left join invoice_insurer_payments_agg iipa
+    on iipa.invoice_id = i.id
 ) -- ds__encounter_invoices -- one row per invoice with the resolved billing figures.
 -- The per-invoice arithmetic now lives in int__encounter_invoice_amounts so that
 -- clinical__cost can share the same source of truth without a backwards
