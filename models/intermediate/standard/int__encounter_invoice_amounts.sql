@@ -1,6 +1,6 @@
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
 -- One row per invoice: price-list resolution, item discounts, insurance coverage,
--- invoice-level discount, net patient payment. Extracted from ds__encounter_invoices
+-- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
 -- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
@@ -273,6 +273,29 @@ invoice_payments_agg as (
     left join {{ ref('invoice_patient_payments') }} ipp
         on ipp.invoice_payment_id = ipay.id
     group by ipay.invoice_id
+),
+
+invoice_insurer_payments_agg as (
+    -- BL-013: insurer payments actually received per invoice, mirroring the
+    -- refund netting used for patient payments. A payment counts as an insurer
+    -- payment when it carries an invoice_insurer_payments row.
+    --
+    -- No status filter: invoice_payments.amount is the amount actually paid, and
+    -- invoice_insurer_payments.status is *derived from* it in the app
+    -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
+    -- partial), so a rejected payment already contributes 0 and a partial one
+    -- contributes its real received value. Tamanu's own insurer-received total
+    -- (getSpecificInsurerPaymentRemainingBalance) sums amount across all insurer
+    -- payments with no status filter -- this mirrors that exactly.
+    select
+        ipay.invoice_id,
+        sum(
+            case when ipay.original_payment_id is not null then -ipay.amount else ipay.amount end
+        ) filter (where iip.id is not null) as insurer_payment
+    from {{ ref('invoice_payments') }} ipay
+    left join {{ ref('invoice_insurer_payments') }} iip
+        on iip.invoice_payment_id = ipay.id
+    group by ipay.invoice_id
 )
 
 -- One row per invoice. The status column lets consumers filter (e.g. exclude
@@ -297,6 +320,8 @@ select
         2
     ) as invoice_discount,
     ipa.patient_payment,
+    -- BL-013: net insurer payment actually received
+    iipa.insurer_payment,
     iia.products_no_category
 from {{ ref('invoices') }} i
 left join invoice_finalised inf
@@ -309,3 +334,5 @@ left join invoice_discount_pct idsc
     on idsc.invoice_id = i.id
 left join invoice_payments_agg ipa
     on ipa.invoice_id = i.id
+left join invoice_insurer_payments_agg iipa
+    on iipa.invoice_id = i.id

@@ -23,6 +23,12 @@ OMOP domain of the event the cost is attached to. Always "Visit" — Tamanu cost
 recorded against the encounter.
 {% enddocs %}
 
+{% docs clinical__cost__invoice_status %}
+Invoice lifecycle status (in_progress / finalised / cancelled), carried so consumers
+can exclude cancelled invoices — which still carry a charge. A Tamanu extension; OMOP
+COST has no status field.
+{% enddocs %}
+
 {% docs clinical__cost__cost_type_concept_id %}
 OMOP concept indicating how the cost was derived. Reserved for a billing-system
 provenance concept; currently 0 (no matching concept).
@@ -57,7 +63,9 @@ necessarily an amount received.
 {% enddocs %}
 
 {% docs clinical__cost__discount_amount %}
-Total value of adjustments (discounts) applied to the invoice.
+The invoice-level discount amount only. Item-level discounts are already netted
+into total_charge and are not included here; folding them in is an open question
+(spec OQ-003).
 {% enddocs %}
 
 {% docs clinical__cost__payer_plan_period_id %}

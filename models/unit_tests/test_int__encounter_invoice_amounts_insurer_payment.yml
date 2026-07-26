@@ -1,9 +1,15 @@
 unit_tests:
-  - name: test_int__encounter_invoice_amounts_invoice_level_discount
+  - name: test_int__encounter_invoice_amounts_insurer_payment
     model: int__encounter_invoice_amounts
     description: >
-      An invoice-level discount of 20% on a $100 item total (no insurance
-      coverage) yields invoice_discount = (100 - 0) * 0.2 = 20.
+      insurer_payment nets insurer payments minus refunds, with NO status filter
+      (BL-013). invoice_payments.amount is the amount actually paid and the insurer
+      status is derived from it, so a rejected payment (amount 0) contributes 0 and
+      a partial payment contributes its real received value. Here: a $100 paid
+      payment, a $30 partial, a $0 rejected, and a $100 refund of the paid one
+      (original_payment_id set) net to insurer_payment = 100 + 30 + 0 - 100 = 30.
+      A separate $25 patient payment stays on patient_payment, proving the two
+      aggregates are disjoint.
     given:
       - input: ref('encounters')
         format: sql
@@ -33,7 +39,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -43,27 +49,43 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+          -- insurer: $100 paid, $30 partial, $0 rejected, $100 refund of the paid one; plus a $25 patient payment
+          select '00000000-0000-0000-0000-000000000010'::uuid as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 100.00::numeric as amount, null::uuid as original_payment_id
+          union all
+          select '00000000-0000-0000-0000-000000000011'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 30.00::numeric, null::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000012'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 0.00::numeric, null::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000013'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000020'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 25.00::numeric, null::uuid
 
       - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          -- status is unused by the model (derived from amount in the app) -- shown for clarity
+          select '00000000-0000-0000-0000-000000000030'::uuid as id, '00000000-0000-0000-0000-000000000010'::uuid as invoice_payment_id, 'paid' as status
+          union all
+          select '00000000-0000-0000-0000-000000000031'::uuid, '00000000-0000-0000-0000-000000000011'::uuid, 'partial'
+          union all
+          select '00000000-0000-0000-0000-000000000032'::uuid, '00000000-0000-0000-0000-000000000012'::uuid, 'rejected'
+          union all
+          select '00000000-0000-0000-0000-000000000033'::uuid, '00000000-0000-0000-0000-000000000013'::uuid, 'paid'
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select '00000000-0000-0000-0000-000000000040'::uuid as id, '00000000-0000-0000-0000-000000000020'::uuid as invoice_payment_id
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -93,8 +115,7 @@ unit_tests:
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          -- 20% invoice-level discount
-          select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 0.2::numeric as percentage, '2024-01-14 09:00:00'::timestamp as applied_time, '00000000-0000-0000-0000-0000000000d1'::uuid as id
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
 
       - input: ref('invoice_price_lists')
         format: sql
@@ -112,12 +133,12 @@ unit_tests:
         select
           '00000000-0000-0000-0000-000000000001' as invoice_id,
           'enc_001' as encounter_id,
-          'in_progress' as status,
+          'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          100.00::numeric as invoice_total,
+          50.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
-          20.00::numeric as invoice_discount,
-          null::numeric as patient_payment,
-          null::numeric as insurer_payment,
-          'Consultation' as products_no_category
+          0.00::numeric as invoice_discount,
+          25.00::numeric as patient_payment,
+          30.00::numeric as insurer_payment,
+          null::text as products_no_category

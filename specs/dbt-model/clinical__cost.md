@@ -36,12 +36,13 @@ Health Economics. See
 
 ## Purpose
 
-**What this artefact measures.** One row per finalised or in-progress Tamanu
-invoice, in OMOP `COST` shape: the amount charged (`total_charge`), the amount
-actually received split by payer (`paid_by_patient`, `paid_by_payer`,
-`total_paid`), and the amount insurance is expected to cover but may not yet
-have paid (`amount_allowed`). Each row is anchored to the OMOP `VISIT_OCCURRENCE`
-for the encounter the invoice belongs to.
+**What this artefact measures.** One row per Tamanu invoice (any status —
+`invoice_status` is carried so consumers can exclude cancelled invoices), in OMOP
+`COST` shape: the amount charged (`total_charge`), the amount actually received
+split by payer (`paid_by_patient`, `paid_by_payer`, `total_paid`), and the amount
+insurance is expected to cover but may not yet have paid (`amount_allowed`). Each
+row is anchored to the OMOP `VISIT_OCCURRENCE` for the encounter the invoice
+belongs to.
 
 **Clinical / operational context.** Tamanu records patient billing as `invoices`
 (one per encounter), itemised into `invoice_items`, with discounts
@@ -104,15 +105,16 @@ canonical billing surface must not lose information the source carries.
 | `cost_id` | uuid | `invoices.id`. Native UUID PK — no remap to OMOP integer IDs (D1) |
 | `cost_event_id` | uuid | `invoice.encounter_id` → `clinical__visit_occurrence.visit_occurrence_id`. The billed encounter |
 | `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-004) |
+| `invoice_status` **[ext]** | text | Invoice lifecycle status (`in_progress` / `finalised` / `cancelled`) from `int__encounter_invoice_amounts.status`, carried so consumers can exclude cancelled invoices. OMOP `COST` has no status field |
 | `cost_type_concept_id` | integer | Constant provenance concept — the invoice originates in the Tamanu billing system. Concept TBD (OQ-005) |
 | `currency_concept_id` | integer | Deployment currency (e.g. GHS for Queen of Sheba). Universal model cannot hardcode one currency — see OQ-002. NULL until resolved |
 | `total_charge` | numeric | Invoice value: `int__encounter_invoice_amounts.invoice_total` (sum of discounted item totals) |
 | `total_paid` | numeric | Money actually received: `paid_by_patient` + `paid_by_payer` |
 | `paid_by_patient` | numeric | Net patient payment (payments less refunds): `int__encounter_invoice_amounts.patient_payment` |
-| `paid_by_payer` | numeric | Insurer payments **actually received** — summed from `invoice_payments` linked to `invoice_insurer_payments`. Distinct from `amount_allowed` |
+| `paid_by_payer` | numeric | Insurer payments **actually received**: `int__encounter_invoice_amounts.insurer_payment` (sum of `invoice_payments.amount` linked to `invoice_insurer_payments`, refunds netted). Distinct from `amount_allowed` |
 | `amount_allowed` | numeric | Insurance **coverage** (expected, not necessarily paid): `int__encounter_invoice_amounts.insurance_coverage` |
 | `discount_amount` **[ext]** | numeric | Total adjustments (discounts). OMOP `COST` has no discount field — retained for billing consumers. Invoice-level discount from `int__encounter_invoice_amounts.invoice_discount`; item-level scope is OQ-003 |
-| `payer_plan_period_id` | uuid | FK to a future `clinical__payer_plan_period`. NULL until that model exists (OQ-006) |
+| `payer_plan_period_id` | varchar | FK to a future `clinical__payer_plan_period`. Typed `varchar` (cast NULL) pending that model — see OQ-006 |
 | `cost_source_value` **[ext]** | text | `invoices.display_id` — the human-facing invoice number, for traceability |
 
 **Explicitly NULL / not modelled** (OMOP `COST` columns Tamanu has no source for):
@@ -127,11 +129,14 @@ payment-instrument dimension. This is the central design tension — see OQ-001.
 
 ## Business logic
 
-- **BL-001:** One row per invoice, sourced from
+- **BL-001:** One row per invoice (any status), sourced from
   `{{ ref('int__encounter_invoice_amounts') }}` (the shared per-invoice
-  arithmetic extracted from `ds__encounter_invoices` — see OQ-007) plus `bases/`
-  payment tables — never `public.*` (D10) and never a `ds__` dataset (backwards
-  layer dependency, D2). Deleted / test-patient filtering is inherited upstream.
+  arithmetic extracted from `ds__encounter_invoices` — see OQ-007) plus
+  `ref('invoices')` for `display_id` — never `public.*` (D10) and never a `ds__`
+  dataset (backwards layer dependency, D2). Deleted / test-patient filtering is
+  inherited upstream. `invoice_status` is carried through **[ext]** so consumers
+  can exclude cancelled invoices (which still carry a `total_charge`); the model
+  does not filter them, keeping the canonical surface lossless.
 - **BL-002:** `cost_event_id` is the invoice's encounter id, and is an FK to
   `clinical__visit_occurrence.visit_occurrence_id`. Every invoice has a non-null
   `encounter_id` upstream, so the FK is total.
@@ -143,11 +148,16 @@ payment-instrument dimension. This is the central design tension — see OQ-001.
   expectation; a payment is a receipt.
 - **BL-005:** `paid_by_patient` is `int__encounter_invoice_amounts.patient_payment`
   — the net patient payment (refunds already netted upstream).
-- **BL-006:** `paid_by_payer` is the sum of `invoice_payments.amount` for
-  payments carrying an `invoice_insurer_payments` row, netted for refunds by the
-  same `original_payment_id` rule the patient-payment aggregate uses upstream.
-  A refund is negated only when it shares the insurer-payment linkage of the
-  payment it reverses.
+- **BL-006:** `paid_by_payer` is `int__encounter_invoice_amounts.insurer_payment`
+  — the sum of `invoice_payments.amount` for payments carrying an
+  `invoice_insurer_payments` row, refunds netted by the same `original_payment_id`
+  rule as the patient-payment aggregate. Aggregated in the shared ephemeral (not
+  here) so patient and insurer receipts have one definition (OQ-007). **No status
+  filter:** `invoice_payments.amount` is the amount *actually* paid and the
+  insurer `status` is derived from it in the app (`getInvoiceInsurerPaymentStatus`:
+  0 → rejected, full → paid, part → partial), so rejected rows contribute 0 and
+  partial rows contribute their real received value — mirroring Tamanu's own
+  `getSpecificInsurerPaymentRemainingBalance`, which sums unconditionally.
 - **BL-007:** `total_paid` is `paid_by_patient + paid_by_payer` — all money
   received against the invoice, patient and insurer. This is the value the
   invoice report surfaces as "Total received".
@@ -174,6 +184,7 @@ payment-instrument dimension. This is the central design tension — see OQ-001.
 | AC-006 | `total_charge`, `total_paid`, `paid_by_patient`, `paid_by_payer`, `amount_allowed`, `discount_amount` are all `not_null` | BL-010 | dbt `not_null` |
 | AC-007 | Row count equals `int__encounter_invoice_amounts` row count (no invoices dropped or duplicated) | BL-001 | dbt singular test |
 | AC-008 | Every non-null `payer_plan_period_id` exists in `clinical__payer_plan_period` | BL-001 | dbt `relationships` (activated once that model exists — OQ-006) |
+| AC-009 | `invoice_status` is `not_null` and one of `in_progress` / `finalised` / `cancelled` | BL-001 | dbt `not_null` + `accepted_values` |
 
 ## Registry entry
 
@@ -187,24 +198,23 @@ would carry the registry row.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__encounter_invoice_amounts` | `int/` | *To be extracted (OQ-007).* Per-invoice charge, coverage, net patient payment, invoice-level discount — the shared invoice arithmetic currently inside `ds__encounter_invoices` (BL-003..BL-005, BL-008) |
-| `invoice_payments` | `bases/` | Payment amount, date, refund linkage — insurer-payment aggregate (BL-006) |
-| `invoice_insurer_payments` | `bases/` | Marks which payments are insurer payments (BL-006) |
-| `invoices` | `bases/` | `encounter_id` (→ `cost_event_id`), `display_id` (→ `cost_source_value`) |
+| `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted per OQ-007): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment** (BL-003..BL-006, BL-008) |
+| `invoices` | `bases/` | `display_id` (→ `cost_source_value`) |
 | `clinical__visit_occurrence` | `clinical/` | `cost_event_id` FK target (AC-003) |
 | `clinical__payer_plan_period` | `clinical/` | *Future* — `payer_plan_period_id` FK target (OQ-006) |
+
+(`invoice_payments` / `invoice_insurer_payments` are consumed by
+`int__encounter_invoice_amounts`, not by `clinical__cost` directly.)
 
 ## Lineage
 
 ```
-                         ┌──►  clinical__cost  ──►  metric__cost_* / billing reports
-int__encounter_      ────┤                      └►  Tupaia cost & coverage indicators
-  invoice_amounts        └──►  ds__encounter_invoices  (refactored to consume it — OQ-007)
-
-invoices            ──┐
-invoice_payments    ──┼──►  clinical__cost   (insurer-payment aggregate, source values)
-invoice_insurer_    ──┘
-  payments
+invoice_payments    ──┐
+invoice_insurer_    ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
+  payments             │      invoice_amounts   │                     └►  Tupaia cost & coverage
+invoices, items,    ──┘                         └──►  ds__encounter_invoices  (OQ-007)
+  price lists, ...
+invoices            ─────►  clinical__cost   (display_id → cost_source_value)
 clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
   occurrence
 ```

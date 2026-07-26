@@ -57,6 +57,11 @@ unit_tests:
         rows: |
           select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
 
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_payment_id where false
+
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
@@ -116,4 +121,5 @@ unit_tests:
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
+          null::numeric as insurer_payment,
           'Consultation' as products_no_category
