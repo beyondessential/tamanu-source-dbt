@@ -28,7 +28,7 @@ Health Economics. See
 > non-omop on `ds__encounter_invoices` + a deployment-local payment model**,
 > not on `clinical__cost`. `clinical__cost` is nonetheless built as the
 > totals-only canonical billing surface for cost / coverage metrics and
-> dashboards. The layering conflict (OQ-007) was resolved by extracting the
+> dashboards. The layering conflict was resolved by extracting the
 > shared arithmetic into `int__encounter_invoice_amounts`. Model, yml, docs and
 > tests are implemented on branch `feature/maui-6734-clinical-cost`; the `AC`
 > tests are runnable but have **not yet been executed against a database**
@@ -75,7 +75,7 @@ extracted **down** into a shared `int__encounter_invoice_amounts` ephemeral that
 both `clinical__cost` and `ds__encounter_invoices` consume, with
 `ds__encounter_invoices` reduced to a thin projection over it (or over
 `clinical__cost` directly). Duplicating the arithmetic in `clinical__cost` is
-explicitly rejected — it would let the two definitions drift. See OQ-007.
+explicitly rejected — it would let the two definitions drift (see **Decisions taken** above).
 
 ## Grain
 
@@ -142,7 +142,7 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
 
 - **BL-001:** One row per invoice (any status), sourced from
   `{{ ref('int__encounter_invoice_amounts') }}` (the shared per-invoice
-  arithmetic extracted from `ds__encounter_invoices` — see OQ-007) plus
+  arithmetic extracted from `ds__encounter_invoices`) plus
   `ref('invoices')` for `display_id` — never `public.*` (D10) and never a `ds__`
   dataset (backwards layer dependency, D2). Deleted / test-patient filtering is
   inherited upstream. `invoice_status` is carried through **[ext]** so consumers
@@ -163,7 +163,7 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
   — the sum of `invoice_payments.amount` for payments carrying an
   `invoice_insurer_payments` row, refunds netted by the same `original_payment_id`
   rule as the patient-payment aggregate. Aggregated in the shared ephemeral (not
-  here) so patient and insurer receipts have one definition (OQ-007). **No status
+  here) so patient and insurer receipts have one definition. **No status
   filter:** `invoice_payments.amount` is the amount *actually* paid and the
   insurer `status` is derived from it in the app (`getInvoiceInsurerPaymentStatus`:
   0 → rejected, full → paid, part → partial), so rejected rows contribute 0 and
@@ -209,7 +209,7 @@ would carry the registry row.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted per OQ-007): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment** (BL-003..BL-006, BL-008) |
+| `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted from `ds__encounter_invoices`): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment** (BL-003..BL-006, BL-008) |
 | `invoices` | `bases/` | `display_id` (→ `cost_source_value`) |
 | `clinical__visit_occurrence` | `clinical/` | `cost_event_id` FK target (AC-003) |
 | `clinical__payer_plan_period` | `clinical/` | *Future* — `payer_plan_period_id` FK target (OQ-006) |
@@ -223,7 +223,7 @@ would carry the registry row.
 invoice_payments    ──┐
 invoice_insurer_    ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
   payments             │      invoice_amounts   │                     └►  Tupaia cost & coverage
-invoices, items,    ──┘                         └──►  ds__encounter_invoices  (OQ-007)
+invoices, items,    ──┘                         └──►  ds__encounter_invoices
   price lists, ...
 invoices            ─────►  clinical__cost   (display_id → cost_source_value)
 clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)

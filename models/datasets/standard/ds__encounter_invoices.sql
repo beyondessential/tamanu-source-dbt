@@ -3,7 +3,7 @@
 -- clinical__cost can share the same source of truth without a backwards
 -- clinical->ds dependency (D2). This dataset is a thin projection over it and
 -- preserves its original output contract exactly (column set, order, semantics).
--- See specs/dbt-model/clinical__cost.md (OQ-007).
+-- See specs/dbt-model/clinical__cost.md.
 
 select
     invoice_id,

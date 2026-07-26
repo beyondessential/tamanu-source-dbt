@@ -1,7 +1,7 @@
 -- clinical__cost -- OMOP-lite COST domain. One row per invoice (BL-001), anchored to
 -- the encounter's visit_occurrence via cost_event_id. Charges, coverage, net patient
 -- payment and net insurer payment all come from the shared
--- int__encounter_invoice_amounts arithmetic (single source of truth, OQ-007); this
+-- int__encounter_invoice_amounts arithmetic (single source of truth); this
 -- model only reshapes them into OMOP COST columns. Native UUID keys (D1).
 -- See specs/dbt-model/clinical__cost.md for BL-001..BL-010.
 --

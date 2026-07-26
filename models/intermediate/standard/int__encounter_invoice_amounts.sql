@@ -3,7 +3,7 @@
 -- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
--- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
+-- See specs/dbt-model/clinical__cost.md. Ephemeral: inlined by consumers.
 
 with invoice_finalised as (
     -- BL-015: most recent transition into finalised status per invoice
