@@ -18,9 +18,7 @@ select
     is_prn as "{{ translate_label('prescriptionIsPRN') }}",
     is_variable_dose as "{{ translate_label('prescriptionIsVariableDose') }}",
     dose_amount as "{{ translate_label('prescriptionDoseAmount') }}",
-    dosing_unit as "{{ translate_label('prescriptionDosingUnit') }}",
-    dispensing_unit as "{{ translate_label('prescriptionDispensingUnit') }}",
-    unit_conversion as "{{ translate_label('prescriptionUnitConversion') }}",
+    units as "{{ translate_label('prescriptionUnits') }}",
     frequency as "{{ translate_label('prescriptionFrequency') }}"
 from {{ ref('ds__sensitive_encounter_prescriptions') }}
 where

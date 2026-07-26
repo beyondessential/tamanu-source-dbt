@@ -29,3 +29,4 @@ macros/default_translations.sql
 models/surveys/
 target/
 .temp/
+dbt_internal_packages/
