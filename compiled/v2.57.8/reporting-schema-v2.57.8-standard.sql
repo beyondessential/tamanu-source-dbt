@@ -5134,7 +5134,8 @@ create or replace view "reporting"."clinical__cost" as (
 -- See specs/dbt-model/clinical__cost.md for BL-001..BL-010.
 --
 -- Note: the payment-method split (Cash/Mobile Money/Card/...) is intentionally NOT
--- modelled here -- OMOP COST has no payment-instrument dimension (spec OQ-001).
+-- modelled here -- OMOP COST has no payment-instrument dimension (see the
+-- "Decisions taken" note in specs/dbt-model/clinical__cost.md).
 
 with  __dbt__cte__int__encounter_invoice_amounts as (
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
@@ -5484,16 +5485,17 @@ invoices as (
 )
 
 select
-    -- identity (BL-001)
-    a.invoice_id as cost_id,
+    -- identity (BL-001). Cast to varchar (native Tamanu string id, D1) for a
+    -- type-safe key consistent with the other clinical__ models
+    a.invoice_id::varchar as cost_id,
 
     -- event anchor: the billed encounter, FK to clinical__visit_occurrence (BL-002)
-    a.encounter_id as cost_event_id,
+    a.encounter_id::varchar as cost_event_id,
     'Visit' as cost_domain_id,
 
     -- invoice lifecycle status, carried so consumers can exclude cancelled
     -- invoices (which still carry a charge). OMOP COST has no status field, so
-    -- this is a Tamanu extension column (BL-011) [ext]
+    -- this is a Tamanu extension column (BL-001) [ext]
     a.status as invoice_status,
 
     -- provenance: constant, concept TBD (spec OQ-005). 0 = no matching concept
