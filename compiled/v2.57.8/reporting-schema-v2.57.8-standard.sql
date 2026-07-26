@@ -4760,9 +4760,10 @@ insurance_coverage_agg as (
 ),
 
 invoice_items_agg as (
-    -- BL-009: invoice item total and BL-016: the products with no category
+    -- BL-009: invoice item total (sum of discounted item totals)
     select
         invoice_id,
+        -- BL-016: names of the invoice's products that have no category, ordered by item date
         string_agg(
             product_name, ', '
             order by date
@@ -5697,9 +5698,10 @@ insurance_coverage_agg as (
 ),
 
 invoice_items_agg as (
-    -- BL-009: invoice item total and BL-016: the products with no category
+    -- BL-009: invoice item total (sum of discounted item totals)
     select
         invoice_id,
+        -- BL-016: names of the invoice's products that have no category, ordered by item date
         string_agg(
             product_name, ', '
             order by date
@@ -6579,9 +6581,10 @@ insurance_coverage_agg as (
 ),
 
 invoice_items_agg as (
-    -- BL-009: invoice item total and BL-016: the products with no category
+    -- BL-009: invoice item total (sum of discounted item totals)
     select
         invoice_id,
+        -- BL-016: names of the invoice's products that have no category, ordered by item date
         string_agg(
             product_name, ', '
             order by date
