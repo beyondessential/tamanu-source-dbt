@@ -4489,7 +4489,7 @@ create or replace view "reporting"."int__encounter_invoice_amounts" as (
 -- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
--- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
+-- See specs/dbt-model/clinical__cost.md. Ephemeral: inlined by consumers.
 
 with invoice_finalised as (
     -- BL-015: most recent transition into finalised status per invoice
@@ -5129,7 +5129,7 @@ create or replace view "reporting"."clinical__cost" as (
 -- clinical__cost -- OMOP-lite COST domain. One row per invoice (BL-001), anchored to
 -- the encounter's visit_occurrence via cost_event_id. Charges, coverage, net patient
 -- payment and net insurer payment all come from the shared
--- int__encounter_invoice_amounts arithmetic (single source of truth, OQ-007); this
+-- int__encounter_invoice_amounts arithmetic (single source of truth); this
 -- model only reshapes them into OMOP COST columns. Native UUID keys (D1).
 -- See specs/dbt-model/clinical__cost.md for BL-001..BL-010.
 --
@@ -5143,7 +5143,7 @@ with  __dbt__cte__int__encounter_invoice_amounts as (
 -- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
--- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
+-- See specs/dbt-model/clinical__cost.md. Ephemeral: inlined by consumers.
 
 with invoice_finalised as (
     -- BL-015: most recent transition into finalised status per invoice
@@ -5984,7 +5984,7 @@ with __dbt__cte__int__encounter_invoice_amounts as (
 -- invoice-level discount, net patient payment, net insurer payment. Extracted from ds__encounter_invoices
 -- so both ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) consume a
 -- single source of truth without a backwards clinical->ds dependency (D2).
--- See specs/dbt-model/clinical__cost.md (OQ-007). Ephemeral: inlined by consumers.
+-- See specs/dbt-model/clinical__cost.md. Ephemeral: inlined by consumers.
 
 with invoice_finalised as (
     -- BL-015: most recent transition into finalised status per invoice
@@ -6322,7 +6322,7 @@ left join invoice_insurer_payments_agg iipa
 -- clinical__cost can share the same source of truth without a backwards
 -- clinical->ds dependency (D2). This dataset is a thin projection over it and
 -- preserves its original output contract exactly (column set, order, semantics).
--- See specs/dbt-model/clinical__cost.md (OQ-007).
+-- See specs/dbt-model/clinical__cost.md.
 
 select
     invoice_id,
