@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-09 |
-| **Last updated** | 2026-07-22 |
+| **Last updated** | 2026-07-26 |
 
 The OMOP-lite `DRUG_EXPOSURE` domain — one row per drug exposure, unioning three standard
 sources: **medication prescriptions** (the clinical intent to treat), **vaccine
@@ -87,7 +87,7 @@ are many-to-one relative to the row's own PK, so grain is preserved.
 | `provider_id` | uuid or text | Prescription: `prescriber_id`. Vaccination: `coalesce(recorded_by_id, given_by)` — the recording user when captured, else the free-text administerer name. Dispense: `dispensed_by_user_id`. FK to `ref__provider.provider_id` for prescription/dispense only (AC-005) |
 | `visit_occurrence_id` | uuid | The source's `encounter_id`. FK to `clinical__visit_occurrence.visit_occurrence_id` |
 | `drug_source_value` | text | Prescription / dispense: `reference_data.code`. Vaccination: `reference_data.code` via `scheduled_vaccine_id` when the dose is scheduled, else NULL (ad hoc/catch-up) |
-| `drug_source_name` | text | Prescription / dispense: `reference_data.name`. Vaccination: `vaccine_name`, always populated regardless of `drug_source_value` |
+| `drug_source_name` | text | Prescription / dispense: `reference_data.name`. Vaccination: `coalesce(reference_data.name, vaccine_name)` — the canonical name when the dose is scheduled, falling back to the denormalised `vaccine_name` so the name is always populated regardless of `drug_source_value` |
 
 `drug_concept_id` / `drug_source_concept_id` (OMOP standard RxNorm / CVX),
 `route_concept_id`, and `drug_type_concept_id` are **not** emitted — see BL-003 and OQ-1.
@@ -136,10 +136,12 @@ are many-to-one relative to the row's own PK, so grain is preserved.
 - **BL-007 (vaccination branch):** Only `vaccine_administrations` rows with `status = 'GIVEN'`
   are included. `NOT_GIVEN` is not an exposure (it belongs in `clinical__observation`),
   `RECORDED_IN_ERROR` is a deleted GIVEN, and `HISTORICAL` is a hidden shadow of a separate
-  GIVEN record — all three are excluded to avoid double-counting. `drug_source_name` is
-  always the row's own `vaccine_name`; `drug_source_value` is left-joined through
-  `scheduled_vaccine_id` → `vaccine_schedules` → `reference_data` and is NULL for
-  administrations not tied to a scheduled dose.
+  GIVEN record — all three are excluded to avoid double-counting. `drug_source_value` is
+  left-joined through `scheduled_vaccine_id` → `vaccine_schedules` → `reference_data` and is
+  NULL for administrations not tied to a scheduled dose; `drug_source_name` is
+  `coalesce(reference_data.name, vaccine_name)` — the canonical `reference_data` name for a
+  scheduled dose, falling back to the row's own denormalised `vaccine_name` (always present)
+  so the name is populated even for ad hoc/catch-up doses.
 - **BL-008 (dispense branch):** Every `medication_dispenses` row is included, reached through
   `pharmacy_order_prescriptions` → `pharmacy_orders` for the encounter, and via
   `pharmacy_order_prescriptions` → the originating `prescriptions` row (and `reference_data`)

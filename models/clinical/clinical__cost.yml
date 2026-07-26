@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: clinical__cost
+    description: "{{ doc('clinical__cost') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: admin
+      pii: false
+      classification: confidential
+    columns:
+      - name: cost_id
+        data_type: uuid
+        description: "{{ doc('clinical__cost__cost_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__cost_cost_id_not_null
+          - unique:
+              name: ac_002_clinical__cost_cost_id_unique
+      - name: cost_event_id
+        data_type: uuid
+        description: "{{ doc('clinical__cost__cost_event_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_clinical__cost_cost_event_id_not_null
+          - relationships:
+              name: ac_003_clinical__cost_cost_event_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: cost_domain_id
+        data_type: text
+        description: "{{ doc('clinical__cost__cost_domain_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_clinical__cost_cost_domain_id_not_null
+          - accepted_values:
+              name: ac_004_clinical__cost_cost_domain_id_is_visit
+              arguments:
+                values: ["Visit"]
+      - name: cost_type_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__cost__cost_type_concept_id') }}"
+      - name: currency_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__cost__currency_concept_id') }}"
+      - name: total_charge
+        data_type: numeric
+        description: "{{ doc('clinical__cost__total_charge') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_total_charge_not_null
+      - name: total_paid
+        data_type: numeric
+        description: "{{ doc('clinical__cost__total_paid') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_total_paid_not_null
+      - name: paid_by_patient
+        data_type: numeric
+        description: "{{ doc('clinical__cost__paid_by_patient') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_paid_by_patient_not_null
+      - name: paid_by_payer
+        data_type: numeric
+        description: "{{ doc('clinical__cost__paid_by_payer') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_paid_by_payer_not_null
+      - name: amount_allowed
+        data_type: numeric
+        description: "{{ doc('clinical__cost__amount_allowed') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_amount_allowed_not_null
+      - name: discount_amount
+        data_type: numeric
+        description: "{{ doc('clinical__cost__discount_amount') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__cost_discount_amount_not_null
+      - name: payer_plan_period_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__cost__payer_plan_period_id') }}"
+        # AC-008: relationships to clinical__payer_plan_period -- activated once
+        # that model exists (spec OQ-006). No target model yet, so no test here.
+      - name: cost_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__cost__cost_source_value') }}"

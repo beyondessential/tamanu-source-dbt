@@ -1,12 +1,10 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_in_progress_product_name
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_finalised_coverage
+    model: int__encounter_invoice_amounts
     description: >
-      product_name_final is only snapshotted at finalisation, so for an
-      in-progress invoice it is null. The no-category product list must still
-      populate from the live invoice_products.name. The item's product has a
-      null category and name 'Live Consultation', so products_no_category =
-      'Live Consultation'.
+      Finalised coverage (invoice_item_finalised_insurances) takes precedence
+      over live plan coverage. A $100 item with a finalised coverage of 50
+      shows $50 insurance_coverage even though the plan default is 80%.
     given:
       - input: ref('encounters')
         format: sql
@@ -36,7 +34,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -46,13 +44,12 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          -- in-progress item: product_name_final not yet snapshotted (null)
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, null::text as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable, 'Live Consultation' as name
+          select 'prod_001' as id, 'Lab' as category, true as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -67,12 +64,13 @@ unit_tests:
       - input: ref('invoice_item_finalised_insurances')
         format: sql
         rows: |
-          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+          -- Finalised at 50%, overriding the plan's 80% default
+          select 'item_001'::text as invoice_item_id, 'plan_001' as invoice_insurance_plan_id, 50::numeric as coverage_value_final
 
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select 'iiip_001' as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 'plan_001' as invoice_insurance_plan_id
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -82,7 +80,8 @@ unit_tests:
       - input: ref('invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::numeric as default_coverage where false
+          -- Plan default is 80%, but finalised coverage (50%) should take precedence
+          select 'plan_001' as id, 80::numeric as default_coverage
 
       - input: ref('invoice_item_discounts')
         format: sql
@@ -110,11 +109,11 @@ unit_tests:
         select
           '00000000-0000-0000-0000-000000000001' as invoice_id,
           'enc_001' as encounter_id,
-          'in_progress' as status,
+          'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          10.00::numeric as invoice_total,
-          null::numeric as insurance_coverage,
+          100.00::numeric as invoice_total,
+          50.00::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          'Live Consultation' as products_no_category
+          null::text as products_no_category

@@ -1,10 +1,12 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_coverage_cap
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_price_list_priority
+    model: int__encounter_invoice_amounts
     description: >
-      Combined per-item insurance coverage above 100% is capped at the item's
-      discounted total (mirroring the app's Math.min). A $100 item with a plan
-      covering 120% yields least(120, 100) = 100, so insurance_coverage = 100.
+      When two current price lists both match an invoice, the lowest
+      evaluation_order wins -- ahead of created_at (mirroring
+      getIdForPatientEncounter). pl_priority (evaluation_order 1, price 60) is
+      chosen over pl_other (evaluation_order 2, price 90) despite pl_priority
+      having the later created_at, so invoice_total = 60.
     given:
       - input: ref('encounters')
         format: sql
@@ -44,12 +46,12 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, 'Lab' as category, true as insurable, null::text as name
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -69,7 +71,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select 'iiip_001' as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 'plan_001' as invoice_insurance_plan_id
+          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -79,8 +81,7 @@ unit_tests:
       - input: ref('invoice_insurance_plans')
         format: sql
         rows: |
-          -- Plan covers 120%, more than the item total
-          select 'plan_001' as id, 120::numeric as default_coverage
+          select null::text as id, null::numeric as default_coverage where false
 
       - input: ref('invoice_item_discounts')
         format: sql
@@ -95,12 +96,18 @@ unit_tests:
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+          -- Both match facility fac_001; evaluation_order decides ahead of created_at.
+          -- pl_priority has the lower evaluation_order but the later created_at.
+          select 'pl_priority' as id, 'pl_priority' as code, '{"facilityId": "fac_001"}'::jsonb as rules, 1::integer as evaluation_order, '2024-02-01 00:00:00'::timestamp as created_at, 'current' as visibility_status
+          union all
+          select 'pl_other', 'pl_other', '{"facilityId": "fac_001"}'::jsonb, 2::integer, '2024-01-01 00:00:00'::timestamp, 'current'
 
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+          select 'pl_priority' as invoice_price_list_id, 'prod_001' as invoice_product_id, 60.00::numeric as price, false as is_hidden
+          union all
+          select 'pl_other', 'prod_001', 90.00::numeric, false
 
     expect:
       format: sql
@@ -111,8 +118,8 @@ unit_tests:
           'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          100.00::numeric as invoice_total,
-          100.00::numeric as insurance_coverage,
+          60.00::numeric as invoice_total,
+          null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
           null::text as products_no_category

@@ -1,18 +1,17 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_finalised_datetime
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_in_progress_product_name
+    model: int__encounter_invoice_amounts
     description: >
-      invoice_finalised_datetime is the most recent transition into finalised
-      status from logs.changes, in deployment-local time (Pohnpei, UTC+11). A
-      re-finalisation (previous_status already finalised) is excluded. An
-      invoice that never finalises shows null.
+      product_name_final is only snapshotted at finalisation, so for an
+      in-progress invoice it is null. The no-category product list must still
+      populate from the live invoice_products.name. The item's product has a
+      null category and name 'Live Consultation', so products_no_category =
+      'Live Consultation'.
     given:
       - input: ref('encounters')
         format: sql
         rows: |
           select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
-          union all
-          select 'enc_002', '2024-01-20 09:00:00'::timestamp, '2024-01-20 16:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text
 
       - input: ref('locations')
         format: sql
@@ -28,8 +27,6 @@ unit_tests:
         format: sql
         rows: |
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
-          union all
-          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
 
       - input: ref('patient_additional_data')
         format: sql
@@ -39,33 +36,23 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
-          union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
 
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
-          union all
-          -- First finalisation: logged_at UTC 03:00 = Pohnpei 14:00 (UTC+11)
-          select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
-          union all
-          -- Re-finalisation: previous_status = 'finalised' so excluded
-          select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-16 01:00:00+00'::timestamptz, 'finalised', 'finalised'
-          union all
-          -- enc_002 invoice: never reaches finalised
-          select '00000000-0000-0000-0000-000000000002'::uuid, '2024-01-20 10:00:00+00'::timestamptz, 'in_progress', null::text
+          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
 
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity where false
+          -- in-progress item: product_name_final not yet snapshotted (null)
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, null::text as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select null::text as id, null::text as category, null::boolean as insurable, null::text as name where false
+          select 'prod_001' as id, null::text as category, false as insurable, 'Live Consultation' as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -123,23 +110,11 @@ unit_tests:
         select
           '00000000-0000-0000-0000-000000000001' as invoice_id,
           'enc_001' as encounter_id,
-          'finalised' as status,
+          'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
-          '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime,
-          null::numeric as invoice_total,
+          null::timestamp as invoice_finalised_datetime,
+          10.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          null::text as products_no_category
-        union all
-        select
-          '00000000-0000-0000-0000-000000000002',
-          'enc_002',
-          'in_progress',
-          '2024-01-20 09:00:00'::timestamp,
-          null::timestamp,
-          null::numeric,
-          null::numeric,
-          0.00::numeric,
-          null::numeric,
-          null::text
+          'Live Consultation' as products_no_category

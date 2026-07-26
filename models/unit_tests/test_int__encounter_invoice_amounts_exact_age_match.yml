@@ -1,17 +1,18 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_price_list_priority
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_exact_age_match
+    model: int__encounter_invoice_amounts
     description: >
-      When two current price lists both match an invoice, the lowest
-      evaluation_order wins -- ahead of created_at (mirroring
-      getIdForPatientEncounter). pl_priority (evaluation_order 1, price 60) is
-      chosen over pl_other (evaluation_order 2, price 90) despite pl_priority
-      having the later created_at, so invoice_total = 60.
+      A price list with an exact numeric patientAge rule (34) matches only the
+      patient who is 34 at the invoice date. Patient A (born 1990-01-01) is 34
+      and gets the $100 price-list price. Patient B (born 1989-01-01) is 35, the
+      price list is skipped, and the item falls through to $0.
     given:
       - input: ref('encounters')
         format: sql
         rows: |
           select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all
+          select 'enc_002', '2024-01-14 09:00:00'::timestamp, '2024-01-14 16:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text
 
       - input: ref('locations')
         format: sql
@@ -26,7 +27,9 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+          select 'pat_001' as id, 'P001' as display_id, 'Alice' as first_name, 'Young' as last_name, '1990-01-01'::date as date_of_birth, 'female' as sex
+          union all
+          select 'pat_002', 'P002', 'Bob', 'Elder', '1989-01-01'::date, 'male'
 
       - input: ref('patient_additional_data')
         format: sql
@@ -37,6 +40,8 @@ unit_tests:
         format: sql
         rows: |
           select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          union all
+          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-14 09:00:00'::timestamp
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -47,11 +52,13 @@ unit_tests:
         format: sql
         rows: |
           select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          union all
+          select 'item_002'::text, '00000000-0000-0000-0000-000000000002', 'Consultation', '2024-01-14'::date, 'prod_001', null::numeric, null::numeric, 1::integer
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
+          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -96,30 +103,39 @@ unit_tests:
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          -- Both match facility fac_001; evaluation_order decides ahead of created_at.
-          -- pl_priority has the lower evaluation_order but the later created_at.
-          select 'pl_priority' as id, 'pl_priority' as code, '{"facilityId": "fac_001"}'::jsonb as rules, 1::integer as evaluation_order, '2024-02-01 00:00:00'::timestamp as created_at, 'current' as visibility_status
-          union all
-          select 'pl_other', 'pl_other', '{"facilityId": "fac_001"}'::jsonb, 2::integer, '2024-01-01 00:00:00'::timestamp, 'current'
+          -- Exact age match: only 34-year-olds qualify
+          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientAge": 34}'::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, 'current' as visibility_status
 
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select 'pl_priority' as invoice_price_list_id, 'prod_001' as invoice_product_id, 60.00::numeric as price, false as is_hidden
-          union all
-          select 'pl_other', 'prod_001', 90.00::numeric, false
+          select 'pl_001' as invoice_price_list_id, 'prod_001' as invoice_product_id, 100.00::numeric as price, false as is_hidden
 
     expect:
       format: sql
       rows: |
+        -- enc_001 (Alice, age 34): price list matches, invoice_total = 100
         select
           '00000000-0000-0000-0000-000000000001' as invoice_id,
           'enc_001' as encounter_id,
           'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          60.00::numeric as invoice_total,
+          100.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          null::text as products_no_category
+          'Consultation' as products_no_category
+        union all
+        -- enc_002 (Bob, age 35): price list skipped, invoice_total = 0
+        select
+          '00000000-0000-0000-0000-000000000002',
+          'enc_002',
+          'in_progress',
+          '2024-01-14 09:00:00'::timestamp,
+          null::timestamp,
+          0::numeric,
+          null::numeric,
+          0.00::numeric,
+          null::numeric,
+          'Consultation'

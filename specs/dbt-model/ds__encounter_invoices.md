@@ -45,7 +45,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 
 ## Business logic
 
-(Clause numbers are shared with the consuming report spec, which this was split from, and match the `-- BL-NNN` anchors in `models/datasets/standard/ds__encounter_invoices.sql`.)
+(Clause numbers are shared with the consuming report spec, which this was split from. The arithmetic and its `-- BL-NNN` anchors live in `models/intermediate/standard/int__encounter_invoice_amounts.sql` — the ephemeral both this dataset and `clinical__cost` consume; `models/datasets/standard/ds__encounter_invoices.sql` is a thin projection over it. The `test_int__encounter_invoice_amounts_*` unit tests target the ephemeral, where the logic now lives.)
 
 - **BL-006:** Resolve exactly one price list per invoice, mirroring Tamanu's `getIdForPatientEncounter`: match on facility (direct match, or no facility rule and no other current price list claims this facility), patient billing type (the encounter's, falling back to the patient's additional-data billing type), and patient age in completed years at the invoice date (exact value, or min/max range). When several price lists match, the lowest `evaluation_order` wins, then earliest `created_at`, then `code` (price lists with no `evaluation_order` sort last, matching the application).
 - **BL-007:** Item unit price falls back through `invoice_items.price_final` → `invoice_items.manual_entry_price` → `invoice_price_list_items.price` → `0`. The price-list item must be non-hidden and bound to the encounter's resolved price list and the item's product.
@@ -74,7 +74,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 | AC-011 | Combined per-item coverage above 100% is capped at the item's discounted total. | BL-010 |
 | AC-012 | A negatively discounted insurable item is included in coverage, capped at the (negative) discounted total. | BL-008, BL-010 |
 
-ACs are covered by the `test_ds__encounter_invoices_*` unit tests.
+ACs are covered by the `test_int__encounter_invoice_amounts_*` unit tests.
 
 ## Change log
 

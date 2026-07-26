@@ -87,7 +87,9 @@ vaccination_exposures as (
         coalesce(av.recorded_by_id, av.given_by)::varchar as provider_id,
         av.encounter_id::varchar as visit_occurrence_id,
         rd.code as drug_source_value,
-        av.vaccine_name as drug_source_name
+        -- prefer the canonical reference_data name (scheduled doses); fall back to the
+        -- denormalised vaccine_name so ad hoc/catch-up doses still name the vaccine (BL-007)
+        coalesce(rd.name, av.vaccine_name) as drug_source_name
     from vaccine_administrations av
     join encounters e on e.id = av.encounter_id
     left join vaccine_schedules vs on vs.id = av.scheduled_vaccine_id
