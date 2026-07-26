@@ -48,7 +48,7 @@ select
     coalesce(a.insurance_coverage, 0)                        as amount_allowed,    -- BL-004
     coalesce(a.invoice_discount, 0)                         as discount_amount,   -- BL-008 [ext]
 
-    -- payer plan period: future clinical__payer_plan_period (spec OQ-006)
+    -- payer plan period: future clinical__payer_plan_period (spec OQ-002)
     cast(null as varchar) as payer_plan_period_id,
 
     -- human-facing invoice number, retained for traceability [ext]

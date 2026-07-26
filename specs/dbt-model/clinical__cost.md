@@ -93,7 +93,7 @@ item-level because:
 
 Item-level costing (one COST row per invoice item, `cost_event_id` → the item's
 own drug/procedure event) is the **intended** future grain — invoice-level is a
-stepping stone used until invoice items link to clinical events (OQ-004). Grain is
+stepping stone used until invoice items link to clinical events (OQ-001). Grain is
 preserved: the shared `int__encounter_invoice_amounts` is one row per invoice
 (its `invoice_id` is `not_null` + `unique`), and every join below is many-to-one.
 
@@ -115,7 +115,7 @@ canonical billing surface must not lose information the source carries.
 |---|---|---|
 | `cost_id` | character varying(255) | `invoices.id`. Native Tamanu string ID — no remap to OMOP integer IDs (D1) |
 | `cost_event_id` | character varying(255) | `invoice.encounter_id` → `clinical__visit_occurrence.visit_occurrence_id`. The billed encounter |
-| `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-004) |
+| `cost_domain_id` | text | Constant `'Visit'` — costs are attached to the visit, not an itemised event (grain / OQ-001) |
 | `invoice_status` **[ext]** | text | Invoice lifecycle status (`in_progress` / `finalised` / `cancelled`) from `int__encounter_invoice_amounts.status`, carried so consumers can exclude cancelled invoices. OMOP `COST` has no status field |
 | `cost_type_concept_id` | integer | Constant `32821` ("EHR billing record", OMOP Type Concept) — the cost is derived from the Tamanu billing subsystem |
 | `currency_concept_id` | integer | Deployment currency (e.g. GHS for Queen of Sheba), resolved per deployment via a `map__omop_currency` seed or project var. NULL in the universal source-repo model |
@@ -125,7 +125,7 @@ canonical billing surface must not lose information the source carries.
 | `paid_by_payer` | numeric | Insurer payments **actually received**: `int__encounter_invoice_amounts.insurer_payment` (sum of `invoice_payments.amount` linked to `invoice_insurer_payments`, refunds netted). Distinct from `amount_allowed` |
 | `amount_allowed` | numeric | Insurance **coverage** (expected, not necessarily paid): `int__encounter_invoice_amounts.insurance_coverage` |
 | `discount_amount` **[ext]** | numeric | The **invoice-level** discount (`int__encounter_invoice_amounts.invoice_discount`). OMOP `COST` has no discount field — retained for billing consumers. Item-level discounts are already netted into `total_charge`, not double-counted here (BL-008) |
-| `payer_plan_period_id` | varchar | FK to a future `clinical__payer_plan_period`. Typed `varchar` (cast NULL) pending that model — see OQ-006 |
+| `payer_plan_period_id` | varchar | FK to a future `clinical__payer_plan_period`. Typed `varchar` (cast NULL) pending that model — see OQ-002 |
 | `cost_source_value` **[ext]** | text | `invoices.display_id` — the human-facing invoice number, for traceability |
 
 **Explicitly NULL / not modelled** (OMOP `COST` columns Tamanu has no source for):
@@ -204,7 +204,7 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
 | AC-005 | `total_paid` equals `paid_by_patient + paid_by_payer` for every row (within rounding) | BL-007 | dbt singular test |
 | AC-006 | `total_charge`, `total_paid`, `paid_by_patient`, `paid_by_payer`, `amount_allowed`, `discount_amount` are all `not_null` | BL-010 | dbt `not_null` |
 | AC-007 | Row count equals `int__encounter_invoice_amounts` row count (no invoices dropped or duplicated) | BL-001 | dbt singular test |
-| AC-008 | Every non-null `payer_plan_period_id` exists in `clinical__payer_plan_period` | BL-001 | dbt `relationships` (activated once that model exists — OQ-006) |
+| AC-008 | Every non-null `payer_plan_period_id` exists in `clinical__payer_plan_period` | BL-001 | dbt `relationships` (activated once that model exists — OQ-002) |
 | AC-009 | `invoice_status` is `not_null` and one of `in_progress` / `finalised` / `cancelled` | BL-001 | dbt `not_null` + `accepted_values` |
 
 ## Registry entry
@@ -222,7 +222,7 @@ would carry the registry row.
 | `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted from `ds__encounter_invoices`): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment** (BL-003..BL-006, BL-008) |
 | `invoices` | `bases/` | `display_id` (→ `cost_source_value`) |
 | `clinical__visit_occurrence` | `clinical/` | `cost_event_id` FK target (AC-003) |
-| `clinical__payer_plan_period` | `clinical/` | *Future* — `payer_plan_period_id` FK target (OQ-006) |
+| `clinical__payer_plan_period` | `clinical/` | *Future* — `payer_plan_period_id` FK target (OQ-002) |
 
 (`invoice_payments` / `invoice_insurer_payments` are consumed by
 `int__encounter_invoice_amounts`, not by `clinical__cost` directly.)
@@ -249,8 +249,8 @@ schema, and the payment-method / layering decisions under **Decisions taken**.)
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-004 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's drug/procedure event) — **confirmed as the intended future grain**; blocked until invoice items link to clinical events, so invoice-level grain is used until then. | Maui team | future |
-| OQ-006 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
+| OQ-001 | Item-level `COST` grain (one row per invoice item, `cost_event_id` → the item's drug/procedure event) — **confirmed as the intended future grain**; blocked until invoice items link to clinical events, so invoice-level grain is used until then. | Maui team | future |
+| OQ-002 | Build a companion `clinical__payer_plan_period` (OMOP `PAYER_PLAN_PERIOD`) for insurance-plan coverage windows, so `payer_plan_period_id` resolves? Out of scope for this spec; tracked here. | Maui team | — |
 
 ## Divergence from current code
 
@@ -261,4 +261,4 @@ implementation to reconcile.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. OQ-001 / OQ-007 resolved. AC tests run green against the 2.57 replica; status → `implemented` |
+| 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. Payment-method split and shared-arithmetic layering resolved. AC tests run green against the 2.57 replica; status → `implemented` |

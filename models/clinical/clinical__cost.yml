@@ -97,7 +97,7 @@ models:
         data_type: character varying(255)
         description: "{{ doc('clinical__cost__payer_plan_period_id') }}"
         # AC-008: relationships to clinical__payer_plan_period -- activated once
-        # that model exists (spec OQ-006). No target model yet, so no test here.
+        # that model exists (spec OQ-002). No target model yet, so no test here.
       - name: cost_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__cost__cost_source_value') }}"
