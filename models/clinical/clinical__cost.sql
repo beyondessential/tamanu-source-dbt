@@ -26,7 +26,7 @@ select
 
     -- invoice lifecycle status, carried so consumers can exclude cancelled
     -- invoices (which still carry a charge). OMOP COST has no status field, so
-    -- this is a Tamanu extension column (BL-011) [ext]
+    -- this is a Tamanu extension column (BL-001) [ext]
     a.status as invoice_status,
 
     -- provenance: constant, concept TBD (spec OQ-005). 0 = no matching concept
