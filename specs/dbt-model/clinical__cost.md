@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
 | **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
-| **Status** | `review` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (design spun off from the Queen of Sheba End-of-day Invoice Report) |
 | **Repo** | `tamanu-source-dbt` |
@@ -30,11 +30,10 @@ Health Economics. See
 > totals-only canonical billing surface for cost / coverage metrics and
 > dashboards. The layering conflict was resolved by extracting the
 > shared arithmetic into `int__encounter_invoice_amounts`. Model, yml, docs and
-> tests are implemented on branch `feature/maui-6734-clinical-cost`; the `AC`
-> tests are runnable but have **not yet been executed against a database**
-> (authored without a replica connection). Run
-> `dbt build --select int__encounter_invoice_amounts ds__encounter_invoices clinical__cost`
-> and confirm green before bumping status to `implemented`.
+> tests are implemented on branch `feature/maui-6734-clinical-cost`, and the
+> `AC` tests have been **executed green against the release-2.57 replica** via
+> `dbt build --select int__encounter_invoice_amounts ds__encounter_invoices clinical__cost`.
+> Status is `implemented`.
 
 ## Purpose
 
@@ -252,4 +251,4 @@ implementation to reconcile.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. Status → `review`; OQ-001 / OQ-007 resolved. AC tests defined, not yet run against a DB |
+| 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. OQ-001 / OQ-007 resolved. AC tests run green against the 2.57 replica; status → `implemented` |
