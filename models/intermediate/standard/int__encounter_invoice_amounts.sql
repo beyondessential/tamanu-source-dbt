@@ -10,8 +10,9 @@
 -- See specs/dbt-model/clinical__cost.md. Ephemeral: inlined by consumers.
 
 with items as (
-    -- BL-006/007/008/010: per-item price, discount and coverage, resolved once by the
-    -- shared macro. Aggregated below to invoice grain.
+    -- Per-item price (BL-006/007), item discount (BL-008) and coverage (BL-010) as this
+    -- dataset's spec describes them; implemented by the shared invoice_item_amounts() macro
+    -- (anchored BL-002/003/004 in ds__encounter_invoice_items.md). Aggregated to invoice grain.
     {{ invoice_item_amounts() }}
 ),
 

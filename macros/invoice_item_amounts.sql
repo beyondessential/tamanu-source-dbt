@@ -28,7 +28,7 @@ with invoice_context as materialized (
         i.id as invoice_id,
         f.id as facility_id,
         coalesce(e.patient_billing_type_id, pad.patient_billing_type_id) as patient_billing_type_id,
-        -- BL-006: patient age in completed years at the invoice date, computed once
+        -- BL-002: patient age in completed years at the invoice date, computed once
         date_part('year', age(i.datetime, p.date_of_birth)) as age_at_invoice
     from {{ ref('invoices') }} i
     join {{ ref('encounters') }} e
@@ -54,7 +54,7 @@ claimed_facilities as (
 ),
 
 invoice_price_list as (
-    -- BL-006: resolve the single matching price list per invoice, mirroring
+    -- BL-002: resolve the single matching price list per invoice, mirroring
     -- getIdForPatientEncounter. Matches on facility (with exclusionary logic),
     -- patient billing type, and patient age in completed years at the invoice
     -- date (the app resolves at invoice time). When several match, the lowest
@@ -110,7 +110,7 @@ invoice_price_list as (
 ),
 
 item_unit_price as (
-    -- BL-007: mirrors getInvoiceItemPrice. Resolves the unit price once
+    -- BL-002: mirrors getInvoiceItemPrice. Resolves the unit price once
     -- (price_final, else manual entry, else the resolved price-list price, else 0).
     select
         ii.id as invoice_item_id,
@@ -146,7 +146,7 @@ item_unit_price as (
 ),
 
 item_resolved_price as (
-    -- BL-008: mirrors getInvoiceItemTotalDiscountedPrice. Applies the item-level
+    -- BL-003: mirrors getInvoiceItemTotalDiscountedPrice. Applies the item-level
     -- discount (percentage or flat amount) to unit price x quantity.
     select
         iup.invoice_item_id,
@@ -184,7 +184,7 @@ item_resolved_price as (
 ),
 
 item_coverage as (
-    -- BL-010: mirrors getInvoiceItemCoveragePercentage applied per plan (as the
+    -- BL-004: mirrors getInvoiceItemCoveragePercentage applied per plan (as the
     -- app does over invoiceForResponse's insurancePlanItems). For each insurance
     -- plan currently linked to the invoice, coverage is the finalised snapshot
     -- for that (item, plan) when present, otherwise the live per-product
@@ -234,7 +234,7 @@ select
     -- BL-003: signed item adjustment (discounted minus undiscounted) -- negative for a
     -- discount, positive for a markup -- mirroring getItemAdjustmentAmount
     irp.discounted_total - irp.price * irp.quantity as item_adjustment,
-    -- BL-010: per-item insurance coverage, capped at the discounted total; null when the
+    -- BL-004: per-item insurance coverage, capped at the discounted total; null when the
     -- item has no coverage row so the invoice-level sum stays null for no-insurance invoices
     case
         when ic.invoice_item_id is not null
