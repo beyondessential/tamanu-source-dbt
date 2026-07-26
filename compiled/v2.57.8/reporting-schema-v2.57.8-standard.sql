@@ -5498,8 +5498,9 @@ select
     -- this is a Tamanu extension column (BL-001) [ext]
     a.status as invoice_status,
 
-    -- provenance: constant, concept TBD (spec OQ-005). 0 = no matching concept
-    0 as cost_type_concept_id,
+    -- provenance: 32821 = "EHR billing record" (OMOP Type Concept) -- the cost is
+    -- derived from the Tamanu billing subsystem
+    32821 as cost_type_concept_id,
 
     -- deployment currency: universal model leaves it unset; deployments override
     -- per deployment via map__omop_currency or a var (BL-009)
@@ -5514,7 +5515,7 @@ select
     coalesce(a.insurance_coverage, 0)                        as amount_allowed,    -- BL-004
     coalesce(a.invoice_discount, 0)                         as discount_amount,   -- BL-008 [ext]
 
-    -- payer plan period: future clinical__payer_plan_period (spec OQ-006)
+    -- payer plan period: future clinical__payer_plan_period (spec OQ-002)
     cast(null as varchar) as payer_plan_period_id,
 
     -- human-facing invoice number, retained for traceability [ext]
