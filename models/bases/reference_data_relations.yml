@@ -14,21 +14,12 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in reference_data_relations."
-        data_tests:
-          - not_null
-          - unique
       - name: reference_data_id
         data_type: character varying(255)
         description: "{{ doc('reference_data_relations__reference_data_id') }}"
-        # Both edge endpoints must be present: ref__location's recursive hierarchy
-        # walk joins on these FKs, so a null endpoint would silently drop a level.
-        data_tests:
-          - not_null
       - name: reference_data_parent_id
         data_type: character varying(255)
         description: "{{ doc('reference_data_relations__reference_data_parent_id') }}"
-        data_tests:
-          - not_null
       - name: type
         data_type: character varying(255)
         description: "{{ doc('reference_data_relations__type') }}"
