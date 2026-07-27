@@ -59,7 +59,7 @@ violation of that invariant.
 | `year_of_birth` | integer | From `date_of_birth`; NULL if DOB unknown |
 | `month_of_birth` | integer | From `date_of_birth` |
 | `day_of_birth` | integer | From `date_of_birth` |
-| `birth_datetime` | timestamp | `date_of_birth` at `time_of_birth`. NULL when no time of birth was recorded |
+| `birth_datetime` | timestamp | `date_of_birth` at `birth_time`. NULL when no time of birth was recorded |
 | `ethnicity_source_value` | text | `patient_additional_data.ethnicity_id`. Concept shadow is deployment-specific (BL-004) — not resolved here |
 | `location_id` | uuid | `patients.village_id`. FK to `ref__location` (the patient's village). OMOP `PERSON.location_id` |
 
@@ -75,7 +75,7 @@ violation of that invariant.
 - **BL-003:** Birth is decomposed from the source `date_of_birth` into `year_of_birth`,
   `month_of_birth`, `day_of_birth` (no redundant full-date column is emitted — OMOP
   PERSON carries only the components). `birth_datetime` combines the source date with
-  `patient_birth_data.time_of_birth` when present, and is NULL otherwise — no midnight
+  `patient_birth_data.birth_time` (source `time_of_birth`) when present, and is NULL otherwise — no midnight
   default, so the timestamp never implies a precision the data lacks. When
   `birth_datetime` is non-null, its date equals
   `make_date(year_of_birth, month_of_birth, day_of_birth)`.

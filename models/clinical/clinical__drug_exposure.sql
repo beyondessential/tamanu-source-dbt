@@ -42,12 +42,12 @@ encounters as (
     select * from {{ ref('encounters') }}
 ),
 
--- prescription branch: every prescription, joined to its encounter and drug (BL-006).
--- grain is the encounter_prescriptions link row, not the prescription: encounter_prescriptions
--- permits a prescription to be linked to more than one encounter, so keying on p.id would
--- emit duplicate drug_exposure_ids (failing ac_002). ep.id is unique per (encounter, prescription).
+-- prescription branch: every prescription, joined to its encounter and drug (BL-006)
 prescription_exposures as (
     select
+        -- BL-006: PK is encounter_prescriptions.id, NOT prescriptions.id -- only that
+        -- table's own id is unique, so a prescription linked to >1 encounter yields
+        -- distinct exposure rows rather than colliding on the primary key
         ep.id::varchar as drug_exposure_id,
         e.patient_id::varchar as person_id,
         coalesce(p.start_datetime, p.datetime)::date as drug_exposure_start_date,
@@ -90,7 +90,9 @@ vaccination_exposures as (
         coalesce(av.recorded_by_id, av.given_by)::varchar as provider_id,
         av.encounter_id::varchar as visit_occurrence_id,
         rd.code as drug_source_value,
-        av.vaccine_name as drug_source_name
+        -- prefer the canonical reference_data name (scheduled doses); fall back to the
+        -- denormalised vaccine_name so ad hoc/catch-up doses still name the vaccine (BL-007)
+        coalesce(rd.name, av.vaccine_name) as drug_source_name
     from vaccine_administrations av
     join encounters e on e.id = av.encounter_id
     left join vaccine_schedules vs on vs.id = av.scheduled_vaccine_id
@@ -120,9 +122,7 @@ dispense_exposures as (
     join pharmacy_order_prescriptions pop on pop.id = md.pharmacy_order_prescription_id
     join pharmacy_orders po on po.id = pop.pharmacy_order_id
     join encounters e on e.id = po.encounter_id
-    -- left join: the prescription only supplies route + drug identity, so a dispense whose
-    -- prescription row is soft-deleted should still appear (with NULL drug) rather than vanish
-    left join prescriptions p on p.id = pop.prescription_id
+    join prescriptions p on p.id = pop.prescription_id
     left join reference_data rd on rd.id = p.medication_id
 )
 
