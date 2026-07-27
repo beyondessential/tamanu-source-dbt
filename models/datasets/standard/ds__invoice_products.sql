@@ -24,8 +24,9 @@ with price_pivot as (
     select
         invoice_product_id
         {%- for row in price_lists %}
-        , max(case when invoice_price_list_id = '{{ row[0] }}' then price end)
-            as price_{{ loop.index }}
+            ,
+            max(case when invoice_price_list_id = '{{ row[0] }}' then price end)
+                as price_{{ loop.index }}
         {%- endfor %}
     from {{ ref('invoice_price_list_items') }}
     where is_hidden = false
@@ -36,8 +37,9 @@ insurance_pivot as (
     select
         invoice_product_id
         {%- for row in insurance_plans %}
-        , max(case when invoice_insurance_plan_id = '{{ row[0] }}' then coverage_value end)
-            as cov_{{ loop.index }}
+            ,
+            max(case when invoice_insurance_plan_id = '{{ row[0] }}' then coverage_value end)
+                as cov_{{ loop.index }}
         {%- endfor %}
     from {{ ref('invoice_insurance_plan_items') }}
     group by invoice_product_id
@@ -69,7 +71,7 @@ product_available_facilities as (
         pafi.invoice_product_id,
         string_agg(f.name, ', ' order by f.name) as available_facilities
     from product_available_facility_ids pafi
-    cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) as fid
+    cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) fid
     join {{ ref('facilities') }} f
         on f.id = fid
     group by pafi.invoice_product_id
@@ -85,18 +87,20 @@ select
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
     {%- for row in price_lists %}
-    , pp.price_{{ loop.index }} as "Price: {{ row[1] }}"
+        ,
+        pp.price_{{ loop.index }} as "Price: {{ row[1] }}"
     {%- endfor %}
     {%- for row in insurance_plans %}
-    , case
-        when ip.insurable = false then 'n/a'
-        else cast(
-            coalesce(
-                insurp.cov_{{ loop.index }},
-                {%- if row[2] is not none %}{{ row[2] }}{%- else %}null{%- endif %}
-            ) as text
-        )
-    end as "Insurance: {{ row[1] }}"
+        ,
+        case
+            when ip.insurable = false then 'n/a'
+            else cast(
+                    coalesce(
+                        insurp.cov_{{ loop.index }},
+                        {%- if row[2] is not none %}{{ row[2] }}{%- else %}null{%- endif %}
+                    ) as text
+                )
+        end as "Insurance: {{ row[1] }}"
     {%- endfor %}
 from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id

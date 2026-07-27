@@ -33,7 +33,7 @@ select
     {% if is_analytics_target() -%}
     null::text as person_source_value,
     {%- else -%}
-    p.display_id as person_source_value,
+        p.display_id as person_source_value,
     {%- endif %}
 
     -- gender: concept shadow + retained source value (BL-002)

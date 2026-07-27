@@ -30,12 +30,12 @@ history_segments as (
     select
         -- encounter_history.id is uuid; cast to match encounters.id (varchar) for the
         -- union with synthesized_segments and the varchar visit_detail_id contract
-        eh.id::varchar    as visit_detail_id,
-        eh.encounter_id   as visit_occurrence_id,
-        eh.datetime       as visit_detail_start_datetime,
-        eh.department_id  as department_id,
-        eh.location_id    as location_id,
-        eh.clinician_id   as provider_id,
+        eh.id::varchar as visit_detail_id,
+        eh.encounter_id as visit_occurrence_id,
+        eh.datetime as visit_detail_start_datetime,
+        eh.department_id,
+        eh.location_id,
+        eh.clinician_id as provider_id,
         eh.encounter_type as visit_detail_source_value
     from encounter_history eh
 ),
@@ -44,17 +44,18 @@ history_segments as (
 -- taken from the encounter record itself, so every visit has at least one detail (BL-005)
 synthesized_segments as (
     select
-        e.id::varchar    as visit_detail_id,
-        e.id             as visit_occurrence_id,
+        e.id::varchar as visit_detail_id,
+        e.id as visit_occurrence_id,
         e.start_datetime as visit_detail_start_datetime,
-        e.department_id  as department_id,
-        e.location_id    as location_id,
-        e.clinician_id   as provider_id,
+        e.department_id,
+        e.location_id,
+        e.clinician_id as provider_id,
         e.encounter_type as visit_detail_source_value
     from encounters e
     where not exists (
-        select 1 from encounter_history eh where eh.encounter_id = e.id
-    )
+            select 1 from encounter_history eh
+            where eh.encounter_id = e.id
+        )
 ),
 
 -- columns listed explicitly (by name from each branch) so reordering either CTE can't
@@ -117,7 +118,7 @@ select
     -- date + datetime pair, mirroring clinical__visit_occurrence (BL-002)
     b.visit_detail_start_datetime::date as visit_detail_start_date,
     b.visit_detail_start_datetime,
-    b.visit_detail_end_datetime::date   as visit_detail_end_date,
+    b.visit_detail_end_datetime::date as visit_detail_end_date,
     b.visit_detail_end_datetime,
 
     -- care site is the ward: the location_group of the segment's location. NULL when the

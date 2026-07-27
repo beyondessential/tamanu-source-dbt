@@ -61,16 +61,16 @@ vitals_answers as (
 -- vitals branch (BL-006). ids cast to varchar so the union with labs is type-safe
 vitals_measurements as (
     select
-        va.id::varchar          as measurement_id,
-        e.patient_id::varchar   as person_id,
+        va.id::varchar as measurement_id,
+        e.patient_id::varchar as person_id,
         va.start_datetime::date as measurement_date,
-        va.start_datetime       as measurement_datetime,
-        'vitals survey'         as measurement_type_source_value,  -- provenance / union discriminator (BL-005)
+        va.start_datetime as measurement_datetime,
+        'vitals survey' as measurement_type_source_value,  -- provenance / union discriminator (BL-005)
         case when va.body ~ '^-?[0-9]+(\.[0-9]+)?$' then va.body::numeric end as value_as_number,
-        va.body                 as value_source_value,
-        null::varchar           as unit_source_value,
+        va.body as value_source_value,
+        null::varchar as unit_source_value,
         va.submitted_by_id::varchar as provider_id,
-        va.encounter_id::varchar    as visit_occurrence_id,
+        va.encounter_id::varchar as visit_occurrence_id,
         pde.code as measurement_source_value,
         pde.name as measurement_source_name
     from vitals_answers va
@@ -81,16 +81,16 @@ vitals_measurements as (
 -- lab branch: completed lab tests that have a result (BL-007)
 lab_measurements as (
     select
-        lt.id::varchar        as measurement_id,
+        lt.id::varchar as measurement_id,
         e.patient_id::varchar as person_id,
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)::date as measurement_date,
-        coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
-        'lab'                 as measurement_type_source_value,
+        coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime) as measurement_datetime,  -- completed, else published/requested (BL-004)
+        'lab' as measurement_type_source_value,
         case when trim(lt.result) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(lt.result)::numeric end as value_as_number,
-        trim(lt.result)       as value_source_value,
-        ltt.unit              as unit_source_value,
+        trim(lt.result) as value_source_value,
+        ltt.unit as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
-        lr.encounter_id::varchar    as visit_occurrence_id,
+        lr.encounter_id::varchar as visit_occurrence_id,
         ltt.code as measurement_source_value,
         ltt.name as measurement_source_name
     from lab_tests lt
@@ -98,8 +98,8 @@ lab_measurements as (
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
     where lt.result is not null and trim(lt.result) != ''
-      -- drop requests that never produced a valid result even if a stale value lingers (BL-007)
-      and lr.status not in ('deleted', 'sample-not-collected', 'entered-in-error')
+        -- drop requests that never produced a valid result even if a stale value lingers (BL-007)
+        and lr.status not in ('deleted', 'sample-not-collected', 'entered-in-error')
 ),
 
 -- birth anthropometry, unpivoted upstream by int__patient_birth_measurements (BL-008).
@@ -107,17 +107,17 @@ lab_measurements as (
 birth_measurements as (
     select
         (bm.patient_id || '-birthdata-' || bm.measurement_source_value)::varchar as measurement_id,
-        bm.patient_id::varchar  as person_id,
+        bm.patient_id::varchar as person_id,
         bm.measurement_datetime::date as measurement_date,
-        bm.measurement_datetime as measurement_datetime,
-        'birth data'            as measurement_type_source_value,
+        bm.measurement_datetime,
+        'birth data' as measurement_type_source_value,
         case when trim(bm.value_source_value) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(bm.value_source_value)::numeric end as value_as_number,
-        bm.value_source_value   as value_source_value,
-        null::varchar           as unit_source_value,
-        null::varchar           as provider_id,
-        null::varchar           as visit_occurrence_id,
-        bm.measurement_source_value as measurement_source_value,
-        bm.measurement_source_name  as measurement_source_name
+        bm.value_source_value,
+        null::varchar as unit_source_value,
+        null::varchar as provider_id,
+        null::varchar as visit_occurrence_id,
+        bm.measurement_source_value,
+        bm.measurement_source_name
     from patient_birth_measurements bm
 )
 

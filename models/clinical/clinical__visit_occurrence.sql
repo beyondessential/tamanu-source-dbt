@@ -37,21 +37,21 @@ select
                 where eht.encounter_id = e.id
                     and eht.encounter_type in ('emergency', 'triage', 'observation')
             )
-        then 262
+            then 262
         else vm.concept_id
     end as visit_concept_id,
 
     -- visit datetimes (BL-004)
     e.start_datetime::date as visit_start_date,
-    e.start_datetime       as visit_start_datetime,
-    e.end_datetime::date   as visit_end_date,
-    e.end_datetime         as visit_end_datetime,
+    e.start_datetime as visit_start_datetime,
+    e.end_datetime::date as visit_end_date,
+    e.end_datetime as visit_end_datetime,
 
     -- visit type provenance: constant EHR administration record (BL-003)
     32817 as visit_type_concept_id,
 
     -- provider and care site (BL-005, BL-006)
-    e.clinician_id  as provider_id,
+    e.clinician_id as provider_id,
     e.department_id as care_site_id,
 
     -- source value retained alongside concept (BL-007)
