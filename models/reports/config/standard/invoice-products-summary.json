@@ -2,7 +2,7 @@
   "query": "replace this",
   "name": "Invoice products summary",
   "status": "published",
-  "notes": "This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.",
+  "notes": "This report provides a summary of all invoice products, including their insurable status, category, pricing and charging type across all price lists, and insurance coverage across all insurance plans.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "allTime",

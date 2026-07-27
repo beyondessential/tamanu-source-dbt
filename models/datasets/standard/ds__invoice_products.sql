@@ -26,6 +26,8 @@ with price_pivot as (
         {%- for row in price_lists %}
         , max(case when invoice_price_list_id = '{{ row[0] }}' then price end)
             as price_{{ loop.index }}
+        , bool_or(case when invoice_price_list_id = '{{ row[0] }}' then is_fixed_price end)
+            as charging_{{ loop.index }}
         {%- endfor %}
     from {{ ref('invoice_price_list_items') }}
     where is_hidden = false
@@ -97,6 +99,15 @@ select
             ) as text
         )
     end as "Insurance: {{ row[1] }}"
+    {%- endfor %}
+    {%- for row in price_lists %}
+    , case
+        -- is_fixed_price is only honoured by the application for drugs (see
+        -- invoice_price_list_items.md), so surface it as NULL for other categories
+        when ip.category is distinct from 'Drug' or pp.charging_{{ loop.index }} is null then null
+        when pp.charging_{{ loop.index }} then 'flatFee'
+        else 'perUnit'
+    end as "Price List Charging: {{ row[1] }}"
     {%- endfor %}
 from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
