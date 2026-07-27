@@ -3816,8 +3816,11 @@ select
         )
     end as "Insurance: Insurance Plan 1"
     , case
+        -- is_fixed_price is only honoured by the application for drugs (see
+        -- invoice_price_list_items.md), so surface it as NULL for other categories
+        when ip.category is distinct from 'Drug' or pp.charging_1 is null then null
         when pp.charging_1 then 'flatFee'
-        when pp.charging_1 = false then 'perUnit'
+        else 'perUnit'
     end as "Price List Charging: Price List 1"
 from "reporting"."invoice_products" ip
 left join price_pivot pp on pp.invoice_product_id = ip.id

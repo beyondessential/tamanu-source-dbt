@@ -102,8 +102,11 @@ select
     {%- endfor %}
     {%- for row in price_lists %}
     , case
+        -- is_fixed_price is only honoured by the application for drugs (see
+        -- invoice_price_list_items.md), so surface it as NULL for other categories
+        when ip.category is distinct from 'Drug' or pp.charging_{{ loop.index }} is null then null
         when pp.charging_{{ loop.index }} then 'flatFee'
-        when pp.charging_{{ loop.index }} = false then 'perUnit'
+        else 'perUnit'
     end as "Price List Charging: {{ row[1] }}"
     {%- endfor %}
 from {{ ref('invoice_products') }} ip
