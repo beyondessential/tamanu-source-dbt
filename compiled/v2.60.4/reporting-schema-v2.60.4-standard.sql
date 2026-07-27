@@ -3749,14 +3749,6 @@ with price_pivot as (
         invoice_product_id
         , max(case when invoice_price_list_id = 'invoicePriceList-1' then price end)
             as price_1
-    from "reporting"."invoice_price_list_items"
-    where is_hidden = false
-    group by invoice_product_id
-),
-
-price_list_charging_pivot as (
-    select
-        invoice_product_id
         , bool_or(case when invoice_price_list_id = 'invoicePriceList-1' then is_fixed_price end)
             as charging_1
     from "reporting"."invoice_price_list_items"
@@ -3823,11 +3815,13 @@ select
             ) as text
         )
     end as "Insurance: Insurance Plan 1"
-    , plcp.charging_1 as "Price List Charging: Price List 1"
+    , case
+        when pp.charging_1 then 'flatFee'
+        when pp.charging_1 = false then 'perUnit'
+    end as "Price List Charging: Price List 1"
 from "reporting"."invoice_products" ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
-left join price_list_charging_pivot plcp on plcp.invoice_product_id = ip.id
 left join product_available_facilities paf on paf.invoice_product_id = ip.id
 left join "reporting"."lab_test_types" ltt on ltt.id = ip.source_record_id
 left join "reporting"."lab_test_panels" ltp on ltp.id = ip.source_record_id

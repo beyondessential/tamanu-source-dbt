@@ -37,6 +37,7 @@ select
     {%- endfor %}
     {%- for name in price_list_names %}
     , "Price List Charging: {{ name }}"
+        as "{{ translate_label('invoiceProductPriceListCharging') }}: {{ name }}"
     {%- endfor %}
 from {{ ref('ds__invoice_products') }}
 order by name
