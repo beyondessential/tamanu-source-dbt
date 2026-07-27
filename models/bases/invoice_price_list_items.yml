@@ -26,3 +26,6 @@ models:
       - name: is_hidden
         data_type: boolean
         description: "{{ doc('invoice_price_list_items__is_hidden') }}"
+      - name: is_fixed_price
+        data_type: boolean
+        description: "{{ doc('invoice_price_list_items__is_fixed_price') }}"
