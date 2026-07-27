@@ -1,12 +1,9 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_in_progress_product_name
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_invoice_level_discount
+    model: int__encounter_invoice_amounts
     description: >
-      product_name_final is only snapshotted at finalisation, so for an
-      in-progress invoice it is null. The no-category product list must still
-      populate from the live invoice_products.name. The item's product has a
-      null category and name 'Live Consultation', so products_no_category =
-      'Live Consultation'.
+      An invoice-level discount of 20% on a $100 item total (no insurance
+      coverage) yields invoice_discount = (100 - 0) * 0.2 = 20.
     given:
       - input: ref('encounters')
         format: sql
@@ -36,7 +33,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -46,18 +43,22 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          -- in-progress item: product_name_final not yet snapshotted (null)
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, null::text as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable, 'Live Consultation' as name
+          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
         rows: |
           select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
@@ -92,7 +93,8 @@ unit_tests:
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+          -- 20% invoice-level discount
+          select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 0.2::numeric as percentage, '2024-01-14 09:00:00'::timestamp as applied_time, '00000000-0000-0000-0000-0000000000d1'::uuid as id
 
       - input: ref('invoice_price_lists')
         format: sql
@@ -113,8 +115,10 @@ unit_tests:
           'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          10.00::numeric as invoice_total,
+          100.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
-          0.00::numeric as invoice_discount,
+          20.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          'Live Consultation' as products_no_category
+          null::numeric as insurer_payment,
+          'Consultation' as products_no_category,
+          'INV' as display_id

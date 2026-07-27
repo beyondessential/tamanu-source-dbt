@@ -1,0 +1,126 @@
+unit_tests:
+  - name: test_int__encounter_invoice_amounts_finalised_coverage
+    model: int__encounter_invoice_amounts
+    description: >
+      Finalised coverage (invoice_item_finalised_insurances) takes precedence
+      over live plan coverage. A $100 item with a finalised coverage of 50
+      shows $50 insurance_coverage even though the plan default is 80%.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Lab' as category, true as insurable, null::text as name
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::uuid as id, null::uuid as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          -- Finalised at 50%, overriding the plan's 80% default
+          select 'item_001'::text as invoice_item_id, 'plan_001' as invoice_insurance_plan_id, 50::numeric as coverage_value_final
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select 'iiip_001' as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 'plan_001' as invoice_insurance_plan_id
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          -- Plan default is 80%, but finalised coverage (50%) should take precedence
+          select 'plan_001' as id, 80::numeric as default_coverage
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          100.00::numeric as invoice_total,
+          50.00::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV' as display_id
