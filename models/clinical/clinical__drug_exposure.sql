@@ -45,7 +45,10 @@ encounters as (
 -- prescription branch: every prescription, joined to its encounter and drug (BL-006)
 prescription_exposures as (
     select
-        p.id::varchar as drug_exposure_id,
+        -- BL-006: PK is encounter_prescriptions.id, NOT prescriptions.id -- only that
+        -- table's own id is unique, so a prescription linked to >1 encounter yields
+        -- distinct exposure rows rather than colliding on the primary key
+        ep.id::varchar as drug_exposure_id,
         e.patient_id::varchar as person_id,
         coalesce(p.start_datetime, p.datetime)::date as drug_exposure_start_date,
         coalesce(p.start_datetime, p.datetime) as drug_exposure_start_datetime,

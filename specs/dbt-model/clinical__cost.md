@@ -152,10 +152,11 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
 
 ## Business logic
 
-- **BL-001:** One row per invoice (any status), sourced from
+- **BL-001:** One row per invoice (any status), sourced solely from
   `{{ ref('int__encounter_invoice_amounts') }}` (the shared per-invoice
-  arithmetic extracted from `ds__encounter_invoices`) plus
-  `ref('invoices')` for `display_id` — never `public.*` (D10) and never a `ds__`
+  arithmetic extracted from `ds__encounter_invoices`), which also carries the
+  invoice's `display_id` through for `cost_source_value` — so `clinical__cost`
+  needs no direct `ref('invoices')`. Never `public.*` (D10) and never a `ds__`
   dataset (backwards layer dependency, D2). Deleted / test-patient filtering is
   inherited upstream. `invoice_status` is carried through **[ext]** so consumers
   can exclude cancelled invoices (which still carry a `total_charge`); the model
@@ -231,23 +232,23 @@ would carry the registry row.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted from `ds__encounter_invoices`): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment** (BL-003..BL-006, BL-008) |
-| `invoices` | `bases/` | `display_id` (→ `cost_source_value`) |
+| `int__encounter_invoice_amounts` | `int/` | The shared per-invoice arithmetic (extracted from `ds__encounter_invoices`): charge, coverage, invoice-level discount, `status`, net patient payment **and net insurer payment**, plus `display_id` carried through for `cost_source_value` (BL-001, BL-003..BL-006, BL-008) |
 | `clinical__visit_occurrence` | `clinical/` | `cost_event_id` FK target (AC-003) |
 | `clinical__payer_plan_period` | `clinical/` | *Future* — `payer_plan_period_id` FK target (OQ-002) |
 
-(`invoice_payments` / `invoice_insurer_payments` are consumed by
-`int__encounter_invoice_amounts`, not by `clinical__cost` directly.)
+(`clinical__cost`'s only direct `ref()` is `int__encounter_invoice_amounts`. The
+`invoices` `display_id` reaches it *through* the shared ephemeral — `clinical__cost`
+does not `ref('invoices')` directly. `invoice_payments` / `invoice_insurer_payments`
+are likewise consumed by `int__encounter_invoice_amounts`, not by `clinical__cost`.)
 
 ## Lineage
 
 ```
 invoice_payments    ──┐
 invoice_insurer_    ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
-  payments             │      invoice_amounts   │                     └►  Tupaia cost & coverage
-invoices, items,    ──┘                         └──►  ds__encounter_invoices
-  price lists, ...
-invoices            ─────►  clinical__cost   (display_id → cost_source_value)
+  payments             │      invoice_amounts   │    (display_id →     └►  Tupaia cost & coverage
+invoices, items,    ──┘      (carries display_id)│     cost_source_value)
+  price lists, ...                               └──►  ds__encounter_invoices
 clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
   occurrence
 ```
