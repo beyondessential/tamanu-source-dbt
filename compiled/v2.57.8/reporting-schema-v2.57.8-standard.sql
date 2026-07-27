@@ -1918,20 +1918,20 @@ select
 
     -- diagnosis datetimes; encounter diagnoses are point-in-time, so no end (BL-004)
     ed.datetime::date as condition_start_date,
-    ed.datetime       as condition_start_datetime,
-    null::date        as condition_end_date,
-    null::timestamp   as condition_end_datetime,
+    ed.datetime as condition_start_datetime,
+    null::date as condition_end_date,
+    null::timestamp as condition_end_datetime,
 
     -- provenance: every row here is an EHR encounter diagnosis (BL-006)
     'encounter diagnosis' as condition_type_source_value,
 
     -- status + primary/secondary flag; certainty retained verbatim (BL-005)
-    ed.certainty  as condition_status_source_value,
-    ed.is_primary as is_primary,
+    ed.certainty as condition_status_source_value,
+    ed.is_primary,
 
     -- provider + visit FKs (BL-002)
     ed.diagnosed_by_id as provider_id,
-    ed.encounter_id    as visit_occurrence_id,
+    ed.encounter_id as visit_occurrence_id,
 
     -- diagnosis ICD-10 code + name; concept_id deferred to vocab__ (BL-003)
     rd.code as condition_source_value,
@@ -2216,12 +2216,12 @@ history_segments as (
     select
         -- encounter_history.id is uuid; cast to match encounters.id (varchar) for the
         -- union with synthesized_segments and the varchar visit_detail_id contract
-        eh.id::varchar    as visit_detail_id,
-        eh.encounter_id   as visit_occurrence_id,
-        eh.datetime       as visit_detail_start_datetime,
-        eh.department_id  as department_id,
-        eh.location_id    as location_id,
-        eh.clinician_id   as provider_id,
+        eh.id::varchar as visit_detail_id,
+        eh.encounter_id as visit_occurrence_id,
+        eh.datetime as visit_detail_start_datetime,
+        eh.department_id,
+        eh.location_id,
+        eh.clinician_id as provider_id,
         eh.encounter_type as visit_detail_source_value
     from encounter_history eh
 ),
@@ -2230,17 +2230,18 @@ history_segments as (
 -- taken from the encounter record itself, so every visit has at least one detail (BL-005)
 synthesized_segments as (
     select
-        e.id::varchar    as visit_detail_id,
-        e.id             as visit_occurrence_id,
+        e.id::varchar as visit_detail_id,
+        e.id as visit_occurrence_id,
         e.start_datetime as visit_detail_start_datetime,
-        e.department_id  as department_id,
-        e.location_id    as location_id,
-        e.clinician_id   as provider_id,
+        e.department_id,
+        e.location_id,
+        e.clinician_id as provider_id,
         e.encounter_type as visit_detail_source_value
     from encounters e
     where not exists (
-        select 1 from encounter_history eh where eh.encounter_id = e.id
-    )
+            select 1 from encounter_history eh
+            where eh.encounter_id = e.id
+        )
 ),
 
 -- columns listed explicitly (by name from each branch) so reordering either CTE can't
@@ -2303,7 +2304,7 @@ select
     -- date + datetime pair, mirroring clinical__visit_occurrence (BL-002)
     b.visit_detail_start_datetime::date as visit_detail_start_date,
     b.visit_detail_start_datetime,
-    b.visit_detail_end_datetime::date   as visit_detail_end_date,
+    b.visit_detail_end_datetime::date as visit_detail_end_date,
     b.visit_detail_end_datetime,
 
     -- care site is the ward: the location_group of the segment's location. NULL when the
@@ -2367,21 +2368,21 @@ select
                 where eht.encounter_id = e.id
                     and eht.encounter_type in ('emergency', 'triage', 'observation')
             )
-        then 262
+            then 262
         else vm.concept_id
     end as visit_concept_id,
 
     -- visit datetimes (BL-004)
     e.start_datetime::date as visit_start_date,
-    e.start_datetime       as visit_start_datetime,
-    e.end_datetime::date   as visit_end_date,
-    e.end_datetime         as visit_end_datetime,
+    e.start_datetime as visit_start_datetime,
+    e.end_datetime::date as visit_end_date,
+    e.end_datetime as visit_end_datetime,
 
     -- visit type provenance: constant EHR administration record (BL-003)
     32817 as visit_type_concept_id,
 
     -- provider and care site (BL-005, BL-006)
-    e.clinician_id  as provider_id,
+    e.clinician_id as provider_id,
     e.department_id as care_site_id,
 
     -- source value retained alongside concept (BL-007)
@@ -2761,11 +2762,10 @@ with contributing_death_causes as (
 -- most one current row but there is no unique constraint on patient_id so dedupe
 -- defensively and prefer a finalised record when more than one current row exists
 death_data as (
-    select distinct on (patient_id)
-        *
+    select distinct on (patient_id) *
     from "reporting"."patient_death_data"
     where visibility_status = 'current'
-    order by patient_id asc, is_final desc nulls last, id
+    order by patient_id asc, is_final desc nulls last, id asc
 ),
 
 encounters_with_death as (
@@ -3238,8 +3238,9 @@ create or replace view "reporting"."ds__invoice_products" as (
 with price_pivot as (
     select
         invoice_product_id
-        , max(case when invoice_price_list_id = 'invoicePriceList-1' then price end)
-            as price_1
+            ,
+            max(case when invoice_price_list_id = 'invoicePriceList-1' then price end)
+                as price_1
     from "reporting"."invoice_price_list_items"
     where is_hidden = false
     group by invoice_product_id
@@ -3248,8 +3249,9 @@ with price_pivot as (
 insurance_pivot as (
     select
         invoice_product_id
-        , max(case when invoice_insurance_plan_id = 'insurance-plan-1' then coverage_value end)
-            as cov_1
+            ,
+            max(case when invoice_insurance_plan_id = 'insurance-plan-1' then coverage_value end)
+                as cov_1
     from "reporting"."invoice_insurance_plan_items"
     group by invoice_product_id
 ),
@@ -3280,7 +3282,7 @@ product_available_facilities as (
         pafi.invoice_product_id,
         string_agg(f.name, ', ' order by f.name) as available_facilities
     from product_available_facility_ids pafi
-    cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) as fid
+    cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) fid
     join "reporting"."facilities" f
         on f.id = fid
     group by pafi.invoice_product_id
@@ -3295,15 +3297,17 @@ select
     paf.available_facilities,
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
-    , pp.price_1 as "Price: Price List 1"
-    , case
-        when ip.insurable = false then 'n/a'
-        else cast(
-            coalesce(
-                insurp.cov_1,100
-            ) as text
-        )
-    end as "Insurance: Insurance Plan 1"
+        ,
+        pp.price_1 as "Price: Price List 1"
+        ,
+        case
+            when ip.insurable = false then 'n/a'
+            else cast(
+                    coalesce(
+                        insurp.cov_1,100
+                    ) as text
+                )
+        end as "Insurance: Insurance Plan 1"
 from "reporting"."invoice_products" ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
@@ -5991,16 +5995,16 @@ vitals_answers as (
 -- vitals branch (BL-006). ids cast to varchar so the union with labs is type-safe
 vitals_measurements as (
     select
-        va.id::varchar          as measurement_id,
-        e.patient_id::varchar   as person_id,
+        va.id::varchar as measurement_id,
+        e.patient_id::varchar as person_id,
         va.start_datetime::date as measurement_date,
-        va.start_datetime       as measurement_datetime,
-        'vitals survey'         as measurement_type_source_value,  -- provenance / union discriminator (BL-005)
+        va.start_datetime as measurement_datetime,
+        'vitals survey' as measurement_type_source_value,  -- provenance / union discriminator (BL-005)
         case when va.body ~ '^-?[0-9]+(\.[0-9]+)?$' then va.body::numeric end as value_as_number,
-        va.body                 as value_source_value,
-        null::varchar           as unit_source_value,
+        va.body as value_source_value,
+        null::varchar as unit_source_value,
         va.submitted_by_id::varchar as provider_id,
-        va.encounter_id::varchar    as visit_occurrence_id,
+        va.encounter_id::varchar as visit_occurrence_id,
         pde.code as measurement_source_value,
         pde.name as measurement_source_name
     from vitals_answers va
@@ -6011,16 +6015,16 @@ vitals_measurements as (
 -- lab branch: completed lab tests that have a result (BL-007)
 lab_measurements as (
     select
-        lt.id::varchar        as measurement_id,
+        lt.id::varchar as measurement_id,
         e.patient_id::varchar as person_id,
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)::date as measurement_date,
-        coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
-        'lab'                 as measurement_type_source_value,
+        coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime) as measurement_datetime,  -- completed, else published/requested (BL-004)
+        'lab' as measurement_type_source_value,
         case when trim(lt.result) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(lt.result)::numeric end as value_as_number,
-        trim(lt.result)       as value_source_value,
-        ltt.unit              as unit_source_value,
+        trim(lt.result) as value_source_value,
+        ltt.unit as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
-        lr.encounter_id::varchar    as visit_occurrence_id,
+        lr.encounter_id::varchar as visit_occurrence_id,
         ltt.code as measurement_source_value,
         ltt.name as measurement_source_name
     from lab_tests lt
@@ -6028,8 +6032,8 @@ lab_measurements as (
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
     where lt.result is not null and trim(lt.result) != ''
-      -- drop requests that never produced a valid result even if a stale value lingers (BL-007)
-      and lr.status not in ('deleted', 'sample-not-collected', 'entered-in-error')
+        -- drop requests that never produced a valid result even if a stale value lingers (BL-007)
+        and lr.status not in ('deleted', 'sample-not-collected', 'entered-in-error')
 ),
 
 -- birth anthropometry, unpivoted upstream by int__patient_birth_measurements (BL-008).
@@ -6037,17 +6041,17 @@ lab_measurements as (
 birth_measurements as (
     select
         (bm.patient_id || '-birthdata-' || bm.measurement_source_value)::varchar as measurement_id,
-        bm.patient_id::varchar  as person_id,
+        bm.patient_id::varchar as person_id,
         bm.measurement_datetime::date as measurement_date,
-        bm.measurement_datetime as measurement_datetime,
-        'birth data'            as measurement_type_source_value,
+        bm.measurement_datetime,
+        'birth data' as measurement_type_source_value,
         case when trim(bm.value_source_value) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(bm.value_source_value)::numeric end as value_as_number,
-        bm.value_source_value   as value_source_value,
-        null::varchar           as unit_source_value,
-        null::varchar           as provider_id,
-        null::varchar           as visit_occurrence_id,
-        bm.measurement_source_value as measurement_source_value,
-        bm.measurement_source_name  as measurement_source_name
+        bm.value_source_value,
+        null::varchar as unit_source_value,
+        null::varchar as provider_id,
+        null::varchar as visit_occurrence_id,
+        bm.measurement_source_value,
+        bm.measurement_source_name
     from patient_birth_measurements bm
 )
 
@@ -6218,17 +6222,17 @@ survey_answers as (
 -- survey branch (BL-006). ids cast to varchar so the union is type-safe (BL-002)
 survey_observations as (
     select
-        sa.id::varchar           as observation_id,
-        e.patient_id::varchar    as person_id,
-        sa.start_datetime::date  as observation_date,
-        sa.start_datetime        as observation_datetime,
+        sa.id::varchar as observation_id,
+        e.patient_id::varchar as person_id,
+        sa.start_datetime::date as observation_date,
+        sa.start_datetime as observation_datetime,
         -- provenance / union discriminator (BL-005)
         case sa.survey_type
             when 'programs' then 'program survey'
             else 'referral survey'
-        end                      as observation_type_source_value,
+        end as observation_type_source_value,
         case when sa.body ~ '^-?[0-9]+(\.[0-9]+)?$' then sa.body::numeric end as value_as_number,
-        sa.body                  as value_source_value,
+        sa.body as value_source_value,
         sa.submitted_by_id::varchar as provider_id,
         sa.encounter_id::varchar as visit_occurrence_id,
         sa.code as observation_source_value,
@@ -6242,18 +6246,18 @@ survey_observations as (
 -- clinical__drug_exposure: vaccine_name as the name, code via the scheduled vaccine
 not_given_observations as (
     select
-        av.id::varchar        as observation_id,
+        av.id::varchar as observation_id,
         e.patient_id::varchar as person_id,
-        av.datetime::date     as observation_date,
-        av.datetime           as observation_datetime,  -- when the not-given was recorded (BL-004)
+        av.datetime::date as observation_date,
+        av.datetime as observation_datetime,  -- when the not-given was recorded (BL-004)
         'vaccination not given' as observation_type_source_value,
-        null::numeric         as value_as_number,
+        null::numeric as value_as_number,
         coalesce(rdr.name, av.reason) as value_source_value,
         -- recorded_by_id (a real user FK) preferred; given_by is free text, so the FK test
         -- is scoped off this branch (BL-002)
         coalesce(av.recorded_by_id, av.given_by)::varchar as provider_id,
         av.encounter_id::varchar as visit_occurrence_id,
-        rd.code         as observation_source_value,
+        rd.code as observation_source_value,
         av.vaccine_name as observation_source_name
     from vaccine_administrations av
     join encounters e on e.id = av.encounter_id
@@ -6268,16 +6272,16 @@ not_given_observations as (
 triage_branch_observations as (
     select
         (t.triage_id || '-' || t.observation_source_value)::varchar as observation_id,
-        e.patient_id::varchar         as person_id,
-        t.observation_datetime::date  as observation_date,
-        t.observation_datetime        as observation_datetime,
-        'triage'                      as observation_type_source_value,
+        e.patient_id::varchar as person_id,
+        t.observation_datetime::date as observation_date,
+        t.observation_datetime,
+        'triage' as observation_type_source_value,
         case when trim(t.value_source_value) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(t.value_source_value)::numeric end as value_as_number,
-        t.value_source_value          as value_source_value,
-        t.clinician_id::varchar       as provider_id,
-        t.encounter_id::varchar       as visit_occurrence_id,
-        t.observation_source_value    as observation_source_value,
-        t.observation_source_name     as observation_source_name
+        t.value_source_value,
+        t.clinician_id::varchar as provider_id,
+        t.encounter_id::varchar as visit_occurrence_id,
+        t.observation_source_value,
+        t.observation_source_name
     from triage_observations t
     join encounters e on e.id = t.encounter_id
 )
