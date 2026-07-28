@@ -143,22 +143,23 @@ Provides autocomplete functionality using predefined API endpoints.
 - `bookingType`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `contactRelationship`
 - `country`, `ctScanImagingArea`, `department`, `designation`, `diagnosis`
 - `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
-- `ecgImagingArea`, `echocardiogramImagingArea`, `encounter`, `endoscopyImagingArea`, `ethnicity`
-- `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscopyImagingArea`, `holterMonitorImagingArea`
-- `imagingType`, `insurer`, `invoiceInsurancePlan`, `invoicePriceList`, `invoiceProduct`
-- `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`, `labTestPanel`
-- `labTestPriority`, `labTestType`, `location`, `locationGroup`, `mammogramDiagImagingArea`
-- `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`, `medicationNotGivenReason`
-- `medicationSet`, `medicationTemplate`, `mriImagingArea`, `multiReferenceData`, `nationality`
-- `nonSensitiveLabTestCategory`, `noteType`, `nursingZone`, `occupation`, `orthopantomographyImagingArea`
-- `patient`, `patientBillingType`, `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`
-- `paymentMethod`, `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`
-- `programRegistryClinicalStatus`, `programRegistryCondition`, `reaction`, `referenceData`, `referralSource`
-- `religion`, `reportDefinition`, `role`, `secondaryIdType`, `sensitiveLabTestCategory`
-- `settlement`, `specimenType`, `stressTestImagingArea`, `subdivision`, `survey`
-- `taskDeletionReason`, `taskNotCompletedReason`, `taskSet`, `taskTemplate`, `template`
-- `timeZone`, `triageReason`, `ultrasoundImagingArea`, `vaccineCircumstance`, `vaccineNotGivenReason`
-- `vascularStudyImagingArea`, `village`, `xRayImagingArea`
+- `ecgImagingArea`, `echocardiogramImagingArea`, `encounter`, `encounterFee`, `endoscopyImagingArea`
+- `ethnicity`, `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscopyImagingArea`
+- `holterMonitorImagingArea`, `imagingType`, `insurer`, `invoiceInsurancePlan`, `invoicePriceList`
+- `invoiceProduct`, `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`
+- `labTestPanel`, `labTestPriority`, `labTestType`, `location`, `locationGroup`
+- `mammogramDiagImagingArea`, `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`
+- `medicationDispenseModifyReason`, `medicationNotGivenReason`, `medicationPresetLabel`, `medicationSet`, `medicationTemplate`
+- `mriImagingArea`, `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `noteType`
+- `nursingZone`, `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
+- `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`, `paymentMethod`, `pharmacyEncounterFee`
+- `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`, `programRegistryClinicalStatus`
+- `programRegistryCondition`, `reaction`, `referenceData`, `referralSource`, `religion`
+- `reportDefinition`, `role`, `secondaryIdType`, `sensitiveLabTestCategory`, `settlement`
+- `specimenType`, `stressTestImagingArea`, `subdivision`, `survey`, `taskDeletionReason`
+- `taskNotCompletedReason`, `taskSet`, `taskTemplate`, `template`, `timeZone`
+- `triageReason`, `ultrasoundImagingArea`, `vaccineCircumstance`, `vaccineNotGivenReason`, `vascularStudyImagingArea`
+- `village`, `xRayImagingArea`
 
 ### 3. ParameterMultiselectField
 
