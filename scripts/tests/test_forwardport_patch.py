@@ -1,6 +1,6 @@
+import json
 import os
 import textwrap
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,12 +8,18 @@ import pytest
 import forwardport_patch
 from create_version_branch import find_latest_tag_for_major, find_latest_tag_for_minor
 from forwardport_patch import (
+    Change,
+    compute_next_version,
     forwardport_to_branch,
+    get_change_commits,
     get_higher_minor_branches_from_list,
     get_major_minor_patch,
+    get_open_pr,
     get_previous_tag,
+    get_target_major_minor,
     get_unmerged_files,
     get_version_tags_for_minor_from_list,
+    is_version_bump_commit,
     is_version_only_diff,
     strip_compiled_output_from_head,
     try_autoresolve_version_conflict,
@@ -112,6 +118,7 @@ def test_get_previous_tag_large_patch():
 # ---------------------------------------------------------------------------
 # find_latest_tag_for_minor  (from create_version_branch.py)
 # ---------------------------------------------------------------------------
+
 
 def _make_refs(*tags):
     return [{"ref": f"refs/tags/{t}"} for t in tags]
@@ -364,17 +371,23 @@ DBT_PROJECT_MIXED_DIFF = textwrap.dedent("""\
 
 
 def test_is_version_only_diff_dbt_project():
-    with patch.object(forwardport_patch, "git_out", return_value=DBT_PROJECT_VERSION_DIFF):
+    with patch.object(
+        forwardport_patch, "git_out", return_value=DBT_PROJECT_VERSION_DIFF
+    ):
         assert is_version_only_diff("b031e6c", "dbt_project.yml")
 
 
 def test_is_version_only_diff_pyproject():
-    with patch.object(forwardport_patch, "git_out", return_value=PYPROJECT_VERSION_DIFF):
+    with patch.object(
+        forwardport_patch, "git_out", return_value=PYPROJECT_VERSION_DIFF
+    ):
         assert is_version_only_diff("b031e6c", "pyproject.toml")
 
 
 def test_is_version_only_diff_false_when_other_lines_change():
-    with patch.object(forwardport_patch, "git_out", return_value=DBT_PROJECT_MIXED_DIFF):
+    with patch.object(
+        forwardport_patch, "git_out", return_value=DBT_PROJECT_MIXED_DIFF
+    ):
         assert not is_version_only_diff("b031e6c", "dbt_project.yml")
 
 
@@ -384,7 +397,9 @@ def test_is_version_only_diff_false_when_no_diff():
 
 
 def test_get_unmerged_files_parses_output():
-    with patch.object(forwardport_patch, "git_out", return_value="dbt_project.yml\npyproject.toml\n"):
+    with patch.object(
+        forwardport_patch, "git_out", return_value="dbt_project.yml\npyproject.toml\n"
+    ):
         assert get_unmerged_files() == ["dbt_project.yml", "pyproject.toml"]
 
 
@@ -406,7 +421,11 @@ def test_try_autoresolve_succeeds_on_version_only_conflict():
         if args[:2] == ("diff", "--name-only"):
             return "dbt_project.yml\npyproject.toml"
         if args[0] == "show":
-            return DBT_PROJECT_VERSION_DIFF if args[-1] == "dbt_project.yml" else PYPROJECT_VERSION_DIFF
+            return (
+                DBT_PROJECT_VERSION_DIFF
+                if args[-1] == "dbt_project.yml"
+                else PYPROJECT_VERSION_DIFF
+            )
         return ""
 
     with (
@@ -605,7 +624,12 @@ def test_strip_compiled_output_restores_modified_not_removed():
     ):
         strip_compiled_output_from_head()
 
-    assert ("checkout", "HEAD~1", "--", "compiled/v2.54.17/reporting-schema.sql") in git_calls
+    assert (
+        "checkout",
+        "HEAD~1",
+        "--",
+        "compiled/v2.54.17/reporting-schema.sql",
+    ) in git_calls
     assert not any(c[0] == "rm" for c in git_calls)
 
 
@@ -614,7 +638,10 @@ def test_strip_compiled_output_restores_modified_not_removed():
 # ---------------------------------------------------------------------------
 
 _COMMITS = ["aaaa1111aaaa1111", "bbbb2222bbbb2222", "cccc3333cccc3333"]
-_CONFLICT_OUTPUT = ("", "CONFLICT (content): Merge conflict in foo.sql")  # (stderr, stdout)
+_CONFLICT_OUTPUT = (
+    "",
+    "CONFLICT (content): Merge conflict in foo.sql",
+)  # (stderr, stdout)
 _EMPTY_PICK_OUTPUT = ("cherry-pick is now empty", "")  # (stderr, stdout)
 
 
@@ -643,24 +670,46 @@ def _git_out_mock(rev_list_count="1"):
         if "rev-list" in args and "--count" in args:
             return rev_list_count
         return ""
+
     return _git_out
 
 
-def _run(cherry_pick_results=None, rev_list_count="1"):
-    """Run forwardport_to_branch with mocked git/gh. Returns the args list of each gh pr create call."""
+def _run(
+    cherry_pick_results=None,
+    rev_list_count="1",
+    change=None,
+    existing_pr=None,
+    existing_draft=False,
+):
+    """Run forwardport_to_branch with mocked git/gh.
+
+    Returns (create_calls, edit_calls) — the args list of each `gh pr create`
+    and each `gh pr edit --title` (PR refresh) call. `existing_pr`, if given, is
+    the URL an already-open PR is reported at; `existing_draft` marks it a draft.
+    """
     gh_create_calls = []
+    gh_title_edit_calls = []
 
     def fake_gh_out(*args, **kwargs):
         if args[0] == "pr" and args[1] == "list":
+            if existing_pr:
+                return json.dumps([{"url": existing_pr, "isDraft": existing_draft}])
             return "[]"
         if args[0] == "pr" and args[1] == "create":
             gh_create_calls.append(list(args))
             return "https://github.com/org/repo/pull/42"
+        if args[0] == "pr" and args[1] == "edit" and "--title" in args:
+            gh_title_edit_calls.append(list(args))
+            return ""
         return ""
 
     with (
-        patch.object(forwardport_patch, "git", side_effect=_git_mock(cherry_pick_results)),
-        patch.object(forwardport_patch, "git_out", side_effect=_git_out_mock(rev_list_count)),
+        patch.object(
+            forwardport_patch, "git", side_effect=_git_mock(cherry_pick_results)
+        ),
+        patch.object(
+            forwardport_patch, "git_out", side_effect=_git_out_mock(rev_list_count)
+        ),
         patch.object(forwardport_patch, "gh_out", side_effect=fake_gh_out),
         patch.object(forwardport_patch, "get_branch_version", return_value="2.50.4"),
         patch.object(forwardport_patch, "update_version_in_files", return_value=[]),
@@ -671,13 +720,17 @@ def _run(cherry_pick_results=None, rev_list_count="1"):
             new_patch_tag="v2.49.9",
             source_major_minor="2.49",
             repo="org/repo",
+            change=change,
         )
 
-    return gh_create_calls
+    return gh_create_calls, gh_title_edit_calls
 
 
-def _pr_args(gh_create_calls):
-    assert len(gh_create_calls) == 1, f"Expected 1 pr create call, got {len(gh_create_calls)}"
+def _pr_args(run_result):
+    gh_create_calls, _ = run_result
+    assert len(gh_create_calls) == 1, (
+        f"Expected 1 pr create call, got {len(gh_create_calls)}"
+    )
     return gh_create_calls[0]
 
 
@@ -687,8 +740,9 @@ def _get_arg(args, flag):
 
 def test_conflict_first_commit_no_pr_when_nothing_ahead():
     # Conflict on first commit, nothing committed ahead — no PR should be opened.
-    calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="0")
-    assert calls == []
+    create_calls, edit_calls = _run({_COMMITS[0]: _CONFLICT_OUTPUT}, rev_list_count="0")
+    assert create_calls == []
+    assert edit_calls == []
 
 
 def test_conflict_later_commit_opens_draft_pr():
@@ -775,3 +829,192 @@ def test_already_applied_commits_excluded_from_denominator():
     )
     body = _get_arg(_pr_args(calls), "--body")
     assert "Cherry-picked 1 of 2" in body
+
+
+# ---------------------------------------------------------------------------
+# PR title uses the change subject + version span
+# ---------------------------------------------------------------------------
+
+
+def test_title_uses_change_subject_and_version_span():
+    calls = _run(
+        {},
+        rev_list_count="3",
+        change=Change(subject="fix(clinical): correct drug PK (#620)"),
+    )
+    title = _get_arg(_pr_args(calls), "--title")
+    assert (
+        title == "fix(clinical): correct drug PK (#620) (forwardport v2.49.9 → 2.50.5)"
+    )
+
+
+def test_title_notes_extra_commits():
+    calls = _run({}, rev_list_count="3", change=Change(subject="fix: a", extra=2))
+    title = _get_arg(_pr_args(calls), "--title")
+    assert title == "fix: a (+2 more) (forwardport v2.49.9 → 2.50.5)"
+
+
+def test_title_change_subject_with_conflict_marker():
+    calls = _run(
+        {_COMMITS[1]: _CONFLICT_OUTPUT},
+        rev_list_count="1",
+        change=Change(subject="fix: something"),
+    )
+    title = _get_arg(_pr_args(calls), "--title")
+    assert title == "fix: something (forwardport v2.49.9 → 2.50.5) [CONFLICT]"
+
+
+def test_title_falls_back_to_generic_when_no_change_subject():
+    calls = _run({}, rev_list_count="3", change=None)
+    title = _get_arg(_pr_args(calls), "--title")
+    assert title == "chore: forwardport v2.49.9 → 2.50.5 (onto 2.50)"
+
+
+def test_body_links_source_commit():
+    calls = _run(
+        {},
+        rev_list_count="3",
+        change=Change(subject="fix: a", commit="aaaa1111aaaa1111"),
+    )
+    body = _get_arg(_pr_args(calls), "--body")
+    assert "https://github.com/org/repo/commit/aaaa1111aaaa1111" in body
+    assert "`aaaa1111`" in body
+
+
+# ---------------------------------------------------------------------------
+# get_change_commits / is_version_bump_commit
+# ---------------------------------------------------------------------------
+
+
+def test_get_change_commits_skips_version_bump_commits():
+    # First commit is a pure version bump, second is the real change.
+    def fake_git_out(*args):
+        if args[:2] == ("show", "--name-only"):
+            return "dbt_project.yml" if args[-1] == "aaaa" else "models/foo.sql"
+        if args[0] == "show":  # is_version_only_diff diff lookup
+            return DBT_PROJECT_VERSION_DIFF
+        return ""
+
+    with patch.object(forwardport_patch, "git_out", side_effect=fake_git_out):
+        assert get_change_commits(["aaaa", "bbbb"]) == ["bbbb"]
+
+
+def test_get_change_commits_empty_when_all_version_bumps():
+    def fake_git_out(*args):
+        if args[:2] == ("show", "--name-only"):
+            return "dbt_project.yml"
+        if args[0] == "show":
+            return DBT_PROJECT_VERSION_DIFF
+        return ""
+
+    with patch.object(forwardport_patch, "git_out", side_effect=fake_git_out):
+        assert get_change_commits(["aaaa"]) == []
+
+
+def test_is_version_bump_commit_false_for_non_version_file():
+    def fake_git_out(*args):
+        if args[:2] == ("show", "--name-only"):
+            return "models/foo.sql\ndbt_project.yml"
+        return DBT_PROJECT_VERSION_DIFF
+
+    with patch.object(forwardport_patch, "git_out", side_effect=fake_git_out):
+        assert not is_version_bump_commit("aaaa")
+
+
+# ---------------------------------------------------------------------------
+# compute_next_version / get_target_major_minor
+# ---------------------------------------------------------------------------
+
+
+def test_get_target_major_minor_from_branch_name():
+    assert get_target_major_minor("2.58") == (2, 58)
+
+
+def test_get_target_major_minor_main_reads_codebase():
+    with patch.object(forwardport_patch, "get_branch_version", return_value="2.61.0"):
+        assert get_target_major_minor("main") == (2, 61)
+
+
+def test_compute_next_version_bumps_from_latest_released_tag():
+    # Codebase is at 2.60.6 (a prior forward-port bumped it, not yet released),
+    # but the latest released tag is v2.60.5 — the next patch must be 2.60.6,
+    # derived from the tag, not 2.60.7 from the codebase.
+    with (
+        patch.object(
+            forwardport_patch,
+            "get_version_tags_for_minor",
+            return_value=["v2.60.4", "v2.60.5"],
+        ),
+        patch.object(forwardport_patch, "get_branch_version", return_value="2.60.6"),
+    ):
+        assert compute_next_version("2.60") == ("2.60.5", "2.60.6")
+
+
+def test_compute_next_version_falls_back_to_codebase_when_no_tags():
+    with (
+        patch.object(forwardport_patch, "get_version_tags_for_minor", return_value=[]),
+        patch.object(forwardport_patch, "get_branch_version", return_value="2.61.0"),
+    ):
+        assert compute_next_version("2.61") == ("2.61.0", "2.61.1")
+
+
+# ---------------------------------------------------------------------------
+# get_open_pr
+# ---------------------------------------------------------------------------
+
+
+def test_get_open_pr_returns_record_when_present():
+    with patch.object(
+        forwardport_patch,
+        "gh_out",
+        return_value='[{"url": "https://github.com/org/repo/pull/7", "isDraft": false}]',
+    ):
+        assert get_open_pr("org/repo", "some-branch") == {
+            "url": "https://github.com/org/repo/pull/7",
+            "isDraft": False,
+        }
+
+
+def test_get_open_pr_none_when_empty():
+    with patch.object(forwardport_patch, "gh_out", return_value="[]"):
+        assert get_open_pr("org/repo", "some-branch") is None
+
+
+def test_get_open_pr_none_on_bad_json():
+    with patch.object(forwardport_patch, "gh_out", return_value="not json"):
+        assert get_open_pr("org/repo", "some-branch") is None
+
+
+# ---------------------------------------------------------------------------
+# Idempotency: a ready PR gets its title refreshed; a draft is left untouched
+# ---------------------------------------------------------------------------
+
+
+def test_existing_ready_pr_title_refreshed_not_recreated():
+    # A force-push would clobber human commits, so an open PR is never re-ported;
+    # only its title is refreshed.
+    create_calls, edit_calls = _run(
+        {},
+        rev_list_count="3",
+        change=Change(subject="fix: a"),
+        existing_pr="https://github.com/org/repo/pull/7",
+    )
+    assert create_calls == []
+    assert len(edit_calls) == 1
+    edit = edit_calls[0]
+    assert "https://github.com/org/repo/pull/7" in edit
+    assert _get_arg(edit, "--title") == "fix: a (forwardport v2.49.9 → 2.50.5)"
+    assert "--body" not in edit  # body is left alone to avoid churn
+
+
+def test_existing_draft_pr_left_untouched():
+    # A conflict draft may hold a human's in-progress resolution — don't touch it.
+    create_calls, edit_calls = _run(
+        {},
+        rev_list_count="3",
+        change=Change(subject="fix: a"),
+        existing_pr="https://github.com/org/repo/pull/7",
+        existing_draft=True,
+    )
+    assert create_calls == []
+    assert edit_calls == []
