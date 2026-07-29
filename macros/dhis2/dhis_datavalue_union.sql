@@ -2,13 +2,19 @@
 {#
     DHIS2 datavalue presentation join over metric__ views.
 
-    Emits the standard 6-column DHIS2 datavalue shape (dataelement, period,
-    orgunit, categoryoptioncombo, attributeoptioncombo, value) as a UNION ALL
-    over one or more metric__ views in the D5 wide format (metric_id,
-    period_start, value_numeric, facility_id, + disaggregation columns).
-    All semantic logic belongs upstream in the metric layer; this macro is
-    presentation only — a generalisation of MSF Syria's
-    dhis_ncd_indicator_union onto the metric architecture.
+    Emits a DHIS2 datavalue shape (dataelement, period, orgunit,
+    [categoryoptioncombo], [attributeoptioncombo], value) as a UNION ALL over
+    one or more metric__ views in the D5 wide format (metric_id, period_start,
+    value_numeric, facility_id, + disaggregation columns). All semantic logic
+    belongs upstream in the metric layer; this macro is presentation only — a
+    generalisation of MSF Syria's dhis_ncd_indicator_union onto the metric
+    architecture.
+
+    The categoryoptioncombo and attributeoptioncombo columns are optional:
+    each is emitted only when at least one config in the union maps or defaults
+    that dimension. Datasets whose DHIS2 target does not use combos simply omit
+    the relevant keys from every config and the column is left out entirely
+    (kept consistent across all UNION branches).
 
     metric_configs: list of dicts, one per metric__ view:
     - metric_model (required): metric__ view name. Must expose metric_id,
@@ -18,9 +24,16 @@
       (id, indicator); joined on indicator = metric_id.
     - coc_map (optional): category-option-combo mapping model. When present,
       coc_join_columns (list of column names shared by the COC map and the
-      metric view) is required. When absent the report is undisaggregated
-      and categoryoptioncombo falls back to var('dhis_attributeoptioncombo')
-      — the DHIS2 default COC.
+      metric view) is required and categoryoptioncombo is coc.id. When absent
+      but the column is emitted (because another config needs it),
+      categoryoptioncombo is coc_default if that key is given, otherwise NULL
+      (DHIS2 treats a missing combo as the system default). Pass coc_default
+      only for datasets that actually want an explicit default combo, e.g.
+      coc_default=var('dhis_attributeoptioncombo').
+    - aoc_map (optional): attribute-option-combo mapping model, symmetric to
+      coc_map. When present, aoc_join_columns is required and
+      attributeoptioncombo is aoc.id. When absent but emitted,
+      attributeoptioncombo is aoc_default if given, otherwise NULL.
     - period_expr (optional): SQL over alias `m` producing the DHIS2 period
       string. Defaults to the monthly format
       to_char(m.period_start, var('yearmonth_format')). Weekly reports pass
@@ -39,17 +52,35 @@
             ...
         ]) }}
 #}
+{#- Combo columns are emitted only if some config in the union uses them. -#}
+{% set ns = namespace(coc=false, aoc=false) %}
+{% for config in metric_configs %}
+    {% if config.get('coc_map') or config.get('coc_default') %}{% set ns.coc = true %}{% endif %}
+    {% if config.get('aoc_map') or config.get('aoc_default') %}{% set ns.aoc = true %}{% endif %}
+{% endfor %}
 {% for config in metric_configs %}
 select
     de.id as dataelement,
     {{ config.get('period_expr', "to_char(m.period_start, '" ~ var('yearmonth_format') ~ "')") }} as period,
     ou.dhis_org_unit_id as orgunit,
+    {% if ns.coc -%}
     {% if config.get('coc_map') -%}
     coc.id as categoryoptioncombo,
+    {%- elif config.get('coc_default') -%}
+    '{{ config.coc_default }}' as categoryoptioncombo,
     {%- else -%}
-    '{{ var("dhis_attributeoptioncombo") }}' as categoryoptioncombo,
+    null as categoryoptioncombo,
     {%- endif %}
-    '{{ var("dhis_attributeoptioncombo") }}' as attributeoptioncombo,
+    {% endif -%}
+    {% if ns.aoc -%}
+    {% if config.get('aoc_map') -%}
+    aoc.id as attributeoptioncombo,
+    {%- elif config.get('aoc_default') -%}
+    '{{ config.aoc_default }}' as attributeoptioncombo,
+    {%- else -%}
+    null as attributeoptioncombo,
+    {%- endif %}
+    {% endif -%}
     {{ config.get('value_expr', 'm.value_numeric') }} as value
 from {{ ref(config.metric_model) }} m
 join {{ ref(config.de_map) }} de
@@ -58,6 +89,12 @@ join {{ ref(config.de_map) }} de
 join {{ ref(config.coc_map) }} coc
     on {% for col in config.coc_join_columns -%}
     coc.{{ col }} = m.{{ col }} {%- if not loop.last %} and {% endif %}
+    {%- endfor %}
+{% endif -%}
+{% if config.get('aoc_map') -%}
+join {{ ref(config.aoc_map) }} aoc
+    on {% for col in config.aoc_join_columns -%}
+    aoc.{{ col }} = m.{{ col }} {%- if not loop.last %} and {% endif %}
     {%- endfor %}
 {% endif -%}
 join {{ ref('map__dhis_orgunit') }} ou
