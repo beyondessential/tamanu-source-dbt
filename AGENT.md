@@ -126,15 +126,6 @@ bundle rather than a seed table:
   `tamanu-dbt-<deployment>/csv/metric_definitions_<deployment>.csv` and are
   merged in by the generation script (keyed on `metric_id`)
 
-## Patch propagation script
-
-`scripts/propagate_patch.py` has a test suite at `scripts/tests/test_propagate_patch.py`.
-Run the tests whenever `propagate_patch.py` or its test file changes:
-
-```bash
-cd scripts && uv run --env-file ../.env python -m pytest tests/test_propagate_patch.py -v
-```
-
 ## Running commands
 
 Run project commands through `uv run --env-file .env <cmd>` — `uv` syncs the virtualenv
