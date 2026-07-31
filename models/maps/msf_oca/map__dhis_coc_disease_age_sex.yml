@@ -1,0 +1,38 @@
+version: 2
+models:
+  - name: map__dhis_coc_disease_age_sex
+    description: >
+      DHIS2 category-option-combos for the NCD Indicators disease × age × sex
+      disaggregation (DHIS2 category combo TlIWfVFnyxW): 8 diseases × 5 age
+      groups × 3 sex. Shared verbatim with the other MSF OCA NCD deployment
+      (UIDs are global to the MSF OCA DHIS2 instance). Joined to
+      metric__ncd_indicators on (dhis_ncd_category, age_group, sex).
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - dhis_ncd_category
+              - age_group
+              - sex
+          config:
+            severity: error
+    columns:
+      - name: id
+        description: DHIS2 category-option-combo UID.
+        tests:
+          - not_null
+          - unique
+      - name: dhis_ncd_category
+        description: >
+          NCD disease category — asthma, copd, diabetes_i, diabetes_ii,
+          epilepsy, hypertension, cvd, other_ncd.
+        tests:
+          - not_null
+      - name: age_group
+        description: 'NCD age group — <5 years, 5-14 years, 15-49 years, 50+ years, Unknown age.'
+        tests:
+          - not_null
+      - name: sex
+        description: 'Sex — Female, Male, Other/Unknown.'
+        tests:
+          - not_null
