@@ -169,6 +169,12 @@ scanning the whole codebase:
 | Source doc blocks | `models/sources/<table>.md` |
 | Deployment repo list | `.github/deployment-repos.yml` |
 
+Release propagation: the deployment repos above pin a `tamanu-source-dbt`
+version and are bumped **manually** per release — open one version-bump PR
+against each (see the release conventions in maui-team). In-repo forward-porting
+of a patch across higher-minor branches is automated by
+`.github/workflows/forwardport-patch.yml`.
+
 Quick search commands:
 
 ```bash
