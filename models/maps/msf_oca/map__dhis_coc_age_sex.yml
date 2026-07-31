@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: map__dhis_coc_age_sex
+    description: >
+      DHIS2 category-option-combos for the age x sex disaggregation (MSF OCA
+      category combo CjVsc7apGqi): 5 age groups x 3 sex. Shared across MSF OCA
+      deployments (UIDs global to the MSF OCA DHIS2 instance). Enabled per
+      deployment via var('msf_oca_dhis2'). Joined on (age_group, sex).
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - age_group
+              - sex
+          config:
+            severity: error
+    columns:
+      - name: id
+        description: DHIS2 category-option-combo UID.
+        tests:
+          - not_null
+          - unique
+      - name: age_group
+        description: 'Age group -- <5 years, 5-14 years, 15-49 years, 50+ years, Unknown age.'
+        tests:
+          - not_null
+      - name: sex
+        description: 'Sex -- Female, Male, Other/Unknown.'
+        tests:
+          - not_null
