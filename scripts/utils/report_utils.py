@@ -177,11 +177,13 @@ def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
-    The script is generated based on the model nodes that do not have the "reports" tag and
-    are compiled in the project. Dependencies between models are resolved before generating
-    the views in the schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset views) are excluded when
-    has_sensitive_facility is false. has_sensitive_facility is read from dbt_project.yml via get_dbt_project_vars(),
-    not from the dbt runtime context.
+    The script is generated based on the model nodes that do not have the "reports" or
+    "internal" tag and are compiled in the project. Dependencies between models are resolved
+    before generating the views in the schema. Nodes tagged "internal" (e.g. the
+    metric_definitions registry) are dbt-package-internal and never materialised into the
+    deployable reporting schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset
+    views) are excluded when has_sensitive_facility is false. has_sensitive_facility is read
+    from dbt_project.yml via get_dbt_project_vars(), not from the dbt runtime context.
 
     Args:
         target (str): The target tag to filter models for generating views.
@@ -200,6 +202,7 @@ def generate_reporting_schema_script():
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" not in manifest["nodes"][key].get("tags", [])
+        and "internal" not in manifest["nodes"][key].get("tags", [])
         and (
             has_sensitive_facility
             or "restricted" not in manifest["nodes"][key].get("tags", [])
