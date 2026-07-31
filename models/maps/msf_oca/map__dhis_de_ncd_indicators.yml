@@ -1,0 +1,22 @@
+version: 2
+models:
+  - name: map__dhis_de_ncd_indicators
+    description: >
+      DHIS2 Data Elements for the NCD Indicators report (27 indicators across
+      consultations, diagnoses, active care, exits, referrals, quality-of-care
+      measurements, and 6-month cohort outcomes). UIDs are shared verbatim with
+      the other MSF OCA NCD deployment (same report, same DHIS2 instance).
+    columns:
+      - name: id
+        description: DHIS2 Data Element UID.
+        tests:
+          - not_null
+          - unique
+      - name: indicator
+        description: >
+          metric__ncd_indicators.metric_id slug (e.g. consultations_new,
+          diagnoses, patients_active, exit_ltfu, referred_specialist,
+          htn_bp_controlled, cohort_6m_retention_percent).
+        tests:
+          - not_null
+          - unique
