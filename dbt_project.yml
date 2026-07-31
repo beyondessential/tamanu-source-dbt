@@ -5,6 +5,10 @@ profile: tamanu_source_dbt
 
 vars:
   has_sensitive_facility: false
+  # Enable the MSF OCA DHIS2 shared mappings (models/maps/msf_oca). Off by
+  # default -- only MSF OCA deployments set this true. The UIDs are global to the
+  # MSF OCA DHIS2 instance and meaningless for other deployments.
+  msf_oca_dhis2: false
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
@@ -43,6 +47,14 @@ models:
         - base
     intermediate:
       +materialized: ephemeral
+    maps:
+      # MSF OCA DHIS2 shared mappings -- disabled unless the deployment sets
+      # var('msf_oca_dhis2'). Keeps MSF-instance-specific UIDs out of non-MSF builds.
+      msf_oca:
+        +enabled: "{{ var('msf_oca_dhis2', false) }}"
+        +materialized: view
+        +tags:
+          - msf-oca-dhis2
     datasets:
       +docs:
         show: true
