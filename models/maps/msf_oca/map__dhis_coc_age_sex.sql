@@ -1,7 +1,8 @@
 -- DHIS2 category-option-combos for the age x sex disaggregation (MSF OCA
 -- category combo CjVsc7apGqi): 5 age groups x 3 sex. Shared across MSF OCA
--- deployments -- the UIDs are global to the MSF OCA DHIS2 instance. Built only
--- when var('msf_oca_dhis2') is true. Joined on (age_group, sex).
+-- deployments -- the UIDs are global to the MSF OCA DHIS2 instance. Disabled in
+-- this repo; an MSF OCA deployment re-enables the maps/msf_oca models in its own
+-- dbt_project.yml. Joined on (age_group, sex).
 select * from (
     values
         ('CHskMNYmgS7', '<5 years', 'Female'),

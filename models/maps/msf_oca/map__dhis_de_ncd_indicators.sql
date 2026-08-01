@@ -3,8 +3,9 @@
 -- indicator = metric__ncd_indicators.metric_id.
 --
 -- The 27 UIDs are shared across MSF OCA deployments (global to the MSF OCA
--- DHIS2 instance), confirmed against the NCD indicators source sheet. Built only
--- when var('msf_oca_dhis2') is true. The disaggregation each indicator uses is chosen in
+-- DHIS2 instance), confirmed against the NCD indicators source sheet. Disabled in
+-- this repo; an MSF OCA deployment re-enables the maps/msf_oca models in its own
+-- dbt_project.yml. The disaggregation each indicator uses is chosen in
 -- the report layer per config: consultations / diagnoses / exits / referrals join
 -- map__dhis_coc_disease_age_sex; active-care / measurement / cohort join the
 -- age x sex COC map.
