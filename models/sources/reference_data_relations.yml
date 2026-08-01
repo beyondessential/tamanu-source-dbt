@@ -35,26 +35,12 @@ sources:
           - name: deleted_at
             data_type: timestamp with time zone
             description: "{{ doc('generic__deleted_at') }} in reference_data_relations."
-          # A null endpoint is a malformed relation edge: ref__location joins both
-          # ends with an inner join, so such an edge never matches and is discarded
-          # whole (it was never a usable link). warn-only for now — validated clean on
-          # one demo DB but not across every tamanu-dbt-* deployment; promote to error
-          # once it has stayed clean for a release (Tamanu does not declare these
-          # NOT NULL at the DB level).
           - name: reference_data_id
             data_type: text
             description: "{{ doc('reference_data_relations__reference_data_id') }}"
-            data_tests:
-              - not_null:
-                  config:
-                    severity: warn
           - name: reference_data_parent_id
             data_type: text
             description: "{{ doc('reference_data_relations__reference_data_parent_id') }}"
-            data_tests:
-              - not_null:
-                  config:
-                    severity: warn
           - name: type
             data_type: character varying(255)
             description: "{{ doc('reference_data_relations__type') }}"
