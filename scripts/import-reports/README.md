@@ -88,7 +88,7 @@ chmod +x import-reports-k8s.sh   # first time only
 | `-Pod`            | `--pod`           | auto-resolved                        | Override the central pod instead of resolving by selector. |
 | `-Container`      | `--container`     | —                                    | Container name for multi-container pods. |
 | `-Selector`       | `--selector`      | `app.kubernetes.io/name=central,…`   | Label selector used to find the central pod. |
-| `-Workdir`        | `--workdir`       | `.`                                  | Working dir inside the pod for `node dist` (e.g. `/app/packages/central-server`). |
+| `-Workdir`        | `--workdir`       | `.`                                  | Working dir inside the pod for the central-server CLI (e.g. `/app/packages/central-server`). |
 | `-DbSvc`          | `--db-svc`        | `central-db-rw`                      | Service used for the before/after snapshot query. |
 | `-DbName`         | `--db-name`       | `app`                                | Database name. |
 | `-DbRole`         | `--db-role`       | `app`                                | Role the schema is applied as (`SET ROLE`). |
@@ -103,8 +103,9 @@ chmod +x import-reports-k8s.sh   # first time only
    the app role, and apply the file in a single transaction.
 2. **Reports**: each `.json` is staged into the pod as base64 (immune to
    encoding/newline truncation), the transferred byte count is verified against the
-   source (retried up to 3× on a short write), then imported with
-   `node dist importReport -f … -v`. The staged `/tmp/<name>.json` is always removed
+   source (retried up to 3× on a short write), then imported with the central-server CLI's
+   `importReport -f … -v` (run via `node dist` on packaged images, or `node --import tsx app`
+   on 2.60+ source images). The staged `/tmp/<name>.json` is always removed
    afterwards — on success and on failure alike — so nothing is left in the pod. If an
    import fails, the run aborts with an error naming the report that failed.
 3. **Snapshot** of report definitions and their latest/published versions is printed

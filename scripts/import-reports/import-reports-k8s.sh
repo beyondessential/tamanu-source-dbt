@@ -60,7 +60,7 @@ Options:
   --pod NAME           override the central pod (default: resolve by --selector)
   --container NAME     container name for multi-container pods
   --selector SEL       label selector to find the central pod
-  --workdir DIR        working dir in the pod for `node dist` (default: .)
+  --workdir DIR        working dir in the pod for the central-server CLI (default: .)
   --db-svc SVC         service used for the before/after snapshot (default: central-db-rw)
   --db-name NAME       database name (default: app)
   --db-role ROLE       role the schema is applied as via SET ROLE (default: app)
@@ -160,10 +160,13 @@ fi
 
 # ---- helpers ----------------------------------------------------------------------
 invoke_node_dist() {
-  # $1 = args passed to `node dist`
+  # $1 = args passed to the central-server CLI
   local dist_args="$1"
+  # 2.60+ k8s images run the CLI from TS source via tsx (app/); older or packaged images ship
+  # a built dist/. Detect in the pod and pick the right entry point.
   # "${cexec[@]+...}" guards against an empty array under `set -u` on bash 3.2 (stock macOS).
-  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- sh -lc "cd '$WORKDIR' && node dist $dist_args"
+  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
+    sh -lc "cd '$WORKDIR' && if [ -f dist/index.js ]; then node dist $dist_args; else node --import tsx app $dist_args; fi"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password).
