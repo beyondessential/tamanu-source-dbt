@@ -55,6 +55,9 @@ models:
       +materialized: view
       +tags:
         - reference
+      # MSF OCA DHIS2 shared mappings -- disabled here (MSF-instance-specific
+      # UIDs). An MSF OCA deployment repo re-enables msf_oca via +enabled: true
+      # in its own dbt_project.yml.
       msf_oca:
         +enabled: false
         +materialized: view
