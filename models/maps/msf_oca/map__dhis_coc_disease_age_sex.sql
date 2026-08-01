@@ -2,8 +2,9 @@
 -- NCD Indicators report (DHIS2 category combo TlIWfVFnyxW). One row per
 -- (disease, age_group, sex). Shared across MSF OCA deployments -- the UIDs are
 -- global to the MSF OCA DHIS2 instance (8 diseases x 5 age groups x 3 sex).
--- Built only when var('msf_oca_dhis2') is true. Joined to
--- metric__ncd_indicators on (dhis_ncd_category, age_group, sex).
+-- Disabled in this repo; an MSF OCA deployment re-enables the maps/msf_oca
+-- models in its own dbt_project.yml. Joined to metric__ncd_indicators on
+-- (dhis_ncd_category, age_group, sex).
 select * from (
     values
         -- Asthma
