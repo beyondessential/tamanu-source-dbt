@@ -55,14 +55,6 @@ models:
       +materialized: view
       +tags:
         - reference
-      # MSF OCA DHIS2 shared mappings -- disabled here. Keeps
-      # MSF-instance-specific UIDs out of non-MSF builds. An MSF OCA
-      # deployment repo re-enables them in its own dbt_project.yml:
-      #   models:
-      #     tamanu_source_dbt:
-      #       maps:
-      #         msf_oca:
-      #           +enabled: true
       msf_oca:
         +enabled: false
         +materialized: view
