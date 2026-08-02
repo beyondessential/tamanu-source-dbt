@@ -109,7 +109,7 @@ function Invoke-NodeDist([string]$DistArgs) {
   # packaged images ship a built dist/. Detect in the pod and pick the right entry point.
   $inner = "cd '$Workdir' && if [ -f dist/index.js ]; then node dist $DistArgs; else node --import tsx app $DistArgs; fi"
   kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc $inner
-  Assert-LastExit "node <dist|tsx app> $DistArgs"
+  Assert-LastExit "central-server CLI: $DistArgs"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password)
