@@ -104,12 +104,13 @@ if (-not $SchemaOnly -and -not $Pod) {
 $cExec = @()
 if ($Container) { $cExec = @("-c", $Container) }
 
-function Invoke-NodeDist([string]$DistArgs) {
-  # 2.60+ k8s images run the central-server CLI from TS source via tsx (app/); older or
-  # packaged images ship a built dist/. Detect in the pod and pick the right entry point.
-  $inner = "cd '$Workdir' && if [ -f dist/index.js ]; then node dist $DistArgs; else node --import tsx app $DistArgs; fi"
+function Invoke-CentralCli([string]$CliArgs) {
+  # Pick the entry point in the pod: a dist/ directory means node resolves it as before
+  # (index.js or package.json main); no dist/ means the image is build-less (2.60+) so run
+  # from TS source via tsx. Error out if neither is present (usually a wrong -Workdir).
+  $inner = "cd '$Workdir' && if [ -d dist ]; then node dist $CliArgs; elif [ -d app ]; then node --import tsx app $CliArgs; else echo `"ERROR: no central-server entry point under `$(pwd) - check -Workdir`" >&2; exit 1; fi"
   kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc $inner
-  Assert-LastExit "central-server CLI: $DistArgs"
+  Assert-LastExit "central-server CLI: $CliArgs"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password)
@@ -254,7 +255,7 @@ if ($SchemaOnly) {
     # finally{} always removes the staged temp file, even if the import throws; catch{}
     # re-throws naming the report so the CLI says which one failed.
     try {
-      Invoke-NodeDist "importReport -f '/tmp/$bn' -v"
+      Invoke-CentralCli "importReport -f '/tmp/$bn' -v"
     } catch {
       throw "ERROR: importReport failed for $bn. Aborting. ($_)"
     } finally {

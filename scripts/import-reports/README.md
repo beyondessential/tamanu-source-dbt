@@ -104,8 +104,9 @@ chmod +x import-reports-k8s.sh   # first time only
 2. **Reports**: each `.json` is staged into the pod as base64 (immune to
    encoding/newline truncation), the transferred byte count is verified against the
    source (retried up to 3× on a short write), then imported with the central-server CLI's
-   `importReport -f … -v` (run via `node dist` on packaged images, or `node --import tsx app`
-   on 2.60+ source images). The staged `/tmp/<name>.json` is always removed
+   `importReport -f … -v` — run via `node dist` when the pod ships a built `dist/`, or
+   `node --import tsx app` when it does not (build-less 2.60+ images run from source). The
+   staged `/tmp/<name>.json` is always removed
    afterwards — on success and on failure alike — so nothing is left in the pod. If an
    import fails, the run aborts with an error naming the report that failed.
 3. **Snapshot** of report definitions and their latest/published versions is printed

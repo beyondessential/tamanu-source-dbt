@@ -159,14 +159,15 @@ if ! $SCHEMA_ONLY && [[ -z "$POD" ]]; then
 fi
 
 # ---- helpers ----------------------------------------------------------------------
-invoke_node_dist() {
+invoke_central_cli() {
   # $1 = args passed to the central-server CLI
-  local dist_args="$1"
-  # 2.60+ k8s images run the CLI from TS source via tsx (app/); older or packaged images ship
-  # a built dist/. Detect in the pod and pick the right entry point.
+  local cli_args="$1"
+  # Pick the entry point in the pod: a dist/ directory means node resolves it as before
+  # (index.js or package.json main); no dist/ means the image is build-less (2.60+) so run
+  # from TS source via tsx. Error out if neither is present (usually a wrong --workdir).
   # "${cexec[@]+...}" guards against an empty array under `set -u` on bash 3.2 (stock macOS).
   kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
-    sh -lc "cd '$WORKDIR' && if [ -f dist/index.js ]; then node dist $dist_args; else node --import tsx app $dist_args; fi"
+    sh -lc "cd '$WORKDIR' && if [ -d dist ]; then node dist $cli_args; elif [ -d app ]; then node --import tsx app $cli_args; else echo \"ERROR: no central-server entry point under \$(pwd) - check --workdir\" >&2; exit 1; fi"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password).
@@ -324,7 +325,7 @@ else
     # Capture the exit so `set -e` doesn't abort before cleanup; always remove the staged
     # temp file, then fail loudly naming the report.
     import_rc=0
-    invoke_node_dist "importReport -f '/tmp/$bn' -v" || import_rc=$?
+    invoke_central_cli "importReport -f '/tmp/$bn' -v" || import_rc=$?
     kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
       sh -lc "rm -f '/tmp/$bn'" || echo "   (could not remove /tmp/$bn)"
     if [[ $import_rc -ne 0 ]]; then
