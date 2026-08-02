@@ -295,14 +295,14 @@ else
       *[!A-Za-z0-9._-]*) echo "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)" >&2; exit 1 ;;
     esac
     echo ">> Importing $bn ..."
-    # Stage as base64 (pure ASCII, immune to newline/encoding truncation), then verify the
-    # byte count and retry — the stdin pipe can short-write over the network.
+    # Stage with `kubectl cp` (binary-safe tar stream, reliable) rather than piping base64
+    # over `kubectl exec -i` stdin, which can short-write over the network. Verify the byte
+    # count and retry regardless, as cheap insurance.
     expected="$(wc -c < "$r" | tr -d '[:space:]')"
     staged=false
     for ((attempt = 1; attempt <= max_stage_attempts; attempt++)); do
-      if ! base64 < "$r" | kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
-             sh -lc "base64 -d > '/tmp/$bn'"; then
-        echo "   stage attempt $attempt/$max_stage_attempts failed (kubectl error)"
+      if ! kubectl cp -n "$NAMESPACE" "${cexec[@]+"${cexec[@]}"}" "$r" "$POD:/tmp/$bn"; then
+        echo "   stage attempt $attempt/$max_stage_attempts failed (kubectl cp error)"
         continue
       fi
       # Verify the staged file is intact before importing (catches a truncated transfer).

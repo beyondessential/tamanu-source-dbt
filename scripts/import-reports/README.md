@@ -101,9 +101,10 @@ chmod +x import-reports-k8s.sh   # first time only
 1. **Schema first** (if `--schema-sql` given): for each `--schema-svc`, `exec` into the
    CNPG `rw` service over its local socket (peer auth as the superuser), `SET ROLE` to
    the app role, and apply the file in a single transaction.
-2. **Reports**: each `.json` is staged into the pod as base64 (immune to
-   encoding/newline truncation), the transferred byte count is verified against the
-   source (retried up to 3× on a short write), then imported with the central-server CLI's
+2. **Reports**: each `.json` is copied into the pod with `kubectl cp` (a binary-safe tar
+   stream, reliable where `kubectl exec -i` stdin can short-write), the transferred byte
+   count is verified against the source (retried up to 3× on a short write), then imported
+   with the central-server CLI's
    `importReport -f … -v` — run via `node dist` when the pod ships a built `dist/`, or
    `node --import tsx app` when it does not (build-less 2.60+ images run from source). The
    staged `/tmp/<name>.json` is always removed
@@ -114,9 +115,9 @@ chmod +x import-reports-k8s.sh   # first time only
 
 After applying, verify per the runbook (active versions + spot-check that a report runs).
 
-> **Note on the schema transfer.** The schema `.sql` is streamed over the same
-> `kubectl exec` stdin pipe as reports, but — unlike reports — it is *not* base64-staged
-> or byte-count-verified. The safety net there is `--single-transaction` +
+> **Note on the schema transfer.** Unlike reports — which are copied with `kubectl cp`
+> and byte-count-verified — the schema `.sql` is streamed over a `kubectl exec` stdin pipe
+> and is *not* verified. The safety net there is `--single-transaction` +
 > `ON_ERROR_STOP=1`: a truncated file almost certainly fails to parse and the whole
 > transaction rolls back, so a short write aborts rather than partially applying. It
 > catches a bad transfer via the transaction, not by verifying the transfer itself.
