@@ -104,10 +104,13 @@ if (-not $SchemaOnly -and -not $Pod) {
 $cExec = @()
 if ($Container) { $cExec = @("-c", $Container) }
 
-function Invoke-NodeDist([string]$DistArgs) {
-  $inner = "cd '$Workdir' && node dist $DistArgs"
+function Invoke-CentralCli([string]$CliArgs) {
+  # Pick the entry point in the pod: a dist/ directory means node resolves it as before
+  # (index.js or package.json main); no dist/ means the image is build-less (2.60+) so run
+  # from TS source via tsx. Error out if neither is present (usually a wrong -Workdir).
+  $inner = "cd '$Workdir' && if [ -d dist ]; then node dist $CliArgs; elif [ -d app ]; then node --import tsx app $CliArgs; else echo `"ERROR: no central-server entry point under `$(pwd) - check -Workdir`" >&2; exit 1; fi"
   kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc $inner
-  Assert-LastExit "node dist $DistArgs"
+  Assert-LastExit "central-server CLI: $CliArgs"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password)
@@ -224,15 +227,20 @@ if ($SchemaOnly) {
       throw "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)"
     }
     Write-Host ">> Importing $bn ..."
-    # Stage as base64 (pure ASCII, immune to newline/encoding truncation), then verify the
-    # byte count and retry — the stdin pipe can short-write over the network.
+    # Stage with `kubectl cp` (binary-safe tar stream, reliable) rather than piping base64
+    # over `kubectl exec -i` stdin, which short-writes over the network on Windows. Verify the
+    # byte count and retry regardless, as cheap insurance.
     $expected = (Get-Item -LiteralPath $r.FullName).Length
-    $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($r.FullName))
     $staged = $false
     for ($attempt = 1; $attempt -le $maxStageAttempts; $attempt++) {
-      $b64 | kubectl exec -i -n $Namespace $Pod @cExec -- sh -lc "base64 -d > '/tmp/$bn'"
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "   stage attempt $attempt/$maxStageAttempts failed (kubectl exit $LASTEXITCODE)"
+      # kubectl cp mis-parses a Windows drive-letter path (C:\...) as a remote spec, so cd into
+      # the report's directory and pass the bare filename ($bn is charset-validated above).
+      Push-Location -LiteralPath $r.DirectoryName
+      kubectl cp -n $Namespace @cExec $bn "${Pod}:/tmp/$bn"
+      $cpRc = $LASTEXITCODE
+      Pop-Location
+      if ($cpRc -ne 0) {
+        Write-Host "   stage attempt $attempt/$maxStageAttempts failed (kubectl cp exit $cpRc)"
         continue
       }
       # Verify the staged file is intact before importing (catches a truncated transfer).
@@ -252,7 +260,7 @@ if ($SchemaOnly) {
     # finally{} always removes the staged temp file, even if the import throws; catch{}
     # re-throws naming the report so the CLI says which one failed.
     try {
-      Invoke-NodeDist "importReport -f '/tmp/$bn' -v"
+      Invoke-CentralCli "importReport -f '/tmp/$bn' -v"
     } catch {
       throw "ERROR: importReport failed for $bn. Aborting. ($_)"
     } finally {

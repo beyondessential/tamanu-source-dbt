@@ -126,7 +126,12 @@ const path = require("path");
 const { exec } = require("child_process");
 
 const folderPath = path.resolve(".");
-const baseCommand = "node ./dist/app.bundle.js importReport";
+// Build-less images (Tamanu 2.60+) run the CLI from TS source via tsx and ship no dist/
+// bundle; older images ship the bundled ./dist/app.bundle.js. Pick whichever is present.
+const distBundle = "./dist/app.bundle.js";
+const baseCommand = fs.existsSync(distBundle)
+  ? `node ${distBundle} importReport`
+  : "node --import tsx app importReport";
 
 fs.readdir(folderPath, async (err, files) => {
   if (err) {

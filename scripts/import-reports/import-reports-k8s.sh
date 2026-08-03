@@ -60,7 +60,7 @@ Options:
   --pod NAME           override the central pod (default: resolve by --selector)
   --container NAME     container name for multi-container pods
   --selector SEL       label selector to find the central pod
-  --workdir DIR        working dir in the pod for `node dist` (default: .)
+  --workdir DIR        working dir in the pod for the central-server CLI (default: .)
   --db-svc SVC         service used for the before/after snapshot (default: central-db-rw)
   --db-name NAME       database name (default: app)
   --db-role ROLE       role the schema is applied as via SET ROLE (default: app)
@@ -159,11 +159,15 @@ if ! $SCHEMA_ONLY && [[ -z "$POD" ]]; then
 fi
 
 # ---- helpers ----------------------------------------------------------------------
-invoke_node_dist() {
-  # $1 = args passed to `node dist`
-  local dist_args="$1"
+invoke_central_cli() {
+  # $1 = args passed to the central-server CLI
+  local cli_args="$1"
+  # Pick the entry point in the pod: a dist/ directory means node resolves it as before
+  # (index.js or package.json main); no dist/ means the image is build-less (2.60+) so run
+  # from TS source via tsx. Error out if neither is present (usually a wrong --workdir).
   # "${cexec[@]+...}" guards against an empty array under `set -u` on bash 3.2 (stock macOS).
-  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- sh -lc "cd '$WORKDIR' && node dist $dist_args"
+  kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
+    sh -lc "cd '$WORKDIR' && if [ -d dist ]; then node dist $cli_args; elif [ -d app ]; then node --import tsx app $cli_args; else echo \"ERROR: no central-server entry point under \$(pwd) - check --workdir\" >&2; exit 1; fi"
 }
 
 # Socket-mode psql into a CNPG rw service (peer auth as superuser, no password).
@@ -291,14 +295,14 @@ else
       *[!A-Za-z0-9._-]*) echo "ERROR: unsafe report filename: $bn (allowed: A-Z a-z 0-9 . _ -)" >&2; exit 1 ;;
     esac
     echo ">> Importing $bn ..."
-    # Stage as base64 (pure ASCII, immune to newline/encoding truncation), then verify the
-    # byte count and retry — the stdin pipe can short-write over the network.
+    # Stage with `kubectl cp` (binary-safe tar stream, reliable) rather than piping base64
+    # over `kubectl exec -i` stdin, which can short-write over the network. Verify the byte
+    # count and retry regardless, as cheap insurance.
     expected="$(wc -c < "$r" | tr -d '[:space:]')"
     staged=false
     for ((attempt = 1; attempt <= max_stage_attempts; attempt++)); do
-      if ! base64 < "$r" | kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
-             sh -lc "base64 -d > '/tmp/$bn'"; then
-        echo "   stage attempt $attempt/$max_stage_attempts failed (kubectl error)"
+      if ! kubectl cp -n "$NAMESPACE" "${cexec[@]+"${cexec[@]}"}" "$r" "$POD:/tmp/$bn"; then
+        echo "   stage attempt $attempt/$max_stage_attempts failed (kubectl cp error)"
         continue
       fi
       # Verify the staged file is intact before importing (catches a truncated transfer).
@@ -321,7 +325,7 @@ else
     # Capture the exit so `set -e` doesn't abort before cleanup; always remove the staged
     # temp file, then fail loudly naming the report.
     import_rc=0
-    invoke_node_dist "importReport -f '/tmp/$bn' -v" || import_rc=$?
+    invoke_central_cli "importReport -f '/tmp/$bn' -v" || import_rc=$?
     kubectl exec -i -n "$NAMESPACE" "$POD" "${cexec[@]+"${cexec[@]}"}" -- \
       sh -lc "rm -f '/tmp/$bn'" || echo "   (could not remove /tmp/$bn)"
     if [[ $import_rc -ne 0 ]]; then
