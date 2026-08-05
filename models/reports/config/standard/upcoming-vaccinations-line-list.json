@@ -1,7 +1,7 @@
 {
   "query": "replace this",
   "name": "Upcoming vaccinations line list",
-  "notes": "This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.",
+  "notes": "This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range. Set the 'Exclude overseas patients' filter to Yes to drop patients whose recorded country of residence is set to an overseas country.",
   "status": "published",
   "dbSchema": "reporting",
   "queryOptions": {
@@ -51,6 +51,21 @@
         "label": "Village",
         "name": "villageId",
         "suggesterEndpoint": "village"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "name": "excludeNonHomeCountry",
+        "label": "Exclude overseas patients (default No)",
+        "options": [
+          {
+            "label": "No",
+            "value": "no"
+          },
+          {
+            "label": "Yes",
+            "value": "yes"
+          }
+        ]
       }
     ]
   }
