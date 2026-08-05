@@ -9,6 +9,11 @@ vars:
   # default -- only MSF OCA deployments set this true. The UIDs are global to the
   # MSF OCA DHIS2 instance and meaningless for other deployments.
   msf_oca_dhis2: false
+  # reference_data id of the deployment's home country. Used by the
+  # upcoming-vaccinations report's "Exclude overseas patients" parameter
+  # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
+  # Overridden per deployment (e.g. Samoa sets country-Samoa).
+  home_country_id: country-Australia
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
