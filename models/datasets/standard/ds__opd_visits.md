@@ -16,7 +16,8 @@ Count of OPD visits (clinic or vaccination encounters) in the group.
 {% enddocs %}
 
 {% docs ds__opd_visits__tupaia_facility_id %}
-Tupaia's facility id, mapped from facility_id via the deployment's own
-tupaia_facility_mapping seed. NULL when the deployment has not configured a facility
-mapping, or when the facility has no mapping entry.
+Tupaia's facility id, mapped from tamanu_facility_id via the deployment's own
+tupaia_facility_mapping seed. 'Not available' (never NULL, since this is the data table's
+filter column) when the deployment has not configured a facility mapping, or when the
+facility has no mapping entry.
 {% enddocs %}

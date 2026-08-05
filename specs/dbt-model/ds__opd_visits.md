@@ -28,22 +28,22 @@ duration is not included; see BL-005.
 
 ## Grain
 
-**One row per** `(date, facility_id, location_group_id, location_group_name, sex,
+**One row per** `(date, tamanu_facility_id, location_group_id, location_group_name, sex,
 age_group)`. The underlying subject is the **encounter** (its intake segment); rows are
 aggregated counts. Encounters whose ward doesn't resolve (no ward assigned, or a
 soft-deleted ward) carry `location_group_id = 'locationgroup-unknown'` and
 `location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
-visit total;
-`facility_id` is unaffected by a missing ward (see BL-003) and is only NULL when the
-encounter has no location at all.
+visit total; `tamanu_facility_id` is unaffected by a missing ward (see BL-003) and is only
+NULL when the encounter has no location at all. `tupaia_facility_id` is never NULL — it's
+the data table's filter column, so it carries `'Not available'` instead (see BL-006).
 
 ## Output schema
 
 | Column | Type | Notes |
 |---|---|---|
 | `date` | date | Calendar day of the intake segment. `data_table_filter: date` |
-| `facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of ward. NULL only when the encounter has no location. `data_table_filter: array` |
-| `tupaia_facility_id` | text | `facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). NULL if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
+| `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of ward. NULL only when the encounter has no location. Not filterable — `tupaia_facility_id` is the filter column instead |
+| `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
 | `location_group_id` | uuid | Ward (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the ward doesn't resolve; otherwise FK → `ref__care_site` ward-type rows. `data_table_filter: array` |
 | `location_group_name` | text | Ward name; `'Unknown'` when the ward doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
@@ -52,18 +52,19 @@ encounter has no location at all.
 
 ## Business logic
 
-- **BL-001:** Grain is one row per `(date, facility_id, location_group_id,
+- **BL-001:** Grain is one row per `(date, tamanu_facility_id, location_group_id,
   location_group_name, sex, age_group)`. Sourced from `clinical__` models, `ref__care_site`,
   `bases/locations` (BL-003), and a deployment-only seed (BL-006) — see Dependencies.
 - **BL-002 (OPD inclusion + intake attribution):** OPD visits are the **first** segment of
   each encounter (`clinical__visit_detail` where `preceding_visit_detail_id is null`) whose
   `visit_detail_source_value in ('clinic', 'vaccination')`, covering **both** clinic and
   vaccination. `date` and `location_group_id` come from that intake segment.
-- **BL-003 (facility + clinic name, resolved independently):** `facility_id` and the clinic
-  name are two separate lookups, not a chain. `facility_id` is joined from `bases/locations`
-  (`clinical__visit_detail.location_id` → `locations.facility_id`) — a location always
-  carries its own facility, regardless of whether it also has a ward. `facility_id` is only
-  NULL when the encounter has no location at all (or that location was later soft-deleted).
+- **BL-003 (facility + clinic name, resolved independently):** `tamanu_facility_id` and the
+  clinic name are two separate lookups, not a chain. `tamanu_facility_id` is joined from
+  `bases/locations` (`clinical__visit_detail.location_id` → `locations.facility_id`) — a
+  location always carries its own facility, regardless of whether it also has a ward.
+  `tamanu_facility_id` is only NULL when the encounter has no location at all (or that
+  location was later soft-deleted).
 
   The clinic (`location_group_name`/`location_group_id`) is joined from `ref__care_site`
   (`care_site_type = 'ward'`) on the intake segment's `care_site_id`. Only the **clinic** is
@@ -88,23 +89,30 @@ encounter has no location at all.
   would misrepresent wait/consultation time. The additive measure is `total_opd_visits`
   (`count`) only.
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
-  `facility_id` through a `tupaia_facility_mapping` seed (columns `tamanu_facility_id`,
-  `tupaia_facility_id`) that **only exists in a deployment's own repo** — `tamanu-source-dbt`
-  never defines this seed itself. The join is gated behind
+  `tamanu_facility_id` through a `tupaia_facility_mapping` seed (columns
+  `tamanu_facility_id`, `tupaia_facility_id`) that **only exists in a deployment's own repo**
+  — `tamanu-source-dbt` never defines this seed itself. The join is gated behind
   `var('has_tupaia_facility_mapping', false)`: when the flag is off (the default, including
   every standalone build of `tamanu-source-dbt`), the `ref()` to the seed is never rendered
-  at all, so the model still compiles with no seed present, and `tupaia_facility_id` is
-  simply NULL. A deployment that has set up its own mapping sets
-  `has_tupaia_facility_mapping: true` in its own `dbt_project.yml` `vars:` block alongside
-  supplying `seeds/tupaia_facility_mapping.csv`. If a deployment sets the flag `true` without
-  providing the seed, the build fails loudly (missing `ref()`) rather than silently shipping
-  blank Tupaia ids — this is intentional.
+  at all, so the model still compiles with no seed present. A deployment that has set up its
+  own mapping sets `has_tupaia_facility_mapping: true` in its own `dbt_project.yml` `vars:`
+  block alongside supplying `seeds/tupaia_facility_mapping.csv`. If a deployment sets the
+  flag `true` without providing the seed, the build fails loudly (missing `ref()`) rather
+  than silently shipping a placeholder — this is intentional.
 
-  **Uniqueness contract:** the join is `tm.tamanu_facility_id = b.facility_id`, executed
-  before the `count(*)` that produces `total_opd_visits`. If `tamanu_facility_id` is not
-  unique in the seed (a duplicated row, or one Tamanu facility deliberately mapped to more
-  than one Tupaia entity), every OPD visit at that facility fans out and is counted once per
-  matching seed row — `total_opd_visits` silently inflates, breaking the additive-count
+  **Never NULL:** `tupaia_facility_id` is the model's `data_table_filter` column, and
+  Tupaia's default array filter (`col = any(coalesce(:param, array[col]))`) silently drops
+  rows where `col` is NULL — a NULL facility id would simply vanish from any view that
+  doesn't pass an explicit filter value. So `tupaia_facility_id` is `'Not available'`
+  whenever a real value isn't available: the flag is off, the flag is on but the facility has
+  no entry in the seed (`coalesce(tm.tupaia_facility_id, 'Not available')`), or (per BL-003)
+  `tamanu_facility_id` itself is NULL.
+
+  **Uniqueness contract:** the join is `tm.tamanu_facility_id = b.tamanu_facility_id`,
+  executed before the `count(*)` that produces `total_opd_visits`. If `tamanu_facility_id` is
+  not unique in the seed (a duplicated row, or one Tamanu facility deliberately mapped to
+  more than one Tupaia entity), every OPD visit at that facility fans out and is counted once
+  per matching seed row — `total_opd_visits` silently inflates, breaking the additive-count
   guarantee in BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the
   seed only exists in deployment repos. **Every deployment that sets
   `has_tupaia_facility_mapping: true` must add a `unique` test on `tamanu_facility_id` to its
@@ -120,6 +128,6 @@ None.
 |---|---|---|
 | `clinical__visit_detail` | `clinical/` | Intake segment (first history segment); OPD inclusion, date, ward, location |
 | `clinical__person` | `clinical/` | Sex and birth date for age at visit |
-| `locations` | `bases/` | `facility_id` of the visit's location (BL-003) |
+| `locations` | `bases/` | `tamanu_facility_id` of the visit's location (BL-003) |
 | `ref__care_site` | `ref/` | Clinic (ward) name |
 | `tupaia_facility_mapping` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `has_tupaia_facility_mapping` (BL-006) |

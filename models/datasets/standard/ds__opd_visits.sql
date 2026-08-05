@@ -25,7 +25,7 @@ care_site as (
 opd_encounters as (
     select
         vd.visit_detail_start_date as date,
-        loc.facility_id,
+        loc.facility_id as tamanu_facility_id,
         -- both sentinels trigger off the same ward-lookup miss (no ward assigned, or the
         -- ward was soft-deleted and no longer resolves in ref__care_site), so a real id
         -- never pairs with an 'Unknown' name or vice versa
@@ -58,7 +58,7 @@ opd_encounters as (
 opd_encounters_banded as (
     select
         date,
-        facility_id,
+        tamanu_facility_id,
         location_group_id,
         location_group_name,
         sex,
@@ -70,14 +70,17 @@ opd_encounters_banded as (
 
 select
     b.date,
-    b.facility_id,
+    b.tamanu_facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has configured its own
     -- tupaia_facility_mapping seed (BL-006). Never referenced when the flag is unset, so
     -- this model still builds standalone in tamanu-source-dbt with no such seed present.
+    -- Never NULL: this is the data_table_filter column, and Tupaia's default array filter
+    -- (col = any(coalesce(:param, array[col]))) silently drops NULL rows, so an unmapped
+    -- or unconfigured facility gets the literal 'Not available' instead.
     {% if has_tupaia_mapping %}
-    tm.tupaia_facility_id,
+    coalesce(tm.tupaia_facility_id, 'Not available') as tupaia_facility_id,
     {% else %}
-    null::text as tupaia_facility_id,
+    'Not available' as tupaia_facility_id,
     {% endif %}
     b.location_group_id,
     b.location_group_name,
@@ -87,14 +90,14 @@ select
 from opd_encounters_banded b
 {% if has_tupaia_mapping %}
 left join {{ ref('tupaia_facility_mapping') }} tm
-    on tm.tamanu_facility_id = b.facility_id
+    on tm.tamanu_facility_id = b.tamanu_facility_id
 {% endif %}
 group by
     b.date,
-    b.facility_id,
+    b.tamanu_facility_id,
     -- a constant needs no grouping, so this only appears here when it's a real column
     {% if has_tupaia_mapping %}
-    tm.tupaia_facility_id,
+    coalesce(tm.tupaia_facility_id, 'Not available'),
     {% endif %}
     b.location_group_id,
     b.location_group_name,
