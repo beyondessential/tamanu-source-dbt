@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: map__dhis_de_opd
+    description: >
+      DHIS2 Data Elements for the MSF OCA chronic-care OPD consultations dataset
+      (53 data elements: HIV and TB new + follow-up, seven chronic-disease
+      follow-up categories, and 21 psychiatric-diagnosis categories new +
+      follow-up). UIDs are global to the MSF OCA DHIS2 instance -- the
+      chronic-disease follow-up UIDs are shared verbatim with the other MSF OCA
+      OPD deployment. Gated off in this package; an MSF OCA deployment re-enables
+      maps/msf_oca in its own dbt_project.yml.
+    columns:
+      - name: id
+        description: DHIS2 Data Element UID.
+        tests:
+          - not_null
+          - unique
+      - name: indicator
+        description: >
+          metric_id slug, <category>_<consultation_type> with consultation_type
+          in {new, followup} (e.g. hiv_new, respiratory_followup,
+          psych_ptsd_followup). Chronic-disease categories are follow-up only.
+        tests:
+          - not_null
+          - unique
