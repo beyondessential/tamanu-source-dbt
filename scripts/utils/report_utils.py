@@ -12,7 +12,7 @@ from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint, execute_command
 
 SCHEMA = "reporting"
-ROLE = "reporting"
+ROLE = "tamanu_reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
 DEPLOYMENT = get_deployment_name()
