@@ -75,7 +75,7 @@ denormalised `facility_id` / `facility_name` columns without a second model.
 | `care_site_name` | text | `departments.name` or `location_groups.name`. OMOP `CARE_SITE.care_site_name` |
 | `care_site_source_value` | text | `departments.code` or `location_groups.code`. OMOP `CARE_SITE.care_site_source_value` |
 | `place_of_service_source_value` | text | `facilities.type`. OMOP `CARE_SITE.place_of_service_source_value`. NULL when the care site has no facility |
-| `facility_id` | uuid | `departments.facility_id`. Parent facility FK, denormalised. NULL when unset |
+| `facility_id` | uuid | `departments.facility_id` or `location_groups.facility_id` (matching the row's grain). Parent facility FK, denormalised. NULL when unset |
 | `facility_name` | text | `facilities.name`. Parent facility name, denormalised. NULL when the facility is unset/removed |
 
 OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.

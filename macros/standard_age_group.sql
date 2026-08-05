@@ -12,7 +12,7 @@
     null or outside 0-120 (null falls through the `between` checks to the else branch).
 #}
     case
-        when {{ age_column }} between 0 and 0   then '<1 year'
+        when {{ age_column }} = 0                then '<1 year'
         when {{ age_column }} between 1 and 4   then '1-4 years'
         when {{ age_column }} between 5 and 14  then '5-14 years'
         when {{ age_column }} between 15 and 49 then '15-49 years'

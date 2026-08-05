@@ -26,19 +26,20 @@ opd_encounters as (
     select
         vd.visit_detail_start_date as date,
         loc.facility_id,
-        coalesce(vd.care_site_id, 'locationgroup-Unknown') as location_group_id,
+        -- both sentinels trigger off the same ward-lookup miss (no ward assigned, or the
+        -- ward was soft-deleted and no longer resolves in ref__care_site), so a real id
+        -- never pairs with an 'Unknown' name or vice versa
+        coalesce(cs.care_site_id, 'locationgroup-unknown') as location_group_id,
         coalesce(cs.care_site_name, 'Unknown') as location_group_name,
         pr.gender_source_value as sex,
-        -- age in whole years at the visit; null year_of_birth -> null (Unknown age band)
+        -- age in whole years at the visit; null year_of_birth -> null (Unknown age band).
+        -- month_of_birth/day_of_birth are extracted from the same date_of_birth column in
+        -- clinical__person, so they're populated whenever year_of_birth is.
         case
             when pr.year_of_birth is not null then
                 extract(year from age(
                     vd.visit_detail_start_date,
-                    make_date(
-                        pr.year_of_birth,
-                        coalesce(pr.month_of_birth, 1),
-                        coalesce(pr.day_of_birth, 1)
-                    )
+                    make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
                 ))::int
         end as age_years
     from visit_detail vd
@@ -91,10 +92,9 @@ left join {{ ref('tupaia_facility_mapping') }} tm
 group by
     b.date,
     b.facility_id,
+    -- a constant needs no grouping, so this only appears here when it's a real column
     {% if has_tupaia_mapping %}
     tm.tupaia_facility_id,
-    {% else %}
-    null::text,
     {% endif %}
     b.location_group_id,
     b.location_group_name,

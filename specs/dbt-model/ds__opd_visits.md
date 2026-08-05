@@ -30,10 +30,12 @@ duration is not included; see BL-005.
 
 **One row per** `(date, facility_id, location_group_id, location_group_name, sex,
 age_group)`. The underlying subject is the **encounter** (its intake segment); rows are
-aggregated counts. Ward-less encounters carry `location_group_id = 'locationgroup-Unknown'`
-and `location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in
-the visit total; `facility_id` is unaffected by a missing ward (see BL-003) and is only
-NULL when the encounter has no location at all.
+aggregated counts. Encounters whose ward doesn't resolve (no ward assigned, or a
+soft-deleted ward) carry `location_group_id = 'locationgroup-unknown'` and
+`location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
+visit total;
+`facility_id` is unaffected by a missing ward (see BL-003) and is only NULL when the
+encounter has no location at all.
 
 ## Output schema
 
@@ -42,8 +44,8 @@ NULL when the encounter has no location at all.
 | `date` | date | Calendar day of the intake segment. `data_table_filter: date` |
 | `facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of ward. NULL only when the encounter has no location. `data_table_filter: array` |
 | `tupaia_facility_id` | text | `facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). NULL if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
-| `location_group_id` | uuid | Ward (the "clinic"). `'locationgroup-Unknown'` (not a real FK value) when no ward; otherwise FK → `ref__care_site` ward-type rows. `data_table_filter: array` |
-| `location_group_name` | text | Ward name; `'Unknown'` when no ward |
+| `location_group_id` | uuid | Ward (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the ward doesn't resolve; otherwise FK → `ref__care_site` ward-type rows. `data_table_filter: array` |
+| `location_group_name` | text | Ward name; `'Unknown'` when the ward doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
 | `age_group` | text | OPD visit age band at the visit date (see BL-004) |
 | `total_opd_visits` | integer | `count(*)` of OPD visits. `data_table_metric: sum` |
@@ -60,15 +62,31 @@ NULL when the encounter has no location at all.
 - **BL-003 (facility + clinic name, resolved independently):** `facility_id` and the clinic
   name are two separate lookups, not a chain. `facility_id` is joined from `bases/locations`
   (`clinical__visit_detail.location_id` → `locations.facility_id`) — a location always
-  carries its own facility, regardless of whether it also has a ward. `location_group_name`
-  is joined from `ref__care_site` (`care_site_type = 'ward'`) on the intake segment's
-  `care_site_id`. Only the **clinic** is genuinely unknown when there's no ward:
-  `location_group_name` is coalesced to `'Unknown'` and `location_group_id` to
-  `'locationgroup-Unknown'` (a sentinel, not a real `ref__care_site` id) in that case, while
-  `facility_id` is left populated. `facility_id` is only NULL when the encounter has no
-  location at all (or that location was later soft-deleted). A future `relationships` test
-  on `location_group_id` must exclude the `'locationgroup-Unknown'` sentinel rather than
-  treat it as a broken FK.
+  carries its own facility, regardless of whether it also has a ward. `facility_id` is only
+  NULL when the encounter has no location at all (or that location was later soft-deleted).
+
+  The clinic (`location_group_name`/`location_group_id`) is joined from `ref__care_site`
+  (`care_site_type = 'ward'`) on the intake segment's `care_site_id`. Only the **clinic** is
+  genuinely unknown when the ward doesn't resolve — and both sentinels trigger off the same
+  condition (the join producing no match), so they always land together: `location_group_id`
+  is `coalesce(cs.care_site_id, 'locationgroup-unknown')` and `location_group_name` is
+  `coalesce(cs.care_site_name, 'Unknown')`, both driven by the *joined* `care_site_id`, not
+  the raw segment `care_site_id`. This covers two distinct cases identically: no ward was
+  ever assigned, or a ward was assigned but has since been soft-deleted and no longer
+  resolves in `ref__care_site`. A real `location_group_id` never pairs with an `'Unknown'`
+  name, or vice versa. A future `relationships` test on `location_group_id` must exclude the
+  `'locationgroup-unknown'` sentinel rather than treat it as a broken FK.
+- **BL-004 (sex + age band):** `sex` from `clinical__person.gender_source_value`; age in
+  whole years at the visit date is computed from `year_of_birth`/`month_of_birth`/
+  `day_of_birth` and banded by the `standard_age_group` macro into
+  `<1 / 1-4 / 5-14 / 15-49 / 50+`. The join to `clinical__person` is an inner join: `bases/
+  patients` excludes soft-deleted and merged-away patients, so a visit whose patient was
+  later deleted or merged is excluded from the dataset entirely, not counted with blank
+  demographics.
+- **BL-005 (no duration measure):** encounter duration is deliberately omitted. OPD/clinic
+  encounters are auto-discharged, so `end - start` does not reflect real time spent and
+  would misrepresent wait/consultation time. The additive measure is `total_opd_visits`
+  (`count`) only.
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
   `facility_id` through a `tupaia_facility_mapping` seed (columns `tamanu_facility_id`,
   `tupaia_facility_id`) that **only exists in a deployment's own repo** — `tamanu-source-dbt`
@@ -81,17 +99,16 @@ NULL when the encounter has no location at all.
   supplying `seeds/tupaia_facility_mapping.csv`. If a deployment sets the flag `true` without
   providing the seed, the build fails loudly (missing `ref()`) rather than silently shipping
   blank Tupaia ids — this is intentional.
-- **BL-004 (sex + age band):** `sex` from `clinical__person.gender_source_value`; age in
-  whole years at the visit date is computed from `year_of_birth`/`month_of_birth`/
-  `day_of_birth` and banded by the `standard_age_group` macro into
-  `<1 / 1-4 / 5-14 / 15-49 / 50+`. The join to `clinical__person` is an inner join: `bases/
-  patients` excludes soft-deleted and merged-away patients, so a visit whose patient was
-  later deleted or merged is excluded from the dataset entirely, not counted with blank
-  demographics.
-- **BL-005 (no duration measure):** encounter duration is deliberately omitted. OPD/clinic
-  encounters are auto-discharged, so `end - start` does not reflect real time spent and
-  would misrepresent wait/consultation time. The additive measure is `total_opd_visits`
-  (`count`) only.
+
+  **Uniqueness contract:** the join is `tm.tamanu_facility_id = b.facility_id`, executed
+  before the `count(*)` that produces `total_opd_visits`. If `tamanu_facility_id` is not
+  unique in the seed (a duplicated row, or one Tamanu facility deliberately mapped to more
+  than one Tupaia entity), every OPD visit at that facility fans out and is counted once per
+  matching seed row — `total_opd_visits` silently inflates, breaking the additive-count
+  guarantee in BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the
+  seed only exists in deployment repos. **Every deployment that sets
+  `has_tupaia_facility_mapping: true` must add a `unique` test on `tamanu_facility_id` to its
+  own `seeds/tupaia_facility_mapping.csv` schema** as a condition of enabling the flag.
 
 ## Acceptance criteria
 

@@ -7,7 +7,8 @@ to any period.
 
 {% docs ds__opd_visits__age_group %}
 OPD visit age band at the visit date: '<1 year', '1-4 years', '5-14 years',
-'15-49 years', '50+ years', or 'Unknown age' when the birth date is missing.
+'15-49 years', '50+ years', or 'Unknown age' when the birth date is missing, or the
+computed age at the visit is negative or greater than 120 (implausible/bad data).
 {% enddocs %}
 
 {% docs ds__opd_visits__total_opd_visits %}
