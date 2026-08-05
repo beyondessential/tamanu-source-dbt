@@ -1,0 +1,94 @@
+unit_tests:
+  - name: ac_002_upcoming_vaccinations_exclude_overseas
+    model: upcoming-vaccinations-line-list
+    description: >
+      AC-002 / BL-006: with the "Exclude overseas patients" parameter set to yes and
+      home_country_id = country-Home, a patient recorded in an overseas country is
+      dropped, while a patient in the home country and a patient with no recorded
+      country are retained.
+    overrides:
+      vars:
+        date_format: YYYY-MM-DD
+        fromDate: '2015-01-01'
+        toDate: '2025-01-01'
+        excludeNonHomeCountry: 'yes'
+        home_country_id: country-Home
+    given:
+      - input: ref('ds__patient_vaccinations_upcoming')
+        format: sql
+        rows: |
+          select
+            'P-HOME'::text as display_id,
+            'Ann'::text as first_name,
+            'Alpha'::text as last_name,
+            '2020-01-01'::date as date_of_birth,
+            5::integer as age,
+            'Female'::text as sex,
+            'v1'::text as village_id,
+            'Apia'::text as village,
+            'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date,
+            'Routine'::text as vaccine_category,
+            'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule,
+            'DUE'::text as vaccine_status
+          union all
+          select
+            'P-NULL'::text,
+            'Ben'::text,
+            'Bravo'::text,
+            '2021-01-01'::date,
+            4::integer,
+            'Male'::text,
+            'v1'::text,
+            'Apia'::text,
+            null::text,
+            '2025-05-01'::date,
+            'Routine'::text,
+            'BCG'::text,
+            'Dose 1'::text,
+            'DUE'::text
+          union all
+          select
+            'P-OVERSEAS'::text,
+            'Cara'::text,
+            'Charlie'::text,
+            '2022-01-01'::date,
+            3::integer,
+            'Female'::text,
+            'v1'::text,
+            'Apia'::text,
+            'country-Overseas'::text,
+            '2025-04-01'::date,
+            'Routine'::text,
+            'BCG'::text,
+            'Dose 1'::text,
+            'DUE'::text
+    expect:
+      format: sql
+      rows: |
+        select
+          'P-NULL'      as "Patient ID",
+          'Ben'         as "First name",
+          'Bravo'       as "Last name",
+          '2021-01-01'  as "Date of birth",
+          'Apia'        as "Village",
+          4             as "Age",
+          'Male'        as "Sex",
+          '2025-05-01'  as "Vaccination due date",
+          'BCG'         as "Vaccine name",
+          'Dose 1'      as "Schedule",
+          'DUE'         as "Vaccine status"
+        union all
+        select
+          'P-HOME',
+          'Ann',
+          'Alpha',
+          '2020-01-01',
+          'Apia',
+          5,
+          'Female',
+          '2025-06-01',
+          'BCG',
+          'Dose 1',
+          'DUE'
