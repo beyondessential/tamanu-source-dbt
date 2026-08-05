@@ -65,13 +65,15 @@ opd_encounters_banded as (
     from opd_encounters
 )
 
+{% set has_tupaia_mapping = var('has_tupaia_facility_mapping', false) %}
+
 select
     b.date,
     b.facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has configured its own
     -- tupaia_facility_mapping seed (BL-006). Never referenced when the flag is unset, so
     -- this model still builds standalone in tamanu-source-dbt with no such seed present.
-    {% if var('has_tupaia_facility_mapping', false) %}
+    {% if has_tupaia_mapping %}
     tm.tupaia_facility_id,
     {% else %}
     null::text as tupaia_facility_id,
@@ -82,14 +84,14 @@ select
     b.age_group,
     count(*) as total_opd_visits
 from opd_encounters_banded b
-{% if var('has_tupaia_facility_mapping', false) %}
+{% if has_tupaia_mapping %}
 left join {{ ref('tupaia_facility_mapping') }} tm
     on tm.tamanu_facility_id = b.facility_id
 {% endif %}
 group by
     b.date,
     b.facility_id,
-    {% if var('has_tupaia_facility_mapping', false) %}
+    {% if has_tupaia_mapping %}
     tm.tupaia_facility_id,
     {% else %}
     null::text,

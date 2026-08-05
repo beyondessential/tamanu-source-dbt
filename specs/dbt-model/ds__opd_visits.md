@@ -80,10 +80,7 @@ NULL when the encounter has no location at all.
   `has_tupaia_facility_mapping: true` in its own `dbt_project.yml` `vars:` block alongside
   supplying `seeds/tupaia_facility_mapping.csv`. If a deployment sets the flag `true` without
   providing the seed, the build fails loudly (missing `ref()`) rather than silently shipping
-  blank Tupaia ids — this is intentional. (An earlier design shipped an empty "default" seed
-  in the shared package as a fallback; that was tested and rejected — dbt refuses to build
-  when both the shared package and a deployment define a seed with the same name, since they
-  resolve to the same physical table.)
+  blank Tupaia ids — this is intentional.
 - **BL-004 (sex + age band):** `sex` from `clinical__person.gender_source_value`; age in
   whole years at the visit date is computed from `year_of_birth`/`month_of_birth`/
   `day_of_birth` and banded by the `standard_age_group` macro into
