@@ -15,3 +15,10 @@
 
 # Any Python file, anywhere in the repo.
 *.py @beyondessential/maui
+
+# Shell and PowerShell scripts, anywhere in the repo.
+*.sh  @beyondessential/maui
+*.ps1 @beyondessential/maui
+
+# Operational / devops directory, anywhere in the repo (e.g. data-lake's devops/).
+devops/ @beyondessential/maui
