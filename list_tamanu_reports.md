@@ -599,11 +599,11 @@ This report generates a list of all patients that have been registered, includin
 
 **Report Description**
 
-This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
+This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range. Set the 'Exclude overseas patients' filter to Yes to drop patients whose recorded country of residence is set to an overseas country.
 
 **Filters**
 
-Category, Vaccine, Vaccine status, Village
+Category, Vaccine, Vaccine status, Village, Exclude overseas patients (default No)
 
 **Default date range**: 18years
 
