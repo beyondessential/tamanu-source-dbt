@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: ds__opd_visits
+    description: "{{ doc('ds__opd_visits') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      create_data_table: true
+      data_table_permission_groups: "{{ var('opd_visits_permission_groups', []) | tojson }}"
+    columns:
+      - name: date
+        data_type: date
+        description: "{{ doc('generic__date') }} of the OPD visit."
+        meta:
+          data_table_filter: date
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} of the visit's ward."
+        meta:
+          data_table_filter: array
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group_id') }} (the clinic). 'locationgroup-Unknown' when the visit's location has no ward."
+        meta:
+          data_table_filter: array
+      - name: location_group_name
+        data_type: character varying(255)
+        description: "{{ doc('generic__location_group') }} (the clinic)."
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+        meta:
+          data_table_filter: array
+      - name: age_group
+        data_type: character varying(255)
+        description: "{{ doc('ds__opd_visits__age_group') }}"
+        meta:
+          data_table_filter: array
+      - name: total_opd_visits
+        data_type: integer
+        description: "{{ doc('ds__opd_visits__total_opd_visits') }}"
+        meta:
+          data_table_metric: sum

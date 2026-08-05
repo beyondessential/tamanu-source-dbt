@@ -44,17 +44,16 @@ models a typed, OMOP-named surface (`care_site_id`, `care_site_type`, `care_site
 `place_of_service_source_value`) so they join to `ref__care_site`, not to raw base
 tables — keeping the layer contract intact and portable across OMOP tooling (D2).
 
-**Why both grains (the hybrid).** `encounters.department_id` is always populated, so
-department is the safe, lossless care site for the *visit* level. Wards are physical and
-sparse — most Tamanu `locations` have no `location_group`, and ~1 in 8 encounters has a
-location with no ward — so ward is unsuitable as the visit-level key but is the right
-finer care site at the *segment* level, where a NULL is acceptable. OMOP explicitly
-allows a coarser care site on `VISIT_OCCURRENCE` and a finer one on `VISIT_DETAIL`.
+**Why both grains (the hybrid).** Both `clinical__visit_occurrence` and
+`clinical__visit_detail` key `care_site_id` on the **ward** (location_group of the
+encounter's / segment's location). Wards are physical and sparse — most Tamanu `locations`
+have no `location_group`, and ~1 in 8 encounters has a location with no ward — so
+`care_site_id` is NULL for those (accepted; NULLs are excluded from the FK test).
 
-**Who reads it.** `clinical__visit_occurrence` (`care_site_id` FK → department-type rows);
-`clinical__visit_detail` (`care_site_id` FK → ward-type rows); `metric__` / `dataset__`
-models that disaggregate by facility (see the `hypertension_controlled` worked example in
-D5, which joins `ref__care_site` on `care_site_id`).
+**Who reads it.** `clinical__visit_occurrence` and `clinical__visit_detail` (both
+`care_site_id` FK → ward-type rows); `metric__` / `dataset__` models that disaggregate by
+facility (see the `hypertension_controlled` worked example in D5, which joins
+`ref__care_site` on `care_site_id`).
 
 ## Grain
 
@@ -115,11 +114,10 @@ vocabulary can derive the concept downstream.
   revisit if a deployment geocodes facility addresses into `ref__location`-compatible rows.
 - **BL-005:** The model is the `union all` of two grains — departments
   (`care_site_type = 'department'`) and location_groups (`care_site_type = 'ward'`) —
-  because OMOP `CARE_SITE` is a single heterogeneous table. Consumers pick the grain via
-  `care_site_type`: `clinical__visit_occurrence` joins department-type rows (the visit's
-  organizational unit, always populated), `clinical__visit_detail` joins ward-type rows
-  (the segment's physical location_group, which may be NULL there since most Tamanu
-  locations have no ward).
+  because OMOP `CARE_SITE` is a single heterogeneous table. Both
+  `clinical__visit_occurrence` and `clinical__visit_detail` key `care_site_id` on
+  **ward-type** rows (the encounter's / segment's location_group), which may be NULL since
+  most Tamanu locations have no ward.
 
 ## Acceptance criteria
 
@@ -149,6 +147,6 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 
 | Model | Use |
 |---|---|
-| `clinical__visit_occurrence` | `care_site_id` FK → department-type rows (AC-008 there) |
+| `clinical__visit_occurrence` | `care_site_id` FK → ward-type rows (AC-008 there) |
 | `clinical__visit_detail` | `care_site_id` FK → ward-type rows (the segment's location_group) |
 | `metric__` / `dataset__` | facility-level disaggregation |

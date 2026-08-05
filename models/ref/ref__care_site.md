@@ -2,8 +2,8 @@
 OMOP CARE_SITE wrapper over Tamanu care units. Heterogeneous: one row per department
 (the organizational care unit, care_site_type = 'department') and one row per
 location_group (the physical ward/area, care_site_type = 'ward'), each denormalised with
-its parent facility. Departments are the care site on clinical__visit_occurrence; wards
-are the care site on clinical__visit_detail.
+its parent facility. Wards (location_group) are the care site on both
+clinical__visit_occurrence and clinical__visit_detail.
 {% enddocs %}
 
 {% docs ref__care_site__care_site_id %}

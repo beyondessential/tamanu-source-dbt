@@ -28,7 +28,7 @@ measurement, and observation event tables). See
 **What this artefact measures.** One row per encounter, in OMOP `VISIT_OCCURRENCE`
 shape: native UUID primary key, standardised visit-type concept ID alongside the
 Tamanu encounter-type source value, visit start/end datetimes, attending provider
-reference, and department care-site reference.
+reference, and ward (location_group) care-site reference.
 
 **Clinical context.** Tamanu records all patient–facility interactions as
 `encounters`, typed by `encounter_type` (admission, clinic, emergency, etc.). OMOP
@@ -62,7 +62,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_end_datetime` | timestamp | `encounters.end_datetime`. NULL for open encounters |
 | `visit_type_concept_id` | integer | Constant 32817 (EHR administration record) — all encounters originate from the Tamanu EHR |
 | `provider_id` | uuid | `encounters.clinician_id`. The attending clinician at encounter creation. NULL when no clinician recorded |
-| `care_site_id` | uuid | `encounters.department_id`. FK to `ref__care_site.care_site_id` (the department). NULL when no department recorded |
+| `care_site_id` | uuid | `location_group_id` of the encounter's location (`encounters.location_id` → `locations.location_group_id`). FK to `ref__care_site.care_site_id` (ward-type rows) |
 | `visit_source_value` | text | `encounters.encounter_type`. Tamanu local code, retained alongside the concept ID (D1) |
 
 ## Business logic
@@ -95,11 +95,13 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
   `examiner_id`, renamed at base layer). This is the clinician recorded at encounter
   creation; mid-encounter clinician changes tracked in `encounter_history` are not
   reflected here (they belong to a future `clinical__provider_visit` event if needed).
-- **BL-006:** `care_site_id` is `department_id` from `bases/encounters`. It represents
-  the department the encounter is assigned to at creation, and is an FK to
-  `ref__care_site.care_site_id` (the OMOP `CARE_SITE` wrapper over Tamanu departments).
-  The referential-integrity test on the column is AC-008. NULL when no department is
-  recorded (NULLs are excluded from the relationship test).
+- **BL-006:** `care_site_id` is the ward: the `location_group_id` of the encounter's
+  location (`encounters.location_id` → `bases/locations.location_group_id`, via a left
+  join). It is an FK to `ref__care_site.care_site_id` (the ward-type rows of the OMOP
+  `CARE_SITE` wrapper). The referential-integrity test on the column is AC-008. NULL when
+  the location has no ward or the encounter has no location (common in Tamanu; NULLs are
+  excluded from the relationship test). Department remains available at the segment grain
+  on `clinical__visit_detail`.
 - **BL-007:** `visit_source_value` carries the raw Tamanu `encounter_type` value
   alongside the OMOP concept. It is not a direct identifier and is not withheld on
   analytics targets.
@@ -128,9 +130,10 @@ row (D5, dbt-conventions § Documentation).
 
 | Ref | Layer | Role |
 |---|---|---|
-| `encounters` | `bases/` | Encounter identity, type, datetimes, clinician, department |
+| `encounters` | `bases/` | Encounter identity, type, datetimes, clinician, location |
+| `locations` | `bases/` | `location_group_id` (ward) of the encounter's location, used as `care_site_id` (BL-006) |
 | `encounter_history` | `bases/` | Prior encounter types per encounter; used to detect ER→admission transitions (BL-002) |
 | `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept (universal) |
 | `clinical__person` | `clinical/` | Parent PERSON domain; `person_id` FK target |
-| `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its department-type rows (AC-008). (`ref__care_site` also holds ward rows, used by `clinical__visit_detail`.) |
+| `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its ward-type rows (AC-008), same grain as `clinical__visit_detail` |
 | `ref__provider` | `ref/` | OMOP PROVIDER wrapper over users; `provider_id` FK target (AC-009) |

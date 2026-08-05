@@ -33,5 +33,6 @@ record) for Tamanu-sourced encounters.
 {% enddocs %}
 
 {% docs clinical__visit_occurrence__care_site_id %}
-UUID of the department the encounter is assigned to. FK to ref__care_site.care_site_id.
+UUID of the ward (location_group) of the encounter's location. FK to
+ref__care_site.care_site_id (ward-type rows).
 {% enddocs %}
