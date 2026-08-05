@@ -5,6 +5,11 @@ profile: tamanu_source_dbt
 
 vars:
   has_sensitive_facility: false
+  # reference_data id of the deployment's home country. Used by the
+  # upcoming-vaccinations report's "Exclude overseas patients" parameter
+  # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
+  # Overridden per deployment (e.g. Samoa sets country-Samoa).
+  home_country_id: country-Australia
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
