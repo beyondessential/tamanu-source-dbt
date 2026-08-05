@@ -51,8 +51,8 @@ NULL when the encounter has no location at all.
 ## Business logic
 
 - **BL-001:** Grain is one row per `(date, facility_id, location_group_id,
-  location_group_name, sex, age_group)`. Sourced only from `clinical__` models and
-  `ref__care_site`.
+  location_group_name, sex, age_group)`. Sourced from `clinical__` models, `ref__care_site`,
+  `bases/locations` (BL-003), and a deployment-only seed (BL-006) — see Dependencies.
 - **BL-002 (OPD inclusion + intake attribution):** OPD visits are the **first** segment of
   each encounter (`clinical__visit_detail` where `preceding_visit_detail_id is null`) whose
   `visit_detail_source_value in ('clinic', 'vaccination')`, covering **both** clinic and
