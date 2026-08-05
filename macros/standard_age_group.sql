@@ -1,6 +1,6 @@
-{% macro opd_visit_age_group(age_column) %}
+{% macro standard_age_group(age_column) %}
 {#
-    OPD visit age bands: <1, 1-4, 5-14, 15-49, 50+ years.
+    Standard age bands: <1, 1-4, 5-14, 15-49, 50+ years.
 
     Kept in a dedicated, named macro so the band choice is in one place and reusable across
     datasets.

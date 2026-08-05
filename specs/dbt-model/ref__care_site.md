@@ -31,10 +31,11 @@ grain they need. Resolves
 **What this artefact represents.** One row per Tamanu care unit, at two grains that
 coexist in the single OMOP `CARE_SITE` table (which is heterogeneous by design):
 - **department** (`care_site_type = 'department'`) — the organizational unit an encounter
-  is assigned to (`encounters.department_id`). The care site on
-  `clinical__visit_occurrence`.
+  is assigned to (`encounters.department_id`). Carried as an attribute on
+  `clinical__visit_detail`, not a visit-level care-site FK.
 - **ward** (`care_site_type = 'ward'`) — a physical `location_group` (ward/area). The
-  care site on `clinical__visit_detail` (per segment).
+  care site on both `clinical__visit_occurrence` (per encounter) and
+  `clinical__visit_detail` (per segment).
 
 Each row is denormalised with its parent facility's id, name, and type.
 

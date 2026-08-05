@@ -128,7 +128,7 @@ select
     loc.location_group_id as care_site_id,
 
     -- department (organizational unit) and room carried as attributes (BL-007);
-    -- department is the grain used as care_site on clinical__visit_occurrence
+    -- FKs to ref__care_site (department-type rows) but is not itself a visit-level care site
     b.department_id,
     b.location_id,
 

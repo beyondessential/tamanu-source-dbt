@@ -1,9 +1,10 @@
 -- ref__care_site -- OMOP CARE_SITE wrapper. Heterogeneous by design: one row per Tamanu
 -- department (the organizational care unit, care_site_type = 'department') AND one row per
--- location_group (the physical ward/area, care_site_type = 'ward'). Departments feed
--- clinical__visit_occurrence.care_site_id (always populated); wards feed
--- clinical__visit_detail.care_site_id (per-segment, and sparse — most Tamanu locations have
--- no ward). Each care site is denormalised with its parent facility. Native UUID PK (D1).
+-- location_group (the physical ward/area, care_site_type = 'ward'). Wards feed both
+-- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id (per-
+-- segment); both are sparse — most Tamanu locations have no ward. Departments remain an
+-- attribute on clinical__visit_detail (not a visit-level care-site FK). Each care site is
+-- denormalised with its parent facility. Native UUID PK (D1).
 -- Sources only from bases/ (D10); OMOP column naming applied (D2).
 -- See specs/dbt-model/ref__care_site.md for BL-001..BL-005.
 

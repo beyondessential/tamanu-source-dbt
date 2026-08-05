@@ -107,13 +107,14 @@ encounter is represented by at least one row.
   location, resolved by `left join`ing `locations` on the segment `location_id` and taking
   `location_group_id`. It FKs to `ref__care_site` (ward-type rows). It is NULL when the
   location has no `location_group`, which is common in Tamanu (most `locations` have no
-  ward), so the FK test tolerates NULL. This is the finer, physical care site; the
-  coarser, always-populated department care site lives on `clinical__visit_occurrence`
-  (OMOP allows a coarser care site on the visit and a finer one on the detail).
+  ward), so the FK test tolerates NULL. `clinical__visit_occurrence` keys its `care_site_id`
+  on the same ward grain (via the encounter's own location), so both models share the
+  ward-type FK target; `clinical__visit_occurrence` resolves it per encounter, this model
+  resolves it per segment.
 - **BL-007:** `department_id` (the organizational unit, `encounter_history.department_id`)
   and `location_id` (the room/bed, `encounter_history.location_id`) are carried as
-  attributes. `department_id` is the grain used as `care_site` on
-  `clinical__visit_occurrence` and FKs to `ref__care_site` (department-type rows).
+  attributes. `department_id` FKs to `ref__care_site` (department-type rows) but is not
+  itself a visit-level care site — no `clinical__` model keys `care_site_id` on department.
   `location_id` is finer than the ward care site and is **not** an OMOP `LOCATION` (that
   is geography — `ref__location`); it is carried raw until a care-site-style wrapper for
   Tamanu locations exists.

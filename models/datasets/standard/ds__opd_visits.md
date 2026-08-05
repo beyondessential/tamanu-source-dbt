@@ -13,3 +13,9 @@ OPD visit age band at the visit date: '<1 year', '1-4 years', '5-14 years',
 {% docs ds__opd_visits__total_opd_visits %}
 Count of OPD visits (clinic or vaccination encounters) in the group.
 {% enddocs %}
+
+{% docs ds__opd_visits__tupaia_facility_id %}
+Tupaia's facility id, mapped from facility_id via the deployment's own
+tupaia_facility_mapping seed. NULL when the deployment has not configured a facility
+mapping, or when the facility has no mapping entry.
+{% enddocs %}
