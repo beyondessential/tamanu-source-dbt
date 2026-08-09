@@ -84,6 +84,11 @@ models:
         +tags:
           - restricted
     reports:
+      # Reports are the in-product (reporting-schema) surface. Don't build them
+      # on an analytics target -- that build feeds Tupaia from the `analytics`
+      # schema (D9) and reports would be dead weight / need report-only vars.
+      # Report/clone/prod targets (not starting with `analytics`) keep them.
+      +enabled: "{{ not target.name.startswith('analytics') }}"
       +docs:
         show: false
       +tags:
