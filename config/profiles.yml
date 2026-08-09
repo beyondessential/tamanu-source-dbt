@@ -7,7 +7,7 @@ tamanu_source_dbt:
       host: "{{ env_var('TAMANU_DEMO_DB_URL') }}"
       port: 5432
       user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
-      pass: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
+      password: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
       schema: analytics
     analytics_release:
@@ -16,7 +16,7 @@ tamanu_source_dbt:
       host: "{{ env_var('TAMANU_RL_DB_URL') }}"
       port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
       user: "{{ env_var('TAMANU_RL_DB_USER') }}"
-      pass: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
+      password: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
       schema: analytics
     reporting_demo:
@@ -25,7 +25,7 @@ tamanu_source_dbt:
       host: "{{ env_var('TAMANU_DEMO_DB_URL') }}"
       port: "{{ env_var('TAMANU_DEMO_DB_PORT') | as_number }}"
       user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
-      pass: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
+      password: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
       schema: reporting
     reporting_release:
@@ -34,6 +34,6 @@ tamanu_source_dbt:
       host: "{{ env_var('TAMANU_RL_DB_URL') }}"
       port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
       user: "{{ env_var('TAMANU_RL_DB_USER') }}"
-      pass: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
+      password: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
       schema: reporting
