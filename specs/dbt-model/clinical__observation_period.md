@@ -107,7 +107,7 @@ Exactly the OMOP v5.4 `OBSERVATION_PERIOD` columns:
 | AC-005 | `period_type_concept_id` is `not_null` and always 44814724 | BL-004 | dbt `not_null` + `accepted_values` |
 | AC-006 | `observation_period_end_date >= observation_period_start_date` on every row | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-007 | Bounds span all domains: start from the earliest event (any domain), end from the latest (including a drug-exposure end date); a visit-less patient (e.g. birth measurements only) still gets a period; an open visit contributes only its start | BL-001, BL-002, BL-005 | dbt unit test (`test_clinical__observation_period_spans_all_domains`) |
-| AC-008 | A future-dated event end (e.g. a drug exposure end date after today) flows through as `observation_period_end_date` uncapped | BL-002 | dbt unit test (`test_clinical__observation_period_does_not_cap_future_dated_ends`) |
+| AC-008 | A future-dated event end (e.g. a drug exposure end date after today) flows through as `observation_period_end_date` uncapped | BL-002 | dbt unit test (`test_clinical__observation_period_uncapped_future_end`) |
 
 ## Registry entry
 

@@ -5,6 +5,15 @@ unit_tests:
       The report excludes cancelled invoices when aggregating per encounter:
       their totals and products must not appear. Only the in_progress invoice's
       $50 total and "Manual Fee" product surface.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+        language: default
     given:
       - input: ref('encounters')
         format: sql
