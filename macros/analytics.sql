@@ -1,3 +1,3 @@
 {% macro is_analytics_target() %}
-  {{ return(target.name.startswith('analytics')) }}
+  {{ return(target.name.startswith('analytics_')) }}
 {% endmacro %}
