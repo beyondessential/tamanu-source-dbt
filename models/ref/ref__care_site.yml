@@ -27,7 +27,7 @@ models:
           - accepted_values:
               name: ac_005_ref__care_site_care_site_type_values
               arguments:
-                values: ["department", "ward"]
+                values: ["department", "area"]
       - name: care_site_name
         data_type: character varying(255)
         description: "{{ doc('ref__care_site__care_site_name') }}"

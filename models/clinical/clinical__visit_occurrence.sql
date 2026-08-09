@@ -55,8 +55,8 @@ select
     32817 as visit_type_concept_id,
 
     -- provider and care site (BL-005, BL-006)
-    -- care site is the ward: the location_group of the encounter's location. FK to
-    -- ref__care_site (ward-type rows) (BL-006)
+    -- care site is the area: the location_group of the encounter's location. FK to
+    -- ref__care_site (area-type rows) (BL-006)
     e.clinician_id  as provider_id,
     loc.location_group_id as care_site_id,
 
@@ -65,4 +65,4 @@ select
 
 from encounters e
 left join visit_map vm on vm.local_code = e.encounter_type
-left join locations loc on loc.id = e.location_id
+join locations loc on loc.id = e.location_id

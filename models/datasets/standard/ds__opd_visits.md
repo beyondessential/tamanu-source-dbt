@@ -1,5 +1,5 @@
 {% docs ds__opd_visits %}
-OPD visits dataset. One row per day per clinic (ward) with a count of outpatient
+OPD visits dataset. One row per day per clinic (area) with a count of outpatient
 visits (encounters whose first history segment is clinic or vaccination), disaggregated by
 facility, sex and OPD visit age band. Additive count only, so it can be aggregated
 to any period.

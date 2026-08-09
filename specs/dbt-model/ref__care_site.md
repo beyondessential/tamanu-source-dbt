@@ -16,7 +16,7 @@
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
 both Tamanu **departments** (the organizational care unit) and **location_groups**
-(physical wards/areas) as care sites, discriminated by `care_site_type`. Gives
+(physical areas) as care sites, discriminated by `care_site_type`. Gives
 `clinical__` models a stable, OMOP-named join target for care-site context at whichever
 grain they need. Resolves
 [`clinical__visit_occurrence` OQ-1](clinical__visit_occurrence.md) — `care_site_id` on
@@ -33,7 +33,7 @@ coexist in the single OMOP `CARE_SITE` table (which is heterogeneous by design):
 - **department** (`care_site_type = 'department'`) — the organizational unit an encounter
   is assigned to (`encounters.department_id`). Carried as an attribute on
   `clinical__visit_detail`, not a visit-level care-site FK.
-- **ward** (`care_site_type = 'ward'`) — a physical `location_group` (ward/area). The
+- **area** (`care_site_type = 'area'`) — a physical `location_group`. The
   care site on both `clinical__visit_occurrence` (per encounter) and
   `clinical__visit_detail` (per segment).
 
@@ -46,19 +46,19 @@ models a typed, OMOP-named surface (`care_site_id`, `care_site_type`, `care_site
 tables — keeping the layer contract intact and portable across OMOP tooling (D2).
 
 **Why both grains (the hybrid).** Both `clinical__visit_occurrence` and
-`clinical__visit_detail` key `care_site_id` on the **ward** (location_group of the
-encounter's / segment's location). Wards are physical and sparse — most Tamanu `locations`
-have no `location_group`, and ~1 in 8 encounters has a location with no ward — so
+`clinical__visit_detail` key `care_site_id` on the **area** (location_group of the
+encounter's / segment's location). Areas are physical and sparse — most Tamanu `locations`
+have no `location_group`, and ~1 in 8 encounters has a location with no area — so
 `care_site_id` is NULL for those (accepted; NULLs are excluded from the FK test).
 
 **Who reads it.** `clinical__visit_occurrence` and `clinical__visit_detail` (both
-`care_site_id` FK → ward-type rows); `metric__` / `dataset__` models that disaggregate by
+`care_site_id` FK → area-type rows); `metric__` / `dataset__` models that disaggregate by
 facility (see the `hypertension_controlled` worked example in D5, which joins
 `ref__care_site` on `care_site_id`).
 
 ## Grain
 
-**One row per:** care site — a Tamanu `department` **or** a `location_group` (ward), with
+**One row per:** care site — a Tamanu `department` **or** a `location_group` (area), with
 `care_site_type` discriminating. `care_site_id` is unique across both because department
 and location_group ids occupy distinct UUID spaces. Soft-deleted rows are filtered by the
 base models. The join to `bases/facilities` is many-to-one, so grain is preserved; it is a
@@ -71,7 +71,7 @@ denormalised `facility_id` / `facility_name` columns without a second model.
 | Column | Type | Notes |
 |---|---|---|
 | `care_site_id` | uuid | `departments.id` or `location_groups.id`. Native UUID PK — no remap to OMOP integer IDs (D1). OMOP `CARE_SITE.care_site_id` |
-| `care_site_type` | text | `'department'` or `'ward'` — which Tamanu entity the row represents. Lets consumers pick the grain |
+| `care_site_type` | text | `'department'` or `'area'` — which Tamanu entity the row represents. Lets consumers pick the grain |
 | `care_site_name` | text | `departments.name` or `location_groups.name`. OMOP `CARE_SITE.care_site_name` |
 | `care_site_source_value` | text | `departments.code` or `location_groups.code`. OMOP `CARE_SITE.care_site_source_value` |
 | `place_of_service_source_value` | text | `facilities.type`. OMOP `CARE_SITE.place_of_service_source_value`. NULL when the care site has no facility |
@@ -114,11 +114,11 @@ vocabulary can derive the concept downstream.
   Columns are added only when a real value backs them (the `ref__location` precedent);
   revisit if a deployment geocodes facility addresses into `ref__location`-compatible rows.
 - **BL-005:** The model is the `union all` of two grains — departments
-  (`care_site_type = 'department'`) and location_groups (`care_site_type = 'ward'`) —
+  (`care_site_type = 'department'`) and location_groups (`care_site_type = 'area'`) —
   because OMOP `CARE_SITE` is a single heterogeneous table. Both
   `clinical__visit_occurrence` and `clinical__visit_detail` key `care_site_id` on
-  **ward-type** rows (the encounter's / segment's location_group), which may be NULL since
-  most Tamanu locations have no ward.
+  **area-type** rows (the encounter's / segment's location_group), which may be NULL since
+  most Tamanu locations have no area.
 
 ## Acceptance criteria
 
@@ -128,8 +128,8 @@ vocabulary can derive the concept downstream.
 | AC-002 | `care_site_id` is `unique` (one row per care site across both grains — relies on the disjoint department / location_group UUID spaces, BL-001) | grain | dbt `unique` |
 | AC-003 | A department denormalises into a `care_site_type='department'` row carrying `facility_id`, `facility_name`, and `place_of_service_source_value` | BL-002, BL-003, BL-005 | dbt unit test (`test_ref__care_site_department_denormalises_facility`) |
 | AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
-| AC-005 | `care_site_type` is `not_null` and one of `department` / `ward` | BL-005 | dbt `not_null` + `accepted_values` |
-| AC-006 | A location_group denormalises into a `care_site_type='ward'` row carrying its facility | BL-002, BL-005 | dbt unit test (`test_ref__care_site_ward_from_location_group`) |
+| AC-005 | `care_site_type` is `not_null` and one of `department` / `area` | BL-005 | dbt `not_null` + `accepted_values` |
+| AC-006 | A location_group denormalises into a `care_site_type='area'` row carrying its facility | BL-002, BL-005 | dbt unit test (`test_ref__care_site_area_from_location_group`) |
 
 ## Registry entry
 
@@ -141,13 +141,13 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | Ref | Layer | Role |
 |---|---|---|
 | `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
-| `location_groups` | `bases/` | Ward care sites (id, code, name) and parent facility link |
+| `location_groups` | `bases/` | Area care sites (id, code, name) and parent facility link |
 | `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
 
 ## Consumers
 
 | Model | Use |
 |---|---|
-| `clinical__visit_occurrence` | `care_site_id` FK → ward-type rows (AC-008 there) |
-| `clinical__visit_detail` | `care_site_id` FK → ward-type rows (the segment's location_group) |
+| `clinical__visit_occurrence` | `care_site_id` FK → area-type rows (AC-008 there) |
+| `clinical__visit_detail` | `care_site_id` FK → area-type rows (the segment's location_group) |
 | `metric__` / `dataset__` | facility-level disaggregation |

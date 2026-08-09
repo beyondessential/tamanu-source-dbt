@@ -3,7 +3,7 @@
 -- encounter. Segments walk the unified encounter_history timeline (BL-002); encounters
 -- with no history at all get one synthesized whole-visit segment (BL-005). Per-segment
 -- visit concept from map__omop_visit_type (BL-003); segments chained via
--- preceding_visit_detail_id (BL-004). care_site_id is the ward (BL-006); department and
+-- preceding_visit_detail_id (BL-004). care_site_id is the area (BL-006); department and
 -- room carried as attributes (BL-007). Sources only from bases/ (D10).
 -- See specs/dbt-model/clinical__visit_detail.md for BL-001..BL-007.
 
@@ -123,8 +123,8 @@ select
     b.visit_detail_end_datetime::date   as visit_detail_end_date,
     b.visit_detail_end_datetime,
 
-    -- care site is the ward: the location_group of the segment's location. NULL when the
-    -- location has no ward (common in Tamanu). FK to ref__care_site (ward-type rows) (BL-006)
+    -- care site is the area: the location_group of the segment's location. NULL when the
+    -- location has no area (common in Tamanu). FK to ref__care_site (area-type rows) (BL-006)
     loc.location_group_id as care_site_id,
 
     -- department (organizational unit) and room carried as attributes (BL-007);

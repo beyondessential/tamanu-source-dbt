@@ -35,12 +35,12 @@ those changes into one row per phase, each keyed to its parent `visit_occurrence
 **Clinical context.** `clinical__visit_occurrence` deliberately collapses an encounter
 to one row (BL-002 there uses concept 262 to flag an ER→inpatient episode, but does not
 expose the individual phases). Analytics that need per-phase timing — length of stay by
-department, time-in-ER before admission, ward-transfer counts — need the segment grain
+department, time-in-ER before admission, area-transfer counts — need the segment grain
 that `VISIT_DETAIL` provides.
 
 **Who reads it.** `metric__` length-of-stay and transfer indicators; `dataset__`
 admission audit line-lists; any analysis that must attribute time to a specific
-department or ward within a single encounter.
+department or area within a single encounter.
 
 ## Grain
 
@@ -63,9 +63,9 @@ encounter is represented by at least one row.
 | `visit_detail_start_datetime` | timestamp | Segment start (the `encounter_history` event datetime, or the encounter start for a synthesized segment) |
 | `visit_detail_end_date` | date | Date component of `visit_detail_end_datetime`. NULL for the final segment of an open encounter |
 | `visit_detail_end_datetime` | timestamp | Segment end (next segment's start, or the encounter `end_datetime`; NULL for the final segment of an open encounter) |
-| `care_site_id` | uuid | Segment **ward** — the `location_group` of the segment's location, resolved via `locations`. FK to `ref__care_site.care_site_id` (ward-type rows). NULL when the location has no ward (BL-006) |
+| `care_site_id` | uuid | Segment **area** — the `location_group` of the segment's location, resolved via `locations`. FK to `ref__care_site.care_site_id` (area-type rows). NULL when the location has no area (BL-006) |
 | `department_id` | uuid | Segment department (`encounter_history.department_id`) — organizational unit, carried as an attribute (BL-007). FK to `ref__care_site.care_site_id` (department-type rows) |
-| `location_id` | uuid | Segment room/bed (`encounter_history.location_id`) — finer than the ward care site, carried raw (BL-007) |
+| `location_id` | uuid | Segment room/bed (`encounter_history.location_id`) — finer than the area care site, carried raw (BL-007) |
 | `provider_id` | uuid | Segment clinician (`encounter_history.clinician_id`) |
 | `visit_detail_source_value` | text | Segment `encounter_type`, retained verbatim (D1) |
 | `preceding_visit_detail_id` | uuid | The prior segment's `visit_detail_id` in the same encounter; NULL for the first segment |
@@ -73,7 +73,7 @@ encounter is represented by at least one row.
 ## Business logic
 
 - **BL-001:** One row per encounter segment, sourced from `{{ ref('encounter_history') }}`,
-  `{{ ref('encounters') }}`, and `{{ ref('locations') }}` (for the ward lookup) only
+  `{{ ref('encounters') }}`, and `{{ ref('locations') }}` (for the area lookup) only
   (D10) — never `public.*`. Soft-delete and test-patient filtering are inherited from the
   base models; a history row whose encounter is filtered out is dropped by the inner join
   to `encounters`.
@@ -103,19 +103,19 @@ encounter is represented by at least one row.
   keyed on `encounters.id`. This guarantees every encounter has at least one
   `VISIT_DETAIL` row. The `encounters.id` key cannot collide with an
   `encounter_history.id` (distinct UUID spaces), preserving AC-002.
-- **BL-006:** `care_site_id` is the **ward** — the `location_group` of the segment's
+- **BL-006:** `care_site_id` is the **area** — the `location_group` of the segment's
   location, resolved by `left join`ing `locations` on the segment `location_id` and taking
-  `location_group_id`. It FKs to `ref__care_site` (ward-type rows). It is NULL when the
+  `location_group_id`. It FKs to `ref__care_site` (area-type rows). It is NULL when the
   location has no `location_group`, which is common in Tamanu (most `locations` have no
-  ward), so the FK test tolerates NULL. `clinical__visit_occurrence` keys its `care_site_id`
-  on the same ward grain (via the encounter's own location), so both models share the
-  ward-type FK target; `clinical__visit_occurrence` resolves it per encounter, this model
+  area), so the FK test tolerates NULL. `clinical__visit_occurrence` keys its `care_site_id`
+  on the same area grain (via the encounter's own location), so both models share the
+  area-type FK target; `clinical__visit_occurrence` resolves it per encounter, this model
   resolves it per segment.
 - **BL-007:** `department_id` (the organizational unit, `encounter_history.department_id`)
   and `location_id` (the room/bed, `encounter_history.location_id`) are carried as
   attributes. `department_id` FKs to `ref__care_site` (department-type rows) but is not
   itself a visit-level care site — no `clinical__` model keys `care_site_id` on department.
-  `location_id` is finer than the ward care site and is **not** an OMOP `LOCATION` (that
+  `location_id` is finer than the area care site and is **not** an OMOP `LOCATION` (that
   is geography — `ref__location`); it is carried raw until a care-site-style wrapper for
   Tamanu locations exists.
 
@@ -126,7 +126,7 @@ encounter is represented by at least one row.
 | AC-001 | `visit_detail_id` is `not_null` | grain | dbt `not_null` |
 | AC-002 | `visit_detail_id` is `unique` | grain | dbt `unique` |
 | AC-003 | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | BL-001 | dbt `relationships` |
-| AC-004 | Every non-null `care_site_id` (ward) exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
+| AC-004 | Every non-null `care_site_id` (area) exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
 | AC-005 | Every non-null `visit_detail_concept_id` exists in `map__omop_visit_type.concept_id` | BL-003 | dbt `relationships` |
 | AC-006 | When `visit_detail_end_datetime` is non-null, it is `>= visit_detail_start_datetime` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-007 | Segments of one encounter do not overlap: each ends where the next begins, the last at the encounter end | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
@@ -149,9 +149,9 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 |---|---|---|
 | `encounter_history` | `bases/` | Per-segment department, location, type, clinician, datetime (the timeline) |
 | `encounters` | `bases/` | Segment/encounter bounds, `person_id`, and the whole-visit fallback (BL-005) |
-| `locations` | `bases/` | Room → `location_group` (ward) lookup for `care_site_id` (BL-006) |
+| `locations` | `bases/` | Room → `location_group` (area) lookup for `care_site_id` (BL-006) |
 | `map__omop_visit_type` | `maps/` | encounter_type → OMOP Visit concept, per segment |
 | `clinical__visit_occurrence` | `clinical/` | Parent VISIT_OCCURRENCE; `visit_occurrence_id` FK target (AC-003) |
 | `clinical__person` | `clinical/` | `person_id` FK target (AC-009) |
-| `ref__care_site` | `ref/` | `care_site_id` (ward) and `department_id` FK target (AC-004, AC-008) |
+| `ref__care_site` | `ref/` | `care_site_id` (area) and `department_id` FK target (AC-004, AC-008) |
 | `ref__provider` | `ref/` | `provider_id` FK target (AC-010) |

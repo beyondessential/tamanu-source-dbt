@@ -27,10 +27,10 @@ unit_tests:
           'hospital' as place_of_service_source_value,
           'fac1' as facility_id, 'General Hospital' as facility_name
 
-  - name: test_ref__care_site_ward_from_location_group
+  - name: test_ref__care_site_area_from_location_group
     model: ref__care_site
     description: >-
-      A location_group becomes a care_site_type='ward' row, denormalised with its parent
+      A location_group becomes a care_site_type='area' row, denormalised with its parent
       facility and place-of-service concept (BL-001, BL-002, BL-003, BL-005).
     given:
       - input: ref('departments')
@@ -40,7 +40,7 @@ unit_tests:
       - input: ref('location_groups')
         format: sql
         rows: |
-          select 'ward1' as id, 'WRD1' as code, 'Paediatric Ward' as name, 'fac1' as facility_id
+          select 'area1' as id, 'ARA1' as code, 'Paediatric Area' as name, 'fac1' as facility_id
       - input: ref('facilities')
         format: sql
         rows: |
@@ -49,8 +49,8 @@ unit_tests:
       format: sql
       rows: |
         select
-          'ward1' as care_site_id, 'ward' as care_site_type,
-          'Paediatric Ward' as care_site_name, 'WRD1' as care_site_source_value,
+          'area1' as care_site_id, 'area' as care_site_type,
+          'Paediatric Area' as care_site_name, 'ARA1' as care_site_source_value,
           'hospital' as place_of_service_source_value,
           'fac1' as facility_id, 'General Hospital' as facility_name
 

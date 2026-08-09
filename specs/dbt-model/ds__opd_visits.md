@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 
-OPD (outpatient) visits dataset. One row per day per clinic (ward) with a count of
+OPD (outpatient) visits dataset. One row per day per clinic (area) with a count of
 outpatient visits, disaggregated by facility, sex and OPD visit age band. Day
 grain and additive, so it can be aggregated to any period downstream.
 
@@ -20,7 +20,7 @@ grain and additive, so it can be aggregated to any period downstream.
 
 **What this measures.** Outpatient department visits. An encounter counts as OPD when
 its **first encounter-history segment** is `clinic` or `vaccination`. The visit is
-attributed to the **date and ward of that intake segment**.
+attributed to the **date and area of that intake segment**.
 
 **Why day grain, count only.** The dataset emits a single additive `count` measure at day
 grain so it can be aggregated to any period (week/month/year) downstream. Encounter
@@ -30,10 +30,10 @@ duration is not included; see BL-005.
 
 **One row per** `(date, tamanu_facility_id, location_group_id, location_group_name, sex,
 age_group)`. The underlying subject is the **encounter** (its intake segment); rows are
-aggregated counts. Encounters whose ward doesn't resolve (no ward assigned, or a
-soft-deleted ward) carry `location_group_id = 'locationgroup-unknown'` and
+aggregated counts. Encounters whose area doesn't resolve (no area assigned, or a
+soft-deleted area) carry `location_group_id = 'locationgroup-unknown'` and
 `location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
-visit total; `tamanu_facility_id` is unaffected by a missing ward (see BL-003) and is only
+visit total; `tamanu_facility_id` is unaffected by a missing area (see BL-003) and is only
 NULL when the encounter has no location at all. `tupaia_facility_id` is never NULL — it's
 the data table's filter column, so it carries `'Not available'` instead (see BL-006).
 
@@ -42,10 +42,10 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 | Column | Type | Notes |
 |---|---|---|
 | `date` | date | Calendar day of the intake segment. `data_table_filter: date` |
-| `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of ward. NULL only when the encounter has no location. Not filterable — `tupaia_facility_id` is the filter column instead |
+| `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of area. NULL only when the encounter has no location. Not filterable — `tupaia_facility_id` is the filter column instead |
 | `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
-| `location_group_id` | uuid | Ward (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the ward doesn't resolve; otherwise FK → `ref__care_site` ward-type rows. `data_table_filter: array` |
-| `location_group_name` | text | Ward name; `'Unknown'` when the ward doesn't resolve |
+| `location_group_id` | uuid | Area (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `ref__care_site` area-type rows. `data_table_filter: array` |
+| `location_group_name` | text | Area name; `'Unknown'` when the area doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
 | `age_group` | text | OPD visit age band at the visit date (see BL-004) |
 | `total_opd_visits` | integer | `count(*)` of OPD visits. `data_table_metric: sum` |
@@ -62,18 +62,18 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 - **BL-003 (facility + clinic name, resolved independently):** `tamanu_facility_id` and the
   clinic name are two separate lookups, not a chain. `tamanu_facility_id` is joined from
   `bases/locations` (`clinical__visit_detail.location_id` → `locations.facility_id`) — a
-  location always carries its own facility, regardless of whether it also has a ward.
+  location always carries its own facility, regardless of whether it also has an area.
   `tamanu_facility_id` is only NULL when the encounter has no location at all (or that
   location was later soft-deleted).
 
   The clinic (`location_group_name`/`location_group_id`) is joined from `ref__care_site`
-  (`care_site_type = 'ward'`) on the intake segment's `care_site_id`. Only the **clinic** is
-  genuinely unknown when the ward doesn't resolve — and both sentinels trigger off the same
+  (`care_site_type = 'area'`) on the intake segment's `care_site_id`. Only the **clinic** is
+  genuinely unknown when the area doesn't resolve — and both sentinels trigger off the same
   condition (the join producing no match), so they always land together: `location_group_id`
   is `coalesce(cs.care_site_id, 'locationgroup-unknown')` and `location_group_name` is
   `coalesce(cs.care_site_name, 'Unknown')`, both driven by the *joined* `care_site_id`, not
-  the raw segment `care_site_id`. This covers two distinct cases identically: no ward was
-  ever assigned, or a ward was assigned but has since been soft-deleted and no longer
+  the raw segment `care_site_id`. This covers two distinct cases identically: no area was
+  ever assigned, or an area was assigned but has since been soft-deleted and no longer
   resolves in `ref__care_site`. A real `location_group_id` never pairs with an `'Unknown'`
   name, or vice versa. A future `relationships` test on `location_group_id` must exclude the
   `'locationgroup-unknown'` sentinel rather than treat it as a broken FK.
@@ -126,8 +126,8 @@ None.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `clinical__visit_detail` | `clinical/` | Intake segment (first history segment); OPD inclusion, date, ward, location |
+| `clinical__visit_detail` | `clinical/` | Intake segment (first history segment); OPD inclusion, date, area, location |
 | `clinical__person` | `clinical/` | Sex and birth date for age at visit |
 | `locations` | `bases/` | `tamanu_facility_id` of the visit's location (BL-003) |
-| `ref__care_site` | `ref/` | Clinic (ward) name |
+| `ref__care_site` | `ref/` | Clinic (area) name |
 | `tupaia_facility_mapping` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `has_tupaia_facility_mapping` (BL-006) |

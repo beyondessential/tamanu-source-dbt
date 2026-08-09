@@ -1,8 +1,8 @@
 -- ref__care_site -- OMOP CARE_SITE wrapper. Heterogeneous by design: one row per Tamanu
 -- department (the organizational care unit, care_site_type = 'department') AND one row per
--- location_group (the physical ward/area, care_site_type = 'ward'). Wards feed both
+-- location_group (the physical area, care_site_type = 'area'). Areas feed both
 -- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id (per-
--- segment); both are sparse — most Tamanu locations have no ward. Departments remain an
+-- segment); both are sparse — most Tamanu locations have no area. Departments remain an
 -- attribute on clinical__visit_detail (not a visit-level care-site FK). Each care site is
 -- denormalised with its parent facility. Native UUID PK (D1).
 -- Sources only from bases/ (D10); OMOP column naming applied (D2).
@@ -31,10 +31,10 @@ department_sites as (
     from departments d
 ),
 
--- physical care unit: ward/area (BL-001, BL-005)
-ward_sites as (
+-- physical care unit: area (BL-001, BL-005)
+area_sites as (
     select
-        'ward'          as care_site_type,
+        'area'          as care_site_type,
         lg.id::varchar  as care_site_id,
         lg.name         as care_site_name,
         lg.code         as care_site_source_value,
@@ -45,7 +45,7 @@ ward_sites as (
 care_sites as (
     select * from department_sites
     union all
-    select * from ward_sites
+    select * from area_sites
 )
 
 select
