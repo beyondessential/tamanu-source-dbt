@@ -32,10 +32,10 @@ unit_tests:
         format: csv
         rows: |
           id,user_id,designation_id
-          ud_001,user_001,desg_001
-          ud_002,user_002,desg_002
-          ud_003,user_002,desg_003
-          ud_004,user_003,desg_001
+          00000000-0000-0000-0000-000000000001,user_001,desg_001
+          00000000-0000-0000-0000-000000000002,user_002,desg_002
+          00000000-0000-0000-0000-000000000003,user_002,desg_003
+          00000000-0000-0000-0000-000000000004,user_003,desg_001
 
       - input: ref('reference_data')
         format: csv
