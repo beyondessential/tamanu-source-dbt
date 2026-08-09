@@ -3,9 +3,22 @@ unit_tests:
     model: ds__encounter_invoices
     description: >
       invoice_finalised_datetime is the most recent transition into finalised
-      status from logs.changes, in deployment-local time (Pohnpei, UTC+11). A
-      re-finalisation (previous_status already finalised) is excluded. An
-      invoice that never finalises shows null.
+      status from logs.changes, in deployment-local time (Australia/Sydney,
+      AEDT UTC+11 for the January dates used here). A re-finalisation
+      (previous_status already finalised) is excluded. An invoice that never
+      finalises shows null.
+    overrides:
+      vars:
+        # tamanu-source-dbt's own default timezone. Sydney observes DST (AEDT
+        # UTC+11 / AEST UTC+10) -- the fixture dates below are all January
+        # (AEDT), so they resolve to UTC+11; adding fixture rows outside
+        # daylight-saving months would shift this to UTC+10.
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
     given:
       - input: ref('encounters')
         format: sql
@@ -48,7 +61,7 @@ unit_tests:
         rows: |
           select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
           union all
-          -- First finalisation: logged_at UTC 03:00 = Pohnpei 14:00 (UTC+11)
+          -- First finalisation: logged_at UTC 03:00 = Sydney 14:00 (AEDT, UTC+11 in January)
           select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
           union all
           -- Re-finalisation: previous_status = 'finalised' so excluded
