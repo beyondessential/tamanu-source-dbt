@@ -1,7 +1,7 @@
 unit_tests:
-  - name: test_ds_admissions_sensitive_facilities
+  - name: test_ds__admissions_filters_admission_encounters_only
     model: ds__admissions
-    description: "Test that admissions at sensitive facilities are excluded"
+    description: "Test that only admission encounters are included"
     overrides:
       vars:
         timezone: Australia/Sydney
@@ -14,9 +14,11 @@ unit_tests:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_001' as id, 'pat_001' as patient_id, '2024-05-15 10:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'loc_001' as location_id, 'bill_001' as patient_billing_type_id, 'admission' as encounter_type
+          select 'enc_001' as id, 'pat_001' as patient_id, '2024-01-15 10:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'loc_001' as location_id, 'bill_001' as patient_billing_type_id, 'admission' as encounter_type
           union all
-          select 'enc_002', 'pat_002', '2024-05-16 14:00:00'::timestamp, null::timestamp, 'loc_002', 'bill_002', 'admission'
+          select 'enc_002', 'pat_002', '2024-01-16 14:30:00'::timestamp, null::timestamp, 'loc_002', 'bill_002', 'outpatient'
+          union all
+          select 'enc_003', 'pat_003', '2024-01-17 08:15:00'::timestamp, null::timestamp, 'loc_001', null, 'emergency'
       
       - input: ref('patients')
         format: sql
@@ -24,48 +26,42 @@ unit_tests:
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, 'vil_001' as village_id
           union all
           select 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'female', 'vil_002'
+          union all
+          select 'pat_003', 'P003', 'Bob', 'Johnson', '1975-12-10'::date, 'male', null
       
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-05-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
-          union all
-          select 'enc_002', '2024-05-16 14:00:00'::timestamp, null::text[], 'cli_002', 'dept_002', 'loc_002', 'admission'
+          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
       
       - input: ref('users')
         format: sql
         rows: |
           select 'cli_001' as id, 'Dr. Alice Wilson' as display_name
-          union all
-          select 'cli_002', 'Dr. Bob Martinez'
       
       - input: ref('departments')
         format: sql
         rows: |
           select 'dept_001' as id, 'Emergency' as name
-          union all
-          select 'dept_002', 'Psychiatry'
       
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'Room 101' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
           union all
-          select 'loc_002', 'Room 201', 'fac_002', 'lg_002'
+          select 'loc_002', 'Room 201', 'fac_001', 'lg_002'
       
       - input: ref('location_groups')
         format: sql
         rows: |
           select 'lg_001' as id, 'Emergency Ward' as name
           union all
-          select 'lg_002', 'Psychiatric Ward'
+          select 'lg_002', 'Medical Ward'
       
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
-          union all
-          select 'fac_002', 'Psychiatric Hospital', true
       
       - input: ref('reference_data')
         format: sql
@@ -87,4 +83,4 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 34 as age, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'bill_001' as billing_type_id, 'Insurance' as billing_type, 'cli_001' as admitting_clinician_id, 'Dr. Alice Wilson' as admitting_clinician, '2024-05-15 10:00:00'::timestamp as admission_datetime, 'active' as admission_status, null::timestamp as discharge_datetime, 'fac_001' as facility_id, 'Central Hospital' as facility, array['dept_001'] as department_ids, 'Emergency' as departments, '2024-05-15 10:00' as department_datetimes, array['lg_001'] as location_group_ids, 'Emergency Ward' as location_groups, '2024-05-15 10:00' as location_group_datetimes, array['loc_001'] as location_ids, 'Room 101' as locations, '2024-05-15 10:00' as location_datetimes, null as primary_diagnoses, null as primary_diagnoses_codes, null as secondary_diagnoses, null as secondary_diagnoses_codes
+        select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 33 as age, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'bill_001' as billing_type_id, 'Insurance' as billing_type, 'cli_001' as admitting_clinician_id, 'Dr. Alice Wilson' as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active' as admission_status, null::timestamp as discharge_datetime, 'fac_001' as facility_id, 'Central Hospital' as facility, array['dept_001'] as department_ids, 'Emergency' as departments, '2024-01-15 10:00' as department_datetimes, array['lg_001'] as location_group_ids, 'Emergency Ward' as location_groups, '2024-01-15 10:00' as location_group_datetimes, array['loc_001'] as location_ids, 'Room 101' as locations, '2024-01-15 10:00' as location_datetimes, null as primary_diagnoses, null as primary_diagnoses_codes, null as secondary_diagnoses, null as secondary_diagnoses_codes

@@ -8,7 +8,7 @@ unit_tests:
       invoice that never finalises shows null.
     overrides:
       vars:
-        timezone: Australia/Sydney
+        timezone: Pacific/Pohnpei  # fixed UTC+11 year-round — matches the fixture's Pohnpei comments/description; Australia/Sydney would silently drift 1h for rows in AEST months
         date_format: 'YYYY-MM-DD'
         time_format: 'HH24:MI'
         datetime_format: 'YYYY-MM-DD HH24:MI:SS'

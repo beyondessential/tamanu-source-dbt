@@ -1,7 +1,7 @@
 unit_tests:
-  - name: test_ds_admissions_age_calculation
+  - name: test_ds__admissions_sensitive_facilities
     model: ds__admissions
-    description: "Test age calculation at admission time"
+    description: "Test that admissions at sensitive facilities are excluded"
     overrides:
       vars:
         timezone: Australia/Sydney
@@ -15,48 +15,68 @@ unit_tests:
         format: sql
         rows: |
           select 'enc_001' as id, 'pat_001' as patient_id, '2024-05-15 10:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'loc_001' as location_id, 'bill_001' as patient_billing_type_id, 'admission' as encounter_type
+          union all
+          select 'enc_002', 'pat_002', '2024-05-16 14:00:00'::timestamp, null::timestamp, 'loc_002', 'bill_002', 'admission'
       
       - input: ref('patients')
         format: sql
         rows: |
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, 'vil_001' as village_id
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'female', 'vil_002'
       
       - input: ref('encounter_history')
         format: sql
         rows: |
           select 'enc_001' as encounter_id, '2024-05-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          union all
+          select 'enc_002', '2024-05-16 14:00:00'::timestamp, null::text[], 'cli_002', 'dept_002', 'loc_002', 'admission'
       
       - input: ref('users')
         format: sql
         rows: |
           select 'cli_001' as id, 'Dr. Alice Wilson' as display_name
+          union all
+          select 'cli_002', 'Dr. Bob Martinez'
       
       - input: ref('departments')
         format: sql
         rows: |
           select 'dept_001' as id, 'Emergency' as name
+          union all
+          select 'dept_002', 'Psychiatry'
       
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'Room 101' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+          union all
+          select 'loc_002', 'Room 201', 'fac_002', 'lg_002'
       
       - input: ref('location_groups')
         format: sql
         rows: |
           select 'lg_001' as id, 'Emergency Ward' as name
+          union all
+          select 'lg_002', 'Psychiatric Ward'
       
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+          union all
+          select 'fac_002', 'Psychiatric Hospital', true
       
       - input: ref('reference_data')
         format: sql
         rows: |
           select 'vil_001' as id, 'Village A' as name, null as code
           union all
+          select 'vil_002', 'Village B', null
+          union all
           select 'bill_001', 'Insurance', null
+          union all
+          select 'bill_002', 'Private Pay', null
       
       - input: ref('encounter_diagnoses')
         format: sql
