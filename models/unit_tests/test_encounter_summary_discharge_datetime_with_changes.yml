@@ -6,6 +6,15 @@ unit_tests:
       the discharge assigned time columns should reflect the time of the last change for
       each dimension, not the encounter start time. This tests the primary path where
       max(datetime) filter is used instead of the fallback to start time.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+        language: default
     given:
       - input: ref('encounters')
         format: sql

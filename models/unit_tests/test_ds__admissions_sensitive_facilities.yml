@@ -1,7 +1,15 @@
 unit_tests:
-  - name: test_ds_admissions_sensitive_facilities
+  - name: test_ds__admissions_sensitive_facilities
     model: ds__admissions
     description: "Test that admissions at sensitive facilities are excluded"
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
     given:
       - input: ref('encounters')
         format: sql
