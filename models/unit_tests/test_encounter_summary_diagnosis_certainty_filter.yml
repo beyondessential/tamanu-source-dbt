@@ -5,6 +5,14 @@ unit_tests:
       Diagnoses with certainty 'disproven' or 'error' should be excluded from the
       Diagnoses column. Confirmed and suspected diagnoses should still appear,
       ordered by is_primary descending then datetime ascending.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
     given:
       - input: ref('encounters')
         format: sql

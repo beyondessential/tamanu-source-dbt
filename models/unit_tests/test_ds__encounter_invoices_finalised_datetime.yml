@@ -6,6 +6,14 @@ unit_tests:
       status from logs.changes, in deployment-local time (Pohnpei, UTC+11). A
       re-finalisation (previous_status already finalised) is excluded. An
       invoice that never finalises shows null.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
     given:
       - input: ref('encounters')
         format: sql
