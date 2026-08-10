@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: clinical__measurement
+    description: "{{ doc('clinical__measurement') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: measurement_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__measurement_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__measurement_measurement_id_not_null
+          - unique:
+              name: ac_002_clinical__measurement_measurement_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__measurement_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: measurement_date
+        data_type: date
+        description: "{{ doc('clinical__measurement__measurement_date') }}"
+      - name: measurement_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__measurement__measurement_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_007_clinical__measurement_measurement_datetime_not_null
+      - name: measurement_type_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__measurement_type_source_value') }}"
+      - name: value_as_number
+        data_type: numeric
+        description: "{{ doc('clinical__measurement__value_as_number') }}"
+      - name: value_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__value_source_value') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__measurement_value_source_value_not_null
+      - name: unit_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__unit_source_value') }}"
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__provider_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_005_clinical__measurement_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__visit_occurrence_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__measurement_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: measurement_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__measurement_source_value') }}"
+      - name: measurement_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__measurement_source_name') }}"

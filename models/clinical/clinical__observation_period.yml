@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: clinical__observation_period
+    description: "{{ doc('clinical__observation_period') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-006: the period must not end before it starts (BL-002). or_equal
+      # permits a single-day period; both bounds are not-null (AC-004).
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_006_clinical__observation_period_end_at_or_after_start
+          arguments:
+            column_A: observation_period_end_date
+            column_B: observation_period_start_date
+            or_equal: true
+    columns:
+      - name: observation_period_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation_period__observation_period_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__observation_period_observation_period_id_not_null
+          - unique:
+              name: ac_002_clinical__observation_period_observation_period_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation_period__person_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_clinical__observation_period_person_id_not_null
+          - relationships:
+              name: ac_003_clinical__observation_period_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: observation_period_start_date
+        data_type: date
+        description: "{{ doc('clinical__observation_period__observation_period_start_date') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_clinical__observation_period_start_date_not_null
+      - name: observation_period_end_date
+        data_type: date
+        description: "{{ doc('clinical__observation_period__observation_period_end_date') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_clinical__observation_period_end_date_not_null
+      - name: period_type_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__observation_period__period_type_concept_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_clinical__observation_period_period_type_concept_id_not_null
+          - accepted_values:
+              name: ac_005_clinical__observation_period_period_type_concept_id_is_ehr
+              arguments:
+                values: [44814724]
+                quote: false
