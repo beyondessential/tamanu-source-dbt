@@ -1,0 +1,105 @@
+version: 2
+
+models:
+  - name: clinical__drug_exposure
+    description: "{{ doc('clinical__drug_exposure') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-009: an exposure's end must not precede its start (BL-004). or_equal
+      # permits point events (vaccination / dispense end == start); NULL end
+      # (open prescription) is excluded by the row_condition.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_009_clinical__drug_exposure_end_at_or_after_start
+          arguments:
+            column_A: drug_exposure_end_datetime
+            column_B: drug_exposure_start_datetime
+            or_equal: true
+            row_condition: "drug_exposure_end_datetime is not null"
+    columns:
+      - name: drug_exposure_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__drug_exposure_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__drug_exposure_drug_exposure_id_not_null
+          - unique:
+              name: ac_002_clinical__drug_exposure_drug_exposure_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__drug_exposure_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: drug_exposure_start_date
+        data_type: date
+        description: "{{ doc('clinical__drug_exposure__drug_exposure_start_date') }}"
+      - name: drug_exposure_start_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__drug_exposure__drug_exposure_start_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__drug_exposure_drug_exposure_start_datetime_not_null
+      - name: drug_exposure_end_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__drug_exposure__drug_exposure_end_datetime') }}"
+      - name: drug_exposure_type_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__drug_exposure_type_source_value') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_007_clinical__drug_exposure_drug_exposure_type_source_value_accepted
+              arguments:
+                values:
+                  - prescription
+                  - vaccination
+                  - dispense
+      - name: quantity
+        data_type: numeric
+        description: "{{ doc('clinical__drug_exposure__quantity') }}"
+      - name: refills
+        data_type: integer
+        description: "{{ doc('clinical__drug_exposure__refills') }}"
+      - name: route_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__route_source_value') }}"
+      - name: stop_reason
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__stop_reason') }}"
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__provider_id') }}"
+        data_tests:
+          - dbt_utils.relationships_where:
+              name: ac_005_clinical__drug_exposure_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+                from_condition: "drug_exposure_type_source_value != 'vaccination'"
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__visit_occurrence_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__drug_exposure_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: drug_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__drug_source_value') }}"
+      - name: drug_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__drug_exposure__drug_source_name') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_clinical__drug_exposure_drug_source_name_not_null
