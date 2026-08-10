@@ -65,18 +65,19 @@ outpatient_encounters_banded as (
         location_group_id,
         location_group_name,
         sex,
-        {{ standard_age_group('age_years') }} as age_group
+        {{ age_group__who_primary_classification('age_years') }} as age_group
     from outpatient_encounters
 )
 
-{% set has_tupaia_mapping = var('has_tupaia_facility_mapping', false) %}
+{% set has_tupaia_mapping = var('integrations', {}).get('tupaia', {}).get('enabled', false) %}
 
 select
     b.visit_detail_start_date,
     b.tamanu_facility_id,
-    -- Tupaia facility id crosswalk: only joined when the deployment has configured its own
-    -- tupaia_facility_mapping seed (BL-006). Never referenced when the flag is unset, so
-    -- this model still builds standalone in tamanu-source-dbt with no such seed present.
+    -- Tupaia facility id crosswalk: only joined when the deployment has set
+    -- integrations.tupaia.enabled and supplied its own tupaia_facility_mapping seed
+    -- (BL-006). Never referenced when the flag is unset, so this model still builds
+    -- standalone in tamanu-source-dbt with no such seed present.
     -- Never NULL: this is the data_table_filter column, and Tupaia's default array filter
     -- (col = any(coalesce(:param, array[col]))) silently drops NULL rows, so an unmapped
     -- or unconfigured facility gets the literal 'Not available' instead.

@@ -6,8 +6,9 @@ visit age band. Additive count only, so it can be aggregated to any period.
 {% enddocs %}
 
 {% docs ds__outpatient_visit__age_group %}
-Outpatient visit age band at the visit date: '<1 year', '1-4 years', '5-14 years',
-'15-49 years', '50+ years', or 'Unknown age' when the birth date is missing, or the
+Outpatient visit age band at the visit date, per the WHO primary age classification's
+range boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years',
+'60-74 years', '75+ years', or 'Unknown age' when the birth date is missing, or the
 computed age at the visit is negative or greater than 120 (implausible/bad data).
 {% enddocs %}
 

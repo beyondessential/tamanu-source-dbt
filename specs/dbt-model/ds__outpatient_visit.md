@@ -49,7 +49,7 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 | `location_group_id` | uuid | Area (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `ref__care_site` area-type rows. `data_table_filter: array` |
 | `location_group_name` | text | Area name; `'Unknown'` when the area doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
-| `age_group` | text | Outpatient visit age band at the visit date (see BL-004) |
+| `age_group` | text | Outpatient visit age band at the visit date, per the WHO primary age classification's range boundaries (see BL-004) |
 | `total_outpatient_visits` | integer | `count(*)` of outpatient visits. `data_table_metric: sum` |
 
 ## Business logic
@@ -88,10 +88,14 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
   `'locationgroup-unknown'` sentinel rather than treat it as a broken FK.
 - **BL-004 (sex + age band):** `sex` from `clinical__person.gender_source_value`; age in
   whole years at the visit date is computed from `year_of_birth`/`month_of_birth`/
-  `day_of_birth` and banded by the `standard_age_group` macro into
-  `<1 / 1-4 / 5-14 / 15-49 / 50+`. The join to `clinical__person` is an inner join: `bases/
-  patients` excludes soft-deleted and merged-away patients, so a visit whose patient was
-  later deleted or merged is excluded from the dataset entirely, not counted with blank
+  `day_of_birth` and banded by the `age_group__who_primary_classification` macro, using the
+  WHO primary age classification's range boundaries but labelled by range rather than WHO's
+  category name: `0-14 / 15-24 / 25-44 / 45-59 / 60-74 / 75+ years`. Source:
+  https://wellfr.com/understanding-the-who-classification-of-age-groups-according-to-who
+  (see the macro's own docstring for the caveat on this source). The join to
+  `clinical__person` is an inner join: `bases/patients` excludes soft-deleted and
+  merged-away patients, so a visit whose patient was later deleted or merged is excluded
+  from the dataset entirely, not counted with blank
   demographics.
 - **BL-005 (no duration measure):** encounter duration is deliberately omitted. Outpatient/
   clinic encounters are auto-discharged, so `end - start` does not reflect real time spent
@@ -100,14 +104,27 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
   `tamanu_facility_id` through a `tupaia_facility_mapping` seed (columns
   `tamanu_facility_id`, `tupaia_facility_id`) that **only exists in a deployment's own repo**
-  — `tamanu-source-dbt` never defines this seed itself. The join is gated behind
-  `var('has_tupaia_facility_mapping', false)`: when the flag is off (the default, including
-  every standalone build of `tamanu-source-dbt`), the `ref()` to the seed is never rendered
-  at all, so the model still compiles with no seed present. A deployment that has set up its
-  own mapping sets `has_tupaia_facility_mapping: true` in its own `dbt_project.yml` `vars:`
-  block alongside supplying `seeds/tupaia_facility_mapping.csv`. If a deployment sets the
-  flag `true` without providing the seed, the build fails loudly (missing `ref()`) rather
-  than silently shipping a placeholder — this is intentional.
+  — `tamanu-source-dbt` never defines this seed itself. The join is gated behind a
+  namespaced integration flag, `var('integrations', {}).get('tupaia', {}).get('enabled',
+  false)`, rather than a one-off boolean var — this keeps the `vars:` block from growing a
+  new flat flag for every Tupaia-related mapping added over time (facility mapping today,
+  potentially others later); `dhis2` and `senaite` are expected to follow the same
+  `integrations.<name>.enabled` shape as they gain similar deployment-specific mappings.
+  When the flag is off (the default, including every standalone build of
+  `tamanu-source-dbt`), the `ref()` to the seed is never rendered at all, so the model still
+  compiles with no seed present. A deployment that has set up its own mapping sets:
+  ```yaml
+  vars:
+    integrations:
+      tupaia:
+        enabled: true
+  ```
+  in its own `dbt_project.yml`, alongside supplying `seeds/tupaia_facility_mapping.csv`. If
+  a deployment sets `integrations.tupaia.enabled: true` without providing the seed, the
+  build fails loudly (missing `ref()`) rather than silently shipping a placeholder — this is
+  intentional. Note this flag is deployment-wide for Tupaia (not per-mapping): enabling it
+  commits the deployment to supplying every Tupaia-related seed `tamanu-source-dbt` expects
+  under this flag, not just this one.
 
   **Never NULL:** `tupaia_facility_id` is the model's `data_table_filter` column, and
   Tupaia's default array filter (`col = any(coalesce(:param, array[col]))`) silently drops
@@ -125,8 +142,8 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
   `total_outpatient_visits` silently inflates, breaking the additive-count guarantee in
   BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the seed only
   exists in deployment repos. **Every deployment that sets
-  `has_tupaia_facility_mapping: true` must add a `unique` test on `tamanu_facility_id` to its
-  own `seeds/tupaia_facility_mapping.csv` schema** as a condition of enabling the flag.
+  `integrations.tupaia.enabled: true` must add a `unique` test on `tamanu_facility_id` to
+  its own `seeds/tupaia_facility_mapping.csv` schema** as a condition of enabling the flag.
 
 ## Acceptance criteria
 
@@ -140,4 +157,4 @@ None.
 | `clinical__person` | `clinical/` | Sex and birth date for age at visit |
 | `locations` | `bases/` | `tamanu_facility_id` of the visit's location (BL-003) |
 | `ref__care_site` | `ref/` | Clinic (area) name |
-| `tupaia_facility_mapping` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `has_tupaia_facility_mapping` (BL-006) |
+| `tupaia_facility_mapping` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `integrations.tupaia.enabled` (BL-006) |
