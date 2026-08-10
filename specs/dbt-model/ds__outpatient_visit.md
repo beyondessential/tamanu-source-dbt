@@ -1,25 +1,26 @@
-# dbt Model Spec: `ds__opd_visits` (canonical definition)
+# dbt Model Spec: `ds__outpatient_visit` (canonical definition)
 
 ## Identity
 
 | Field | Value |
 |---|---|
-| **Name** | `ds__opd_visits` |
+| **Name** | `ds__outpatient_visit` |
 | **Type** | dbt model (dataset) |
-| **Layer** | `datasets` (standard) |
+| **Layer** | `datasets` (omop) |
 | **Materialisation** | `view` |
 | **Status** | `draft` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 
-OPD (outpatient) visits dataset. One row per day per clinic (area) with a count of
-outpatient visits, disaggregated by facility, sex and OPD visit age band. Day
+Outpatient visits dataset. One row per day per clinic (area) with a count of
+outpatient visits, disaggregated by facility, sex and outpatient visit age band. Day
 grain and additive, so it can be aggregated to any period downstream.
 
 ## Purpose
 
-**What this measures.** Outpatient department visits. An encounter counts as OPD when
-its **first encounter-history segment** is `clinic` or `vaccination`. The visit is
+**What this measures.** Outpatient department visits. An encounter counts as outpatient
+when its **first encounter-history segment** has OMOP visit concept **9202 (Outpatient
+Visit)** — covering `clinic`, `vaccination`, and `imaging` encounter types. The visit is
 attributed to the **date and area of that intake segment**.
 
 **Why day grain, count only.** The dataset emits a single additive `count` measure at day
@@ -28,8 +29,9 @@ duration is not included; see BL-005.
 
 ## Grain
 
-**One row per** `(date, tamanu_facility_id, location_group_id, location_group_name, sex,
-age_group)`. The underlying subject is the **encounter** (its intake segment); rows are
+**One row per** `(visit_detail_start_date, tamanu_facility_id, location_group_id,
+location_group_name, sex, age_group)`. The underlying subject is the **encounter** (its
+intake segment); rows are
 aggregated counts. Encounters whose area doesn't resolve (no area assigned, or a
 soft-deleted area) carry `location_group_id = 'locationgroup-unknown'` and
 `location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
@@ -41,24 +43,31 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 
 | Column | Type | Notes |
 |---|---|---|
-| `date` | date | Calendar day of the intake segment. `data_table_filter: date` |
+| `visit_detail_start_date` | date | Calendar day of the intake segment (OMOP `VISIT_DETAIL.visit_detail_start_date`). `data_table_filter: date` |
 | `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of area. NULL only when the encounter has no location. Not filterable — `tupaia_facility_id` is the filter column instead |
 | `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
 | `location_group_id` | uuid | Area (the "clinic"). `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `ref__care_site` area-type rows. `data_table_filter: array` |
 | `location_group_name` | text | Area name; `'Unknown'` when the area doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
-| `age_group` | text | OPD visit age band at the visit date (see BL-004) |
-| `total_opd_visits` | integer | `count(*)` of OPD visits. `data_table_metric: sum` |
+| `age_group` | text | Outpatient visit age band at the visit date (see BL-004) |
+| `total_outpatient_visits` | integer | `count(*)` of outpatient visits. `data_table_metric: sum` |
 
 ## Business logic
 
-- **BL-001:** Grain is one row per `(date, tamanu_facility_id, location_group_id,
-  location_group_name, sex, age_group)`. Sourced from `clinical__` models, `ref__care_site`,
-  `bases/locations` (BL-003), and a deployment-only seed (BL-006) — see Dependencies.
-- **BL-002 (OPD inclusion + intake attribution):** OPD visits are the **first** segment of
-  each encounter (`clinical__visit_detail` where `preceding_visit_detail_id is null`) whose
-  `visit_detail_source_value in ('clinic', 'vaccination')`, covering **both** clinic and
-  vaccination. `date` and `location_group_id` come from that intake segment.
+- **BL-001:** Grain is one row per `(visit_detail_start_date, tamanu_facility_id,
+  location_group_id, location_group_name, sex, age_group)`. Sourced from `clinical__`
+  models, `ref__care_site`, `bases/locations` (BL-003), and a deployment-only seed (BL-006)
+  — see Dependencies.
+- **BL-002 (outpatient inclusion + intake attribution):** Outpatient visits are the
+  **first** segment of each encounter (`clinical__visit_detail` where
+  `preceding_visit_detail_id is null`) whose `visit_detail_concept_id = 9202` (OMOP
+  'Outpatient Visit', from `map__omop_visit_type`). Filtering on the OMOP concept rather
+  than the raw Tamanu `visit_detail_source_value` means inclusion is driven by the
+  OMOP-standard mapping, not a hand-picked list of source strings — today that mapping
+  covers `clinic`, `vaccination`, **and `imaging`** (all three map to 9202); a future
+  deployment-specific encounter type would be included automatically if
+  `map__omop_visit_type` maps it to 9202, with no change needed here.
+  `visit_detail_start_date` and `location_group_id` come from that intake segment.
 - **BL-003 (facility + clinic name, resolved independently):** `tamanu_facility_id` and the
   clinic name are two separate lookups, not a chain. `tamanu_facility_id` is joined from
   `bases/locations` (`clinical__visit_detail.location_id` → `locations.facility_id`) — a
@@ -84,10 +93,10 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
   patients` excludes soft-deleted and merged-away patients, so a visit whose patient was
   later deleted or merged is excluded from the dataset entirely, not counted with blank
   demographics.
-- **BL-005 (no duration measure):** encounter duration is deliberately omitted. OPD/clinic
-  encounters are auto-discharged, so `end - start` does not reflect real time spent and
-  would misrepresent wait/consultation time. The additive measure is `total_opd_visits`
-  (`count`) only.
+- **BL-005 (no duration measure):** encounter duration is deliberately omitted. Outpatient/
+  clinic encounters are auto-discharged, so `end - start` does not reflect real time spent
+  and would misrepresent wait/consultation time. The additive measure is
+  `total_outpatient_visits` (`count`) only.
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
   `tamanu_facility_id` through a `tupaia_facility_mapping` seed (columns
   `tamanu_facility_id`, `tupaia_facility_id`) that **only exists in a deployment's own repo**
@@ -109,12 +118,13 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
   `tamanu_facility_id` itself is NULL.
 
   **Uniqueness contract:** the join is `tm.tamanu_facility_id = b.tamanu_facility_id`,
-  executed before the `count(*)` that produces `total_opd_visits`. If `tamanu_facility_id` is
-  not unique in the seed (a duplicated row, or one Tamanu facility deliberately mapped to
-  more than one Tupaia entity), every OPD visit at that facility fans out and is counted once
-  per matching seed row — `total_opd_visits` silently inflates, breaking the additive-count
-  guarantee in BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the
-  seed only exists in deployment repos. **Every deployment that sets
+  executed before the `count(*)` that produces `total_outpatient_visits`. If
+  `tamanu_facility_id` is not unique in the seed (a duplicated row, or one Tamanu facility
+  deliberately mapped to more than one Tupaia entity), every outpatient visit at that
+  facility fans out and is counted once per matching seed row —
+  `total_outpatient_visits` silently inflates, breaking the additive-count guarantee in
+  BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the seed only
+  exists in deployment repos. **Every deployment that sets
   `has_tupaia_facility_mapping: true` must add a `unique` test on `tamanu_facility_id` to its
   own `seeds/tupaia_facility_mapping.csv` schema** as a condition of enabling the flag.
 
@@ -126,7 +136,7 @@ None.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `clinical__visit_detail` | `clinical/` | Intake segment (first history segment); OPD inclusion, date, area, location |
+| `clinical__visit_detail` | `clinical/` | Intake segment (first history segment); outpatient inclusion, visit_detail_start_date, area, location |
 | `clinical__person` | `clinical/` | Sex and birth date for age at visit |
 | `locations` | `bases/` | `tamanu_facility_id` of the visit's location (BL-003) |
 | `ref__care_site` | `ref/` | Clinic (area) name |

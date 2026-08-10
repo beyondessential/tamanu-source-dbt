@@ -1,7 +1,9 @@
--- ds__opd_visits -- OPD visits aggregated to (date, facility, area, sex, age_group).
--- An encounter is OPD when its first history segment is clinic or vaccination; date and
--- area come from that segment. Additive count only, so it can be aggregated to any period.
--- See specs/dbt-model/ds__opd_visits.md for BL-001..BL-006.
+-- ds__outpatient_visit -- Outpatient visits aggregated to (visit_detail_start_date,
+-- facility, area, sex, age_group). An encounter is outpatient when its first history
+-- segment's OMOP visit concept is 9202 (Outpatient Visit) -- covers clinic, vaccination,
+-- and imaging (BL-002); visit_detail_start_date and area come from that segment. Additive
+-- count only, so it can be aggregated to any period. See
+-- specs/dbt-model/ds__outpatient_visit.md for BL-001..BL-006.
 
 with visit_detail as (
     select * from {{ ref('clinical__visit_detail') }}
@@ -19,12 +21,13 @@ care_site as (
     select * from {{ ref('ref__care_site') }}
 ),
 
--- OPD intake encounters: the first history segment of each encounter when it is clinic or
--- vaccination (BL-002), enriched with facility from the visit's location (BL-003), clinic
--- name from the area (BL-003), sex, and age at the visit (BL-004)
-opd_encounters as (
+-- outpatient intake encounters: the first history segment of each encounter whose OMOP
+-- visit concept is 9202/Outpatient Visit (BL-002), enriched with facility from the
+-- visit's location (BL-003), clinic name from the area (BL-003), sex, and age at the
+-- visit (BL-004)
+outpatient_encounters as (
     select
-        vd.visit_detail_start_date as date,
+        vd.visit_detail_start_date,
         loc.facility_id as tamanu_facility_id,
         -- both sentinels trigger off the same area-lookup miss (no area assigned, or the
         -- area was soft-deleted and no longer resolves in ref__care_site), so a real id
@@ -51,25 +54,25 @@ opd_encounters as (
         on cs.care_site_id = vd.care_site_id
         and cs.care_site_type = 'area'
     where vd.preceding_visit_detail_id is null
-        and vd.visit_detail_source_value in ('clinic', 'vaccination')
+        and vd.visit_detail_concept_id = 9202 -- OMOP 'Outpatient Visit'
 ),
 
 -- band age once so the group-by keys on a plain column (BL-004)
-opd_encounters_banded as (
+outpatient_encounters_banded as (
     select
-        date,
+        visit_detail_start_date,
         tamanu_facility_id,
         location_group_id,
         location_group_name,
         sex,
         {{ standard_age_group('age_years') }} as age_group
-    from opd_encounters
+    from outpatient_encounters
 )
 
 {% set has_tupaia_mapping = var('has_tupaia_facility_mapping', false) %}
 
 select
-    b.date,
+    b.visit_detail_start_date,
     b.tamanu_facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has configured its own
     -- tupaia_facility_mapping seed (BL-006). Never referenced when the flag is unset, so
@@ -86,14 +89,14 @@ select
     b.location_group_name,
     b.sex,
     b.age_group,
-    count(*) as total_opd_visits
-from opd_encounters_banded b
+    count(*) as total_outpatient_visits
+from outpatient_encounters_banded b
 {% if has_tupaia_mapping %}
 left join {{ ref('tupaia_facility_mapping') }} tm
     on tm.tamanu_facility_id = b.tamanu_facility_id
 {% endif %}
 group by
-    b.date,
+    b.visit_detail_start_date,
     b.tamanu_facility_id,
     -- a constant needs no grouping, so this only appears here when it's a real column
     {% if has_tupaia_mapping %}

@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ds__opd_visits
-    description: "{{ doc('ds__opd_visits') }}"
+  - name: ds__outpatient_visit
+    description: "{{ doc('ds__outpatient_visit') }}"
     config:
       tags:
         - clinical
@@ -11,9 +11,9 @@ models:
       domain: clinical
       create_data_table: true
     columns:
-      - name: date
+      - name: visit_detail_start_date
         data_type: date
-        description: "{{ doc('generic__date') }} of the OPD visit."
+        description: "{{ doc('clinical__visit_detail__visit_detail_start_date') }}"
         meta:
           data_table_filter: date
       - name: tamanu_facility_id
@@ -21,7 +21,7 @@ models:
         description: "{{ doc('generic__facility_id') }} of the visit's location."
       - name: tupaia_facility_id
         data_type: character varying(255)
-        description: "{{ doc('ds__opd_visits__tupaia_facility_id') }}"
+        description: "{{ doc('ds__outpatient_visit__tupaia_facility_id') }}"
         meta:
           data_table_filter: array
       - name: location_group_id
@@ -39,11 +39,11 @@ models:
           data_table_filter: array
       - name: age_group
         data_type: character varying(255)
-        description: "{{ doc('ds__opd_visits__age_group') }}"
+        description: "{{ doc('ds__outpatient_visit__age_group') }}"
         meta:
           data_table_filter: array
-      - name: total_opd_visits
+      - name: total_outpatient_visits
         data_type: bigint
-        description: "{{ doc('ds__opd_visits__total_opd_visits') }}"
+        description: "{{ doc('ds__outpatient_visit__total_outpatient_visits') }}"
         meta:
           data_table_metric: sum
