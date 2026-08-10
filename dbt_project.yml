@@ -52,7 +52,18 @@ models:
         - base
     intermediate:
       +materialized: ephemeral
+    ref:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
     maps:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
       # MSF OCA DHIS2 shared mappings -- disabled unless the deployment sets
       # var('msf_oca_dhis2'). Keeps MSF-instance-specific UIDs out of non-MSF builds.
       msf_oca:
@@ -60,6 +71,12 @@ models:
         +materialized: view
         +tags:
           - msf-oca-dhis2
+    clinical:
+      +docs:
+        show: true
+      +materialized: "{{ 'view' if target.name.startswith('reporting_') else 'table' }}"
+      +tags:
+        - clinical
     datasets:
       +docs:
         show: true
