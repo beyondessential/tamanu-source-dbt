@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-07-22 |
+| **Last updated** | 2026-08-10 |
 
 The OMOP-lite `VISIT_OCCURRENCE` domain — the canonical encounter surface every
 `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to for visit

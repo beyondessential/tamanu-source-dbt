@@ -31,8 +31,8 @@ duration is not included; see BL-005.
 
 **One row per** `(visit_detail_start_date, tamanu_facility_id, location_group_id,
 location_group_name, sex, age_group)`. The underlying subject is the **encounter** (its
-intake segment); rows are
-aggregated counts. Encounters whose area doesn't resolve (no area assigned, or a
+intake segment); rows are aggregated counts. Encounters whose area doesn't resolve (no
+area assigned, or a
 soft-deleted area) carry `location_group_id = 'locationgroup-unknown'` and
 `location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
 visit total; `tamanu_facility_id` is unaffected by a missing area (see BL-003) and is only
@@ -50,7 +50,7 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 | `location_group_name` | text | Area name; `'Unknown'` when the area doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
 | `age_group` | text | Outpatient visit age band at the visit date, per the WHO primary age classification's range boundaries (see BL-004) |
-| `total_outpatient_visits` | integer | `count(*)` of outpatient visits. `data_table_metric: sum` |
+| `total_outpatient_visits` | bigint | `count(*)` of outpatient visits. `data_table_metric: sum` |
 
 ## Business logic
 

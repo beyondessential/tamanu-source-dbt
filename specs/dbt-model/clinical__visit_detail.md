@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-07-22 |
+| **Last updated** | 2026-08-10 |
 
 The OMOP-lite `VISIT_DETAIL` domain — the intra-visit phase breakdown that sits **below**
 [`clinical__visit_occurrence`](clinical__visit_occurrence.md). Where `VISIT_OCCURRENCE`
