@@ -1,7 +1,8 @@
 {% macro age_group__who_primary_classification(age_column) %}
 {#
     WHO "primary" age classification bands, labelled by range rather than the WHO category
-    name: 0-14, 15-24, 25-44, 45-59, 60-74, 75+.
+    name: 0-14 (Children), 15-24 (Youth), 25-44 (Young Adults), 45-59 (Middle Age),
+    60-74 (Elderly / Older Persons), 75+ (Seniors).
 
     Source: https://wellfr.com/understanding-the-who-classification-of-age-groups-according-to-who
     (an aggregator page, not a primary who.int publication -- cited as the exact source

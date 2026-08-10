@@ -31,13 +31,11 @@ duration is not included; see BL-005.
 
 **One row per** `(visit_detail_start_date, tamanu_facility_id, location_group_id,
 location_group_name, sex, age_group)`. The underlying subject is the **encounter** (its
-intake segment); rows are aggregated counts. Encounters whose area doesn't resolve (no
-area assigned, or a
-soft-deleted area) carry `location_group_id = 'locationgroup-unknown'` and
-`location_group_name = 'Unknown'` (an "unknown clinic" bucket) but are still counted in the
-visit total; `tamanu_facility_id` is unaffected by a missing area (see BL-003) and is only
-NULL when the encounter has no location at all. `tupaia_facility_id` is never NULL — it's
-the data table's filter column, so it carries `'Not available'` instead (see BL-006).
+intake segment); rows are aggregated counts. Encounters with no resolvable area still
+count, under a `'locationgroup-unknown'`/`'Unknown'` sentinel pair; `tamanu_facility_id`
+is unaffected by a missing area and is NULL only when there's no location at all (BL-003).
+`tupaia_facility_id` is never NULL — it's the data table's filter column, so it carries
+`'Not available'` instead (BL-006).
 
 ## Output schema
 
@@ -61,42 +59,30 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 - **BL-002 (outpatient inclusion + intake attribution):** Outpatient visits are the
   **first** segment of each encounter (`clinical__visit_detail` where
   `preceding_visit_detail_id is null`) whose `visit_detail_concept_id = 9202` (OMOP
-  'Outpatient Visit', from `map__omop_visit_type`). Filtering on the OMOP concept rather
-  than the raw Tamanu `visit_detail_source_value` means inclusion is driven by the
-  OMOP-standard mapping, not a hand-picked list of source strings — today that mapping
-  covers `clinic`, `vaccination`, **and `imaging`** (all three map to 9202); a future
-  deployment-specific encounter type would be included automatically if
-  `map__omop_visit_type` maps it to 9202, with no change needed here.
+  'Outpatient Visit', from `map__omop_visit_type`). Filtering on the OMOP concept (not the
+  raw `visit_detail_source_value`) ties inclusion to the OMOP-standard mapping — today that
+  covers `clinic`, `vaccination`, **and `imaging`** (all three map to 9202).
   `visit_detail_start_date` and `location_group_id` come from that intake segment.
 - **BL-003 (facility + clinic name, resolved independently):** `tamanu_facility_id` and the
-  clinic name are two separate lookups, not a chain. `tamanu_facility_id` is joined from
+  clinic name are two separate lookups, not a chain. `tamanu_facility_id` comes from
   `bases/locations` (`clinical__visit_detail.location_id` → `locations.facility_id`) — a
-  location always carries its own facility, regardless of whether it also has an area.
-  `tamanu_facility_id` is only NULL when the encounter has no location at all (or that
-  location was later soft-deleted).
+  location always carries its own facility, whether or not it has an area — so it's NULL
+  only when the encounter has no location at all (or that location was later soft-deleted).
 
-  The clinic (`location_group_name`/`location_group_id`) is joined from `ref__care_site`
-  (`care_site_type = 'area'`) on the intake segment's `care_site_id`. Only the **clinic** is
-  genuinely unknown when the area doesn't resolve — and both sentinels trigger off the same
-  condition (the join producing no match), so they always land together: `location_group_id`
-  is `coalesce(cs.care_site_id, 'locationgroup-unknown')` and `location_group_name` is
-  `coalesce(cs.care_site_name, 'Unknown')`, both driven by the *joined* `care_site_id`, not
-  the raw segment `care_site_id`. This covers two distinct cases identically: no area was
-  ever assigned, or an area was assigned but has since been soft-deleted and no longer
-  resolves in `ref__care_site`. A real `location_group_id` never pairs with an `'Unknown'`
-  name, or vice versa. A future `relationships` test on `location_group_id` must exclude the
-  `'locationgroup-unknown'` sentinel rather than treat it as a broken FK.
-- **BL-004 (sex + age band):** `sex` from `clinical__person.gender_source_value`; age in
+  The clinic (`location_group_name`/`location_group_id`) comes from `ref__care_site`
+  (`care_site_type = 'area'`) on the intake segment's `care_site_id`. Both sentinels are
+  driven off the same *joined* `care_site_id`, not the raw segment value —
+  `location_group_id` is `coalesce(cs.care_site_id, 'locationgroup-unknown')`,
+  `location_group_name` is `coalesce(cs.care_site_name, 'Unknown')` — so a missing area
+  (never assigned, or soft-deleted since) always yields both sentinels together; a real
+  `location_group_id` never pairs with an `'Unknown'` name, or vice versa.
+- **BL-004 (sex + age band):** `sex` is `clinical__person.gender_source_value`. Age in
   whole years at the visit date is computed from `year_of_birth`/`month_of_birth`/
-  `day_of_birth` and banded by the `age_group__who_primary_classification` macro, using the
-  WHO primary age classification's range boundaries but labelled by range rather than WHO's
-  category name: `0-14 / 15-24 / 25-44 / 45-59 / 60-74 / 75+ years`. Source:
-  https://wellfr.com/understanding-the-who-classification-of-age-groups-according-to-who
-  (see the macro's own docstring for the caveat on this source). The join to
-  `clinical__person` is an inner join: `bases/patients` excludes soft-deleted and
-  merged-away patients, so a visit whose patient was later deleted or merged is excluded
-  from the dataset entirely, not counted with blank
-  demographics.
+  `day_of_birth` and banded by the `age_group__who_primary_classification` macro (see its
+  docstring for the band boundaries and source). The join to `clinical__person` is an inner
+  join — `bases/patients` excludes soft-deleted and merged-away patients, so a visit whose
+  patient was later deleted or merged is excluded from the dataset entirely, not counted
+  with blank demographics.
 - **BL-005 (no duration measure):** encounter duration is deliberately omitted. Outpatient/
   clinic encounters are auto-discharged, so `end - start` does not reflect real time spent
   and would misrepresent wait/consultation time. The additive measure is
@@ -104,46 +90,31 @@ the data table's filter column, so it carries `'Not available'` instead (see BL-
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
   `tamanu_facility_id` through a `tupaia_facility_mapping` seed (columns
   `tamanu_facility_id`, `tupaia_facility_id`) that **only exists in a deployment's own repo**
-  — `tamanu-source-dbt` never defines this seed itself. The join is gated behind a
-  namespaced integration flag, `var('integrations', {}).get('tupaia', {}).get('enabled',
-  false)`, rather than a one-off boolean var — this keeps the `vars:` block from growing a
-  new flat flag for every Tupaia-related mapping added over time (facility mapping today,
-  potentially others later); `dhis2` and `senaite` are expected to follow the same
-  `integrations.<name>.enabled` shape as they gain similar deployment-specific mappings.
-  When the flag is off (the default, including every standalone build of
-  `tamanu-source-dbt`), the `ref()` to the seed is never rendered at all, so the model still
-  compiles with no seed present. A deployment that has set up its own mapping sets:
+  — `tamanu-source-dbt` never defines it. The join is gated behind a namespaced flag,
+  `var('integrations', {}).get('tupaia', {}).get('enabled', false)`, rather than a one-off
+  boolean, so the `vars:` block doesn't grow a new flag per Tupaia mapping over time. When
+  the flag is off (the default, including every standalone build), the `ref()` to the seed
+  is never rendered, so the model compiles with no seed present. A deployment enables it
+  via:
   ```yaml
   vars:
     integrations:
       tupaia:
         enabled: true
   ```
-  in its own `dbt_project.yml`, alongside supplying `seeds/tupaia_facility_mapping.csv`. If
-  a deployment sets `integrations.tupaia.enabled: true` without providing the seed, the
-  build fails loudly (missing `ref()`) rather than silently shipping a placeholder — this is
-  intentional. Note this flag is deployment-wide for Tupaia (not per-mapping): enabling it
-  commits the deployment to supplying every Tupaia-related seed `tamanu-source-dbt` expects
-  under this flag, not just this one.
+  in its own `dbt_project.yml`, alongside supplying `seeds/tupaia_facility_mapping.csv`.
+  Enabling the flag without the seed fails the build loudly (missing `ref()`) rather than
+  shipping a placeholder — intentional. The flag is deployment-wide for Tupaia, not
+  per-mapping: enabling it commits the deployment to supplying every Tupaia seed this repo
+  expects under it, not just this one.
 
   **Never NULL:** `tupaia_facility_id` is the model's `data_table_filter` column, and
   Tupaia's default array filter (`col = any(coalesce(:param, array[col]))`) silently drops
-  rows where `col` is NULL — a NULL facility id would simply vanish from any view that
-  doesn't pass an explicit filter value. So `tupaia_facility_id` is `'Not available'`
-  whenever a real value isn't available: the flag is off, the flag is on but the facility has
-  no entry in the seed (`coalesce(tm.tupaia_facility_id, 'Not available')`), or (per BL-003)
-  `tamanu_facility_id` itself is NULL.
-
-  **Uniqueness contract:** the join is `tm.tamanu_facility_id = b.tamanu_facility_id`,
-  executed before the `count(*)` that produces `total_outpatient_visits`. If
-  `tamanu_facility_id` is not unique in the seed (a duplicated row, or one Tamanu facility
-  deliberately mapped to more than one Tupaia entity), every outpatient visit at that
-  facility fans out and is counted once per matching seed row —
-  `total_outpatient_visits` silently inflates, breaking the additive-count guarantee in
-  BL-005/Purpose. `tamanu-source-dbt` cannot enforce or even see this, since the seed only
-  exists in deployment repos. **Every deployment that sets
-  `integrations.tupaia.enabled: true` must add a `unique` test on `tamanu_facility_id` to
-  its own `seeds/tupaia_facility_mapping.csv` schema** as a condition of enabling the flag.
+  rows where `col` is NULL — a NULL facility id would vanish from any view that doesn't pass
+  an explicit filter. `tupaia_facility_id` is therefore `'Not available'` whenever a real
+  value isn't available: the flag is off, the flag is on but the facility has no seed entry
+  (`coalesce(tm.tupaia_facility_id, 'Not available')`), or (per BL-003) `tamanu_facility_id`
+  itself is NULL.
 
 ## Acceptance criteria
 
