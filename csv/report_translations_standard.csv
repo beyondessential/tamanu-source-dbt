@@ -314,10 +314,18 @@ report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
 report.reporting.rolePermissions,Role permissions
+report.reporting.triageActiveCareDateTime,Time of active care/admission
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
+report.reporting.triageChiefComplaint,Chief complaint
+report.reporting.triageDateTime,Time of triage
+report.reporting.triageEdOutcome,Discharged from ED or admitted
 report.reporting.triageRecordCount,Number of triage records
+report.reporting.triageSecondaryComplaint,Secondary complaint
+report.reporting.triageTargetTimeMet,Target time met
+report.reporting.triageTotalLengthOfStay,Total length of stay triage to discharge (hh:mm:ss)
 report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
+report.reporting.triageWaitingTimeToActiveCare,Waiting time triage to active care (hh:mm:ss)
 report.reporting.userDesignations,Designations
 report.reporting.userDisplayId,User ID
 report.reporting.userEmail,User email
