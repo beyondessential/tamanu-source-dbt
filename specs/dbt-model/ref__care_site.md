@@ -37,10 +37,10 @@ coexist in the single OMOP `CARE_SITE` table (which is heterogeneous by design):
 
 Each row is denormalised with its parent facility's id, name, and type.
 
-Location_groups (areas) are **not** a grain here. A `ds__` dataset that needs area-level
-context joins `bases/locations` → `bases/location_groups` directly — that link is a
-dataset-layer concern, not a `ref__care_site` one (see `ds__emergency_visit` BL-003 for the
-pattern).
+Location_groups (areas) are **not** a grain here. A consumer that needs area-level context
+joins `bases/locations` → `bases/location_groups` directly — that link is a consumer-layer
+concern, not a `ref__care_site` one (see `metric__emergency_care` BL-007, which resolves
+facility the same way and notes why area is not a disaggregation there).
 
 **Why a wrapper.** Tamanu stores care-site structure as `departments` and `locations`, each
 linked to a `facilities` row. `ref__care_site` gives downstream models a typed, OMOP-named
