@@ -10,7 +10,7 @@
 -- (BL-003) -- clinical__visit_detail.care_site_id is location-grained, so this dataset
 -- resolves area for itself rather than reading it from the clinical layer. Additive count
 -- only, so it can be aggregated to any period. See specs/dbt-model/ds__emergency_visit.md
--- for BL-001..BL-007.
+-- for BL-001..BL-008.
 
 with visit_detail as (
     select * from {{ ref('clinical__visit_detail') }}
@@ -39,6 +39,10 @@ location_groups as (
 emergency_encounters as (
     select
         vd.visit_detail_start_date,
+        -- string period column at month grain, for Tupaia data tables: the transform layer
+        -- runs alasql, which cannot bucket a date to a month, and the generator's date-range
+        -- params key on string period columns (BL-008)
+        to_char(vd.visit_detail_start_date, 'YYYY-MM') as yearmonth,
         loc.facility_id as tamanu_facility_id,
         -- both sentinels trigger off the same location_groups-lookup miss (the segment's
         -- location has no location_group, or that location_group was soft-deleted), so a
@@ -94,6 +98,7 @@ emergency_encounters as (
 emergency_encounters_banded as (
     select
         visit_detail_start_date,
+        yearmonth,
         tamanu_facility_id,
         location_group_id,
         location_group_name,
@@ -107,6 +112,7 @@ emergency_encounters_banded as (
 
 select
     b.visit_detail_start_date,
+    b.yearmonth,
     b.tamanu_facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has set
     -- integrations.tupaia.enabled and supplied its own tupaia_facility_mapping seed
@@ -133,6 +139,7 @@ left join {{ ref('tupaia_facility_mapping') }} tm
 {% endif %}
 group by
     b.visit_detail_start_date,
+    b.yearmonth,
     b.tamanu_facility_id,
     -- a constant needs no grouping, so this only appears here when it's a real column
     {% if has_tupaia_mapping %}
