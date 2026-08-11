@@ -7,8 +7,9 @@ downstream clinical event models.
 
 {% docs clinical__visit_occurrence__visit_concept_id %}
 OMOP standard Visit concept ID for the encounter type (9201 Inpatient Visit,
-9202 Outpatient Visit, 9203 Emergency Room Visit). NULL when the encounter type
-has no corresponding standard concept.
+9202 Outpatient Visit, 9203 Emergency Room Visit, or 262 for an ER-to-admission episode).
+Never NULL -- an encounter whose encounter_type has no corresponding standard concept is
+excluded from this model entirely, not kept with a NULL concept.
 {% enddocs %}
 
 {% docs clinical__visit_occurrence__visit_start_date %}
@@ -33,5 +34,6 @@ record) for Tamanu-sourced encounters.
 {% enddocs %}
 
 {% docs clinical__visit_occurrence__care_site_id %}
-UUID of the department the encounter is assigned to. FK to ref__care_site.care_site_id.
+UUID of the encounter's location; the raw location_id. FK to ref__care_site.care_site_id
+(location-type rows). NULL only when the encounter has no location_id recorded.
 {% enddocs %}
