@@ -17,6 +17,16 @@ vars:
   datetime_without_seconds_format: YYYY-MM-DD HH24:MI
   yearmonth_format: YYYY-MM
   translation_prefix: report.reporting
+  # Target waiting time in minutes by triage category, used by the emergency triage
+  # line list's "Target time met" column. Defaults to the Australasian Triage Scale
+  # (Category 1 immediate). A deployment whose policy differs overrides the whole map
+  # in its own dbt_project.yml.
+  triage_target_minutes:
+    "1": 0
+    "2": 10
+    "3": 30
+    "4": 60
+    "5": 120
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
     - default

@@ -1,0 +1,146 @@
+version: 2
+
+models:
+  - name: ds__emergency_triage
+    description: >
+      One row per emergency department presentation, combining the triage record with the
+      presenting complaints, diagnoses and medications of its encounter, the waiting time to
+      active care, whether the triage category's target waiting time was met, and how the
+      presentation ended. Backs the emergency triage line list report.
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: triage_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in triages."
+        tests:
+          - not_null:
+              name: ac_001_ds__emergency_triage_triage_id_not_null
+          - unique:
+              name: ac_001_ds__emergency_triage_triage_id_unique
+      - name: encounter_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__encounter_id') }}"
+        tests:
+          - not_null:
+              name: ac_001_ds__emergency_triage_encounter_id_not_null
+      - name: patient_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+      - name: display_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__display_id') }}"
+      - name: first_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__first_name') }}"
+      - name: last_name
+        data_type: character varying(255)
+        description: "{{ doc('patients__last_name') }}"
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: village_id
+        data_type: character varying(255)
+        description: "{{ doc('patients__village_id') }}"
+      - name: village
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the patient's village."
+      - name: date_of_birth
+        data_type: date
+        description: "{{ doc('patients__date_of_birth') }}"
+      - name: age
+        data_type: integer
+        description: Age in whole years at the time of triage.
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} the presentation took place at."
+      - name: department_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} of the department the patient was triaged in."
+      - name: arrival_datetime
+        data_type: timestamp
+        description: "{{ doc('triages__arrival_time') }}"
+      - name: arrival_mode
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of how the patient arrived."
+      - name: triage_datetime
+        data_type: timestamp
+        description: "{{ doc('triages__triage_time') }}"
+        tests:
+          - not_null:
+              name: ac_001_ds__emergency_triage_triage_datetime_not_null
+      - name: score
+        data_type: text
+        description: "{{ doc('triages__score') }}"
+      - name: triage_category
+        data_type: text
+        description: The triage score written as a category, for example Category 3.
+      - name: chief_complaint
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the chief complaint."
+      - name: secondary_complaint
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the secondary complaint."
+      - name: clinician_id
+        data_type: character varying(255)
+        description: "{{ doc('triages__practitioner_id') }}"
+      - name: clinician
+        data_type: character varying(255)
+        description: "{{ doc('generic__user') }} who triaged the patient."
+      - name: diagnoses
+        data_type: text
+        description: Diagnoses recorded during the encounter, comma separated.
+      - name: medications
+        data_type: text
+        description: Medications prescribed during the encounter, comma separated.
+      - name: active_care_datetime
+        data_type: timestamp
+        description: When the patient moved from triage into active care or admission.
+      - name: waiting_time_seconds
+        data_type: bigint
+        description: >
+          Seconds between triage and the start of active care. Empty while the patient is
+          still waiting.
+      - name: target_wait_minutes
+        data_type: integer
+        description: Target waiting time in minutes for the patient's triage category.
+      - name: encounter_type
+        data_type: character varying(255)
+        description: "{{ doc('encounters__encounter_type') }}"
+      - name: is_admitted_from_ed
+        data_type: boolean
+        description: >
+          Whether the presentation went on to an inpatient admission, taken from the
+          encounter's OMOP visit concept.
+      - name: ed_outcome
+        data_type: text
+        description: >
+          How the presentation ended -- Admitted where it became an inpatient admission, or
+          Discharged. Empty while the patient is still in the department. A death is not a
+          separate outcome; see discharge_disposition.
+      - name: discharge_disposition_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} id of the discharge disposition."
+      - name: discharge_disposition
+        data_type: character varying(255)
+        description: "{{ doc('generic__reference_data') }} of the discharge disposition."
+      - name: discharge_datetime
+        data_type: timestamp
+        description: When the encounter ended.
+      - name: length_of_stay_seconds
+        data_type: bigint
+        description: >
+          Seconds between triage and the end of the encounter. Empty while the encounter is
+          open.
+      - name: target_time_met
+        data_type: text
+        description: >
+          Whether the patient was seen within the target waiting time for their triage
+          category -- Yes or No. Empty while the patient is still waiting, or where the
+          category has no configured target.

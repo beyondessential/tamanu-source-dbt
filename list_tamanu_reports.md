@@ -116,6 +116,31 @@ Facility, Cause of death, Due to (or as a consequence of), Other contributing co
 
 ---
 
+### Emergency triage line list *(sensitive version available)*
+
+**Report Description**
+
+This report generates a list of emergency department presentations triaged within the selected date range, one row per triage record, in order of triage time.
+
+For each presentation the report includes the triage category and arrival mode, the chief and secondary complaint, any diagnoses and medications recorded during the encounter, and the times of triage and of the start of active care.
+
+'Waiting time triage to active care' is the interval between triage and the time the triage record was closed, shown as total hours, minutes and seconds (hh:mm:ss). A stay longer than a day appears as, for example, 29:28:00.
+
+'Target time met' compares that waiting time against the target for the patient's triage category. Targets default to the Australasian Triage Scale (Category 1 immediate, Category 2 within 10 minutes, Category 3 within 30, Category 4 within 60, Category 5 within 120) and are configured per deployment. The column is blank while a patient is still waiting.
+
+'Discharged from ED or admitted' shows 'Admitted' where the encounter went on to an inpatient admission, and 'Discharged' where the encounter has ended. It is blank while the encounter is still open. A death in the department is not reported as a separate outcome -- the discharge disposition column carries it.
+
+'Total length of stay' runs from triage to the end of the encounter, so for an admitted patient it spans the whole inpatient episode.
+
+**Filters**
+
+Facility, Department, Triage category
+
+**Default date range**: 30days
+
+
+---
+
 ### Encounter diets line list *(sensitive version available)*
 
 **Report Description**
