@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ds__emergency_visit
-    description: "{{ doc('ds__emergency_visit') }}"
+  - name: ds__outpatient_visit
+    description: "{{ doc('ds__outpatient_visit') }}"
     config:
       tags:
         - clinical
@@ -21,17 +21,17 @@ models:
         description: "{{ doc('generic__facility_id') }} of the visit's location."
       - name: tupaia_facility_id
         data_type: character varying(255)
-        description: "{{ doc('ds__emergency_visit__tupaia_facility_id') }}"
+        description: "{{ doc('ds__outpatient_visit__tupaia_facility_id') }}"
         meta:
           data_table_filter: array
       - name: location_group_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group_id') }} (the ED area). 'locationgroup-unknown' when the segment's location has no area, or that area was soft-deleted (no longer resolves in location_groups)."
+        description: "{{ doc('generic__location_group_id') }} (the area). 'locationgroup-unknown' when the visit's location has no area, or that area was soft-deleted (no longer resolves in location_groups)."
         meta:
           data_table_filter: array
       - name: location_group_name
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group') }} (the ED area)."
+        description: "{{ doc('generic__location_group') }} (the area)."
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
@@ -39,16 +39,11 @@ models:
           data_table_filter: array
       - name: age_group
         data_type: character varying(255)
-        description: "{{ doc('ds__emergency_visit__age_group') }}"
+        description: "{{ doc('ds__outpatient_visit__age_group') }}"
         meta:
           data_table_filter: array
-      - name: is_inpatient_admission
-        data_type: boolean
-        description: "{{ doc('ds__emergency_visit__is_inpatient_admission') }}"
-        meta:
-          data_table_filter: array
-      - name: total_emergency_visits
+      - name: total_outpatient_visits
         data_type: bigint
-        description: "{{ doc('ds__emergency_visit__total_emergency_visits') }}"
+        description: "{{ doc('ds__outpatient_visit__total_outpatient_visits') }}"
         meta:
           data_table_metric: sum
