@@ -6,6 +6,15 @@ visit age band, and whether the attendance led to an inpatient admission. Additi
 only, so it can be aggregated to any period.
 {% enddocs %}
 
+{% docs ds__emergency_visit__yearmonth %}
+Calendar month of the attendance, as 'YYYY-MM'. Functionally dependent on
+visit_detail_start_date, so it does not change the dataset's day grain -- it exists so a
+Tupaia data table can group at month grain in the database, rather than returning every
+day's row for the transform layer to bucket (which it cannot do: the transform layer runs
+alasql, with no date-to-month function). Matches the yearmonth column convention shared by
+other Tupaia-facing datasets.
+{% enddocs %}
+
 {% docs ds__emergency_visit__location_group_id %}
 UUID of the intake segment's location_group (the ED area). 'locationgroup-unknown' (not a
 real FK value) when the segment's location has no location_group, or that location_group

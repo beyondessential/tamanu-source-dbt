@@ -71,6 +71,7 @@ grain, not a case specific to this dataset.
 | Column | Type | Notes |
 |---|---|---|
 | `visit_detail_start_date` | date | Calendar day of the intake segment (OMOP `VISIT_DETAIL.visit_detail_start_date`). `data_table_filter: date` |
+| `yearmonth` | text | Calendar month of the attendance, `'YYYY-MM'`. Functionally dependent on `visit_detail_start_date`, so it does not change the grain (BL-008). `data_table_filter: yearmonth` |
 | `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of area. Never NULL — an encounter whose location doesn't resolve is excluded from the dataset entirely (BL-003), not surfaced with a NULL value here. Not filterable — `tupaia_facility_id` is the filter column instead |
 | `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
 | `location_group_id` | uuid | Area (the ED area). `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `bases/location_groups.id`. `data_table_filter: array` |
@@ -85,7 +86,9 @@ grain, not a case specific to this dataset.
 - **BL-001:** Grain is one row per `(visit_detail_start_date, tamanu_facility_id,
   location_group_id, location_group_name, sex, age_group, is_inpatient_admission)`. Sourced
   from `clinical__` models, `bases/locations` and `bases/location_groups` (BL-003), and a
-  deployment-only seed (BL-006) — see Dependencies.
+  deployment-only seed (BL-006) — see Dependencies. `yearmonth` (BL-008) is also in the
+  `group by` but is functionally dependent on `visit_detail_start_date`, so it adds no
+  grain.
 - **BL-002 (ED inclusion + intake attribution):** ED attendances are the **first** segment
   of each encounter (`clinical__visit_detail` where `preceding_visit_detail_id is null`)
   whose `visit_detail_concept_id = 9203` (OMOP 'Emergency Room Visit', from
@@ -229,6 +232,25 @@ grain, not a case specific to this dataset.
   dataset — it is `clinical__visit_occurrence`'s own BL-002 risk, already guarded by that
   model's AC-011 (`data_test__clinical__visit_occurrence`) and by
   `data_test__map__omop_visit_type_coverage` upstream of it.
+- **BL-008 (`yearmonth`, a string period column for the Tupaia data table):** `yearmonth` is
+  `to_char(visit_detail_start_date, 'YYYY-MM')`. It is functionally dependent on
+  `visit_detail_start_date`, so adding it to the `group by` does not change the grain
+  (BL-001) — every row that had a distinct date already had a distinct month.
+
+  It exists because of a constraint in the consuming layer, not a modelling need. A Tupaia
+  data table can only `group by` columns the dataset actually exposes, and Tupaia's report
+  transform layer runs **alasql**, which has no date-to-month function — so a monthly chart
+  built on `visit_detail_start_date` alone would have to pull every day's row into the
+  transform engine and could not bucket them there anyway. Exposing `yearmonth` lets the
+  database do that aggregation: a monthly ED-attendance chart fetches with
+  `groupByColumns: ['yearmonth']` and gets one row per month.
+
+  `'YYYY-MM'` as a **string** (not a date or an integer) is the established convention for
+  Tupaia-facing datasets across this org — see `data-staging`'s `bes__phr_mel_*` models, and
+  the `date_range_columns` list in `tupaia-data-product`'s data-table generator, which keys
+  its start/end range parameters on `date_string` / `yearmonth` / `week_ending_sunday`.
+  `visit_detail_start_date` is retained alongside it: it stays the day-grain, OMOP-faithful
+  column, and the dataset remains additive to any period (BL-005).
 
 ## Acceptance criteria
 
