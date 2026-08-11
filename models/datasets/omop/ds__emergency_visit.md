@@ -6,17 +6,6 @@ visit age band, and whether the attendance led to an inpatient admission. Additi
 only, so it can be aggregated to any period.
 {% enddocs %}
 
-{% docs ds__emergency_visit__location_group_id %}
-UUID of the intake segment's location_group (the ED area). 'locationgroup-unknown' (not a
-real FK value) when the segment's location has no location_group, or that location_group
-no longer resolves; otherwise FK to bases/location_groups.
-{% enddocs %}
-
-{% docs ds__emergency_visit__location_group_name %}
-Name of the intake segment's location_group (the ED area). 'Unknown' when the segment's
-location has no location_group, or that location_group no longer resolves.
-{% enddocs %}
-
 {% docs ds__emergency_visit__age_group %}
 Emergency visit age band at the attendance date, per the WHO primary age classification's
 range boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years',

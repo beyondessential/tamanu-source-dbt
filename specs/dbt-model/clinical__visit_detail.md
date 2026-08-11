@@ -175,7 +175,7 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 
 | Ref | Layer | Role |
 |---|---|---|
-| `encounter_history` | `bases/` | Per-segment department, location, type, clinician, datetime (the timeline) |
+| `encounter_history` | `bases/` | Per-segment department, location, type, clinician, datetime (the timeline); `location_id` used directly as `care_site_id` (BL-006) |
 | `encounters` | `bases/` | Segment/encounter bounds, `person_id`, and the whole-visit fallback (BL-005) |
 | `map__omop_visit_type` | `maps/` | encounter_type → OMOP Visit concept, per segment (inner join; coverage guarded by AC-012) |
 | `clinical__visit_occurrence` | `clinical/` | Parent VISIT_OCCURRENCE; `visit_occurrence_id` FK target (AC-003) |
