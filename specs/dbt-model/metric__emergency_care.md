@@ -258,6 +258,15 @@ crosswalk.
   conditional, so this repo (where the integration is off and no such seed exists) still
   parses and builds. With the integration off the column is the literal `'Not available'`.
 
+  **Turning the var on without the seed fails the whole project's parse**, not just this
+  model: `dbt parse --vars '{integrations: {tupaia: {enabled: true}}}'` here raises
+  `Compilation Error … depends on a node named 'tupaia_facility_mapping' which was not
+  found`. That is the intended failure mode — loud and immediate, rather than a column that
+  silently reads `'Not available'` everywhere — but it means the var and the seed must land
+  in the same change. A deployment enabling the integration adds
+  `seeds/tupaia_facility_mapping.csv` (columns `tamanu_facility_id`, `tupaia_facility_id`)
+  in the same PR.
+
   **Never NULL, deliberately.** The column is a data table filter, and Tupaia's array filter
   pattern (`col = ANY(COALESCE(:param, ARRAY[col]))`) drops NULL rows — a NULL would silently
   disappear that facility from every chart rather than show it as unmapped. Hence the
