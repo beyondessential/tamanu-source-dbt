@@ -10,9 +10,6 @@ models:
       owner: bes-maui
       domain: clinical
       create_data_table: true
-      data_table_permission_groups:
-        - Hospital Admin
-        - Donor
     columns:
       - name: visit_detail_start_date
         data_type: date

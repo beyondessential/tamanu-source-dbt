@@ -37,6 +37,19 @@ unrelated to what a `ds__` dataset needs for a Tupaia "by area" disaggregation. 
 have this dataset inherit whatever grain the clinical layer happens to expose, it resolves
 area for itself.
 
+**Consumer boundary.** This model declares what the data *is* — `create_data_table: true`,
+and per-column `data_table_filter` / `data_table_metric`, which are intrinsic properties of
+the dataset (this column is a measure; this one is a date range). It deliberately does
+**not** declare `data_table_permission_groups`. Permission groups are a per-consumer
+concern, and this repo is shared by every Tamanu deployment — naming one deployment's
+groups here would impose them on every other deployment that reuses the dataset. They are
+set alongside the rest of the consumer's Tupaia configuration, in `tupaia-data-product`.
+
+Note this differs from `.maui/knowledge/standards/tamanu-dbt-conventions.md`, which lists
+`data_table_permission_groups` beside `create_data_table`. That guidance holds for a
+**deployment** repo (`tamanu-dbt-<deployment>`), where permission groups genuinely are
+local to the one deployment the repo serves; it does not hold here.
+
 ## Purpose
 
 **What this measures.** Emergency department attendances ("ED attendances"). An encounter
