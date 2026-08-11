@@ -18,17 +18,6 @@
         "filterBySelectedFacility": true
       },
       {
-        "parameterField": "ParameterAutocompleteField",
-        "label": "Department",
-        "name": "departmentId",
-        "suggesterEndpoint": "department",
-        "suggesterOptions": {
-          "baseQueryParameters": {
-            "filterByFacility": true
-          }
-        }
-      },
-      {
         "parameterField": "ParameterSelectField",
         "label": "Triage category",
         "name": "triageScore",

@@ -134,7 +134,7 @@ For each presentation the report includes the triage category and arrival mode, 
 
 **Filters**
 
-Facility, Department, Triage category
+Facility, Triage category
 
 **Default date range**: 30days
 

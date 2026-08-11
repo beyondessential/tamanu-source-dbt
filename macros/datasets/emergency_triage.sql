@@ -8,15 +8,6 @@ with presentations as (
     select * from {{ ref(triage_source) }}
 ),
 
--- BL-011: the department the patient was triaged in, which is where the encounter began
-triage_department as (
-    select distinct on (eh.encounter_id)
-        eh.encounter_id,
-        eh.department_id
-    from {{ ref('encounter_history') }} eh
-    join presentations p on p.encounter_id = eh.encounter_id
-    order by eh.encounter_id asc, eh.datetime asc
-),
 
 -- BL-006: diagnoses recorded against the presentation's encounter. bases/encounter_diagnoses
 -- already drops disproven and recorded-in-error certainties
@@ -57,8 +48,6 @@ presentation_details as (
         -- BL-002: age as at the time of triage, not today
         date_part('year', age(p.triage_datetime, p.date_of_birth))::integer as age,
         p.facility_id,
-        -- BL-011: fall back to the encounter's department when it has no history
-        coalesce(td.department_id, e.department_id) as department_id,
         p.arrival_datetime,
         p.arrival_mode,
         p.triage_datetime,
@@ -84,7 +73,6 @@ presentation_details as (
     from presentations p
     join {{ ref('encounters') }} e on e.id = p.encounter_id
     left join {{ ref('clinical__visit_occurrence') }} vo on vo.visit_occurrence_id = p.encounter_id
-    left join triage_department td on td.encounter_id = p.encounter_id
     left join encounter_diagnoses_agg dx on dx.encounter_id = p.encounter_id
     left join encounter_medications_agg rx on rx.encounter_id = p.encounter_id
     left join {{ ref('discharges') }} dis on dis.encounter_id = p.encounter_id
@@ -132,7 +120,6 @@ select
     t.date_of_birth,
     t.age,
     t.facility_id,
-    t.department_id,
     t.arrival_datetime,
     t.arrival_mode,
     t.triage_datetime,

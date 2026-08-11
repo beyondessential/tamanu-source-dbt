@@ -41,7 +41,6 @@ at most one triage per encounter.
 | `ds__encounters_emergency` / `ds__sensitive_encounters_emergency` | Triage record with patient demographics, complaints, facility |
 | `clinical__visit_occurrence` | OMOP visit concept, to identify presentations that became inpatient admissions |
 | `encounters` | Encounter type, department and end date |
-| `encounter_history` | Department the patient was triaged in |
 | `encounter_diagnoses` | Diagnoses recorded during the encounter |
 | `encounter_prescriptions`, `prescriptions` | Medications prescribed during the encounter |
 | `discharges` | Discharge disposition |
@@ -71,7 +70,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 - **BL-008:** Every triage category Tamanu can record (1 to 5) has a target waiting time, supplied by `var('triage_target_minutes')`. A triage score the map does not cover, and a map entry that is not a whole non-negative number of minutes, yield no target and therefore no compliance verdict rather than an error; a triage score is mandatory in the triage form but nullable in the model, so the report degrades instead of failing. A category set to zero is met only by a same-second start of active care, which is why Category 1 is given a 2-minute allowance rather than the literal "immediate" of the Australasian Triage Scale.
 - **BL-009:** A presentation is `Admitted` where the encounter's OMOP visit concept is 262 (Emergency Room and Inpatient Visit), otherwise `Discharged` where the encounter has ended, and otherwise empty, which means the encounter is still open. A death is not a separate outcome -- the discharge disposition column carries it.
 - **BL-010:** Total length of stay is the interval from triage to the end of the encounter, so an admitted patient's stay spans their whole inpatient episode.
-- **BL-011:** A presentation is attributed to the facility and to the department its encounter began in, falling back to the encounter's current department when no history exists; both are report parameters only, with Tamanu scoping the department list to the selected facility.
+- **BL-011:** The facility is a report parameter. There is deliberately no department filter: a triage record is itself the evidence that the encounter came through emergency, so the register covers every such encounter regardless of the department it moved to afterwards.
 - **BL-012:** The date range filters on the date of triage in the viewer's timezone and is inclusive of both bounds, defaulting to the past 30 days.
 - **BL-013:** An active care or encounter end time recorded before the time of triage is unusable, so the duration it would produce is left empty rather than shown as zero.
 - **BL-014:** The report exposes the triage category as a parameter.

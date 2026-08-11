@@ -60,9 +60,6 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: "{{ doc('generic__facility_id') }} the presentation took place at."
-      - name: department_id
-        data_type: character varying(255)
-        description: "{{ doc('generic__id') }} of the department the patient was triaged in."
       - name: arrival_datetime
         data_type: timestamp
         description: "{{ doc('triages__arrival_time') }}"

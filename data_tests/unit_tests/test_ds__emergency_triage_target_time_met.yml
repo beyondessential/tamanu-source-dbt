@@ -61,21 +61,6 @@ unit_tests:
           union all
           select 'enc_bad_score', 9203
 
-      - input: ref('encounter_history')
-        format: sql
-        rows: |
-          select 'enc_hit' as encounter_id, 'dept_1' as department_id, '2024-05-15 09:00:00'::timestamp as datetime
-          union all
-          select 'enc_miss', 'dept_1', '2024-05-15 09:00:00'::timestamp
-          union all
-          select 'enc_cat1_late', 'dept_1', '2024-05-15 09:00:00'::timestamp
-          union all
-          select 'enc_cat1_now', 'dept_1', '2024-05-15 09:00:00'::timestamp
-          union all
-          select 'enc_waiting', 'dept_1', '2024-05-15 09:00:00'::timestamp
-          union all
-          select 'enc_bad_score', 'dept_1', '2024-05-15 09:00:00'::timestamp
-
       - input: ref('encounter_diagnoses')
         format: sql
         rows: |
@@ -104,14 +89,14 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'tri_hit' as triage_id, 'enc_hit' as encounter_id, 'pat_1' as patient_id, 'P1' as display_id, 'A' as first_name, 'B' as last_name, 'female' as sex, 'vil_1' as village_id, 'Village' as village, '1990-01-01'::date as date_of_birth, 34 as age, 'fac_1' as facility_id, 'dept_1' as department_id, '2024-05-15 09:00:00'::timestamp as arrival_datetime, 'Ambulance' as arrival_mode, '2024-05-15 09:00:00'::timestamp as triage_datetime, '3' as score, 'Category 3' as triage_category, 'Chest pain' as chief_complaint, null::text as secondary_complaint, 'cli_1' as clinician_id, 'Dr A' as clinician, null::text as diagnoses, null::text as medications, '2024-05-15 09:25:00'::timestamp as active_care_datetime, 1500::bigint as waiting_time_seconds, 30 as target_wait_minutes, 'emergency' as encounter_type, false as is_admitted_from_ed, 'Discharged' as ed_outcome, null::text as discharge_disposition_id, null::text as discharge_disposition, '2024-05-15 12:00:00'::timestamp as discharge_datetime, 10800::bigint as length_of_stay_seconds, 'Yes' as target_time_met
+        select 'tri_hit' as triage_id, 'enc_hit' as encounter_id, 'pat_1' as patient_id, 'P1' as display_id, 'A' as first_name, 'B' as last_name, 'female' as sex, 'vil_1' as village_id, 'Village' as village, '1990-01-01'::date as date_of_birth, 34 as age, 'fac_1' as facility_id, '2024-05-15 09:00:00'::timestamp as arrival_datetime, 'Ambulance' as arrival_mode, '2024-05-15 09:00:00'::timestamp as triage_datetime, '3' as score, 'Category 3' as triage_category, 'Chest pain' as chief_complaint, null::text as secondary_complaint, 'cli_1' as clinician_id, 'Dr A' as clinician, null::text as diagnoses, null::text as medications, '2024-05-15 09:25:00'::timestamp as active_care_datetime, 1500::bigint as waiting_time_seconds, 30 as target_wait_minutes, 'emergency' as encounter_type, false as is_admitted_from_ed, 'Discharged' as ed_outcome, null::text as discharge_disposition_id, null::text as discharge_disposition, '2024-05-15 12:00:00'::timestamp as discharge_datetime, 10800::bigint as length_of_stay_seconds, 'Yes' as target_time_met
         union all
-        select 'tri_miss', 'enc_miss', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', 'dept_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '3', 'Category 3', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:35:00'::timestamp, 2100::bigint, 30, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'No'
+        select 'tri_miss', 'enc_miss', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '3', 'Category 3', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:35:00'::timestamp, 2100::bigint, 30, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'No'
         union all
-        select 'tri_cat1_late', 'enc_cat1_late', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', 'dept_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '1', 'Category 1', 'Cardiac arrest', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:00:01'::timestamp, 1::bigint, 0, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'No'
+        select 'tri_cat1_late', 'enc_cat1_late', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '1', 'Category 1', 'Cardiac arrest', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:00:01'::timestamp, 1::bigint, 0, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'No'
         union all
-        select 'tri_cat1_now', 'enc_cat1_now', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', 'dept_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '1', 'Category 1', 'Cardiac arrest', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:00:00'::timestamp, 0::bigint, 0, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'Yes'
+        select 'tri_cat1_now', 'enc_cat1_now', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '1', 'Category 1', 'Cardiac arrest', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:00:00'::timestamp, 0::bigint, 0, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, 'Yes'
         union all
-        select 'tri_waiting', 'enc_waiting', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', 'dept_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '2', 'Category 2', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, null::timestamp, null::bigint, 10, 'triage', false, null::text, null::text, null::text, null::timestamp, null::bigint, null::text
+        select 'tri_waiting', 'enc_waiting', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '2', 'Category 2', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, null::timestamp, null::bigint, 10, 'triage', false, null::text, null::text, null::text, null::timestamp, null::bigint, null::text
         union all
-        select 'tri_bad_score', 'enc_bad_score', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', 'dept_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '9', 'Category 9', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:25:00'::timestamp, 1500::bigint, null::integer, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, null::text
+        select 'tri_bad_score', 'enc_bad_score', 'pat_1', 'P1', 'A', 'B', 'female', 'vil_1', 'Village', '1990-01-01'::date, 34, 'fac_1', '2024-05-15 09:00:00'::timestamp, 'Ambulance', '2024-05-15 09:00:00'::timestamp, '9', 'Category 9', 'Chest pain', null::text, 'cli_1', 'Dr A', null::text, null::text, '2024-05-15 09:25:00'::timestamp, 1500::bigint, null::integer, 'emergency', false, 'Discharged', null::text, null::text, '2024-05-15 12:00:00'::timestamp, 10800::bigint, null::text

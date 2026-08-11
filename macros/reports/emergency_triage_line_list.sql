@@ -34,15 +34,12 @@ select
         as "{{ translate_label('triageTotalLengthOfStay') }}"
 from {{ ref(dataset) }}
 where
-    -- BL-011: the facility and department the patient was triaged in are selectable, and
-    -- Tamanu scopes the department suggester to the selected facility
+    -- BL-011: the facility is selectable. There is deliberately no department filter -- a
+    -- triage record is itself the evidence the encounter came through emergency, so the
+    -- register covers every such encounter regardless of where it moved afterwards.
     case
         when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
-    end
-    and case
-        when {{ parameter('departmentId') }} is null then true
-        else department_id = {{ parameter('departmentId') }}
     end
     -- BL-014: the triage category is selectable
     and case
