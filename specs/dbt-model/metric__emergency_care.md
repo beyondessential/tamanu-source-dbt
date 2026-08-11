@@ -7,7 +7,7 @@
 | **Name** | `metric__emergency_care` (suite of 3 `metric__` indicators) |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format) |
-| **Materialisation** | `view` |
+| **Materialisation** | env-aware — `view` on `reporting_*`, `table` on `analytics_*` (BL-008) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
@@ -119,9 +119,13 @@ that sums `value_numeric`.
 
 `subject_id` is NULL throughout: these are pre-aggregated counts, not per-subject facts.
 
+`tupaia_facility_id` is **not** part of the grain. It is an attribute of the facility,
+functionally dependent on `facility_id` (BL-009), so it rides along without splitting a row.
+
 ## Output schema
 
-D5 wide format, plus this suite's three disaggregation columns.
+D5 wide format, plus this suite's three disaggregation columns and the Tupaia facility
+crosswalk.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -134,6 +138,7 @@ D5 wide format, plus this suite's three disaggregation columns.
 | `value_numeric` | numeric | Count, or percentage for `ed_admission_rate`. `data_table_metric: sum` |
 | `value_boolean` | boolean | NULL — unused |
 | `facility_id` | uuid | Facility of the intake segment's location. `data_table_filter: array` |
+| `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `tupaia_facility_mapping` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
 | `sex` | text | `clinical__person.gender_source_value`. `data_table_filter: array` |
 | `age_group__who_primary_classification` | text | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
 
@@ -148,9 +153,11 @@ D5 wide format, plus this suite's three disaggregation columns.
   matching every other model in this repo. That is the **DB session** date, which under a UTC
   session can lag a deployment east of UTC by up to a day: for a few hours after local
   midnight on the 1st, the just-completed month is still withheld. Accepted deliberately —
-  the model is a view, so it self-heals within the day, and the alternative
-  (`now() at time zone var('timezone')`) buys a sub-day edge at the cost of diverging from
-  the repo's convention. No test-only variable is used to pin the boundary: unit tests date
+  the alternative (`now() at time zone var('timezone')`) buys a sub-day edge at the cost of
+  diverging from the repo's convention. Note the lag self-heals on the next evaluation, which
+  on `reporting_*` is the next query but on `analytics_*` is **the next `dbt build`** (BL-008)
+  — so on the analytics replica the withheld month appears when the model is next refreshed,
+  not a few hours later. No test-only variable is used to pin the boundary: unit tests date
   their fixtures in the past (always included) or the far future (always excluded), so the
   exclusion is deterministic without one. There is no month spine: a
   month with no ED attendance emits no row rather than a zero, since absence and a true zero
@@ -197,7 +204,11 @@ D5 wide format, plus this suite's three disaggregation columns.
   `round(100.0 * admitted / attendances, 1)`, computed from the same grouping as the two
   counts so it is internally consistent with them. It is a **proportion**: summing it across
   `sex`, age band or facility is meaningless. A consumer aggregating to a coarser grain
-  must re-derive it from `ed_attendance_admitted / ed_attendance`. It is registered anyway —
+  must re-derive it from `ed_attendance_admitted / ed_attendance`. A consumer re-deriving it
+  should also note the **scale**: this column is 0–100, whereas some presentation layers
+  expect a 0–1 fraction (Tupaia's `percentage` value type multiplies by 100), so a chart that
+  re-derives the ratio should emit the bare quotient rather than reuse this scaling. It is
+  registered anyway —
   rather than left to each visual — so the definition is stated once; the registry carries
   its numerator and denominator descriptions. Emitted only where the denominator is
   non-zero, which by construction it always is.
@@ -213,6 +224,56 @@ D5 wide format, plus this suite's three disaggregation columns.
   `ds__emergency_visit`, but areas are sparse in Tamanu and ED-specific area reporting was
   not asked for; a consumer needing it joins `bases/locations` → `bases/location_groups`
   itself, as `ds__emergency_visit` BL-003 did.
+- **BL-008 (materialisation is env-aware):** `view` when `target.name` starts with
+  `reporting_`, `table` otherwise. The reporting bundle must stay production-safe, so nothing
+  there materialises a table against a live deployment database; the analytics replica has no
+  such constraint, and a table there means a dashboard query reads pre-aggregated rows instead
+  of re-scanning the full encounter history on every load. Set on the `metrics:` block in
+  `dbt_project.yml`, so it is the convention for the layer rather than a property of this
+  model. Verified across all four targets in `config/profiles.yml`:
+  `reporting_release`/`reporting_demo` → `view`, `analytics_release`/`analytics_demo` → `table`.
+
+  Consequence for BL-002 above: on `analytics_*` the current-month boundary is evaluated at
+  build time, not query time, so a withheld month appears at the next `dbt build` rather than
+  a few hours later.
+
+  **Caveat — the guard depends on a target-naming convention, and fails towards `table`.**
+  Only `config/profiles.yml` (which the asset build selects via `--profiles-dir config`) uses
+  the `reporting_*` / `analytics_*` prefixes. A developer's `~/.dbt/profiles.yml` names its
+  targets `release`, `demo`, `fiji`, …, and every deployment repo that consumes this project
+  as a package names its own `clone` / `demo` / `replica` / `analytics` — so in all of those
+  a `metric__` model materialises as a **table**, because an unrecognised target falls to the
+  `else`. That is the right outcome for a deployment repo, which builds against a replica, but
+  it is the more invasive materialisation reached by default rather than by decision. Worth
+  considering inverting the test (`table` only when `target.name` starts with `analytics_`,
+  `view` otherwise) so an unrecognised target gets the safe materialisation instead.
+- **BL-009 (Tupaia facility crosswalk):** `tupaia_facility_id` carries Tupaia's id for the
+  facility, so a Tupaia consumer can chart per facility without a crosswalk of its own.
+
+  **Gated, not assumed.** The join to `{{ ref('tupaia_facility_mapping') }}` is emitted only
+  when the deployment sets `integrations.tupaia.enabled` — the `ref()` sits inside the
+  conditional, so this repo (where the integration is off and no such seed exists) still
+  parses and builds. With the integration off the column is the literal `'Not available'`.
+
+  **Never NULL, deliberately.** The column is a data table filter, and Tupaia's array filter
+  pattern (`col = ANY(COALESCE(:param, ARRAY[col]))`) drops NULL rows — a NULL would silently
+  disappear that facility from every chart rather than show it as unmapped. Hence the
+  `coalesce(…, 'Not available')` and AC-008.
+
+  The mapping is a **left** join: an unmapped facility is still counted, labelled
+  `'Not available'`. Under-counting ED activity because a facility is missing from a
+  deployment's crosswalk would be the worse failure.
+
+  This does **not** make `tupaia_facility_id` a metric disaggregation — the registry still
+  lists `facility_id,sex,age_group__who_primary_classification`, and
+  `assert__metric_definitions__disaggregations` would reject a Tupaia-side id. It is a
+  facility attribute, not a dimension the metric is defined over (see Grain).
+- **BL-010 (sensitive facilities are included):** there is deliberately **no**
+  `facilities.is_sensitive` filter. These are pre-aggregated counts with no `subject_id` and
+  no PII, so no patient is identifiable through them; excluding sensitive facilities would
+  silently understate ED activity in exactly the deployments that have them. Recorded in the
+  model's `meta` as `pii: false`, `classification: internal`. A future per-subject
+  `metric__`/`derived__` model at encounter or patient grain would need the opposite default.
 
 ## Acceptance criteria
 
@@ -225,6 +286,7 @@ D5 wide format, plus this suite's three disaggregation columns.
 | AC-005 | `period_granularity` is `not_null` and always `'month'` | BL-002 | dbt `not_null` + `accepted_values` |
 | AC-006 | `value_numeric` is `not_null` | BL-006 | dbt `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | dbt `not_null` |
+| AC-008 | `tupaia_facility_id` is `not_null` — `'Not available'` rather than NULL, so a Tupaia array filter cannot drop the row | BL-009 | dbt `not_null` |
 
 ## Registry entry
 
@@ -254,12 +316,17 @@ deploying country's national HMIS definition".
 | `locations` | `bases/` | `facility_id` of the intake segment's location (BL-007) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 | `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
+| `tupaia_facility_mapping` | `seeds/` (deployment) | Tamanu → Tupaia facility id crosswalk (BL-009). **Conditional** — referenced only when `integrations.tupaia.enabled`, so it is not a dependency in this repo |
 
 ## Consumers
 
 | Consumer | Use |
 |---|---|
-| `tupaia-data-product` `tamanu` source | Data table `tamanu_qos__emergency_care`, backing the Queen of Sheba Emergency → ED attendances card (MAUI-6694) |
+| `tupaia-data-product` `tamanu` source | Data table `tamanu_qos__emergency_care`, backing three Emergency cards for Queen of Sheba (MAUI-6694): ED attendances, ED attendances by admission outcome, ED admission rate |
+
+Those cards are built from **metric-agnostic** templates (`line__metric_count`,
+`bar__metric_split`, `line__metric_ratio`) that take metric ids as parameters, so any
+deployment materialising this model gets the same three cards from configuration alone.
 
 Two things a consumer of this model has to get right, both of which follow from the D5
 wide format rather than from anything ED-specific:
