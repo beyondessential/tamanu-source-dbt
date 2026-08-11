@@ -234,6 +234,24 @@ Three rows in `csv/metric_definitions.csv` — `ed_attendance`,
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 | `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
 
+## Consumers
+
+| Consumer | Use |
+|---|---|
+| `tupaia-data-product` `tamanu` source | Data table `tamanu_qos__emergency_care`, backing the Queen of Sheba Emergency → ED attendances card (MAUI-6694) |
+
+Two things a consumer of this model has to get right, both of which follow from the D5
+wide format rather than from anything ED-specific:
+
+- **Always filter `metric_id`.** All three indicators share the single `value_numeric`
+  column, so a query that does not pin `metric_id` sums unlike things.
+- **`period_start` is a `date`, and a consumer may not be able to take it as one.** Over a
+  JSON boundary a Postgres `date` is a hazard: node-postgres parses it into a JS `Date` at
+  *local* midnight, so serialising to UTC moves the first of a month into the previous
+  month. The Tupaia data table therefore renders it as `'YYYY-MM-DD'` text
+  (`tupaia-data-product` `Dataset._from_clause`); that is a transport concern and is fixed
+  at that boundary, not here — this model stays typed for the warehouse.
+
 ## Related
 
 | Artefact | Relationship |
