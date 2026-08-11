@@ -4,9 +4,9 @@ unit_tests:
     description: >-
       A two-phase encounter (emergency then admission) unfolds into two non-overlapping
       segments: the first ends exactly where the second starts, the last ends at the
-      encounter end, each carries its own per-segment concept, its ward via the location
-      lookup (BL-006), its department attribute (BL-007), and the second points back at
-      the first via preceding_visit_detail_id (AC-006, AC-007, BL-002, BL-003, BL-004).
+      encounter end, each carries its own per-segment concept, its location_id as
+      care_site_id (BL-006), its department attribute (BL-007), and the second points back
+      at the first via preceding_visit_detail_id (AC-006, AC-007, BL-002, BL-003, BL-004).
     given:
       - input: ref('encounters')
         format: sql
@@ -28,12 +28,6 @@ unit_tests:
           union all
           select 'h2', 'e1', '2024-01-01 14:00:00'::timestamp,
                  'depB', 'locB', 'clinY', 'admission'
-      - input: ref('locations')
-        format: sql
-        rows: |
-          select 'locA' as id, 'wardA' as location_group_id
-          union all
-          select 'locB', 'wardB'
       - input: ref('map__omop_visit_type')
         format: sql
         rows: |
@@ -50,7 +44,7 @@ unit_tests:
           '2024-01-01 10:00:00'::timestamp as visit_detail_start_datetime,
           '2024-01-01'::date as visit_detail_end_date,
           '2024-01-01 14:00:00'::timestamp as visit_detail_end_datetime,
-          'wardA' as care_site_id, 'depA' as department_id, 'locA' as location_id,
+          'locA' as care_site_id, 'depA' as department_id,
           'clinX' as provider_id,
           'emergency' as visit_detail_source_value,
           null::varchar as preceding_visit_detail_id
@@ -62,7 +56,7 @@ unit_tests:
           '2024-01-01 14:00:00'::timestamp,
           '2024-01-02'::date,
           '2024-01-02 09:00:00'::timestamp,
-          'wardB', 'depB', 'locB',
+          'locB', 'depB',
           'clinY',
           'admission',
           'h1'
@@ -71,9 +65,9 @@ unit_tests:
     model: clinical__visit_detail
     description: >-
       An encounter with no encounter_history rows gets one synthesized whole-visit segment
-      keyed on the encounter id (BL-005). Its location has no location_group, so the ward
-      care_site_id comes through NULL while the department attribute is retained (BL-006,
-      BL-007). encounter_history is left empty.
+      keyed on the encounter id (BL-005); care_site_id carries the encounter's location_id
+      straight through, and the department attribute is retained (BL-006, BL-007).
+      encounter_history is left empty.
     given:
       - input: ref('encounters')
         format: sql
@@ -95,10 +89,6 @@ unit_tests:
             null::varchar as department_id, null::varchar as location_id,
             null::varchar as clinician_id, null::varchar as encounter_type
           where false
-      - input: ref('locations')
-        format: sql
-        rows: |
-          select 'locC' as id, null::varchar as location_group_id
       - input: ref('map__omop_visit_type')
         format: sql
         rows: |
@@ -113,7 +103,7 @@ unit_tests:
           '2024-03-01 08:00:00'::timestamp as visit_detail_start_datetime,
           '2024-03-01'::date as visit_detail_end_date,
           '2024-03-01 12:00:00'::timestamp as visit_detail_end_datetime,
-          null::varchar as care_site_id, 'depC' as department_id, 'locC' as location_id,
+          'locC' as care_site_id, 'depC' as department_id,
           'clinZ' as provider_id,
           'clinic' as visit_detail_source_value,
           null::varchar as preceding_visit_detail_id
