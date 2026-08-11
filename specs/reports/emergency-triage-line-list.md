@@ -40,7 +40,7 @@ at most one triage per encounter.
 |---|---|
 | `ds__encounters_emergency` / `ds__sensitive_encounters_emergency` | Triage record with patient demographics, complaints, facility |
 | `clinical__visit_occurrence` | OMOP visit concept, to identify presentations that became inpatient admissions |
-| `encounters` | Encounter type, department and end date |
+| `encounters` | Encounter type and end date |
 | `encounter_diagnoses` | Diagnoses recorded during the encounter |
 | `encounter_prescriptions`, `prescriptions` | Medications prescribed during the encounter |
 | `discharges` | Discharge disposition |
