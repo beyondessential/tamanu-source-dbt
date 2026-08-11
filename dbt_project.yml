@@ -72,6 +72,12 @@ models:
       +materialized: "{{ 'view' if target.name.startswith('reporting_') else 'table' }}"
       +tags:
         - clinical
+    metrics:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - metrics
     datasets:
       +docs:
         show: true
