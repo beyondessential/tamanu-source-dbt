@@ -26,12 +26,12 @@ models:
           data_table_filter: array
       - name: location_group_id
         data_type: character varying(255)
-        description: "{{ doc('ds__emergency_visit__location_group_id') }}"
+        description: "{{ doc('generic__location_group_id') }} (the ED area). 'locationgroup-unknown' when the segment's location has no area, or that area was soft-deleted (no longer resolves in location_groups)."
         meta:
           data_table_filter: array
       - name: location_group_name
         data_type: character varying(255)
-        description: "{{ doc('ds__emergency_visit__location_group_name') }}"
+        description: "{{ doc('generic__location_group') }} (the ED area)."
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
