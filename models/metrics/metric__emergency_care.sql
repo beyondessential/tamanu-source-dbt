@@ -50,6 +50,9 @@ ed_attendances as (
         on vo.visit_occurrence_id = vd.visit_occurrence_id
     join locations loc
         on loc.id = vd.care_site_id
+    -- Deliberately no facilities.is_sensitive filter: these are pre-aggregated counts with
+    -- no subject, so the metric covers standard and sensitive facilities alike. Do not add
+    -- one -- excluding sensitive facilities would silently understate ED activity.
     where vd.preceding_visit_detail_id is null
         and vd.visit_detail_concept_id = 9203 -- OMOP 'Emergency Room Visit'
 ),
@@ -126,16 +129,32 @@ unioned as (
 
 -- BL-007: D5 wide format. subject_id and value_boolean are unused -- these are
 -- pre-aggregated counts, not per-subject or boolean facts.
+{% set has_tupaia_mapping = var('integrations', {}).get('tupaia', {}).get('enabled', false) %}
+
 select
-    metric_id,
+    u.metric_id,
     null::text as variant_id,
     null::varchar as subject_id,
-    period_start,
-    (period_start + interval '1 month' - interval '1 day')::date as period_end,
+    u.period_start,
+    (u.period_start + interval '1 month' - interval '1 day')::date as period_end,
     'month'::text as period_granularity,
-    value as value_numeric,
+    u.value as value_numeric,
     null::boolean as value_boolean,
-    facility_id,
-    sex,
-    age_group__who_primary_classification
-from unioned
+    u.facility_id,
+    -- Tupaia facility id crosswalk: joined only when the deployment sets
+    -- integrations.tupaia.enabled and supplies its own tupaia_facility_mapping seed, so this
+    -- model still builds standalone here with no such seed present. Never NULL -- it is a data
+    -- table filter column, and Tupaia's default array filter drops NULL rows, so an unmapped
+    -- or unconfigured facility gets the literal 'Not available'.
+    {% if has_tupaia_mapping -%}
+    coalesce(tm.tupaia_facility_id, 'Not available') as tupaia_facility_id,
+    {%- else -%}
+        'Not available' as tupaia_facility_id,
+    {%- endif %}
+    u.sex,
+    u.age_group__who_primary_classification
+from unioned u
+{%- if has_tupaia_mapping %}
+left join {{ ref('tupaia_facility_mapping') }} tm
+    on tm.tamanu_facility_id = u.facility_id
+{%- endif %}

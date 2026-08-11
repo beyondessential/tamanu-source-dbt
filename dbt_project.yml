@@ -75,7 +75,10 @@ models:
     metrics:
       +docs:
         show: true
-      +materialized: view
+      # env-aware per dbt-conventions / D5: a view in the reporting bundle (must stay
+      # production-safe), a table on the analytics replica so dashboard queries do not
+      # re-aggregate the full history on every read.
+      +materialized: "{{ 'view' if target.name.startswith('reporting_') else 'table' }}"
       +tags:
         - metrics
     datasets:
