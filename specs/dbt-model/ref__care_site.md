@@ -15,10 +15,9 @@
 | **Last updated** | 2026-08-11 |
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
-both Tamanu **departments** (the organizational care unit) and **locations**
-(the room/bed a segment takes place at) as care sites, discriminated by `care_site_type`.
-Gives `clinical__` models a stable, OMOP-named join target for care-site context at
-whichever grain they need. Resolves
+Tamanu **departments** (the organizational care unit) and **locations** (physical
+rooms/beds) as care sites, discriminated by `care_site_type`. Gives `clinical__` models a
+stable, OMOP-named join target for care-site context at whichever grain they need. Resolves
 [`clinical__visit_occurrence` OQ-1](clinical__visit_occurrence.md) — `care_site_id` on
 `clinical__visit_occurrence` has a canonical FK target. See
 [D2](../../.maui/knowledge/architecture/data-architecture/decisions.md) (`ref__` layer,
@@ -30,38 +29,41 @@ whichever grain they need. Resolves
 
 **What this artefact represents.** One row per Tamanu care unit, at two grains that
 coexist in the single OMOP `CARE_SITE` table (which is heterogeneous by design):
-- **department** (`care_site_type = 'department'`) — the organizational unit an encounter
-  is assigned to (`encounters.department_id`). Carried as an attribute on
-  `clinical__visit_detail`, not a visit-level care-site FK.
-- **location** (`care_site_type = 'location'`) — a Tamanu `location` (room/bed). The care
+- **department** (`care_site_type = 'department'`) — the organizational unit. Carried as
+  an attribute on `clinical__visit_detail`; not itself a visit-level care site.
+- **location** (`care_site_type = 'location'`) — an individual physical room/bed. The care
   site on both `clinical__visit_occurrence` (per encounter) and `clinical__visit_detail`
   (per segment).
 
 Each row is denormalised with its parent facility's id, name, and type.
 
-**Why a wrapper.** Tamanu stores care-site structure as `departments` and `locations`,
-each linked to a `facilities` row. `ref__care_site` gives downstream models a typed,
-OMOP-named surface (`care_site_id`, `care_site_type`, `care_site_name`,
+Location_groups (areas) are **not** a grain here. A `ds__` dataset that needs area-level
+context joins `bases/locations` → `bases/location_groups` directly — that link is a
+dataset-layer concern, not a `ref__care_site` one (see `ds__emergency_visit` BL-003 for the
+pattern).
+
+**Why a wrapper.** Tamanu stores care-site structure as `departments` and `locations`, each
+linked to a `facilities` row. `ref__care_site` gives downstream models a typed, OMOP-named
+surface (`care_site_id`, `care_site_type`, `care_site_name`,
 `place_of_service_source_value`) so they join to `ref__care_site`, not to raw base
 tables — keeping the layer contract intact and portable across OMOP tooling (D2).
 
-**Why both grains (the hybrid).** Both `clinical__visit_occurrence` and
-`clinical__visit_detail` key `care_site_id` on the **location** of the encounter's /
-segment's location — Tamanu always records a location on an encounter, so `care_site_id`
-is always populated. A location's grouping (`location_group`, the physical
-"clinic"/"ward") is a separate, coarser concept: consumers that need it (e.g.
-`ds__outpatient_visit`) join `location_groups` directly.
+**Why two grains.** Both `clinical__` models key `care_site_id` on the **location** itself,
+not department. Location is used because every encounter's / segment's location resolves
+whenever it has one at all. Department is organizational rather than physical, so it is not
+used as `care_site_id` by either `clinical__` model; it is retained here as an available
+grain, carried as an attribute on `clinical__visit_detail`.
 
-**Who reads it.** `clinical__visit_occurrence` and `clinical__visit_detail` (both
-`care_site_id` FK → location-type rows); `metric__` / `dataset__` models that disaggregate
-by facility (see the `hypertension_controlled` worked example in D5, which joins
-`ref__care_site` on `care_site_id`).
+**Who reads it.** `clinical__visit_occurrence` (`care_site_id` FK → location-type rows);
+`clinical__visit_detail` (`care_site_id` FK → location-type rows); `metric__` / `dataset__`
+models that disaggregate by facility (see the `hypertension_controlled` worked example in
+D5, which joins `ref__care_site` on `care_site_id`).
 
 ## Grain
 
 **One row per:** care site — a Tamanu `department` **or** a `location`, with
 `care_site_type` discriminating. `care_site_id` is unique across both because department
-and location ids occupy distinct UUID spaces. Soft-deleted rows are filtered by the base
+and location ids occupy disjoint UUID spaces. Soft-deleted rows are filtered by the base
 models. The join to `bases/facilities` is many-to-one, so grain is preserved; it is a
 `left join`, so a care site whose facility is unset or soft-deleted is still emitted with
 the facility-derived columns NULL. Facility-level aggregation is available via the
@@ -88,12 +90,12 @@ vocabulary can derive the concept downstream.
 ## Business logic
 
 - **BL-001:** One row per care site, sourced from `{{ ref('departments') }}`,
-  `{{ ref('locations') }}`, and `{{ ref('facilities') }}` only (D10) — never
-  `public.*`. Soft-delete filtering is inherited from the base models. The department and
-  location id spaces are disjoint, so the union preserves a unique `care_site_id`;
-  the facility join is many-to-one, so grain is preserved.
+  `{{ ref('locations') }}`, and `{{ ref('facilities') }}` only (D10) — never `public.*`.
+  Soft-delete filtering is inherited from the base models. The department and location id
+  spaces are disjoint, so the union preserves a unique `care_site_id`; the facility join is
+  many-to-one, so grain is preserved.
 - **BL-002:** OMOP column naming is applied — `id → care_site_id`, `name → care_site_name`,
-  `code → care_site_source_value` — for both departments and locations. The parent
+  `code → care_site_source_value` — across both grains. The parent
   facility's `type` is carried verbatim as `place_of_service_source_value`. No
   `place_of_service_concept_id` is emitted: OMOP's Place of Service vocabulary has no
   standard concepts, so there is no domain-correct concept to populate (using a
@@ -116,9 +118,22 @@ vocabulary can derive the concept downstream.
   revisit if a deployment geocodes facility addresses into `ref__location`-compatible rows.
 - **BL-005:** The model is the `union all` of two grains — departments
   (`care_site_type = 'department'`) and locations (`care_site_type = 'location'`) —
-  because OMOP `CARE_SITE` is a single heterogeneous table. Both
-  `clinical__visit_occurrence` and `clinical__visit_detail` key `care_site_id` on
-  **location-type** rows (the encounter's / segment's own location).
+  because OMOP `CARE_SITE` is a single heterogeneous table. `care_site_id` on both
+  `clinical__visit_occurrence` and `clinical__visit_detail` is FK-tested against
+  location-type rows here (the encounter's / segment's physical location). Neither model
+  joins `bases/locations` to produce it — both carry their raw `location_id` straight
+  through (their own BL-006 in each spec) and rely on the FK test alone for validation. A
+  `location_id` pointing at a since-soft-deleted location will not resolve to a row here
+  (which sources from `bases/locations`, excluding soft-deleted rows), so the FK test would
+  flag it — an accepted, low-stakes gap given project-wide `severity: warn`. Department-type
+  rows exist in this model but are not currently joined or FK-tested by either `clinical__`
+  model's `care_site_id` — they remain an available grain (`clinical__visit_detail.
+  department_id` reads them as an attribute FK target).
+- **BL-006:** The `location` grain (`care_site_type = 'location'`, sourced from
+  `{{ ref('locations') }}`) wraps **every** Tamanu location as its own care site. It exists
+  so that `clinical__visit_occurrence.care_site_id` and `clinical__visit_detail.care_site_id`
+  (both real `locations.id`-shaped values, their own BL-006 in each spec) have a row to
+  resolve against.
 
 ## Acceptance criteria
 
@@ -129,7 +144,7 @@ vocabulary can derive the concept downstream.
 | AC-003 | A department denormalises into a `care_site_type='department'` row carrying `facility_id`, `facility_name`, and `place_of_service_source_value` | BL-002, BL-003, BL-005 | dbt unit test (`test_ref__care_site_department_denormalises_facility`) |
 | AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
 | AC-005 | `care_site_type` is `not_null` and one of `department` / `location` | BL-005 | dbt `not_null` + `accepted_values` |
-| AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-005 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
+| AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-006 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
 
 ## Registry entry
 
@@ -141,13 +156,13 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | Ref | Layer | Role |
 |---|---|---|
 | `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
-| `locations` | `bases/` | Location care sites (id, code, name) and parent facility link |
+| `locations` | `bases/` | Location care sites (id, code, name) and parent facility link (BL-006) |
 | `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
 
 ## Consumers
 
 | Model | Use |
 |---|---|
-| `clinical__visit_occurrence` | `care_site_id` FK → location-type rows (AC-008 there) |
-| `clinical__visit_detail` | `care_site_id` FK → location-type rows (the segment's own location) |
+| `clinical__visit_occurrence` | `care_site_id` FK → location-type rows (AC-008 there, its own BL-006) |
+| `clinical__visit_detail` | `care_site_id` FK → location-type rows (the segment's location) |
 | `metric__` / `dataset__` | facility-level disaggregation |

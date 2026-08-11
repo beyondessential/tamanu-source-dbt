@@ -1,10 +1,19 @@
 unit_tests:
-  - name: test_encounter_summary_excludes_disproven_and_error_diagnoses
+  - name: test_enc_summary_discharge_datetime_fallback
     model: encounter-summary-by-end-date
     description: >
-      Diagnoses with certainty 'disproven' or 'error' should be excluded from the
-      Diagnoses column. Confirmed and suspected diagnoses should still appear,
-      ordered by is_primary descending then datetime ascending.
+      When an encounter has no location, department, or area changes (only the initial
+      encounter_history creation record with change_type = null), the discharge assigned
+      time columns should fall back to the encounter start datetime rather than null.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+        language: default
     given:
       - input: ref('encounters')
         format: sql
@@ -78,13 +87,7 @@ unit_tests:
       - input: ref('reference_data')
         format: sql
         rows: |
-          select 'diag_confirmed' as id, 'Confirmed Disease' as name, 'C01' as code
-          union all
-          select 'diag_suspected', 'Suspected Disease', 'S02'
-          union all
-          select 'diag_disproven', 'Disproven Disease', 'D03'
-          union all
-          select 'diag_error', 'Error Disease', 'E04'
+          select null::text as id, null::text as name, null::text as code where false
 
       - input: ref('triages')
         format: sql
@@ -99,13 +102,7 @@ unit_tests:
       - input: ref('encounter_diagnoses')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, 'diag_confirmed' as diagnosis_id, true as is_primary, 'confirmed' as certainty, '2024-01-15 10:30:00'::timestamp as datetime
-          union all
-          select 'enc_001', 'diag_suspected', false, 'suspected', '2024-01-15 10:45:00'::timestamp
-          union all
-          select 'enc_001', 'diag_disproven', false, 'disproven', '2024-01-15 11:00:00'::timestamp
-          union all
-          select 'enc_001', 'diag_error', false, 'error', '2024-01-15 11:15:00'::timestamp
+          select null::text as encounter_id, null::text as diagnosis_id, null::bool as is_primary, null::text as certainty, null::timestamp as datetime where false
 
       - input: ref('encounter_prescriptions')
         format: sql
@@ -211,11 +208,8 @@ unit_tests:
           'Ward A' as "Location history",
           '2024-01-15 10:00:00' as "Location history date and times",
           null::text as "Reason for encounter",
-          'Name: Confirmed Disease, Code: C01, Is primary: primary, Certainty: confirmed'
-          || E'\n' ||
-          'Name: Suspected Disease, Code: S02, Is primary: secondary, Certainty: suspected'
-          as "Diagnoses",
-          'C01; S02' as "Diagnosis codes",
+          null::text as "Diagnoses",
+          null::text as "Diagnosis codes",
           null::text as "Medications",
           null::text as "Vaccinations",
           null::text as "Procedures",

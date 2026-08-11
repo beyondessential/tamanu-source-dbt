@@ -5,6 +5,11 @@ profile: tamanu_source_dbt
 
 vars:
   has_sensitive_facility: false
+  # reference_data id of the deployment's home country. Used by the
+  # upcoming-vaccinations report's "Exclude overseas patients" parameter
+  # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
+  # Overridden per deployment (e.g. Samoa sets country-Samoa).
+  home_country_id: country-Australia
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
@@ -79,6 +84,11 @@ models:
         +tags:
           - restricted
     reports:
+      # Reports are the in-product (reporting-schema) surface. Don't build them
+      # on an analytics target -- that build feeds Tupaia from the `analytics`
+      # schema (D9) and reports would be dead weight / need report-only vars.
+      # Report/clone/prod targets (not starting with `analytics`) keep them.
+      +enabled: "{{ not target.name.startswith('analytics') }}"
       +docs:
         show: false
       +tags:

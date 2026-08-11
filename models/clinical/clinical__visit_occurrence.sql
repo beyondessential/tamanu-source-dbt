@@ -52,11 +52,11 @@ select
     -- visit type provenance: constant EHR administration record (BL-003)
     32817 as visit_type_concept_id,
 
-    -- provider and care site (BL-005, BL-006)
-    -- care site is the encounter's own location. FK to ref__care_site
-    -- (location-type rows) (BL-006)
-    e.clinician_id  as provider_id,
-    e.location_id   as care_site_id,
+    -- provider (BL-005)
+    e.clinician_id as provider_id,
+
+    -- care site is the encounter's location. FK to ref__care_site (location-type rows) (BL-006)
+    e.location_id as care_site_id,
 
     -- source value retained alongside concept (BL-007)
     e.encounter_type as visit_source_value

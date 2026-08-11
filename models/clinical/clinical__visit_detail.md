@@ -18,9 +18,10 @@ clinical__visit_occurrence.visit_occurrence_id.
 
 {% docs clinical__visit_detail__visit_detail_concept_id %}
 OMOP standard Visit concept for this segment's encounter_type (9201 Inpatient Visit,
-9202 Outpatient Visit, 9203 Emergency Room Visit). NULL when the type has no matching
-concept. Per-segment, so an ER phase and a later inpatient phase of one encounter carry
-9203 and 9201 respectively.
+9202 Outpatient Visit, 9203 Emergency Room Visit). Never NULL -- a segment whose
+encounter_type has no matching concept is excluded from this model entirely, not kept with
+a NULL concept. Per-segment, so an ER phase and a later inpatient phase of one encounter
+carry 9203 and 9201 respectively.
 {% enddocs %}
 
 {% docs clinical__visit_detail__visit_detail_start_date %}
@@ -42,15 +43,14 @@ datetime for the final segment. NULL for the final segment of an open encounter.
 {% enddocs %}
 
 {% docs clinical__visit_detail__care_site_id %}
-UUID of the location (Tamanu room/bed) the segment took place in. FK to
-ref__care_site.care_site_id (location-type rows).
+UUID of the location (room/bed) the segment took place in; the segment's raw location_id.
+FK to ref__care_site.care_site_id (location-type rows). NULL when the segment has no
+location_id recorded.
 {% enddocs %}
 
 {% docs clinical__visit_detail__department_id %}
 UUID of the department (organizational care unit) responsible for the segment. Carried as
-an attribute; not itself a visit-level care site (see clinical__visit_occurrence and
-clinical__visit_detail care_site_id, which key on location instead). FK to
-ref__care_site.care_site_id (department-type rows).
+an attribute. FK to ref__care_site.care_site_id (department-type rows).
 {% enddocs %}
 
 {% docs clinical__visit_detail__visit_detail_source_value %}

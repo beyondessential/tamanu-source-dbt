@@ -28,7 +28,7 @@ measurement, and observation event tables). See
 **What this artefact measures.** One row per encounter, in OMOP `VISIT_OCCURRENCE`
 shape: native UUID primary key, standardised visit-type concept ID alongside the
 Tamanu encounter-type source value, visit start/end datetimes, attending provider
-reference, and the encounter's location as its care-site reference.
+reference, and a location care-site reference.
 
 **Clinical context.** Tamanu records all patient–facility interactions as
 `encounters`, typed by `encounter_type` (admission, clinic, emergency, etc.). OMOP
@@ -65,7 +65,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_end_datetime` | timestamp | `encounters.end_datetime`. NULL for open encounters |
 | `visit_type_concept_id` | integer | Constant 32817 (EHR administration record) — all encounters originate from the Tamanu EHR |
 | `provider_id` | uuid | `encounters.clinician_id`. The attending clinician at encounter creation. NULL when no clinician recorded |
-| `care_site_id` | uuid | `encounters.location_id` — the encounter's own location. FK to `ref__care_site.care_site_id` (location-type rows) |
+| `care_site_id` | uuid | The encounter's location — the raw `location_id`. FK to `ref__care_site.care_site_id` (location-type rows). NULL only when the encounter has no `location_id` recorded |
 | `visit_source_value` | text | `encounters.encounter_type`. Tamanu local code, retained alongside the concept ID (D1) |
 
 ## Business logic
@@ -118,14 +118,28 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
   `examiner_id`, renamed at base layer). This is the clinician recorded at encounter
   creation; mid-encounter clinician changes tracked in `encounter_history` are not
   reflected here (they belong to a future `clinical__provider_visit` event if needed).
-- **BL-006:** `care_site_id` is the encounter's own location (`encounters.location_id`),
-  effectively always populated since every encounter has a location. It is an FK to
-  `ref__care_site.care_site_id` (the
-  location-type rows of the OMOP `CARE_SITE` wrapper). The referential-integrity test on
-  the column is AC-008. A location's grouping (`location_group`, the physical
-  "clinic"/"ward") is a separate, coarser concept: consumers that need it (e.g.
-  `ds__outpatient_visit`) join `bases/locations` directly. Department remains available
-  at the segment grain on `clinical__visit_detail`.
+- **BL-006:** `care_site_id` is the encounter's raw `location_id` — no join to
+  `bases/locations` is made or needed; the value is carried straight through from
+  `encounters`. Location is used (rather than department, or the location's area) because
+  every encounter's location resolves whenever the encounter has one at all — location is
+  the grain that stays populated for the great majority of encounters, matching
+  `clinical__visit_detail`'s own `care_site_id` (BL-006 there, same reasoning).
+  `department_id` is not used: department is carried instead as an attribute on
+  `clinical__visit_detail` (its own BL-007), not as a visit-level care site.
+
+  This is the reason `ref__care_site` carries a `care_site_type = 'location'` grain
+  (wrapping every Tamanu `location` as its own care site, see `ref__care_site` BL-006): it
+  gives `care_site_id` a row to resolve against.
+
+  `care_site_id` is NULL only when the encounter has no `location_id` at all
+  (`encounters.location_id` is nullable, unlike `encounter_history.location_id`).
+
+  **No soft-delete validation.** A `location_id` pointing at a since-soft-deleted location
+  is *not* NULLed out here — it passes through as-is. `ref__care_site`'s location-type rows
+  are sourced from `bases/locations`, which excludes soft-deleted locations, so such a row
+  would not resolve there; AC-008's `relationships` test would flag it. This is an accepted,
+  low-stakes gap, matching `clinical__visit_detail`'s own BL-006: project-wide
+  `data_tests: +severity: warn` means that test warns rather than fails the build.
 - **BL-007:** `visit_source_value` carries the raw Tamanu `encounter_type` value
   alongside the OMOP concept. It is not a direct identifier and is not withheld on
   analytics targets.
@@ -156,9 +170,9 @@ row (D5, dbt-conventions § Documentation).
 
 | Ref | Layer | Role |
 |---|---|---|
-| `encounters` | `bases/` | Encounter identity, type, datetimes, clinician, location, used directly as `care_site_id` (BL-006) |
+| `encounters` | `bases/` | Encounter identity, type, datetimes, clinician, location (used directly as `care_site_id`, BL-006) |
 | `encounter_history` | `bases/` | Prior encounter types per encounter; used to detect ER→admission transitions (BL-002) |
-| `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept (inner join; coverage guarded by AC-010) |
+| `map__omop_visit_type` | `maps/` | Tamanu encounter_type → OMOP Visit concept, per encounter (inner join; coverage guarded by AC-010) |
 | `clinical__person` | `clinical/` | Parent PERSON domain; `person_id` FK target |
-| `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its location-type rows (AC-008), same grain as `clinical__visit_detail` |
+| `ref__care_site` | `ref/` | OMOP CARE_SITE wrapper; `care_site_id` FK → its location-type rows (AC-008). Same location grain as `clinical__visit_detail`. |
 | `ref__provider` | `ref/` | OMOP PROVIDER wrapper over users; `provider_id` FK target (AC-009) |

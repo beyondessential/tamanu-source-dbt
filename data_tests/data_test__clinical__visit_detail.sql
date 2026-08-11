@@ -36,24 +36,24 @@ ac_011 as (
     where fs.first_segment_start > vo.visit_start_datetime
 ),
 
--- AC-013: every encounter has at least one corresponding clinical__visit_detail row (the
--- grain is per-segment, so this checks existence, not a 1:1 row count). A missing encounter
--- means BL-003's inner join to map__omop_visit_type excluded every segment of this
--- encounter -- its encounter_type, or an encounter_history phase's encounter_type, has no
--- row in map__omop_visit_type (schema drift). This is the direct completeness check;
--- data_test__map__omop_visit_type_coverage flags the root cause (the unmapped
--- encounter_type value) earlier and independently of this test.
+-- AC-013: every encounter has at least one corresponding clinical__visit_detail row
+-- (the grain is per-segment, so this checks existence, not a 1:1 row count). A missing
+-- encounter means BL-003's inner join to map__omop_visit_type excluded every segment of
+-- this encounter -- its encounter_type, or an encounter_history phase's encounter_type,
+-- has no row in map__omop_visit_type (schema drift). This is the direct completeness
+-- check; data_test__map__omop_visit_type_coverage (AC-012) flags the root cause (the
+-- unmapped encounter_type value) earlier and independently of this test.
 ac_013 as (
     select
-        e.id as encounter_id,
+        e.id as visit_occurrence_id,
         'AC-013' as failed_ac
     from encounters e
     where not exists (
-        select 1 from visit_detail vd
-        where vd.visit_occurrence_id = e.id
-    )
+            select 1 from visit_detail vd
+            where vd.visit_occurrence_id = e.id
+        )
 )
 
-select visit_occurrence_id as encounter_id, failed_ac from ac_011
+select visit_occurrence_id, failed_ac from ac_011
 union all
-select encounter_id, failed_ac from ac_013
+select visit_occurrence_id, failed_ac from ac_013

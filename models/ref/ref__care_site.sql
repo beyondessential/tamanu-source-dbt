@@ -1,13 +1,10 @@
 -- ref__care_site -- OMOP CARE_SITE wrapper. Heterogeneous by design: one row per Tamanu
--- department (the organizational care unit, care_site_type = 'department') AND one row per
--- Tamanu location (the room/bed a segment actually takes place at, care_site_type =
--- 'location'). Locations feed both clinical__visit_occurrence.care_site_id and
--- clinical__visit_detail.care_site_id -- every encounter carries a location, so this
--- column is always populated. Departments remain an attribute on clinical__visit_detail
--- (not a visit-level care-site FK). Each care site is
--- denormalised with its parent facility. Native UUID PK (D1).
--- Sources only from bases/ (D10); OMOP column naming applied (D2).
--- See specs/dbt-model/ref__care_site.md for BL-001..BL-005.
+-- department (the organizational care unit, care_site_type = 'department') and one row per
+-- location (the physical room/bed, care_site_type = 'location'). Locations feed both
+-- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id. Each care
+-- site is denormalised with its parent facility. Native UUID PK (D1). Sources only from
+-- bases/ (D10); OMOP column naming applied (D2).
+-- See specs/dbt-model/ref__care_site.md for BL-001..BL-006.
 
 with departments as (
     select * from {{ ref('departments') }}
@@ -32,15 +29,15 @@ department_sites as (
     from departments d
 ),
 
--- physical care unit: location (BL-001, BL-005)
+-- physical care unit: individual location (room/bed) (BL-001, BL-006)
 location_sites as (
     select
         'location'      as care_site_type,
-        l.id::varchar   as care_site_id,
-        l.name          as care_site_name,
-        l.code          as care_site_source_value,
-        l.facility_id   as facility_id
-    from locations l
+        loc.id::varchar as care_site_id,
+        loc.name        as care_site_name,
+        loc.code        as care_site_source_value,
+        loc.facility_id as facility_id
+    from locations loc
 ),
 
 care_sites as (

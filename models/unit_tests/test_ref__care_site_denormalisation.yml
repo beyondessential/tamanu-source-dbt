@@ -31,7 +31,7 @@ unit_tests:
     model: ref__care_site
     description: >-
       A location becomes a care_site_type='location' row, denormalised with its parent
-      facility and place-of-service concept (BL-001, BL-002, BL-003, BL-005).
+      facility and place-of-service concept (BL-001, BL-002, BL-003, BL-006).
     given:
       - input: ref('departments')
         format: sql
@@ -40,7 +40,7 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc1' as id, 'LOC1' as code, 'Paediatric Ward Bed 3' as name, 'fac1' as facility_id
+          select 'loc1' as id, 'LOC1' as code, 'Room 4 Bed 2' as name, 'fac1' as facility_id
       - input: ref('facilities')
         format: sql
         rows: |
@@ -50,7 +50,7 @@ unit_tests:
       rows: |
         select
           'loc1' as care_site_id, 'location' as care_site_type,
-          'Paediatric Ward Bed 3' as care_site_name, 'LOC1' as care_site_source_value,
+          'Room 4 Bed 2' as care_site_name, 'LOC1' as care_site_source_value,
           'hospital' as place_of_service_source_value,
           'fac1' as facility_id, 'General Hospital' as facility_name
 

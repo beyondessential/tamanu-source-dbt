@@ -35,8 +35,8 @@ those changes into one row per phase, each keyed to its parent `visit_occurrence
 **Clinical context.** `clinical__visit_occurrence` deliberately collapses an encounter
 to one row (BL-002 there uses concept 262 to flag an ER→inpatient episode, but does not
 expose the individual phases). Analytics that need per-phase timing — length of stay by
-department, time-in-ER before admission, location-transfer counts — need the segment
-grain that `VISIT_DETAIL` provides.
+department, time-in-ER before admission, location-transfer counts — need the segment grain
+that `VISIT_DETAIL` provides.
 
 **Who reads it.** `metric__` length-of-stay and transfer indicators; `dataset__`
 admission audit line-lists; any analysis that must attribute time to a specific
@@ -66,7 +66,7 @@ inner join, not kept with a NULL concept — see BL-003 and
 | `visit_detail_start_datetime` | timestamp | Segment start (the `encounter_history` event datetime, or the encounter start for a synthesized segment) |
 | `visit_detail_end_date` | date | Date component of `visit_detail_end_datetime`. NULL for the final segment of an open encounter |
 | `visit_detail_end_datetime` | timestamp | Segment end (next segment's start, or the encounter `end_datetime`; NULL for the final segment of an open encounter) |
-| `care_site_id` | uuid | Segment's own location (`encounter_history.location_id`). FK to `ref__care_site.care_site_id` (location-type rows) (BL-006) |
+| `care_site_id` | uuid | Segment location — the raw `location_id`. FK to `ref__care_site.care_site_id` (location-type rows). NULL only when the segment has no `location_id` recorded (BL-006) |
 | `department_id` | uuid | Segment department (`encounter_history.department_id`) — organizational unit, carried as an attribute (BL-007). FK to `ref__care_site.care_site_id` (department-type rows) |
 | `provider_id` | uuid | Segment clinician (`encounter_history.clinician_id`) |
 | `visit_detail_source_value` | text | Segment `encounter_type`, retained verbatim (D1) |
@@ -75,9 +75,9 @@ inner join, not kept with a NULL concept — see BL-003 and
 ## Business logic
 
 - **BL-001:** One row per encounter segment, sourced from `{{ ref('encounter_history') }}`
-  and `{{ ref('encounters') }}` only (D10) — never `public.*`. Soft-delete and
-  test-patient filtering are inherited from the base models; a history row whose encounter
-  is filtered out is dropped by the inner join to `encounters`.
+  and `{{ ref('encounters') }}` only (D10) — never `public.*`. Soft-delete and test-patient
+  filtering are inherited from the base models; a history row whose encounter is filtered
+  out is dropped by the inner join to `encounters`.
 - **BL-002:** `encounter_history` is a single timeline where each row is a full snapshot
   (department, location, encounter_type, clinician) at one datetime — department and
   location changes already share the same rows, so there is no separate stream to merge.
@@ -126,17 +126,24 @@ inner join, not kept with a NULL concept — see BL-003 and
   `VISIT_DETAIL` row, **provided its `encounter_type` is covered by `map__omop_visit_type`**
   (BL-003's inner join is the exception to this guarantee). The `encounters.id` key cannot
   collide with an `encounter_history.id` (distinct UUID spaces), preserving AC-002.
-- **BL-006:** `care_site_id` is the segment's own location (`encounter_history.location_id`,
-  or the encounter's `location_id` for a synthesized segment). It FKs to `ref__care_site`
-  (location-type rows). `encounter_history.location_id` has a `not_null` source test, so
-  it is effectively always populated, matching `clinical__visit_occurrence.care_site_id`.
-  `clinical__visit_occurrence` keys its
-  `care_site_id` on the same location grain (the encounter's own location), so both
-  models share the location-type FK target; `clinical__visit_occurrence` resolves it per
-  encounter, this model resolves it per segment.
+- **BL-006:** `care_site_id` is the segment's raw `location_id` — no join to `bases/locations`
+  is made or needed; the value is carried straight through from `encounter_history` /
+  `encounters`. It FKs to `ref__care_site` (location-type rows). It is NULL only when the
+  segment has no `location_id` at all (possible only for the synthesized whole-visit
+  segment, BL-005, since `encounter_history.location_id` is `not_null` but
+  `encounters.location_id` is not).
+
+  **No soft-delete validation.** A `location_id` pointing at a since-soft-deleted location
+  is *not* NULLed out here — it passes through as-is. `ref__care_site`'s location-type rows
+  are sourced from `bases/locations`, which excludes soft-deleted locations, so such a row
+  would not resolve there; AC-004's `relationships` test would flag it. This is an accepted,
+  low-stakes gap: `data_tests: +severity: warn` project-wide means that test warns rather
+  than fails the build, and validating against a live `locations` join was judged not worth
+  the added dependency for a case the test already surfaces. Facility is not surfaced at
+  this layer at all; a `ds__` dataset that needs it joins `bases/locations` itself (see
+  `ds__emergency_visit` BL-003 for the pattern).
 - **BL-007:** `department_id` (the organizational unit, `encounter_history.department_id`)
-  is carried as an attribute. It FKs to `ref__care_site` (department-type rows) but is not
-  itself a visit-level care site — no `clinical__` model keys `care_site_id` on department.
+  is carried as an attribute. It FKs to `ref__care_site` (department-type rows).
 
 ## Acceptance criteria
 
