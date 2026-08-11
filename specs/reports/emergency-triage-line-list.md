@@ -68,7 +68,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 - **BL-005:** Waiting time is the interval from triage to the start of active care, and is empty while the patient is still waiting.
 - **BL-006:** Diagnoses are every diagnosis recorded against the presentation's encounter, comma separated and deduplicated; `bases/encounter_diagnoses` supplies the exclusion of disproven and recorded-in-error certainties.
 - **BL-007:** Medications are every medication prescribed during the presentation's encounter, comma separated and deduplicated.
-- **BL-008:** Every triage category Tamanu can record (1 to 5) has a target waiting time, supplied by `var('triage_target_minutes')`. A triage score the map does not cover, and a map entry that is not a whole non-negative number of minutes, yield no target and therefore no compliance verdict rather than an error; a triage score is mandatory in the triage form but nullable in the model, so the report degrades instead of failing.
+- **BL-008:** Every triage category Tamanu can record (1 to 5) has a target waiting time, supplied by `var('triage_target_minutes')`. A triage score the map does not cover, and a map entry that is not a whole non-negative number of minutes, yield no target and therefore no compliance verdict rather than an error; a triage score is mandatory in the triage form but nullable in the model, so the report degrades instead of failing. A zero target is met only by a same-second start of active care, so a category set to zero reports any measurable wait as a miss -- intended for an "immediate" category, not a defect.
 - **BL-009:** A presentation is `Admitted` where the encounter's OMOP visit concept is 262 (Emergency Room and Inpatient Visit), otherwise `Discharged` where the encounter has ended, and otherwise empty, which means the encounter is still open. A death is not a separate outcome -- the discharge disposition column carries it.
 - **BL-010:** Total length of stay is the interval from triage to the end of the encounter, so an admitted patient's stay spans their whole inpatient episode.
 - **BL-011:** A presentation is attributed to the facility and to the department its encounter began in, falling back to the encounter's current department when no history exists; both are report parameters only, with Tamanu scoping the department list to the selected facility.
@@ -97,9 +97,7 @@ test.
 
 ## Open questions
 
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | A zero-minute Category 1 target reports every Category 1 presentation with any measurable wait as a miss: 43 of 43 at Samoa's TTM Hospital in 2026 to date, none met, the fastest being 69 seconds from triage to active care. The compliance column is therefore uninformative for the most urgent category. The register template raises the same point and suggests a short buffer (e.g. 2 minutes) before counting a miss. Confirm which the deployment wants. | timcleasby | Before implemented |
+None outstanding.
 
 ## Lineage
 

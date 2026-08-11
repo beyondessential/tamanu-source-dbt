@@ -18,9 +18,10 @@ vars:
   yearmonth_format: YYYY-MM
   translation_prefix: report.reporting
   # Target waiting time in minutes by triage category, used by the emergency triage
-  # line list's "Target time met" column. Defaults to the Australasian Triage Scale
-  # (Category 1 immediate). A deployment whose policy differs overrides the whole map
-  # in its own dbt_project.yml.
+  # line list's "Target time met" column. Defaults to the Australasian Triage Scale.
+  # A deployment whose policy differs overrides the whole map in its own dbt_project.yml.
+  # Category 1's zero is deliberate: 'immediate' means any measurable wait between triage
+  # and active care is reported as a miss. Raise it here if a deployment allows a buffer.
   triage_target_minutes:
     "1": 0
     "2": 10
