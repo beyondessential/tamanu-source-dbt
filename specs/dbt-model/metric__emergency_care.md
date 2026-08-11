@@ -153,8 +153,9 @@ crosswalk.
   midnight on the 1st, the just-completed month is still withheld. Accepted deliberately —
   the alternative (`now() at time zone var('timezone')`) buys a sub-day edge at the cost of
   diverging from the repo's convention. Note the lag self-heals on the next evaluation, which
-  on `reporting_*` is the next query but on `analytics_*` is **the next `dbt build`** (BL-008)
-  — so on the analytics replica the withheld month appears when the model is next refreshed,
+  depends on the materialisation (BL-008): wherever the model is a view that is the next
+  query, but on an `analytics*` target, where it is a table, it is **the next `dbt build`** —
+  so on the analytics replica the withheld month appears when the model is next refreshed,
   not a few hours later. No test-only variable is used to pin the boundary: unit tests date
   their fixtures in the past (always included) or the far future (always excluded), so the
   exclusion is deterministic without one. There is no month spine: a
