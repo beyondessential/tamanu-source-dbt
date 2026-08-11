@@ -7,7 +7,7 @@
 | **Name** | `metric__emergency_care` (suite of 3 `metric__` indicators) |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format) |
-| **Materialisation** | env-aware — `view` on `reporting_*`, `table` on `analytics_*` (BL-008) |
+| **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
@@ -127,7 +127,7 @@ crosswalk.
 
 | Column | Type | Notes |
 |---|---|---|
-| `metric_id` | text | One of the three registered ids. FK → `metric_definitions.metric_id` (AC-003) |
+| `metric_id` | text | `ed_attendance` or `ed_attendance_admitted`. FK → `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL — standard definitions, no variant |
 | `subject_id` | uuid | NULL — pre-aggregated |
 | `period_start` | date | First day of the reporting month, inclusive. `data_table_filter: date` |
@@ -203,6 +203,12 @@ crosswalk.
   (`ed_attendance_admitted`) and the denominator (`ed_attendance`) are additive, so the rate
   can be formed correctly at any grain, whereas a pre-computed proportion cannot be rolled up.
 
+  **When a consumer forms the rate, it is 0–1.** Per D5 "Rate scale", a rate is a fraction,
+  never 0–100 — the bare `admitted / attendances` quotient, unrounded. Presentation layers
+  scale for display (Tupaia's `percentage` value type multiplies by 100, so a 0–100 value
+  would render as 3000%). This is also why nothing here rounds: rounding is a display concern,
+  and rounding before aggregation loses precision the consumer may still need.
+
 - **BL-007 (facility attribution):** `facility_id` is the facility of the intake segment's
   location, resolved by joining `bases/locations` on
   `clinical__visit_detail.care_site_id` (which is the segment's `location_id` — see that
@@ -215,29 +221,34 @@ crosswalk.
   `ds__emergency_visit`, but areas are sparse in Tamanu and ED-specific area reporting was
   not asked for; a consumer needing it joins `bases/locations` → `bases/location_groups`
   itself, as `ds__emergency_visit` BL-003 did.
-- **BL-008 (materialisation is env-aware):** `view` when `target.name` starts with
-  `reporting_`, `table` otherwise. The reporting bundle must stay production-safe, so nothing
-  there materialises a table against a live deployment database; the analytics replica has no
-  such constraint, and a table there means a dashboard query reads pre-aggregated rows instead
-  of re-scanning the full encounter history on every load. Set on the `metrics:` block in
+- **BL-008 (materialisation is env-aware):** `table` when `target.name` starts with
+  `analytics`, `view` otherwise. A table on the analytics replica means a dashboard query
+  reads pre-aggregated rows instead of re-scanning the full encounter history on every load;
+  everywhere else a view, because the reporting bundle must stay production-safe and must
+  never materialise a table against a live deployment database. Set on the `metrics:` block in
   `dbt_project.yml`, so it is the convention for the layer rather than a property of this
-  model. Verified across all four targets in `config/profiles.yml`:
-  `reporting_release`/`reporting_demo` → `view`, `analytics_release`/`analytics_demo` → `table`.
+  model.
+
+  **The test names the heavy case on purpose.** Written the other way round
+  (`'view' if target.name.startswith('reporting_') else 'table'`) every *unrecognised* target
+  gets a table — and most targets are unrecognised, since only `config/profiles.yml` uses the
+  `reporting_*` / `analytics_*` prefixes. A developer's `~/.dbt/profiles.yml` names targets
+  `release`, `demo`, `fiji`; a deployment repo names its own `clone`, `demo`, `replica`,
+  `analytics`. Choosing the invasive materialisation should be a decision, never a fallback.
+  See `dbt-conventions.md` § Environment-aware.
+
+  Consequence for deployment repos: a replica target must be **named** `analytics*` to get
+  tables; `clone` / `demo` / `replica` now resolve to views. `tamanu-dbt-queenofsheba` already
+  has an `analytics` output; the others would need renaming to keep table materialisation.
+
+  Verified: `analytics_release` / `analytics_demo` → `table`;
+  `reporting_release` / `reporting_demo` → `view`; an unrecognised target (`release`) → `view`,
+  for both this model and `clinical__visit_detail`.
 
   Consequence for BL-002 above: on `analytics_*` the current-month boundary is evaluated at
   build time, not query time, so a withheld month appears at the next `dbt build` rather than
   a few hours later.
 
-  **Caveat — the guard depends on a target-naming convention, and fails towards `table`.**
-  Only `config/profiles.yml` (which the asset build selects via `--profiles-dir config`) uses
-  the `reporting_*` / `analytics_*` prefixes. A developer's `~/.dbt/profiles.yml` names its
-  targets `release`, `demo`, `fiji`, …, and every deployment repo that consumes this project
-  as a package names its own `clone` / `demo` / `replica` / `analytics` — so in all of those
-  a `metric__` model materialises as a **table**, because an unrecognised target falls to the
-  `else`. That is the right outcome for a deployment repo, which builds against a replica, but
-  it is the more invasive materialisation reached by default rather than by decision. Worth
-  considering inverting the test (`table` only when `target.name` starts with `analytics_`,
-  `view` otherwise) so an unrecognised target gets the safe materialisation instead.
 - **BL-009 (Tupaia facility crosswalk):** `tupaia_facility_id` carries Tupaia's id for the
   facility, so a Tupaia consumer can chart per facility without a crosswalk of its own.
 
@@ -271,7 +282,7 @@ crosswalk.
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | One row per `(metric_id, period_start, facility_id, sex, age_group__who_primary_classification)` | grain | `dbt_utils.unique_combination_of_columns` (`error`) |
-| AC-002 | `metric_id` is `not_null` and one of the three registered ids | BL-001 | dbt `not_null` + `accepted_values` |
+| AC-002 | `metric_id` is `not_null` and one of the two registered ids | BL-001 | dbt `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | dbt `relationships` (`error`) |
 | AC-004 | `period_start` and `period_end` are `not_null` | BL-002 | dbt `not_null` |
 | AC-005 | `period_granularity` is `not_null` and always `'month'` | BL-002 | dbt `not_null` + `accepted_values` |

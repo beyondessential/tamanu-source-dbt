@@ -50,9 +50,9 @@ ed_attendances as (
         on vo.visit_occurrence_id = vd.visit_occurrence_id
     join locations loc
         on loc.id = vd.care_site_id
-    -- Deliberately no facilities.is_sensitive filter: these are pre-aggregated counts with
-    -- no subject, so the metric covers standard and sensitive facilities alike. Do not add
-    -- one -- excluding sensitive facilities would silently understate ED activity.
+    -- BL-010: deliberately no facilities.is_sensitive filter -- these are pre-aggregated
+    -- counts with no subject, so the metric covers standard and sensitive facilities alike.
+    -- Do not add one -- excluding sensitive facilities would understate ED activity.
     where vd.preceding_visit_detail_id is null
         and vd.visit_detail_concept_id = 9203 -- OMOP 'Emergency Room Visit'
 ),
@@ -110,8 +110,12 @@ unioned as (
         age_group__who_primary_classification,
         total_admitted::numeric as value
     from attendances_by_month
-
 )
+
+-- BL-006: no derived admission rate is emitted. Both the numerator
+-- (ed_attendance_admitted) and the denominator (ed_attendance) are additive counts, so a
+-- consumer forms the rate at whatever grain it groups to. A pre-computed proportion could
+-- not be rolled up, and would sum incorrectly wherever a disaggregation was collapsed.
 
 -- BL-007: D5 wide format. subject_id and value_boolean are unused -- these are
 -- pre-aggregated counts, not per-subject or boolean facts.
@@ -127,7 +131,7 @@ select
     u.value as value_numeric,
     null::boolean as value_boolean,
     u.facility_id,
-    -- Tupaia facility id crosswalk: joined only when the deployment sets
+    -- BL-009: Tupaia facility id crosswalk, joined only when the deployment sets
     -- integrations.tupaia.enabled and supplies its own tupaia_facility_mapping seed, so this
     -- model still builds standalone here with no such seed present. Never NULL -- it is a data
     -- table filter column, and Tupaia's default array filter drops NULL rows, so an unmapped

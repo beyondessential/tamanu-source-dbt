@@ -82,11 +82,22 @@ models:
       - name: definition_rationale
         description: Short justification — for external standards, why this one over others; for `BES`/`MSF`, why an internal definition.
       - name: unit
-        description: Unit of measure (`count`, `percentage`, `rate_per_1000`). Metrics only — NULL for non-metric kinds.
+        description: >
+          Unit of measure. Metrics only — NULL for non-metric kinds.
+
+          `count` — an integer count.
+          `proportion` — a rate, proportion or percentage, stored **0–1, never 0–100**
+          (D5 "Rate scale"). Presentation layers scale for display: Tupaia's `percentage`
+          value type multiplies by 100, so a 0–100 value renders as 3000%.
+          `rate_per_1000` — a rate already scaled per 1000.
+
+          `percentage` is the legacy 0–100 form. It is still accepted because the NCD
+          `*_percent` rows carry it and their implementing model lives in an MSF deployment
+          repo; do not use it for new metrics.
         tests:
           - accepted_values:
               arguments:
-                values: ['count', 'percentage', 'rate_per_1000']
+                values: ['count', 'proportion', 'percentage', 'rate_per_1000']
       - name: subject_grain
         description: Grain of `subject_id` in the metric output — `patient`, `encounter`, `facility`, etc.
         tests:

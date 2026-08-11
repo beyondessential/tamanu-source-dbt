@@ -9,8 +9,8 @@ models:
     meta:
       owner: bes-maui
       domain: clinical
-      # Pre-aggregated counts with no subject: covers standard and sensitive facilities
-      # alike, and carries no PII, so it is not restricted despite its clinical domain.
+      # BL-010: pre-aggregated counts with no subject -- covers standard and sensitive
+      # facilities alike, and no PII, so not restricted despite the clinical domain.
       pii: false
       classification: internal
       create_data_table: true
