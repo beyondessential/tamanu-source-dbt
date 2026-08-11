@@ -1,6 +1,8 @@
--- clinical__visit_occurrence -- OMOP-lite VISIT_OCCURRENCE domain. One row per encounter (BL-001).
--- Visit-concept shadow column sits alongside local encounter_type source value; native UUID PK
--- (D1 OMOP-lite). Sources only from bases/ (D10).
+-- clinical__visit_occurrence -- OMOP-lite VISIT_OCCURRENCE domain. One row per encounter,
+-- provided its encounter_type is covered by map__omop_visit_type (BL-001, BL-002 -- inner
+-- join, see BL-002 for the consequence of an unmapped encounter_type). Visit-concept shadow
+-- column sits alongside local encounter_type source value; native UUID PK (D1 OMOP-lite).
+-- Sources only from bases/ (D10).
 -- See specs/dbt-model/clinical__visit_occurrence.md for BL-001..BL-007.
 
 with encounters as (
@@ -9,10 +11,6 @@ with encounters as (
 
 visit_map as (
     select * from {{ ref('map__omop_visit_type') }}
-),
-
-locations as (
-    select * from {{ ref('locations') }}
 ),
 
 -- collect the distinct encounter types seen in history for each encounter;
@@ -55,14 +53,13 @@ select
     32817 as visit_type_concept_id,
 
     -- provider and care site (BL-005, BL-006)
-    -- care site is the area: the location_group of the encounter's location. FK to
-    -- ref__care_site (area-type rows) (BL-006)
+    -- care site is the encounter's own location. FK to ref__care_site
+    -- (location-type rows) (BL-006)
     e.clinician_id  as provider_id,
-    loc.location_group_id as care_site_id,
+    e.location_id   as care_site_id,
 
     -- source value retained alongside concept (BL-007)
     e.encounter_type as visit_source_value
 
 from encounters e
-left join visit_map vm on vm.local_code = e.encounter_type
-join locations loc on loc.id = e.location_id
+join visit_map vm on vm.local_code = e.encounter_type

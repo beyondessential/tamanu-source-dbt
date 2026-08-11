@@ -1,5 +1,5 @@
 {% docs ds__outpatient_visit %}
-Outpatient visits dataset. One row per day per clinic (area) with a count of outpatient
+Outpatient visits dataset. One row per day per area with a count of outpatient
 visits (encounters whose first history segment has OMOP visit concept 9202/Outpatient
 Visit -- clinic, vaccination, or imaging), disaggregated by facility, sex and outpatient
 visit age band. Additive count only, so it can be aggregated to any period.

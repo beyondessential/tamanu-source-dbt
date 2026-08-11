@@ -2,9 +2,10 @@
 -- (BL-001): a contiguous department/location/encounter_type phase within a single
 -- encounter. Segments walk the unified encounter_history timeline (BL-002); encounters
 -- with no history at all get one synthesized whole-visit segment (BL-005). Per-segment
--- visit concept from map__omop_visit_type (BL-003); segments chained via
--- preceding_visit_detail_id (BL-004). care_site_id is the area (BL-006); department and
--- room carried as attributes (BL-007). Sources only from bases/ (D10).
+-- visit concept from map__omop_visit_type (BL-003, inner join -- see BL-003 for the
+-- consequence of an unmapped encounter_type); segments chained via
+-- preceding_visit_detail_id (BL-004). care_site_id is the segment's own location
+-- (BL-006); department carried as an attribute (BL-007). Sources only from bases/ (D10).
 -- See specs/dbt-model/clinical__visit_detail.md for BL-001..BL-007.
 
 with encounters as (
@@ -13,10 +14,6 @@ with encounters as (
 
 encounter_history as (
     select * from {{ ref('encounter_history') }}
-),
-
-locations as (
-    select * from {{ ref('locations') }}
 ),
 
 visit_map as (
@@ -123,14 +120,13 @@ select
     b.visit_detail_end_datetime::date   as visit_detail_end_date,
     b.visit_detail_end_datetime,
 
-    -- care site is the area: the location_group of the segment's location. NULL when the
-    -- location has no area (common in Tamanu). FK to ref__care_site (area-type rows) (BL-006)
-    loc.location_group_id as care_site_id,
+    -- care site is the segment's own location. FK to ref__care_site
+    -- (location-type rows) (BL-006)
+    b.location_id as care_site_id,
 
-    -- department (organizational unit) and room carried as attributes (BL-007);
-    -- FKs to ref__care_site (department-type rows) but is not itself a visit-level care site
+    -- department (organizational unit) carried as an attribute (BL-007); FKs to
+    -- ref__care_site (department-type rows) but is not itself a visit-level care site
     b.department_id,
-    b.location_id,
 
     b.provider_id,
 
@@ -141,5 +137,4 @@ select
     b.preceding_visit_detail_id
 
 from bounded b
-left join visit_map vm on vm.local_code = b.visit_detail_source_value
-left join locations loc on loc.id = b.location_id
+join visit_map vm on vm.local_code = b.visit_detail_source_value

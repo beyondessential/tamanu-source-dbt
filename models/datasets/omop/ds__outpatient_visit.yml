@@ -26,12 +26,12 @@ models:
           data_table_filter: array
       - name: location_group_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group_id') }} (the clinic). 'locationgroup-unknown' when the visit's location has no area, or that area no longer resolves in ref__care_site."
+        description: "{{ doc('generic__location_group_id') }} (the area). 'locationgroup-unknown' when the visit's location has no area, or that area was soft-deleted (no longer resolves in location_groups)."
         meta:
           data_table_filter: array
       - name: location_group_name
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group') }} (the clinic)."
+        description: "{{ doc('generic__location_group') }} (the area)."
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"

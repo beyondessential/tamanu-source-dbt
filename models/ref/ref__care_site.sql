@@ -1,9 +1,10 @@
 -- ref__care_site -- OMOP CARE_SITE wrapper. Heterogeneous by design: one row per Tamanu
 -- department (the organizational care unit, care_site_type = 'department') AND one row per
--- location_group (the physical area, care_site_type = 'area'). Areas feed both
--- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id (per-
--- segment); both are sparse — most Tamanu locations have no area. Departments remain an
--- attribute on clinical__visit_detail (not a visit-level care-site FK). Each care site is
+-- Tamanu location (the room/bed a segment actually takes place at, care_site_type =
+-- 'location'). Locations feed both clinical__visit_occurrence.care_site_id and
+-- clinical__visit_detail.care_site_id -- every encounter carries a location, so this
+-- column is always populated. Departments remain an attribute on clinical__visit_detail
+-- (not a visit-level care-site FK). Each care site is
 -- denormalised with its parent facility. Native UUID PK (D1).
 -- Sources only from bases/ (D10); OMOP column naming applied (D2).
 -- See specs/dbt-model/ref__care_site.md for BL-001..BL-005.
@@ -12,8 +13,8 @@ with departments as (
     select * from {{ ref('departments') }}
 ),
 
-location_groups as (
-    select * from {{ ref('location_groups') }}
+locations as (
+    select * from {{ ref('locations') }}
 ),
 
 facilities as (
@@ -31,21 +32,21 @@ department_sites as (
     from departments d
 ),
 
--- physical care unit: area (BL-001, BL-005)
-area_sites as (
+-- physical care unit: location (BL-001, BL-005)
+location_sites as (
     select
-        'area'          as care_site_type,
-        lg.id::varchar  as care_site_id,
-        lg.name         as care_site_name,
-        lg.code         as care_site_source_value,
-        lg.facility_id  as facility_id
-    from location_groups lg
+        'location'      as care_site_type,
+        l.id::varchar   as care_site_id,
+        l.name          as care_site_name,
+        l.code          as care_site_source_value,
+        l.facility_id   as facility_id
+    from locations l
 ),
 
 care_sites as (
     select * from department_sites
     union all
-    select * from area_sites
+    select * from location_sites
 )
 
 select

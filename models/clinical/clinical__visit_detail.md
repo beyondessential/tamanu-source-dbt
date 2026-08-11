@@ -42,21 +42,15 @@ datetime for the final segment. NULL for the final segment of an open encounter.
 {% enddocs %}
 
 {% docs clinical__visit_detail__care_site_id %}
-UUID of the area (location_group) the segment took place in — the physical care site. FK
-to ref__care_site.care_site_id (area-type rows). NULL when the segment's location has no
-location_group, which is common in Tamanu.
+UUID of the location (Tamanu room/bed) the segment took place in. FK to
+ref__care_site.care_site_id (location-type rows).
 {% enddocs %}
 
 {% docs clinical__visit_detail__department_id %}
 UUID of the department (organizational care unit) responsible for the segment. Carried as
 an attribute; not itself a visit-level care site (see clinical__visit_occurrence and
-clinical__visit_detail care_site_id, which key on area instead). FK to
+clinical__visit_detail care_site_id, which key on location instead). FK to
 ref__care_site.care_site_id (department-type rows).
-{% enddocs %}
-
-{% docs clinical__visit_detail__location_id %}
-UUID of the room/bed (Tamanu location) the segment took place in — finer than the area
-care site. Carried as a raw UUID; there is no ref__ wrapper for Tamanu locations yet.
 {% enddocs %}
 
 {% docs clinical__visit_detail__visit_detail_source_value %}

@@ -33,6 +33,6 @@ record) for Tamanu-sourced encounters.
 {% enddocs %}
 
 {% docs clinical__visit_occurrence__care_site_id %}
-UUID of the area (location_group) of the encounter's location. FK to
-ref__care_site.care_site_id (area-type rows).
+UUID of the encounter's own location. FK to ref__care_site.care_site_id
+(location-type rows).
 {% enddocs %}
