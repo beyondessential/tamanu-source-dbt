@@ -66,7 +66,7 @@ implausible (negative, or over 120).
 
 {% docs metric__emergency_care__tupaia_facility_id %}
 Tupaia's facility id, mapped from `facility_id` via the deployment's own
-`tupaia_facility_mapping` seed. `'Not available'` -- never NULL, since this is a data table
+`map__tupaia_facility` seed. `'Not available'` -- never NULL, since this is a data table
 filter column -- when the deployment has not configured a facility mapping, or when the
 facility has no mapping entry.
 {% enddocs %}

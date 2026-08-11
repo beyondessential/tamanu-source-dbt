@@ -132,7 +132,7 @@ select
     null::boolean as value_boolean,
     u.facility_id,
     -- BL-009: Tupaia facility id crosswalk, joined only when the deployment sets
-    -- integrations.tupaia.enabled and supplies its own tupaia_facility_mapping seed, so this
+    -- integrations.tupaia.enabled and supplies its own map__tupaia_facility seed, so this
     -- model still builds standalone here with no such seed present. Never NULL -- it is a data
     -- table filter column, and Tupaia's default array filter drops NULL rows, so an unmapped
     -- or unconfigured facility gets the literal 'Not available'.
@@ -145,6 +145,6 @@ select
     u.age_group__who_primary_classification
 from unioned u
 {%- if has_tupaia_mapping %}
-left join {{ ref('tupaia_facility_mapping') }} tm
+left join {{ ref('map__tupaia_facility') }} tm
     on tm.tamanu_facility_id = u.facility_id
 {%- endif %}

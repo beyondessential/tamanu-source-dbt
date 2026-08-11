@@ -136,7 +136,7 @@ crosswalk.
 | `value_numeric` | numeric | Count. Additive, so `data_table_metric: sum` is safe at any grain |
 | `value_boolean` | boolean | NULL — unused |
 | `facility_id` | varchar(255) | Facility of the intake segment's location — Tamanu ids are varchar, not a Postgres `uuid`. `data_table_filter: array` |
-| `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `tupaia_facility_mapping` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
+| `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `map__tupaia_facility` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
 | `age_group__who_primary_classification` | varchar(255) | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
 
@@ -253,18 +253,18 @@ crosswalk.
 - **BL-009 (Tupaia facility crosswalk):** `tupaia_facility_id` carries Tupaia's id for the
   facility, so a Tupaia consumer can chart per facility without a crosswalk of its own.
 
-  **Gated, not assumed.** The join to `{{ ref('tupaia_facility_mapping') }}` is emitted only
+  **Gated, not assumed.** The join to `{{ ref('map__tupaia_facility') }}` is emitted only
   when the deployment sets `integrations.tupaia.enabled` — the `ref()` sits inside the
   conditional, so this repo (where the integration is off and no such seed exists) still
   parses and builds. With the integration off the column is the literal `'Not available'`.
 
   **Turning the var on without the seed fails the whole project's parse**, not just this
   model: `dbt parse --vars '{integrations: {tupaia: {enabled: true}}}'` here raises
-  `Compilation Error … depends on a node named 'tupaia_facility_mapping' which was not
+  `Compilation Error … depends on a node named 'map__tupaia_facility' which was not
   found`. That is the intended failure mode — loud and immediate, rather than a column that
   silently reads `'Not available'` everywhere — but it means the var and the seed must land
   in the same change. A deployment enabling the integration adds
-  `seeds/tupaia_facility_mapping.csv` (columns `tamanu_facility_id`, `tupaia_facility_id`)
+  `seeds/map__tupaia_facility.csv` (columns `tamanu_facility_id`, `tupaia_facility_id`)
   in the same PR.
 
   **Never NULL, deliberately.** The column is a data table filter, and Tupaia's array filter
@@ -335,7 +335,7 @@ deploying country's national HMIS definition".
 | `locations` | `bases/` | `facility_id` of the intake segment's location (BL-007) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 | `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
-| `tupaia_facility_mapping` | `seeds/` (deployment) | Tamanu → Tupaia facility id crosswalk (BL-009). **Conditional** — referenced only when `integrations.tupaia.enabled`, so it is not a dependency in this repo |
+| `map__tupaia_facility` | `seeds/` (deployment) | Tamanu → Tupaia facility id crosswalk (BL-009). **Conditional** — referenced only when `integrations.tupaia.enabled`, so it is not a dependency in this repo |
 
 ## Consumers
 
