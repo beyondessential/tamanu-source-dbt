@@ -26,12 +26,12 @@ models:
           data_table_filter: array
       - name: location_group_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group_id') }} (the ED area). 'locationgroup-unknown' when the visit's location has no area, or that area no longer resolves in ref__care_site."
+        description: "{{ doc('ds__emergency_visit__location_group_id') }}"
         meta:
           data_table_filter: array
       - name: location_group_name
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group') }} (the ED area)."
+        description: "{{ doc('ds__emergency_visit__location_group_name') }}"
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
@@ -40,6 +40,11 @@ models:
       - name: age_group
         data_type: character varying(255)
         description: "{{ doc('ds__emergency_visit__age_group') }}"
+        meta:
+          data_table_filter: array
+      - name: is_inpatient_admission
+        data_type: boolean
+        description: "{{ doc('ds__emergency_visit__is_inpatient_admission') }}"
         meta:
           data_table_filter: array
       - name: total_emergency_visits
