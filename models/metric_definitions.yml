@@ -91,9 +91,12 @@ models:
           value type multiplies by 100, so a 0–100 value renders as 3000%.
           `rate_per_1000` — a rate already scaled per 1000.
 
-          `percentage` is the legacy 0–100 form. It is still accepted because the NCD
-          `*_percent` rows carry it and their implementing model lives in an MSF deployment
-          repo; do not use it for new metrics.
+          `percentage` is the legacy 0–100 form. Do not use it for new metrics. It is still
+          accepted because the seven NCD `cohort_6m_*_percent` rows carry it: they are
+          computed as `round((numerator / denominator) * 100, 1)` in
+          `tamanu-dbt-msf-kule/models/metrics/metric__ncd_indicators_summary.sql`, so
+          relabelling them here without changing that model would make this registry wrong.
+          Migrating them is a change in that repo.
         tests:
           - accepted_values:
               arguments:
