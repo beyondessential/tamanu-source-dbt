@@ -18,9 +18,10 @@ clinical__visit_occurrence.visit_occurrence_id.
 
 {% docs clinical__visit_detail__visit_detail_concept_id %}
 OMOP standard Visit concept for this segment's encounter_type (9201 Inpatient Visit,
-9202 Outpatient Visit, 9203 Emergency Room Visit). NULL when the type has no matching
-concept. Per-segment, so an ER phase and a later inpatient phase of one encounter carry
-9203 and 9201 respectively.
+9202 Outpatient Visit, 9203 Emergency Room Visit). Never NULL -- a segment whose
+encounter_type has no matching concept is excluded from this model entirely, not kept with
+a NULL concept. Per-segment, so an ER phase and a later inpatient phase of one encounter
+carry 9203 and 9201 respectively.
 {% enddocs %}
 
 {% docs clinical__visit_detail__visit_detail_start_date %}
@@ -42,20 +43,14 @@ datetime for the final segment. NULL for the final segment of an open encounter.
 {% enddocs %}
 
 {% docs clinical__visit_detail__care_site_id %}
-UUID of the ward (location_group) the segment took place in — the physical care site. FK
-to ref__care_site.care_site_id (ward-type rows). NULL when the segment's location has no
-location_group, which is common in Tamanu.
+UUID of the location (room/bed) the segment took place in; the segment's raw location_id.
+FK to ref__care_site.care_site_id (location-type rows). NULL when the segment has no
+location_id recorded.
 {% enddocs %}
 
 {% docs clinical__visit_detail__department_id %}
 UUID of the department (organizational care unit) responsible for the segment. Carried as
-an attribute; this is the grain used as care_site on clinical__visit_occurrence. FK to
-ref__care_site.care_site_id (department-type rows).
-{% enddocs %}
-
-{% docs clinical__visit_detail__location_id %}
-UUID of the room/bed (Tamanu location) the segment took place in — finer than the ward
-care site. Carried as a raw UUID; there is no ref__ wrapper for Tamanu locations yet.
+an attribute. FK to ref__care_site.care_site_id (department-type rows).
 {% enddocs %}
 
 {% docs clinical__visit_detail__visit_detail_source_value %}
