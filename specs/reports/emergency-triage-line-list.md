@@ -99,7 +99,7 @@ test.
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | A zero-minute Category 1 target reports every Category 1 presentation with any measurable wait as a miss (36 of 36 at Samoa's TTM Hospital in 2026 to date). Confirm whether deployments want a short grace period instead. | timcleasby | Before implemented |
+| OQ-001 | A zero-minute Category 1 target reports every Category 1 presentation with any measurable wait as a miss: 43 of 43 at Samoa's TTM Hospital in 2026 to date, none met, the fastest being 69 seconds from triage to active care. The compliance column is therefore uninformative for the most urgent category. The register template raises the same point and suggests a short buffer (e.g. 2 minutes) before counting a miss. Confirm which the deployment wants. | timcleasby | Before implemented |
 
 ## Lineage
 
