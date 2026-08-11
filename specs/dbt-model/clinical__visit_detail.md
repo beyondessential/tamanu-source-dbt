@@ -140,8 +140,8 @@ inner join, not kept with a NULL concept — see BL-003 and
   low-stakes gap: `data_tests: +severity: warn` project-wide means that test warns rather
   than fails the build, and validating against a live `locations` join was judged not worth
   the added dependency for a case the test already surfaces. Facility is not surfaced at
-  this layer at all; a `ds__` dataset that needs it joins `bases/locations` itself (see
-  `ds__emergency_visit` BL-003 for the pattern).
+  this layer at all; a consumer that needs it joins `bases/locations` itself (see
+  `metric__emergency_care` BL-007 for the pattern).
 - **BL-007:** `department_id` (the organizational unit, `encounter_history.department_id`)
   is carried as an attribute. It FKs to `ref__care_site` (department-type rows).
 
