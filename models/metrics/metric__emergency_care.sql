@@ -1,7 +1,7 @@
 -- metric__emergency_care -- D5 wide-format metric view for the emergency care
 -- indicators registered in csv/metric_definitions.csv: ed_attendance,
 -- ed_attendance_admitted (MAUI-6694).
--- Spec: specs/dbt-model/metric__emergency_care.md (BL-001..BL-007).
+-- Spec: specs/dbt-model/metric__emergency_care.md (BL-001..BL-010).
 --
 -- Supersedes ds__emergency_visit: same attendance definition (intake segment
 -- carrying OMOP visit concept 9203), re-expressed as registered metrics so the
@@ -76,8 +76,8 @@ ed_attendances_banded as (
         < date_trunc('month', current_date)
 ),
 
--- one row per (month, facility, sex, age band) carrying both counts, so the
--- rate is computed from the same grouping rather than re-derived
+-- one row per (month, facility, sex, age band) carrying both counts, so the two
+-- metrics below are emitted from a single grouping
 attendances_by_month as (
     select
         period_start,

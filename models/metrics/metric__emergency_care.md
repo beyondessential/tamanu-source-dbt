@@ -9,7 +9,7 @@ intake segment, so each arrival counts once. Attendances that went on to an inpa
 admission are included, and identified separately by ed_attendance_admitted.
 
 Supersedes ds__emergency_visit, which carried the same attendance definition as a
-standalone dataset. See specs/dbt-model/metric__emergency_care.md for BL-001..BL-007.
+standalone dataset. See specs/dbt-model/metric__emergency_care.md for BL-001..BL-010.
 {% enddocs %}
 
 {% docs metric__emergency_care__metric_id %}

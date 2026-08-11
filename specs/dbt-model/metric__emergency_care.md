@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `metric__emergency_care` (suite of 3 `metric__` indicators) |
+| **Name** | `metric__emergency_care` (suite of 2 registered indicators) |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
@@ -15,9 +15,9 @@
 | **Created** | 2026-08-11 |
 | **Last updated** | 2026-08-11 |
 
-Canonical definitions for the three emergency care indicators registered in
-`csv/metric_definitions.csv`: `ed_attendance`, `ed_attendance_admitted` and
-Monthly, at facility grain, disaggregated by sex and age band.
+Canonical definitions for the two emergency care indicators registered in
+`csv/metric_definitions.csv`: `ed_attendance` and `ed_attendance_admitted`. Monthly, at
+facility grain, disaggregated by sex and age band.
 
 **Supersedes `ds__emergency_visit`.** That dataset carried the same attendance definition
 (intake segment with OMOP visit concept 9203, the 262 admission flag) as a standalone
@@ -92,7 +92,7 @@ monthly aggregation is a BES composition. They are not implementations of AIHW i
   quality indicators, developed in support of WHO standardisation and designed for exactly
   this data environment. They are **condition-specific clinical quality** measures (e.g.
   "% of trauma patients who die within 24 hours of presentation"), not activity counts, so
-  none matches these three. **AFEM is the correct anchor for any future ED *quality*
+  none matches these two. **AFEM is the correct anchor for any future ED *quality*
   metric** — it is African, WHO-aligned, and its authors explicitly excluded time-stamped
   metrics as impractical in low-resource settings, which is a standing caution against
   prioritising waiting-time indicators here.
@@ -129,16 +129,16 @@ crosswalk.
 |---|---|---|
 | `metric_id` | text | `ed_attendance` or `ed_attendance_admitted`. FK → `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL — standard definitions, no variant |
-| `subject_id` | uuid | NULL — pre-aggregated |
+| `subject_id` | varchar(255) | NULL — pre-aggregated. Typed to match the D5 column, not populated |
 | `period_start` | date | First day of the reporting month, inclusive. `data_table_filter: date` |
 | `period_end` | date | Last day of the reporting month, inclusive |
 | `period_granularity` | text | Constant `'month'` |
 | `value_numeric` | numeric | Count. Additive, so `data_table_metric: sum` is safe at any grain |
 | `value_boolean` | boolean | NULL — unused |
-| `facility_id` | uuid | Facility of the intake segment's location. `data_table_filter: array` |
+| `facility_id` | varchar(255) | Facility of the intake segment's location — Tamanu ids are varchar, not a Postgres `uuid`. `data_table_filter: array` |
 | `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `tupaia_facility_mapping` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
-| `sex` | text | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_group__who_primary_classification` | text | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
+| `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
+| `age_group__who_primary_classification` | varchar(255) | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
 
 ## Business logic
 
@@ -267,6 +267,13 @@ crosswalk.
   `'Not available'`. Under-counting ED activity because a facility is missing from a
   deployment's crosswalk would be the worse failure.
 
+  **The seed must hold at most one row per `tamanu_facility_id`.** Nothing in this model
+  enforces it, and a duplicate would fan the left join out, double-counting every
+  attendance at that facility. AC-001 would catch it — `tupaia_facility_id` is not in the
+  grain, so a fan-out breaks uniqueness — but only as a grain failure whose message does
+  not name the cause. A deployment adding the seed should test it `unique` on
+  `tamanu_facility_id` in its own repo.
+
   This does **not** make `tupaia_facility_id` a metric disaggregation — the registry still
   lists `facility_id,sex,age_group__who_primary_classification`, and
   `assert__metric_definitions__disaggregations` would reject a Tupaia-side id. It is a
@@ -293,7 +300,7 @@ crosswalk.
 
 ## Registry entry
 
-Three rows in `csv/metric_definitions.csv` — `ed_attendance`,
+Two rows in `csv/metric_definitions.csv` — `ed_attendance` and
 `ed_attendance_admitted` — both `kind: metric`,
 `subject_grain: encounter`,
 `disaggregations: facility_id,sex,age_group__who_primary_classification`,
@@ -334,7 +341,7 @@ deployment materialising this model gets the same three cards from configuration
 Two things a consumer of this model has to get right, both of which follow from the D5
 wide format rather than from anything ED-specific:
 
-- **Always filter `metric_id`.** All three indicators share the single `value_numeric`
+- **Always filter `metric_id`.** Both indicators share the single `value_numeric`
   column, so a query that does not pin `metric_id` sums unlike things.
 - **`period_start` is a `date`, and a consumer may not be able to take it as one.** Over a
   JSON boundary a Postgres `date` is a hazard: node-postgres parses it into a JS `Date` at
