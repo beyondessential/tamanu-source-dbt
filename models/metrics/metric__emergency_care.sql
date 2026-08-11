@@ -8,14 +8,6 @@
 -- definitions are discoverable, externally anchored and reusable across
 -- deployments rather than local to one dataset (BL-001).
 
-{#- BL-002: "today" in deployment timezone, not DB session timezone (avoids a
-    month-boundary UTC lag). test_current_date overrides for unit tests. -#}
-{%- if var('test_current_date', none) -%}
-    {%- set current_local_date = "'" ~ var('test_current_date') ~ "'::date" -%}
-{%- else -%}
-    {%- set current_local_date = "(now() at time zone '" ~ var('timezone') ~ "')::date" -%}
-{%- endif %}
-
 with visit_detail as (
     select * from {{ ref('clinical__visit_detail') }}
 ),
@@ -70,12 +62,15 @@ ed_attendances_banded as (
         facility_id,
         sex,
         is_admitted,
-        {{ age_group__who_primary_classification('age_years') }} as age_group
+        {{ age_group__who_primary_classification('age_years') }}
+            as age_group__who_primary_classification
     from ed_attendances
     -- BL-002: exclude the incomplete current month; a partial final month reads
-    -- as a collapse in a trend chart
+    -- as a collapse in a trend chart. current_date is the DB session date, as
+    -- everywhere else in this repo -- see the spec for the sub-day lag this
+    -- accepts at a month boundary.
     where date_trunc('month', presentation_date)
-        < date_trunc('month', {{ current_local_date }})
+        < date_trunc('month', current_date)
 ),
 
 -- one row per (month, facility, sex, age band) carrying both counts, so the
@@ -85,11 +80,11 @@ attendances_by_month as (
         period_start,
         facility_id,
         sex,
-        age_group,
+        age_group__who_primary_classification,
         count(*) as total_attendances,
         count(*) filter (where is_admitted) as total_admitted
     from ed_attendances_banded
-    group by period_start, facility_id, sex, age_group
+    group by period_start, facility_id, sex, age_group__who_primary_classification
 ),
 
 unioned as (
@@ -98,7 +93,7 @@ unioned as (
         period_start,
         facility_id,
         sex,
-        age_group,
+        age_group__who_primary_classification,
         total_attendances::numeric as value
     from attendances_by_month
 
@@ -109,7 +104,7 @@ unioned as (
         period_start,
         facility_id,
         sex,
-        age_group,
+        age_group__who_primary_classification,
         total_admitted::numeric as value
     from attendances_by_month
 
@@ -123,7 +118,7 @@ unioned as (
         period_start,
         facility_id,
         sex,
-        age_group,
+        age_group__who_primary_classification,
         round(100.0 * total_admitted / total_attendances, 1) as value
     from attendances_by_month
     where total_attendances > 0
@@ -142,5 +137,5 @@ select
     null::boolean as value_boolean,
     facility_id,
     sex,
-    age_group
+    age_group__who_primary_classification
 from unioned

@@ -54,9 +54,13 @@ when aggregating.
 NULL -- not used by these indicators.
 {% enddocs %}
 
-{% docs metric__emergency_care__age_group %}
-Age band at the attendance date, per the WHO primary age classification's range
-boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years', '60-74 years',
+{% docs metric__emergency_care__age_group__who_primary_classification %}
+Age band at the attendance date. The column is named for the classification that
+produced it (macro `age_group__who_primary_classification`) rather than a generic
+`age_group`, so a consumer can tell which banding it is reading without going back to the
+model -- bands are not comparable across classifications.
+
+Per the WHO primary age classification's range boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years', '60-74 years',
 '75+ years', or 'Unknown age' when the birth date is missing or the computed age is
 implausible (negative, or over 120).
 {% enddocs %}

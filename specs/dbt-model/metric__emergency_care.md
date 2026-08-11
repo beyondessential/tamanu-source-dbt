@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format) |
 | **Materialisation** | `view` |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
@@ -103,14 +103,18 @@ monthly aggregation is a BES composition. They are not implementations of AIHW i
 collecting monthly facility-level attendance. Queen of Sheba almost certainly already
 reports into it. Aligning these definitions to DHIMS2's would make the dashboard agree with
 the hospital's national returns — worth much more than agreeing with an Australian standard.
-The DHIMS2 dataset definitions were not available at time of writing; the registry rows note
-this as pending. If DHIMS2 defines attendance differently, that becomes a `variant_of` row
+The DHIMS2 dataset definitions were not available at time of writing. The registry rows note
+alignment as pending, but in country-neutral terms ("the deploying country's national HMIS
+definition") — the registry lists the standard metrics the product works with, so naming one
+deployment there would be wrong. Ghana is named here, in the spec for the work that raised
+the question. If DHIMS2 defines attendance differently, that becomes a `variant_of` row
 rather than a change here.
 
 ## Grain
 
-**One row per** `(metric_id, period_start, facility_id, sex, age_group)`. Asserted by
-AC-001 at `error` severity — a grain violation would double-count a month in any consumer
+**One row per**
+`(metric_id, period_start, facility_id, sex, age_group__who_primary_classification)`.
+Asserted by AC-001 at `error` severity — a grain violation would double-count a month in any consumer
 that sums `value_numeric`.
 
 `subject_id` is NULL throughout: these are pre-aggregated counts, not per-subject facts.
@@ -131,7 +135,7 @@ D5 wide format, plus this suite's three disaggregation columns.
 | `value_boolean` | boolean | NULL — unused |
 | `facility_id` | uuid | Facility of the intake segment's location. `data_table_filter: array` |
 | `sex` | text | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_group` | text | WHO primary age band at the attendance date (BL-004). `data_table_filter: array` |
+| `age_group__who_primary_classification` | text | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
 
 ## Business logic
 
@@ -140,9 +144,15 @@ D5 wide format, plus this suite's three disaggregation columns.
   definition of record; this model is its implementation.
 - **BL-002 (reporting period):** monthly, bucketed by `date_trunc('month', …)` on the
   attendance's presentation date. **The incomplete current month is never emitted** — a
-  partial final month reads as a collapse on a trend chart. "Today" is evaluated in the
-  deployment timezone, not the DB session timezone, so a month boundary does not shift under
-  a UTC session; `test_current_date` overrides it for unit tests. There is no month spine: a
+  partial final month reads as a collapse on a trend chart. "Today" is plain `current_date`,
+  matching every other model in this repo. That is the **DB session** date, which under a UTC
+  session can lag a deployment east of UTC by up to a day: for a few hours after local
+  midnight on the 1st, the just-completed month is still withheld. Accepted deliberately —
+  the model is a view, so it self-heals within the day, and the alternative
+  (`now() at time zone var('timezone')`) buys a sub-day edge at the cost of diverging from
+  the repo's convention. No test-only variable is used to pin the boundary: unit tests date
+  their fixtures in the past (always included) or the far future (always excluded), so the
+  exclusion is deterministic without one. There is no month spine: a
   month with no ED attendance emits no row rather than a zero, since absence and a true zero
   are not distinguishable here and a fabricated zero is the more misleading of the two.
 - **BL-003 (attendance inclusion + intake attribution):** an ED attendance is the **first**
@@ -186,7 +196,7 @@ D5 wide format, plus this suite's three disaggregation columns.
 - **BL-006 (`ed_admission_rate` is not additive):** the rate is
   `round(100.0 * admitted / attendances, 1)`, computed from the same grouping as the two
   counts so it is internally consistent with them. It is a **proportion**: summing it across
-  `sex`, `age_group` or facility is meaningless. A consumer aggregating to a coarser grain
+  `sex`, age band or facility is meaningless. A consumer aggregating to a coarser grain
   must re-derive it from `ed_attendance_admitted / ed_attendance`. It is registered anyway —
   rather than left to each visual — so the definition is stated once; the registry carries
   its numerator and denominator descriptions. Emitted only where the denominator is
@@ -208,7 +218,7 @@ D5 wide format, plus this suite's three disaggregation columns.
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | One row per `(metric_id, period_start, facility_id, sex, age_group)` | grain | `dbt_utils.unique_combination_of_columns` (`error`) |
+| AC-001 | One row per `(metric_id, period_start, facility_id, sex, age_group__who_primary_classification)` | grain | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is `not_null` and one of the three registered ids | BL-001 | dbt `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | dbt `relationships` (`error`) |
 | AC-004 | `period_start` and `period_end` are `not_null` | BL-002 | dbt `not_null` |
@@ -220,8 +230,19 @@ D5 wide format, plus this suite's three disaggregation columns.
 
 Three rows in `csv/metric_definitions.csv` — `ed_attendance`,
 `ed_attendance_admitted`, `ed_admission_rate` — all `kind: metric`,
-`subject_grain: encounter`, `disaggregations: facility_id,sex,age_group`, `status: draft`,
-`spec_path` pointing here.
+`subject_grain: encounter`,
+`disaggregations: facility_id,sex,age_group__who_primary_classification`,
+`status: approved`, `spec_path` pointing here.
+
+The disaggregation names the age classification, so
+`assert__metric_definitions__disaggregations` admits
+`age_group__who_primary_classification` alongside the generic `age_group` the pre-existing
+rows use.
+
+The registry is the list of **standard** metrics the product works with, so no rationale
+there names a deployment. The national-alignment question is a deployment concern and lives
+here as OQ-001, not in the registry — the rationales say "pending alignment with the
+deploying country's national HMIS definition".
 
 ## Dependencies
 

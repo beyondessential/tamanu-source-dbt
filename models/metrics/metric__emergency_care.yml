@@ -21,7 +21,7 @@ models:
               - period_start
               - facility_id
               - sex
-              - age_group
+              - age_group__who_primary_classification
           config:
             severity: error
     columns:
@@ -103,8 +103,8 @@ models:
         description: "{{ doc('patients__sex') }}"
         meta:
           data_table_filter: array
-      - name: age_group
+      - name: age_group__who_primary_classification
         data_type: character varying(255)
-        description: "{{ doc('metric__emergency_care__age_group') }}"
+        description: "{{ doc('metric__emergency_care__age_group__who_primary_classification') }}"
         meta:
           data_table_filter: array
