@@ -17,7 +17,7 @@
 
 Canonical definitions for the three emergency care indicators registered in
 `csv/metric_definitions.csv`: `ed_attendance`, `ed_attendance_admitted` and
-`ed_admission_rate`. Monthly, at facility grain, disaggregated by sex and age band.
+Monthly, at facility grain, disaggregated by sex and age band.
 
 **Supersedes `ds__emergency_visit`.** That dataset carried the same attendance definition
 (intake segment with OMOP visit concept 9203, the 262 admission flag) as a standalone
@@ -34,7 +34,6 @@ calendar month:
 |---|---|---|
 | `ed_attendance` | count | ED attendances |
 | `ed_attendance_admitted` | count | Of those, the ones that became an inpatient admission |
-| `ed_admission_rate` | percentage | The proportion admitted |
 
 **Clinical context.** In Tamanu an ED arrival that is later admitted is a **single
 encounter** whose type changes over time, recorded in `encounter_history`. Counting
@@ -70,7 +69,6 @@ and Welfare, custodian of the METeOR metadata registry) for the *concepts* they 
 |---|---|---|---|
 | `ed_attendance` | AIHW | [746091](https://meteor.aihw.gov.au/content/746091) | Emergency department stay — presentation date |
 | `ed_attendance_admitted` | AIHW | [746706](https://meteor.aihw.gov.au/content/746706) | ED service episode — episode end status |
-| `ed_admission_rate` | BES | — | A proportion of the two above |
 
 **What is and isn't being claimed.** AIHW does publish aggregate indicators in METeOR, with
 numerator/denominator/computation fields — e.g. National Healthcare Agreement
@@ -135,7 +133,7 @@ crosswalk.
 | `period_start` | date | First day of the reporting month, inclusive. `data_table_filter: date` |
 | `period_end` | date | Last day of the reporting month, inclusive |
 | `period_granularity` | text | Constant `'month'` |
-| `value_numeric` | numeric | Count, or percentage for `ed_admission_rate`. `data_table_metric: sum` |
+| `value_numeric` | numeric | Count. Additive, so `data_table_metric: sum` is safe at any grain |
 | `value_boolean` | boolean | NULL — unused |
 | `facility_id` | uuid | Facility of the intake segment's location. `data_table_filter: array` |
 | `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `tupaia_facility_mapping` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
@@ -200,18 +198,11 @@ crosswalk.
   and that can differ from the intake segment's type. This is the same schema-drift risk as
   everywhere else the map is used, already guarded by `clinical__visit_occurrence`'s own
   completeness test and by `data_test__map__omop_visit_type_coverage` upstream of it.
-- **BL-006 (`ed_admission_rate` is not additive):** the rate is
-  `round(100.0 * admitted / attendances, 1)`, computed from the same grouping as the two
-  counts so it is internally consistent with them. It is a **proportion**: summing it across
-  `sex`, age band or facility is meaningless. A consumer aggregating to a coarser grain
-  must re-derive it from `ed_attendance_admitted / ed_attendance`. A consumer re-deriving it
-  should also note the **scale**: this column is 0–100, whereas some presentation layers
-  expect a 0–1 fraction (Tupaia's `percentage` value type multiplies by 100), so a chart that
-  re-derives the ratio should emit the bare quotient rather than reuse this scaling. It is
-  registered anyway —
-  rather than left to each visual — so the definition is stated once; the registry carries
-  its numerator and denominator descriptions. Emitted only where the denominator is
-  non-zero, which by construction it always is.
+- **BL-006 (no derived rate):** the model emits counts only. The admission rate is left to
+  the consumer -- the Tupaia visual or Tamanu report layer -- because both the numerator
+  (`ed_attendance_admitted`) and the denominator (`ed_attendance`) are additive, so the rate
+  can be formed correctly at any grain, whereas a pre-computed proportion cannot be rolled up.
+
 - **BL-007 (facility attribution):** `facility_id` is the facility of the intake segment's
   location, resolved by joining `bases/locations` on
   `clinical__visit_detail.care_site_id` (which is the segment's `location_id` — see that
@@ -291,7 +282,7 @@ crosswalk.
 ## Registry entry
 
 Three rows in `csv/metric_definitions.csv` — `ed_attendance`,
-`ed_attendance_admitted`, `ed_admission_rate` — all `kind: metric`,
+`ed_attendance_admitted` — both `kind: metric`,
 `subject_grain: encounter`,
 `disaggregations: facility_id,sex,age_group__who_primary_classification`,
 `status: approved`, `spec_path` pointing here.

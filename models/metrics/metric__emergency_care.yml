@@ -43,7 +43,6 @@ models:
                 values:
                   - ed_attendance
                   - ed_attendance_admitted
-                  - ed_admission_rate
           # Definition <-> implementation link: every metric__ view asserts its
           # ids are registered in the canonical registry.
           - relationships:

@@ -1,7 +1,7 @@
 {% docs metric__emergency_care %}
 D5 wide-format metric view for the emergency care indicators registered in
-csv/metric_definitions.csv: ed_attendance, ed_attendance_admitted and
-ed_admission_rate. One row per (metric, reporting month, facility, sex, age band).
+csv/metric_definitions.csv: ed_attendance and ed_attendance_admitted. One row per
+(metric, reporting month, facility, sex, age band).
 
 An ED attendance is an encounter whose first history segment carries OMOP visit concept
 9203/Emergency Room Visit -- covering emergency, triage and observation -- counted at that
@@ -13,9 +13,9 @@ standalone dataset. See specs/dbt-model/metric__emergency_care.md for BL-001..BL
 {% enddocs %}
 
 {% docs metric__emergency_care__metric_id %}
-The registered indicator identifier: 'ed_attendance', 'ed_attendance_admitted' or
-'ed_admission_rate'. Joins to the canonical registry in csv/metric_definitions.csv, which
-carries each one's definition, source and rationale.
+The registered indicator identifier: 'ed_attendance' or 'ed_attendance_admitted'. Joins to
+the canonical registry in csv/metric_definitions.csv, which carries each one's definition,
+source and rationale.
 {% enddocs %}
 
 {% docs metric__emergency_care__variant_id %}
@@ -41,13 +41,12 @@ Constant 'month'. Every indicator here reports monthly.
 {% enddocs %}
 
 {% docs metric__emergency_care__value_numeric %}
-The indicator value: a count for ed_attendance and ed_attendance_admitted, a percentage
-(0-100, one decimal place) for ed_admission_rate.
+The indicator value: a count of attendances for ed_attendance, and of attendances admitted
+for ed_attendance_admitted.
 
-Counts are additive across the disaggregation columns -- summing them over sex and age
-band gives the facility total. **ed_admission_rate is not**: it is a proportion, so
-summing it across disaggregations is meaningless. Re-derive the rate from the two counts
-when aggregating.
+Both are additive across the disaggregation columns -- summing them over sex and age band
+gives the facility total -- so a consumer can form the admission rate at whatever grain it
+groups to. No pre-computed rate is emitted, because a proportion cannot be rolled up.
 {% enddocs %}
 
 {% docs metric__emergency_care__value_boolean %}

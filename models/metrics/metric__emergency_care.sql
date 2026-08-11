@@ -1,6 +1,6 @@
 -- metric__emergency_care -- D5 wide-format metric view for the emergency care
 -- indicators registered in csv/metric_definitions.csv: ed_attendance,
--- ed_attendance_admitted, ed_admission_rate (MAUI-6694).
+-- ed_attendance_admitted (MAUI-6694).
 -- Spec: specs/dbt-model/metric__emergency_care.md (BL-001..BL-007).
 --
 -- Supersedes ds__emergency_visit: same attendance definition (intake segment
@@ -111,20 +111,6 @@ unioned as (
         total_admitted::numeric as value
     from attendances_by_month
 
-    union all
-
-    -- BL-006: a proportion, not a count -- non-additive, and emitted only where
-    -- the denominator is non-zero. Every group here has >= 1 attendance by
-    -- construction, so the guard is defensive rather than load-bearing.
-    select
-        'ed_admission_rate' as metric_id,
-        period_start,
-        facility_id,
-        sex,
-        age_group__who_primary_classification,
-        round(100.0 * total_admitted / total_attendances, 1) as value
-    from attendances_by_month
-    where total_attendances > 0
 )
 
 -- BL-007: D5 wide format. subject_id and value_boolean are unused -- these are
