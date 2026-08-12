@@ -17,7 +17,7 @@ models:
         meta:
           data_table_filter: date
       - name: yearmonth
-        data_type: date
+        data_type: character varying(255)
         description: "{{ doc('ds__outpatient_visit__yearmonth') }}"
         meta:
           data_table_filter: yearmonth

@@ -67,8 +67,8 @@ outpatient_encounters as (
 outpatient_encounters_banded as (
     select
         visit_detail_start_date,
-        -- first day of the visit's calendar month (BL-007)
-        date_trunc('month', visit_detail_start_date)::date as yearmonth,
+        -- visit's calendar month, 'YYYY-MM' (BL-007)
+        to_char(visit_detail_start_date, 'YYYY-MM') as yearmonth,
         tamanu_facility_id,
         location_group_id,
         location_group_name,
