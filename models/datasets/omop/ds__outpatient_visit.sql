@@ -84,7 +84,7 @@ select
     b.yearmonth,
     b.tamanu_facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has set
-    -- integrations.tupaia.enabled and supplied its own tupaia_facility_mapping seed
+    -- integrations.tupaia.enabled and supplied its own map__tupaia_facility seed
     -- (BL-006). Never referenced when the flag is unset, so this model still builds
     -- standalone in tamanu-source-dbt with no such seed present.
     -- Never NULL: this is the data_table_filter column, and Tupaia's default array filter
@@ -102,7 +102,7 @@ select
     count(*) as total_outpatient_visits
 from outpatient_encounters_banded b
 {% if has_tupaia_mapping %}
-left join {{ ref('tupaia_facility_mapping') }} tm
+left join {{ ref('map__tupaia_facility') }} tm
     on tm.tamanu_facility_id = b.tamanu_facility_id
 {% endif %}
 group by
