@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-11 |
+| **Last updated** | 2026-08-12 |
 
 Canonical definitions for the two emergency care indicators registered in
 `csv/metric_definitions.csv`: `ed_attendance` and `ed_attendance_admitted`. Monthly, at
@@ -267,6 +267,14 @@ crosswalk.
   `seeds/map__tupaia_facility.csv` (columns `tamanu_facility_id`, `tupaia_facility_id`)
   in the same PR.
 
+  **Unit-test coverage follows the gate.** A unit test resolves its `given` inputs against a
+  manifest holding only the nodes it names, so one test cannot cover both sides of the var:
+  with the integration on the model refs a seed the test must mock, and with it off that
+  seed is not in the project to name. `test_metric__emergency_care_attendance_filters`
+  (AC-009) is therefore enabled only where the integration is off, and
+  `test_metric__emergency_care_tupaia_crosswalk` (AC-010) only where it is on. Each runs
+  where its inputs resolve, and every project runs exactly one of them.
+
   **Never NULL, deliberately.** The column is a data table filter, and Tupaia's array filter
   pattern (`col = ANY(COALESCE(:param, ARRAY[col]))`) drops NULL rows — a NULL would silently
   disappear that facility from every chart rather than show it as unmapped. Hence the
@@ -306,7 +314,8 @@ crosswalk.
 | AC-006 | `value_numeric` is `not_null` | BL-006 | dbt `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | dbt `not_null` |
 | AC-008 | `tupaia_facility_id` is `not_null` — `'Not available'` rather than NULL, so a Tupaia array filter cannot drop the row | BL-009 | dbt `not_null` |
-| AC-009 | An attendance is the intake segment only and only where its visit concept is 9203; the admitted count follows visit concept 262; the incomplete current month is excluded | BL-002, BL-003, BL-005 | dbt unit test (`test_metric__emergency_care_attendance_filters`) |
+| AC-009 | An attendance is the intake segment only and only where its visit concept is 9203; the admitted count follows visit concept 262; the incomplete current month is excluded | BL-002, BL-003, BL-005 | dbt unit test (`test_metric__emergency_care_attendance_filters`) — enabled where the Tupaia integration is off |
+| AC-010 | With the Tupaia integration on, a facility present in `map__tupaia_facility` carries its Tupaia id and one absent from it carries `'Not available'` | BL-009 | dbt unit test (`test_metric__emergency_care_tupaia_crosswalk`) — enabled where the integration is on |
 
 ## Registry entry
 
