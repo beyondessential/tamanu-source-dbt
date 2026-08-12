@@ -6,9 +6,6 @@ profile: tamanu_source_dbt
 vars:
   has_sensitive_facility: false
   home_country_id: country-Australia
-  integrations:
-    tupaia:
-      enabled: false
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD

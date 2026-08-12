@@ -9,13 +9,6 @@ unit_tests:
       incomplete current month is excluded. The current-month row is built from
       current_date in SQL rather than pinned, since the model reads the session date.
 
-      Runs only where the Tupaia integration is off, which is this repo and every
-      deployment that has not enabled it. With the integration on, the model refs
-      map__tupaia_facility, and a unit test can only mock nodes it names in given --
-      so the crosswalk case is covered by test_metric__emergency_care_tupaia_crosswalk,
-      which is enabled on exactly the inverse condition.
-    config:
-      enabled: "{{ not var('integrations', {}).get('tupaia', {}).get('enabled', false) }}"
     given:
       # vd_admitted + vd_not_admitted share (month, facility, sex, age band) so they
       # aggregate into one group: 2 attendances, 1 of them admitted.
@@ -61,6 +54,6 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'ed_attendance' as metric_id, null::text as variant_id, null::varchar as subject_id, '2024-05-01'::date as period_start, '2024-05-31'::date as period_end, 'month'::text as period_granularity, 2::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'Not available' as tupaia_facility_id, 'female' as sex, '25-44 years' as age_group__who_primary_classification
+        select 'ed_attendance' as metric_id, null::text as variant_id, null::varchar as subject_id, '2024-05-01'::date as period_start, '2024-05-31'::date as period_end, 'month'::text as period_granularity, 2::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, '25-44 years' as age_group__who_primary_classification
         union all
         select 'ed_attendance_admitted', null::text, null::varchar, '2024-05-01'::date, '2024-05-31'::date, 'month'::text, 1::numeric, null::boolean, 'fac_1', 'Not available', 'female', '25-44 years'
