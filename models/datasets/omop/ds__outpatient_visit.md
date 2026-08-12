@@ -6,7 +6,7 @@ visit age band. Additive count only, so it can be aggregated to any period.
 {% enddocs %}
 
 {% docs ds__outpatient_visit__yearmonth %}
-First day of the visit's calendar month (`date_trunc('month', visit_detail_start_date)`).
+The visit's calendar month as `'YYYY-MM'` text (`to_char(visit_detail_start_date, 'YYYY-MM')`).
 {% enddocs %}
 
 {% docs ds__outpatient_visit__age_group %}

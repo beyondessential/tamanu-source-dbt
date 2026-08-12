@@ -46,7 +46,7 @@ the data table's filter column, so it carries `'Not available'` instead (BL-006)
 | Column | Type | Notes |
 |---|---|---|
 | `visit_detail_start_date` | date | Calendar day of the intake segment (OMOP `VISIT_DETAIL.visit_detail_start_date`). `data_table_filter: date` |
-| `yearmonth` | date | First day of the intake segment's calendar month (`date_trunc('month', visit_detail_start_date)`), alongside `visit_detail_start_date` rather than replacing it (BL-007). `data_table_filter: yearmonth` |
+| `yearmonth` | text | The intake segment's calendar month as `'YYYY-MM'` (`to_char(visit_detail_start_date, 'YYYY-MM')`), alongside `visit_detail_start_date` rather than replacing it (BL-007). `data_table_filter: yearmonth` |
 | `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of area. Never NULL — an encounter whose location doesn't resolve is excluded from the dataset entirely (BL-003). Not filterable — `tupaia_facility_id` is the filter column instead |
 | `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
 | `location_group_id` | uuid | Area. `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `bases/location_groups.id`. `data_table_filter: array` |
@@ -132,10 +132,9 @@ the data table's filter column, so it carries `'Not available'` instead (BL-006)
   entry (`coalesce(tm.tupaia_facility_id, 'Not available')`). `tamanu_facility_id` itself
   is never NULL to begin with (BL-003), so that case doesn't arise.
 - **BL-007 (yearmonth):** `yearmonth` is
-  `date_trunc('month', visit_detail_start_date)::date` — the first day of the intake
-  segment's calendar month. It is carried alongside `visit_detail_start_date`, not instead
-  of it, and does not change the grain (BL-001): it is functionally dependent on
-  `visit_detail_start_date`.
+  `to_char(visit_detail_start_date, 'YYYY-MM')` — the intake segment's calendar month as
+  text. It is carried alongside `visit_detail_start_date`, not instead of it, and does not
+  change the grain (BL-001): it is functionally dependent on `visit_detail_start_date`.
 
 ## Acceptance criteria
 
