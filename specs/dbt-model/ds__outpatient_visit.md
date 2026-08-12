@@ -48,7 +48,7 @@ the data table's filter column, so it carries `'Not available'` instead (BL-006)
 | `visit_detail_start_date` | date | Calendar day of the intake segment (OMOP `VISIT_DETAIL.visit_detail_start_date`). `data_table_filter: date` |
 | `yearmonth` | text | The intake segment's calendar month as `'YYYY-MM'` (`to_char(visit_detail_start_date, 'YYYY-MM')`), alongside `visit_detail_start_date` rather than replacing it (BL-007). `data_table_filter: yearmonth` |
 | `tamanu_facility_id` | uuid | Facility of the visit's location (`bases/locations.facility_id`), independent of area. Never NULL — an encounter whose location doesn't resolve is excluded from the dataset entirely (BL-003). Not filterable — `tupaia_facility_id` is the filter column instead |
-| `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `tupaia_facility_mapping` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
+| `tupaia_facility_id` | text | `tamanu_facility_id` mapped to Tupaia's id via the deployment's `map__tupaia_facility` seed (see BL-006). `'Not available'` (never NULL) if the deployment hasn't configured this mapping, or the facility has no entry. `data_table_filter: array` |
 | `location_group_id` | uuid | Area. `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK → `bases/location_groups.id`. `data_table_filter: array` |
 | `location_group_name` | text | Area name; `'Unknown'` when the area doesn't resolve |
 | `sex` | text | `clinical__person.gender_source_value` |
@@ -104,7 +104,7 @@ the data table's filter column, so it carries `'Not available'` instead (BL-006)
   and would misrepresent wait/consultation time. The additive measure is
   `total_outpatient_visits` (`count`) only.
 - **BL-006 (Tupaia facility-id crosswalk, deployment-gated):** `tupaia_facility_id` maps
-  `tamanu_facility_id` through a `tupaia_facility_mapping` seed (columns
+  `tamanu_facility_id` through a `map__tupaia_facility` seed (columns
   `tamanu_facility_id`, `tupaia_facility_id`) that **only exists in a deployment's own repo**
   — `tamanu-source-dbt` never defines it. The join is gated behind a namespaced flag,
   `var('integrations', {}).get('tupaia', {}).get('enabled', false)`, rather than a one-off
@@ -118,7 +118,7 @@ the data table's filter column, so it carries `'Not available'` instead (BL-006)
       tupaia:
         enabled: true
   ```
-  in its own `dbt_project.yml`, alongside supplying `seeds/tupaia_facility_mapping.csv`.
+  in its own `dbt_project.yml`, alongside supplying `seeds/map__tupaia_facility.csv`.
   Enabling the flag without the seed fails the build loudly (missing `ref()`) rather than
   shipping a placeholder — intentional. The flag is deployment-wide for Tupaia, not
   per-mapping: enabling it commits the deployment to supplying every Tupaia seed this repo
@@ -148,4 +148,4 @@ None.
 | `clinical__person` | `clinical/` | Sex and birth date for age at visit |
 | `locations` | `bases/` | `tamanu_facility_id` and `location_group_id` of the visit's location (BL-003) |
 | `location_groups` | `bases/` | Area (location_group) name, joined via the visit's location (BL-003) |
-| `tupaia_facility_mapping` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `integrations.tupaia.enabled` (BL-006) |
+| `map__tupaia_facility` | deployment seed (not in `tamanu-source-dbt`) | Tamanu → Tupaia facility id crosswalk, gated by `integrations.tupaia.enabled` (BL-006) |
