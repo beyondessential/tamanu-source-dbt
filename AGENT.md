@@ -126,15 +126,6 @@ bundle rather than a seed table:
   `tamanu-dbt-<deployment>/csv/metric_definitions_<deployment>.csv` and are
   merged in by the generation script (keyed on `metric_id`)
 
-## Patch propagation script
-
-`scripts/propagate_patch.py` has a test suite at `scripts/tests/test_propagate_patch.py`.
-Run the tests whenever `propagate_patch.py` or its test file changes:
-
-```bash
-cd scripts && uv run --env-file ../.env python -m pytest tests/test_propagate_patch.py -v
-```
-
 ## Running commands
 
 Run project commands through `uv run --env-file .env <cmd>` — `uv` syncs the virtualenv
@@ -177,6 +168,12 @@ scanning the whole codebase:
 | Metric definitions source | `csv/metric_definitions.csv` (generates `macros/metric_definitions.sql`; view at `models/metric_definitions.sql`) |
 | Source doc blocks | `models/sources/<table>.md` |
 | Deployment repo list | `.github/deployment-repos.yml` |
+
+Release propagation: the deployment repos above pin a `tamanu-source-dbt`
+version and are bumped **manually** per release — open one version-bump PR
+against each (see the release conventions in maui-team). Forward-porting a
+patch across higher-minor branches is a manual cherry-pick too; neither is
+automated in this repo.
 
 Quick search commands:
 
