@@ -117,13 +117,9 @@ that sums `value_numeric`.
 
 `subject_id` is NULL throughout: these are pre-aggregated counts, not per-subject facts.
 
-`tupaia_facility_id` is **not** part of the grain. It is an attribute of the facility,
-functionally dependent on `facility_id` (BL-009), so it rides along without splitting a row.
-
 ## Output schema
 
-D5 wide format, plus this suite's three disaggregation columns and the Tupaia facility
-crosswalk.
+D5 wide format, plus this suite's three disaggregation columns.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -136,7 +132,6 @@ crosswalk.
 | `value_numeric` | numeric | Count. Additive, so `data_table_metric: sum` is safe at any grain |
 | `value_boolean` | boolean | NULL — unused |
 | `facility_id` | varchar(255) | Facility of the intake segment's location — Tamanu ids are varchar, not a Postgres `uuid`. `data_table_filter: array` |
-| `tupaia_facility_id` | text | Tupaia's id for the same facility, from the deployment's `map__tupaia_facility` seed. `'Not available'` — never NULL — when the integration is off or the facility is unmapped (BL-009). `data_table_filter: array` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
 | `age_group__who_primary_classification` | varchar(255) | Age band at the attendance date (BL-004). Named for the classification that produced it, not a generic `age_group`, because bands are not comparable across classifications. `data_table_filter: array` |
 
@@ -250,51 +245,28 @@ crosswalk.
   build time, not query time, so a withheld month appears at the next `dbt build` rather than
   a few hours later.
 
-- **BL-009 (Tupaia facility crosswalk):** `tupaia_facility_id` carries Tupaia's id for the
-  facility, so a Tupaia consumer can chart per facility without a crosswalk of its own.
+- **BL-009 (facility identity is Tamanu's, and stays that way):** the model emits
+  `facility_id` — the Tamanu id — and nothing else. It does **not** translate that into a
+  consumer's own identifier.
 
-  **Gated, not assumed.** The join to `{{ ref('map__tupaia_facility') }}` is emitted only
-  when the deployment sets `integrations.tupaia.enabled` — the `ref()` sits inside the
-  conditional, so this repo (where the integration is off and no such seed exists) still
-  parses and builds. With the integration off the column is the literal `'Not available'`.
+  An earlier revision carried a `tupaia_facility_id` column, joined to a deployment-supplied
+  seed behind an `integrations.tupaia.enabled` var. That was withdrawn. Three reasons:
 
-  **Turning the var on without the seed fails the whole project's parse**, not just this
-  model: `dbt parse --vars '{integrations: {tupaia: {enabled: true}}}'` here raises
-  `Compilation Error … depends on a node named 'map__tupaia_facility' which was not
-  found`. That is the intended failure mode — loud and immediate, rather than a column that
-  silently reads `'Not available'` everywhere — but it means the var and the seed must land
-  in the same change. A deployment enabling the integration adds
-  `seeds/map__tupaia_facility.csv` (columns `tamanu_facility_id`, `tupaia_facility_id`)
-  in the same PR.
+  1. **It put a consumer's namespace in a shared model.** Tupaia is one consumer; DHIS2 org
+     units and a deployment's own coding are others. A column per consumer does not scale,
+     and the first one sets the precedent.
+  2. **The gate made the model's schema depend on a var**, so the same model had different
+     columns in different deployments — and a `ref()` inside the gate meant enabling the var
+     without the seed failed the whole project's parse.
+  3. **It went wrong in practice.** Two models ended up naming the same crosswalk seed
+     differently (`map__tupaia_facility` here, `tupaia_facility_mapping` in
+     `ds__outpatient_visit`), so a deployment with the var on had to supply two seeds holding
+     identical data or one model would not resolve.
 
-  **Unit-test coverage follows the gate.** A unit test resolves its `given` inputs against a
-  manifest holding only the nodes it names, so one test cannot cover both sides of the var:
-  with the integration on the model refs a seed the test must mock, and with it off that
-  seed is not in the project to name. `test_metric__emergency_care_attendance_filters`
-  (AC-009) is therefore enabled only where the integration is off, and
-  `test_metric__emergency_care_tupaia_crosswalk` (AC-010) only where it is on. Each runs
-  where its inputs resolve, and every project runs exactly one of them.
+  The translation is a **consumer-layer** concern and belongs where the consumer is built.
+  For Tupaia that is the data table, which can join the crosswalk in its own SQL; nothing
+  about that requires the metric to carry the column.
 
-  **Never NULL, deliberately.** The column is a data table filter, and Tupaia's array filter
-  pattern (`col = ANY(COALESCE(:param, ARRAY[col]))`) drops NULL rows — a NULL would silently
-  disappear that facility from every chart rather than show it as unmapped. Hence the
-  `coalesce(…, 'Not available')` and AC-008.
-
-  The mapping is a **left** join: an unmapped facility is still counted, labelled
-  `'Not available'`. Under-counting ED activity because a facility is missing from a
-  deployment's crosswalk would be the worse failure.
-
-  **The seed must hold at most one row per `tamanu_facility_id`.** Nothing in this model
-  enforces it, and a duplicate would fan the left join out, double-counting every
-  attendance at that facility. AC-001 would catch it — `tupaia_facility_id` is not in the
-  grain, so a fan-out breaks uniqueness — but only as a grain failure whose message does
-  not name the cause. A deployment adding the seed should test it `unique` on
-  `tamanu_facility_id` in its own repo.
-
-  This does **not** make `tupaia_facility_id` a metric disaggregation — the registry still
-  lists `facility_id,sex,age_group__who_primary_classification`, and
-  `assert__metric_definitions__disaggregations` would reject a Tupaia-side id. It is a
-  facility attribute, not a dimension the metric is defined over (see Grain).
 - **BL-010 (sensitive facilities are included):** there is deliberately **no**
   `facilities.is_sensitive` filter. These are pre-aggregated counts with no `subject_id` and
   no PII, so no patient is identifiable through them; excluding sensitive facilities would
@@ -313,9 +285,7 @@ crosswalk.
 | AC-005 | `period_granularity` is `not_null` and always `'month'` | BL-002 | dbt `not_null` + `accepted_values` |
 | AC-006 | `value_numeric` is `not_null` | BL-006 | dbt `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | dbt `not_null` |
-| AC-008 | `tupaia_facility_id` is `not_null` — `'Not available'` rather than NULL, so a Tupaia array filter cannot drop the row | BL-009 | dbt `not_null` |
-| AC-009 | An attendance is the intake segment only and only where its visit concept is 9203; the admitted count follows visit concept 262; the incomplete current month is excluded | BL-002, BL-003, BL-005 | dbt unit test (`test_metric__emergency_care_attendance_filters`) — enabled where the Tupaia integration is off |
-| AC-010 | With the Tupaia integration on, a facility present in `map__tupaia_facility` carries its Tupaia id and one absent from it carries `'Not available'` | BL-009 | dbt unit test (`test_metric__emergency_care_tupaia_crosswalk`) — enabled where the integration is on |
+| AC-009 |An attendance is the intake segment only and only where its visit concept is 9203; the admitted count follows visit concept 262; the incomplete current month is excluded | BL-002, BL-003, BL-005 | dbt unit test (`test_metric__emergency_care_attendance_filters`) |
 
 ## Registry entry
 
@@ -345,7 +315,6 @@ deploying country's national HMIS definition".
 | `locations` | `bases/` | `facility_id` of the intake segment's location (BL-007) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 | `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
-| `map__tupaia_facility` | `seeds/` (deployment) | Tamanu → Tupaia facility id crosswalk (BL-009). **Conditional** — referenced only when `integrations.tupaia.enabled`, so it is not a dependency in this repo |
 
 ## Consumers
 
