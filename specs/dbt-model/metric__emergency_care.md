@@ -306,6 +306,7 @@ crosswalk.
 | AC-006 | `value_numeric` is `not_null` | BL-006 | dbt `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | dbt `not_null` |
 | AC-008 | `tupaia_facility_id` is `not_null` — `'Not available'` rather than NULL, so a Tupaia array filter cannot drop the row | BL-009 | dbt `not_null` |
+| AC-009 | An attendance is the intake segment only and only where its visit concept is 9203; the admitted count follows visit concept 262; the incomplete current month is excluded | BL-002, BL-003, BL-005 | dbt unit test (`test_metric__emergency_care_attendance_filters`) |
 
 ## Registry entry
 
