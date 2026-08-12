@@ -171,9 +171,9 @@ scanning the whole codebase:
 
 Release propagation: the deployment repos above pin a `tamanu-source-dbt`
 version and are bumped **manually** per release — open one version-bump PR
-against each (see the release conventions in maui-team). In-repo forward-porting
-of a patch across higher-minor branches is automated by
-`.github/workflows/forwardport-patch.yml`.
+against each (see the release conventions in maui-team). Forward-porting a
+patch across higher-minor branches is a manual cherry-pick too; neither is
+automated in this repo.
 
 Quick search commands:
 
