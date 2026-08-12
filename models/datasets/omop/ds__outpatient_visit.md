@@ -5,6 +5,10 @@ Visit -- clinic, vaccination, or imaging), disaggregated by facility, sex and ou
 visit age band. Additive count only, so it can be aggregated to any period.
 {% enddocs %}
 
+{% docs ds__outpatient_visit__yearmonth %}
+First day of the visit's calendar month (`date_trunc('month', visit_detail_start_date)`).
+{% enddocs %}
+
 {% docs ds__outpatient_visit__age_group %}
 Outpatient visit age band at the visit date, per the WHO primary age classification's
 range boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years',
