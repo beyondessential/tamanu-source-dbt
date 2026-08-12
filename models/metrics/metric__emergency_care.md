@@ -63,10 +63,3 @@ Per the WHO primary age classification's range boundaries: '0-14 years', '15-24 
 '75+ years', or 'Unknown age' when the birth date is missing or the computed age is
 implausible (negative, or over 120).
 {% enddocs %}
-
-{% docs metric__emergency_care__tupaia_facility_id %}
-Tupaia's facility id, mapped from `facility_id` via the deployment's own
-`map__tupaia_facility` seed. `'Not available'` -- never NULL, since this is a data table
-filter column -- when the deployment has not configured a facility mapping, or when the
-facility has no mapping entry.
-{% enddocs %}
