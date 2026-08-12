@@ -1,10 +1,10 @@
 -- ds__outpatient_visit -- Outpatient visits aggregated to (visit_detail_start_date,
--- facility, area, sex, age_group). An encounter is outpatient when its first history
--- segment's OMOP visit concept is 9202 (Outpatient Visit) -- covers clinic, vaccination,
--- and imaging (BL-002); visit_detail_start_date and area come from that segment. Facility
--- and area are resolved via bases/locations (inner) + bases/location_groups (left)
--- (BL-003). Additive count only, so it can be aggregated to any period. See
--- specs/dbt-model/ds__outpatient_visit.md for BL-001..BL-006.
+-- yearmonth, facility, area, sex, age_group). An encounter is outpatient when its first
+-- history segment's OMOP visit concept is 9202 (Outpatient Visit) -- covers clinic,
+-- vaccination, and imaging (BL-002); visit_detail_start_date and area come from that
+-- segment. Facility and area are resolved via bases/locations (inner) +
+-- bases/location_groups (left) (BL-003). Additive count only, so it can be aggregated to
+-- any period. See specs/dbt-model/ds__outpatient_visit.md for BL-001..BL-007.
 
 with visit_detail as (
     select * from {{ ref('clinical__visit_detail') }}
@@ -67,6 +67,8 @@ outpatient_encounters as (
 outpatient_encounters_banded as (
     select
         visit_detail_start_date,
+        -- first day of the visit's calendar month (BL-007)
+        date_trunc('month', visit_detail_start_date)::date as yearmonth,
         tamanu_facility_id,
         location_group_id,
         location_group_name,
@@ -79,6 +81,7 @@ outpatient_encounters_banded as (
 
 select
     b.visit_detail_start_date,
+    b.yearmonth,
     b.tamanu_facility_id,
     -- Tupaia facility id crosswalk: only joined when the deployment has set
     -- integrations.tupaia.enabled and supplied its own tupaia_facility_mapping seed
@@ -104,6 +107,7 @@ left join {{ ref('tupaia_facility_mapping') }} tm
 {% endif %}
 group by
     b.visit_detail_start_date,
+    b.yearmonth,
     b.tamanu_facility_id,
     -- a constant needs no grouping, so this only appears here when it's a real column
     {% if has_tupaia_mapping %}
