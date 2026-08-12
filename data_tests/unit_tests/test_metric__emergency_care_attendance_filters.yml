@@ -8,6 +8,14 @@ unit_tests:
       count follows visit-level concept 262, not the attendance itself. BL-002: the
       incomplete current month is excluded. The current-month row is built from
       current_date in SQL rather than pinned, since the model reads the session date.
+
+      Runs only where the Tupaia integration is off, which is this repo and every
+      deployment that has not enabled it. With the integration on, the model refs
+      map__tupaia_facility, and a unit test can only mock nodes it names in given --
+      so the crosswalk case is covered by test_metric__emergency_care_tupaia_crosswalk,
+      which is enabled on exactly the inverse condition.
+    config:
+      enabled: "{{ not var('integrations', {}).get('tupaia', {}).get('enabled', false) }}"
     given:
       # vd_admitted + vd_not_admitted share (month, facility, sex, age band) so they
       # aggregate into one group: 2 attendances, 1 of them admitted.
