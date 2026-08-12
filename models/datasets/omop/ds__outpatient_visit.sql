@@ -77,42 +77,22 @@ outpatient_encounters_banded as (
     from outpatient_encounters
 )
 
-{% set has_tupaia_mapping = var('integrations', {}).get('tupaia', {}).get('enabled', false) %}
-
 select
     b.visit_detail_start_date,
     b.yearmonth,
     b.tamanu_facility_id,
-    -- Tupaia facility id crosswalk: only joined when the deployment has set
-    -- integrations.tupaia.enabled and supplied its own map__tupaia_facility seed
-    -- (BL-006). Never referenced when the flag is unset, so this model still builds
-    -- standalone in tamanu-source-dbt with no such seed present.
-    -- Never NULL: this is the data_table_filter column, and Tupaia's default array filter
-    -- (col = any(coalesce(:param, array[col]))) silently drops NULL rows, so an unmapped
-    -- or unconfigured facility gets the literal 'Not available' instead.
-    {% if has_tupaia_mapping %}
-    coalesce(tm.tupaia_facility_id, 'Not available') as tupaia_facility_id,
-    {% else %}
-    'Not available' as tupaia_facility_id,
-    {% endif %}
+    -- BL-006: facility is emitted as the Tamanu id only. Translating it to a consumer's
+    -- own identifier is a consumer-layer concern and is done there, not here.
     b.location_group_id,
     b.location_group_name,
     b.sex,
     b.age_group,
     count(*) as total_outpatient_visits
 from outpatient_encounters_banded b
-{% if has_tupaia_mapping %}
-left join {{ ref('map__tupaia_facility') }} tm
-    on tm.tamanu_facility_id = b.tamanu_facility_id
-{% endif %}
 group by
     b.visit_detail_start_date,
     b.yearmonth,
     b.tamanu_facility_id,
-    -- a constant needs no grouping, so this only appears here when it's a real column
-    {% if has_tupaia_mapping %}
-    coalesce(tm.tupaia_facility_id, 'Not available'),
-    {% endif %}
     b.location_group_id,
     b.location_group_name,
     b.sex,
