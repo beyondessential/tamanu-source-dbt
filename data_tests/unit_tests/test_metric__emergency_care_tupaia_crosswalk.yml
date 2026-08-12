@@ -1,0 +1,61 @@
+unit_tests:
+  - name: test_metric__emergency_care_tupaia_crosswalk
+    model: metric__emergency_care
+    description: >
+      BL-009: with the Tupaia integration on, a facility present in map__tupaia_facility
+      carries its Tupaia id, and one absent from the seed carries the literal
+      'Not available' rather than NULL. Both counts are attributed to the facility that
+      was attended, so the crosswalk rides along on the admitted row too.
+
+      Runs only where the integration is on -- the seed is supplied by the deployment and
+      does not exist in this repo, and a given input must name a node that is in the
+      project. The flag-off behaviour, and the attendance filters this test does not
+      re-cover, are in test_metric__emergency_care_attendance_filters.
+    config:
+      enabled: "{{ var('integrations', {}).get('tupaia', {}).get('enabled', false) }}"
+    given:
+      # One attendance at a mapped facility (admitted) and one at an unmapped facility
+      # (not admitted), in a complete month so BL-002 does not withhold them.
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vo_mapped' as visit_occurrence_id, 'per_1' as person_id, 'loc_mapped' as care_site_id, '2024-05-15'::date as visit_detail_start_date, null::text as preceding_visit_detail_id, 9203 as visit_detail_concept_id
+          union all
+          select 'vo_unmapped', 'per_1', 'loc_unmapped', '2024-05-16'::date, null::text, 9203
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'vo_mapped' as visit_occurrence_id, 262 as visit_concept_id
+          union all
+          select 'vo_unmapped', 9203
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_mapped' as id, 'fac_mapped' as facility_id
+          union all
+          select 'loc_unmapped', 'fac_unmapped'
+
+      # fac_unmapped is deliberately absent -- the left join is what produces
+      # 'Not available', and an under-populated deployment seed must not drop the row.
+      - input: ref('map__tupaia_facility')
+        format: sql
+        rows: |
+          select 'fac_mapped' as tamanu_facility_id, 'TU_fac_mapped' as tupaia_facility_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_attendance' as metric_id, null::text as variant_id, null::varchar as subject_id, '2024-05-01'::date as period_start, '2024-05-31'::date as period_end, 'month'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_mapped' as facility_id, 'TU_fac_mapped' as tupaia_facility_id, 'female' as sex, '25-44 years' as age_group__who_primary_classification
+        union all
+        select 'ed_attendance', null::text, null::varchar, '2024-05-01'::date, '2024-05-31'::date, 'month'::text, 1::numeric, null::boolean, 'fac_unmapped', 'Not available', 'female', '25-44 years'
+        union all
+        select 'ed_attendance_admitted', null::text, null::varchar, '2024-05-01'::date, '2024-05-31'::date, 'month'::text, 1::numeric, null::boolean, 'fac_mapped', 'TU_fac_mapped', 'female', '25-44 years'
+        union all
+        select 'ed_attendance_admitted', null::text, null::varchar, '2024-05-01'::date, '2024-05-31'::date, 'month'::text, 0::numeric, null::boolean, 'fac_unmapped', 'Not available', 'female', '25-44 years'
