@@ -23,7 +23,7 @@ Count of outpatient visits (encounters whose first history segment has OMOP visi
 
 {% docs ds__outpatient_visit__tupaia_facility_id %}
 Tupaia's facility id, mapped from tamanu_facility_id via the deployment's own
-tupaia_facility_mapping seed. 'Not available' (never NULL, since this is the data table's
+map__tupaia_facility seed. 'Not available' (never NULL, since this is the data table's
 filter column) when the deployment has not configured a facility mapping, or when the
 facility has no mapping entry. tamanu_facility_id itself is never NULL here -- a visit
 whose location doesn't resolve is excluded from the dataset entirely.
