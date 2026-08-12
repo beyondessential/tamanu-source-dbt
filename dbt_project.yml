@@ -10,9 +10,6 @@ vars:
   # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
   # Overridden per deployment (e.g. Samoa sets country-Samoa).
   home_country_id: country-Australia
-  integrations:
-    tupaia:
-      enabled: false
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
