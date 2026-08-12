@@ -119,32 +119,20 @@ unioned as (
 
 -- BL-007: D5 wide format. subject_id and value_boolean are unused -- these are
 -- pre-aggregated counts, not per-subject or boolean facts.
-{% set has_tupaia_mapping = var('integrations', {}).get('tupaia', {}).get('enabled', false) %}
-
+--
+-- BL-009: facility is emitted as the Tamanu facility_id only. Translating it to a
+-- consumer's own identifier -- a Tupaia entity code, a DHIS2 org unit -- is a
+-- consumer-layer concern and is done there (for Tupaia, in the data table), not here.
 select
-    u.metric_id,
+    metric_id,
     null::text as variant_id,
     null::varchar as subject_id,
-    u.period_start,
-    (u.period_start + interval '1 month' - interval '1 day')::date as period_end,
+    period_start,
+    (period_start + interval '1 month' - interval '1 day')::date as period_end,
     'month'::text as period_granularity,
-    u.value as value_numeric,
+    value as value_numeric,
     null::boolean as value_boolean,
-    u.facility_id,
-    -- BL-009: Tupaia facility id crosswalk, joined only when the deployment sets
-    -- integrations.tupaia.enabled and supplies its own map__tupaia_facility seed, so this
-    -- model still builds standalone here with no such seed present. Never NULL -- it is a data
-    -- table filter column, and Tupaia's default array filter drops NULL rows, so an unmapped
-    -- or unconfigured facility gets the literal 'Not available'.
-    {% if has_tupaia_mapping -%}
-    coalesce(tm.tupaia_facility_id, 'Not available') as tupaia_facility_id,
-    {%- else -%}
-        'Not available' as tupaia_facility_id,
-    {%- endif %}
-    u.sex,
-    u.age_group__who_primary_classification
-from unioned u
-{%- if has_tupaia_mapping %}
-left join {{ ref('map__tupaia_facility') }} tm
-    on tm.tamanu_facility_id = u.facility_id
-{%- endif %}
+    facility_id,
+    sex,
+    age_group__who_primary_classification
+from unioned
