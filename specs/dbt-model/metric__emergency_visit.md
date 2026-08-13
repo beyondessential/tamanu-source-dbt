@@ -255,7 +255,7 @@ keeps the registry and the model from drifting.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__emergency_visits` | `intermediate/` | The shared base; every ref below is reached through it |
+| `int__emergency_visits` | `intermediate/omop/` | The shared base; every ref below is reached through it |
 | `clinical__visit_detail` | `clinical/` | Intake segment: inclusion, arrival, location, encounter id (BL-003, BL-007, BL-011) |
 | `clinical__visit_occurrence` | `clinical/` | Encounter end (BL-002) and concept 262 (BL-005) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |

@@ -196,7 +196,7 @@ models.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__emergency_visits` | `intermediate/` | The whole attendance base: inclusion, span, triage, disposition |
+| `int__emergency_visits` | `intermediate/omop/` | The whole attendance base: inclusion, span, triage, disposition |
 | `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
