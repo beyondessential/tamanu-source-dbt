@@ -9,7 +9,7 @@ ED. Departure is departure from the **ED**, not the end of the encounter -- for 
 ended in admission, period_end is the moment of admission.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, sex, age band, triage acuity, length-of-stay band, discharge disposition -- and
+facility, sex, age, triage acuity, discharge disposition -- and
 over any time grain from minute upwards.
 
 Shares its attendance base with metric__emergency_visit via int__emergency_visits. Both
@@ -44,12 +44,11 @@ seconds is a repeating decimal. Mean time in the ED is avg(ed_time__minutes) at 
 the consumer groups to; the median and the 90th percentile come from the same column.
 
 A measure, not a dimension: the value is continuous, so it carries no data table filter and is
-not registered as a disaggregation. ed_time__4_hours_band is the banded form for
-grouping and filtering; this column is the underlying duration.
+not registered as a disaggregation. Not banded either -- a four-hour split is a presentation
+choice a deployment may set differently, so the consumer's data table bands it.
 
-NULL only while the patient is in the ED with nothing booked and the encounter open -- the same rows
-ed_time__4_hours_band reports as 'Unknown' -- so a duration visual restricts to non-NULL
-rows.
+NULL only while the patient is in the ED with nothing booked and the encounter open, so a
+duration visual restricts to non-NULL rows.
 {% enddocs %}
 
 {% docs metric__emergency_stay__discharge_disposition %}

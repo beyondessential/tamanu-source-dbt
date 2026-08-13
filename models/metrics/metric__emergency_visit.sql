@@ -51,9 +51,10 @@ select
     null::boolean as value_boolean,
     facility_id,
     sex,
-    -- BL-004: age band at the attendance date
-    {{ age_group__who_primary_classification('age_years') }}
-        as age_group__who_primary_classification,
+    -- BL-004: age in whole years at arrival.
+    -- BL-019: unbanded -- an age classification is a presentation choice a deployment may set
+    -- differently, so the consumer's data table bands it.
+    age_years,
     triage_score,
     -- BL-013
     case
@@ -62,8 +63,9 @@ select
     end as principal_diagnosis__icd10_chapter,
     -- BL-014: the wait to active care, in minutes
     waiting_time__minutes,
-    -- BL-015: the four-hour split of total length of stay
-    length_of_stay__4_hours_band,
+    -- BL-015: total length of stay in minutes.
+    -- BL-019: unbanded, for the same reason as age.
+    length_of_stay__minutes,
     -- BL-016: local hour of arrival, 0-23
     ed_start__hour,
     is_admitted

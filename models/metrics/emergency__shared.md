@@ -56,17 +56,6 @@ Constant 'minute' -- period_start and period_end are timestamps resolved to the 
 NULL -- unused by this metric.
 {% enddocs %}
 
-{% docs emergency__age_group__who_primary_classification %}
-Age band at the attendance date. The column is named for the classification that
-produced it (macro `age_group__who_primary_classification`) rather than a generic
-`age_group`, so a consumer can tell which banding it is reading without going back to the
-model -- bands are not comparable across classifications.
-
-Per the WHO primary age classification's range boundaries: '0-14 years', '15-24 years', '25-44 years', '45-59 years', '60-74 years',
-'75+ years', or 'Unknown age' when the birth date is missing or the computed age is
-implausible (negative, or over 120).
-{% enddocs %}
-
 {% docs emergency__triage_score %}
 The acuity category assigned by the triage practitioner: '1' (most urgent) to '5', or
 'Not recorded'.
@@ -85,40 +74,15 @@ Never NULL -- this is a data table filter column, and Tupaia's default array fil
 NULL rows.
 {% enddocs %}
 
-{% docs emergency__length_of_stay__4_hours_band %}
-Total length of stay split at four hours: '< 4 hours', '4 or more hours', or 'Unknown'.
 
-The duration is arrival in the ED to discharge from hospital, so for an admitted patient it
-spans the inpatient episode. On metric__emergency_visit that is
-period_end - period_start.
+{% docs emergency__age_years %}
+Age in whole years at arrival in the ED, from the patient's birth date.
 
-Four hours is the conventional emergency department threshold, and the column names it so a
-different split added later reads as a different column. metric__emergency_stay bands the
-emergency department portion under its own name, ed_time__4_hours_band.
+Not banded. An age classification is a presentation choice -- WHO primary bands, five-year
+bands, a national HMIS grouping -- and deployments differ, so the metric emits the number and
+the consumer's data table bands it. That keeps one metric usable under every banding rather
+than one column per classification.
 
-'Unknown' marks an open encounter, where the duration is still running, and belongs in a
-count of current activity.
-
-Always populated -- this is a data table filter column, and Tupaia's default array filter
-keeps the rows whose value is present. A consumer needing the exact duration rather than the
-band computes it from period_start and period_end.
-{% enddocs %}
-
-{% docs emergency__ed_time__4_hours_band %}
-Time in the emergency department split at four hours: '< 4 hours', '4 or more hours', or
-'Unknown'.
-
-The duration is arrival in the ED to departure from it -- whether that departure is an
-internal transfer to an inpatient bed or a discharge straight from the ED. On
-metric__emergency_stay that is period_end - period_start.
-
-Four hours is the conventional emergency department threshold, and the column names it so a
-different split added later reads as a different column. metric__emergency_visit bands
-total length of stay, to hospital discharge, under its own name,
-length_of_stay__4_hours_band.
-
-'Unknown' marks a patient still in the ED, and belongs in a count of current activity.
-
-Always populated -- this is a data table filter column, and Tupaia's default array filter
-keeps the rows whose value is present.
+A measure, not a dimension: continuous, so it carries no data table filter and is absent from
+the registry's disaggregations. NULL where the birth date is missing.
 {% enddocs %}

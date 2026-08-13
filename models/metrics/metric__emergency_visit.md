@@ -9,8 +9,8 @@ intake segment, so each arrival counts once. Attendances that went on to an inpa
 admission are included, and flagged by is_admitted.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, sex, age band, triage acuity, principal diagnosis chapter,
-total length-of-stay band, hour of arrival, admission outcome -- and over any time grain from
+facility, sex, triage acuity, principal diagnosis chapter,
+hour of arrival, admission outcome -- and over any time grain from
 minute upwards. Nothing is pre-aggregated, so no dimension has to be collapsed to get a
 total and the admission rate can be formed at any grain.
 
@@ -112,4 +112,17 @@ filter to it for the admitted count, or ignore it for the total.
 
 Never NULL -- this is a data table filter column, and Tupaia's default array filter drops
 NULL rows, so the model coalesces a missing visit concept to false.
+{% enddocs %}
+
+{% docs metric__emergency_visit__length_of_stay__minutes %}
+Minutes from arrival in the ED to discharge from hospital, so for an admitted patient it
+spans the inpatient episode. metric__emergency_stay measures the emergency department
+portion instead.
+
+Carried to two decimal places, on the same basis as waiting_time__minutes. Not banded: a
+four-hour split is a presentation choice a deployment may set differently, so the metric
+emits the duration and the consumer's data table bands it.
+
+A measure, not a dimension: continuous, so it carries no data table filter and is absent
+from the registry's disaggregations. NULL while the encounter is open.
 {% enddocs %}

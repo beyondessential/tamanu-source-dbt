@@ -40,13 +40,13 @@ select
     null::boolean as value_boolean,
     facility_id,
     sex,
-    -- BL-004: age band at the attendance date
-    {{ age_group__who_primary_classification('age_years') }}
-        as age_group__who_primary_classification,
+    -- BL-004: age in whole years at arrival. Unbanded -- an age classification is a
+    -- presentation choice a deployment may set differently, so the data table bands it
+    -- (metric__emergency_visit.md BL-019).
+    age_years,
     triage_score,
-    -- BL-015: time in the ED, as minutes and as the four-hour split
+    -- BL-015: time in the ED in minutes. Unbanded, for the same reason as age.
     ed_time__minutes,
-    ed_time__4_hours_band,
     -- BL-017: how the encounter ended. Encounter-grained, so for a stay that was admitted
     -- this is the eventual hospital discharge, not the ED departure.
     discharge_disposition

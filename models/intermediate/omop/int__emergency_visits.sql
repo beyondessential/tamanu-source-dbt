@@ -213,6 +213,8 @@ select
     -- waiting_time__minutes. NULL only while the patient is in the ED with nothing booked.
     round(ed_time__seconds / 60.0, 2) as ed_time__minutes,
     length_of_stay__seconds,
+    -- BL-015: total length of stay as minutes, on the same basis as the other durations
+    round(length_of_stay__seconds / 60.0, 2) as length_of_stay__minutes,
     principal_diagnosis_code,
     -- BL-012: 'Not recorded' covers both an attendance with no triage row and a triage row
     -- with a blank score. Never NULL -- these are data table filter columns downstream, and
@@ -224,18 +226,8 @@ select
     -- the deployment's central timezone (var('timezone'), see to_user_selected_timezone), so
     -- this is already a local hour and needs no conversion. A deployment spanning timezones
     -- gets the central zone's hour, not each facility's.
-    extract(hour from ed_start__datetime)::int as ed_start__hour,
-    -- BL-015: the four-hour threshold, applied to each duration. Two separate columns because
-    -- the two measure different things and are not comparable -- metric__emergency_stay uses
-    -- time in the ED, metric__emergency_visit uses total length of stay.
-    case
-        when ed_time__seconds is null then 'Unknown'
-        when ed_time__seconds < 4 * 60 * 60 then '< 4 hours'
-        else '4 or more hours'
-    end as ed_time__4_hours_band,
-    case
-        when length_of_stay__seconds is null then 'Unknown'
-        when length_of_stay__seconds < 4 * 60 * 60 then '< 4 hours'
-        else '4 or more hours'
-    end as length_of_stay__4_hours_band
+    extract(hour from ed_start__datetime)::int as ed_start__hour
+-- BL-019: no banding here. A four-hour split and an age classification are both presentation
+-- choices a deployment may set differently, so the metrics emit the continuous value and the
+-- consumer's data table bands it.
 from attendances

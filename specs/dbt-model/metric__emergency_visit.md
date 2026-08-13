@@ -49,7 +49,7 @@ Hospital (MAUI-6694), via a data table over this view.
 AIHW's [Emergency department stay](https://meteor.aihw.gov.au/content/472757) object class runs
 from presentation to physical departure from the ED, which is `metric__emergency_stay`'s period;
 this model runs its period on to hospital discharge (BL-002). AIHW registers no length-of-stay
-element and no four-hour indicator, so BL-015's banding and the per-attendance aggregation are
+element and no four-hour indicator, so the per-attendance aggregation is
 BES compositions.
 
 ## Grain
@@ -65,7 +65,7 @@ attendance counts rather than distinct patients.
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and one measure attribute.
+D5 wide format, plus five disaggregation columns and three measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -79,11 +79,11 @@ D5 wide format, plus seven disaggregation columns and one measure attribute.
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | Intake segment's facility (BL-007). Tamanu ids are varchar, not `uuid`. `data_table_filter: array` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_group__who_primary_classification` | varchar(255) | Age band at the attendance date (BL-004). `data_table_filter: array` |
+| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, so no `data_table_filter` |
 | `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011). `data_table_filter: array` |
 | `principal_diagnosis__icd10_chapter` | text | WHO ICD-10 chapter, `'Not recorded'` or `'Unclassified'` (BL-013). Always populated (AC-013). `data_table_filter: array` |
 | `waiting_time__minutes` | numeric | Triage to active care, 2 dp (BL-014). NULL until the patient is seen. A measure, so no filter |
-| `length_of_stay__4_hours_band` | text | Total stay split at four hours, or `'Unknown'` (BL-015). Always populated (AC-015). `data_table_filter: array` |
+| `length_of_stay__minutes` | numeric | Arrival to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, so no `data_table_filter` |
 | `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016). `data_table_filter: array` |
 | `is_admitted` | boolean | Went on to an inpatient admission (BL-005). Always populated (AC-010). `data_table_filter: array` |
 
@@ -115,10 +115,10 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   never return from `admission` to an ED phase, so any encounter with an ED segment has one
   first. An encounter that starts elsewhere and passes through an ED phase later is
   intra-hospital movement, out of scope.
-- **BL-004 (sex + age band):** `sex` is `clinical__person.gender_source_value`; age in whole
-  years at the attendance date is banded by `age_group__who_primary_classification`. The join to
-  `clinical__person` is **inner**, so an attendance whose patient `bases/patients` excludes as
-  soft-deleted or merged away is excluded rather than counted with blank demographics.
+- **BL-004 (sex + age):** `sex` is `clinical__person.gender_source_value`; `age_years` is age in
+  whole years at arrival, unbanded (BL-019). The join to `clinical__person` is **inner**, so an
+  attendance whose patient `bases/patients` excludes as soft-deleted or merged away is excluded
+  rather than counted with blank demographics.
 - **BL-005 (admitted outcome):** `is_admitted` is true where the encounter's visit-level OMOP
   concept is **262**, which `clinical__visit_occurrence` BL-002 assigns to an admission whose
   history contains an ED phase. It is coalesced to `false` because a NULL would be dropped by
@@ -207,12 +207,22 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   commencement, inherited from `ds__emergency_triage`, so the presentation-to-triage interval is
   excluded and the wait is understated against AIHW. Aligning it would move numbers on an existing
   report, so it is recorded rather than changed unilaterally.
-- **BL-015 (total length-of-stay band):** `length_of_stay__4_hours_band` splits
-  `period_end - period_start` at four hours: `'< 4 hours'`, `'4 or more hours'`, or `'Unknown'`
-  where `period_end` is NULL. The column names its threshold, so a different split added later
-  reads as a different column; `metric__emergency_stay` bands the ED portion as
-  `ed_time__4_hours_band`. `'Unknown'` marks an open encounter and belongs in a count of
-  current activity.
+- **BL-015 (total length of stay):** `length_of_stay__minutes` is `period_end - period_start`
+  in minutes, held to 2 dp on the same basis as `waiting_time__minutes`, and unbanded (BL-019).
+  It is NULL while the encounter is open, and `metric__emergency_stay` measures the ED portion
+  as `ed_time__minutes`.
+- **BL-019 (banding is the consumer's):** the metrics emit continuous values and register no
+  banded column. An age classification and a four-hour duration split are both presentation
+  choices a deployment may set differently — WHO primary bands against five-year bands, four
+  hours against six — so banding in the warehouse would either freeze one choice or need a
+  column per variant.
+
+  `age_years`, `waiting_time__minutes`, `ed_time__minutes` and `length_of_stay__minutes` are
+  therefore measures rather than dimensions: no `data_table_filter`, absent from the registry's
+  disaggregations. The consumer's data table declares the bands it wants over them.
+
+  This is why a deployment can change its banding without a change here, and why two deployments
+  banding differently still share one metric definition.
 - **BL-016 (hour of arrival):** `ed_start__hour` is the hour of `period_start`, 0–23, as an
   integer so it sorts and buckets naturally. Tamanu stores naive timestamps in the deployment's
   central timezone (`var('timezone')`), so this is already a local hour; a deployment spanning
@@ -235,7 +245,7 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 | AC-011 | `triage_score` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-013 | `principal_diagnosis__icd10_chapter` is `not_null` | BL-013 | `not_null` |
-| AC-015 | `length_of_stay__4_hours_band` is `not_null` and one of the three labels | BL-015 | `not_null` + `accepted_values` |
+| AC-015 | `length_of_stay__minutes` is non-negative where present | BL-015 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | `ed_start__hour` is `not_null` and between 0 and 23 | BL-016 | `not_null` + `dbt_expectations.expect_column_values_to_be_between` |
 | AC-018 | The D5 projection: `period_end` is the encounter end, the diagnosis code is grouped to its chapter here, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_018_metric__emergency_visit_projection` |
 | AC-019 | `waiting_time__minutes` is non-negative where present | BL-014 | `dbt_expectations.expect_column_values_to_be_between` |
@@ -246,7 +256,7 @@ AC numbers are shared with `metric__emergency_stay` wherever a criterion covers 
 
 One active row — `ed_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with
-`disaggregations: facility_id,sex,age_group__who_primary_classification,triage_score,principal_diagnosis__icd10_chapter,length_of_stay__4_hours_band,ed_start__hour,is_admitted`.
+`disaggregations: facility_id,sex,triage_score,principal_diagnosis__icd10_chapter,ed_start__hour,is_admitted`.
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`, which
 keeps the registry and the model from drifting.

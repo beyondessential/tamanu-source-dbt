@@ -19,14 +19,14 @@ unit_tests:
       - input: ref('int__emergency_visits')
         format: sql
         rows: |
-          select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 11:45'::timestamp as ed_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 195.00::numeric as ed_time__minutes, '< 4 hours' as ed_time__4_hours_band, 'Home' as discharge_disposition
+          select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 11:45'::timestamp as ed_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 195.00::numeric as ed_time__minutes, 'Home' as discharge_disposition
           union all
           -- still in the ED: no departure, so the band is Unknown
-          select 'ed_2', '2024-05-18 06:05'::timestamp, null::timestamp, 'fac_1', 'male', 30, 'Not recorded', null::numeric, 'Unknown', 'Not recorded'
+          select 'ed_2', '2024-05-18 06:05'::timestamp, null::timestamp, 'fac_1', 'male', 30, 'Not recorded', null::numeric, 'Not recorded'
 
     expect:
       format: sql
       rows: |
-        select 'ed_stay' as metric_id, null::text as variant_id, 'ed_1'::varchar as subject_id, '2024-05-15 08:30'::timestamp as period_start, '2024-05-15 11:45'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, '25-44 years' as age_group__who_primary_classification, '1' as triage_score, 195.00::numeric as ed_time__minutes, '< 4 hours' as ed_time__4_hours_band, 'Home' as discharge_disposition
+        select 'ed_stay' as metric_id, null::text as variant_id, 'ed_1'::varchar as subject_id, '2024-05-15 08:30'::timestamp as period_start, '2024-05-15 11:45'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 195.00::numeric as ed_time__minutes, 'Home' as discharge_disposition
         union all
-        select 'ed_stay', null::text, 'ed_2'::varchar, '2024-05-18 06:05'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', '25-44 years', 'Not recorded', null::numeric, 'Unknown', 'Not recorded'
+        select 'ed_stay', null::text, 'ed_2'::varchar, '2024-05-18 06:05'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 30, 'Not recorded', null::numeric, 'Not recorded'

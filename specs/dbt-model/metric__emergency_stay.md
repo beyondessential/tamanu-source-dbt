@@ -50,8 +50,8 @@ Hospital (MAUI-6694), via a data table over this view.
 | `period_start` | AIHW | [746091](https://meteor.aihw.gov.au/content/746091) / [746096](https://meteor.aihw.gov.au/content/746096) | ED stay — presentation date / time |
 | `period_end` | AIHW | [746076](https://meteor.aihw.gov.au/content/746076) / [746081](https://meteor.aihw.gov.au/content/746081) | ED stay — physical departure date / time |
 
-The AIHW object class defines this model's period exactly; BL-015's four-hour banding is a BES
-composition over that concept.
+The AIHW object class defines this model's period exactly. AIHW registers no length-of-stay
+element, so the duration is a BES composition over that concept.
 
 **DV-001 — physical departure.** AIHW's `period_end` is when the patient is recorded as having
 *physically departed*. BL-018 resolves that from the first segment at a different `care_site_id`,
@@ -72,7 +72,7 @@ independent row (BL-010).
 
 ## Output schema
 
-D5 wide format, plus five disaggregation columns.
+D5 wide format, plus four disaggregation columns and one measure attribute.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -86,10 +86,10 @@ D5 wide format, plus five disaggregation columns.
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | Intake segment's facility (BL-007). `data_table_filter: array` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_group__who_primary_classification` | varchar(255) | Age band at the attendance date (BL-004). `data_table_filter: array` |
+| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, so no `data_table_filter` |
 | `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011). `data_table_filter: array` |
 | `ed_time__minutes` | numeric | Time in the ED in minutes, 2 dp (BL-015). NULL while the patient is in the ED. A measure, so no filter |
-| `ed_time__4_hours_band` | text | `'< 4 hours'`, `'4 or more hours'` or `'Unknown'` (BL-015). Always populated (AC-015). `data_table_filter: array` |
+
 | `discharge_disposition` | text | How the encounter ended, or `'Not recorded'` (BL-017). Always populated (AC-017). `data_table_filter: array` |
 
 ## Business logic
@@ -119,17 +119,12 @@ below are this model's own.
   `view` otherwise, set on the `metrics:` block in `dbt_project.yml`.
 - **BL-009 (facility identity is Tamanu's):** the model emits `facility_id`, the Tamanu id.
   Consumer-specific identifiers are resolved in the consumer layer.
-- **BL-015 (time in the ED):** the duration is reported two ways. `ed_time__minutes` is
-  `period_end - period_start` in minutes; `ed_time__4_hours_band` splits it at four
-  hours into `'< 4 hours'`, `'4 or more hours'`, or `'Unknown'` where `period_end` is NULL.
+- **BL-015 (time in the ED):** `ed_time__minutes` is `period_end - period_start` in minutes,
+  held to 2 dp on the same basis as `metric__emergency_visit`'s `waiting_time__minutes`. NULL
+  where `period_end` is (AC-019 asserts non-negative where present).
 
-  `ed_time__minutes` is a **measure, not a dimension**: continuous, so it carries no
-  `data_table_filter` and is absent from the registry's disaggregations. It is held to 2 dp on
-  the same basis as `metric__emergency_visit`'s `waiting_time__minutes`, and is NULL on the
-  rows the band reports as `'Unknown'` (AC-019 asserts non-negative where present).
-
-  The column names its threshold, so a different split added later reads as a different column;
-  `metric__emergency_visit` bands total length of stay as `length_of_stay__4_hours_band`.
+  Unbanded, per `metric__emergency_visit.md` BL-019: a four-hour split is a presentation choice a
+  deployment may set differently, so the consumer's data table bands this column.
   `'Unknown'` marks a patient still in the ED and belongs in a count of current activity.
 - **BL-017 (discharge disposition):** `discharge_disposition` is the disposition name on the
   encounter's discharge record, through `bases/discharges` → `bases/reference_data`, or
@@ -194,9 +189,9 @@ question for deployment data; if it is common, a `logs.changes`-based history mo
 | AC-009 | The shared base resolves as specified, including that a segment with no end takes its departure from `planned_location_start_datetime` and that a recorded end takes precedence over the plan | BL-003–BL-005, BL-012–BL-018 | unit test `ac_009_int__emergency_visits_derivations` |
 | AC-011 | `triage_score` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
-| AC-015 | `ed_time__4_hours_band` is `not_null` and one of the three labels | BL-015 | `not_null` + `accepted_values` |
+
 | AC-017 | `discharge_disposition` is `not_null` | BL-017 | `not_null` |
-| AC-018 | `period_end` is the ED departure rather than the encounter end; the band is time in the ED; disposition passes through; an open stay yields NULL `period_end` and an `'Unknown'` band | BL-002, BL-015, BL-017 | unit test `ac_018_metric__emergency_stay_projection` |
+| AC-018 | `period_end` is the ED departure rather than the encounter end; disposition passes through; an open stay yields a NULL `period_end` | BL-002, BL-015, BL-017 | unit test `ac_018_metric__emergency_stay_projection` |
 | AC-019 | `ed_time__minutes` is non-negative where present | BL-015 | `dbt_expectations.expect_column_values_to_be_between` |
 
 AC numbers are shared with `metric__emergency_visit` wherever a criterion covers the same

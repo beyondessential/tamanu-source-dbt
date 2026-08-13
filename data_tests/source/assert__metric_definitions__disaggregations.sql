@@ -18,10 +18,6 @@ where trim(d) not in (
         'principal_diagnosis__icd10_chapter',
         -- ed_visit's arrival hour
         'ed_start__hour',
-        -- ed_visit's total length of stay, and ed_stay's emergency department portion,
-        -- each split at four hours. Separate names because the two are not comparable.
-        'length_of_stay__4_hours_band',
-        'ed_time__4_hours_band',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition'
     )

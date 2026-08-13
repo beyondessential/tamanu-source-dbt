@@ -11,7 +11,7 @@ unit_tests:
       active care, NULL where the patient has no active-care time. BL-018: ed_end__datetime is
       the earliest of the first move to another location and the booked transfer, falling
       through to the encounter end; a segment at the same location is boarding, not a
-      departure. BL-015: the four-hour bands, with 'Unknown' where a duration is still open.
+      departure. BL-015: the durations are emitted in minutes, unbanded.
       BL-017: discharge_disposition resolves through the disposition reference data.
 
     given:
@@ -137,12 +137,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 'J18.9' as principal_diagnosis_code, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour, '4 or more hours' as ed_time__4_hours_band, '4 or more hours' as length_of_stay__4_hours_band
+        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 1470.00::numeric as length_of_stay__minutes, 'J18.9' as principal_diagnosis_code, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour
         union all
-        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 'ZZ999', '3', 'Transfer to another facility', 22, '4 or more hours', '4 or more hours'
+        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 300.00::numeric, 'ZZ999', '3', 'Transfer to another facility', 22
         union all
-        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::text, 'Not recorded', 'Not recorded', 6, 'Unknown', 'Unknown'
+        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 6
         union all
-        select 'ed_4', '2024-05-21 07:00'::timestamp, '2024-05-21 09:30'::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 9000::bigint, 150.00::numeric, null::bigint, null::text, 'Not recorded', 'Not recorded', 7, '< 4 hours', 'Unknown'
+        select 'ed_4', '2024-05-21 07:00'::timestamp, '2024-05-21 09:30'::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 9000::bigint, 150.00::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 7
         union all
-        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 08:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, null::bigint, null::text, 'Not recorded', 'Not recorded', 7, '< 4 hours', 'Unknown'
+        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 08:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 7

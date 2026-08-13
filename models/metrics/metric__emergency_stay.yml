@@ -119,11 +119,11 @@ models:
         description: "{{ doc('patients__sex') }}"
         meta:
           data_table_filter: array
-      - name: age_group__who_primary_classification
-        data_type: character varying(255)
-        description: "{{ doc('emergency__age_group__who_primary_classification') }}"
-        meta:
-          data_table_filter: array
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('emergency__age_years') }}"
+        # BL-004: a measure, not a dimension -- the age classification is the consumer's, so
+        # this carries no data_table_filter and is absent from the registry's disaggregations.
       - name: triage_score
         data_type: text
         description: "{{ doc('emergency__triage_score') }}"
@@ -143,18 +143,6 @@ models:
               arguments:
                 min_value: 0
                 row_condition: "ed_time__minutes is not null"
-      - name: ed_time__4_hours_band
-        data_type: text
-        description: "{{ doc('emergency__ed_time__4_hours_band') }}"
-        meta:
-          data_table_filter: array
-        data_tests:
-          - not_null:
-              name: ac_015_metric__emergency_stay_ed_time_band_not_null
-          - accepted_values:
-              name: ac_015_metric__emergency_stay_ed_time_band_values
-              arguments:
-                values: ['< 4 hours', '4 or more hours', 'Unknown']
       - name: discharge_disposition
         data_type: text
         description: "{{ doc('metric__emergency_stay__discharge_disposition') }}"

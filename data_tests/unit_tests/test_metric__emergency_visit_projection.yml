@@ -14,14 +14,14 @@ unit_tests:
       - input: ref('int__emergency_visits')
         format: sql
         rows: |
-          select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 'J18.9' as principal_diagnosis_code, 2.00::numeric as waiting_time__minutes, '4 or more hours' as length_of_stay__4_hours_band, 8 as ed_start__hour, true as is_admitted
+          select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 'J18.9' as principal_diagnosis_code, 2.00::numeric as waiting_time__minutes, 1470.00::numeric as length_of_stay__minutes, 8 as ed_start__hour, true as is_admitted
           union all
           -- open encounter: no end, no principal diagnosis, and not yet seen
-          select 'ed_2', '2024-05-18 06:05'::timestamp, null::timestamp, 'fac_1', 'male', 30, 'Not recorded', null::text, null::numeric, 'Unknown', 6, false
+          select 'ed_2', '2024-05-18 06:05'::timestamp, null::timestamp, 'fac_1', 'male', 30, 'Not recorded', null::text, null::numeric, null::numeric, 6, false
 
     expect:
       format: sql
       rows: |
-        select 'ed_visit' as metric_id, null::text as variant_id, 'ed_1'::varchar as subject_id, '2024-05-15 08:30'::timestamp as period_start, '2024-05-16 09:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, '25-44 years' as age_group__who_primary_classification, '1' as triage_score, 'X Diseases of the respiratory system' as principal_diagnosis__icd10_chapter, 2.00::numeric as waiting_time__minutes, '4 or more hours' as length_of_stay__4_hours_band, 8 as ed_start__hour, true as is_admitted
+        select 'ed_visit' as metric_id, null::text as variant_id, 'ed_1'::varchar as subject_id, '2024-05-15 08:30'::timestamp as period_start, '2024-05-16 09:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, '1' as triage_score, 'X Diseases of the respiratory system' as principal_diagnosis__icd10_chapter, 2.00::numeric as waiting_time__minutes, 1470.00::numeric as length_of_stay__minutes, 8 as ed_start__hour, true as is_admitted
         union all
-        select 'ed_visit', null::text, 'ed_2'::varchar, '2024-05-18 06:05'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', '25-44 years', 'Not recorded', 'Not recorded', null::numeric, 'Unknown', 6, false
+        select 'ed_visit', null::text, 'ed_2'::varchar, '2024-05-18 06:05'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 30, 'Not recorded', 'Not recorded', null::numeric, null::numeric, 6, false

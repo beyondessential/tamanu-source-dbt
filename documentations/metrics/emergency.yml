@@ -28,8 +28,8 @@ metrics:
     746091, 746096) and "Emergency department stay - physical departure date/time" (METeOR 746076,
     746081). Same population as ed_visit - the distinction is framing, not inclusion: ed_visit measures
     total length of stay to hospital discharge, ed_stay measures the emergency department portion.
-    AIHW registers no length-of-stay data element and no four-hour indicator, so the duration banding
-    is a BES composition over the AIHW concept. Divergence: Tamanu records the administrative transition
+    AIHW registers no length-of-stay data element, so the emitted duration is a BES composition over
+    the AIHW concept. Divergence: Tamanu records the administrative transition
     out of the emergency department phase, which for an admitted patient can precede physical departure
     from the department. Pending alignment with the deploying country's national HMIS definition.
   unit: count
@@ -37,9 +37,7 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_group__who_primary_classification
   - triage_score
-  - ed_time__4_hours_band
   - discharge_disposition
   variant_of: null
   owner: bes-maui
@@ -70,10 +68,8 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_group__who_primary_classification
   - triage_score
   - principal_diagnosis__icd10_chapter
-  - length_of_stay__4_hours_band
   - ed_start__hour
   - is_admitted
   variant_of: null
