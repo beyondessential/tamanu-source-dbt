@@ -21,6 +21,26 @@ questions.
 See specs/dbt-model/metric__emergency_stay.md for BL-001..BL-017.
 {% enddocs %}
 
+{% docs metric__emergency_stay__period_end %}
+Timestamp the patient left the emergency department, to the minute.
+
+**Departure from the ED, not the end of the encounter.** For a stay that ended in admission
+this is the moment the patient left the department, so period_end - period_start is time in the
+ED, not total hospital stay. metric__emergency_visit measures the whole encounter over the same
+rows.
+
+**The departure is the earliest signal that the patient left**: the first move to another
+location, or the time a booked transfer takes effect, falling through to the encounter end when
+neither is recorded. A segment boundary alone is not a departure -- an encounter_type change to
+admission closes the intake segment while the patient is still in the ED, so boarding time counts
+toward the stay. Where the booked time is still in the future, the resulting duration is a planned
+one: the model reads no clock, so it does not distinguish a plan already elapsed from one pending.
+
+**NULL only while the patient is in the ED with nothing booked and the encounter open**, so this
+column is deliberately nullable: time in the ED is undefined until they leave. A consumer
+measuring duration filters these rows out; a consumer counting stays keeps them.
+{% enddocs %}
+
 {% docs metric__emergency_stay__metric_id %}
 The registered indicator identifier: always 'ed_stay'. Joins to the canonical registry in
 documentations/metrics/*.yml, which carries its definition, source and rationale.

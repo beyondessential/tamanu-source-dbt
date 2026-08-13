@@ -26,6 +26,19 @@ admission outcome.
 See specs/dbt-model/metric__emergency_visit.md for BL-001..BL-016.
 {% enddocs %}
 
+{% docs metric__emergency_visit__period_end %}
+Timestamp the encounter ended -- discharge from hospital, to the minute.
+
+**The end of the encounter, not departure from the ED.** For an attendance that went on to an
+inpatient admission this is the eventual hospital discharge, so period_end - period_start is
+total length of stay, spanning the inpatient episode. metric__emergency_stay measures the ED
+portion over the same rows.
+
+**NULL while the encounter is open**, so this column is deliberately nullable: total length of
+stay is undefined until the patient is discharged. A consumer measuring duration filters these
+rows out; a consumer counting attendances keeps them.
+{% enddocs %}
+
 {% docs metric__emergency_visit__metric_id %}
 The registered indicator identifier: always 'ed_visit'. Joins to the canonical
 registry in documentations/metrics/*.yml, which carries its definition, source and rationale.

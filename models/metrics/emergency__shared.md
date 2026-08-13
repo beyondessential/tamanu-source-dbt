@@ -23,29 +23,10 @@ keeps these models unrestricted.
 Timestamp the patient arrived in the ED -- the start of the ED intake segment, to the minute.
 
 Minute grain lets a consumer roll up to hour, day, week, month, quarter or year, and pair
-with period_end to measure time in the ED. No period is withheld -- today's attendances are
+with period_end to measure duration -- which period, and so which duration, is the
+individual metric's. No period is withheld -- today's attendances are
 emitted, and a consumer wanting only complete months excludes the current one in its own
 date filter.
-{% enddocs %}
-
-{% docs emergency__period_end %}
-Timestamp the patient left the ED -- the end of the ED intake segment, to the minute.
-
-**Departure from the ED, not the end of the encounter.** For an attendance that ended in
-admission this is the moment of admission, so period_end - period_start is time in the ED,
-not total hospital stay. The total-stay figure is the emergency triage line list's, computed
-from the whole encounter.
-
-**The departure is the earliest signal that the patient left**: the first move to another
-location, or the time a booked transfer takes effect, falling through to the encounter end when
-neither is recorded. A segment boundary alone is not a departure -- an encounter_type change to
-admission closes the intake segment while the patient is still in the ED, so boarding time counts
-toward the stay. Where the booked time is still in the future, the resulting duration is a planned
-one: the model reads no clock, so it does not distinguish a plan already elapsed from one pending.
-
-**NULL only while the patient is in the ED with nothing booked and the encounter open**, so this column is
-deliberately nullable: time in the ED is undefined until they leave. A consumer measuring
-duration filters these rows out; a consumer counting attendances ignores the column.
 {% enddocs %}
 
 {% docs emergency__period_granularity %}

@@ -77,7 +77,7 @@ models:
               name: ac_004_metric__emergency_visit_period_start_not_null
       - name: period_end
         data_type: timestamp
-        description: "{{ doc('emergency__period_end') }}"
+        description: "{{ doc('metric__emergency_visit__period_end') }}"
         # BL-002: deliberately no not_null test -- NULL means the attendance is still open,
         # and length of stay is undefined until it closes. Ordering is asserted by AC-012 on
         # the model, since a column-grain test cannot compare two columns.

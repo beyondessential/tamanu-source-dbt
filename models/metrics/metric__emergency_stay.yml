@@ -74,7 +74,7 @@ models:
               name: ac_004_metric__emergency_stay_period_start_not_null
       - name: period_end
         data_type: timestamp
-        description: "{{ doc('emergency__period_end') }}"
+        description: "{{ doc('metric__emergency_stay__period_end') }}"
         # BL-002: deliberately no not_null test -- NULL means the patient is still in the ED,
         # and time in the ED is undefined until they leave. Ordering is asserted by AC-012 on
         # the model, since a column-grain test cannot compare two columns.
