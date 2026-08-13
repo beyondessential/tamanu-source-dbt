@@ -15,7 +15,7 @@
 | **Last updated** | 2026-07-19 |
 
 Canonical definitions for the 3 MSF Mental Health Sessions indicators
-registered in `csv/metric_definitions.csv`. Implementations are
+registered in `documentations/metrics/*.yml`. Implementations are
 deployment-specific (see § Implementations). This spec governs the
 *definitions* — what each indicator measures, output shape, semantic
 invariants. Implementation details (which upstream models feed each, session
@@ -67,7 +67,7 @@ D5 wide format. Each `metric__` view emits:
 ## Business logic
 
 - **BL-001:** Every output row carries `metric_id` set to its registered
-  identifier in `csv/metric_definitions.csv`. Joining a consumer to the
+  identifier in `documentations/metrics/*.yml`. Joining a consumer to the
   registry on `metric_id` returns the definition.
 - **BL-002 (`active_psychiatric_care`):** Count of distinct patients whose
   psychiatry-program registration status is **active as of the end of each
@@ -111,7 +111,7 @@ D5 wide format. Each `metric__` view emits:
 
 ## Registry entries
 
-3 rows in `csv/metric_definitions.csv`: `active_psychiatric_care`,
+3 rows in `documentations/metrics/*.yml`: `active_psychiatric_care`,
 `psychiatric_care_sessions`, `medication_side_effects` — all with
 `kind = metric`, `definition_source = MSF`, `data_source = tamanu`. See the
 seed for per-indicator `description`, `subject_grain`, and `unit`.

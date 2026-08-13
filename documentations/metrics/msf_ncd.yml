@@ -1,0 +1,655 @@
+# MSF NCD programme metrics and cohorts.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: cohort_6m_diabetes_active
+  kind: metric
+  name: 6-month cohort — active diabetic patients
+  description: >-
+    Cohort diabetic patients still active at the 6-month evaluation point in the reporting month.
+  numerator_description: Distinct cohort patients with a diabetes diagnosis still active at month
+    end
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_diabetes_bp_control_percent
+  kind: metric
+  name: 6-month cohort diabetes BP control rate
+  description: >-
+    Percentage of active cohort diabetic patients whose 6-month BP is controlled. Emitted only when
+    measurements exist.
+  numerator_description: Distinct active cohort diabetes patients with controlled BP
+  denominator_description: Distinct active cohort diabetes patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_diabetes_bp_measured_percent
+  kind: metric
+  name: 6-month cohort diabetes BP measured percent
+  description: Percentage of active cohort diabetic patients with a BP measurement in the 6-month
+    window.
+  numerator_description: Distinct active cohort diabetes patients with a BP measurement
+  denominator_description: Distinct active cohort diabetes patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_diabetes_hba1c_control_percent
+  kind: metric
+  name: 6-month cohort diabetes HbA1c control rate
+  description: >-
+    Percentage of active cohort diabetic patients whose 6-month HbA1c is controlled. Emitted only
+    when measurements exist.
+  numerator_description: Distinct active cohort diabetes patients with controlled HbA1c
+  denominator_description: Distinct active cohort diabetes patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_diabetes_hba1c_measured_percent
+  kind: metric
+  name: 6-month cohort diabetes HbA1c measured percent
+  description: Percentage of active cohort diabetic patients with an HbA1c test in the 6-month window.
+  numerator_description: Distinct active cohort diabetes patients with an HbA1c test
+  denominator_description: Distinct active cohort diabetes patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_htn_active
+  kind: metric
+  name: 6-month cohort — active hypertensive patients
+  description: >-
+    Cohort hypertensive patients still active at the 6-month evaluation point in the reporting month.
+  numerator_description: Distinct cohort patients with a hypertension diagnosis still active at month
+    end
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_htn_bp_control_percent
+  kind: metric
+  name: 6-month cohort HTN BP control rate
+  description: >-
+    Percentage of active cohort hypertensive patients whose 6-month BP is controlled. Emitted only
+    when measurements exist.
+  numerator_description: Distinct active cohort HTN patients with controlled BP
+  denominator_description: Distinct active cohort HTN patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_htn_bp_measured_percent
+  kind: metric
+  name: 6-month cohort HTN BP measured percent
+  description: >-
+    Percentage of active cohort hypertensive patients with a BP measurement in the 6-month window.
+  numerator_description: Distinct active cohort HTN patients with a BP measurement
+  denominator_description: Distinct active cohort HTN patients
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_patients_active
+  kind: metric
+  name: 6-month cohort — active patients
+  description: >-
+    Cohort patients (active 9 months prior) still active at the 6-month evaluation point in the reporting
+    month.
+  numerator_description: Distinct cohort patients active at month end
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_6m_retention_percent
+  kind: metric
+  name: 6-month cohort retention rate
+  description: Percentage of cohort patients still active at the 6-month evaluation point.
+  numerator_description: Distinct cohort patients still active
+  denominator_description: Distinct cohort patients in the cohort
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: percentage
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: cohort_ncd_6m
+  kind: cohort
+  name: 6-month NCD cohort
+  description: >-
+    NCD-registry patients whose registration first became ncdactive 9 months before the reporting
+    month and who were still in the program at the 6-month evaluation point.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program 6-month evaluation cohort
+  unit: null
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/der__cohort_ncd_6m.md
+- metric_id: cohort_ncd_registry
+  kind: cohort
+  name: NCD program registry cohort
+  description: >-
+    NCD-registry patients (all clinical statuses except waitlist) with conditions pivoted to columns
+    and the latest exit-survey info.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program registry definition
+  unit: null
+  subject_grain: patient
+  disaggregations:
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/der__cohort_ncd_registry.md
+- metric_id: consultations_followup
+  kind: metric
+  name: Follow-up NCD consultations
+  description: >-
+    Patients with a second or later consultation in the NCD program during the reporting month.
+  numerator_description: >-
+    Patients with at least one prior NCD consultation who attend another consultation in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: consultations_new
+  kind: metric
+  name: New NCD consultations
+  description: >-
+    Patients whose first lifetime consultation in the NCD program falls in the reporting month.
+  numerator_description: Patients attending their first lifetime NCD consultation in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diabetes_bp_controlled
+  kind: metric
+  name: Diabetes patients with controlled BP
+  description: Diabetes patients with a controlled blood-pressure measurement in the reporting month.
+  numerator_description: >-
+    Distinct diabetes patients with a controlled blood-pressure measurement in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diabetes_bp_measured
+  kind: metric
+  name: Diabetes patients with BP measured
+  description: Diabetes patients with at least one blood-pressure measurement in the reporting month.
+  numerator_description: >-
+    Distinct diabetes patients with at least one recorded blood-pressure measurement in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diabetes_hba1c_controlled
+  kind: metric
+  name: Diabetes patients with controlled HbA1c
+  description: Diabetes patients with a controlled HbA1c measurement in the reporting month.
+  numerator_description: Distinct diabetes patients with a controlled HbA1c measurement in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diabetes_hba1c_measured
+  kind: metric
+  name: Diabetes patients with HbA1c measured
+  description: Diabetes patients with at least one HbA1c test in the reporting month.
+  numerator_description: >-
+    Distinct diabetes patients with at least one recorded HbA1c measurement in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diagnoses
+  kind: metric
+  name: Patients with active NCD diagnosis
+  description: >-
+    Patients with an active NCD registration carrying the given condition by the end of the reporting
+    month.
+  numerator_description: >-
+    Distinct patients with an active NCD registration carrying the given condition by the end of the
+    reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: diagnoses_new
+  kind: metric
+  name: New NCD diagnoses
+  description: >-
+    Patients whose NCD registration first transitioned to ncdactive carrying the given condition during
+    the reporting month.
+  numerator_description: >-
+    Distinct patients whose NCD registration first became active carrying the given condition in the
+    reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_deceased
+  kind: metric
+  name: NCD exits — deceased
+  description: Patients exited from the NCD program as deceased during the reporting month.
+  numerator_description: Distinct patients exited from the NCD program as deceased in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_ltfu
+  kind: metric
+  name: NCD exits — lost to follow-up
+  description: Patients exited from the NCD program as lost-to-follow-up during the reporting month.
+  numerator_description: Distinct patients exited from the NCD program as lost-to-follow-up in the
+    reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_other
+  kind: metric
+  name: NCD exits — other
+  description: >-
+    Patients exited from the NCD program for other reasons (clinically discharged, voluntary exit,
+    other) during the reporting month.
+  numerator_description: >-
+    Distinct patients exited from the NCD program in the reporting month for other reasons (clinically
+    discharged, voluntary exit, other)
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_transferred
+  kind: metric
+  name: NCD exits — transferred or referred out
+  description: >-
+    Patients exited from the NCD program as transferred or referred out during the reporting month.
+  numerator_description: >-
+    Distinct patients exited from the NCD program as transferred or referred out in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: htn_bp_controlled
+  kind: metric
+  name: Hypertension patients with controlled BP
+  description: Hypertension patients with a controlled blood-pressure measurement in the reporting
+    month.
+  numerator_description: >-
+    Distinct hypertension patients with a controlled blood-pressure measurement in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: htn_bp_measured
+  kind: metric
+  name: Hypertension patients with BP measured
+  description: Hypertension patients with at least one blood-pressure measurement in the reporting
+    month.
+  numerator_description: >-
+    Distinct hypertension patients with at least one recorded blood-pressure measurement in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: patients_active
+  kind: metric
+  name: Active NCD patients
+  description: Patients with an active NCD registration as of the reporting month.
+  numerator_description: >-
+    Distinct patients with an active NCD registration as of month end (active before month end and
+    exit not yet recorded)
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: patients_new
+  kind: metric
+  name: Newly enrolled NCD patients
+  description: >-
+    Patients whose NCD registration first transitioned to ncdactive during the reporting month and
+    were still active at month end.
+  numerator_description: >-
+    Distinct patients whose NCD registration first became active in the reporting month and who were
+    still active at month end
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: referred_specialist
+  kind: metric
+  name: NCD specialist referrals
+  description: Patients referred to a specialist via the NCDRef001 form during the reporting month.
+  numerator_description: Distinct patients referred to a specialist via the NCDRef001 form in the
+    reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md

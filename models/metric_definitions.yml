@@ -8,20 +8,29 @@ models:
       this package — deployments inherit the catalogue automatically via
       `ref('metric_definitions')` without redeclaring anything.
 
-      The registry is authored in `metric_definitions.csv` and compiled inline
-      by the `get_metric_definitions()` macro, so it materialises as a view in
-      the production bundle rather than a seed table. Regenerate the macro with
-      `python scripts/generate_metric_definitions_macro.py` after editing the
-      CSV.
+      The registry is authored in `documentations/metrics/*.yml` — one file per
+      programme, merged by `metric_id` — and compiled inline by the
+      `get_metric_definitions()` macro, so it materialises as a view in the
+      production bundle rather than a seed table. Regenerate the macro with
+      `python scripts/generate_metric_definitions_macro.py` after editing.
 
-      Each row defines one indicator: identifier, plain-English description,
+      **Every metric is defined here**, in this repo, whichever repo implements
+      it. A deployment inherits the whole catalogue and registers nothing of its
+      own, so a `metric_id` means one thing across every deployment.
+
+      Each entry defines one indicator: identifier, plain-English description,
       numerator/denominator, source standard, output shape (subject grain,
       disaggregations, unit), and lifecycle status. Definitions here are the
       single source of truth — implementation overrides (a deployment uses a
       different upstream survey for the same metric) are invisible at this
       layer; only definition variances (different rules, different numbers) are
-      flagged, via `variant_of` on a deployment-specific extension at
-      `tamanu-dbt-<deployment>/metric_definitions_<deployment>.csv`.
+      flagged, as a separate entry here carrying `variant_of`.
+
+      A variant is **registered** here and **documented** at the deployment: its
+      entry points `spec_path` at the deployment repo's spec, which carries the
+      rule, the rationale and the divergence from the parent. That keeps every
+      `metric_id` and its shape centrally reviewable while the deployment owns
+      the detail of why its numbers differ.
 
       Schema per Maui data architecture D5
       (`.maui/knowledge/architecture/data-architecture/decisions.md`).
