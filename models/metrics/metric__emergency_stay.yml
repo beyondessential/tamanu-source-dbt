@@ -1,0 +1,166 @@
+version: 2
+
+models:
+  - name: metric__emergency_stay
+    description: "{{ doc('metric__emergency_stay') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # BL-010: per-stay rows, but the subject is an encounter id with no patient identifier
+      # alongside it -- no patient is identifiable through a row, so this stays unrestricted
+      # and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+      create_data_table: true
+    data_tests:
+      # One row per stay. A duplicate would double-count a stay in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__emergency_stay_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-012 (BL-002): time in the ED is period_end - period_start, so a period_end before
+      # its start would make it negative. Only closed stays are in scope -- an open one has no
+      # period_end.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_012_metric__emergency_stay_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__emergency_stay__metric_id') }}"
+        meta:
+          data_table_filter: array
+        data_tests:
+          - not_null:
+              name: ac_002_metric__emergency_stay_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__emergency_stay_metric_id_values
+              arguments:
+                values:
+                  - ed_stay
+          - relationships:
+              name: ac_003_metric__emergency_stay_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('emergency__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('emergency__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__emergency_stay_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: "{{ doc('emergency__period_start') }}"
+        meta:
+          data_table_filter: date
+        data_tests:
+          - not_null:
+              name: ac_004_metric__emergency_stay_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: "{{ doc('emergency__period_end') }}"
+        # BL-002: deliberately no not_null test -- NULL means the patient is still in the ED,
+        # and time in the ED is undefined until they leave. Ordering is asserted by AC-012 on
+        # the model, since a column-grain test cannot compare two columns.
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('emergency__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__emergency_stay_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__emergency_stay_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__emergency_stay__value_numeric') }}"
+        meta:
+          data_table_metric: sum
+        data_tests:
+          - not_null:
+              name: ac_006_metric__emergency_stay_value_numeric_not_null
+          - accepted_values:
+              name: ac_006_metric__emergency_stay_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('emergency__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} the stay is attributed to."
+        meta:
+          data_table_filter: array
+        data_tests:
+          - not_null:
+              name: ac_007_metric__emergency_stay_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+        meta:
+          data_table_filter: array
+      - name: age_group__who_primary_classification
+        data_type: character varying(255)
+        description: "{{ doc('emergency__age_group__who_primary_classification') }}"
+        meta:
+          data_table_filter: array
+      - name: triage_score
+        data_type: text
+        description: "{{ doc('emergency__triage_score') }}"
+        meta:
+          data_table_filter: array
+        data_tests:
+          - not_null:
+              name: ac_011_metric__emergency_stay_triage_score_not_null
+      - name: ed_time__minutes
+        data_type: numeric
+        description: "{{ doc('metric__emergency_stay__ed_time__minutes') }}"
+        # BL-015: a measure, not a dimension -- continuous, so it carries no
+        # data_table_filter. Deliberately nullable: NULL while the patient is still in the ED.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_019_metric__emergency_stay_ed_time_non_negative
+              arguments:
+                min_value: 0
+                row_condition: "ed_time__minutes is not null"
+      - name: ed_time__4_hours_band
+        data_type: text
+        description: "{{ doc('emergency__ed_time__4_hours_band') }}"
+        meta:
+          data_table_filter: array
+        data_tests:
+          - not_null:
+              name: ac_015_metric__emergency_stay_ed_time_band_not_null
+          - accepted_values:
+              name: ac_015_metric__emergency_stay_ed_time_band_values
+              arguments:
+                values: ['< 4 hours', '4 or more hours', 'Unknown']
+      - name: discharge_disposition
+        data_type: text
+        description: "{{ doc('metric__emergency_stay__discharge_disposition') }}"
+        meta:
+          data_table_filter: array
+        data_tests:
+          # 'Not recorded' rather than NULL, so a Tupaia array filter cannot drop the stay.
+          - not_null:
+              name: ac_017_metric__emergency_stay_discharge_disposition_not_null

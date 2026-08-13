@@ -1,0 +1,130 @@
+unit_tests:
+  - name: ac_009_int__emergency_visits_derivations
+    model: int__emergency_visits
+    description: >
+      Behavioural coverage for the shared attendance base, which both emergency care metrics
+      project. BL-003: an attendance is the intake segment only, and only when its OMOP visit
+      concept is 9203 -- a later segment and a non-ED intake are both excluded. BL-005:
+      is_admitted follows visit-level concept 262. BL-012: triage_score falls back to
+      'Not recorded' for a blank score and for a missing triage row. BL-013: a second
+      is_primary row does not duplicate the attendance -- the earliest wins. BL-014: waiting_time__minutes is
+      the wait from triage to active care, NULL where the patient has no active-care time. BL-015: the
+      four-hour band, with 'Unknown' while the attendance is open. BL-016: ed_start__hour is
+      the local hour. BL-017: discharge_disposition resolves through the disposition reference
+      data and falls back to 'Not recorded'.
+
+    given:
+      # ed_1 closed after 3h15m (< 4 hours), triage category 1 seen 2 min after triage. Two
+      #      principal diagnoses; the earlier (J18.9) wins.
+      # ed_2 closed after 5h (4 or more hours), category 3 seen 45 min after triage.
+      #      Diagnosis code resolves to no chapter.
+      # ed_3 still open with no transfer planned -- no departure, so 'Unknown' band, and no
+      #      triage row at all so 'Not recorded' score and a NULL wait. No discharge record.
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'ed_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_1' as care_site_id, '2024-05-15'::date as visit_detail_start_date, '2024-05-15 08:30'::timestamp as visit_detail_start_datetime, '2024-05-15 11:45'::timestamp as visit_detail_end_datetime, null::text as preceding_visit_detail_id, 9203 as visit_detail_concept_id
+          union all
+          select 'ed_2', 'per_1', 'loc_1', '2024-05-16'::date, '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, null::text, 9203
+          union all
+          select 'ed_3', 'per_1', 'loc_1', '2024-05-18'::date, '2024-05-18 06:05'::timestamp, null::timestamp, null::text, 9203
+          union all
+          -- BL-018: open segment, but a transfer is planned, so the plan supplies the departure
+          select 'ed_4', 'per_1', 'loc_1', '2024-05-21'::date, '2024-05-21 07:00'::timestamp, null::timestamp, null::text, 9203
+          union all
+          -- BL-003: a later segment of an ED encounter is not a second attendance
+          select 'ed_later_segment', 'per_1', 'loc_1', '2024-05-19'::date, '2024-05-19 09:00'::timestamp, '2024-05-19 10:00'::timestamp, 'vd_earlier', 9203
+          union all
+          -- BL-003: an intake segment that is not an ED visit
+          select 'ed_not_ed', 'per_1', 'loc_1', '2024-05-20'::date, '2024-05-20 09:00'::timestamp, '2024-05-20 10:00'::timestamp, null::text, 9201
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'ed_1' as visit_occurrence_id, 262 as visit_concept_id, '2024-05-16 09:00'::timestamp as visit_end_datetime
+          union all
+          select 'ed_2', 9203, '2024-05-17 03:00'::timestamp
+          union all
+          select 'ed_3', 9203, null::timestamp
+          union all
+          select 'ed_4', 9203, null::timestamp
+          union all
+          select 'ed_later_segment', 262, '2024-05-19 10:00'::timestamp
+          union all
+          select 'ed_not_ed', 9201, '2024-05-20 10:00'::timestamp
+
+      # BL-018: ed_1 has both a recorded segment end and a planned location -- the recorded end
+      # must win. ed_4 has only the plan, so the plan supplies its departure. ed_2 and ed_3 have
+      # no plan.
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'ed_1' as id, '2024-05-15 23:00'::timestamp as planned_location_start_datetime
+          union all
+          select 'ed_2', null::timestamp
+          union all
+          select 'ed_3', null::timestamp
+          union all
+          select 'ed_4', '2024-05-21 09:30'::timestamp
+          union all
+          select 'ed_later_segment', null::timestamp
+          union all
+          select 'ed_not_ed', null::timestamp
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1' as id, 'fac_1' as facility_id
+
+      # BL-014: ed_1 triaged 08:30 and seen 08:32 -- a 2 minute wait. ed_2 triaged 22:00 and
+      # seen 22:45 -- 45 minutes. ed_3 and ed_4 have no triage row, so their wait is NULL.
+      - input: ref('triages')
+        format: sql
+        rows: |
+          select 'ed_1' as encounter_id, '1' as score, '2024-05-15 08:30'::timestamp as triage_datetime, '2024-05-15 08:32'::timestamp as closed_datetime
+          union all
+          select 'ed_2', '3', '2024-05-16 22:00'::timestamp, '2024-05-16 22:45'::timestamp
+
+      # BL-013: ed_1 carries two is_primary rows -- the earlier (J18.9, chapter X) must win.
+      # The non-primary row must be ignored. ed_2's code sits in no chapter.
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select 'co_1' as condition_occurrence_id, 'ed_1' as visit_occurrence_id, true as is_primary, 'J18.9' as condition_source_value, '2024-05-15 09:00'::timestamp as condition_start_datetime
+          union all
+          select 'co_2', 'ed_1', true, 'I21.9', '2024-05-15 10:00'::timestamp
+          union all
+          select 'co_3', 'ed_1', false, 'E11.9', '2024-05-15 09:30'::timestamp
+          union all
+          select 'co_4', 'ed_2', true, 'ZZ999', '2024-05-16 23:00'::timestamp
+
+      # BL-017: ed_1 and ed_2 have dispositions; ed_3 has no discharge record.
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select 'ed_1' as encounter_id, 'disp_home' as disposition_id
+          union all
+          select 'ed_2', 'disp_transfer'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'disp_home' as id, 'Home' as name
+          union all
+          select 'disp_transfer', 'Transfer to another facility'
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 11:45'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 11700::bigint as ed_time__seconds, 195.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 'J18.9' as principal_diagnosis_code, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour, '< 4 hours' as ed_time__4_hours_band, '4 or more hours' as length_of_stay__4_hours_band
+        union all
+        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 'ZZ999', '3', 'Transfer to another facility', 22, '4 or more hours', '4 or more hours'
+        union all
+        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::text, 'Not recorded', 'Not recorded', 6, 'Unknown', 'Unknown'
+        union all
+        select 'ed_4', '2024-05-21 07:00'::timestamp, '2024-05-21 09:30'::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 9000::bigint, 150.00::numeric, null::bigint, null::text, 'Not recorded', 'Not recorded', 7, '< 4 hours', 'Unknown'
