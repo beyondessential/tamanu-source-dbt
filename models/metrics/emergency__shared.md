@@ -85,5 +85,5 @@ column per classification.
 
 A measure, not a dimension: continuous, so it is absent from the registry's disaggregations
 and no data table exposes it as a filter. The bands the standard data tables apply are in
-the repo's data_tables/ folder. NULL where the birth date is missing.
+tupaia-data-product. NULL where the birth date is missing.
 {% enddocs %}

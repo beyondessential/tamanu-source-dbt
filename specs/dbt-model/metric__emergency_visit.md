@@ -89,10 +89,11 @@ D5 wide format, plus six disaggregation columns and three measure attributes.
 
 ## Data tables
 
-The Tupaia data tables over this view are configured in the repo's top-level `data_tables/`
-folder, one file per data table. Splitting them out of the model's `.yml` is what lets one metric carry several.
-The standard ones live here; a deployment that bands age differently adds a file under the same
-path in its own `tamanu-dbt-*` repo, rather than forking the metric.
+The Tupaia data tables over this view are configured in `tupaia-data-product`, at
+`tamanu/data_tables/`, one file per data table. They live there rather than here because the
+filter types, the aggregation and the bands are all the consumer's vocabulary — only the model
+name points at dbt — and because it keeps a data table's whole configuration, permission groups
+included, in one repo.
 
 `emergency_visit__standard.yml` is the one BES ships. It ranges `period_start` as a date;
 exposes `metric_id`, `facility_id`, `sex`, `triage_score`,
@@ -101,9 +102,9 @@ bands `age_group__who_primary_classification` from `age_years` and
 `length_of_stay__4_hours_band` from `length_of_stay__minutes`; and sums `value_numeric`.
 `period_end` is not exposed — an open encounter has none, and an array filter drops a NULL row.
 
-`data_tables/README.md` holds the schema, and `scripts/validate_data_tables.py`
-asserts every column named there is one this model emits, so renaming a column here fails in CI
-rather than emptying a dashboard.
+`tupaia-data-product/validate_data_tables.py` checks each file against this project's dbt
+manifest, so a column renamed here fails there at generate time rather than emptying a
+dashboard. This model therefore carries no `data_table_*` meta.
 
 ## Business logic
 
@@ -237,7 +238,7 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 
   `age_years`, `waiting_time__minutes`, `ed_time__minutes` and `length_of_stay__minutes` are
   therefore measures rather than dimensions, absent from the registry's disaggregations. The
-  data table declares the bands it wants over them, in `data_tables/`.
+  data table declares the bands it wants over them, in `tupaia-data-product`.
 
   This is why a deployment can change its banding without a change here, and why two deployments
   banding differently still share one metric definition.

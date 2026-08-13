@@ -93,10 +93,9 @@ D5 wide format, plus four disaggregation columns and one measure attribute.
 
 ## Data tables
 
-The Tupaia data tables over this view are configured in the repo's top-level `data_tables/`
-folder, one file per data table. Splitting them out of the model's `.yml` is what lets one metric carry several.
-The standard ones live here; a deployment that bands age or the four-hour split differently
-adds a file under the same path in its own `tamanu-dbt-*` repo, rather than forking the metric.
+The Tupaia data tables over this view are configured in `tupaia-data-product`, at
+`tamanu/data_tables/`, one file per data table — see `metric__emergency_visit.md` § Data tables
+for why they live there.
 
 `emergency_stay__standard.yml` is the one BES ships. It ranges `period_start` as a date; exposes
 `metric_id`, `facility_id`, `sex`, `triage_score` and `discharge_disposition` as array filters;
@@ -104,8 +103,7 @@ bands `age_group__who_primary_classification` from `age_years` and `ed_time__4_h
 `ed_time__minutes`; and sums `value_numeric`. `period_end` is not exposed — a patient still in
 the department has none, and an array filter drops a NULL row.
 
-`data_tables/README.md` holds the schema, and `scripts/validate_data_tables.py`
-asserts every column named there is one this model emits.
+This model therefore carries no `data_table_*` meta.
 
 ## Business logic
 
