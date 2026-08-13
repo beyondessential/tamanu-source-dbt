@@ -8,5 +8,16 @@ where trim(d) not in (
         'age_group__who_primary_classification',
         'sex',
         'facility_id',
-        'dhis_ncd_category'
+        'dhis_ncd_category',
+        -- ed_visit's admission outcome, carried as a disaggregation on
+        -- metric__emergency_visit's per-encounter rows rather than as its own metric_id.
+        'is_admitted',
+        -- ed_visit's triage acuity category
+        'triage_score',
+        -- ed_visit's principal diagnosis, grouped to a WHO ICD-10 chapter
+        'principal_diagnosis__icd10_chapter',
+        -- ed_visit's arrival hour
+        'ed_start__hour',
+        -- ed_stay's encounter discharge disposition
+        'discharge_disposition'
     )
