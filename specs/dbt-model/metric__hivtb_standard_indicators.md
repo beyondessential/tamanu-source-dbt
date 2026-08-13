@@ -16,7 +16,7 @@
 | **Last updated** | 2026-07-27 |
 
 Canonical definitions for the 24 MSF OCA "Standard Indicators" (PMTCT / HIV-AIDS /
-Tuberculosis) registered in `csv/metric_definitions.csv`. Implementations are
+Tuberculosis) registered in `documentations/metrics/*.yml`. Implementations are
 deployment-specific (see § Implementations). This spec governs the *definitions* —
 what each indicator measures, output shape, semantic invariants. Implementation
 details (which upstream models feed each, point-in-time reconstruction mechanics,
@@ -83,7 +83,7 @@ episode) unless stated otherwise.
   *complete* calendar month; the current (incomplete) month is never emitted. Age,
   where relevant, is evaluated at the time of the qualifying visit/form/event (not
   current age). Every output row carries `metric_id` set to its registered
-  identifier in `csv/metric_definitions.csv`.
+  identifier in `documentations/metrics/*.yml`.
 
 ### PMTCT (5 indicators)
 
@@ -193,11 +193,11 @@ specs add their own deployment-specific unit/singular tests on top.
 | AC-003 | No row has `period_start` in the current (incomplete) month | BL-001 | singular test |
 | AC-004 | Output grain (`metric_id`, `period_start`, `facility_id`) is unique | grain | `dbt_utils.unique_combination_of_columns` |
 | AC-005 | No row has `value_numeric <= 0` | BL-022 | singular test |
-| AC-006 | Every emitted `metric_id` is registered in `csv/metric_definitions.csv` | BL-001 | `relationships` |
+| AC-006 | Every emitted `metric_id` is registered in `documentations/metrics/*.yml` | BL-001 | `relationships` |
 
 ## Registry entries
 
-24 rows in `csv/metric_definitions.csv`, all `kind = metric`,
+24 rows in `documentations/metrics/*.yml`, all `kind = metric`,
 `definition_source = MSF`, `data_source = tamanu`, `spec_path` pointing at this
 file:
 
