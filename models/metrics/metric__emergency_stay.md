@@ -47,7 +47,7 @@ A measure, not a dimension: the value is continuous, so it carries no data table
 not registered as a disaggregation. ed_time__4_hours_band is the banded form for
 grouping and filtering; this column is the underlying duration.
 
-NULL while the patient is in the ED with no transfer planned -- the same rows
+NULL only while the patient is in the ED with nothing booked and the encounter open -- the same rows
 ed_time__4_hours_band reports as 'Unknown' -- so a duration visual restricts to non-NULL
 rows.
 {% enddocs %}

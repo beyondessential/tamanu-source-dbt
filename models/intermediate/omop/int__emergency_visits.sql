@@ -61,29 +61,49 @@ principal_diagnoses as (
     where is_primary
 ),
 
--- BL-003: ED attendances are the first history segment of each encounter whose OMOP visit
--- concept is 9203/Emergency Room Visit -- covers emergency, triage and observation. One row
--- per attendance, attributed to that intake segment.
+-- BL-003: the ED intake segment of each encounter -- the first history segment whose OMOP
+-- visit concept is 9203/Emergency Room Visit, covering emergency, triage and observation.
+ed_intake as (
+    select
+        visit_occurrence_id,
+        visit_detail_start_datetime,
+        care_site_id
+    from visit_detail
+    where preceding_visit_detail_id is null
+        and visit_detail_concept_id = 9203 -- OMOP 'Emergency Room Visit'
+),
+
+-- BL-018: the first time the patient's location leaves the ED. A segment boundary is not by
+-- itself a departure: an encounter_type change to admission closes the intake segment while
+-- the patient is still physically in the emergency department, which is the boarding case a
+-- four-hour measure exists to expose. Only a change of care_site is a physical departure.
+ed_location_exits as (
+    select
+        later.visit_occurrence_id,
+        min(later.visit_detail_start_datetime) as ed_location_exit__datetime
+    from visit_detail later
+    join ed_intake i
+        on i.visit_occurrence_id = later.visit_occurrence_id
+    where later.visit_detail_start_datetime > i.visit_detail_start_datetime
+        and later.care_site_id is distinct from i.care_site_id
+    group by later.visit_occurrence_id
+),
+
+-- BL-003: one row per attendance, attributed to that intake segment.
 attendances as (
     select
         -- BL-011: the encounter id is the subject. One intake segment per encounter, so this
         -- is unique across the rows emitted here.
         vd.visit_occurrence_id,
         vd.visit_detail_start_datetime as ed_start__datetime,
-        -- BL-002: two distinct departures, and the metrics use different ones.
-        -- ED departure is when the patient leaves the emergency department: the intake
-        -- segment's end, which is an internal transfer to an inpatient bed or a discharge
-        -- straight from the ED.
-        -- BL-018: where the segment has no end, a planned location stands in for it -- the
-        -- encounter is booked to transfer out of the ED at planned_location_start_datetime, so
-        -- the ED episode is settled even though the next segment is unrecorded. An actual
-        -- segment end always wins over the plan. NULL = in the ED with no transfer planned.
-        -- encounters holds CURRENT state, so this reads a live plan only; a transfer that has
-        -- already happened closed the segment and is read from there instead. No historical
-        -- planned-location change is recoverable here -- encounter_history omits the field, so
-        -- it lives only in logs.changes. See OQ-002 in the metric__emergency_stay spec.
+        -- BL-018: departure from the emergency department, taken as the earliest signal that
+        -- the patient left: the first move to another location, or the time a booked transfer
+        -- takes effect. least() ignores NULLs, so whichever exists wins and the earlier wins
+        -- when both do. Falling through to the encounter end covers a discharge straight from
+        -- the ED and any encounter that never moved.
         coalesce(
-            vd.visit_detail_end_datetime, enc.planned_location_start_datetime
+            least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
+            vo.visit_end_datetime
         ) as ed_end__datetime,
         -- Encounter end is discharge from hospital, so for an admitted patient it is later
         -- than the ED departure. NULL = encounter still open.
@@ -101,15 +121,18 @@ attendances as (
             when tr.closed_datetime < tr.triage_datetime then null
             else extract(epoch from (tr.closed_datetime - tr.triage_datetime))::bigint
         end as waiting_time__seconds,
-        -- BL-015: time in the ED -- arrival to ED departure, including a departure supplied by
-        -- a planned location (BL-018). NULL while the patient is in the ED with no transfer
-        -- planned.
+        -- BL-015: time in the ED -- arrival to the departure resolved by BL-018. NULL only
+        -- while the patient is in the ED and the encounter is still open.
         case
-            when coalesce(vd.visit_detail_end_datetime, enc.planned_location_start_datetime) is null
-                then null
+            when coalesce(
+                    least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
+                    vo.visit_end_datetime
+                ) is null then null
             else extract(epoch from (
-                    coalesce(vd.visit_detail_end_datetime, enc.planned_location_start_datetime)
-                    - vd.visit_detail_start_datetime
+                    coalesce(
+                        least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
+                        vo.visit_end_datetime
+                    ) - vd.visit_detail_start_datetime
                 ))::bigint
         end as ed_time__seconds,
         -- BL-015: total length of stay -- arrival to discharge from hospital, so it spans the
@@ -140,10 +163,14 @@ attendances as (
     -- location does not resolve is excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = vd.care_site_id
-    -- BL-018: planned location, for the ED departure fallback. encounters.id is the primary
-    -- key, so this yields one row per attendance.
+    -- BL-018: the booked transfer, one of the two departure signals. encounters.id is the
+    -- primary key, so this yields one row per attendance.
     join encounters enc
         on enc.id = vd.visit_occurrence_id
+    -- BL-018: the physical departure, where one has been recorded. Grouped to one row per
+    -- encounter above, so it cannot fan out.
+    left join ed_location_exits x
+        on x.visit_occurrence_id = vd.visit_occurrence_id
     -- BL-012: left join -- an attendance with no triage record still counts. Tamanu records
     -- at most one triage per encounter, so this does not fan out; each metric's grain test is
     -- the backstop if that ever stops holding.
@@ -183,7 +210,7 @@ select
     round(waiting_time__seconds / 60.0, 2) as waiting_time__minutes,
     ed_time__seconds,
     -- BL-015: time in the ED as minutes, to two decimal places, on the same basis as
-    -- waiting_time__minutes. NULL while the patient is in the ED with no transfer planned.
+    -- waiting_time__minutes. NULL only while the patient is in the ED with nothing booked.
     round(ed_time__seconds / 60.0, 2) as ed_time__minutes,
     length_of_stay__seconds,
     principal_diagnosis_code,

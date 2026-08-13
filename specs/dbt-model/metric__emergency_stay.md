@@ -53,13 +53,13 @@ Hospital (MAUI-6694), via a data table over this view.
 The AIHW object class defines this model's period exactly; BL-015's four-hour banding is a BES
 composition over that concept.
 
-**DV-001 — physical departure vs administrative transition.** AIHW's `period_end` is when the
-patient is recorded as having *physically departed*, whereas Tamanu records the administrative
-transition out of the ED phase (BL-002) — which for an admitted patient can precede physical
-departure, so a patient admitted on paper but still boarding counts as departed. Time in the ED
-is therefore understated wherever boarding occurs, which is precisely the delay a four-hour
-measure exists to expose. The administrative transition is the only departure signal Tamanu
-records.
+**DV-001 — physical departure.** AIHW's `period_end` is when the patient is recorded as having
+*physically departed*. BL-018 resolves that from the first segment at a different `care_site_id`,
+so boarding time counts toward the stay: an `encounter_type` change to `admission` no longer ends
+it. Two residual gaps remain against the AIHW definition. A booked transfer that has not yet
+happened stands in for the move, so those rows carry a planned rather than an observed departure.
+And a location change is recorded when the patient's location is *updated*, which may lag the
+moment they physically left the department.
 
 ## Grain
 
@@ -80,7 +80,7 @@ D5 wide format, plus five disaggregation columns.
 | `variant_id` | text | NULL — this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id (BL-011). `not_null` (AC-008) |
 | `period_start` | timestamp | Arrival in the ED (BL-002). `data_table_filter: date` |
-| `period_end` | timestamp | Departure from the ED. NULL while the patient is in the ED with no transfer planned (BL-002, BL-018) |
+| `period_end` | timestamp | Departure from the ED, resolved by BL-018. NULL only while the patient is in the ED with nothing booked and the encounter open |
 | `period_granularity` | text | Constant `'minute'` |
 | `value_numeric` | numeric | Always `1` (AC-006). Additive, so `data_table_metric: sum` |
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
@@ -100,18 +100,18 @@ below are this model's own.
 
 - **BL-001 (registration):** every emitted `metric_id` is registered in
   `documentations/metrics/*.yml`, asserted by AC-003 at `error` severity.
-- **BL-002 (the stay period):** `period_start` is `ed_start__datetime` and `period_end` is
-  `ed_end__datetime` from `int__emergency_visits` — the ED intake segment's bounds — at
-  `'minute'` granularity.
+- **BL-002 (the stay period):** `period_start` is `ed_start__datetime`, the ED intake segment's
+  start, and `period_end` is `ed_end__datetime`, the departure resolved by BL-018 — at `'minute'`
+  granularity.
 
   Departure is departure from the emergency department, whether an internal transfer to an
   inpatient bed or a discharge straight from the ED. For an admitted patient the encounter runs
   on to hospital discharge, which `metric__emergency_visit` measures.
 
   Time in the ED is `period_end - period_start`, computed by the consumer at its own grain
-  (BL-006). `period_end` is nullable — NULL means the patient is in the ED with no transfer
-  planned (BL-018) — so AC-004 covers `period_start` only and AC-012 asserts ordering where
-  `period_end` is present.
+  (BL-006). `period_end` is nullable — NULL means the patient is in the ED with nothing booked
+  and the encounter still open — so AC-004 covers `period_start` only and AC-012 asserts ordering
+  where `period_end` is present.
 - **BL-006 (durations are the consumer's):** the model emits counts; any average, median or
   percentile of time in the ED is computed from `period_start` and `period_end` at the consumer's
   grain.
@@ -144,28 +144,40 @@ below are this model's own.
   to be common for recent admitted stays. Values are whatever the deployment's disposition
   reference data holds, so the column is open-vocabulary and its test is `not_null` alone.
   `bases/discharges` is `distinct on (encounter_id)`, so the join yields one row per encounter.
-- **BL-018 (planned location as the departure):** where the ED segment carries no end,
-  `encounters.planned_location_start_datetime` supplies the departure, because an encounter booked
-  to transfer out of the ED is settled at that time even though the next segment is unrecorded. A
-  recorded `visit_detail_end_datetime` always takes precedence, and the join to `bases/encounters`
-  is on the primary key so it yields one row per attendance.
+- **BL-018 (resolving the departure):** `period_end` is the **earliest** of two signals that the
+  patient left the emergency department, falling through to the encounter end when neither is
+  present:
 
-  **This applies to currently-open segments only, because `encounters` holds current state.** A
-  segment ends on any department, location or `encounter_type` change (`clinical__visit_detail`
-  BL-001), so an attendance whose transfer has happened has a closed segment and takes its
-  departure from there.
+  1. the start of the first later segment at a **different `care_site_id`** — the physical move
+  2. `encounters.planned_location_start_datetime` — the time a booked transfer takes effect
+  3. `clinical__visit_occurrence.visit_end_datetime` — the encounter ended in the ED
 
-  **A planned time in the future produces a planned duration.** The model reads no clock (BL-002),
+  **A segment boundary is not by itself a departure.** A segment ends on any department, location
+  or `encounter_type` change (`clinical__visit_detail` BL-001), so an `encounter_type` change to
+  `admission` closes the intake segment while the patient is still physically in the ED. Taking
+  that boundary as the departure would end the stay at the admission decision and hide boarding
+  time entirely — which is the delay a four-hour measure exists to expose. Only a change of
+  `care_site_id` counts.
+
+  `least()` ignores NULLs, so whichever signal exists wins and the earlier wins when both do.
+  The physical move is the stronger evidence, but a plan that precedes it is taken as the moment
+  ED care concluded. Step 3 covers a discharge straight from the ED and any encounter that never
+  moved. `period_end` is NULL only where the patient is in the ED with nothing booked and the
+  encounter is still open.
+
+  The location-exit CTE is grouped to one row per encounter and `bases/encounters` is joined on its
+  primary key, so neither can fan out.
+
+  **A booked time in the future produces a planned duration.** The model reads no clock (BL-002),
   so it treats an elapsed plan and a pending one alike — which is what makes a projected four-hour
-  breach visible. Without the fallback, every attendance awaiting an unrecorded transfer would band
-  as `'Unknown'`.
+  breach visible.
 
-**OQ-001 — historical planned-location transitions.** `encounters` carries only the *current*
-planned location, and `encounter_history` omits the field entirely. An attendance whose transfer
-took effect without a history event, and whose plan was then cleared, has no recoverable departure
-and bands as `'Unknown'`. Reconstructing when the change occurred needs `logs.changes`, which this
-model does not read. If `'Unknown'` proves a large share of closed ED activity in deployment data,
-a `logs.changes`-based history model is the fix.
+**OQ-001 — a move recorded without a segment.** `encounters` carries only the *current* planned
+location and `encounter_history` omits the field, so no historical plan change is recoverable
+without `logs.changes`, which this model does not read. Where a patient left the ED but no
+location-change segment was written and any plan was since cleared, BL-018 falls through to the
+encounter end and **overstates** time in the ED for that stay. How often that happens is a
+question for deployment data; if it is common, a `logs.changes`-based history model is the fix.
 
 ## Acceptance criteria
 

@@ -36,14 +36,14 @@ admission this is the moment of admission, so period_end - period_start is time 
 not total hospital stay. The total-stay figure is the emergency triage line list's, computed
 from the whole encounter.
 
-**A planned location supplies the departure where the segment has no end.** An encounter
-booked to transfer out of the ED carries planned_location_start_datetime, and the ED episode is
-settled at that time even though the next segment is unrecorded. A recorded segment end always
-takes precedence over the plan. Where the planned time is still in the future, the resulting
-duration is a planned one -- the model reads no clock, so it does not distinguish a plan already
-elapsed from one pending.
+**The departure is the earliest signal that the patient left**: the first move to another
+location, or the time a booked transfer takes effect, falling through to the encounter end when
+neither is recorded. A segment boundary alone is not a departure -- an encounter_type change to
+admission closes the intake segment while the patient is still in the ED, so boarding time counts
+toward the stay. Where the booked time is still in the future, the resulting duration is a planned
+one: the model reads no clock, so it does not distinguish a plan already elapsed from one pending.
 
-**NULL while the patient is in the ED with no transfer planned**, so this column is
+**NULL only while the patient is in the ED with nothing booked and the encounter open**, so this column is
 deliberately nullable: time in the ED is undefined until they leave. A consumer measuring
 duration filters these rows out; a consumer counting attendances ignores the column.
 {% enddocs %}
