@@ -16,8 +16,8 @@ Nothing in this repo materialises a data table.
 
 This folder holds the **standard** data tables, the set BES ships with the standard metrics.
 A **custom** one — a deployment's own banding, or a slice only it needs — lives in that
-deployment's `tamanu-dbt-*` repo under the same `documentations/data_tables/` path, the same
-split as every other custom model, seed and report.
+deployment's `tamanu-dbt-*` repo under the same `data_tables/` path, the same split as every
+other custom model, seed and report.
 
 A custom file may name a standard model: the metrics arrive there as the
 `tamanu_source_dbt` package, and `validate_data_tables.py` resolves a model from either root.

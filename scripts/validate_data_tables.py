@@ -1,4 +1,4 @@
-"""Validate the data table configurations in documentations/data_tables/.
+"""Validate the data table configurations in data_tables/.
 
 A data table names columns of a dbt model and bands continuous ones for display. Nothing here
 materialises it -- tupaia-data-product compiles each file into a Tupaia data table -- so a
@@ -19,7 +19,7 @@ import yaml
 
 BASE_DIR = os.getcwd()
 
-DATA_TABLES_DIR = os.path.join("documentations", "data_tables")
+DATA_TABLES_DIR = "data_tables"
 
 # A deployment's own data tables live in its repo, where the standard models arrive as an
 # installed package -- so both roots are searched and the same script runs in either repo.

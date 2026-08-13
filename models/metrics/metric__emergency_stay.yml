@@ -6,10 +6,10 @@ models:
     config:
       tags:
         - clinical
-    # BL-019: the Tupaia data tables over this model are configured in
-    # documentations/data_tables/, one file per data table. The standard ones live here; a
-    # deployment that bands a value differently adds a file under the same path in its own
-    # tamanu-dbt-* repo, rather than forking the metric.
+    # BL-019: the Tupaia data tables over this model are configured in data_tables/, one file
+    # per data table. The standard ones live here; a deployment that bands a value differently
+    # adds a file under the same path in its own tamanu-dbt-* repo, rather than forking the
+    # metric.
     meta:
       owner: bes-maui
       domain: clinical
