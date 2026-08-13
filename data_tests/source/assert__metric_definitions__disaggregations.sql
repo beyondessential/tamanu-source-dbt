@@ -8,6 +8,9 @@ where trim(d) not in (
         'age_group__who_primary_classification',
         'sex',
         'facility_id',
+        -- opd_visit's area/clinic. The first metric__ disaggregation at less than facility
+        -- grain -- no other metric__ model groups by location_group today.
+        'location_group_id',
         'dhis_ncd_category',
         -- ed_visit's admission outcome, carried as a disaggregation on
         -- metric__emergency_visit's per-encounter rows rather than as its own metric_id.

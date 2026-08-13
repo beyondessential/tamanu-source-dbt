@@ -1,0 +1,43 @@
+# Outpatient department metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: opd_visit
+  kind: metric
+  name: OPD visits
+  description: >-
+    Outpatient department visits. One row per visit, from encounters whose first recorded segment
+    is a clinic, vaccination or imaging phase.
+  numerator_description: >-
+    Encounters whose first recorded segment carries OMOP visit concept 9202 (Outpatient Visit),
+    counted on the visit date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '400604'
+  definition_rationale: >-
+    Visit concept follows the AIHW METeOR object class "Non-admitted patient service event"
+    (METeOR 400604), the closest AIHW concept anchor for a non-admitted clinic/vaccination/imaging
+    encounter. AIHW registers no plain OPD attendance-count indicator -- its non-admitted
+    reporting is built around the Tier 2 Non-Admitted Services Classification and per-clinic
+    activity counts, not a single cross-clinic count -- so this is a BES composition over the
+    AIHW concept, not an implementation of an AIHW indicator. "Occasion of service" (METeOR
+    270511) was considered and rejected as the anchor: it is scoped to a narrower residual clinic
+    category, not the general OPD population this metric covers. Pending alignment with the
+    deploying country's national HMIS definition.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  - location_group_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__outpatient_visit.md
