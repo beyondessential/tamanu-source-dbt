@@ -1,0 +1,69 @@
+# AIHW emergency care metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: ed_attendance
+  kind: metric
+  name: ED attendances
+  description: >-
+    Emergency department attendances in the reporting month. One per encounter that presented to the
+    ED, counted at presentation.
+  numerator_description: >-
+    Encounters whose first recorded phase is an emergency department phase, by month of presentation
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '746091'
+  definition_rationale: >-
+    Attendance concept follows AIHW METeOR "Emergency department stay", counted by presentation date
+    (METeOR 746091). AIHW does publish aggregate indicators in METeOR, but its emergency department
+    indicators are Australian policy performance measures (e.g. National Healthcare Agreement PI 19,
+    METeOR 740847, which requires triage category 4-5 and non-ambulance arrival) rather than a plain
+    attendance count - so the monthly aggregation here is a BES composition over the AIHW concept,
+    not an implementation of an AIHW indicator. Pending alignment with the deploying country's national
+    HMIS definition.
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - facility_id
+  - sex
+  - age_group__who_primary_classification
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__emergency_care.md
+- metric_id: ed_attendance_admitted
+  kind: metric
+  name: ED attendances admitted
+  description: >-
+    Emergency department attendances in the reporting month whose encounter went on to an inpatient
+    admission.
+  numerator_description: ED attendances whose encounter ended in an inpatient admission, by month
+    of presentation
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '746706'
+  definition_rationale: >-
+    Admitted outcome follows AIHW METeOR "Non-admitted patient emergency department service episode
+    - episode end status" (METeOR 746706), restricted to the admitted status; identified in Tamanu
+    by OMOP visit concept 262 (Emergency Room and Inpatient Visit). No AIHW indicator matches a plain
+    count of admitted attendances - AIHW ED indicators are policy performance measures - so the monthly
+    aggregation is a BES composition over the AIHW concept. Pending alignment with the deploying country's
+    national HMIS definition.
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - facility_id
+  - sex
+  - age_group__who_primary_classification
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__emergency_care.md
