@@ -15,7 +15,7 @@
 | **Last updated** | 2026-06-11 |
 
 Canonical definitions for the 27 MSF NCD indicators registered in
-`csv/metric_definitions.csv`. Implementations are deployment-specific
+`documentations/metrics/*.yml`. Implementations are deployment-specific
 (see § Implementations). This spec governs the *definitions* — what each
 indicator measures, output shape, semantic invariants. Implementation
 details (which `int__` chains feed each, materialisation strategy, view
@@ -81,7 +81,7 @@ D5 wide format. Each `metric__` view emits:
 
 ## Business logic
 
-- **BL-001:** Every output row carries `metric_id` set to its registered identifier in `csv/metric_definitions.csv`. Joining a consumer to the registry on `metric_id` returns the definition.
+- **BL-001:** Every output row carries `metric_id` set to its registered identifier in `documentations/metrics/*.yml`. Joining a consumer to the registry on `metric_id` returns the definition.
 - **BL-002:** `variant_id`, `subject_id`, and `value_boolean` are constant NULL on the standard definition. Deployment-specific definition variants set `variant_id` per D5.
 - **BL-003:** `period_start` is the first of the reporting month; `period_end` is the last day of the same month; `period_granularity` is constant `'month'`.
 - **BL-004:** `value_numeric` is the indicator value. Counts are integers; percentages are rounded to one decimal.
@@ -101,7 +101,7 @@ D5 wide format. Each `metric__` view emits:
 
 ## Registry entries
 
-27 rows in `csv/metric_definitions.csv`, all with `kind = metric`,
+27 rows in `documentations/metrics/*.yml`, all with `kind = metric`,
 `definition_source = MSF`, `data_source = tamanu`. See the seed for
 per-indicator `description`, `numerator_description`,
 `denominator_description`, `unit`, `subject_grain`, and `disaggregations`.
