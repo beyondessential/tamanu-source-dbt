@@ -12,6 +12,7 @@ CLAUDE.md
 # Environment and config
 .env
 .user.yml
+local_config/
 
 # Python
 __pycache__
