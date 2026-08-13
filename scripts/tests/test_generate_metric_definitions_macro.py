@@ -1,8 +1,10 @@
+import textwrap
+
 from generate_metric_definitions_macro import (
     COLUMNS,
     build_macro_content,
-    merge_definitions,
-    read_csv,
+    read_definitions,
+    read_definitions_dir,
     sql_literal,
 )
 
@@ -37,31 +39,6 @@ def test_sql_literal_preserves_commas():
 
 
 # ---------------------------------------------------------------------------
-# merge_definitions — localised wins, by metric_id
-# ---------------------------------------------------------------------------
-
-
-def test_merge_localised_overrides_standard():
-    standard = {"a": _row("a", name="standard")}
-    localised = {"a": _row("a", name="localised")}
-    merged = merge_definitions(standard, localised)
-    assert merged["a"]["name"] == "localised"
-
-
-def test_merge_localised_extends_catalogue():
-    standard = {"a": _row("a")}
-    localised = {"b": _row("b", variant_of="a")}
-    merged = merge_definitions(standard, localised)
-    assert set(merged) == {"a", "b"}
-
-
-def test_merge_does_not_mutate_standard():
-    standard = {"a": _row("a", name="standard")}
-    merge_definitions(standard, {"a": _row("a", name="localised")})
-    assert standard["a"]["name"] == "standard"
-
-
-# ---------------------------------------------------------------------------
 # build_macro_content — sorting, NULL rendering, column casts
 # ---------------------------------------------------------------------------
 
@@ -91,31 +68,126 @@ def test_build_macro_is_a_jinja_macro():
 
 
 # ---------------------------------------------------------------------------
-# read_csv — keyed by metric_id, blank metric_id skipped
+# read_definitions — keyed by metric_id, list columns joined, blanks skipped
 # ---------------------------------------------------------------------------
 
 
-def test_read_csv_keys_by_metric_id(tmp_path):
-    csv_file = tmp_path / "metric_definitions.csv"
-    header = ",".join(COLUMNS)
-    csv_file.write_text(
-        f"{header}\n"
-        "patients_active,metric,Active,desc,,,tamanu,MSF,,,count,patient,sex,,bes-maui,draft,specs/x.md\n",
-        encoding="utf-8",
+def _write(tmp_path, body):
+    path = tmp_path / "metric_definitions.yml"
+    path.write_text(textwrap.dedent(body), encoding="utf-8")
+    return str(path)
+
+
+def test_read_definitions_keys_by_metric_id(tmp_path):
+    path = _write(
+        tmp_path,
+        """\
+        metrics:
+          - metric_id: patients_active
+            kind: metric
+            name: Active
+            description: desc
+            unit: count
+            subject_grain: patient
+            disaggregations:
+              - sex
+            owner: bes-maui
+            status: draft
+            spec_path: specs/x.md
+        """,
     )
-    rows = read_csv(str(csv_file))
+    rows = read_definitions(path)
     assert set(rows) == {"patients_active"}
     assert rows["patients_active"]["kind"] == "metric"
-    # empty cells preserved as empty string at read time (rendered to NULL later)
+    # every column is present, absent ones as empty string (rendered to NULL later)
+    assert set(rows["patients_active"]) == set(COLUMNS)
     assert rows["patients_active"]["numerator_description"] == ""
 
 
-def test_read_csv_skips_blank_metric_id(tmp_path):
-    csv_file = tmp_path / "metric_definitions.csv"
-    header = ",".join(COLUMNS)
-    csv_file.write_text(f"{header}\n" + "," * (len(COLUMNS) - 1) + "\n", encoding="utf-8")
-    assert read_csv(str(csv_file)) == {}
+def test_read_definitions_joins_list_columns(tmp_path):
+    path = _write(
+        tmp_path,
+        """\
+        metrics:
+          - metric_id: a
+            disaggregations:
+              - age_group
+              - sex
+              - facility_id
+        """,
+    )
+    # the macro emits disaggregations as comma-joined text
+    assert read_definitions(path)["a"]["disaggregations"] == "age_group,sex,facility_id"
 
 
-def test_read_csv_missing_file_returns_empty(tmp_path):
-    assert read_csv(str(tmp_path / "nope.csv")) == {}
+def test_read_definitions_renders_null_as_empty(tmp_path):
+    path = _write(
+        tmp_path,
+        """\
+        metrics:
+          - metric_id: a
+            variant_of: null
+            definition_source_code: 746091
+        """,
+    )
+    rows = read_definitions(path)
+    assert rows["a"]["variant_of"] == ""
+    # a numeric-looking code stays text, so the macro quotes it unchanged
+    assert rows["a"]["definition_source_code"] == "746091"
+
+
+def test_read_definitions_skips_blank_metric_id(tmp_path):
+    path = _write(
+        tmp_path,
+        """\
+        metrics:
+          - metric_id: null
+            name: nameless
+        """,
+    )
+    assert read_definitions(path) == {}
+
+
+def test_read_definitions_missing_file_returns_empty(tmp_path):
+    assert read_definitions(str(tmp_path / "nope.yml")) == {}
+
+
+def test_read_definitions_empty_file_returns_empty(tmp_path):
+    assert read_definitions(_write(tmp_path, "")) == {}
+
+
+# ---------------------------------------------------------------------------
+# read_definitions_dir — merges every *.yml, rejects a duplicate metric_id
+# ---------------------------------------------------------------------------
+
+
+def _write_named(tmp_path, filename, metric_id):
+    (tmp_path / filename).write_text(
+        "metrics:\n  - metric_id: %s\n" % metric_id, encoding="utf-8"
+    )
+
+
+def test_read_definitions_dir_merges_files(tmp_path):
+    _write_named(tmp_path, "emergency.yml", "ed_visit")
+    _write_named(tmp_path, "msf_opd.yml", "anaemia_followup")
+    assert set(read_definitions_dir(str(tmp_path))) == {"ed_visit", "anaemia_followup"}
+
+
+def test_read_definitions_dir_rejects_duplicate_metric_id(tmp_path):
+    _write_named(tmp_path, "a.yml", "ed_visit")
+    _write_named(tmp_path, "b.yml", "ed_visit")
+    try:
+        read_definitions_dir(str(tmp_path))
+    except ValueError as exc:
+        assert "ed_visit" in str(exc)
+    else:
+        raise AssertionError("a duplicate metric_id across files must raise")
+
+
+def test_read_definitions_dir_ignores_non_yaml(tmp_path):
+    _write_named(tmp_path, "notes.md", "ignored")
+    assert read_definitions_dir(str(tmp_path)) == {}
+
+
+def test_read_definitions_dir_missing_returns_empty(tmp_path):
+    assert read_definitions_dir(str(tmp_path / "nope")) == {}
