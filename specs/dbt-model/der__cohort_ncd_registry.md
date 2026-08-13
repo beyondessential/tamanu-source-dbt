@@ -15,7 +15,7 @@
 | **Last updated** | 2026-06-11 |
 
 Canonical definition of the MSF NCD program registry cohort. Registered in
-`csv/metric_definitions.csv` as `cohort_ncd_registry` (kind `cohort`).
+`documentations/metrics/*.yml` as `cohort_ncd_registry` (kind `cohort`).
 Implementations are deployment-specific (see § Implementations).
 
 ## Purpose
@@ -95,7 +95,7 @@ verbatim):
 
 ## Registry entry
 
-`csv/metric_definitions.csv` row:
+`documentations/metrics/*.yml` row:
 
 | Column | Value |
 |---|---|
