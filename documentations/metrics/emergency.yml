@@ -8,62 +8,71 @@
 # Run that after editing, and commit the regenerated macro -- CI fails on drift.
 
 metrics:
-- metric_id: ed_attendance
+- metric_id: ed_stay
   kind: metric
-  name: ED attendances
+  name: ED stays
   description: >-
-    Emergency department attendances in the reporting month. One per encounter that presented to the
-    ED, counted at presentation.
+    Emergency department stays. One row per attendance, spanning presentation at the emergency department
+    to physical departure from it.
   numerator_description: >-
-    Encounters whose first recorded phase is an emergency department phase, by month of presentation
+    Visits whose first recorded segment is an emergency department segment, counted on the presentation
+    date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '472757'
+  definition_rationale: >-
+    Follows the AIHW METeOR object class "Emergency department stay" (METeOR 472757): the period between
+    when a patient presents at an emergency department and when that person is recorded as having
+    physically departed it. Bounded by "Emergency department stay - presentation date/time" (METeOR
+    746091, 746096) and "Emergency department stay - physical departure date/time" (METeOR 746076,
+    746081). Same population as ed_visit - the distinction is framing, not inclusion: ed_visit measures
+    total length of stay to hospital discharge, ed_stay measures the emergency department portion.
+    AIHW registers no length-of-stay data element, so the emitted duration is a BES composition over
+    the AIHW concept. Divergence: Tamanu records the administrative transition
+    out of the emergency department phase, which for an admitted patient can precede physical departure
+    from the department. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  - sex
+  - triage_score
+  - discharge_disposition
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__emergency_stay.md
+- metric_id: ed_visit
+  kind: metric
+  name: ED visits
+  description: >-
+    Emergency room visits, from arrival in the emergency department to discharge from hospital. One
+    row per visit.
+  numerator_description: >-
+    Visits whose first recorded segment is an emergency department segment, counted on the presentation
+    date
   denominator_description: null
   data_source: tamanu
   definition_source: AIHW
   definition_source_code: '746091'
   definition_rationale: >-
-    Attendance concept follows AIHW METeOR "Emergency department stay", counted by presentation date
-    (METeOR 746091). AIHW does publish aggregate indicators in METeOR, but its emergency department
-    indicators are Australian policy performance measures (e.g. National Healthcare Agreement PI 19,
-    METeOR 740847, which requires triage category 4-5 and non-ambulance arrival) rather than a plain
-    attendance count - so the monthly aggregation here is a BES composition over the AIHW concept,
-    not an implementation of an AIHW indicator. Pending alignment with the deploying country's national
-    HMIS definition.
+    Visit concept follows AIHW METeOR "Emergency department stay", counted by presentation date (METeOR
+    746091). AIHW does publish aggregate indicators in METeOR, but its emergency department indicators
+    are Australian policy performance measures (e.g. National Healthcare Agreement PI 19, METeOR 740847,
+    which requires triage category 4-5 and non-ambulance arrival) rather than a plain attendance count
+    - so the aggregation here is a BES composition over the AIHW concept, not an implementation of
+    an AIHW indicator. Pending alignment with the deploying country's national HMIS definition.
   unit: count
-  subject_grain: encounter
+  subject_grain: visit
   disaggregations:
   - facility_id
   - sex
-  - age_group__who_primary_classification
+  - triage_score
+  - principal_diagnosis__icd10_chapter
+  - ed_start__hour
+  - is_admitted
   variant_of: null
   owner: bes-maui
   status: approved
-  spec_path: specs/dbt-model/metric__emergency_care.md
-- metric_id: ed_attendance_admitted
-  kind: metric
-  name: ED attendances admitted
-  description: >-
-    Emergency department attendances in the reporting month whose encounter went on to an inpatient
-    admission.
-  numerator_description: ED attendances whose encounter ended in an inpatient admission, by month
-    of presentation
-  denominator_description: null
-  data_source: tamanu
-  definition_source: AIHW
-  definition_source_code: '746706'
-  definition_rationale: >-
-    Admitted outcome follows AIHW METeOR "Non-admitted patient emergency department service episode
-    - episode end status" (METeOR 746706), restricted to the admitted status; identified in Tamanu
-    by OMOP visit concept 262 (Emergency Room and Inpatient Visit). No AIHW indicator matches a plain
-    count of admitted attendances - AIHW ED indicators are policy performance measures - so the monthly
-    aggregation is a BES composition over the AIHW concept. Pending alignment with the deploying country's
-    national HMIS definition.
-  unit: count
-  subject_grain: encounter
-  disaggregations:
-  - facility_id
-  - sex
-  - age_group__who_primary_classification
-  variant_of: null
-  owner: bes-maui
-  status: approved
-  spec_path: specs/dbt-model/metric__emergency_care.md
+  spec_path: specs/dbt-model/metric__emergency_visit.md
