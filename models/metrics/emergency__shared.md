@@ -70,7 +70,7 @@ score is possible below the UI. The two are not distinguished, because from a ca
 standpoint both mean "no acuity known" -- a consumer needing to tell them apart reads
 `triages` directly.
 
-Never NULL -- this is a data table filter column, and Tupaia's default array filter drops
+Never NULL -- the data tables expose this as an array filter, and Tupaia's array filter drops
 NULL rows.
 {% enddocs %}
 
@@ -80,9 +80,10 @@ Age in whole years at arrival in the ED, from the patient's birth date.
 
 Not banded. An age classification is a presentation choice -- WHO primary bands, five-year
 bands, a national HMIS grouping -- and deployments differ, so the metric emits the number and
-the consumer's data table bands it. That keeps one metric usable under every banding rather
-than one column per classification.
+the data table bands it. That keeps one metric usable under every banding rather than one
+column per classification.
 
-A measure, not a dimension: continuous, so it carries no data table filter and is absent from
-the registry's disaggregations. NULL where the birth date is missing.
+A measure, not a dimension: continuous, so it is absent from the registry's disaggregations
+and no data table exposes it as a filter. The bands the standard data tables apply are in
+documentations/data_tables/. NULL where the birth date is missing.
 {% enddocs %}

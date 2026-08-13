@@ -46,7 +46,7 @@ select
     visit_end__datetime as period_end,
     'minute'::text as period_granularity,
     -- BL-011: one attendance per row, so the count contribution is always 1. Additive,
-    -- so data_table_metric: sum is correct at every grain.
+    -- so a data table summing it is correct at every grain.
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     facility_id,

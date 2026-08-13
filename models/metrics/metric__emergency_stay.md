@@ -43,7 +43,7 @@ waiting_time__minutes: 0.6-second resolution, with a fixed scale because minutes
 seconds is a repeating decimal. Mean time in the ED is avg(ed_time__minutes) at whatever grain
 the consumer groups to; the median and the 90th percentile come from the same column.
 
-A measure, not a dimension: the value is continuous, so it carries no data table filter and is
+A measure, not a dimension: the value is continuous, so no data table exposes it as a filter and it is
 not registered as a disaggregation. Not banded either -- a four-hour split is a presentation
 choice a deployment may set differently, so the consumer's data table bands it.
 
@@ -67,7 +67,7 @@ distinction matters.
 'Not recorded' therefore covers a genuinely open encounter as well as a missing discharge
 record, and is expected to be common for recent admitted stays.
 
-Never NULL -- this is a data table filter column, and Tupaia's default array filter drops
+Never NULL -- the data tables expose this as an array filter, and Tupaia's array filter drops
 NULL rows. Values are whatever the deployment's disposition reference data contains, so they
 are not a fixed vocabulary and no accepted_values test constrains them.
 {% enddocs %}

@@ -79,18 +79,33 @@ D5 wide format, plus four disaggregation columns and one measure attribute.
 | `metric_id` | text | Always `ed_stay`. FK → `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL — this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id (BL-011). `not_null` (AC-008) |
-| `period_start` | timestamp | Arrival in the ED (BL-002). `data_table_filter: date` |
+| `period_start` | timestamp | Arrival in the ED (BL-002) |
 | `period_end` | timestamp | Departure from the ED, resolved by BL-018. NULL only while the patient is in the ED with nothing booked and the encounter open |
 | `period_granularity` | text | Constant `'minute'` |
-| `value_numeric` | numeric | Always `1` (AC-006). Additive, so `data_table_metric: sum` |
+| `value_numeric` | numeric | Always `1` (AC-006). Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
-| `facility_id` | varchar(255) | Intake segment's facility (BL-007). `data_table_filter: array` |
-| `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, so no `data_table_filter` |
-| `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011). `data_table_filter: array` |
-| `ed_time__minutes` | numeric | Time in the ED in minutes, 2 dp (BL-015). NULL while the patient is in the ED. A measure, so no filter |
+| `facility_id` | varchar(255) | Intake segment's facility (BL-007) |
+| `sex` | varchar(255) | `clinical__person.gender_source_value` |
+| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, not a dimension |
+| `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011) |
+| `ed_time__minutes` | numeric | Time in the ED in minutes, 2 dp (BL-015). NULL while the patient is in the ED. A measure, not a dimension |
+| `discharge_disposition` | text | How the encounter ended, or `'Not recorded'` (BL-017). Always populated (AC-017) |
 
-| `discharge_disposition` | text | How the encounter ended, or `'Not recorded'` (BL-017). Always populated (AC-017). `data_table_filter: array` |
+## Data tables
+
+The Tupaia data tables over this view are configured in `documentations/data_tables/`, one file
+per data table. Splitting them out of the model's `.yml` is what lets one metric carry several.
+The standard ones live here; a deployment that bands age or the four-hour split differently
+adds a file under the same path in its own `tamanu-dbt-*` repo, rather than forking the metric.
+
+`emergency_stay__standard.yml` is the one BES ships. It ranges `period_start` as a date; exposes
+`metric_id`, `facility_id`, `sex`, `triage_score` and `discharge_disposition` as array filters;
+bands `age_group__who_primary_classification` from `age_years` and `ed_time__4_hours_band` from
+`ed_time__minutes`; and sums `value_numeric`. `period_end` is not exposed — a patient still in
+the department has none, and an array filter drops a NULL row.
+
+`documentations/data_tables/README.md` holds the schema, and `scripts/validate_data_tables.py`
+asserts every column named there is one this model emits.
 
 ## Business logic
 

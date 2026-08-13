@@ -6,6 +6,10 @@ models:
     config:
       tags:
         - clinical
+    # BL-019: the Tupaia data tables over this model are configured in
+    # documentations/data_tables/, one file per data table. The standard ones live here; a
+    # deployment that bands a value differently adds a file under the same path in its own
+    # tamanu-dbt-* repo, rather than forking the metric.
     meta:
       owner: bes-maui
       domain: clinical
@@ -15,7 +19,6 @@ models:
       # sensitive facilities alike.
       pii: false
       classification: internal
-      create_data_table: true
     data_tests:
       # One row per attendance. A duplicate would double-count an attendance in any
       # consumer that sums value_numeric -- error even though the repo default is warn.
@@ -41,8 +44,6 @@ models:
       - name: metric_id
         data_type: text
         description: "{{ doc('metric__emergency_visit__metric_id') }}"
-        meta:
-          data_table_filter: array
         data_tests:
           - not_null:
               name: ac_002_metric__emergency_visit_metric_id_not_null
@@ -72,8 +73,6 @@ models:
       - name: period_start
         data_type: timestamp
         description: "{{ doc('emergency__period_start') }}"
-        meta:
-          data_table_filter: date
         data_tests:
           - not_null:
               name: ac_004_metric__emergency_visit_period_start_not_null
@@ -96,8 +95,6 @@ models:
       - name: value_numeric
         data_type: numeric
         description: "{{ doc('metric__emergency_visit__value_numeric') }}"
-        meta:
-          data_table_metric: sum
         data_tests:
           - not_null:
               name: ac_006_metric__emergency_visit_value_numeric_not_null
@@ -114,26 +111,20 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: "{{ doc('generic__facility_id') }} the attendance is attributed to."
-        meta:
-          data_table_filter: array
         data_tests:
           - not_null:
               name: ac_007_metric__emergency_visit_facility_id_not_null
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
-        meta:
-          data_table_filter: array
       - name: age_years
         data_type: integer
         description: "{{ doc('emergency__age_years') }}"
         # BL-004: a measure, not a dimension -- the age classification is the consumer's, so
-        # this carries no data_table_filter and is absent from the registry's disaggregations.
+        # this is absent from the registry's disaggregations and is banded by the data table.
       - name: triage_score
         data_type: text
         description: "{{ doc('emergency__triage_score') }}"
-        meta:
-          data_table_filter: array
         data_tests:
           # The model coalesces to 'Not recorded' precisely so this holds: Tupaia's array
           # filter drops NULL rows, so a NULL here would silently disappear the attendance.
@@ -142,8 +133,6 @@ models:
       - name: principal_diagnosis__icd10_chapter
         data_type: text
         description: "{{ doc('metric__emergency_visit__principal_diagnosis__icd10_chapter') }}"
-        meta:
-          data_table_filter: array
         data_tests:
           # 'Not recorded' / 'Unclassified' rather than NULL, so a Tupaia array filter
           # cannot drop the attendance.
@@ -152,8 +141,8 @@ models:
       - name: waiting_time__minutes
         data_type: numeric
         description: "{{ doc('metric__emergency_visit__waiting_time__minutes') }}"
-        # BL-014: a measure, not a dimension -- high cardinality, so it carries no
-        # data_table_filter. Deliberately nullable: NULL until the patient reaches active care.
+        # BL-014: a measure, not a dimension -- high cardinality, so no data table exposes it
+        # as a filter. Deliberately nullable: NULL until the patient reaches active care.
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               name: ac_019_metric__emergency_visit_waiting_time_non_negative
@@ -173,8 +162,6 @@ models:
       - name: ed_start__hour
         data_type: integer
         description: "{{ doc('metric__emergency_visit__ed_start__hour') }}"
-        meta:
-          data_table_filter: array
         data_tests:
           - not_null:
               name: ac_016_metric__emergency_visit_ed_start__hour_not_null
@@ -186,8 +173,6 @@ models:
       - name: is_admitted
         data_type: boolean
         description: "{{ doc('metric__emergency_visit__is_admitted') }}"
-        meta:
-          data_table_filter: array
         data_tests:
           # The model coalesces to false precisely so this holds: Tupaia's array filter
           # drops NULL rows, so a NULL here would silently disappear the attendance.

@@ -49,8 +49,8 @@ Hospital (MAUI-6694), via a data table over this view.
 AIHW's [Emergency department stay](https://meteor.aihw.gov.au/content/472757) object class runs
 from presentation to physical departure from the ED, which is `metric__emergency_stay`'s period;
 this model runs its period on to hospital discharge (BL-002). AIHW registers no length-of-stay
-element and no four-hour indicator, so the per-attendance aggregation is
-BES compositions.
+element, so `length_of_stay__minutes` and the per-attendance aggregation are BES compositions
+over the AIHW concepts.
 
 ## Grain
 
@@ -65,27 +65,45 @@ attendance counts rather than distinct patients.
 
 ## Output schema
 
-D5 wide format, plus five disaggregation columns and three measure attributes.
+D5 wide format, plus six disaggregation columns and three measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
 | `metric_id` | text | Always `ed_visit`. FK → `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL — this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id (BL-011). `not_null` (AC-008) |
-| `period_start` | timestamp | Arrival in the ED (BL-002). `data_table_filter: date` |
+| `period_start` | timestamp | Arrival in the ED (BL-002) |
 | `period_end` | timestamp | Encounter end — hospital discharge. NULL while the encounter is open (BL-002) |
 | `period_granularity` | text | Constant `'minute'` |
-| `value_numeric` | numeric | Always `1` (AC-006). Additive, so `data_table_metric: sum` |
+| `value_numeric` | numeric | Always `1` (AC-006). Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
-| `facility_id` | varchar(255) | Intake segment's facility (BL-007). Tamanu ids are varchar, not `uuid`. `data_table_filter: array` |
-| `sex` | varchar(255) | `clinical__person.gender_source_value`. `data_table_filter: array` |
-| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, so no `data_table_filter` |
-| `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011). `data_table_filter: array` |
-| `principal_diagnosis__icd10_chapter` | text | WHO ICD-10 chapter, `'Not recorded'` or `'Unclassified'` (BL-013). Always populated (AC-013). `data_table_filter: array` |
-| `waiting_time__minutes` | numeric | Triage to active care, 2 dp (BL-014). NULL until the patient is seen. A measure, so no filter |
-| `length_of_stay__minutes` | numeric | Arrival to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, so no `data_table_filter` |
-| `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016). `data_table_filter: array` |
-| `is_admitted` | boolean | Went on to an inpatient admission (BL-005). Always populated (AC-010). `data_table_filter: array` |
+| `facility_id` | varchar(255) | Intake segment's facility (BL-007). Tamanu ids are varchar, not `uuid` |
+| `sex` | varchar(255) | `clinical__person.gender_source_value` |
+| `age_years` | integer | Age in whole years at arrival (BL-004). A measure, not a dimension |
+| `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011) |
+| `principal_diagnosis__icd10_chapter` | text | WHO ICD-10 chapter, `'Not recorded'` or `'Unclassified'` (BL-013). Always populated (AC-013) |
+| `waiting_time__minutes` | numeric | Triage to active care, 2 dp (BL-014). NULL until the patient is seen. A measure, not a dimension |
+| `length_of_stay__minutes` | numeric | Arrival to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
+| `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016) |
+| `is_admitted` | boolean | Went on to an inpatient admission (BL-005). Always populated (AC-010) |
+
+## Data tables
+
+The Tupaia data tables over this view are configured in `documentations/data_tables/`, one file
+per data table. Splitting them out of the model's `.yml` is what lets one metric carry several.
+The standard ones live here; a deployment that bands age differently adds a file under the same
+path in its own `tamanu-dbt-*` repo, rather than forking the metric.
+
+`emergency_visit__standard.yml` is the one BES ships. It ranges `period_start` as a date;
+exposes `metric_id`, `facility_id`, `sex`, `triage_score`,
+`principal_diagnosis__icd10_chapter`, `ed_start__hour` and `is_admitted` as array filters;
+bands `age_group__who_primary_classification` from `age_years` and
+`length_of_stay__4_hours_band` from `length_of_stay__minutes`; and sums `value_numeric`.
+`period_end` is not exposed — an open encounter has none, and an array filter drops a NULL row.
+
+`documentations/data_tables/README.md` holds the schema, and `scripts/validate_data_tables.py`
+asserts every column named there is one this model emits, so renaming a column here fails in CI
+rather than emptying a dashboard.
 
 ## Business logic
 
@@ -188,8 +206,8 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   `triages.closed_datetime - triages.triage_datetime`, the same rule as `ds__emergency_triage`
   BL-005 — expressed in minutes.
 
-  It is a **measure, not a dimension**: continuous, so it carries no `data_table_filter` and is
-  absent from the registry's disaggregations. It is held to 2 dp because minutes from whole
+  It is a **measure, not a dimension**: continuous, so it is absent from the registry's
+  disaggregations and no data table exposes it as a filter. It is held to 2 dp because minutes from whole
   seconds is a repeating decimal, and is NULL until the patient is seen (AC-019 asserts
   non-negative where present).
 
@@ -218,8 +236,8 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   column per variant.
 
   `age_years`, `waiting_time__minutes`, `ed_time__minutes` and `length_of_stay__minutes` are
-  therefore measures rather than dimensions: no `data_table_filter`, absent from the registry's
-  disaggregations. The consumer's data table declares the bands it wants over them.
+  therefore measures rather than dimensions, absent from the registry's disaggregations. The
+  data table declares the bands it wants over them, in `documentations/data_tables/`.
 
   This is why a deployment can change its banding without a change here, and why two deployments
   banding differently still share one metric definition.

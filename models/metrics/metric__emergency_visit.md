@@ -64,7 +64,7 @@ Two fallbacks, kept distinct:
   ICD-10's unassigned gaps.
 
 Where an encounter carries more than one principal diagnosis, the earliest is used. Neither
-label is ever NULL, since this is a data table filter column and Tupaia's default array
+label is ever NULL, since the data tables expose this as an array filter and Tupaia's array
 filter drops NULL rows.
 
 Note the labels do not sort into chapter order lexically ('X' sorts before 'XVIII' but after
@@ -80,7 +80,7 @@ scale is needed because minutes from whole seconds is a repeating decimal. Mean 
 avg(waiting_time__minutes) at whatever grain the consumer groups to; the median and the 90th
 percentile come from the same column.
 
-A measure, not a dimension: the value is continuous, so it carries no data table filter and is
+A measure, not a dimension: the value is continuous, so no data table exposes it as a filter and it is
 not registered as a disaggregation. Group by triage_score to slice it by acuity.
 
 Compliance against a target is the consumer's: compare this column to the deployment's target
@@ -110,7 +110,7 @@ ended up an inpatient".
 A disaggregation, not a separate metric: group by it to split attendances by outcome,
 filter to it for the admitted count, or ignore it for the total.
 
-Never NULL -- this is a data table filter column, and Tupaia's default array filter drops
+Never NULL -- the data tables expose this as an array filter, and Tupaia's array filter drops
 NULL rows, so the model coalesces a missing visit concept to false.
 {% enddocs %}
 
@@ -123,6 +123,6 @@ Carried to two decimal places, on the same basis as waiting_time__minutes. Not b
 four-hour split is a presentation choice a deployment may set differently, so the metric
 emits the duration and the consumer's data table bands it.
 
-A measure, not a dimension: continuous, so it carries no data table filter and is absent
+A measure, not a dimension: continuous, so no data table exposes it as a filter and it is absent
 from the registry's disaggregations. NULL while the encounter is open.
 {% enddocs %}

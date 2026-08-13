@@ -217,7 +217,7 @@ select
     round(length_of_stay__seconds / 60.0, 2) as length_of_stay__minutes,
     principal_diagnosis_code,
     -- BL-012: 'Not recorded' covers both an attendance with no triage row and a triage row
-    -- with a blank score. Never NULL -- these are data table filter columns downstream, and
+    -- with a blank score. Never NULL -- the data tables expose these as array filters, and
     -- Tupaia's array filter drops NULL rows.
     coalesce(triage_score_raw, 'Not recorded') as triage_score,
     -- BL-017
