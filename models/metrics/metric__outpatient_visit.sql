@@ -38,7 +38,10 @@ outpatient_visits as (
         -- this model resolving that join itself
         loc.id as location_id,
         pr.gender_source_value as sex,
-        -- age in whole years at the visit; null year_of_birth -> null
+        -- age in whole years at the visit; null year_of_birth -> null. month_of_birth/
+        -- day_of_birth are extracted from the same date_of_birth column in
+        -- clinical__person, so they're populated whenever year_of_birth is -- make_date
+        -- below never errors on a partial date.
         case
             when pr.year_of_birth is not null then
                 extract(year from age(
