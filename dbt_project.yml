@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.57.12
+version: 2.57.15
 config-version: 2
 profile: tamanu_source_dbt
 
