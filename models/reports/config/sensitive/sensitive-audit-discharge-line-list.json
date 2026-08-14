@@ -1,0 +1,87 @@
+{
+  "query": "replace this",
+  "name": "Sensitive audit - discharge line list",
+  "status": "published",
+  "notes": "This report lists patients at sensitive facilities whose discharge was recorded in Tamanu within the selected date range.\n\nThe date range filters on when the discharge was recorded, that is when a user completed the discharge form, and NOT on the discharge date and time entered on that form. Both are shown side by side, along with the number of days between them, so that a backlog of discharges recorded late can be monitored.\n\nThe below information is included for each discharge:\n- Discharge date and time as entered on the discharge form.\n- Discharge recorded date and time, being when the discharge was actually recorded in Tamanu.\n- Days between discharge and recording. Zero means the discharge was recorded on the day it happened.\n- Discharging clinician named on the form, and the user who completed the form. These are often different people.\n- Whether the discharge was automatic. Tamanu discharges some encounters automatically, for example outpatient encounters left open overnight, and encounters closed on registering a patient death. Use the discharge type filter to include or exclude these.\n- Number of times the discharge was edited after it was first recorded.\n\nDischarges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Encounter type",
+        "name": "encounterType",
+        "options": [
+          {
+            "label": "Hospital admission",
+            "value": "admission"
+          },
+          {
+            "label": "Clinic",
+            "value": "clinic"
+          },
+          {
+            "label": "Emergency short stay",
+            "value": "emergency"
+          },
+          {
+            "label": "Active ED care",
+            "value": "observation"
+          },
+          {
+            "label": "Triage",
+            "value": "triage"
+          },
+          {
+            "label": "Imaging",
+            "value": "imaging"
+          },
+          {
+            "label": "Form response",
+            "value": "surveyResponse"
+          },
+          {
+            "label": "Vaccination record",
+            "value": "vaccination"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Discharge type",
+        "name": "dischargeType",
+        "options": [
+          {
+            "label": "Recorded by a user",
+            "value": "manual"
+          },
+          {
+            "label": "Automatic",
+            "value": "automatic"
+          }
+        ]
+      }
+    ]
+  }
+}

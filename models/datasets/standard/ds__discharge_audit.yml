@@ -1,0 +1,116 @@
+version: 2
+
+models:
+  - name: ds__discharge_audit
+    description: >
+      Dataset for the discharge audit report. One row per discharged encounter, holding both
+      the discharge date and time entered on the discharge form and the date and time the
+      discharge was actually recorded in Tamanu, so the recording backlog can be monitored.
+    config:
+      tags:
+        - dataset
+        - clinical
+        - audit
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: discharge_id
+        description: "{{ doc('generic__id') }} in discharges."
+        data_tests:
+          - unique:
+              name: ac_002_ds__discharge_audit_unique_discharge
+          - not_null
+
+      - name: encounter_id
+        description: "{{ doc('discharges__encounter_id') }}"
+        data_tests:
+          - unique:
+              name: ac_002_ds__discharge_audit_one_row_per_encounter
+          - not_null
+
+      - name: encounter_type
+        description: "{{ doc('encounters__encounter_type') }}"
+
+      - name: patient_id
+        description: "{{ doc('generic__id') }} in patients."
+
+      - name: display_id
+        description: "{{ doc('patients__display_id') }}"
+
+      - name: first_name
+        description: "{{ doc('patients__first_name') }}"
+
+      - name: last_name
+        description: "{{ doc('patients__last_name') }}"
+
+      - name: date_of_birth
+        description: "{{ doc('patients__date_of_birth') }}"
+
+      - name: sex
+        description: "{{ doc('patients__sex') }}"
+
+      - name: village_id
+        description: "{{ doc('patients__village_id') }}"
+
+      - name: village
+        description: "{{ doc('reference_data__name') }} of the patient's village."
+
+      - name: facility_id
+        description: "{{ doc('generic__id') }} in facilities."
+
+      - name: facility
+        description: "{{ doc('facilities__name') }}"
+
+      - name: department_id
+        description: "{{ doc('generic__id') }} in departments."
+
+      - name: department
+        description: "{{ doc('departments__name') }}"
+
+      - name: location_id
+        description: "{{ doc('generic__id') }} in locations."
+
+      - name: location
+        description: "{{ doc('locations__name') }}"
+
+      - name: admission_datetime
+        description: "{{ doc('ds__discharge_audit__admission_datetime') }}"
+
+      - name: discharge_datetime_entered
+        description: "{{ doc('ds__discharge_audit__discharge_datetime_entered') }}"
+
+      - name: discharge_recorded_datetime
+        description: "{{ doc('ds__discharge_audit__discharge_recorded_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_ds__discharge_audit_recorded_datetime_not_null
+
+      - name: days_between_discharge_and_recording
+        description: "{{ doc('ds__discharge_audit__days_between_discharge_and_recording') }}"
+
+      - name: discharge_disposition_id
+        description: "{{ doc('discharges__disposition_id') }}"
+
+      - name: discharge_disposition
+        description: "{{ doc('reference_data__name') }} of the discharge disposition."
+
+      - name: discharger_id
+        description: "{{ doc('discharges__discharger_id') }}"
+
+      - name: discharger_on_form
+        description: "{{ doc('ds__discharge_audit__discharger_on_form') }}"
+
+      - name: recorded_by_user_id
+        description: "{{ doc('discharges_change_logs__changed_by_user_id') }}"
+
+      - name: recorded_by_user
+        description: "{{ doc('ds__discharge_audit__recorded_by_user') }}"
+
+      - name: is_auto_discharge
+        description: "{{ doc('ds__discharge_audit__is_auto_discharge') }}"
+
+      - name: later_edit_count
+        description: "{{ doc('ds__discharge_audit__later_edit_count') }}"
