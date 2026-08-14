@@ -54,7 +54,7 @@ visit`, and is unique because only the intake segment is counted (BL-003) -- so
 
 ## Output schema
 
-D5 wide format, plus four disaggregation columns and one measure attribute.
+D5 wide format, plus three disaggregation columns and one measure attribute.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -62,13 +62,12 @@ D5 wide format, plus four disaggregation columns and one measure attribute.
 | `variant_id` | text | NULL -- this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id. `not_null` (AC-008) |
 | `period_start` | date | Visit date (BL-002) |
-| `period_end` | date | Always NULL -- no departure event is tracked (BL-002) |
+| `period_end` | date | Encounter end date. NULL while the encounter is open (BL-002) |
 | `period_granularity` | text | Constant `'day'` |
 | `value_numeric` | numeric | Always `1` (AC-006). Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | Intake segment's facility (BL-006) |
-| `location_group_id` | varchar(255) | Area. `'locationgroup-unknown'` (not a real FK value) when the area doesn't resolve; otherwise FK -> `bases/location_groups.id` (BL-007) |
-| `location_group_name` | varchar(255) | Area name; `'Unknown'` when the area doesn't resolve (BL-007) |
+| `location_id` | varchar(255) | Intake segment's location, one level finer than facility (BL-006). `not_null` (AC-010) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `age_years` | integer | Age in whole years at the visit, unbanded (BL-004). A measure, not a dimension |
 
@@ -81,6 +80,11 @@ configuration (permission groups included) in that repo. `validate_data_tables.p
 checks each file against this project's dbt manifest, so a column renamed here fails there
 at generate time rather than emptying a dashboard.
 
+Area/clinic disaggregation (`location_group`) and the Tamanu-to-Tupaia facility crosswalk
+are both left to that layer too -- joined at the data table against a seed, rather than
+resolved here. This model emits the raw `location_id` so that join is possible; it does not
+resolve `location_group` itself (see BL-006).
+
 This model therefore carries no `data_table_*` meta.
 
 ## Business logic
@@ -88,10 +92,14 @@ This model therefore carries no `data_table_*` meta.
 - **BL-001 (registration):** every emitted `metric_id` is registered in
   `documentations/metrics/*.yml`, asserted by AC-003 at `error` severity.
 - **BL-002 (reporting period):** `period_start` is the visit date
-  (`clinical__visit_detail.visit_detail_start_date` for the intake segment), at `'day'`
-  granularity. `period_end` is always NULL -- Tamanu tracks the visit date only for
-  outpatient encounters, with no arrival/departure timestamp pair the way ED has, so no
-  duration is computable and none is emitted.
+  (`clinical__visit_detail.visit_detail_start_date` for the intake segment); `period_end` is
+  the encounter end date (`clinical__visit_occurrence.visit_end_date`), at `'day'`
+  granularity.
+
+  `period_end` is nullable -- NULL means the encounter is still open -- so AC-004 covers
+  `period_start` only and AC-009 asserts ordering where `period_end` is present. Tamanu
+  tracks dates only for outpatient encounters, not timestamps, so `period_end - period_start`
+  gives whole days, not a precise duration the way ED's minute-resolution pair does.
 
   Every visit is emitted as it happens; the model reads no clock, and a consumer needing
   whole periods applies its own date filter. A period with no visit emits no row.
@@ -115,25 +123,20 @@ This model therefore carries no `data_table_*` meta.
 - **BL-005 (materialisation is env-aware):** `table` when `target.name` starts with
   `analytics`, `view` otherwise, set on the `metrics:` block in `dbt_project.yml` (shared
   with every model under `models/metrics/`).
-- **BL-006 (facility attribution):** `facility_id` is the intake segment's location resolved
-  through `bases/locations` on `care_site_id`. The join is **inner**, so an encounter whose
-  location does not resolve is excluded rather than attributed to a NULL facility.
-- **BL-007 (area attribution):** `location_group_id`/`location_group_name` are the intake
-  segment's location's `location_group`, resolved through `bases/location_groups`. The join
-  is **left**, not inner: areas are sparse in Tamanu -- most locations have none -- so a
-  missing `location_group` is the expected common case, not an anomaly, and the visit still
-  counts under the `'locationgroup-unknown'`/`'Unknown'` sentinel pair. Both sentinels are
-  driven off the same *joined* `location_groups` row, not the raw `location_group_id` value
-  on `locations`, so a missing area (never assigned, or soft-deleted since) always yields
-  both sentinels together; a real `location_group_id` never pairs with an `'Unknown'` name,
-  or vice versa.
+- **BL-006 (facility and location attribution):** `facility_id` and `location_id` are both
+  resolved through the same `bases/locations` join on `care_site_id` -- `facility_id` is
+  `locations.facility_id`, `location_id` is the location's own primary key (`locations.id`).
+  The join is **inner**, so an encounter whose location does not resolve is excluded rather
+  than attributed to a NULL facility.
 
-  This is the first `metric__` model to register a disaggregation finer than facility --
-  `metric__emergency_visit` has none. Nothing in D5 forbids it; no other metric has needed
-  it yet.
-- **BL-008 (facility identity stays Tamanu's):** the model emits `facility_id`, the Tamanu
-  id, and nothing else. Consumer-specific identifiers -- a Tupaia entity code -- are
-  resolved in the consumer layer, not here.
+  `location_id` is one level finer than facility and carries no area/clinic resolution of
+  its own -- `metric__emergency_visit` has no equivalent column at all. It exists so a
+  consumer can join to `bases/location_groups` (or a similar area lookup) at the data table
+  layer if it wants clinic-level detail, without this model resolving that join itself (see
+  § Data tables). First `metric__` disaggregation finer than facility.
+- **BL-007 (facility and location identity stay Tamanu's):** the model emits `facility_id`
+  and `location_id` as Tamanu ids, untranslated. Consumer-specific identifiers -- a Tupaia
+  entity code, an area/clinic grouping -- are resolved in the consumer layer, not here.
 
 ## Acceptance criteria
 
@@ -147,13 +150,13 @@ This model therefore carries no `data_table_*` meta.
 | AC-006 | `value_numeric` is `not_null` and always `1` | BL-003 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-006 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | grain | `not_null` |
-| AC-009 | `location_group_id` is `not_null` | BL-007 | `not_null` |
-| AC-010 | `location_group_name` is `not_null` | BL-007 | `not_null` |
+| AC-009 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
+| AC-010 | `location_id` is `not_null` | BL-006 | `not_null` |
 
 ## Registry entry
 
 One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
-`spec_path` pointing here, with `disaggregations: facility_id,location_group_id,sex`.
+`spec_path` pointing here, with `disaggregations: facility_id,location_id,sex`.
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`,
 which keeps the registry and the model from drifting.
@@ -163,9 +166,9 @@ which keeps the registry and the model from drifting.
 | Ref | Layer | Role |
 |---|---|---|
 | `clinical__visit_detail` | `clinical/` | Intake segment: inclusion, visit date, location, encounter id (BL-003, BL-006) |
+| `clinical__visit_occurrence` | `clinical/` | Encounter end date (BL-002) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
-| `locations` | `bases/` | Facility and area of the intake segment's location (BL-006, BL-007) |
-| `location_groups` | `bases/` | Area (location_group) name, joined via the visit's location (BL-007) |
+| `locations` | `bases/` | Facility and location id of the intake segment's location (BL-006) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
@@ -182,8 +185,13 @@ which keeps the registry and the model from drifting.
    current month itself.
 3. **Band `age_years` itself.** No band set is emitted here -- a consumer wanting age groups
    declares its own classification in its data table.
-4. **Translate `facility_id`.** This is the Tamanu id, not a consumer-specific one -- for
-   Tupaia, the crosswalk to a Tupaia entity code is joined at the data table.
+4. **Translate `facility_id`, and join `location_id` for area if needed.** `facility_id` is
+   the Tamanu id, not a consumer-specific one -- for Tupaia, the crosswalk to a Tupaia
+   entity code is joined at the data table. Clinic/area (`location_group`) resolution is
+   not done by this model either -- a consumer wanting it joins `location_id` to its own
+   area reference at the data table.
+5. **Handle a NULL `period_end`.** A duration visual filters those rows out; a count visual
+   keeps them.
 
 ## Related
 

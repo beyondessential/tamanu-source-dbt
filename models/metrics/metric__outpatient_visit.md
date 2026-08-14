@@ -8,10 +8,10 @@ An outpatient visit is an encounter whose first history segment carries OMOP vis
 segment, so each visit counts once.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, area, sex -- and over any time grain from day upwards. Nothing is pre-aggregated,
-so no dimension has to be collapsed to get a total.
+facility, location, sex -- and over any time grain from day upwards. Nothing is
+pre-aggregated, so no dimension has to be collapsed to get a total.
 
-See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-008.
+See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-007.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__metric_id %}
@@ -49,9 +49,11 @@ current one in its own date filter.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__period_end %}
-Always NULL. Tamanu tracks the visit date only for outpatient encounters -- there is no
-arrival/departure timestamp pair the way there is for an ED attendance, so no duration is
-computable and none is emitted.
+Calendar day the encounter ended. NULL while the encounter is still open.
+
+Tamanu tracks a date only for outpatient encounters, not a timestamp -- there is no
+arrival/departure pair to the minute the way there is for an ED attendance, so
+period_end - period_start gives whole days, not a precise duration.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__period_granularity %}

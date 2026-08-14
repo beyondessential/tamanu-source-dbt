@@ -35,7 +35,7 @@ metrics:
   subject_grain: visit
   disaggregations:
   - facility_id
-  - location_group_id
+  - location_id
   - sex
   variant_of: null
   owner: bes-maui

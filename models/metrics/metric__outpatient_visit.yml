@@ -29,6 +29,14 @@ models:
               - subject_id
           config:
             severity: error
+      # AC-009 (BL-002): period_end, where present, is at or after period_start.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_009_metric__outpatient_visit_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
     columns:
       - name: metric_id
         data_type: text
@@ -68,7 +76,7 @@ models:
       - name: period_end
         data_type: date
         description: "{{ doc('metric__outpatient_visit__period_end') }}"
-        # Always NULL -- Tamanu tracks the visit date only, no departure event (BL-002).
+        # BL-002: deliberately no not_null test -- NULL means the encounter is still open.
       - name: period_granularity
         data_type: text
         description: "{{ doc('metric__outpatient_visit__period_granularity') }}"
@@ -101,18 +109,12 @@ models:
         data_tests:
           - not_null:
               name: ac_007_metric__outpatient_visit_facility_id_not_null
-      - name: location_group_id
+      - name: location_id
         data_type: character varying(255)
-        description: "{{ doc('generic__location_group_id') }} (the area). 'locationgroup-unknown' when the visit's location has no area, or that area was soft-deleted (no longer resolves in location_groups)."
+        description: "{{ doc('generic__location_id') }} of the visit."
         data_tests:
           - not_null:
-              name: ac_009_metric__outpatient_visit_location_group_id_not_null
-      - name: location_group_name
-        data_type: character varying(255)
-        description: "{{ doc('generic__location_group') }} (the area). 'Unknown' when the visit's location has no area."
-        data_tests:
-          - not_null:
-              name: ac_010_metric__outpatient_visit_location_group_name_not_null
+              name: ac_010_metric__outpatient_visit_location_id_not_null
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
