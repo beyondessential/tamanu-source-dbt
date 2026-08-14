@@ -6,16 +6,16 @@ models:
     config:
       tags:
         - clinical
-    # BL-007: no data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment
-    # that bands a value differently adds a file there rather than forking the metric.
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
+    # tables), so a deployment that bands a value differently adds a file there rather than
+    # forking the metric.
     meta:
       owner: bes-maui
       domain: clinical
-      # BL-005: per-visit rows, but the subject is an encounter id with no patient
-      # identifier, name or birth date alongside it -- no patient is identifiable through
-      # a row, so this stays unrestricted and covers standard and sensitive facilities
-      # alike.
+      # Per-visit rows, but the subject is an encounter id with no patient identifier, name
+      # or birth date alongside it -- no patient is identifiable through a row, so this
+      # stays unrestricted and covers standard and sensitive facilities alike.
       pii: false
       classification: internal
     data_tests:
@@ -85,7 +85,7 @@ models:
         data_tests:
           - not_null:
               name: ac_006_metric__outpatient_visit_value_numeric_not_null
-          # BL-008: one visit per row, so the count contribution is always 1. A value
+          # BL-003: one visit per row, so the count contribution is always 1. A value
           # other than 1 would mean the model had silently re-aggregated.
           - accepted_values:
               name: ac_006_metric__outpatient_visit_value_numeric_is_one
