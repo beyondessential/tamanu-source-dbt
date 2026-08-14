@@ -25,6 +25,33 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
+### Audit discharge line list *(sensitive version available)*
+
+**Report Description**
+
+This report lists patients whose discharge was recorded in Tamanu within the selected date range.
+
+The date range filters on when the discharge was recorded, that is when a user completed the discharge form, and NOT on the discharge date and time entered on that form. Both are shown side by side, along with the number of days between them, so that a backlog of discharges recorded late can be monitored.
+
+The below information is included for each discharge:
+- Discharge date and time as entered on the discharge form.
+- Discharge recorded date and time, being when the discharge was actually recorded in Tamanu.
+- Days between discharge and recording. Zero means the discharge was recorded on the day it happened.
+- Discharging clinician named on the form, and the user who completed the form. These are often different people.
+- Whether the discharge was automatic. Tamanu discharges some encounters automatically, for example outpatient encounters left open overnight, and encounters closed on registering a patient death. Use the discharge type filter to include or exclude these.
+- Number of times the discharge was edited after it was first recorded.
+
+Discharges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.
+
+**Filters**
+
+Facility, Department, Encounter type, Discharge type
+
+**Default date range**: 30days
+
+
+---
+
 ### Audit encounter invoice *(sensitive version available)*
 
 **Report Description**

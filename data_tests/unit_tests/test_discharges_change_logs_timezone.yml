@@ -1,0 +1,43 @@
+version: 2
+
+unit_tests:
+  - name: test_discharges_change_logs_timezone
+    model: discharges_change_logs
+    description: >
+      AC-005. logs.changes.logged_at is stored in UTC, so a change logged either side of
+      local midnight must land on the correct local date. Under Pacific/Tarawa (UTC+12) the
+      second change crosses into the following day. Also checks change_sequence ordering and
+      the test-patient exclusion.
+    overrides:
+      vars:
+        timezone: Pacific/Tarawa
+    given:
+      - input: source('logs__tamanu', 'changes')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'discharges' as table_name, 'dis_001' as record_id, '2024-03-14 11:30:00+00'::timestamptz as logged_at, '2024-03-14 11:30:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_001' as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
+          union all
+          select '00000000-0000-0000-0000-000000000002', 'discharges', 'dis_001', '2024-03-14 12:30:00+00'::timestamptz, '2024-03-14 12:30:00+00'::timestamptz, null::timestamptz, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+          union all
+          select '00000000-0000-0000-0000-000000000003', 'discharges', 'dis_002', '2024-03-14 12:30:00+00'::timestamptz, '2024-03-14 12:30:00+00'::timestamptz, null::timestamptz, 'usr_001', '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+
+      - input: source('tamanu', 'discharges')
+        format: sql
+        rows: |
+          select 'dis_001' as id, 'enc_001' as encounter_id, null::timestamptz as deleted_at
+          union all
+          select 'dis_002', 'enc_002', null::timestamptz
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
+          union all
+          select 'enc_002', 'h1627394-3778-4c31-a510-9fcb88efdbf3', null::timestamptz
+
+    expect:
+      format: sql
+      rows: |
+        select '00000000-0000-0000-0000-000000000001' as change_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2024-03-14 23:30:00'::timestamp as changed_datetime, 'usr_001' as changed_by_user_id, 'Home' as note, 'cli_001' as discharger_id, 'disp_001' as disposition_id, 1 as change_sequence
+        union all
+        select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2024-03-15 00:30:00'::timestamp, 'usr_002', 'Home with follow up', 'cli_001', 'disp_001', 2

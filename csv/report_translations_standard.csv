@@ -1,4 +1,12 @@
 stringId,default
+encounter.property.type.admission,Hospital admission
+encounter.property.type.clinic,Clinic
+encounter.property.type.emergency,Emergency short stay
+encounter.property.type.imaging,Imaging
+encounter.property.type.observation,Active ED care
+encounter.property.type.surveyResponse,Form response
+encounter.property.type.triage,Triage
+encounter.property.type.vaccination,Vaccination record
 report.reporting.admissionDate,Admission date
 report.reporting.admissionDateTime,Admission date and time
 report.reporting.admissionStatus,Admission status
@@ -89,12 +97,18 @@ report.reporting.diagnosisDate,Date of diagnosis
 report.reporting.diagnosisDateTime,Date & time
 report.reporting.diagnosisIsPrimary,Is primary
 report.reporting.dischargeAssignedTime,Time assigned to
+report.reporting.dischargeClinician,Discharging clinician
 report.reporting.dischargeDate,Discharged date
 report.reporting.dischargeDateTime,Discharge date and time
 report.reporting.dischargeDepartment,Discharging department
 report.reporting.dischargeDisposition,Discharge disposition
+report.reporting.dischargeIsAutomatic,Automatic discharge
+report.reporting.dischargeLaterEditCount,Edits after recording
 report.reporting.dischargeLocation,Discharging location
 report.reporting.dischargeLocationGroup,Discharging area
+report.reporting.dischargeRecordedBy,Discharge recorded by
+report.reporting.dischargeRecordedDateTime,Discharge recorded date and time
+report.reporting.dischargeRecordingDelayDays,Days between discharge and recording
 report.reporting.encounterClinician,Clinician
 report.reporting.encounterDepartmentHistory,Department history
 report.reporting.encounterDepartmentHistoryDateTimes,Department history date and times

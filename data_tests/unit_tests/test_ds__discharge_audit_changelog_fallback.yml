@@ -1,0 +1,61 @@
+unit_tests:
+  - name: test_ds__discharge_audit_changelog_fallback
+    model: ds__discharge_audit
+    description: >
+      AC-003. A discharge with no change log coverage still appears, taking its recorded
+      date and time from the discharge record's own creation time, with no recording user
+      and no edit count.
+    given:
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select 'dis_003' as id, null as note, 'enc_003' as encounter_id, null as discharged_by_id, null as disposition_id, '2024-01-05 07:45:00'::timestamp as created_datetime
+
+      - input: ref('discharges_change_logs')
+        format: sql
+        rows: |
+          select null::text as change_id, null::text as discharge_id, null::text as encounter_id, null::timestamp as changed_datetime, null::text as changed_by_user_id, null::integer as change_sequence
+          where false
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_003' as id, 'pat_003' as patient_id, 'admission' as encounter_type, '2024-01-01 09:00:00'::timestamp as start_datetime, '2024-01-03 12:00:00'::timestamp as end_datetime, null as department_id, 'loc_001' as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 1' as name, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_003' as id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'male' as sex, null as village_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name
+          where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'dis_003' as discharge_id, 'enc_003' as encounter_id, 'admission' as encounter_type, 'pat_003' as patient_id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'Male' as sex, null as village_id, null as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null as department_id, null as department, 'loc_001' as location_id, 'Room 1' as location, '2024-01-01 09:00:00'::timestamp as admission_datetime, '2024-01-03 12:00:00'::timestamp as discharge_datetime_entered, '2024-01-05 07:45:00'::timestamp as discharge_recorded_datetime, 2 as days_between_discharge_and_recording, null as discharge_disposition_id, null as discharge_disposition, null as discharger_id, null as discharger_on_form, null as recorded_by_user_id, null as recorded_by_user, false as is_auto_discharge, null::integer as later_edit_count
