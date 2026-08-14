@@ -95,6 +95,16 @@ def sql_literal(value):
 
 def build_macro_content(definitions):
     """Render the macro source for a dict of metric definitions, sorted by metric_id."""
+    # An empty registry renders `values` with no row tuples, which is invalid SQL that
+    # only fails much later at `dbt run`. Fail here, where the cause is still visible.
+    if not definitions:
+        raise ValueError(
+            "no metric definitions found -- refusing to write a macro with an empty "
+            "VALUES clause. Check that documentations/metrics/*.yml is readable from "
+            "the current directory, and in a deployment repo that dbt deps has "
+            "vendored tamanu_source_dbt."
+        )
+
     rows = sorted(definitions.values(), key=lambda r: r["metric_id"])
 
     # Cast every column to text — a VALUES column that is NULL in all rows is
