@@ -3,7 +3,8 @@ select distinct on (d.encounter_id)
     d.note,
     d.encounter_id,
     d.discharger_id as discharged_by_id,
-    d.disposition_id
+    d.disposition_id,
+    d.created_at at time zone '{{ var("timezone") }}' as created_datetime
 from {{ source('tamanu', 'discharges') }} d
 join {{ source('tamanu', 'encounters') }} e on e.id = d.encounter_id
 where d.deleted_at is null
