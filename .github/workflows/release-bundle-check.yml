@@ -1,13 +1,22 @@
 name: Release bundle check
 
 # Fails when a declared version has no compiled report bundle behind it.
-# Reusable workflow lives in beyondessential/maui-team.
 #
-# check-tags audits recent v* tags too. tag-depth is 1 because this repo carries
-# 25 historical phantom tags (tagged with no version bump and no bundle); depth 1
-# audits only the newest tag on each branch, which passes on every branch today
-# while still catching any NEW phantom on the next PR. Raise the depth as clean
-# releases accumulate and the historical ones sink down the list.
+# compiled/v<version>/ IS the distribution here - publishing is unreliable, so
+# the built bundle is committed by design. .gitignore carries compiled/*/*.json,
+# so a plain `git add -A` drops the bundle from a release commit silently.
+# Release commits need `git add -f compiled/v<version>`.
+#
+# The check logic lives in beyondessential/maui-team (scripts/check_release_bundle.py)
+# and is fetched with a token minted from the BES Maui Submodule Reader App.
+# It is inlined rather than called as a reusable workflow because this repo is
+# public and maui-team is private: a public repo cannot call a private repo's
+# reusable workflow. Checking the private repo out with a token is permitted.
+#
+# tag-depth is 1 because this repo carries historical phantom tags (tagged with
+# no version bump and no bundle). Depth 1 audits only the newest tag on each
+# branch - passes on every branch today, while still catching any NEW phantom on
+# the next PR. Raise it as clean releases accumulate.
 
 on:
   pull_request:
@@ -15,8 +24,37 @@ on:
 
 jobs:
   bundle:
-    uses: beyondessential/maui-team/.github/workflows/release-bundle-check.yml@main
-    secrets: inherit
-    with:
-      check-tags: true
-      tag-depth: 1
+    name: Compiled bundle present for declared version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mint maui-team read token
+        id: maui-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MAUI_APP_ID }}
+          private-key: ${{ secrets.MAUI_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: maui-team
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history + tags, so the tag audit can see reachable tags.
+          fetch-depth: 0
+
+      - name: Checkout maui-team scripts
+        uses: actions/checkout@v4
+        with:
+          repository: beyondessential/maui-team
+          path: .maui-team-tools
+          ref: main
+          token: ${{ steps.maui-token.outputs.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check compiled bundle
+        run: python .maui-team-tools/scripts/check_release_bundle.py --check-tags --tag-depth 1
