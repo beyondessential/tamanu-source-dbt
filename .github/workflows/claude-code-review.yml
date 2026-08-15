@@ -26,7 +26,9 @@ jobs:
       group: claude-review-${{ github.event.pull_request.number || github.event.issue.number }}
       cancel-in-progress: true
     permissions:
-      contents: read
+      # write (not read) so the .maui submodule bump below can be pushed back
+      # to the PR branch.
+      contents: write
       pull-requests: write
       issues: read
       id-token: write
@@ -73,6 +75,37 @@ jobs:
 
       - name: Initialise .maui submodule
         run: git submodule update --init .maui
+
+      # Keep .maui current so reviews and the release bundle check run against
+      # the latest maui-team content rather than a pin that silently ages. The
+      # bump lands as a visible commit on the PR branch, so it stays reviewable
+      # - unlike tracking @main, where upstream changes arrive unseen.
+      # Skipped for fork PRs: they get no secrets and cannot be pushed to.
+      - name: Update .maui submodule
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        id: update-submodule
+        run: |
+          git submodule update --remote .maui
+          if git diff --quiet HEAD -- .maui; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo ".maui is already up to date"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push submodule update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          steps.update-submodule.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .maui
+          git commit -m "chore: update .maui submodule"
+          git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Resolve review reference file
         id: review
