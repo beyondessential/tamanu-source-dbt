@@ -15,7 +15,15 @@ name: Release bundle check
 # does not let a public repo call a reusable workflow in a private repo - the
 # call fails at resolution with "workflow was not found", before any job runs.
 # claude-code-review.yml and publish-artifacts.yml are inlined for the same
-# reason. Keep this wrapper in step with .maui/.github/workflows/release-bundle-check.yml.
+# reason.
+#
+# This wrapper DELIBERATELY DIVERGES from .maui/.github/workflows/release-bundle-check.yml:
+# that reusable workflow fetches the script with a second checkout of maui-team@main,
+# whereas this runs it from the pinned .maui submodule so upstream changes cannot
+# reach these checks unreviewed. The FLAGS must stay in step - it exposes the same
+# options as inputs (check-tags, tag-depth, convention-floor, strict-pruned). Do not
+# drop --convention-floor when reconciling: without it branch 2.39 fails forever on
+# v2.37.0, a tag that predates committed bundles and cannot be fixed.
 #
 # Branches with no compiled/ directory predate the convention (it starts at
 # v2.38.0) and are skipped as NOT APPLICABLE, so this runs safely on every
@@ -36,6 +44,9 @@ jobs:
   bundle:
     name: Compiled bundle present for declared version
     runs-on: ubuntu-latest
+    # Fork PRs get no secrets, so the App-token step would error rather than
+    # skip. Same-repo branches only.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
 
@@ -63,6 +74,9 @@ jobs:
           # Full history + tags: the tag audit needs reachable tags, and telling
           # a never-built bundle from a deliberately pruned one needs all history.
           fetch-depth: 0
+          # Do not let actions/checkout fetch submodules: it would use the
+          # caller's GITHUB_TOKEN, which cannot read the private maui-team.
+          # The next step inits .maui with the App-token git config set above.
           submodules: false
 
       - name: Initialise .maui submodule
@@ -70,5 +84,5 @@ jobs:
 
       - name: Check compiled bundle
         run: >
-          python .maui/scripts/check_release_bundle.py
+          python3 .maui/scripts/check_release_bundle.py
           --check-tags --tag-depth 5 --convention-floor 2.38.0
