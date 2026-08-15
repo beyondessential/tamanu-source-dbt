@@ -1,0 +1,22 @@
+name: Release bundle check
+
+# Fails when a declared version has no compiled report bundle behind it.
+# Reusable workflow lives in beyondessential/maui-team.
+#
+# check-tags audits recent v* tags too. tag-depth is 1 because this repo carries
+# 25 historical phantom tags (tagged with no version bump and no bundle); depth 1
+# audits only the newest tag on each branch, which passes on every branch today
+# while still catching any NEW phantom on the next PR. Raise the depth as clean
+# releases accumulate and the historical ones sink down the list.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  bundle:
+    uses: beyondessential/maui-team/.github/workflows/release-bundle-check.yml@main
+    secrets: inherit
+    with:
+      check-tags: true
+      tag-depth: 1
