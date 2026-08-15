@@ -23,11 +23,12 @@ name: Release bundle check
 # before v2.38.0: they have no bundle because none existed yet, which is correct
 # and unfixable.
 #
-# tag-depth is 1 while six historical phantom tags remain on 2.38, 2.44 and 2.46
-# (tagged with no version bump and no bundle). Depth 1 audits only the newest tag
-# per branch - passes everywhere today, but a phantom superseded by a clean
-# release before the next PR escapes. Raise to 5 once those six are deleted;
-# that is what makes the audit reliable rather than a tripwire.
+# tag-depth is 5: a new phantom stays inside the audit window for five more
+# releases on its branch, comfortably longer than a PR cycle. Depth 1 was the
+# earlier stopgap and let a phantom escape whenever a clean release superseded it
+# before the next PR - which at this repo's cadence was often the same day.
+# All 39 historical phantom tags have been deleted, so depth 5 passes everywhere:
+# 21 branches pass, 7 skip (no compiled/), 0 fail.
 
 on: pull_request
 
@@ -70,4 +71,4 @@ jobs:
       - name: Check compiled bundle
         run: >
           python .maui/scripts/check_release_bundle.py
-          --check-tags --tag-depth 1 --convention-floor 2.38.0
+          --check-tags --tag-depth 5 --convention-floor 2.38.0
