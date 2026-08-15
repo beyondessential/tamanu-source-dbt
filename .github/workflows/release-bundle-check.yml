@@ -7,25 +7,31 @@ name: Release bundle check
 # so a plain `git add -A` drops the bundle from a release commit silently.
 # Release commits need `git add -f compiled/v<version>`.
 #
-# The check logic lives in beyondessential/maui-team (scripts/check_release_bundle.py)
-# and is fetched with a token minted from the BES Maui Submodule Reader App.
-# It is inlined rather than called as a reusable workflow because this repo is
-# public and maui-team is private: a public repo cannot call a private repo's
-# reusable workflow. Checking the private repo out with a token is permitted.
+# INLINED DELIBERATELY - keep in sync with .maui/.github/workflows/release-bundle-check.yml.
+# This repo is public and maui-team is private, and GitHub does not let a public
+# repo call a reusable workflow in a private repo: the call fails at resolution
+# with "workflow was not found", before any job runs. claude-code-review.yml and
+# publish-artifacts.yml are inlined here for the same reason. Checking maui-team
+# out with a minted App token is permitted, which is how the script is fetched.
 #
-# tag-depth is 1 because this repo carries historical phantom tags (tagged with
-# no version bump and no bundle). Depth 1 audits only the newest tag on each
-# branch - passes on every branch today, while still catching any NEW phantom on
-# the next PR. Raise it as clean releases accumulate.
+# Branches with no compiled/ directory at all predate the convention (it first
+# appears on 2.39) and are skipped by the script as NOT APPLICABLE, so this runs
+# safely on every branch without a branches: filter.
+#
+# tag-depth is 1 because this repo carries 25 historical phantom tags - tagged
+# with no version bump and no bundle. Depth 1 audits only the newest tag on each
+# branch, which passes everywhere today while still catching any NEW phantom on
+# the next PR. Raise it once those tags are deleted or age out; until then a
+# higher depth fails on 2.55, 2.56, 2.57, 2.59 and 2.60.
 
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+on: pull_request
 
 jobs:
   bundle:
     name: Compiled bundle present for declared version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Mint maui-team read token
@@ -40,7 +46,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Full history + tags, so the tag audit can see reachable tags.
+          # Full history + tags: the tag audit needs reachable tags, and telling
+          # a never-built bundle from a deliberately pruned one needs all history.
           fetch-depth: 0
 
       - name: Checkout maui-team scripts
