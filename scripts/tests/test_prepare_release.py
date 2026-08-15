@@ -13,6 +13,7 @@ from prepare_release import (
     host_matches_series,
     minor_series,
     normalise,
+    render_pr_body,
     parse_commit_log,
     parse_dbt_host,
     parse_version,
@@ -124,6 +125,27 @@ class TestCommitLog:
         assert parse_commit_log("") == []
 
 
+class TestPrBodyProvenance:
+    """The body must never claim work this run did not do."""
+
+    ARGS = ("2.60.13", "2.60.12", [("abc1234", "fix: something")], {"reporting-schema": 0})
+
+    def test_claims_a_rebuild_only_when_it_rebuilt(self):
+        body = render_pr_body(*self.ARGS, "2.60", "k8s-pg-release-2-60", built=True)
+        assert "rebuilt the bundle" in body
+        assert "was built against `k8s-pg-release-2-60`" in body
+
+    def test_says_so_when_the_bundle_was_reused(self):
+        body = render_pr_body(*self.ARGS, "2.60", "k8s-pg-release-2-60", built=False)
+        assert "not rebuilt by this run" in body
+        assert "rebuilt the bundle via" not in body
+        assert "consistency check rather than proof" in body
+
+    def test_flags_an_unverified_database(self):
+        body = render_pr_body(*self.ARGS, "2.60", None, built=False)
+        assert "provenance is unconfirmed" in body
+
+
 class TestBaseBranch:
     ALL_EXIST = staticmethod(lambda name: True)
     NONE_EXIST = staticmethod(lambda name: False)
@@ -188,18 +210,33 @@ class TestDbtHostParsing:
 
 class TestDiffDescription:
     def test_reports_a_version_only_rebuild(self):
-        summary = {"analytics-metadata": 0, "reporting-schema": 0, "reporting-docs": 0}
+        summary = {"analytics-metadata": 0, "reporting-schema": 0}
         assert "byte-identical" in _describe_diff(summary)
 
     def test_reports_real_changes(self):
-        summary = {"analytics-metadata": 12, "reporting-schema": 340, "reporting-docs": 0}
+        summary = {"analytics-metadata": 12, "reporting-schema": 340}
         described = _describe_diff(summary)
         assert "reporting-schema (340 lines)" in described
         assert "analytics-metadata (12 lines)" in described
-        assert "reporting-docs" not in described
+
+    def test_always_explains_why_docs_are_not_compared(self):
+        for summary in ({"reporting-schema": 0}, {"reporting-schema": 5}):
+            assert "reporting-docs is not compared" in _describe_diff(summary)
 
     def test_handles_no_previous_bundle(self):
         assert "No previous bundle" in _describe_diff({"reporting-schema": None})
 
     def test_normalise_blanks_the_version_stamp(self):
         assert normalise("view v2.54.32 x", "2.54.32") == "view vVERSION x"
+
+    def test_normalise_blanks_dbt_build_metadata(self):
+        # Without this, every docs rebuild reports a difference and a version-only
+        # release is described as carrying model changes.
+        old = '{"generated_at": "2026-08-14T13:21:28Z", "invocation_id": "929e3d5a"}'
+        new = '{"generated_at": "2026-08-15T10:48:18Z", "invocation_id": "62f7b5e2"}'
+        assert normalise(old, "2.60.12") == normalise(new, "2.60.13")
+
+    def test_normalise_keeps_real_content_differences(self):
+        old = '{"generated_at": "2026-08-14T13:21:28Z", "name": "old_model"}'
+        new = '{"generated_at": "2026-08-15T10:48:18Z", "name": "new_model"}'
+        assert normalise(old, "2.60.12") != normalise(new, "2.60.13")

@@ -51,6 +51,13 @@ AGGREGATES = (
     ("reporting-docs", "html"),
 )
 
+# reporting-docs is deliberately not diffed. dbt's docs bundle embeds the manifest,
+# which lists `sources` and `depends_on.nodes` in a non-deterministic order, so two
+# builds of identical code never match byte for byte. Comparing it would report a
+# change on every release and teach everyone to ignore the comparison. The schema and
+# metadata artefacts are deterministic, and they are the ones that describe behaviour.
+COMPARABLE = frozenset({"analytics-metadata", "reporting-schema"})
+
 PROTECTED_BRANCH = re.compile(r"^(main|\d+\.\d+)$")
 VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
@@ -319,9 +326,17 @@ def bundle_is_built(version):
     return all(path.exists() for path in bundle_paths(version))
 
 
+# dbt stamps every build with fresh timestamps and an invocation id. They say nothing
+# about what the release contains, so they are normalised out alongside the version --
+# otherwise every rebuild looks like it changed something.
+BUILD_METADATA = re.compile(
+    r'"(generated_at|invocation_id|invocation_started_at|run_started_at)":\s*"[^"]*"'
+)
+
+
 def normalise(text, version):
-    """Blank out the version stamp so two bundles can be compared on content alone."""
-    return text.replace(version, "VERSION")
+    """Blank out the version stamp and build metadata, to compare on content alone."""
+    return BUILD_METADATA.sub(r'"\1": "NORMALISED"', text.replace(version, "VERSION"))
 
 
 def compare_bundles(new_version, old_version):
@@ -335,6 +350,8 @@ def compare_bundles(new_version, old_version):
 
     summary = {}
     for (name, ext), new_path in zip(AGGREGATES, bundle_paths(new_version)):
+        if name not in COMPARABLE:
+            continue
         old_path = COMPILED_DIR / f"v{old_version}" / f"{name}-v{old_version}-standard.{ext}"
         if not old_path.exists():
             summary[name] = None
@@ -381,12 +398,33 @@ def render_commit_message(new_version, old_version, commits, diff_summary):
     return "\n".join(lines)
 
 
-def render_pr_body(new_version, old_version, commits, diff_summary, base, host):
-    """Draft the PR body, mirroring the structure of previous release PRs."""
-    provenance = (
-        f"built against `{host}`, the matching release database for this branch"
-        if host
-        else "database provenance unverified (--no-db-check)"
+def render_pr_body(new_version, old_version, commits, diff_summary, base, host, built):
+    """Draft the PR body, mirroring the structure of previous release PRs.
+
+    `built` records whether this run actually rebuilt the bundle. When it did not, the
+    host check confirms the environment is correct now, but says nothing about what the
+    existing artefacts were built against -- and the body must not imply otherwise.
+    """
+    if host and built:
+        provenance = (
+            f"- the bundle was built against `{host}`, the matching release database "
+            f"for this branch."
+        )
+    elif host:
+        provenance = (
+            f"- `dbt debug` resolves to `{host}`, the matching release database for this "
+            f"branch. The bundle itself was built beforehand, so this is a consistency "
+            f"check rather than proof of the artefacts' provenance."
+        )
+    else:
+        provenance = (
+            "- the target database was not verified (`--no-db-check`), so the artefacts' "
+            "provenance is unconfirmed."
+        )
+    build_line = (
+        "- rebuilt the bundle via `scripts/build_reporting_assets.py`.\n"
+        if built
+        else "- reused the bundle already on disk; it was not rebuilt by this run.\n"
     )
     commit_lines = (
         "\n".join(f"- {sha} {subject}" for sha, subject in commits)
@@ -416,11 +454,12 @@ than a squash.
 
 ## Testing
 
-Prepared with `scripts/prepare_release.py`, which:
+Prepared with `scripts/prepare_release.py`:
 
-- verified the dbt target host before building — {provenance};
-- rebuilt the bundle via `scripts/build_reporting_assets.py`;
-- diffed each aggregate against `v{old_version}` with the version stamp normalised.
+{provenance}
+{build_line}- diffed each deterministic aggregate against `v{old_version}` with the version stamp
+  normalised. `reporting-docs` is not compared: dbt embeds build timestamps in it and
+  orders its dependency lists non-deterministically.
 
 Those commits carried their own tests when they landed, and CI runs the full
 `dbt-tests` suite on this PR.
@@ -435,18 +474,25 @@ def _describe_diff(diff_summary):
     if not known:
         return "No previous bundle was available to compare against."
 
+    footnote = (
+        " reporting-docs is not compared: dbt's docs bundle embeds build timestamps and "
+        "orders its dependency lists non-deterministically, so it never matches byte for "
+        "byte even when nothing changed."
+    )
+
     changed = {name: count for name, count in known.items() if count}
     if not changed:
         return (
-            "The regenerated artefacts are byte-identical to the previous bundle once "
-            "the version stamp is normalised: no report or model behaviour changes in "
-            "this release."
+            "The regenerated reporting-schema and analytics-metadata are byte-identical "
+            "to the previous bundle once the version stamp is normalised: no report or "
+            "model behaviour changes in this release." + footnote
         )
 
     detail = ", ".join(f"{name} ({count} lines)" for name, count in sorted(changed.items()))
     return (
         f"The regenerated artefacts differ beyond the version stamp in {detail}, "
         f"reflecting the commits listed above rather than being a version-only rebuild."
+        + footnote
     )
 
 
@@ -609,7 +655,7 @@ def main(argv=None):
     base = determine_base(branch, series, remote_branch_exists)
     commit_message = render_commit_message(new_version, old_bundle or old_version, commits, diff_summary)
     pr_body = render_pr_body(
-        new_version, old_bundle or old_version, commits, diff_summary, base, host
+        new_version, old_bundle or old_version, commits, diff_summary, base, host, building
     )
 
     out_dir = BASE_DIR / "target"
