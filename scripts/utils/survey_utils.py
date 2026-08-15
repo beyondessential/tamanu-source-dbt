@@ -94,6 +94,19 @@ def generate_survey_doc(survey_id, survey_name):
     ensure_directory_exists(str(SURVEYS_DIR))
     columns = get_survey_columns_from_deployment(survey_id)
 
+    if not columns:
+        # A real survey always has at least one question -- an empty result
+        # means the dbt call that fetches columns failed (network blip,
+        # encoding error, permissions, ...), not that the survey is genuinely
+        # blank. Refuse to write a stub doc/yml with only the base columns:
+        # that used to succeed silently, then only surfaced as a missing
+        # doc() reference at dbt parse time in a downstream deployment repo,
+        # with nothing pointing back at this survey as the cause.
+        raise RuntimeError(
+            f"No columns returned for survey '{survey_id}' -- refusing to write empty docs. "
+            "Check the error logged above from get_survey_columns_from_deployment."
+        )
+
     survey_id = survey_id.replace("-", "_")
 
     doc = ""
