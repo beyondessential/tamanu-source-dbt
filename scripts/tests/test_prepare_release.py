@@ -108,13 +108,20 @@ class TestCommitLog:
             ("abc1234", "feat(metrics): emergency visit metrics (#870)")
         ]
 
-    def test_drops_previous_release_bumps(self):
-        log = "\n".join(
-            [
-                "abc1234 fix(unit_tests): even up the expect columns (#853)",
-                "def5678 release: bump version to 2.57.15 and rebuild the bundle",
-            ]
-        )
+    @pytest.mark.parametrize(
+        "subject",
+        [
+            "release: bump version to 2.57.15 and rebuild the bundle",
+            "chore: bump version to 2.59.5",
+            "chore(release): bump version to 2.60.8",
+        ],
+    )
+    def test_drops_previous_version_bumps_in_any_style(self, subject):
+        log = f"abc1234 fix(unit_tests): even up the expect columns (#853)\ndef5678 {subject}"
+        assert [sha for sha, _ in parse_commit_log(log)] == ["abc1234"]
+
+    def test_keeps_commits_that_merely_mention_a_version(self):
+        log = "abc1234 chore: forwardport v2.57.6 to 2.59 (→ 2.59.2) (#604)"
         assert [sha for sha, _ in parse_commit_log(log)] == ["abc1234"]
 
     def test_keeps_non_ascii_subjects_intact(self):

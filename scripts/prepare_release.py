@@ -214,7 +214,11 @@ def remote_branch_exists(name):
     return git("ls-remote", "--exit-code", "--heads", "origin", name, check=False) != ""
 
 
-RELEASE_COMMIT = re.compile(r"^release: bump version", re.IGNORECASE)
+# Version bumps have been written as `release:`, `chore:` and `chore(release):` over
+# the life of the repo. All of them are release plumbing rather than release content.
+RELEASE_COMMIT = re.compile(
+    r"^(release|chore)(\([^)]*\))?:\s*bump version", re.IGNORECASE
+)
 
 
 def parse_commit_log(log):
