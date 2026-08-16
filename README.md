@@ -98,7 +98,43 @@ We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number
 
 ## Creating a release
 
-1. Click on "Releases"
-2. Click "Draft a new release"
-3. You can select a branch to make the release from, but usually you'd release from `main`.
-4. Give your release a "tag". This is the version number of the release.
+A release is a version bump **and** a compiled bundle, in one PR, followed by a tag.
+Both halves matter: publishing is driven by the tag, but it uploads the bundle committed
+under `compiled/v<version>/`. Tagging a version with no bundle behind it publishes
+nothing — the upload fails on a path that does not exist, or is skipped silently.
+
+Releases are usually cut from the maintenance branch for the version (`2.60`, `2.59`, …),
+not from `main`. `main` carries the next in-development version.
+
+### The short way
+
+From the version branch you are releasing:
+
+```bash
+python scripts/prepare_release.py
+```
+
+This works out the next patch version, cuts a `release/vX.Y.Z` branch, stamps
+`dbt_project.yml` and `pyproject.toml`, builds the reporting assets, diffs the result
+against the last released bundle, and drafts the commit message and PR body under
+`target/`. It stops before committing — add `--commit` to have the commit made — and
+never pushes or opens the PR.
+
+Before building anything it checks that dbt resolves to the release database matching the
+version being released. Building against the wrong database — a stale `.env` still
+pointing at another version, or a deployment replica — produces artefacts that look
+completely valid and are wrong for the branch. Use `--dry-run` to see what it would do,
+and `--no-db-check` only when preparing a release from an already-built bundle.
+
+### The steps it performs
+
+1. Bump the version in `dbt_project.yml` and `pyproject.toml`
+2. Build the bundle (see [Build Reporting Assets](#build-reporting-assets)); commit the
+   three aggregate artefacts under `compiled/v<version>/`. The per-report JSONs are
+   gitignored build output
+3. Open a PR against the version branch and merge it (merge commit, not squash)
+4. Then draft a GitHub release: choose the version branch, tag it `vX.Y.Z`, and publish
+
+Publishing the release is what triggers `publish-artifacts.yml`, which uploads the bundle
+to S3 and registers it with the meta-server. Never upload bundles by hand. If a release
+publishes nothing, check that `compiled/v<version>/` was committed before the tag was cut.
