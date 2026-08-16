@@ -139,6 +139,25 @@ python scripts/generate_translation_macro.py
 python scripts/generate_metric_definitions_macro.py
 ```
 
+## Cutting a release
+
+```bash
+# from the version branch being released; --dry-run to preview
+python scripts/prepare_release.py
+```
+
+Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against the last
+released bundle, and drafts the commit message and PR body under `target/`. It stops
+before the commit (`--commit` makes it) and never pushes or opens the PR.
+
+It refuses to build unless dbt resolves to the release database matching the version
+being released — building against a stale `.env` produces artefacts that look valid and
+are wrong for the branch.
+
+A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
+Tagging a version with no bundle behind it publishes nothing. See
+[README](README.md#creating-a-release).
+
 ---
 
 ## Codebase navigation
