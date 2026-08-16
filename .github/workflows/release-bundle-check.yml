@@ -1,0 +1,88 @@
+name: Release bundle check
+
+# Fails when a declared version has no compiled report bundle behind it.
+#
+# compiled/v<version>/ IS the distribution here - publishing is unreliable, so
+# the built bundle is committed by design. .gitignore carries compiled/*/*.json,
+# so a plain `git add -A` drops the bundle from a release commit silently.
+# Release commits need `git add -f compiled/v<version>`.
+#
+# The check logic lives in maui-team and reaches this repo through the .maui
+# submodule, so it is pinned: it changes only when .maui is deliberately bumped,
+# never underneath you. Only this wrapper is repo-local.
+#
+# INLINED DELIBERATELY. This repo is public and maui-team is private, and GitHub
+# does not let a public repo call a reusable workflow in a private repo - the
+# call fails at resolution with "workflow was not found", before any job runs.
+# claude-code-review.yml and publish-artifacts.yml are inlined for the same
+# reason.
+#
+# This wrapper DELIBERATELY DIVERGES from .maui/.github/workflows/release-bundle-check.yml:
+# that reusable workflow fetches the script with a second checkout of maui-team@main,
+# whereas this runs it from the pinned .maui submodule so upstream changes cannot
+# reach these checks unreviewed. The FLAGS must stay in step - it exposes the same
+# options as inputs (check-tags, tag-depth, convention-floor, strict-pruned). Do not
+# drop --convention-floor when reconciling: without it branch 2.39 fails forever on
+# v2.37.0, a tag that predates committed bundles and cannot be fixed.
+#
+# Branches with no compiled/ directory predate the convention (it starts at
+# v2.38.0) and are skipped as NOT APPLICABLE, so this runs safely on every
+# branch without a branches: filter. --convention-floor likewise skips tags cut
+# before v2.38.0: they have no bundle because none existed yet, which is correct
+# and unfixable.
+#
+# tag-depth is 5: a new phantom stays inside the audit window for five more
+# releases on its branch, comfortably longer than a PR cycle. Depth 1 was the
+# earlier stopgap and let a phantom escape whenever a clean release superseded it
+# before the next PR - which at this repo's cadence was often the same day.
+# All 39 historical phantom tags have been deleted, so depth 5 passes everywhere:
+# 21 branches pass, 7 skip (no compiled/), 0 fail.
+
+on: pull_request
+
+jobs:
+  bundle:
+    name: Compiled bundle present for declared version
+    runs-on: ubuntu-latest
+    # Fork PRs get no secrets, so the App-token step would error rather than
+    # skip. Same-repo branches only.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+
+    steps:
+      - name: Mint maui-team read token
+        id: maui-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MAUI_APP_ID }}
+          private-key: ${{ secrets.MAUI_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: maui-team
+
+      - name: Authenticate git for the private maui-team submodule
+        env:
+          MAUI_TOKEN: ${{ steps.maui-token.outputs.token }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${MAUI_TOKEN}@github.com/beyondessential/maui-team".insteadOf \
+            "https://github.com/beyondessential/maui-team"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history + tags: the tag audit needs reachable tags, and telling
+          # a never-built bundle from a deliberately pruned one needs all history.
+          fetch-depth: 0
+          # Do not let actions/checkout fetch submodules: it would use the
+          # caller's GITHUB_TOKEN, which cannot read the private maui-team.
+          # The next step inits .maui with the App-token git config set above.
+          submodules: false
+
+      - name: Initialise .maui submodule
+        run: git submodule update --init .maui
+
+      - name: Check compiled bundle
+        run: >
+          python3 .maui/scripts/check_release_bundle.py
+          --check-tags --tag-depth 5 --convention-floor 2.38.0
