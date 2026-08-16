@@ -1,19 +1,15 @@
 name: Build Reporting Assets
 
-# Triggered automatically when a release is published, or manually for a specific tag.
+# Manually triggered for a specific tag.
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
 # branch doesn't exist yet), connects to the release database in k8s, runs
-# build_reporting_assets.py, attaches compiled assets to the GitHub release, then
-# publishes them to S3.
+# build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
 #
 # Requires:
 #   vars.TS_OAUTH_CLIENT_ID, vars.TS_TAGS, vars.TS_K8S_OPERATOR_HOSTNAME — Tailscale access
 #   GITHUB_TOKEN with contents:write (granted automatically by GHA)
-#   secrets.META_CERT, secrets.META_KEY, vars.META_URL — passed via secrets: inherit to publish-artifacts
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -33,7 +29,7 @@ jobs:
       - name: Determine version and branch
         id: version
         env:
-          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${TAG#v}"
@@ -138,13 +134,3 @@ jobs:
           gh release upload "${{ steps.version.outputs.tag }}" \
             compiled/v${{ steps.version.outputs.version }}/* \
             --clobber
-
-  publish:
-    name: Publish artifacts to S3
-    needs: build
-    if: github.event_name == 'release'
-    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
-    secrets: inherit
-    permissions:
-      id-token: write
-      contents: read
