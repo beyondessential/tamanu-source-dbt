@@ -6,8 +6,11 @@ suite stays runnable in CI where neither a database nor a dbt install is availab
 
 import pytest
 
+import prepare_release
 from prepare_release import (
+    _render_change_list,
     bump_patch,
+    compare_bundles,
     bundle_versions_from_paths,
     determine_base,
     host_matches_series,
@@ -148,9 +151,89 @@ class TestPrBodyProvenance:
         assert "rebuilt the bundle via" not in body
         assert "consistency check rather than proof" in body
 
-    def test_flags_an_unverified_database(self):
-        body = render_pr_body(*self.ARGS, "2.60", None, built=False)
-        assert "provenance is unconfirmed" in body
+    def test_flags_a_waived_database_check(self):
+        body = render_pr_body(*self.ARGS, "2.60", None, built=False, db_waived=True)
+        assert "was waived (`--no-db-check`)" in body
+
+    def test_does_not_blame_a_flag_the_user_never_passed(self):
+        # The check can fail without being waived; saying otherwise is a false claim.
+        body = render_pr_body(*self.ARGS, "2.60", None, built=False, db_waived=False)
+        assert "could not be verified" in body
+        assert "--no-db-check" not in body
+
+    def test_reports_an_uncomputable_change_list(self):
+        body = render_pr_body(
+            "2.55.7", "2.55.6", None, {"reporting-schema": 0}, "2.55", None, False
+        )
+        assert "could not locate" in body
+
+
+class TestChangeList:
+    """"Could not tell" and "nothing to tell" are different claims."""
+
+    def test_renders_commits(self):
+        rendered = _render_change_list([("abc1234", "fix: thing")], "2.59.2")
+        assert rendered == ["- abc1234 fix: thing"]
+
+    def test_empty_list_means_genuinely_no_commits(self):
+        assert _render_change_list([], "2.59.2") == ["- no commits since the last bundle"]
+
+    def test_none_means_the_range_could_not_be_computed(self):
+        # The forward-port case: the baseline bundle is not in this branch's history,
+        # so claiming "no commits" would assert something the run cannot know.
+        rendered = _render_change_list(None, "2.59.2")[0]
+        assert "could not locate" in rendered
+        assert "v2.59.2" in rendered
+        assert "no commits since the last bundle" not in rendered
+
+
+class TestCompareBundles:
+    """The drafted body's central claim rests on this comparison."""
+
+    @staticmethod
+    def _write(root, version, schema="select 1", metadata="cols: []"):
+        d = root / f"v{version}"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"reporting-schema-v{version}-standard.sql").write_text(schema, encoding="utf-8")
+        (d / f"analytics-metadata-v{version}-standard.yml").write_text(metadata, encoding="utf-8")
+        (d / f"reporting-docs-v{version}-standard.html").write_text("<html>", encoding="utf-8")
+
+    @pytest.fixture
+    def compiled(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(prepare_release, "COMPILED_DIR", tmp_path)
+        return tmp_path
+
+    def test_version_only_rebuild_reports_zero(self, compiled):
+        # Same content, different version stamp -- must not read as a change.
+        self._write(compiled, "2.60.12", schema="create view v2.60.12 as select 1")
+        self._write(compiled, "2.60.13", schema="create view v2.60.13 as select 1")
+        assert compare_bundles("2.60.13", "2.60.12") == {
+            "analytics-metadata": 0,
+            "reporting-schema": 0,
+        }
+
+    def test_real_change_is_counted(self, compiled):
+        self._write(compiled, "2.60.12", schema="select 1")
+        self._write(compiled, "2.60.13", schema="select 1\nselect 2")
+        assert compare_bundles("2.60.13", "2.60.12")["reporting-schema"] > 0
+
+    def test_docs_are_never_compared(self, compiled):
+        # dbt orders the manifest non-deterministically, so docs can never match.
+        self._write(compiled, "2.60.12")
+        self._write(compiled, "2.60.13")
+        assert "reporting-docs" not in compare_bundles("2.60.13", "2.60.12")
+
+    def test_missing_counterpart_reports_none(self, compiled):
+        self._write(compiled, "2.60.13")
+        (compiled / "v2.60.12").mkdir()
+        summary = compare_bundles("2.60.13", "2.60.12")
+        assert summary == {"analytics-metadata": None, "reporting-schema": None}
+        assert "No previous bundle" in _describe_diff(summary)
+
+    def test_build_metadata_is_normalised_away(self, compiled):
+        self._write(compiled, "2.60.12", metadata='{"generated_at": "2026-08-14T13:21:28Z"}')
+        self._write(compiled, "2.60.13", metadata='{"generated_at": "2026-08-15T10:48:18Z"}')
+        assert compare_bundles("2.60.13", "2.60.12")["analytics-metadata"] == 0
 
 
 class TestBaseBranch:
@@ -190,8 +273,9 @@ class TestDatabaseGuard:
         assert not host_matches_series("tamanu-demo.example.internal", "2.57")
 
     def test_rejects_a_deployment_replica(self):
-        # Seen in the wild: a worktree .env still pointing at a deployment replica.
-        assert not host_matches_series("infra-replica-tokelau-central", "2.54")
+        # Seen in the wild: a worktree .env still pointing at a deployment replica
+        # (hostname synthesised -- this repo is public).
+        assert not host_matches_series("infra-replica-example-central", "2.54")
 
 
 class TestDbtHostParsing:
@@ -199,13 +283,13 @@ class TestDbtHostParsing:
     # not anchorable to the start of the line.
     DBT_DEBUG_OUTPUT = (
         "\x1b[0m22:39:00  Connection:\n"
-        "\x1b[0m22:39:00    host: infra-replica-tokelau-central\n"
+        "\x1b[0m22:39:00    host: infra-replica-example-central\n"
         "\x1b[0m22:39:00    port: 5432\n"
         "\x1b[0m22:39:00    Connection test: [\x1b[32mOK connection ok\x1b[0m]\n"
     )
 
     def test_parses_host_through_ansi_and_timestamps(self):
-        assert parse_dbt_host(self.DBT_DEBUG_OUTPUT) == "infra-replica-tokelau-central"
+        assert parse_dbt_host(self.DBT_DEBUG_OUTPUT) == "infra-replica-example-central"
 
     def test_returns_none_when_absent(self):
         assert parse_dbt_host("dbt failed to start") is None

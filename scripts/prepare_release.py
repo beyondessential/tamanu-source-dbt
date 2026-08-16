@@ -154,14 +154,32 @@ def current_branch():
     return git("rev-parse", "--abbrev-ref", "HEAD")
 
 
-def working_tree_is_clean():
-    return git("status", "--porcelain") == ""
+def staged_paths():
+    """Return the paths currently staged in the index."""
+    listing = git("diff", "--cached", "--name-only")
+    return [line for line in listing.splitlines() if line.strip()]
+
+
+def assert_nothing_staged():
+    """Refuse to start with a dirty index.
+
+    `git checkout -b` carries staged changes onto the release branch, and the release
+    commit would then sweep them in alongside the version bump and the bundle. Untracked
+    files are deliberately not checked: a freshly built bundle is untracked, and so is
+    anything else left lying around by a build.
+    """
+    staged = staged_paths()
+    if staged:
+        raise RuntimeError(
+            "The index already has staged changes, which would be swept into the "
+            "release commit:\n  " + "\n  ".join(staged) + "\nCommit or unstage them first."
+        )
 
 
 def assert_up_to_date_with_origin(branch):
     """Warn if the branch has diverged from its remote counterpart."""
     remote = f"origin/{branch}"
-    if git("ls-remote", "--exit-code", "--heads", "origin", branch, check=False) == "":
+    if not remote_branch_exists(branch):
         cprint(f"No remote branch {remote}; skipping the up-to-date check.", "warning")
         return
 
@@ -241,8 +259,17 @@ def commits_since(ref):
 
 
 def commit_that_added(path):
-    """Return the SHA of the commit that last touched `path`, or None."""
-    return git("log", "--format=%H", "-1", "--", path) or None
+    """Return the SHA of the commit that added `path`, or None if it is not in history.
+
+    `--diff-filter=A` matters: without it this returns whichever commit last *touched*
+    the path, so a bundle that was later amended or backfilled would move the baseline
+    forward and silently truncate the change list.
+
+    None is a real answer, not just an error case -- the baseline bundle need not be in
+    this branch's history at all, which is exactly what happens when a version was
+    carried onto the branch by a forward-port.
+    """
+    return git("log", "--format=%H", "-1", "--diff-filter=A", "--", path) or None
 
 
 # --------------------------------------------------------------------------------
@@ -377,6 +404,24 @@ def compare_bundles(new_version, old_version):
 # --------------------------------------------------------------------------------
 
 
+def _render_change_list(commits, old_version, bullet="- "):
+    """Render the change list, distinguishing "nothing" from "could not tell".
+
+    `commits is None` means the commit that added the baseline bundle is not in this
+    branch's history, so no range could be computed. That is not the same as a release
+    with no commits in it, and saying "no commits since the last bundle" there would be
+    a claim the run cannot support.
+    """
+    if commits is None:
+        return [
+            f"{bullet}could not locate the commit that added v{old_version} on this "
+            f"branch; change list unavailable and needs filling in by hand"
+        ]
+    if not commits:
+        return [f"{bullet}no commits since the last bundle"]
+    return [f"{bullet}{sha} {subject}" for sha, subject in commits]
+
+
 def render_commit_message(new_version, old_version, commits, diff_summary):
     """Draft the release commit message."""
     lines = [
@@ -394,20 +439,22 @@ def render_commit_message(new_version, old_version, commits, diff_summary):
         f"Everything merged since the last bundle (v{old_version}):",
         "",
     ]
-    if commits:
-        lines += [f"- {sha} {subject}" for sha, subject in commits]
-    else:
-        lines.append("- no commits since the last bundle")
+    lines += _render_change_list(commits, old_version)
     lines += ["", _describe_diff(diff_summary), ""]
     return "\n".join(lines)
 
 
-def render_pr_body(new_version, old_version, commits, diff_summary, base, host, built):
+def render_pr_body(
+    new_version, old_version, commits, diff_summary, base, host, built, db_waived=False
+):
     """Draft the PR body, mirroring the structure of previous release PRs.
 
     `built` records whether this run actually rebuilt the bundle. When it did not, the
     host check confirms the environment is correct now, but says nothing about what the
     existing artefacts were built against -- and the body must not imply otherwise.
+
+    `db_waived` distinguishes a check the user waived from one that simply could not be
+    completed; blaming a flag nobody passed is the same class of false claim.
     """
     if host and built:
         provenance = (
@@ -420,20 +467,22 @@ def render_pr_body(new_version, old_version, commits, diff_summary, base, host, 
             f"branch. The bundle itself was built beforehand, so this is a consistency "
             f"check rather than proof of the artefacts' provenance."
         )
+    elif db_waived:
+        provenance = (
+            "- the target database check was waived (`--no-db-check`), so the artefacts' "
+            "provenance is unconfirmed."
+        )
     else:
         provenance = (
-            "- the target database was not verified (`--no-db-check`), so the artefacts' "
-            "provenance is unconfirmed."
+            "- the target database could not be verified, so the artefacts' provenance "
+            "is unconfirmed."
         )
     build_line = (
         "- rebuilt the bundle via `scripts/build_reporting_assets.py`.\n"
         if built
         else "- reused the bundle already on disk; it was not rebuilt by this run.\n"
     )
-    commit_lines = (
-        "\n".join(f"- {sha} {subject}" for sha, subject in commits)
-        or "- no commits since the last bundle"
-    )
+    commit_lines = "\n".join(_render_change_list(commits, old_version))
     return f"""## Summary
 
 Bumps `{old_version}` → `{new_version}` and commits the compiled reporting bundle for
@@ -519,12 +568,14 @@ def parse_args(argv=None):
         action="store_true",
         help="Report what would happen without writing, branching or building.",
     )
-    parser.add_argument(
+    # Contradictory: --skip-build would silently win, so say so at parse time.
+    build_mode = parser.add_mutually_exclusive_group()
+    build_mode.add_argument(
         "--rebuild",
         action="store_true",
         help="Rebuild even when the bundle for the target version already exists.",
     )
-    parser.add_argument(
+    build_mode.add_argument(
         "--skip-build",
         action="store_true",
         help="Never build; verify and draft from the bundle already on disk.",
@@ -555,10 +606,22 @@ def main(argv=None):
     dbt_text = DBT_PROJECT.read_text(encoding="utf-8")
     old_version = read_dbt_project_version(dbt_text)
     new_version = args.version or bump_patch(old_version)
-    parse_version(new_version)
     series = minor_series(new_version)
 
+    # A typo'd --version must not stamp the version backwards. Equal is allowed: a
+    # release whose version was already carried onto the branch by a forward-port needs
+    # only the bundle, and re-running to redraft is legitimate. Lower is never right --
+    # with --rebuild it would overwrite an already-released bundle in place.
+    if parse_version(new_version) < parse_version(old_version):
+        raise RuntimeError(
+            f"{new_version} is lower than the current version {old_version}. Releasing "
+            f"backwards would overwrite a released bundle; pass a higher version."
+        )
+
     cprint(f"\nPreparing release {new_version} (from {old_version}) on {branch}", "info")
+
+    if not args.dry_run:
+        assert_nothing_staged()
 
     if PROTECTED_BRANCH.match(branch) and args.no_branch and not args.dry_run:
         raise RuntimeError(
@@ -580,13 +643,16 @@ def main(argv=None):
         )
 
     # ---- Guard the database before anything is built ---------------------------
+    # A dry run builds nothing, so an unreachable database must not stop it -- otherwise
+    # the documented "see what it would do" preview only works on the VPN.
     building = not args.skip_build and (args.rebuild or not bundle_is_built(new_version))
+    must_verify = building and not args.dry_run
     host = None
-    if building or not args.no_db_check:
+    if must_verify or not args.no_db_check:
         try:
             host = check_database(series, allow_mismatch=args.no_db_check)
         except RuntimeError as err:
-            if building:
+            if must_verify:
                 raise
             cprint(str(err), "warning")
 
@@ -653,13 +719,28 @@ def main(argv=None):
         cprint(f"No previous released bundle in the {series} series to compare.", "warning")
 
     # ---- Draft the messages ----------------------------------------------------
+    # None means "could not compute a range", which the drafted text reports honestly
+    # rather than rendering as an empty change list.
     baseline = commit_that_added(f"compiled/v{old_bundle}") if old_bundle else None
-    commits = commits_since(baseline) if baseline else []
+    commits = commits_since(baseline) if baseline else None
+    if old_bundle and baseline is None:
+        cprint(
+            f"Could not find the commit that added compiled/v{old_bundle} on this "
+            f"branch; the change list cannot be computed.",
+            "warning",
+        )
 
     base = determine_base(branch, series, remote_branch_exists)
     commit_message = render_commit_message(new_version, old_bundle or old_version, commits, diff_summary)
     pr_body = render_pr_body(
-        new_version, old_bundle or old_version, commits, diff_summary, base, host, building
+        new_version,
+        old_bundle or old_version,
+        commits,
+        diff_summary,
+        base,
+        host,
+        building,
+        db_waived=args.no_db_check,
     )
 
     out_dir = BASE_DIR / "target"
@@ -672,10 +753,26 @@ def main(argv=None):
     # ---- Stage, and commit only if asked ---------------------------------------
     paths = ["dbt_project.yml", "pyproject.toml", f"compiled/v{new_version}"]
     git("add", *paths)
-    cprint(f"\nStaged: {', '.join(paths)}", "success")
+
+    # `git add <dir>` skips ignored files silently rather than erroring the way an
+    # explicit ignored path does, so a gitignore rule that swallowed the bundle would
+    # leave a release commit with no artefacts in it. That is the exact failure this
+    # script exists to prevent, so assert the aggregates really landed in the index.
+    staged = set(staged_paths())
+    expected = [path.relative_to(BASE_DIR).as_posix() for path in bundle_paths(new_version)]
+    unstaged = [path for path in expected if path not in staged]
+    if unstaged:
+        raise RuntimeError(
+            "The bundle did not reach the index -- check .gitignore:\n  "
+            + "\n  ".join(unstaged)
+        )
+    cprint(f"\nStaged {len(staged)} path(s): {', '.join(paths)}", "success")
 
     if args.commit:
-        git("commit", "-F", str(message_path))
+        # Scoped to our paths: anything else that reached the index must not ride along
+        # inside a release commit.
+        changed = [p for p in paths if any(s == p or s.startswith(p + "/") for s in staged)]
+        git("commit", "--only", "-F", str(message_path), "--", *changed)
         cprint(f"Committed: {git('log', '--format=%h %s', '-1')}", "success")
 
     # ---- Hand back to the human ------------------------------------------------
