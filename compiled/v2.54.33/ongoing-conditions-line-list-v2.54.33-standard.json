@@ -1,0 +1,15 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\ncondition as \"Ongoing condition\",\nto_char(((recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Date recorded\",\nclinician as \"Clinician\",\nto_char(date_resolved, 'YYYY-MM-DD') as \"Date resolved\",\nclinician_resolving as \"Clinician confirming resolution\"\nfrom \"reporting\".\"ds__ongoing_conditions\"\nwhere ((recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n>= \n:fromDate\nand\n((recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n<= \n:toDate\norder by recorded_datetime",
+  "status": "published",
+  "name": "Ongoing conditions line list",
+  "notes": "This report lists all patients with ongoing conditions for the selected parameters.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "allFacilities"
+    ],
+    "parameters": []
+  },
+  "tamanuVersion": "~2.54.0"
+}
