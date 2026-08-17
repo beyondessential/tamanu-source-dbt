@@ -23,5 +23,11 @@ where trim(d) not in (
         -- ed_visit's arrival hour
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
-        'discharge_disposition'
+        'discharge_disposition',
+        -- inpatient_admission's ward (department) the patient was admitted to
+        'admission_ward_id',
+        -- inpatient_admission's referral source, carried as recorded
+        'admission_source',
+        -- inpatient_admission's admission-mode flag: a prior ED/triage/observation phase
+        'is_admitted_via_emergency'
     )
