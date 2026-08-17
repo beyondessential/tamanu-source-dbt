@@ -8,6 +8,10 @@ where trim(d) not in (
         'age_group__who_primary_classification',
         'sex',
         'facility_id',
+        -- opd_visit's raw location, one level finer than facility -- lets a consumer join
+        -- to an area/clinic lookup later without this model resolving that join itself.
+        -- First metric__ disaggregation finer than facility.
+        'location_id',
         'dhis_ncd_category',
         -- ed_visit's admission outcome, carried as a disaggregation on
         -- metric__emergency_visit's per-encounter rows rather than as its own metric_id.
