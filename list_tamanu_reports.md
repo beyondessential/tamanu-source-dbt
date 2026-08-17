@@ -136,7 +136,7 @@ The report includes all details documented in the patient death record.
 
 **Filters**
 
-Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
+Facility, Area, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
 
 **Default date range**: allTime
 
