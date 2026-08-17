@@ -1,0 +1,75 @@
+unit_tests:
+  - name: test_ds__discharge_audit_recording_delay
+    model: ds__discharge_audit
+    description: >
+      AC-004 and AC-006. A discharge whose entered discharge date precedes its recorded date
+      by several days reports the positive gap, the change log supplies the recording user and
+      the later-edit count, and an automatically created discharge is flagged rather than dropped.
+    given:
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select 'dis_001' as id, 'Wound care follow up' as note, 'enc_001' as encounter_id, 'cli_001' as discharged_by_id, 'disp_001' as disposition_id, '2024-03-14 08:05:00'::timestamp as created_datetime
+          union all
+          select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null, '2024-03-11 22:00:00'::timestamp
+
+      - input: ref('discharges_change_logs')
+        format: sql
+        rows: |
+          select 'chg_001' as change_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2024-03-14 08:05:00'::timestamp as changed_datetime, 'usr_001' as changed_by_user_id, 1 as change_sequence
+          union all
+          select 'chg_002', 'dis_001', 'enc_001', '2024-03-15 09:30:00'::timestamp, 'usr_002', 2
+          union all
+          select 'chg_003', 'dis_002', 'enc_002', '2024-03-11 22:00:00'::timestamp, '00000000-0000-0000-0000-000000000000', 1
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, 'admission' as encounter_type, '2024-03-08 11:00:00'::timestamp as start_datetime, '2024-03-10 16:00:00'::timestamp as end_datetime, 'dept_001' as department_id, 'loc_001' as location_id
+          union all
+          select 'enc_002', 'pat_002', 'clinic', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, 'dept_001', 'loc_001'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 1' as name, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'General Medicine' as name
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, 'vil_001' as village_id
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'female', null
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'vil_001' as id, 'Village A' as name
+          union all
+          select 'disp_001', 'Home'
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr Alice Wilson' as display_name
+          union all
+          select 'usr_001', 'Nurse Bob Martinez'
+          union all
+          select 'usr_002', 'Nurse Carol Reid'
+
+    expect:
+      format: sql
+      rows: |
+        select 'dis_001' as discharge_id, 'enc_001' as encounter_id, 'admission' as encounter_type, 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'fac_001' as facility_id, 'Central Hospital' as facility, 'dept_001' as department_id, 'General Medicine' as department, 'loc_001' as location_id, 'Room 1' as location, '2024-03-08 11:00:00'::timestamp as admission_datetime, '2024-03-10 16:00:00'::timestamp as discharge_datetime_entered, '2024-03-14 08:05:00'::timestamp as discharge_recorded_datetime, 4 as days_between_discharge_and_recording, 'disp_001' as discharge_disposition_id, 'Home' as discharge_disposition, 'cli_001' as discharger_id, 'Dr Alice Wilson' as discharger_on_form, 'usr_001' as recorded_by_user_id, 'Nurse Bob Martinez' as recorded_by_user, false as is_auto_discharge, 1 as later_edit_count
+        union all
+        select 'dis_002', 'enc_002', 'clinic', 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'Female', null, null, 'fac_001', 'Central Hospital', 'dept_001', 'General Medicine', 'loc_001', 'Room 1', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, 0, null, null, 'cli_001', 'Dr Alice Wilson', '00000000-0000-0000-0000-000000000000', null, true, 0

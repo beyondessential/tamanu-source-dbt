@@ -61,6 +61,17 @@ def test_build_macro_casts_every_column_to_text():
         assert f"{col}::text as {col}" in content
 
 
+def test_build_macro_rejects_empty_registry():
+    # an empty VALUES clause is invalid SQL, so this must fail at generation time
+    # rather than write a macro that only breaks at dbt run
+    try:
+        build_macro_content({})
+    except ValueError as exc:
+        assert "empty" in str(exc).lower()
+    else:
+        raise AssertionError("an empty registry must raise rather than emit invalid SQL")
+
+
 def test_build_macro_is_a_jinja_macro():
     content = build_macro_content({"a": _row("a")})
     assert "{%- macro get_metric_definitions() -%}" in content

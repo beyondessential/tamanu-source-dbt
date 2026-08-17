@@ -83,19 +83,21 @@
 {%- macro translate_column_value(prefix_key, column_name, language=var("language", "default")) -%}
     {%- set translations = get_translations() -%}
     {%- set prefix = get_translation_prefix(prefix_key) -%}
-    {%- set has_translations = false -%}
+    {#- a namespace is required here: a plain `set` inside the loop does not escape it -#}
+    {%- set ns = namespace(has_translations=false) -%}
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
-            {%- set has_translations = true -%}
+            {%- set ns.has_translations = true -%}
             {%- break -%}
         {%- endif -%}
     {%- endfor -%}
-    {%- if has_translations -%}
+    {%- if ns.has_translations -%}
     case
     {%- for string_id, lang_dict in translations.items() -%}
         {%- if string_id.startswith(prefix ~ '.') -%}
             {%- set value = string_id.replace(prefix ~ '.', '') -%}
-            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") -%}
+            {#- the tag below must not strip trailing whitespace, or the when clauses run into each other -#}
+            {%- set translated_text = lang_dict.get(language, lang_dict.get('default', value)).replace("'", "''") %}
         when {{ column_name }} = '{{ value }}' then '{{ translated_text }}'
         {%- endif -%}
     {%- endfor %}
