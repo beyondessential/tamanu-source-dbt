@@ -95,6 +95,13 @@ models:
       # earns the heavier materialisation, so an unrecognised target falls through to view
       # rather than materialising a table by default.
       +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      # Tupaia reads the metrics from `public_tupaia`, so that is where they build on the
+      # analytics replica. Absolute, not a suffix -- see macros/generate_schema_name.sql,
+      # without which dbt resolves this to `analytics_public_tupaia`. Empty on every other
+      # target, which leaves them in the target's own schema: metric views ship in the
+      # compiled reporting bundle, and production Tamanu must not gain a `public_tupaia`
+      # schema of metric tables.
+      +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
       +tags:
         - metrics
     datasets:
