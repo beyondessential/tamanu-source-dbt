@@ -1,0 +1,39 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\nfacility as \"Facility\",\ndepartment as \"Department\",\nlocation_group as \"Area\",\nlocation as \"Location\",\nto_char(((vaccination_date at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD') as \"Vaccination date\",\nvaccine_category as \"Vaccine category\",\nvaccine_name as \"Vaccine name\",\nvaccine_brand as \"If category of Other, Vaccine brand\",\ndisease as \"If category of Other, Disease\",\nvaccine_status as \"Vaccine status\",\nvaccine_schedule as \"Schedule\",\nbatch as \"Batch\",\ngiven_by as \"Given by\",\nrecorded_by as \"Recorded by\",\ncircumstances as \"If given elsewhere, Circumstances\",\ngiven_elsewhere_by as \"If given elsewhere, Country\",\nnot_given_clinician as \"If not given, Supervising clinician\",\nnot_given_reason as \"If not given, Reason not given\"\nfrom \"reporting\".\"ds__vaccinations\"\nwhere\nvaccine_status in ('Given', 'Not Given')\nand\n((vaccination_date at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n>= \n:fromDate\nand\n((vaccination_date at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n<= \n:toDate\nand\ncase\nwhen \n:villageId is null then true\nelse village_id = \n:villageId\nend\nand\ncase\nwhen \n:facilityId is null then true\nelse facility_id = \n:facilityId\nend\nand\ncase\nwhen \n:category is null then true\nelse vaccine_category = \n:category\nend\nand\ncase\nwhen \n:vaccine is null then true\nelse vaccine_name = \n:vaccine\nend\norder by vaccination_date, last_name, first_name",
+  "status": "published",
+  "name": "Vaccine line list",
+  "notes": "This report generates a list of all patients that have had a vaccination recorded for the selected parameters. Patients are listed alphabetically by last name and date of vaccination in chronological order. \n\nThe report includes vaccinations with statuses of both 'Given' and 'Not given', and each vaccination recorded is listed on a single row. If a vaccination was initially recorded as 'Not given' and is later marked as 'Given', only the vaccination record with a status of 'Given' will be included in the report.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Village",
+        "name": "villageId",
+        "suggesterEndpoint": "village"
+      },
+      {
+        "parameterField": "VaccineCategoryField",
+        "label": "Category",
+        "name": "category"
+      },
+      {
+        "parameterField": "VaccineField",
+        "label": "Vaccine",
+        "name": "vaccine"
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}

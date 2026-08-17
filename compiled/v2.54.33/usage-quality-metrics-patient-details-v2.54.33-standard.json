@@ -1,0 +1,16 @@
+{
+  "query": "select\ntotal_patients as \"Total patients\",\ntotal_patients_with_incomplete_name as \"Total patients with incomplete name\",\ntotal_patients_with_missing_dob as \"Total patients with missing date of birth\",\ntotal_patients_with_invalid_dob as \"Total patients with invalid date of birth\",\ntotal_patients_with_missing_location as \"Total patients with missing location\",\ntotal_patients_with_missing_contact as \"Total patients with missing contact\",\ntotal_patients_merged as \"Total patients merged\"\nfrom \"reporting\".\"ds__usage_quality_metrics_patient_details\"",
+  "name": "Usage quality metrics - patient details",
+  "notes": "This report generates usage quality metrics on patient details. The report provides a summary on the total patients in the database, total with incomplete name, missing date of birth, invalid date of birth, missing location entry, missing contact entry and patients that have been merged.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": []
+  },
+  "tamanuVersion": "~2.54.0"
+}
