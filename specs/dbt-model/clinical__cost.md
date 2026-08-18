@@ -7,7 +7,7 @@
 | **Name** | `clinical__cost` |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
-| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
+| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics*`) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (design spun off from the Queen of Sheba End-of-day Invoice Report) |

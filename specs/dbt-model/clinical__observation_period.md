@@ -7,7 +7,7 @@
 | **Name** | `clinical__observation_period` |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
-| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
+| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics*`) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |

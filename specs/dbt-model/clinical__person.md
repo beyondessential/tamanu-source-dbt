@@ -7,12 +7,12 @@
 | **Name** | `clinical__person` |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
-| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics_*`) |
+| **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics*`) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-07-22 |
+| **Last updated** | 2026-08-18 |
 
 The OMOP-lite `PERSON` domain — the canonical patient-demographics surface every
 other `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to. First
