@@ -1,31 +1,30 @@
 {% macro diagnosis__icd10_obstetric_block(code_column) %}
 {#
-    WHO ICD-10 Chapter XV block for a diagnosis code, labelled "<code range> <block title>"
-    (e.g. 'O60-O75 Complications of labour and delivery'). Chapter XV is Pregnancy,
-    childbirth and the puerperium, O00-O99.
+    WHO ICD-10 Chapter XV blocks -- Pregnancy, childbirth and the puerperium, O00-O99 --
+    labelled "<code range> <block title>" (e.g. 'O60-O75 Complications of labour and
+    delivery').
 
     Source: WHO ICD-10 (2019 edition) Chapter XV block ranges,
     https://icd.who.int/browse10/2019/en
 
-    WHO ICD-10, *not* ICD-10-CM. The US clinical modification draws three of these blocks
-    differently -- O60-O77, O80-O82 and O94-O9A where WHO has O60-O75, O80-O84 and O94-O99 --
-    so under WHO a code in O76-O79 or O93 sits in an unassigned gap rather than inside a
-    block. Take the ranges below from a WHO or WHO-derived tabular list, not from a CM one.
+    For obstetric casemix: the level at which a maternity service's presentations separate
+    into hypertensive disorders, complications of labour, complications of the puerperium and
+    the rest. Chapter granularity resolves that population to a single value, so the block is
+    the first level that distinguishes anything.
 
-    For an obstetric service diagnosis__icd10_chapter answers nothing: essentially every
-    presentation is chapter XV, so a chart of it is a single row. This is the level below it,
-    and the level at which obstetric casemix becomes readable -- hypertensive disorders
-    against complications of labour against puerperal complications.
+    Ranges follow WHO ICD-10, where O09, O17-O19, O49-O59, O76-O79 and O93 are unassigned
+    gaps -- the blocks are not contiguous. ICD-10-CM both draws three blocks differently
+    (O60-O77, O80-O82, O94-O9A) and assigns O09 (Supervision of high risk pregnancy), so a
+    CM-derived reference set yields codes that land in a WHO gap. Take ranges from a WHO or
+    WHO-derived tabular list when extending this.
 
-    Deliberately not named diagnosis__icd10_block, which the diagnosis__icd10_chapter
-    docstring anticipates for the general case. This covers one chapter's blocks; a general
-    block macro spans roughly 130 blocks across every chapter and is a separate piece of work.
-    Named diagnosis__<grouping> on the same convention, so the value carries which grouping
-    produced it -- groupings are not comparable with each other.
+    A code outside O00-O99 returns 'Non-obstetric', which keeps the non-obstetric
+    presentations a maternity service does see as their own readable group, distinct from
+    codes that failed to resolve at all.
 
-    A code outside O00-O99 returns 'Non-obstetric' rather than 'Unclassified'. A maternity
-    service does see non-obstetric presentations, and folding them in with malformed codes
-    would hide a real and clinically interesting group behind a data-quality label.
+    Named diagnosis__<grouping> so the value carries which grouping produced it -- groupings
+    are not comparable with each other. Scoped to chapter XV; a general block macro covers
+    every chapter's ~130 blocks and is its own piece of work.
 
     Matching is on the first three characters of the code, upper-cased -- see
     diagnosis__icd10_chapter for why a plain text `between` is enough and an integer cast
@@ -35,8 +34,14 @@
     - code_column: SQL expression yielding an ICD-10 code (Tamanu reference_data.code).
 
     Returns: CASE expression producing the block label; 'Non-obstetric' for a code outside
-    O00-O99; 'Unclassified' when the code is null, malformed, or falls in one of chapter XV's
-    unassigned gaps (O49-O59, O76-O79, O93).
+    O00-O99; 'Unclassified' when the code is null, falls in one of chapter XV's unassigned
+    gaps (O09, O17-O19, O49-O59, O76-O79, O93), or is malformed in a way that leaves its
+    three-character prefix outside A00-Z99.
+
+    A malformed code whose prefix still looks alphabetic -- 'OBS', 'XYZ' -- satisfies the
+    A00-Z99 branch and returns 'Non-obstetric'. diagnosis__icd10_chapter has the same
+    behaviour, so requiring the two characters after the letter to be digits is a change to
+    make in both at once rather than here alone.
 #}
     case
         when left(upper({{ code_column }}), 3) between 'O00' and 'O08' then 'O00-O08 Pregnancy with abortive outcome'
