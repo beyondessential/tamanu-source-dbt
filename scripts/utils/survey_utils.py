@@ -81,31 +81,19 @@ def get_survey_columns_from_deployment(survey_id):
         return columns
 
 
-def generate_survey_doc(survey_id, survey_name):
+def generate_survey_doc(survey_id, survey_name, columns):
     """
     Create a YML documentation file and MD documentation file for a survey.
     Args:
         survey_id (str): The survey identifier
-        survey_code (str): The survey code
         survey_name (str): The survey name
+        columns (list): List of (id, code, name) tuples for the survey's questions,
+            from get_survey_columns_from_deployment. Callers must skip generation
+            entirely for a survey with no questions -- see create_survey_model.
     Returns:
         str: Path to the created documentation file
     """
     ensure_directory_exists(str(SURVEYS_DIR))
-    columns = get_survey_columns_from_deployment(survey_id)
-
-    if not columns:
-        # A real survey always has at least one question -- an empty result
-        # means the dbt call that fetches columns failed (network blip,
-        # encoding error, permissions, ...), not that the survey is genuinely
-        # blank. Refuse to write a stub doc/yml with only the base columns:
-        # that used to succeed silently, then only surfaced as a missing
-        # doc() reference at dbt parse time in a downstream deployment repo,
-        # with nothing pointing back at this survey as the cause.
-        raise RuntimeError(
-            f"No columns returned for survey '{survey_id}' -- refusing to write empty docs. "
-            "Check the error logged above from get_survey_columns_from_deployment."
-        )
 
     survey_id = survey_id.replace("-", "_")
 
