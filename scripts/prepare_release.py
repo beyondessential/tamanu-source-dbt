@@ -345,7 +345,7 @@ def check_database(series, allow_mismatch=False):
 
 
 def bundle_paths(version):
-    """Return the expected paths of the three committed aggregates for `version`."""
+    """Return the expected paths of the two committed aggregates for `version`."""
     return [
         COMPILED_DIR / f"v{version}" / f"{name}-v{version}-standard.{ext}"
         for name, ext in AGGREGATES
