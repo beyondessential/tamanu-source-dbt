@@ -356,17 +356,9 @@ def bundle_is_built(version):
     return all(path.exists() for path in bundle_paths(version))
 
 
-# dbt stamps every build with fresh timestamps and an invocation id. They say nothing
-# about what the release contains, so they are normalised out alongside the version --
-# otherwise every rebuild looks like it changed something.
-BUILD_METADATA = re.compile(
-    r'"(generated_at|invocation_id|invocation_started_at|run_started_at)":\s*"[^"]*"'
-)
-
-
 def normalise(text, version):
-    """Blank out the version stamp and build metadata, to compare on content alone."""
-    return BUILD_METADATA.sub(r'"\1": "NORMALISED"', text.replace(version, "VERSION"))
+    """Blank out the version stamp, to compare on content alone."""
+    return text.replace(version, "VERSION")
 
 
 def compare_bundles(new_version, old_version):

@@ -226,11 +226,6 @@ class TestCompareBundles:
         assert summary == {"reporting-schema": None}
         assert "No previous bundle" in _describe_diff(summary)
 
-    def test_build_metadata_is_normalised_away(self, compiled):
-        self._write(compiled, "2.60.12", schema='{"generated_at": "2026-08-14T13:21:28Z"}')
-        self._write(compiled, "2.60.13", schema='{"generated_at": "2026-08-15T10:48:18Z"}')
-        assert compare_bundles("2.60.13", "2.60.12")["reporting-schema"] == 0
-
 
 class TestBaseBranch:
     ALL_EXIST = staticmethod(lambda name: True)
@@ -315,14 +310,7 @@ class TestDiffDescription:
     def test_normalise_blanks_the_version_stamp(self):
         assert normalise("view v2.54.32 x", "2.54.32") == "view vVERSION x"
 
-    def test_normalise_blanks_dbt_build_metadata(self):
-        # Without this, every docs rebuild reports a difference and a version-only
-        # release is described as carrying model changes.
-        old = '{"generated_at": "2026-08-14T13:21:28Z", "invocation_id": "929e3d5a"}'
-        new = '{"generated_at": "2026-08-15T10:48:18Z", "invocation_id": "62f7b5e2"}'
-        assert normalise(old, "2.60.12") == normalise(new, "2.60.13")
-
     def test_normalise_keeps_real_content_differences(self):
-        old = '{"generated_at": "2026-08-14T13:21:28Z", "name": "old_model"}'
-        new = '{"generated_at": "2026-08-15T10:48:18Z", "name": "new_model"}'
+        old = "create view v2.60.12 as select a from t"
+        new = "create view v2.60.13 as select b from t"
         assert normalise(old, "2.60.12") != normalise(new, "2.60.13")
