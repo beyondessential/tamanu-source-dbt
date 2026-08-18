@@ -10,24 +10,6 @@ tamanu_source_dbt:
       password: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
       dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
       schema: analytics
-    analytics_demo:
-      type: postgres
-      threads: 1
-      host: "{{ env_var('TAMANU_DEMO_DB_URL') }}"
-      port: 5432
-      user: "{{ env_var('TAMANU_DEMO_DB_USER') }}"
-      password: "{{ env_var('TAMANU_DEMO_DB_PASSWORD') }}"
-      dbname: "{{ env_var('TAMANU_DEMO_DB_DATABASE') }}"
-      schema: analytics
-    analytics_release:
-      type: postgres
-      threads: 1
-      host: "{{ env_var('TAMANU_RL_DB_URL') }}"
-      port: "{{ env_var('TAMANU_RL_DB_PORT') | as_number }}"
-      user: "{{ env_var('TAMANU_RL_DB_USER') }}"
-      password: "{{ env_var('TAMANU_RL_DB_PASSWORD') }}"
-      dbname: "{{ env_var('TAMANU_RL_DB_DATABASE') }}"
-      schema: analytics
     reporting_demo:
       type: postgres
       threads: 1

@@ -88,7 +88,7 @@ class TestBundleVersions:
         paths = [
             "compiled/v2.54.7/reporting-schema-v2.54.7-standard.sql",
             "compiled/v2.54.32/reporting-schema-v2.54.32-standard.sql",
-            "compiled/v2.54.6/analytics-metadata-v2.54.6-standard.yml",
+            "compiled/v2.54.6/reporting-docs-v2.54.6-standard.html",
         ]
         # Lexical ordering would put 2.54.7 first and pick the wrong baseline.
         assert bundle_versions_from_paths(paths, "2.54") == ["2.54.32", "2.54.7", "2.54.6"]
@@ -191,11 +191,10 @@ class TestCompareBundles:
     """The drafted body's central claim rests on this comparison."""
 
     @staticmethod
-    def _write(root, version, schema="select 1", metadata="cols: []"):
+    def _write(root, version, schema="select 1"):
         d = root / f"v{version}"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"reporting-schema-v{version}-standard.sql").write_text(schema, encoding="utf-8")
-        (d / f"analytics-metadata-v{version}-standard.yml").write_text(metadata, encoding="utf-8")
         (d / f"reporting-docs-v{version}-standard.html").write_text("<html>", encoding="utf-8")
 
     @pytest.fixture
@@ -207,10 +206,7 @@ class TestCompareBundles:
         # Same content, different version stamp -- must not read as a change.
         self._write(compiled, "2.60.12", schema="create view v2.60.12 as select 1")
         self._write(compiled, "2.60.13", schema="create view v2.60.13 as select 1")
-        assert compare_bundles("2.60.13", "2.60.12") == {
-            "analytics-metadata": 0,
-            "reporting-schema": 0,
-        }
+        assert compare_bundles("2.60.13", "2.60.12") == {"reporting-schema": 0}
 
     def test_real_change_is_counted(self, compiled):
         self._write(compiled, "2.60.12", schema="select 1")
@@ -227,13 +223,13 @@ class TestCompareBundles:
         self._write(compiled, "2.60.13")
         (compiled / "v2.60.12").mkdir()
         summary = compare_bundles("2.60.13", "2.60.12")
-        assert summary == {"analytics-metadata": None, "reporting-schema": None}
+        assert summary == {"reporting-schema": None}
         assert "No previous bundle" in _describe_diff(summary)
 
     def test_build_metadata_is_normalised_away(self, compiled):
-        self._write(compiled, "2.60.12", metadata='{"generated_at": "2026-08-14T13:21:28Z"}')
-        self._write(compiled, "2.60.13", metadata='{"generated_at": "2026-08-15T10:48:18Z"}')
-        assert compare_bundles("2.60.13", "2.60.12")["analytics-metadata"] == 0
+        self._write(compiled, "2.60.12", schema='{"generated_at": "2026-08-14T13:21:28Z"}')
+        self._write(compiled, "2.60.13", schema='{"generated_at": "2026-08-15T10:48:18Z"}')
+        assert compare_bundles("2.60.13", "2.60.12")["reporting-schema"] == 0
 
 
 class TestBaseBranch:
@@ -301,14 +297,13 @@ class TestDbtHostParsing:
 
 class TestDiffDescription:
     def test_reports_a_version_only_rebuild(self):
-        summary = {"analytics-metadata": 0, "reporting-schema": 0}
+        summary = {"reporting-schema": 0}
         assert "byte-identical" in _describe_diff(summary)
 
     def test_reports_real_changes(self):
-        summary = {"analytics-metadata": 12, "reporting-schema": 340}
+        summary = {"reporting-schema": 340}
         described = _describe_diff(summary)
         assert "reporting-schema (340 lines)" in described
-        assert "analytics-metadata (12 lines)" in described
 
     def test_always_explains_why_docs_are_not_compared(self):
         for summary in ({"reporting-schema": 0}, {"reporting-schema": 5}):

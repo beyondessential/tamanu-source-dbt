@@ -53,7 +53,7 @@ violation of that invariant.
 | Column | Type | Notes |
 |---|---|---|
 | `person_id` | uuid | `patients.id`. Native UUID PK — no remap to OMOP integer IDs (D1) |
-| `person_source_value` | text | `patients.display_id` (MRN / business identifier). Direct identifier — populated only on `reporting_*` targets, NULL on the replica (BL-006) |
+| `person_source_value` | text | `patients.display_id` (MRN / business identifier). Tagged `direct_identifier`; masking is applied to the replica, not in dbt (BL-006) |
 | `gender_concept_id` | integer | OMOP Gender concept from `map__omop_sex` (8507 Male, 8532 Female, 0 no-match). NULL if the local sex value is unmapped |
 | `gender_source_value` | text | Local Tamanu sex value, retained alongside the concept (D1) |
 | `year_of_birth` | integer | From `date_of_birth`; NULL if DOB unknown |
@@ -88,11 +88,9 @@ violation of that invariant.
   `patient_birth_data`, `map__omop_sex`) are `left join` so a missing record yields
   NULL rather than dropping the patient. Only the patient record itself is required.
 - **BL-006:** `person_source_value` carries the patient's `display_id` (the OMOP
-  source identifier / MRN). `display_id` is a direct identifier that `bases/` drops on
-  analytics targets, so it is selected only when `not is_analytics_target()`
-  (`reporting_*` production targets) and emitted as NULL on the replica. This keeps the
-  canonical clinical layer replica-safe while still exposing the MRN where PII is
-  permitted (D10, production-promotion).
+  source identifier / MRN). Masking of direct identifiers is applied to the replica
+  rather than in dbt, so the column is selected unconditionally on every target and
+  keeps its `direct_identifier` tag as classification metadata.
 - **BL-007:** `location_id` is the patient's `village_id`, exposed as an OMOP
   `PERSON.location_id` FK into `ref__location`. The local value is unchanged — the FK
   simply makes it a typed, validated join target rather than a raw reference.
