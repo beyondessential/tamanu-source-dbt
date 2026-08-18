@@ -6,7 +6,6 @@ from utils import (
     cprint,
     ensure_directory_exists,
     execute_command,
-    generate_analytics_metadata,
     generate_reporting_schema_script,
     generate_project_reports,
     get_dbt_project_config,
@@ -75,7 +74,6 @@ def main():
         hide_tests_from_docs()
 
         generate_reporting_schema_script()
-        generate_analytics_metadata()
 
         source_file = os.path.join(BASE_DIR, "target", "static_index.html")
         target_file = os.path.join(
