@@ -1,0 +1,62 @@
+{
+  "query": "\nwith encounters_in_scope as (\nselect\ne.id as encounter_id,\n-- localise once here so downstream presentation reads plain columns\n((e.start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) as start_datetime_local,\n((e.end_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) as end_datetime_local,\ne.patient_id,\ne.department_id,\ne.clinician_id,\ne.patient_billing_type_id,\nf.id as facility_id,\nf.name as facility\nfrom \"reporting\".\"encounters\" e\njoin \"reporting\".\"locations\" l\non l.id = e.location_id\njoin \"reporting\".\"facilities\" f\non f.id = l.facility_id\n-- BL-017: facility scope partitioned by the is_sensitive argument\nand f.is_sensitive = False\nwhere\n-- BL-001: the test patient is already excluded upstream by base__encounters\n-- BL-003: open encounters are included only when the\n-- includeOpenEncounters flag is 'yes' (the default)\n(\ne.end_datetime is not null\nor coalesce(\n:includeOpenEncounters, 'yes') = 'yes'\n)\n-- BL-002: restrict to encounters whose start_datetime is in range\nand ((e.start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) >= \n:fromDate\nand ((e.start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) <= \n:toDate\n-- BL-004: optional facility, billing type and clinician filters\nand case\nwhen \n:facilityId is null then true\nelse f.id = \n:facilityId\nend\nand case\nwhen \n:patientBillingTypeId is null then true\nelse e.patient_billing_type_id = \n:patientBillingTypeId\nend\nand case\nwhen \n:supervisingClinicianId is null then true\nelse e.clinician_id = \n:supervisingClinicianId\nend\n),\ninvoice_data as (\n-- BL-018: aggregate the per-invoice financials (BL-009 to BL-016, resolved\n-- in ds__encounter_invoices) to one row per encounter, excluding cancelled\n-- invoices. invoice_total is coalesced to 0 so an encounter that has a\n-- non-cancelled invoice with no items reads 0 (matching the app), while an\n-- encounter with no invoice at all stays null via the outer left join.\nselect\nei.encounter_id,\nto_char(max(ei.invoice_finalised_datetime), 'YYYY-MM-DD HH24:MI:SS') as invoice_finalised_datetime,\nstring_agg(\nei.products_no_category, ', '\norder by ei.invoice_datetime, ei.invoice_id\n) filter (where ei.products_no_category is not null) as invoice_products_no_category,\ncoalesce(sum(ei.invoice_total), 0) as invoice_total,\nsum(ei.insurance_coverage) as insurance_coverage,\nsum(ei.invoice_discount) as invoice_discount,\nsum(ei.patient_payment) as patient_payment\nfrom \"reporting\".\"ds__encounter_invoices\" ei\njoin encounters_in_scope eis\non eis.encounter_id = ei.encounter_id\nwhere ei.status != 'cancelled'\ngroup by ei.encounter_id\n),\nencounter_financials as (\n-- BL-013: patient subtotal, computed once and reused by the patient total\nselect\nencounter_id,\ninvoice_finalised_datetime,\ninvoice_products_no_category,\ninvoice_total,\ninsurance_coverage,\ninvoice_discount,\npatient_payment,\ninvoice_total - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal\nfrom invoice_data\n)\nselect\np.display_id as \"Patient ID\",\np.first_name as \"First name\",\np.last_name as \"Last name\",\nto_char(p.date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\ndate_part('year', age(eis.start_datetime_local, p.date_of_birth)) as \"Age\",\np.sex as \"Sex\",\nbt.name as \"Billing type\",\nto_char(eis.start_datetime_local, 'YYYY-MM-DD HH24:MI:SS') as \"Encounter start date and time\",\nto_char(eis.end_datetime_local, 'YYYY-MM-DD HH24:MI:SS') as \"Encounter end date and time\",\n-- BL-005: length of stay in days (minimum 1) and for in-progress\n-- encounters, days since start\ncase\nwhen eis.end_datetime_local is null then greatest(current_date - eis.start_datetime_local::date, 1)\nwhen eis.end_datetime_local::date - eis.start_datetime_local::date < 1 then 1\nelse eis.end_datetime_local::date - eis.start_datetime_local::date\nend as \"Length of stay (days)\",\neis.facility as \"Facility\",\ndp.name as \"Discharging department\",\nc.display_name as \"Supervising clinician\",\ninvd.invoice_finalised_datetime as \"Invoice finalised date and time\",\n-- BL-019: money columns rounded to 2dp for display, matching the app's\n-- formatDisplayPrice (the dataset carries full-precision values)\nround(invd.invoice_total, 2) as \"Invoice total\",\nround(invd.insurance_coverage, 2) as \"Insurance coverage\",\n-- BL-013: patient subtotal\nround(invd.patient_subtotal, 2) as \"Patient subtotal\",\nround(invd.patient_payment, 2) as \"Patient payment\",\n-- BL-014: patient total (outstanding balance)\nround(invd.patient_subtotal - coalesce(invd.patient_payment, 0), 2) as \"Patient total\",\ninvd.invoice_products_no_category as \"Invoice products with no category\"\nfrom encounters_in_scope eis\njoin \"reporting\".\"patients\" p\non p.id = eis.patient_id\nleft join \"reporting\".\"departments\" dp\non dp.id = eis.department_id\nleft join \"reporting\".\"users\" c\non c.id = eis.clinician_id\nleft join \"reporting\".\"reference_data\" bt\non bt.id = eis.patient_billing_type_id\nleft join encounter_financials invd\non invd.encounter_id = eis.encounter_id\nwhere\ncase\nwhen \n:departmentId is null then true\nelse dp.id = \n:departmentId\nend\norder by eis.start_datetime_local desc\n",
+  "name": "Audit - encounter invoice",
+  "status": "published",
+  "notes": "Audit report for reviewing invoices against encounters. The date range filters on encounter start date, so each row represents an encounter that started within the range. Use the 'Include in-progress encounters' filter (defaults to Yes) to include non-discharged encounters; included rows appear with an empty encounter end date. Test patients and sensitive facilities are excluded.\n\nColumns included:\n- Patient identification (ID, name, date of birth, age, sex, billing type).\n- Encounter start and end dates and times with length of stay.\n- Facility and discharging department.\n- Supervising clinician.\n- Invoice finalised date and time.\n- Invoice total \u2014 sum of price \u00d7 quantity for all items on non-cancelled invoices.\n- Insurance coverage \u2014 calculated from insurance plan coverage percentages applied to insurable items on non-cancelled invoices. Uses finalised coverage values where available and falls back to current plan values for in-progress invoices.\n- Patient subtotal \u2014 invoice total minus insurance coverage minus invoice-level discount.\n- Patient payment \u2014 net patient payments (payments minus refunds) against non-cancelled invoices.\n- Patient total \u2014 patient subtotal minus patient payment (outstanding balance).\n- Invoice products with no category \u2014 items on non-cancelled invoices that have no product category assigned, which typically indicates manually added fees (e.g. encounter fees added outside the product catalogue) or products with a broken category reference.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dateRangeLabel": "Encounter start date range",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Patient billing type",
+        "name": "patientBillingTypeId",
+        "suggesterEndpoint": "patientBillingType"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Supervising clinician",
+        "name": "supervisingClinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Include in-progress encounters (default Yes)",
+        "name": "includeOpenEncounters",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "yes"
+          },
+          {
+            "label": "No",
+            "value": "no"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
