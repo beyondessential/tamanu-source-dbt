@@ -1,0 +1,38 @@
+{
+  "query": "with reporting_dates as (\nselect date::date as date\nfrom generate_series(\n:fromDate,\n:toDate,\n'1 day'::interval\n) date\n)\nselect\nto_char(rd.date, 'YYYY-MM-DD') as \"Date\",\nir.facility as \"Facility\",\nir.department as \"Department\",\nir.imaging_type as \"Imaging type\",\ncount(distinct ir.request_id) filter (where ((ir.requested_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date = rd.date) as \"Total new requests\",\ncount(distinct ir.request_id) filter (\nwhere ((ir.requested_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date <= rd.date\nand (((ir.completed_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date > rd.date or ir.completed_datetime is null)\n) as \"Total requests with a status of pending\",\ncount(distinct ir.request_id) filter (\nwhere ((ir.completed_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date = rd.date\n) as \"Total requests completed\"\nfrom reporting_dates rd\nleft join \"reporting\".\"ds__imaging_requests\" ir\non ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')\nand ((ir.requested_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date <= rd.date\nand (((ir.completed_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date >= rd.date or ir.completed_datetime is null)\nwhere ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')\nand (ir.department_id is not null or ir.imaging_type is not null)\nand (\n:department is null or ir.department_id = \n:department\n)\nand (\ncase\nwhen \n:imagingType is null then true\nelse ir.imaging_type_id = \n:imagingType\nend\n)\ngroup by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type\norder by rd.date, ir.facility, ir.facility_id, ir.department, ir.department_id, ir.imaging_type",
+  "status": "published",
+  "name": "Imaging requests summary",
+  "notes": "This report generates a statistical summary of imaging requests by date, department and imaging type. Each indicator is reported by day. Dates are listed chronologically by department and imaging type. Imaging requests with a status of cancelled, deleted or entered in error are excluded from this report. \n\nDetails on how each indicator is calculated are provided below:\n- Total new requests = The number of imaging requests generated on the specified day. \n- Total requests with a status of pending = The number of imaging requests with a status of pending. This number may include requests generated on a different date. \n- Total requests completed = The number of imaging requests with status updated to completed on the specified day. ",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "department",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ImagingTypeField",
+        "label": "Imaging type",
+        "name": "imagingType"
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
