@@ -1,0 +1,23 @@
+{
+  "query": "select\nto_char(((datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD') as \"Prescription date\",\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\nfacility as \"Facility\",\nis_selected_for_discharge as \"Prescription selected for discharge\",\nmedication_code as \"Code\",\nmedication as \"Medication\",\nroute as \"Route\",\nquantity as \"Quantity\",\nrepeats as \"Repeats\",\nis_ongoing as \"Is ongoing\",\nis_prn as \"Is PRN\",\nis_variable_dose as \"Is variable dose\",\ndose_amount as \"Dose amount\",\nunits as \"Units\",\nfrequency as \"Frequency\"\nfrom \"reporting\".\"ds__encounter_prescriptions\"\nwhere\n((datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) >= \n:fromDate\nand ((datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) <= \n:toDate\nand case when \n:facilityId is null then true\nelse facility_id = \n:facilityId\nend\norder by datetime desc",
+  "name": "Prescription line list",
+  "status": "published",
+  "notes": "This report generates a list of all prescription created in the selected date range. Prescriptions are listed in order of most recent prescribed date and time.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}

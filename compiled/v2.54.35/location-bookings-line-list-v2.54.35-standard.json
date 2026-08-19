@@ -1,0 +1,76 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\nbilling_type as \"Billing type\",\nto_char(((booking_start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Booking start date and time\",\nto_char(((booking_end_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Booking end date and time\",\ncase\nwhen extract(day from age(booking_end_datetime, booking_start_datetime)) >= 1\nthen extract(day from age(booking_end_datetime, booking_start_datetime)) || ' nights'\nwhen extract(hour from age(booking_end_datetime, booking_start_datetime)) >= 1\nthen extract(hour from age(booking_end_datetime, booking_start_datetime)) || ' hours'\nelse extract(minute from age(booking_end_datetime, booking_start_datetime)) || ' minutes'\nend as \"Booking duration\",\nlocation_group as \"Area\",\nlocation as \"Location\",\nclinician as \"Clinician\",\nbooking_type as \"Booking type\",\nbooking_status as \"Booking status\"\nfrom \"reporting\".\"ds__location_bookings\"\nwhere ((booking_start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) >= \n:fromDate\nand\n((booking_end_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) <= \n:toDate\nand\ncase\nwhen \n:locationGroupId is null then true\nelse location_group_id = \n:locationGroupId\nend\nand\ncase\nwhen \n:bookingStatus is null then true\nelse booking_status = \n:bookingStatus\nend\nand\ncase\nwhen \n:clinicianId is null then true\nelse clinician_id = \n:clinicianId\nend\nand\ncase\nwhen \n:bookingTypeId is null then true\nelse booking_type_id = \n:bookingTypeId\nend\norder by booking_start_datetime",
+  "name": "Location bookings line list",
+  "notes": "This report generates a list of all location bookings for the selected parameters. Patients are listed in chronological order by date and time of booking",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "next30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "BookingTypeField",
+        "label": "Booking type",
+        "name": "bookingTypeId"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Status",
+        "name": "bookingStatus",
+        "options": [
+          {
+            "label": "Confirmed",
+            "value": "Confirmed"
+          },
+          {
+            "label": "Arrived",
+            "value": "Arrived"
+          },
+          {
+            "label": "Assessed",
+            "value": "Assessed"
+          },
+          {
+            "label": "Seen",
+            "value": "Seen"
+          },
+          {
+            "label": "No show",
+            "value": "No-show"
+          },
+          {
+            "label": "Cancelled",
+            "value": "Cancelled"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
