@@ -1,4 +1,4 @@
-# MSF NCD programme metrics and cohorts.
+# MSF NCD program metrics and cohorts.
 #
 # Part of the canonical registry of `metric__` indicators and `der__` derived elements:
 # every documentations/metrics/*.yml file is merged by metric_id.
@@ -469,6 +469,31 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_deceased_total
+  kind: metric
+  name: NCD exits — deceased (all diagnoses)
+  description: >-
+    Patients exited from the NCD program as deceased during the reporting month, counted once
+    per patient without a disease-category breakdown. Same underlying exit event as
+    `exit_deceased`, reported unsegmented by `dhis_ncd_category` for a DHIS2 data element that
+    does not disaggregate by diagnosis.
+  numerator_description: Distinct patients exited from the NCD program as deceased in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
 - metric_id: exit_ltfu
   kind: metric
   name: NCD exits — lost to follow-up
@@ -484,6 +509,31 @@ metrics:
   subject_grain: patient
   disaggregations:
   - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_ltfu_total
+  kind: metric
+  name: NCD exits — lost to follow-up (all diagnoses)
+  description: >-
+    Patients exited from the NCD program as lost-to-follow-up during the reporting month, counted
+    once per patient without a disease-category breakdown. Same underlying exit event as
+    `exit_ltfu`, reported unsegmented by `dhis_ncd_category` for a DHIS2 data element that does
+    not disaggregate by diagnosis.
+  numerator_description: Distinct patients exited from the NCD program as lost-to-follow-up in the
+    reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
   - age_group
   - sex
   - facility_id
@@ -516,6 +566,32 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_other_total
+  kind: metric
+  name: NCD exits — other (all diagnoses)
+  description: >-
+    Patients exited from the NCD program for other reasons (clinically discharged, voluntary exit,
+    other) during the reporting month, counted once per patient without a disease-category
+    breakdown. Same underlying exit event as `exit_other`, reported unsegmented by
+    `dhis_ncd_category` for a DHIS2 data element that does not disaggregate by diagnosis.
+  numerator_description: >-
+    Distinct patients exited from the NCD program in the reporting month for other reasons
+    (clinically discharged, voluntary exit, other)
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
 - metric_id: exit_transferred
   kind: metric
   name: NCD exits — transferred or referred out
@@ -533,6 +609,32 @@ metrics:
   subject_grain: patient
   disaggregations:
   - dhis_ncd_category
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/ncd-indicators.md
+- metric_id: exit_transferred_total
+  kind: metric
+  name: NCD exits — transferred or referred out (all diagnoses)
+  description: >-
+    Patients exited from the NCD program as transferred or referred out during the reporting
+    month, counted once per patient without a disease-category breakdown. Same underlying exit
+    event as `exit_transferred`, reported unsegmented by `dhis_ncd_category` for a DHIS2 data
+    element that does not disaggregate by diagnosis.
+  numerator_description: >-
+    Distinct patients exited from the NCD program as transferred or referred out in the reporting
+    month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF NCD program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
   - age_group
   - sex
   - facility_id
