@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-13 |
+| **Last updated** | 2026-08-19 |
 
 Canonical definition for `ed_visit`: one row per ED attendance, spanning arrival in the ED
 to discharge from hospital at minute resolution.
@@ -43,7 +43,7 @@ Hospital (MAUI-6694), via a data table over this view.
 |---|---|---|---|
 | `period_start` | AIHW | [746091](https://meteor.aihw.gov.au/content/746091) / [746096](https://meteor.aihw.gov.au/content/746096) | ED stay — presentation date / time |
 | `is_admitted` | AIHW | [746706](https://meteor.aihw.gov.au/content/746706) | Non-admitted patient ED service episode — episode end status |
-| `principal_diagnosis__icd10_chapter` | AIHW | [746102](https://meteor.aihw.gov.au/content/746102) | ED stay — principal diagnosis, "established at the conclusion of the patient's attendance … mainly responsible for occasioning the attendance". Coded ICD-10-AM in AIHW implementations, whose chapters match WHO ICD-10 |
+| `principal_diagnosis_code` / `principal_diagnosis` | AIHW | [746102](https://meteor.aihw.gov.au/content/746102) | ED stay — principal diagnosis, "established at the conclusion of the patient's attendance … mainly responsible for occasioning the attendance". Coded ICD-10-AM in AIHW implementations, whose chapters match WHO ICD-10. Emitted here as the raw code and its reference-data name; grouping into a chapter is a deployment-layer concern (BL-013, BL-019) |
 | `waiting_time__minutes` | AIHW | [746117](https://meteor.aihw.gov.au/content/746117) | ED stay — waiting time. Diverges — DV-001 |
 
 AIHW's [Emergency department stay](https://meteor.aihw.gov.au/content/472757) object class runs
@@ -65,7 +65,7 @@ attendance counts rather than distinct patients.
 
 ## Output schema
 
-D5 wide format, plus six disaggregation columns and three measure attributes.
+D5 wide format, plus five disaggregation columns and five measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -81,7 +81,8 @@ D5 wide format, plus six disaggregation columns and three measure attributes.
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `age_years` | integer | Age in whole years at arrival (BL-004). A measure, not a dimension |
 | `triage_score` | text | `'1'`–`'5'` or `'Not recorded'` (BL-012). Always populated (AC-011) |
-| `principal_diagnosis__icd10_chapter` | text | WHO ICD-10 chapter, `'Not recorded'` or `'Unclassified'` (BL-013). Always populated (AC-013) |
+| `principal_diagnosis_code` | text | Raw ICD-10 code of the principal diagnosis, ungrouped (BL-013). NULL where none is recorded. A measure, not a dimension |
+| `principal_diagnosis` | text | Reference-data name for `principal_diagnosis_code` (BL-013). NULL where none is recorded. A measure, not a dimension |
 | `waiting_time__minutes` | numeric | Triage to active care, 2 dp (BL-014). NULL until the patient is seen. A measure, not a dimension |
 | `length_of_stay__minutes` | numeric | Arrival to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
 | `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016) |
@@ -96,11 +97,13 @@ name points at dbt — and because it keeps a data table's whole configuration, 
 included, in one repo.
 
 `emergency_visit__standard.yml` is the one BES ships. It ranges `period_start` as a date;
-exposes `metric_id`, `facility_id`, `sex`, `triage_score`,
-`principal_diagnosis__icd10_chapter`, `ed_start__hour` and `is_admitted` as array filters;
-bands `age_group__who_primary_classification` from `age_years` and
-`length_of_stay__4_hours_band` from `length_of_stay__minutes`; and sums `value_numeric`.
-`period_end` is not exposed — an open encounter has none, and an array filter drops a NULL row.
+exposes `metric_id`, `facility_id`, `sex`, `triage_score`, `ed_start__hour` and `is_admitted`
+as array filters; groups `principal_diagnosis__icd10_chapter` from `principal_diagnosis_code`
+using the `diagnosis__icd10_chapter` macro (defined here in `macros/` for the deployment layer
+to reuse, but invoked only there — the same division of labour as banding age), bands
+`age_group__who_primary_classification` from `age_years` and `length_of_stay__4_hours_band`
+from `length_of_stay__minutes`; and sums `value_numeric`. `period_end` is not exposed — an
+open encounter has none, and an array filter drops a NULL row.
 
 `tupaia-data-product/validate_data_tables.py` checks each file against this project's dbt
 manifest, so a column renamed here fails there at generate time rather than emptying a
@@ -187,22 +190,24 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   The left join relies on Tamanu recording at most one triage per encounter
   (`emergency-triage-line-list.md` BL-001); nothing in `bases/triages` enforces it, so AC-001 is
   the backstop. Scores pass through as recorded.
-- **BL-013 (principal diagnosis chapter):** `principal_diagnosis__icd10_chapter` groups the
-  encounter's principal diagnosis — `clinical__condition_occurrence` where `is_primary` — through
-  the `diagnosis__icd10_chapter` macro over `condition_source_value`.
+- **BL-013 (principal diagnosis, ungrouped):** `principal_diagnosis_code` and
+  `principal_diagnosis` are the encounter's principal diagnosis — `clinical__condition_occurrence`
+  where `is_primary` — as the raw ICD-10 code (`condition_source_value`) and its reference-data
+  name (`condition_source_name`), passed through as recorded.
 
-  Two fallbacks, kept distinct: `'Not recorded'` where the encounter has no principal diagnosis,
-  `'Unclassified'` where a code resolves to no chapter (malformed, or an ICD-10 unassigned gap).
-  Neither is NULL (AC-013).
+  Grouping either one into a chapter, block or any other classification is a presentation choice
+  a deployment may set differently, so it is not done here — the same division of labour as
+  `age_years` (BL-019). The `diagnosis__icd10_chapter` macro that used to run in this model stays
+  defined in `macros/` for a deployment's data table to apply over `principal_diagnosis_code`
+  itself, exactly as `age_group__who_primary_classification` is applied over `age_years` there.
+
+  Both columns are NULL where the encounter has no principal diagnosis — neither is coalesced to
+  a placeholder, since they are measures rather than disaggregations exposed as a Tupaia array
+  filter (unlike `triage_score`, which is).
 
   Tamanu permits a second `is_primary` row, so the CTE ranks by
   `(condition_start_datetime, condition_occurrence_id)` and joins on rank 1 — without it a second
   principal diagnosis would duplicate the attendance and fail AC-001.
-
-  Chapter matching is on the code's upper-cased first three characters compared as text; ICD-10
-  codes are a letter plus two zero-padded digits, so a prefix orders correctly within a letter
-  block and no integer cast is needed. Labels carry the chapter's Roman numeral and title, which
-  do not sort into chapter order lexically.
 - **BL-014 (waiting time):** `waiting_time__minutes` is the wait to active care —
   `triages.closed_datetime - triages.triage_datetime`, the same rule as `ds__emergency_triage`
   BL-005 — expressed in minutes.
@@ -230,18 +235,22 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   in minutes, held to 2 dp on the same basis as `waiting_time__minutes`, and unbanded (BL-019).
   It is NULL while the encounter is open, and `metric__emergency_stay` measures the ED portion
   as `ed_time__minutes`.
-- **BL-019 (banding is the consumer's):** the metrics emit continuous values and register no
-  banded column. An age classification and a four-hour duration split are both presentation
-  choices a deployment may set differently — WHO primary bands against five-year bands, four
-  hours against six — so banding in the warehouse would either freeze one choice or need a
-  column per variant.
+- **BL-019 (banding/grouping is the consumer's):** the metrics emit continuous or raw values and
+  register no banded or grouped column. An age classification, a four-hour duration split and an
+  ICD-10 chapter grouping are all presentation choices a deployment may set differently — WHO
+  primary bands against five-year bands, four hours against six, ICD-10 chapter against block or
+  a national grouping — so doing any of them in the warehouse would either freeze one choice or
+  need a column per variant.
 
-  `age_years`, `waiting_time__minutes`, `ed_time__minutes` and `length_of_stay__minutes` are
-  therefore measures rather than dimensions, absent from the registry's disaggregations. The
-  data table declares the bands it wants over them, in `tupaia-data-product`.
+  `age_years`, `waiting_time__minutes`, `ed_time__minutes`, `length_of_stay__minutes`,
+  `principal_diagnosis_code` and `principal_diagnosis` are therefore measures rather than
+  dimensions, absent from the registry's disaggregations. The data table declares the bands or
+  groupings it wants over them, in `tupaia-data-product` — including `diagnosis__icd10_chapter`
+  over `principal_diagnosis_code`, which stays defined in this repo's `macros/` purely for that
+  reuse.
 
-  This is why a deployment can change its banding without a change here, and why two deployments
-  banding differently still share one metric definition.
+  This is why a deployment can change its banding or grouping without a change here, and why two
+  deployments banding or grouping differently still share one metric definition.
 - **BL-016 (hour of arrival):** `ed_start__hour` is the hour of `period_start`, 0–23, as an
   integer so it sorts and buckets naturally. Tamanu stores naive timestamps in the deployment's
   central timezone (`var('timezone')`), so this is already a local hour; a deployment spanning
@@ -263,10 +272,10 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 | AC-010 | `is_admitted` is `not_null` | BL-005 | `not_null` |
 | AC-011 | `triage_score` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
-| AC-013 | `principal_diagnosis__icd10_chapter` is `not_null` | BL-013 | `not_null` |
+| AC-013 | *Retired* — was `principal_diagnosis__icd10_chapter` `not_null`; the column no longer exists (BL-013 now emits raw, nullable `principal_diagnosis_code`/`principal_diagnosis`) | BL-013 | — |
 | AC-015 | `length_of_stay__minutes` is non-negative where present | BL-015 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | `ed_start__hour` is `not_null` and between 0 and 23 | BL-016 | `not_null` + `dbt_expectations.expect_column_values_to_be_between` |
-| AC-018 | The D5 projection: `period_end` is the encounter end, the diagnosis code is grouped to its chapter here, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_018_metric__emergency_visit_projection` |
+| AC-018 | The D5 projection: `period_end` is the encounter end, the diagnosis code and name pass through ungrouped, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_018_metric__emergency_visit_projection` |
 | AC-019 | `waiting_time__minutes` is non-negative where present | BL-014 | `dbt_expectations.expect_column_values_to_be_between` |
 
 AC numbers are shared with `metric__emergency_stay` wherever a criterion covers the same clause.
@@ -275,7 +284,7 @@ AC numbers are shared with `metric__emergency_stay` wherever a criterion covers 
 
 One active row — `ed_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with
-`disaggregations: facility_id,sex,triage_score,principal_diagnosis__icd10_chapter,ed_start__hour,is_admitted`.
+`disaggregations: facility_id,sex,triage_score,ed_start__hour,is_admitted`.
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`, which
 keeps the registry and the model from drifting.
@@ -288,11 +297,11 @@ keeps the registry and the model from drifting.
 | `clinical__visit_detail` | `clinical/` | Intake segment: inclusion, arrival, location, encounter id (BL-003, BL-007, BL-011) |
 | `clinical__visit_occurrence` | `clinical/` | Encounter end (BL-002) and concept 262 (BL-005) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
-| `clinical__condition_occurrence` | `clinical/` | Principal diagnosis code (BL-013) |
+| `clinical__condition_occurrence` | `clinical/` | Principal diagnosis code and reference-data name (BL-013) |
 | `locations` | `bases/` | Facility of the intake segment's location (BL-007) |
 | `triages` | `bases/` | Acuity, and the wait and target verdict (BL-012, BL-014) |
-| `age_group__who_primary_classification` | `macros/` | Age banding (BL-004) |
-| `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping (BL-013) |
+| `age_group__who_primary_classification` | `macros/` | Age banding — applied at the deployment layer, not by this model (BL-004, BL-019) |
+| `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping over `principal_diagnosis_code` — applied at the deployment layer, not by this model (BL-013, BL-019) |
 | `triage_target_minutes_case` | `macros/` | Target minutes per category (BL-014) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
