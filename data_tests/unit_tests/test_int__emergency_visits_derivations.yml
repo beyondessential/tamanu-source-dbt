@@ -7,7 +7,8 @@ unit_tests:
       is 9203 -- a later segment and a non-ED intake are both excluded. BL-005: is_admitted
       follows visit-level concept 262. BL-012: triage_score falls back to 'Not recorded' for a
       blank score and for a missing triage row. BL-013: a second is_primary row does not
-      duplicate the visit -- the earliest wins. BL-014: waiting_time__minutes is triage to
+      duplicate the visit -- the earliest wins, and its code and reference-data name are both
+      carried through ungrouped. BL-014: waiting_time__minutes is triage to
       active care, NULL where the patient has no active-care time. BL-018: ed_end__datetime is
       the earliest of the first move to another location and the booked transfer, falling
       through to the encounter end; a segment at the same location is boarding, not a
@@ -106,18 +107,20 @@ unit_tests:
           union all
           select 'ed_2', '3', '2024-05-16 22:00'::timestamp, '2024-05-16 22:45'::timestamp
 
-      # BL-013: ed_1 carries two is_primary rows -- the earlier (J18.9, chapter X) must win.
-      # The non-primary row must be ignored. ed_2's code sits in no chapter.
+      # BL-013: ed_1 carries two is_primary rows -- the earlier (J18.9) must win, with its
+      # reference-data name carried alongside. The non-primary row must be ignored. ed_2's
+      # code (ZZ999) has a name but resolves to no ICD-10 chapter -- irrelevant here, since
+      # grouping into a chapter no longer happens in this model.
       - input: ref('clinical__condition_occurrence')
         format: sql
         rows: |
-          select 'co_1' as condition_occurrence_id, 'ed_1' as visit_occurrence_id, true as is_primary, 'J18.9' as condition_source_value, '2024-05-15 09:00'::timestamp as condition_start_datetime
+          select 'co_1' as condition_occurrence_id, 'ed_1' as visit_occurrence_id, true as is_primary, 'J18.9' as condition_source_value, 'Pneumonia, unspecified organism' as condition_source_name, '2024-05-15 09:00'::timestamp as condition_start_datetime
           union all
-          select 'co_2', 'ed_1', true, 'I21.9', '2024-05-15 10:00'::timestamp
+          select 'co_2', 'ed_1', true, 'I21.9', 'Acute myocardial infarction, unspecified', '2024-05-15 10:00'::timestamp
           union all
-          select 'co_3', 'ed_1', false, 'E11.9', '2024-05-15 09:30'::timestamp
+          select 'co_3', 'ed_1', false, 'E11.9', 'Type 2 diabetes mellitus without complications', '2024-05-15 09:30'::timestamp
           union all
-          select 'co_4', 'ed_2', true, 'ZZ999', '2024-05-16 23:00'::timestamp
+          select 'co_4', 'ed_2', true, 'ZZ999', 'Unspecified condition', '2024-05-16 23:00'::timestamp
 
       # BL-017: ed_1 and ed_2 have dispositions; the rest have no discharge record.
       - input: ref('discharges')
@@ -137,12 +140,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 1470.00::numeric as length_of_stay__minutes, 'J18.9' as principal_diagnosis_code, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour
+        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 1470.00::numeric as length_of_stay__minutes, 'J18.9' as principal_diagnosis_code, 'Pneumonia, unspecified organism' as principal_diagnosis, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour
         union all
-        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 300.00::numeric, 'ZZ999', '3', 'Transfer to another facility', 22
+        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 300.00::numeric, 'ZZ999', 'Unspecified condition', '3', 'Transfer to another facility', 22
         union all
-        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 6
+        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 6
         union all
-        select 'ed_4', '2024-05-21 07:00'::timestamp, '2024-05-21 09:30'::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 9000::bigint, 150.00::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 7
+        select 'ed_4', '2024-05-21 07:00'::timestamp, '2024-05-21 09:30'::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 9000::bigint, 150.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7
         union all
-        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 08:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, null::bigint, null::numeric, null::text, 'Not recorded', 'Not recorded', 7
+        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 08:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7

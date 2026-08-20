@@ -69,7 +69,6 @@ metrics:
   - facility_id
   - sex
   - triage_score
-  - principal_diagnosis__icd10_chapter
   - ed_start__hour
   - is_admitted
   variant_of: null
