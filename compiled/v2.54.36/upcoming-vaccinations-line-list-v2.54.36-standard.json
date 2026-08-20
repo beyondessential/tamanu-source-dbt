@@ -1,0 +1,76 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nvillage as \"Village\",\nage as \"Age\",\nsex as \"Sex\",\nto_char(due_date, 'YYYY-MM-DD') as \"Vaccination due date\",\nvaccine_name as \"Vaccine name\",\nvaccine_schedule as \"Schedule\",\nvaccine_status as \"Vaccine status\"\nfrom \"reporting\".\"ds__patient_vaccinations_upcoming\"\nwhere\n-- BL-006: when the user selects \"yes\", drop patients explicitly recorded as\n-- resident in a country other than the home country and retain patients with\n-- no recorded country\ncase\nwhen \n:excludeNonHomeCountry = 'yes'\nthen country_id is null or country_id = 'country-Australia'\nelse true\nend\nand\n-- BL-004: restrict to patients born within the supplied date range\ndate_of_birth >= \n:fromDate\nand\ndate_of_birth <= \n:toDate\nand\n-- BL-005: optional filters -- each applies only when the user supplies a value\ncase\nwhen \n:status is null then true\nelse vaccine_status = \n:status\nend\nand\ncase\nwhen \n:category is null then true\nelse vaccine_category = \n:category\nend\nand\ncase\nwhen \n:vaccine is null then true\nelse vaccine_name = \n:vaccine\nend\nand\ncase\nwhen \n:villageId is null then true\nelse village_id = \n:villageId\nend\n-- BL-007: order by due date, then patient name and vaccine\norder by due_date, last_name, first_name, vaccine_name",
+  "name": "Upcoming vaccinations line list",
+  "notes": "This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range. Set the 'Exclude overseas patients' filter to Yes to drop patients whose recorded country of residence is set to an overseas country.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "18years",
+    "dateRangeLabel": "Enter dates or leave blank for births in the past 18 years",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "VaccineCategoryField",
+        "label": "Category",
+        "name": "category"
+      },
+      {
+        "parameterField": "VaccineField",
+        "label": "Vaccine",
+        "name": "vaccine"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "name": "status",
+        "label": "Vaccine status",
+        "options": [
+          {
+            "label": "Missed",
+            "value": "MISSED"
+          },
+          {
+            "label": "Overdue",
+            "value": "OVERDUE"
+          },
+          {
+            "label": "Due",
+            "value": "DUE"
+          },
+          {
+            "label": "Upcoming",
+            "value": "UPCOMING"
+          },
+          {
+            "label": "Scheduled",
+            "value": "SCHEDULED"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Village",
+        "name": "villageId",
+        "suggesterEndpoint": "village"
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "name": "excludeNonHomeCountry",
+        "label": "Exclude overseas patients (default No)",
+        "options": [
+          {
+            "label": "No",
+            "value": "no"
+          },
+          {
+            "label": "Yes",
+            "value": "yes"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}

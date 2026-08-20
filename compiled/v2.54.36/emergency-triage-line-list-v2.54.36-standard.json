@@ -1,0 +1,50 @@
+{
+  "query": "select\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nsex as \"Sex\",\nvillage as \"Village\",\nage as \"Age\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nto_char(\n((triage_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI'\n) as \"Time of triage\",\ntriage_category as \"Triage category\",\narrival_mode as \"Arrival mode\",\nchief_complaint as \"Chief complaint\",\nsecondary_complaint as \"Secondary complaint\",\ndiagnoses as \"Diagnoses\",\nmedications as \"Medications\",\nto_char(\n((active_care_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI'\n) as \"Time of active care/admission\",\ncase\nwhen triage_datetime is not null and active_care_datetime is not null and active_care_datetime >= triage_datetime\nthen concat(\nlpad((\nextract(day from (active_care_datetime - triage_datetime)) * 24\n+ extract(hour from (active_care_datetime - triage_datetime))\n)::text, 2, '0'), ':',\nlpad(extract(minute from (active_care_datetime - triage_datetime))::text, 2, '0'), ':',\nlpad((extract(second from (active_care_datetime - triage_datetime))::int)::text, 2, '0')\n)\nend\nas \"Waiting time triage to active care (hh:mm:ss)\",\ntarget_time_met as \"Target time met\",\ned_outcome as \"Discharged from ED or admitted\",\ndischarge_disposition as \"Discharge disposition\",\nto_char(\n((discharge_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI'\n) as \"Discharge date and time\",\ncase\nwhen triage_datetime is not null and discharge_datetime is not null and discharge_datetime >= triage_datetime\nthen concat(\nlpad((\nextract(day from (discharge_datetime - triage_datetime)) * 24\n+ extract(hour from (discharge_datetime - triage_datetime))\n)::text, 2, '0'), ':',\nlpad(extract(minute from (discharge_datetime - triage_datetime))::text, 2, '0'), ':',\nlpad((extract(second from (discharge_datetime - triage_datetime))::int)::text, 2, '0')\n)\nend\nas \"Total length of stay triage to discharge (hh:mm:ss)\"\nfrom \"reporting\".\"ds__emergency_triage\"\nwhere\n-- BL-011: the facility is selectable. There is deliberately no department filter -- a\n-- triage record is itself the evidence the encounter came through emergency, so the\n-- register covers every such encounter regardless of where it moved afterwards.\ncase\nwhen \n:facilityId is null then true\nelse facility_id = \n:facilityId\nend\n-- BL-014: the triage category is selectable\nand case\nwhen \n:triageScore is null then true\nelse score = \n:triageScore\nend\n-- BL-012: the date range filters on the date of triage, inclusive of both bounds\nand ((triage_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date\n>= \n:fromDate\nand ((triage_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))::date\n<= \n:toDate\norder by triage_datetime\n",
+  "name": "Emergency triage line list",
+  "status": "published",
+  "notes": "This report generates a list of emergency department presentations triaged within the selected date range, one row per triage record, in order of triage time.\n\nFor each presentation the report includes the triage category and arrival mode, the chief and secondary complaint, any diagnoses and medications recorded during the encounter, and the times of triage and of the start of active care.\n\n'Waiting time triage to active care' is the interval between triage and the time the triage record was closed, shown as total hours, minutes and seconds (hh:mm:ss). A stay longer than a day appears as, for example, 29:28:00.\n\n'Target time met' compares that waiting time against the target for the patient's triage category. Targets default to Australasian Triage Scale intervals, with a 2-minute allowance for Category 1 rather than literal 'immediate' (Category 2 within 10 minutes, Category 3 within 30, Category 4 within 60, Category 5 within 120), and are configured per deployment. The column is blank while a patient is still waiting.\n\n'Discharged from ED or admitted' shows 'Admitted' where the encounter went on to an inpatient admission, and 'Discharged' where the encounter has ended. It is blank while the encounter is still open. A death in the department is not reported as a separate outcome -- the discharge disposition column carries it.\n\n'Total length of stay' runs from triage to the end of the encounter, so for an admitted patient it spans the whole inpatient episode.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Triage category",
+        "name": "triageScore",
+        "options": [
+          {
+            "label": "Category 1",
+            "value": "1"
+          },
+          {
+            "label": "Category 2",
+            "value": "2"
+          },
+          {
+            "label": "Category 3",
+            "value": "3"
+          },
+          {
+            "label": "Category 4",
+            "value": "4"
+          },
+          {
+            "label": "Category 5",
+            "value": "5"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
