@@ -53,6 +53,7 @@ principal_diagnoses as (
     select
         visit_occurrence_id,
         condition_source_value,
+        condition_source_name,
         row_number() over (
             partition by visit_occurrence_id
             order by condition_start_datetime, condition_occurrence_id
@@ -146,7 +147,12 @@ attendances as (
         -- BL-017: how the encounter ended. Encounter-grained, not ED-grained -- for an
         -- attendance that was admitted this is the eventual hospital discharge.
         disposition.name as discharge_disposition_raw,
+        -- BL-013: raw code and reference-data name, ungrouped -- classifying either one (an
+        -- ICD-10 chapter or any other grouping) is a presentation choice a deployment may set
+        -- differently, so that happens at the deployment layer, the same division as age_years
+        -- (BL-019).
         pdx.condition_source_value as principal_diagnosis_code,
+        pdx.condition_source_name as principal_diagnosis,
         case
             when pr.year_of_birth is not null then
                 extract(year from age(
@@ -216,6 +222,7 @@ select
     -- BL-015: total length of stay as minutes, on the same basis as the other durations
     round(length_of_stay__seconds / 60.0, 2) as length_of_stay__minutes,
     principal_diagnosis_code,
+    principal_diagnosis,
     -- BL-012: 'Not recorded' covers both an attendance with no triage row and a triage row
     -- with a blank score. Never NULL -- the data tables expose these as array filters, and
     -- Tupaia's array filter drops NULL rows.
