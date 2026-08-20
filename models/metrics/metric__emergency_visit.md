@@ -9,10 +9,13 @@ intake segment, so each arrival counts once. Attendances that went on to an inpa
 admission are included, and flagged by is_admitted.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, sex, triage acuity, principal diagnosis chapter,
+facility, sex, triage acuity,
 hour of arrival, admission outcome -- and over any time grain from
 minute upwards. Nothing is pre-aggregated, so no dimension has to be collapsed to get a
 total and the admission rate can be formed at any grain.
+
+principal_diagnosis_code and principal_diagnosis are carried too, ungrouped -- see their own
+docs below for why they are measures rather than registered disaggregations.
 
 Total length of stay is period_end - period_start, where period_end is non-NULL -- arrival in
 the ED to discharge from hospital. waiting_time__minutes carries the wait to active care.
@@ -20,8 +23,8 @@ metric__emergency_stay measures the emergency department portion of the stay.
 
 Shares its attendance base with metric__emergency_stay via int__emergency_visits. That model
 covers the same rows over the ED portion of the stay, and disaggregates by discharge
-disposition and its own time-in-ED band rather than by diagnosis chapter, hour of arrival and
-admission outcome.
+disposition and its own time-in-ED band rather than by principal diagnosis, hour of arrival
+and admission outcome.
 
 See specs/dbt-model/metric__emergency_visit.md for BL-001..BL-016.
 {% enddocs %}
@@ -58,30 +61,35 @@ grain the consumer groups to. No pre-computed rate is emitted, because a proport
 be rolled up.
 {% enddocs %}
 
-{% docs metric__emergency_visit__principal_diagnosis__icd10_chapter %}
-WHO ICD-10 chapter of the encounter's principal diagnosis, labelled with the chapter's Roman
-numeral and title -- e.g. 'X Diseases of the respiratory system'.
+{% docs metric__emergency_visit__principal_diagnosis_code %}
+The ICD-10 code of the encounter's principal diagnosis (clinical__condition_occurrence where
+is_primary, condition_source_value), e.g. 'J18.9'.
 
-The name is principal_diagnosis__<grouping>: the concept before the `__`, the grouping after
-it (macro `diagnosis__icd10_chapter`). A deployment preferring a different grouping adds
-principal_diagnosis__icd10_block or principal_diagnosis__dhims2_group alongside, so a consumer
-can always tell which one it is reading. Groupings are not comparable with each other.
+Not grouped: classifying this into an ICD-10 chapter, block, or any other scheme is a
+presentation choice a deployment may set differently, so the raw code is emitted and the
+grouping happens at the deployment/data-table layer -- the same division of labour as
+age_years and age_group__who_primary_classification. The `diagnosis__icd10_chapter` macro
+that used to run here stays defined in macros/ for a deployment to apply over this column.
 
-A disaggregation, so a consumer groups by it for ED case mix, or filters to a chapter to
-count presentations of that kind. Additive like every other disaggregation here.
+A measure, not a dimension: high-cardinality, so it is absent from the registry's
+disaggregations and no data table exposes the raw code as a filter directly -- a deployment
+groups it first.
 
-Two fallbacks, kept distinct:
+Where an encounter carries more than one principal diagnosis, the earliest is used (matching
+principal_diagnosis). NULL where the encounter has no principal diagnosis (no `is_primary`
+row).
+{% enddocs %}
 
-  'Not recorded' -- the encounter has no principal diagnosis (no `is_primary` row).
-  'Unclassified' -- a code is recorded but resolves to no chapter: malformed, or in one of
-  ICD-10's unassigned gaps.
+{% docs metric__emergency_visit__principal_diagnosis %}
+The reference-data name for principal_diagnosis_code (Tamanu reference_data.name for the
+diagnosis), e.g. 'Pneumonia, unspecified organism'.
 
-Where an encounter carries more than one principal diagnosis, the earliest is used. Neither
-label is ever NULL, since the data tables expose this as an array filter and Tupaia's array
-filter drops NULL rows.
+Carried alongside the code for display -- a consumer wanting a chapter or other grouping
+still classifies from principal_diagnosis_code, since a name is free text and not a stable
+classification key.
 
-Note the labels do not sort into chapter order lexically ('X' sorts before 'XVIII' but after
-'IV'). A consumer needing chapter order supplies it.
+Same grain as principal_diagnosis_code: the earliest principal diagnosis where an encounter
+carries more than one, and NULL where the encounter has none.
 {% enddocs %}
 
 {% docs metric__emergency_visit__waiting_time__minutes %}
