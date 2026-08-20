@@ -129,14 +129,17 @@ models:
           # filter drops NULL rows, so a NULL here would silently disappear the attendance.
           - not_null:
               name: ac_011_metric__emergency_visit_triage_score_not_null
-      - name: principal_diagnosis__icd10_chapter
+      - name: principal_diagnosis_code
         data_type: text
-        description: "{{ doc('metric__emergency_visit__principal_diagnosis__icd10_chapter') }}"
-        data_tests:
-          # 'Not recorded' / 'Unclassified' rather than NULL, so a Tupaia array filter
-          # cannot drop the attendance.
-          - not_null:
-              name: ac_013_metric__emergency_visit_diagnosis_chapter_not_null
+        description: "{{ doc('metric__emergency_visit__principal_diagnosis_code') }}"
+        # BL-013/BL-019: raw, ungrouped -- classifying it (an ICD-10 chapter or any other
+        # grouping) is a presentation choice a deployment may set differently, so this is
+        # absent from the registry's disaggregations and grouped by the data table instead.
+        # NULL where the encounter has no principal diagnosis.
+      - name: principal_diagnosis
+        data_type: text
+        description: "{{ doc('metric__emergency_visit__principal_diagnosis') }}"
+        # The reference-data name for principal_diagnosis_code, same treatment as the code.
       - name: waiting_time__minutes
         data_type: numeric
         description: "{{ doc('metric__emergency_visit__waiting_time__minutes') }}"
