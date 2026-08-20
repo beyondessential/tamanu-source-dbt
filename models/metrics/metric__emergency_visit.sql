@@ -56,11 +56,13 @@ select
     -- differently, so the consumer's data table bands it.
     age_years,
     triage_score,
-    -- BL-013
-    case
-        when principal_diagnosis_code is null then 'Not recorded'
-        else {{ diagnosis__icd10_chapter('principal_diagnosis_code') }}
-    end as principal_diagnosis__icd10_chapter,
+    -- BL-013: raw code and reference-data name, ungrouped -- classifying either one (an
+    -- ICD-10 chapter or any other grouping) is a presentation choice a deployment may set
+    -- differently, so it happens at the deployment/data-table layer, the same division as
+    -- age_years and age_group__who_primary_classification (BL-019). diagnosis__icd10_chapter
+    -- stays defined in macros/ for a deployment to apply over principal_diagnosis_code there.
+    principal_diagnosis_code,
+    principal_diagnosis,
     -- BL-014: the wait to active care, in minutes
     waiting_time__minutes,
     -- BL-015: total length of stay in minutes.

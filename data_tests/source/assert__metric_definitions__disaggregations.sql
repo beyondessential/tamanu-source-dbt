@@ -18,8 +18,6 @@ where trim(d) not in (
         'is_admitted',
         -- ed_visit's triage acuity category
         'triage_score',
-        -- ed_visit's principal diagnosis, grouped to a WHO ICD-10 chapter
-        'principal_diagnosis__icd10_chapter',
         -- ed_visit's arrival hour
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
