@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.54.39
+version: 2.54.40
 config-version: 2
 profile: tamanu_source_dbt
 
