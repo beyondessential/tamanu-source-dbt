@@ -46,7 +46,7 @@ unit_tests:
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+          select null::text as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
 
       - input: ref('invoice_items')
         format: sql
@@ -63,17 +63,17 @@ unit_tests:
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
 
       - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -83,7 +83,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -98,12 +98,12 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
 
       - input: ref('invoice_price_lists')
         format: sql

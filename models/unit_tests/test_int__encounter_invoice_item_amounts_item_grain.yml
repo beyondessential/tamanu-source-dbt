@@ -51,7 +51,7 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select 'item_001'::text as invoice_item_id, 20.00::numeric as amount, 'amount' as type, '00000000-0000-0000-0000-0000000000d1'::uuid as id
+          select 'item_001'::text as invoice_item_id, 20.00::numeric as amount, 'amount' as type, '00000000-0000-0000-0000-0000000000d1'::text as id
 
       - input: ref('invoice_price_lists')
         format: sql
@@ -66,7 +66,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plans')
         format: sql

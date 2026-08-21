@@ -39,7 +39,7 @@ unit_tests:
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+          select null::text as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
 
       - input: ref('invoice_items')
         format: sql
@@ -55,25 +55,25 @@ unit_tests:
         format: sql
         rows: |
           -- $100 payment, then $100 refund (nets to 0), plus a separate $40 payment
-          select '00000000-0000-0000-0000-000000000010'::uuid as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 100.00::numeric as amount, null::uuid as original_payment_id
+          select '00000000-0000-0000-0000-000000000010'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 100.00::numeric as amount, null::text as original_payment_id
           union all
-          select '00000000-0000-0000-0000-000000000011'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::uuid
+          select '00000000-0000-0000-0000-000000000011'::text, '00000000-0000-0000-0000-000000000001'::text, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::text
           union all
-          select '00000000-0000-0000-0000-000000000012'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 40.00::numeric, null::uuid
+          select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 40.00::numeric, null::text
 
       - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000020'::uuid as id, '00000000-0000-0000-0000-000000000010'::uuid as invoice_payment_id
+          select '00000000-0000-0000-0000-000000000020'::text as id, '00000000-0000-0000-0000-000000000010'::text as invoice_payment_id
           union all
-          select '00000000-0000-0000-0000-000000000021'::uuid, '00000000-0000-0000-0000-000000000011'::uuid
+          select '00000000-0000-0000-0000-000000000021'::text, '00000000-0000-0000-0000-000000000011'::text
           union all
-          select '00000000-0000-0000-0000-000000000022'::uuid, '00000000-0000-0000-0000-000000000012'::uuid
+          select '00000000-0000-0000-0000-000000000022'::text, '00000000-0000-0000-0000-000000000012'::text
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -83,7 +83,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -98,12 +98,12 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
 
       - input: ref('invoice_price_lists')
         format: sql

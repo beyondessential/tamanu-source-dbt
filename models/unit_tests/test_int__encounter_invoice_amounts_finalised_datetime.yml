@@ -52,17 +52,17 @@ unit_tests:
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
+          select '00000000-0000-0000-0000-000000000001'::text as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
           union all
           -- First finalisation at 03:00 UTC; with timezone pinned to UTC the
           -- local-time conversion is a no-op, so the expected value is 03:00
-          select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
           union all
           -- Re-finalisation: previous_status = 'finalised' so excluded
-          select '00000000-0000-0000-0000-000000000001'::uuid, '2024-01-16 01:00:00+00'::timestamptz, 'finalised', 'finalised'
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-16 01:00:00+00'::timestamptz, 'finalised', 'finalised'
           union all
           -- enc_002 invoice: never reaches finalised
-          select '00000000-0000-0000-0000-000000000002'::uuid, '2024-01-20 10:00:00+00'::timestamptz, 'in_progress', null::text
+          select '00000000-0000-0000-0000-000000000002'::text, '2024-01-20 10:00:00+00'::timestamptz, 'in_progress', null::text
 
       - input: ref('invoice_items')
         format: sql
@@ -77,17 +77,17 @@ unit_tests:
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_id, null::numeric as amount, null::uuid as original_payment_id where false
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
 
       - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select null::uuid as id, null::uuid as invoice_payment_id where false
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -97,7 +97,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -112,12 +112,12 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
 
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
 
       - input: ref('invoice_price_lists')
         format: sql
