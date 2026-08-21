@@ -57,12 +57,12 @@ models:
       +materialized: view
       +tags:
         - base
-      # Tupaia data tables now resolve location_group_name via a two-hop join through
-      # these two models (a metric emits location_id only, per BL-007/BL-006 in
-      # metric__outpatient_visit/metric__emergency_*), so they need to sit in
-      # `public_tupaia` alongside the metrics on the analytics replica, same reasoning
-      # and same mechanism as the metrics: block below. Every other base model stays
-      # untouched -- this is scoped to just the two Tupaia actually joins on.
+      # Tupaia data tables resolve location_group_name via a two-hop join through
+      # these two models (metric__outpatient_visit emits location_id only, per its
+      # BL-006/BL-007), so they need to sit in `public_tupaia` alongside the metrics
+      # on the analytics replica, same reasoning and same mechanism as the metrics:
+      # block below. Every other base model stays untouched -- this is scoped to just
+      # the two models Tupaia actually joins on.
       locations:
         +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
       location_groups:
