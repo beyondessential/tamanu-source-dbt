@@ -1,0 +1,16 @@
+{
+  "query": "\nselect\nid as \"ID\",\nname as \"Product name\",\ninsurable as \"Insurable\",\ncategory as \"Category\",\nsource_record_id as \"Category ID\",\navailable_facilities as \"Available facilities\",\nvisibility_status as \"Visibility status\",\nexternal_code as \"Lab external code\"\nfrom \"reporting\".\"ds__invoice_products\"\norder by name",
+  "status": "published",
+  "name": "Invoice products summary",
+  "notes": "This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": [
+      "allFacilities",
+      "thisFacility"
+    ],
+    "parameters": []
+  },
+  "tamanuVersion": "~2.54.0"
+}

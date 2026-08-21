@@ -1,0 +1,16 @@
+{
+  "query": "select\nregistration_date as \"Registration date\",\ntotal_patient_registrations as \"Total patient registrations\",\ntotal_birth_registrations as \"Total birth registrations\",\ntotal_incorrect_registrations_for_patient_under_6mth as \"Total incorrect registrations for aged under 6 months\"\nfrom \"reporting\".\"ds__usage_quality_metrics_patient_registrations\"\nwhere\nregistration_date >= \n:fromDate\nand\nregistration_date <= \n:toDate",
+  "name": "Usage quality metrics - patient registrations",
+  "notes": "This report generates usage quality metrics on patient registrations. The report provides a summary by selected date range on the total new patient registrations, total birth registrations, and total incorrect registrations (patient instead of birth) for under 6 months old.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": []
+  },
+  "tamanuVersion": "~2.54.0"
+}
