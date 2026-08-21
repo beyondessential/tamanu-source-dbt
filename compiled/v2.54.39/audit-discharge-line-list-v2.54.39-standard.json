@@ -1,0 +1,88 @@
+{
+  "query": "\n-- Discharge Audit Line List\n-- One row per discharged encounter, filtered on when the discharge was recorded in\n-- Tamanu rather than the discharge date entered on the form.\nselect\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nsex as \"Sex\",\nvillage as \"Village\",\ncase\nwhen encounter_type = 'admission' then 'Hospital admission'\nwhen encounter_type = 'clinic' then 'Clinic'\nwhen encounter_type = 'emergency' then 'Emergency short stay'\nwhen encounter_type = 'imaging' then 'Imaging'\nwhen encounter_type = 'observation' then 'Active ED care'\nwhen encounter_type = 'surveyResponse' then 'Form response'\nwhen encounter_type = 'triage' then 'Triage'\nwhen encounter_type = 'vaccination' then 'Vaccination record'\nelse encounter_type\nend as \"Type\",\nfacility as \"Facility\",\ndepartment as \"Department\",\nlocation as \"Location\",\nto_char(((admission_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Encounter start date and time\",\nto_char(((discharge_datetime_entered at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Discharge date and time\",\nto_char(((discharge_recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Discharge recorded date and time\",\ndays_between_discharge_and_recording as \"Days between discharge and recording\",\ndischarge_disposition as \"Discharge disposition\",\ndischarger_on_form as \"Discharging clinician\",\nrecorded_by_user as \"Discharge recorded by\",\ncase when is_auto_discharge then 'Yes' else 'No' end as \"Automatic discharge\",\nlater_edit_count as \"Edits after recording\",\nprimary_diagnoses as \"Primary diagnoses\",\nprimary_diagnoses_codes as \"Primary diagnosis codes\",\nsecondary_diagnoses as \"Secondary diagnoses\",\nsecondary_diagnoses_codes as \"Secondary diagnosis codes\"\nfrom \"reporting\".\"ds__discharge_audit\"\nwhere\n-- BL-007: the date range filters on when the discharge was recorded, not on the\n-- discharge date entered on the form\n((discharge_recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) >= \n:fromDate\n-- the whole of toDate is in scope, because the recorded time of day matters here\nand ((discharge_recorded_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) < (\n:toDate)::date + interval '1 day'\nand case when \n:facilityId is null then true\nelse facility_id = \n:facilityId\nend\nand case when \n:departmentId is null then true\nelse department_id = \n:departmentId\nend\nand case when coalesce(\n:encounterType) is null then true\nelse encounter_type in (\n:encounterType)\nend\nand case when \n:dischargeType is null then true\nwhen \n:dischargeType = 'automatic' then is_auto_discharge\nelse not is_auto_discharge\nend\norder by discharge_recorded_datetime desc, display_id\n",
+  "name": "Audit - discharge line list",
+  "status": "published",
+  "notes": "This report lists patients whose discharge was recorded in Tamanu within the selected date range.\n\nThe date range filters on when the discharge was recorded, that is when a user completed the discharge form, and NOT on the discharge date and time entered on that form. Both are shown side by side, along with the number of days between them, so that a backlog of discharges recorded late can be monitored.\n\nThe below information is included for each discharge:\n- Discharge date and time as entered on the discharge form.\n- Discharge recorded date and time, being when the discharge was actually recorded in Tamanu.\n- Days between discharge and recording. Zero means the discharge was recorded on the day it happened.\n- Discharging clinician named on the form, and the user who completed the form. These are often different people.\n- Whether the discharge was automatic. Tamanu discharges some encounters automatically, for example outpatient encounters left open overnight, and encounters closed on registering a patient death. Use the discharge type filter to include or exclude these.\n- Number of times the discharge was edited after it was first recorded.\n- Primary and secondary diagnoses recorded against the encounter, with their diagnosis codes in separate columns.\n\nDischarges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Encounter type",
+        "name": "encounterType",
+        "options": [
+          {
+            "label": "Hospital admission",
+            "value": "admission"
+          },
+          {
+            "label": "Clinic",
+            "value": "clinic"
+          },
+          {
+            "label": "Emergency short stay",
+            "value": "emergency"
+          },
+          {
+            "label": "Active ED care",
+            "value": "observation"
+          },
+          {
+            "label": "Triage",
+            "value": "triage"
+          },
+          {
+            "label": "Imaging",
+            "value": "imaging"
+          },
+          {
+            "label": "Form response",
+            "value": "surveyResponse"
+          },
+          {
+            "label": "Vaccination record",
+            "value": "vaccination"
+          }
+        ]
+      },
+      {
+        "parameterField": "ParameterSelectField",
+        "label": "Discharge type",
+        "name": "dischargeType",
+        "options": [
+          {
+            "label": "Recorded by a user",
+            "value": "manual"
+          },
+          {
+            "label": "Automatic",
+            "value": "automatic"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}

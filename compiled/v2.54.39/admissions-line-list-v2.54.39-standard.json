@@ -1,0 +1,72 @@
+{
+  "query": "\nselect\ndisplay_id as \"Patient ID\",\nfirst_name as \"First name\",\nlast_name as \"Last name\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nage as \"Age\",\nsex as \"Sex\",\nvillage as \"Village\",\nbilling_type as \"Billing type\",\nadmitting_clinician as \"Admitting clinician\",\nto_char(((admission_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Admission date and time\",\nadmission_status as \"Admission status\",\nto_char(((discharge_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Discharge date and time\",\nfacility as \"Facility\",\ndepartments as \"Department history\",\ndepartment_datetimes as \"Department history date and times\",\nlocation_groups as \"Area history\",\nlocation_group_datetimes as \"Area history date and times\",\nlocations as \"Location history\",\nlocation_datetimes as \"Location history date and times\",\nprimary_diagnoses as \"Primary diagnoses\",\nprimary_diagnoses_codes as \"Primary diagnosis codes\",\nsecondary_diagnoses as \"Secondary diagnoses\",\nsecondary_diagnoses_codes as \"Secondary diagnosis codes\"\nfrom \"reporting\".\"ds__admissions\"\nwhere\n((admission_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) >= \n:fromDate\nand ((admission_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')) <= \n:toDate\nand case when \n:locationGroupId is null then true\nelse \n:locationGroupId = any(location_group_ids::text [])\nend\nand case when \n:facilityId is null then true\nelse facility_id = \n:facilityId\nend\nand case when \n:departmentId is null then true\nelse \n:departmentId = any(department_ids::text [])\nend\nand case when \n:patientBillingTypeId is null then true\nelse billing_type_id like \n:patientBillingTypeId\nend\nand case when \n:clinicianId is null then true\nelse admitting_clinician_id = \n:clinicianId\nend\nand case when coalesce(\n:admissionStatus) is null then true\nelse admission_status in (\n:admissionStatus)\nend\norder by admission_datetime desc\n",
+  "name": "Admissions line list",
+  "status": "published",
+  "notes": "This report generates a list of all patients with a hospital admission started within the selected date range. The report includes both active and discharged admissions. Patients are listed in order of most recent admission by admission date and time. The discharge date is displayed if the patient has been discharged, \notherwise if the encounter is active this column will appear blank. \n\nThe below information is included for each hospital admission:\n- List of all assigned departments and the date and time a patient was assigned to each department.\n- List of all assigned areas and the date and time a patient was assigned to each area.\n- List of all assigned locations and the date and time a patient was assigned to each location.\n- List of all primary and secondary diagnoses (including code) with a certainty of 'Confirmed', 'Suspected', or 'Emergency'. Diagnoses with a certainty of 'Disproven' or 'Recorded in error' are excluded. \n",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Patient billing type",
+        "name": "patientBillingTypeId",
+        "suggesterEndpoint": "patientBillingType"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Admitting clinician",
+        "name": "clinicianId",
+        "suggesterEndpoint": "practitioner"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Admission status",
+        "name": "admissionStatus",
+        "options": [
+          {
+            "label": "Active",
+            "value": "active"
+          },
+          {
+            "label": "Discharged",
+            "value": "discharged"
+          }
+        ]
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}
