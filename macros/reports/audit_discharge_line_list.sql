@@ -25,7 +25,11 @@ select
     discharger_on_form as "{{ translate_label('dischargeClinician') }}",
     recorded_by_user as "{{ translate_label('dischargeRecordedBy') }}",
     case when is_auto_discharge then 'Yes' else 'No' end as "{{ translate_label('dischargeIsAutomatic') }}",
-    later_edit_count as "{{ translate_label('dischargeLaterEditCount') }}"
+    later_edit_count as "{{ translate_label('dischargeLaterEditCount') }}",
+    primary_diagnoses as "{{ translate_label('diagnosesPrimary') }}",
+    primary_diagnoses_codes as "{{ translate_label('diagnosesPrimaryCodes') }}",
+    secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}",
+    secondary_diagnoses_codes as "{{ translate_label('diagnosesSecondaryCodes') }}"
 from {{ ref(dataset) }}
 where
     -- BL-007: the date range filters on when the discharge was recorded, not on the
