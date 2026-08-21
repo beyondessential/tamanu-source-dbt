@@ -52,13 +52,13 @@
       name: name
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in departments."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in departments."
       name: visibility_status
   config:
     tags:
@@ -78,12 +78,9 @@
 - columns:
     created_datetime:
       data_type: timestamp
-      description: 'When the discharge was recorded in Tamanu, in the deployment''s
-        local time.
-
-
-        This is when a user completed the discharge form, which can be days or weeks
-        after the discharge date and time entered on that form.'
+      description: "When the discharge was recorded in Tamanu, in the deployment's\
+        \ local time.\r\n\r\nThis is when a user completed the discharge form, which\
+        \ can be days or weeks after the discharge date and time entered on that form."
       name: created_datetime
     discharged_by_id:
       data_type: character varying
@@ -105,23 +102,17 @@
       name: id
     note:
       data_type: text
-      description: 'Free-form notes about the discharge.
-
-
-        May include treatment plan and follow-ups, written by the discharging clinician.
-
-
-        Since v2.0, also see the [`notes`](#!/source/source.tamanu.tamanu.notes) table
-        for encounter and discharge notes.'
+      description: "Free-form notes about the discharge.\r\n\r\nMay include treatment\
+        \ plan and follow-ups, written by the discharging clinician.\r\n\r\nSince\
+        \ v2.0, also see the [`notes`](#!/source/source.tamanu.tamanu.notes) table\
+        \ for encounter and discharge notes."
       name: note
   config:
     tags:
     - base
     - clinical
-  description: 'Information about a discharge.
-
-
-    A discharge is the end of the lifecycle for an encounter.'
+  description: "Information about a discharge.\r\n\r\nA discharge is the end of the\
+    \ lifecycle for an encounter."
   meta:
     classification: restricted
     domain: clinical
@@ -155,10 +146,8 @@
       name: changed_datetime
     discharge_id:
       data_type: text
-      description: 'The value of the `id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in discharges.'
+      description: "The value of the `id` field of the change data.\r\n\r\nThis is\
+        \ extracted from the data to make it easier to query on. in discharges."
       name: discharge_id
     discharger_id:
       data_type: text
@@ -177,24 +166,18 @@
       name: encounter_id
     note:
       data_type: text
-      description: 'Free-form notes about the discharge.
-
-
-        May include treatment plan and follow-ups, written by the discharging clinician.
-
-
-        Since v2.0, also see the [`notes`](#!/source/source.tamanu.tamanu.notes) table
-        for encounter and discharge notes. From history.'
+      description: "Free-form notes about the discharge.\r\n\r\nMay include treatment\
+        \ plan and follow-ups, written by the discharging clinician.\r\n\r\nSince\
+        \ v2.0, also see the [`notes`](#!/source/source.tamanu.tamanu.notes) table\
+        \ for encounter and discharge notes. From history."
       name: note
   config:
     tags:
     - base
     - clinical
     - log
-  description: 'Change logs for Information about a discharge.
-
-
-    A discharge is the end of the lifecycle for an encounter.'
+  description: "Change logs for Information about a discharge.\r\n\r\nA discharge\
+    \ is the end of the lifecycle for an encounter."
   meta:
     classification: restricted
     domain: clinical
@@ -221,10 +204,7 @@
       name: id
     name:
       data_type: character varying(255)
-      description: 'Free-form name of the document.
-
-
-        Often this is the filename.'
+      description: "Free-form name of the document.\r\n\r\nOften this is the filename."
       name: name
     patient_id:
       data_type: character varying(255)
@@ -240,11 +220,9 @@
     tags:
     - base
     - clinical
-  description: 'Information about an uploaded document or file, typically attached
-    to an encounter or directly to a patient.
-
-
-    The actual file data is stored in [`attachments`](#!/source/source.tamanu.tamanu.attachments).'
+  description: "Information about an uploaded document or file, typically attached\
+    \ to an encounter or directly to a patient.\r\n\r\nThe actual file data is stored\
+    \ in [`attachments`](#!/source/source.tamanu.tamanu.attachments)."
   meta:
     classification: restricted
     domain: clinical
@@ -258,23 +236,9 @@
 - columns:
     certainty:
       data_type: character varying
-      description: 'The level of certainty of the recorded diagnosis.
-
-
-        One of:
-
-        - `confirmed`
-
-        - `disproven`
-
-        - `emergency`
-
-        - `error`
-
-        - `suspected`
-
-
-        `disproven` and `error` are excluded for reporting'
+      description: "The level of certainty of the recorded diagnosis.\r\n\r\nOne of:\r\
+        \n- `confirmed`\r\n- `disproven`\r\n- `emergency`\r\n- `error`\r\n- `suspected`\r\
+        \n\r\n`disproven` and `error` are excluded for reporting"
       name: certainty
     datetime:
       data_type: timestamp
@@ -368,12 +332,9 @@
     tags:
     - base
     - administration
-  description: 'A diet associated with an encounter.
-
-
-    A patient can be placed on a diet for various medical purposes.
-
-    Diets are specified in reference data.'
+  description: "A diet associated with an encounter.\r\n\r\nA patient can be placed\
+    \ on a diet for various medical purposes.\r\nDiets are specified in reference\
+    \ data."
   meta:
     classification: confidential
     domain: admin
@@ -387,18 +348,8 @@
 - columns:
     change_type:
       data_type: character varying(255)
-      description: 'The field which was changed.
-
-
-        One of:
-
-        - `encounter_type`
-
-        - `location`
-
-        - `department`
-
-        - `examiner`'
+      description: "The field which was changed.\r\n\r\nOne of:\r\n- `encounter_type`\r\
+        \n- `location`\r\n- `department`\r\n- `examiner`"
       name: change_type
     clinician_id:
       data_type: character varying(255)
@@ -421,26 +372,9 @@
       name: encounter_id
     encounter_type:
       data_type: character varying(255)
-      description: 'The type of the encounter.
-
-
-        One of:
-
-        - `admission`
-
-        - `clinic`
-
-        - `imaging`
-
-        - `emergency`
-
-        - `observation`
-
-        - `triage`
-
-        - `surveyResponse`
-
-        - `vaccination`'
+      description: "The type of the encounter.\r\n\r\nOne of:\r\n- `admission`\r\n\
+        - `clinic`\r\n- `imaging`\r\n- `emergency`\r\n- `observation`\r\n- `triage`\r\
+        \n- `surveyResponse`\r\n- `vaccination`"
       name: encounter_type
     id:
       data_type: uuid
@@ -514,11 +448,9 @@
       name: department_id
     device_id:
       data_type: text
-      description: 'Unique identifier for the device that created the encounter.
-
-
-        Device IDs are proper to each device and not globally recorded in e.g. a `devices`
-        table.'
+      description: "Unique identifier for the device that created the encounter.\r\
+        \n\r\nDevice IDs are proper to each device and not globally recorded in e.g.\
+        \ a `devices` table."
       name: device_id
     discharge_draft:
       data_type: jsonb
@@ -526,26 +458,9 @@
       name: discharge_draft
     encounter_type:
       data_type: character varying(31)
-      description: 'The type of the encounter.
-
-
-        One of:
-
-        - `admission`
-
-        - `clinic`
-
-        - `imaging`
-
-        - `emergency`
-
-        - `observation`
-
-        - `triage`
-
-        - `surveyResponse`
-
-        - `vaccination`'
+      description: "The type of the encounter.\r\n\r\nOne of:\r\n- `admission`\r\n\
+        - `clinic`\r\n- `imaging`\r\n- `emergency`\r\n- `observation`\r\n- `triage`\r\
+        \n- `surveyResponse`\r\n- `vaccination`"
       name: encounter_type
     end_datetime:
       data_type: timestamp
@@ -571,10 +486,8 @@
       name: patient_id
     planned_location_id:
       data_type: character varying(255)
-      description: 'The [location](#!/source/source.tamanu.tamanu.locations) that
-        the encounter will transfer to at the
-
-        `planned_location_start_time`.'
+      description: "The [location](#!/source/source.tamanu.tamanu.locations) that\
+        \ the encounter will transfer to at the\r\n`planned_location_start_time`."
       name: planned_location_id
     planned_location_start_datetime:
       data_type: timestamp
@@ -582,10 +495,8 @@
       name: planned_location_start_datetime
     reason_for_encounter:
       data_type: text
-      description: 'Free-form information about the encounter.
-
-
-        Can include info like type of survey submitted, emergency diagnosis, etc.'
+      description: "Free-form information about the encounter.\r\n\r\nCan include\
+        \ info like type of survey submitted, emergency diagnosis, etc."
       name: reason_for_encounter
     referral_source_id:
       data_type: character varying(255)
@@ -690,34 +601,23 @@
       name: type
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in facilities."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in facilities."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'Table of facilities.
-
-
-    Facilities may be either or both of:
-
-
-    - Any healthcare facility, like hospitals, clinics, mobile vaccination vans, laboratories,
-    etc
-
-    - A Tamanu Facility deployment.
-
-
-    When syncing, patient and related records are scoped to a facility, according
-    to the
-
-    [`patient_facilities`](#!/source/source.tamanu.tamanu.patient_facilities) table.'
+  description: "Table of facilities.\r\n\r\nFacilities may be either or both of:\r\
+    \n\r\n- Any healthcare facility, like hospitals, clinics, mobile vaccination vans,\
+    \ laboratories, etc\r\n- A Tamanu Facility deployment.\r\n\r\nWhen syncing, patient\
+    \ and related records are scoped to a facility, according to the\r\n[`patient_facilities`](#!/source/source.tamanu.tamanu.patient_facilities)\
+    \ table."
   meta:
     classification: internal
     domain: admin
@@ -747,25 +647,21 @@
       name: id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in imaging_area_external_codes."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in imaging_area_external_codes."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'External codes for imaging areas (such as for [PACS](https://en.wikipedia.org/wiki/Picture_archiving_and_communication_system)).
-
-
-    Imaging areas are stored in [Reference Data](#!/source/source.tamanu.tamanu.reference_data),
-    this
-
-    table adds additional (external) codes.'
+  description: "External codes for imaging areas (such as for [PACS](https://en.wikipedia.org/wiki/Picture_archiving_and_communication_system)).\r\
+    \n\r\nImaging areas are stored in [Reference Data](#!/source/source.tamanu.tamanu.reference_data),\
+    \ this\r\ntable adds additional (external) codes."
   meta:
     classification: internal
     domain: admin
@@ -829,40 +725,10 @@
       name: id
     imaging_type:
       data_type: character varying(31)
-      description: 'Type of imaging.
-
-
-        One of:
-
-        - `angiogram`
-
-        - `colonoscopy`
-
-        - `ctScan`
-
-        - `ecg`
-
-        - `echocardiogram`
-
-        - `endoscopy`
-
-        - `fluroscopy`
-
-        - `holterMonitor`
-
-        - `mammogram`
-
-        - `orthopantomography`
-
-        - `mri`
-
-        - `stressTest`
-
-        - `ultrasound`
-
-        - `vascularStudy`
-
-        - `xRay`'
+      description: "Type of imaging.\r\n\r\nOne of:\r\n- `angiogram`\r\n- `colonoscopy`\r\
+        \n- `ctScan`\r\n- `ecg`\r\n- `echocardiogram`\r\n- `endoscopy`\r\n- `fluroscopy`\r\
+        \n- `holterMonitor`\r\n- `mammogram`\r\n- `orthopantomography`\r\n- `mri`\r\
+        \n- `stressTest`\r\n- `ultrasound`\r\n- `vascularStudy`\r\n- `xRay`"
       name: imaging_type
     location_group_id:
       data_type: character varying(255)
@@ -876,22 +742,15 @@
       name: location_id
     priority:
       data_type: character varying(255)
-      description: 'Priority of the request.
-
-
-        This is a customisable list; by default the values are `routine`, `urgent`,
-        `asap`, `stat`.'
+      description: "Priority of the request.\r\n\r\nThis is a customisable list; by\
+        \ default the values are `routine`, `urgent`, `asap`, `stat`."
       name: priority
     reason_for_cancellation:
       data_type: character varying(1024)
-      description: 'If the request is cancelled, why that is.
-
-
-        This is a customisable list; by default the values are `duplicate` and `entered-in-error`.
-
-
-        The 31-character limit was [arbitrary to avoid extremely long values set in
-        error](https://github.com/beyondessential/tamanu/pull/3512/files#r1102169113).'
+      description: "If the request is cancelled, why that is.\r\n\r\nThis is a customisable\
+        \ list; by default the values are `duplicate` and `entered-in-error`.\r\n\r\
+        \nThe 31-character limit was [arbitrary to avoid extremely long values set\
+        \ in error](https://github.com/beyondessential/tamanu/pull/3512/files#r1102169113)."
       name: reason_for_cancellation
     requested_by_id:
       data_type: character varying(255)
@@ -900,36 +759,17 @@
       name: requested_by_id
     status:
       data_type: character varying(255)
-      description: 'The status of the request.
-
-
-        One of:
-
-        - `pending`
-
-        - `in_progress`
-
-        - `completed`
-
-        - `cancelled`
-
-        - `deleted`
-
-        - `entered_in_error`'
+      description: "The status of the request.\r\n\r\nOne of:\r\n- `pending`\r\n-\
+        \ `in_progress`\r\n- `completed`\r\n- `cancelled`\r\n- `deleted`\r\n- `entered_in_error`"
       name: status
   config:
     tags:
     - base
     - clinical
-  description: 'Imaging requests are the entrypoint of imaging workflows in Tamanu.
-
-
-    Each row is a request for radiology to perform one or more imagings on a patient.
-
-
-    Imagings can have one or more [request areas](#!/source/source.tamanu.tamanu.imaging_request_areas)
-
-    attached, and when completed will have [results](#!/source/source.tamanu.tamanu.imaging_results).'
+  description: "Imaging requests are the entrypoint of imaging workflows in Tamanu.\r\
+    \n\r\nEach row is a request for radiology to perform one or more imagings on a\
+    \ patient.\r\n\r\nImagings can have one or more [request areas](#!/source/source.tamanu.tamanu.imaging_request_areas)\r\
+    \nattached, and when completed will have [results](#!/source/source.tamanu.tamanu.imaging_results)."
   meta:
     classification: restricted
     domain: clinical
@@ -969,30 +809,23 @@
       name: imaging_request_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in imaging_results."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in imaging_results."
       name: visibility_status
   config:
     tags:
     - base
     - clinical
-  description: 'Result of an [imaging request](#!/source/source.tamanu.tamanu.imaging_requests).
-
-
-    In practice, there is usually one or two results per request:
-
-    - one containing a reference to a PACS image, when imaging integrations are enabled;
-
-    - one containing notes from a doctor who analysed the image.
-
-
-    However there is no limit; for example there may be multiple notes from multiple
-    doctors.'
+  description: "Result of an [imaging request](#!/source/source.tamanu.tamanu.imaging_requests).\r\
+    \n\r\nIn practice, there is usually one or two results per request:\r\n- one containing\
+    \ a reference to a PACS image, when imaging integrations are enabled;\r\n- one\
+    \ containing notes from a doctor who analysed the image.\r\n\r\nHowever there\
+    \ is no limit; for example there may be multiple notes from multiple doctors."
   meta:
     classification: restricted
     domain: clinical
@@ -1101,13 +934,13 @@
       name: name
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in invoice_insurance_plans."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in invoice_insurance_plans."
       name: visibility_status
   config:
     tags:
@@ -1143,18 +976,8 @@
       name: reason
     status:
       data_type: text
-      description: 'The status of this payment.
-
-
-        One of:
-
-        - `unpaid`
-
-        - `paid`
-
-        - `partial`
-
-        - `rejected`'
+      description: "The status of this payment.\r\n\r\nOne of:\r\n- `unpaid`\r\n-\
+        \ `paid`\r\n- `partial`\r\n- `rejected`"
       name: status
   config:
     tags:
@@ -1211,14 +1034,10 @@
 - columns:
     coverage_value_final:
       data_type: numeric
-      description: 'The finalised coverage percentage for this invoice item.
-
-
-        This value is copied from the insurance plan''s coverage at the time the invoice
-        item is finalised,
-
-        preserving it for the record even if the insurance plan''s coverage percentage
-        changes later.'
+      description: "The finalised coverage percentage for this invoice item.\r\n\r\
+        \nThis value is copied from the insurance plan's coverage at the time the\
+        \ invoice item is finalised,\r\npreserving it for the record even if the insurance\
+        \ plan's coverage percentage changes later."
       name: coverage_value_final
     id:
       data_type: text
@@ -1238,10 +1057,10 @@
     tags:
     - base
     - administration
-  description: "Finalised insurance coverage values for invoice items.\n\nThis table\
-    \ stores the insurance coverage amounts that were locked in when an invoice item\
-    \ is finalised, \npreserving the coverage percentage at that point in time even\
-    \ if the insurance plan's coverage changes later."
+  description: "Finalised insurance coverage values for invoice items.\r\n\r\nThis\
+    \ table stores the insurance coverage amounts that were locked in when an invoice\
+    \ item is finalised, \r\npreserving the coverage percentage at that point in time\
+    \ even if the insurance plan's coverage changes later."
   meta:
     classification: confidential
     domain: admin
@@ -1388,10 +1207,8 @@
     tags:
     - base
     - administration
-  description: 'Individual payment against an invoice.
-
-
-    Invoices can be paid in installments, by different parties, etc.'
+  description: "Individual payment against an invoice.\r\n\r\nInvoices can be paid\
+    \ in installments, by different parties, etc."
   meta:
     classification: restricted
     domain: admin
@@ -1477,13 +1294,13 @@
       name: rules
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in invoice_price_lists."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in invoice_price_lists."
       name: visibility_status
   config:
     tags:
@@ -1525,13 +1342,13 @@
       name: source_record_id
     visibility_status:
       data_type: character varying(255)
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in invoice_products."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in invoice_products."
       name: visibility_status
   config:
     tags:
@@ -1568,44 +1385,18 @@
       name: id
     insurer_payment_status:
       data_type: character varying(255)
-      description: 'Payment status (insurer portion, if applicable).
-
-
-        One of:
-
-        - `unpaid`
-
-        - `paid`
-
-        - `partial`
-
-        - `rejected`'
+      description: "Payment status (insurer portion, if applicable).\r\n\r\nOne of:\r\
+        \n- `unpaid`\r\n- `paid`\r\n- `partial`\r\n- `rejected`"
       name: insurer_payment_status
     patient_payment_status:
       data_type: character varying(255)
-      description: 'Payment status (patient portion, if applicable).
-
-
-        One of:
-
-        - `unpaid`
-
-        - `paid`
-
-        - `partial`'
+      description: "Payment status (patient portion, if applicable).\r\n\r\nOne of:\r\
+        \n- `unpaid`\r\n- `paid`\r\n- `partial`"
       name: patient_payment_status
     status:
       data_type: character varying(255)
-      description: 'Status of the invoice.
-
-
-        One of:
-
-        - `cancelled`
-
-        - `in_progress`
-
-        - `finalised`'
+      description: "Status of the invoice.\r\n\r\nOne of:\r\n- `cancelled`\r\n- `in_progress`\r\
+        \n- `finalised`"
       name: status
   config:
     tags:
@@ -1639,10 +1430,8 @@
       name: encounter_id
     invoice_id:
       data_type: text
-      description: 'The value of the `id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in invoices.'
+      description: "The value of the `id` field of the change data.\r\n\r\nThis is\
+        \ extracted from the data to make it easier to query on. in invoices."
       name: invoice_id
     logged_at:
       data_type: timestamptz
@@ -1655,24 +1444,14 @@
       name: previous_status
     status:
       data_type: text
-      description: 'Status of the invoice.
-
-
-        One of:
-
-        - `cancelled`
-
-        - `in_progress`
-
-        - `finalised` from history.'
+      description: "Status of the invoice.\r\n\r\nOne of:\r\n- `cancelled`\r\n- `in_progress`\r\
+        \n- `finalised` from history."
       name: status
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in invoices
-        history.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in invoices\
+        \ history."
       name: updated_by_user_id
   config:
     tags:
@@ -1818,10 +1597,7 @@
       name: id
     is_specimen_collected:
       data_type: boolean
-      description: 'Whether a specimen is attached.
-
-
-        This implies `specimen_type_id`.'
+      description: "Whether a specimen is attached.\r\n\r\nThis implies `specimen_type_id`."
       name: is_specimen_collected
     is_urgent:
       data_type: boolean
@@ -1829,37 +1605,28 @@
       name: is_urgent
     lab_sample_site_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-        representing where
-
-        on the patient the sample was taken.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\
+        \ representing where\r\non the patient the sample was taken."
       name: lab_sample_site_id
     lab_test_category_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-        representing the
-
-        category of this request''s test.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\
+        \ representing the\r\ncategory of this request's test."
       name: lab_test_category_id
     lab_test_laboratory_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-        representing the
-
-        laboratory fulfilling this request.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\
+        \ representing the\r\nlaboratory fulfilling this request."
       name: lab_test_laboratory_id
     lab_test_panel_request_id:
       data_type: uuid
-      description: 'Reference to the [Test Panel Request](#!/source/source.tamanu.tamanu.lab_test_panel_requests)
-
-        associated with this request, if any.'
+      description: "Reference to the [Test Panel Request](#!/source/source.tamanu.tamanu.lab_test_panel_requests)\r\
+        \nassociated with this request, if any."
       name: lab_test_panel_request_id
     lab_test_priority_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-        representing the
-
-        priority of this request.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\
+        \ representing the\r\npriority of this request."
       name: lab_test_priority_id
     published_date:
       data_type: character(19)
@@ -1867,22 +1634,9 @@
       name: published_date
     reason_for_cancellation:
       data_type: character varying(31)
-      description: 'Why this request was cancelled.
-
-
-        One of:
-
-        - `clinical`
-
-        - `duplicate`
-
-        - `entered-in-error`
-
-        - `other`
-
-        - `patient-discharged`
-
-        - `patient-refused`'
+      description: "Why this request was cancelled.\r\n\r\nOne of:\r\n- `clinical`\r\
+        \n- `duplicate`\r\n- `entered-in-error`\r\n- `other`\r\n- `patient-discharged`\r\
+        \n- `patient-refused`"
       name: reason_for_cancellation
     requested_by_id:
       data_type: character varying(255)
@@ -1895,63 +1649,28 @@
       name: requested_datetime
     specimen_type_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-        representing the
-
-        type of the specimen for the request, if specified.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\
+        \ representing the\r\ntype of the specimen for the request, if specified."
       name: specimen_type_id
     status:
       data_type: character varying(255)
-      description: 'The status of the request.
-
-
-        One of:
-
-        - `reception_pending`
-
-        - `results_pending`
-
-        - `interim_results`
-
-        - `to_be_verified`
-
-        - `verified`
-
-        - `published`
-
-        - `cancelled`
-
-        - `invalidated`
-
-        - `deleted`
-
-        - `sample-not-collected`
-
-        - `entered-in-error`'
+      description: "The status of the request.\r\n\r\nOne of:\r\n- `reception_pending`\r\
+        \n- `results_pending`\r\n- `interim_results`\r\n- `to_be_verified`\r\n- `verified`\r\
+        \n- `published`\r\n- `cancelled`\r\n- `invalidated`\r\n- `deleted`\r\n- `sample-not-collected`\r\
+        \n- `entered-in-error`"
       name: status
   config:
     tags:
     - base
     - clinical
-  description: 'Lab requests are the entrypoint of laboratory workflows in Tamanu.
-
-
-    Each row is a request for a laboratory to perform a group of tests on a sample
-    taken from a patient.
-
-
-    It will be updated over the course of the workflow to various statuses, starting
-    with
-
-    `reception_pending` (lab has not received the request yet), up to `published`
-    (lab has completed the
-
-    tests and has attached verified results).
-
-
-    See also: `lab_request_attachments`, `lab_request_logs`, `lab_results`, `lab_tests`,
-
-    `lab_test_panels`, and related tables to those.'
+  description: "Lab requests are the entrypoint of laboratory workflows in Tamanu.\r\
+    \n\r\nEach row is a request for a laboratory to perform a group of tests on a\
+    \ sample taken from a patient.\r\n\r\nIt will be updated over the course of the\
+    \ workflow to various statuses, starting with\r\n`reception_pending` (lab has\
+    \ not received the request yet), up to `published` (lab has completed the\r\n\
+    tests and has attached verified results).\r\n\r\nSee also: `lab_request_attachments`,\
+    \ `lab_request_logs`, `lab_results`, `lab_tests`,\r\n`lab_test_panels`, and related\
+    \ tables to those."
   meta:
     classification: restricted
     domain: clinical
@@ -2006,14 +1725,9 @@
     tags:
     - base
     - reference
-  description: 'The lab tests contained in a lab test panel.
-
-
-    See [`lab_test_panels`](#!/source/source.tamanu.tamanu.lab_test_panels) for more
-    about lab test
-
-    panels, and [`lab_test_types`](#!/source/source.tamanu.tamanu.lab_test_types)
-    for the test types.'
+  description: "The lab tests contained in a lab test panel.\r\n\r\nSee [`lab_test_panels`](#!/source/source.tamanu.tamanu.lab_test_panels)\
+    \ for more about lab test\r\npanels, and [`lab_test_types`](#!/source/source.tamanu.tamanu.lab_test_types)\
+    \ for the test types."
   meta:
     classification: internal
     domain: admin
@@ -2042,11 +1756,8 @@
     tags:
     - base
     - clinical
-  description: 'A request for a lab test panel.
-
-
-    See [`lab_test_panels`](#!/source/source.tamanu.tamanu.lab_test_panels) for more
-    about those.'
+  description: "A request for a lab test panel.\r\n\r\nSee [`lab_test_panels`](#!/source/source.tamanu.tamanu.lab_test_panels)\
+    \ for more about those."
   meta:
     classification: restricted
     domain: clinical
@@ -2086,43 +1797,26 @@
       name: name
     visibility_status:
       data_type: character varying(255)
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in lab_test_panels."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in lab_test_panels."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'A panel is a collection of lab test types, usually standardised.
-
-
-    For example the BMP (basic metabolic panel) is a panel of 8 blood tests. Instead
-    of ordering all 8
-
-    tests individually, a clinician can order the panel all at once. This may also
-    used to more
-
-    efficiently use samples.
-
-
-    This table defines the available test panels, and
-
-    [`lab_test_panel_lab_test_types`](#!/source/source.tamanu.tamanu.lab_test_panel_lab_test_types)
-
-    contains the actual test types that are part of each panel. See
-
-    [`lab_test_panel_requests`](#!/source/source.tamanu.tamanu.lab_test_panel_requests)
-    for requesting
-
-    panels specifically, and [`lab_test_requests`](#!/source/source.tamanu.tamanu.lab_test_requests)
-    for
-
-    requesting lab tests in general.'
+  description: "A panel is a collection of lab test types, usually standardised.\r\
+    \n\r\nFor example the BMP (basic metabolic panel) is a panel of 8 blood tests.\
+    \ Instead of ordering all 8\r\ntests individually, a clinician can order the panel\
+    \ all at once. This may also used to more\r\nefficiently use samples.\r\n\r\n\
+    This table defines the available test panels, and\r\n[`lab_test_panel_lab_test_types`](#!/source/source.tamanu.tamanu.lab_test_panel_lab_test_types)\r\
+    \ncontains the actual test types that are part of each panel. See\r\n[`lab_test_panel_requests`](#!/source/source.tamanu.tamanu.lab_test_panel_requests)\
+    \ for requesting\r\npanels specifically, and [`lab_test_requests`](#!/source/source.tamanu.tamanu.lab_test_requests)\
+    \ for\r\nrequesting lab tests in general."
   meta:
     classification: internal
     domain: admin
@@ -2191,16 +1885,8 @@
       name: range_text
     result_type:
       data_type: character varying(255)
-      description: 'Input type of result.
-
-
-        One of:
-
-        - `FreeText`
-
-        - `Number`
-
-        - `Select`'
+      description: "Input type of result.\r\n\r\nOne of:\r\n- `FreeText`\r\n- `Number`\r\
+        \n- `Select`"
       name: result_type
     unit:
       data_type: character varying(255)
@@ -2208,25 +1894,21 @@
       name: unit
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in lab_test_types."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in lab_test_types."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'A kind of test that''s possible to request.
-
-
-    This includes information about the test itself, and also parameters around result
-    formatting, like
-
-    data type, expected ranges, etc.'
+  description: "A kind of test that's possible to request.\r\n\r\nThis includes information\
+    \ about the test itself, and also parameters around result formatting, like\r\n\
+    data type, expected ranges, etc."
   meta:
     classification: internal
     domain: admin
@@ -2275,10 +1957,8 @@
       name: result
     verification:
       data_type: character varying(255)
-      description: 'Free-form field for a verification indication.
-
-
-        May be a verifying or supervising officer''s name, a department, lab notes...'
+      description: "Free-form field for a verification indication.\r\n\r\nMay be a\
+        \ verifying or supervising officer's name, a department, lab notes..."
       name: verification
   config:
     tags:
@@ -2298,9 +1978,8 @@
 - columns:
     booking_type_id:
       data_type: character varying(255)
-      description: 'Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=bookingType`).'
+      description: "Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=bookingType`)."
       name: booking_type_id
     clinician_id:
       data_type: character varying(255)
@@ -2339,18 +2018,8 @@
       name: start_datetime
     status:
       data_type: character varying(255)
-      description: 'The current status of the appointment record.
-
-
-        One of:
-
-        - `Confirmed`
-
-        - `Arrived`
-
-        - `No-show`
-
-        - `Cancelled`'
+      description: "The current status of the appointment record.\r\n\r\nOne of:\r\
+        \n- `Confirmed`\r\n- `Arrived`\r\n- `No-show`\r\n- `Cancelled`"
       name: status
   config:
     tags:
@@ -2387,13 +2056,13 @@
       name: name
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in location_groups."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in location_groups."
       name: visibility_status
   config:
     tags:
@@ -2439,13 +2108,13 @@
       name: name
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in locations."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in locations."
       name: visibility_status
   config:
     tags:
@@ -2552,29 +2221,23 @@
       name: updated_note_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in notes."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in notes."
       name: visibility_status
   config:
     tags:
     - base
     - clinical
-  description: 'Notes recorded by clinicians or system generated.
-
-
-    Also see the deprecated [`note_items`](#!/source/source.tamanu.tamanu.note_items),
-
-    [`note_pages`](#!/source/source.tamanu.tamanu.note_pages), and the even older
-
-    [`notes_legacy`](#!/source/source.tamanu.tamanu.notes_legacy).
-
-
-    This is the current version (3) of the notes system.'
+  description: "Notes recorded by clinicians or system generated.\r\n\r\nAlso see\
+    \ the deprecated [`note_items`](#!/source/source.tamanu.tamanu.note_items),\r\n\
+    [`note_pages`](#!/source/source.tamanu.tamanu.note_pages), and the even older\r\
+    \n[`notes_legacy`](#!/source/source.tamanu.tamanu.notes_legacy).\r\n\r\nThis is\
+    \ the current version (3) of the notes system."
   meta:
     classification: restricted
     domain: clinical
@@ -2588,9 +2251,8 @@
 - columns:
     appointment_type_id:
       data_type: character varying(255)
-      description: 'Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=appointmentType`).'
+      description: "Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=appointmentType`)."
       name: appointment_type_id
     cancelled_at_date:
       data_type: character(10)
@@ -2604,11 +2266,12 @@
       name: clinician_id
     days_of_week:
       data_type: array
-      description: "Stores an array of ISO weekday abbreviations. \nGiven `WEEKLY`\
+      description: "Stores an array of ISO weekday abbreviations. \r\nGiven `WEEKLY`\
         \ frequency `days_of_week` determines the weekday that the repeated appointment\
-        \ occurs on. \nGiven `MONTHLY` frequency `days_of_week` is combined with `nth_weekday`\
-        \ to determine the date in each month that the repeated appointment occurs\
-        \ on.\n\nOne of: \n- `MO`\n- `TU`\n- `WE`\n- `TH`\n- `FR`\n- `SA`\n- `SU`"
+        \ occurs on. \r\nGiven `MONTHLY` frequency `days_of_week` is combined with\
+        \ `nth_weekday` to determine the date in each month that the repeated appointment\
+        \ occurs on.\r\n\r\nOne of: \r\n- `MO`\r\n- `TU`\r\n- `WE`\r\n- `TH`\r\n-\
+        \ `FR`\r\n- `SA`\r\n- `SU`"
       name: days_of_week
     encounter_id:
       data_type: character varying(255)
@@ -2621,14 +2284,8 @@
       name: end_datetime
     frequency:
       data_type: character varying(255)
-      description: 'How often the the recurrence occurs.
-
-
-        One of:
-
-        - `WEEKLY`
-
-        - `MONTHLY`'
+      description: "How often the the recurrence occurs.\r\n\r\nOne of:\r\n- `WEEKLY`\r\
+        \n- `MONTHLY`"
       name: frequency
     generated_until_date:
       data_type: character(10)
@@ -2642,11 +2299,9 @@
       name: id
     interval:
       data_type: integer
-      description: 'The recurrence interval. For example:
-
-        - For a `frequency` of `WEEKLY`, an `interval` of 1 means "Once a week."
-
-        - For a `frequency` of `MONTHLY`, an `interval` of 3 means "Every 3 months."'
+      description: "The recurrence interval. For example:\r\n- For a `frequency` of\
+        \ `WEEKLY`, an `interval` of 1 means \"Once a week.\"\r\n- For a `frequency`\
+        \ of `MONTHLY`, an `interval` of 3 means \"Every 3 months.\""
       name: interval
     is_fully_generated:
       data_type: boolean
@@ -2664,21 +2319,16 @@
       name: location_group_id
     nth_weekday:
       data_type: integer
-      description: 'Ordinal weekday for monthly recurrence interpreted with `days_of_week`
-        for example:
-
-        - `1` with `days_of_week = [''MO'']` =  First Monday of the month
-
-        - `2` with `days_of_week = [''TU'']` =  Second Tuesday of the month
-
-        - `-1` with `days_of_week = [''FR'']` = Last Friday of the month'
+      description: "Ordinal weekday for monthly recurrence interpreted with `days_of_week`\
+        \ for example:\r\n- `1` with `days_of_week = ['MO']` =  First Monday of the\
+        \ month\r\n- `2` with `days_of_week = ['TU']` =  Second Tuesday of the month\r\
+        \n- `-1` with `days_of_week = ['FR']` = Last Friday of the month"
       name: nth_weekday
     occurrence_count:
       data_type: integer
-      description: 'When this value is set, the recurrence ends after generating the
-        specified number of occurrences
-
-        At least one of `occurrence_count` or `until_date` must be set.'
+      description: "When this value is set, the recurrence ends after generating the\
+        \ specified number of occurrences\r\nAt least one of `occurrence_count` or\
+        \ `until_date` must be set."
       name: occurrence_count
     patient_id:
       data_type: character varying(255)
@@ -2695,24 +2345,14 @@
       name: start_datetime
     status:
       data_type: character varying(255)
-      description: 'The current status of the appointment record.
-
-
-        One of:
-
-        - `Confirmed`
-
-        - `Arrived`
-
-        - `No-show`
-
-        - `Cancelled`'
+      description: "The current status of the appointment record.\r\n\r\nOne of:\r\
+        \n- `Confirmed`\r\n- `Arrived`\r\n- `No-show`\r\n- `Cancelled`"
       name: status
     until_date:
       data_type: date
       description: "The end date for the recurrence. No occurrences will be generated\
-        \ beyond this date. \nBoth `until_date` and `occurrence_count` cannot be null\
-        \ at the same time to ensure the recurrence has an end condition."
+        \ beyond this date. \r\nBoth `until_date` and `occurrence_count` cannot be\
+        \ null at the same time to ensure the recurrence has an end condition."
       name: until_date
   config:
     tags:
@@ -2742,14 +2382,9 @@
       description: Unique identifier for the change log entry (UUID from logs.changes).
       name: change_id
     change_sequence:
-      description: 'Sequential number of this change for the appointment.
-
-        - 1 = initial creation event
-
-        - 2+ = subsequent modifications
-
-
-        Uses ROW_NUMBER() partitioned by appointment_id and ordered by logged_at.'
+      description: "Sequential number of this change for the appointment.\r\n- 1 =\
+        \ initial creation event\r\n- 2+ = subsequent modifications\r\n\r\nUses ROW_NUMBER()\
+        \ partitioned by appointment_id and ordered by logged_at."
       name: change_sequence
     clinician_id:
       description: Current [clinician](#!/model/model.tamanu_source_dbt.users) ID
@@ -2817,18 +2452,8 @@
       description: Current appointment start date and time (after the change).
       name: start_datetime
     status:
-      description: 'Current appointment status (after the change).
-
-
-        One of:
-
-        - `Confirmed`
-
-        - `Arrived`
-
-        - `No-show`
-
-        - `Cancelled`'
+      description: "Current appointment status (after the change).\r\n\r\nOne of:\r\
+        \n- `Confirmed`\r\n- `Arrived`\r\n- `No-show`\r\n- `Cancelled`"
       name: status
   config:
     tags:
@@ -2855,26 +2480,8 @@
 - columns:
     blood_type:
       data_type: character varying(255)
-      description: 'Blood type.
-
-
-        One of:
-
-        - `A+`
-
-        - `A-`
-
-        - `AB-`
-
-        - `AB+`
-
-        - `B+`
-
-        - `B-`
-
-        - `O+`
-
-        - `O-`'
+      description: "Blood type.\r\n\r\nOne of:\r\n- `A+`\r\n- `A-`\r\n- `AB-`\r\n\
+        - `AB+`\r\n- `B+`\r\n- `B-`\r\n- `O+`\r\n- `O-`"
       name: blood_type
       tags:
       - quasi_identifier
@@ -2930,24 +2537,8 @@
       - quasi_identifier
     marital_status:
       data_type: character varying(255)
-      description: 'Marital status.
-
-
-        One of:
-
-        - `Defacto`
-
-        - `Married`
-
-        - `Single`
-
-        - `Widow`
-
-        - `Divorced`
-
-        - `Separated`
-
-        - `Unknown`'
+      description: "Marital status.\r\n\r\nOne of:\r\n- `Defacto`\r\n- `Married`\r\
+        \n- `Single`\r\n- `Widow`\r\n- `Divorced`\r\n- `Separated`\r\n- `Unknown`"
       name: marital_status
       tags:
       - quasi_identifier
@@ -3018,11 +2609,9 @@
       - quasi_identifier
     secondary_village_id:
       data_type: text
-      description: 'Reference to patient administrative village of residence ([Reference
-        Data](#!/source/source.tamanu.tamanu.reference_data), secondary).
-
-
-        See also [`patients.village_id`](#!/source/source.tamanu.tamanu.patients).'
+      description: "Reference to patient administrative village of residence ([Reference\
+        \ Data](#!/source/source.tamanu.tamanu.reference_data), secondary).\r\n\r\n\
+        See also [`patients.village_id`](#!/source/source.tamanu.tamanu.patients)."
       name: secondary_village_id
       tags:
       - quasi_identifier
@@ -3039,37 +2628,22 @@
       name: title
     updated_by_field:
       data_type: json
-      description: 'JSON object recording the updated datetime for individual columns.
-
-
-        As PADs contain a lot of disparate data, it''s not uncommon that fields are
-        edited separately in
-
-        different facilities. The default sync strategy is for the last edit to a
-        whole row to "win out" in
-
-        case of a conflict, but this can lead to discarding important data in the
-        case of PADs. This field
-
-        is used to implement per-field "last edit wins" instead.'
+      description: "JSON object recording the updated datetime for individual columns.\r\
+        \n\r\nAs PADs contain a lot of disparate data, it's not uncommon that fields\
+        \ are edited separately in\r\ndifferent facilities. The default sync strategy\
+        \ is for the last edit to a whole row to \"win out\" in\r\ncase of a conflict,\
+        \ but this can lead to discarding important data in the case of PADs. This\
+        \ field\r\nis used to implement per-field \"last edit wins\" instead."
       name: updated_by_field
   config:
     tags:
     - base
     - patient
-  description: 'Core or adjunct patient data that doesn''t fit elsewhere, but is only
-    downloaded to a facility once a
-
-    patient is marked for sync.
-
-
-    This is often referred to as "PAD".
-
-
-    See also `patient_field_definition_categories`, `patient_field_definitions`, and
-    `patient_field_values`,
-
-    which define and specify custom/non-standard data to be stored against patients.'
+  description: "Core or adjunct patient data that doesn't fit elsewhere, but is only\
+    \ downloaded to a facility once a\r\npatient is marked for sync.\r\n\r\nThis is\
+    \ often referred to as \"PAD\".\r\n\r\nSee also `patient_field_definition_categories`,\
+    \ `patient_field_definitions`, and `patient_field_values`,\r\nwhich define and\
+    \ specify custom/non-standard data to be stored against patients."
   meta:
     classification: restricted
     domain: clinical
@@ -3083,26 +2657,8 @@
 - columns:
     blood_type:
       data_type: text
-      description: 'Blood type.
-
-
-        One of:
-
-        - `A+`
-
-        - `A-`
-
-        - `AB-`
-
-        - `AB+`
-
-        - `B+`
-
-        - `B-`
-
-        - `O+`
-
-        - `O-` from history.'
+      description: "Blood type.\r\n\r\nOne of:\r\n- `A+`\r\n- `A-`\r\n- `AB-`\r\n\
+        - `AB+`\r\n- `B+`\r\n- `B-`\r\n- `O+`\r\n- `O-` from history."
       name: blood_type
       tags:
       - quasi_identifier
@@ -3172,24 +2728,9 @@
       name: logged_at
     marital_status:
       data_type: text
-      description: 'Marital status.
-
-
-        One of:
-
-        - `Defacto`
-
-        - `Married`
-
-        - `Single`
-
-        - `Widow`
-
-        - `Divorced`
-
-        - `Separated`
-
-        - `Unknown` from history.'
+      description: "Marital status.\r\n\r\nOne of:\r\n- `Defacto`\r\n- `Married`\r\
+        \n- `Single`\r\n- `Widow`\r\n- `Divorced`\r\n- `Separated`\r\n- `Unknown`\
+        \ from history."
       name: marital_status
       tags:
       - quasi_identifier
@@ -3265,12 +2806,10 @@
       - quasi_identifier
     secondary_village_id:
       data_type: text
-      description: 'Reference to patient administrative village of residence ([Reference
-        Data](#!/source/source.tamanu.tamanu.reference_data), secondary).
-
-
-        See also [`patients.village_id`](#!/source/source.tamanu.tamanu.patients).
-        from history.'
+      description: "Reference to patient administrative village of residence ([Reference\
+        \ Data](#!/source/source.tamanu.tamanu.reference_data), secondary).\r\n\r\n\
+        See also [`patients.village_id`](#!/source/source.tamanu.tamanu.patients).\
+        \ from history."
       name: secondary_village_id
       tags:
       - quasi_identifier
@@ -3287,46 +2826,30 @@
       name: title
     updated_by_field:
       data_type: jsonb
-      description: 'JSON object recording the updated datetime for individual columns.
-
-
-        As PADs contain a lot of disparate data, it''s not uncommon that fields are
-        edited separately in
-
-        different facilities. The default sync strategy is for the last edit to a
-        whole row to "win out" in
-
-        case of a conflict, but this can lead to discarding important data in the
-        case of PADs. This field
-
-        is used to implement per-field "last edit wins" instead. from history.'
+      description: "JSON object recording the updated datetime for individual columns.\r\
+        \n\r\nAs PADs contain a lot of disparate data, it's not uncommon that fields\
+        \ are edited separately in\r\ndifferent facilities. The default sync strategy\
+        \ is for the last edit to a whole row to \"win out\" in\r\ncase of a conflict,\
+        \ but this can lead to discarding important data in the case of PADs. This\
+        \ field\r\nis used to implement per-field \"last edit wins\" instead. from\
+        \ history."
       name: updated_by_field
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in patient
-        additional data history.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in patient\
+        \ additional data history."
       name: updated_by_user_id
   config:
     tags:
     - base
     - patient
     - log
-  description: 'Change logs of Core or adjunct patient data that doesn''t fit elsewhere,
-    but is only downloaded to a facility once a
-
-    patient is marked for sync.
-
-
-    This is often referred to as "PAD".
-
-
-    See also `patient_field_definition_categories`, `patient_field_definitions`, and
-    `patient_field_values`,
-
-    which define and specify custom/non-standard data to be stored against patients.'
+  description: "Change logs of Core or adjunct patient data that doesn't fit elsewhere,\
+    \ but is only downloaded to a facility once a\r\npatient is marked for sync.\r\
+    \n\r\nThis is often referred to as \"PAD\".\r\n\r\nSee also `patient_field_definition_categories`,\
+    \ `patient_field_definitions`, and `patient_field_values`,\r\nwhich define and\
+    \ specify custom/non-standard data to be stored against patients."
   meta:
     classification: restricted
     domain: clinical
@@ -3364,15 +2887,10 @@
     tags:
     - base
     - clinical
-  description: 'List of allergies known of the patient.
-
-
-    In Tamanu this is displayed and entered in the patient view sidebar, under "Allergies".
-
-
-    See also: `public.patient_care_plans`, `public.patient_conditions`,
-
-    `public.patient_family_histories`, `public.patient_issues`.'
+  description: "List of allergies known of the patient.\r\n\r\nIn Tamanu this is displayed\
+    \ and entered in the patient view sidebar, under \"Allergies\".\r\n\r\nSee also:\
+    \ `public.patient_care_plans`, `public.patient_conditions`,\r\n`public.patient_family_histories`,\
+    \ `public.patient_issues`."
   meta:
     classification: restricted
     domain: clinical
@@ -3401,49 +2919,20 @@
       name: apgar_score_ten_minutes
     attendant_at_birth:
       data_type: character varying(255)
-      description: 'The type of the attendant at birth.
-
-
-        One of:
-
-        - `doctor`
-
-        - `midwife`
-
-        - `nurse`
-
-        - `traditional_birth_attentdant`
-
-        - `other`'
+      description: "The type of the attendant at birth.\r\n\r\nOne of:\r\n- `doctor`\r\
+        \n- `midwife`\r\n- `nurse`\r\n- `traditional_birth_attentdant`\r\n- `other`"
       name: attendant_at_birth
     birth_delivery_type:
       data_type: character varying(255)
-      description: 'Type of delivery.
-
-
-        One of:
-
-        - `normal_vaginal_delivery`
-
-        - `breech`
-
-        - `emergency_c_section`
-
-        - `elective_c_section`
-
-        - `vacuum_extraction`
-
-        - `forceps`
-
-        - `other`'
+      description: "Type of delivery.\r\n\r\nOne of:\r\n- `normal_vaginal_delivery`\r\
+        \n- `breech`\r\n- `emergency_c_section`\r\n- `elective_c_section`\r\n- `vacuum_extraction`\r\
+        \n- `forceps`\r\n- `other`"
       name: birth_delivery_type
     birth_facility_id:
       data_type: character varying(255)
-      description: 'Reference to the [facility](#!/source/source.tamanu.tamanu.facilities)
-        the birth was recorded at.
-
-
-        This is only required when `registered_birth_place` is `health_facility`.'
+      description: "Reference to the [facility](#!/source/source.tamanu.tamanu.facilities)\
+        \ the birth was recorded at.\r\n\r\nThis is only required when `registered_birth_place`\
+        \ is `health_facility`."
       name: birth_facility_id
     birth_length:
       data_type: numeric
@@ -3471,26 +2960,14 @@
       name: name_of_attendant_at_birth
     patient_id:
       data_type: character varying(255)
-      description: 'Reference to the [patient](#!/source/source.tamanu.tamanu.patients).
-
-
-        There is at most one `patient_birth_data` row per patient.
-
-
-        Note that the `id` column is generated from this column to enforce this.'
+      description: "Reference to the [patient](#!/source/source.tamanu.tamanu.patients).\r\
+        \n\r\nThere is at most one `patient_birth_data` row per patient.\r\n\r\nNote\
+        \ that the `id` column is generated from this column to enforce this."
       name: patient_id
     registered_birth_place:
       data_type: character varying(255)
-      description: 'Type of the actual birth place.
-
-
-        One of:
-
-        - `health_facility`
-
-        - `home`
-
-        - `other`'
+      description: "Type of the actual birth place.\r\n\r\nOne of:\r\n- `health_facility`\r\
+        \n- `home`\r\n- `other`"
       name: registered_birth_place
     registration_date:
       data_type: date
@@ -3500,14 +2977,10 @@
     tags:
     - base
     - clinical
-  description: 'Information about the birth of the patient, if their birth was recorded
-    into Tamanu.
-
-
-    This is specifically data about the newborn, and only the birth-relevant data.
-
-    Other patient data is found in the normal tables i.e. `patients`, `patient_additional_data`,
-    etc.'
+  description: "Information about the birth of the patient, if their birth was recorded\
+    \ into Tamanu.\r\n\r\nThis is specifically data about the newborn, and only the\
+    \ birth-relevant data.\r\nOther patient data is found in the normal tables i.e.\
+    \ `patients`, `patient_additional_data`, etc."
   meta:
     classification: restricted
     domain: clinical
@@ -3544,16 +3017,10 @@
     tags:
     - base
     - clinical
-  description: 'List of current care plans the patient is on.
-
-
-    In Tamanu this is displayed and entered in the patient view sidebar, under "Care
-    plans".
-
-
-    See also: `public.patient_allergies`, `public.patient_conditions`, `public.patient_family_histories`,
-
-    `public.patient_issues`.'
+  description: "List of current care plans the patient is on.\r\n\r\nIn Tamanu this\
+    \ is displayed and entered in the patient view sidebar, under \"Care plans\".\r\
+    \n\r\nSee also: `public.patient_allergies`, `public.patient_conditions`, `public.patient_family_histories`,\r\
+    \n`public.patient_issues`."
   meta:
     classification: restricted
     domain: clinical
@@ -3587,10 +3054,8 @@
       name: patient_id
     recorded_by_id:
       data_type: character varying(255)
-      description: 'Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
-        diagnosing/recording this
-
-        condition.'
+      description: "Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)\
+        \ diagnosing/recording this\r\ncondition."
       name: recorded_by_id
     recorded_datetime:
       data_type: timestamp
@@ -3602,10 +3067,8 @@
       name: resolution_note
     resolved_by_id:
       data_type: character varying(255)
-      description: 'Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)
-        diagnosing/recording the
-
-        resolution of this condition.'
+      description: "Reference to the [practitioner](#!/source/source.tamanu.tamanu.users)\
+        \ diagnosing/recording the\r\nresolution of this condition."
       name: resolved_by_id
     resolved_datetime:
       data_type: character(19)
@@ -3615,16 +3078,10 @@
     tags:
     - base
     - clinical
-  description: 'List of ongoing conditions known about a patient.
-
-
-    In Tamanu this is displayed and entered in the patient view sidebar, under "Ongoing
-    conditions".
-
-
-    See also: `public.patient_allergies`, `public.patient_care_plans`,
-
-    `public.patient_family_histories`, `public.patient_issues`.'
+  description: "List of ongoing conditions known about a patient.\r\n\r\nIn Tamanu\
+    \ this is displayed and entered in the patient view sidebar, under \"Ongoing conditions\"\
+    .\r\n\r\nSee also: `public.patient_allergies`, `public.patient_care_plans`,\r\n\
+    `public.patient_family_histories`, `public.patient_issues`."
   meta:
     classification: restricted
     domain: clinical
@@ -3672,9 +3129,8 @@
 - columns:
     antecedent_cause1_condition_id:
       data_type: character varying(255)
-      description: 'Reference to an antecedent (1) cause of death
-
-        ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)), if applicable.'
+      description: "Reference to an antecedent (1) cause of death\r\n([Reference Data](#!/source/source.tamanu.tamanu.reference_data)),\
+        \ if applicable."
       name: antecedent_cause1_condition_id
     antecedent_cause1_mins_after_onset:
       data_type: integer
@@ -3683,9 +3139,8 @@
       name: antecedent_cause1_mins_after_onset
     antecedent_cause2_condition_id:
       data_type: character varying(255)
-      description: 'Reference to an antecedent (2) cause of death
-
-        ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)), if applicable.'
+      description: "Reference to an antecedent (2) cause of death\r\n([Reference Data](#!/source/source.tamanu.tamanu.reference_data)),\
+        \ if applicable."
       name: antecedent_cause2_condition_id
     antecedent_cause2_mins_after_onset:
       data_type: integer
@@ -3694,9 +3149,8 @@
       name: antecedent_cause2_mins_after_onset
     antecedent_cause3_condition_id:
       data_type: character varying(255)
-      description: 'Reference to an antecedent (3) cause of death
-
-        ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)), if applicable.'
+      description: "Reference to an antecedent (3) cause of death\r\n([Reference Data](#!/source/source.tamanu.tamanu.reference_data)),\
+        \ if applicable."
       name: antecedent_cause3_condition_id
     antecedent_cause3_mins_after_onset:
       data_type: integer
@@ -3760,13 +3214,9 @@
       name: id
     is_final:
       data_type: boolean
-      description: 'Whether this date record is final.
-
-
-        In Tamanu, this is set by a supervisor after review, and cannot be reversed;
-        it causes all fields to
-
-        become read-only. The only way to undo this record is through a `death_revert_logs`.'
+      description: "Whether this date record is final.\r\n\r\nIn Tamanu, this is set\
+        \ by a supervisor after review, and cannot be reversed; it causes all fields\
+        \ to\r\nbecome read-only. The only way to undo this record is through a `death_revert_logs`."
       name: is_final
     last_surgery_date:
       data_type: date
@@ -3774,10 +3224,8 @@
       name: last_surgery_date
     last_surgery_reason_id:
       data_type: character varying(255)
-      description: 'Reference to a `diagnosis` ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))
-        for the
-
-        reason of the most recent surgery the patient received, if any.'
+      description: "Reference to a `diagnosis` ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))\
+        \ for the\r\nreason of the most recent surgery the patient received, if any."
       name: last_surgery_reason_id
     manner:
       data_type: character varying(255)
@@ -3811,9 +3259,8 @@
       name: pregnancy_moment
     primary_cause_condition_id:
       data_type: character varying(255)
-      description: 'Reference to the primary cause of death
-
-        ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)), if known.'
+      description: "Reference to the primary cause of death\r\n([Reference Data](#!/source/source.tamanu.tamanu.reference_data)),\
+        \ if known."
       name: primary_cause_condition_id
     primary_cause_mins_after_onset:
       data_type: integer
@@ -3827,13 +3274,13 @@
       name: recorded_by_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in patient_death_data."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in patient_death_data."
       name: visibility_status
     was_fetal_or_infant:
       data_type: boolean
@@ -3892,26 +3339,14 @@
     tags:
     - base
     - clinical
-  description: 'Tracks which patients are of interest to which facilities.
-
-
-    This is used to refine sync data: only patient data related to these patients
-    is synced to a
-
-    facility (plus general data, and some exceptions apply like vaccine data under
-    some conditions).
-
-
-    In Tamanu, this can be set manually on the facility server (via the "mark for
-    sync" button), or
-
-    centrally (via some labs / vaccine programs, or via bulk-imports).
-
-
-    _("Joe Patient attends X Clinic" is clinical info; even though an entry in patient
-    facilities
-
-    doesn''t necessarily imply this, it often does.)_'
+  description: "Tracks which patients are of interest to which facilities.\r\n\r\n\
+    This is used to refine sync data: only patient data related to these patients\
+    \ is synced to a\r\nfacility (plus general data, and some exceptions apply like\
+    \ vaccine data under some conditions).\r\n\r\nIn Tamanu, this can be set manually\
+    \ on the facility server (via the \"mark for sync\" button), or\r\ncentrally (via\
+    \ some labs / vaccine programs, or via bulk-imports).\r\n\r\n_(\"Joe Patient attends\
+    \ X Clinic\" is clinical info; even though an entry in patient facilities\r\n\
+    doesn't necessarily imply this, it often does.)_"
   meta:
     classification: restricted
     domain: clinical
@@ -3930,9 +3365,8 @@
       name: clinician_id
     diagnosis_id:
       data_type: character varying(255)
-      description: 'Reference to a diagnosis ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))
-
-        describing this issue.'
+      description: "Reference to a diagnosis ([Reference Data](#!/source/source.tamanu.tamanu.reference_data))\r\
+        \ndescribing this issue."
       name: diagnosis_id
     id:
       data_type: character varying(255)
@@ -3958,16 +3392,10 @@
     tags:
     - base
     - clinical
-  description: 'List of family history conditions known about a patient.
-
-
-    In Tamanu this is displayed and entered in the patient view sidebar, under "Family
-    history".
-
-
-    See also: `public.patient_allergies`, `public.patient_care_plans`, `public.patient_conditions`,
-
-    `public.patient_issues`.'
+  description: "List of family history conditions known about a patient.\r\n\r\nIn\
+    \ Tamanu this is displayed and entered in the patient view sidebar, under \"Family\
+    \ history\".\r\n\r\nSee also: `public.patient_allergies`, `public.patient_care_plans`,\
+    \ `public.patient_conditions`,\r\n`public.patient_issues`."
   meta:
     classification: restricted
     domain: clinical
@@ -3995,11 +3423,8 @@
     tags:
     - base
     - patient
-  description: 'Values recorded in custom patient fields.
-
-
-    The `id` column is generated to enforce one value row per field definition per
-    patient.'
+  description: "Values recorded in custom patient fields.\r\n\r\nThe `id` column is\
+    \ generated to enforce one value row per field definition per patient."
   meta:
     classification: restricted
     domain: clinical
@@ -4030,15 +3455,13 @@
       name: id
     patient_program_registration_id:
       data_type: uuid
-      description: 'Reference to the [Patient Program Registry](#!/source/source.tamanu.tamanu.patient_program_registrations)
-
-        of the condition.'
+      description: "Reference to the [Patient Program Registry](#!/source/source.tamanu.tamanu.patient_program_registrations)\r\
+        \nof the condition."
       name: patient_program_registration_id
     program_registry_condition_category_id:
       data_type: character varying(255)
-      description: 'Reference to the [Program Registry Condition Category](#!/source/source.tamanu.tamanu.program_registry_condition_categories)
-
-        of the condition.'
+      description: "Reference to the [Program Registry Condition Category](#!/source/source.tamanu.tamanu.program_registry_condition_categories)\r\
+        \nof the condition."
       name: program_registry_condition_category_id
     program_registry_condition_id:
       data_type: character varying(255)
@@ -4099,15 +3522,13 @@
       name: logged_at
     patient_program_registration_id:
       data_type: text
-      description: 'Reference to the [Patient Program Registry](#!/source/source.tamanu.tamanu.patient_program_registrations)
-
-        of the condition. from history.'
+      description: "Reference to the [Patient Program Registry](#!/source/source.tamanu.tamanu.patient_program_registrations)\r\
+        \nof the condition. from history."
       name: patient_program_registration_id
     program_registry_condition_category_id:
       data_type: text
-      description: 'Reference to the [Program Registry Condition Category](#!/source/source.tamanu.tamanu.program_registry_condition_categories)
-
-        of the condition. from history.'
+      description: "Reference to the [Program Registry Condition Category](#!/source/source.tamanu.tamanu.program_registry_condition_categories)\r\
+        \nof the condition. from history."
       name: program_registry_condition_category_id
     program_registry_condition_id:
       data_type: text
@@ -4126,11 +3547,9 @@
       name: recorded_by_id
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in patient
-        program registration condition record.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in patient\
+        \ program registration condition record."
       name: updated_by_user_id
   config:
     tags:
@@ -4153,9 +3572,8 @@
 - columns:
     clinical_status_id:
       data_type: character varying(255)
-      description: 'Reference to the [Program Registry Clinical Status](#!/source/source.tamanu.tamanu.program_registry_clinical_statuses)
-
-        of the registration.'
+      description: "Reference to the [Program Registry Clinical Status](#!/source/source.tamanu.tamanu.program_registry_clinical_statuses)\r\
+        \nof the registration."
       name: clinical_status_id
     datetime:
       data_type: timestamp
@@ -4171,10 +3589,8 @@
       name: deactivated_datetime
     facility_id:
       data_type: character varying(255)
-      description: 'Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)
-        this program
-
-        registration is from.'
+      description: "Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)\
+        \ this program\r\nregistration is from."
       name: facility_id
     id:
       data_type: uuid
@@ -4186,53 +3602,36 @@
       name: patient_id
     program_registry_id:
       data_type: character varying(255)
-      description: 'Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)
-
-        of the registration.'
+      description: "Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)\r\
+        \nof the registration."
       name: program_registry_id
     registered_by_id:
       data_type: character varying(255)
-      description: 'Reference to the [Clinician](#!/source/source.tamanu.tamanu.users)
-        recording that
-
-        registration.'
+      description: "Reference to the [Clinician](#!/source/source.tamanu.tamanu.users)\
+        \ recording that\r\nregistration."
       name: registered_by_id
     registering_facility_id:
       data_type: character varying(255)
-      description: 'Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)
-        where the
-
-        registration was registered in.'
+      description: "Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)\
+        \ where the\r\nregistration was registered in."
       name: registering_facility_id
     registration_status:
       data_type: text
-      description: 'The current status of the registration.
-
-
-        One of:
-
-        - `active`
-
-        - `inactive`
-
-        - `recordedInError`'
+      description: "The current status of the registration.\r\n\r\nOne of:\r\n- `active`\r\
+        \n- `inactive`\r\n- `recordedInError`"
       name: registration_status
     village_id:
       data_type: character varying(255)
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=village`) this program registration is from.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=village`) this program registration is from."
       name: village_id
   config:
     tags:
     - base
     - clinical
-  description: 'Table with information about the program registrations of a patient.
-    This is helpful
-
-    to enroll a specific patient within a program that will be followed for an extended
-
-    period of time.'
+  description: "Table with information about the program registrations of a patient.\
+    \ This is helpful\r\nto enroll a specific patient within a program that will be\
+    \ followed for an extended\r\nperiod of time."
   meta:
     classification: restricted
     domain: clinical
@@ -4250,9 +3649,8 @@
       name: changelog_id
     clinical_status_id:
       data_type: text
-      description: 'Reference to the [Program Registry Clinical Status](#!/source/source.tamanu.tamanu.program_registry_clinical_statuses)
-
-        of the registration. from history.'
+      description: "Reference to the [Program Registry Clinical Status](#!/source/source.tamanu.tamanu.program_registry_clinical_statuses)\r\
+        \nof the registration. from history."
       name: clinical_status_id
     datetime:
       data_type: timestamp
@@ -4269,10 +3667,8 @@
       name: deactivated_datetime
     facility_id:
       data_type: text
-      description: 'Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)
-        this program
-
-        registration is from. from history.'
+      description: "Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)\
+        \ this program\r\nregistration is from. from history."
       name: facility_id
     id:
       data_type: text
@@ -4290,62 +3686,43 @@
       name: patient_id
     program_registry_id:
       data_type: text
-      description: 'Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)
-
-        of the registration. from history.'
+      description: "Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)\r\
+        \nof the registration. from history."
       name: program_registry_id
     registered_by_id:
       data_type: text
-      description: 'Reference to the [Clinician](#!/source/source.tamanu.tamanu.users)
-        recording that
-
-        registration. from history.'
+      description: "Reference to the [Clinician](#!/source/source.tamanu.tamanu.users)\
+        \ recording that\r\nregistration. from history."
       name: registered_by_id
     registering_facility_id:
       data_type: text
-      description: 'Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)
-        where the
-
-        registration was registered in. from history.'
+      description: "Reference to the [Facility](#!/source/source.tamanu.tamanu.facilities)\
+        \ where the\r\nregistration was registered in. from history."
       name: registering_facility_id
     registration_status:
       data_type: text
-      description: 'The current status of the registration.
-
-
-        One of:
-
-        - `active`
-
-        - `inactive`
-
-        - `recordedInError` from history.'
+      description: "The current status of the registration.\r\n\r\nOne of:\r\n- `active`\r\
+        \n- `inactive`\r\n- `recordedInError` from history."
       name: registration_status
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in patient_program
-        registrations history.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in patient_program\
+        \ registrations history."
       name: updated_by_user_id
     village_id:
       data_type: text
-      description: 'Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=village`) this program registration is from. from history.'
+      description: "Reference to the [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=village`) this program registration is from. from history."
       name: village_id
   config:
     tags:
     - base
     - clinical
     - log
-  description: 'Change logs of Table with information about the program registrations
-    of a patient. This is helpful
-
-    to enroll a specific patient within a program that will be followed for an extended
-
-    period of time.'
+  description: "Change logs of Table with information about the program registrations\
+    \ of a patient. This is helpful\r\nto enroll a specific patient within a program\
+    \ that will be followed for an extended\r\nperiod of time."
   meta:
     classification: restricted
     domain: clinical
@@ -4360,10 +3737,8 @@
 - columns:
     days_till_due:
       data_type: integer
-      description: 'Number of days until the scheduled vaccine is due. Negative numbers
-        indicates the number of days in the past the vaccine
-
-        was due.'
+      description: "Number of days until the scheduled vaccine is due. Negative numbers\
+        \ indicates the number of days in the past the vaccine\r\nwas due."
       name: days_till_due
     due_date:
       data_type: date
@@ -4396,11 +3771,12 @@
     - base
     - clinical
   description: "A **view** which lists patients and next vaccine due for a given vaccine\
-    \ type.\n\nThe first dose of a vaccine type is based on weeks from birth due whilst\
-    \ subsequent doses are based on weeks from last \nvaccination due.\n\nAge limits\
-    \ in years and thresholds in days for scheduled status are configurable with the\
-    \ following defaults:\n\n- Age = 15\n- Status: Scheduled = 28\n- Status: Upcoming\
-    \ = 7\n- Status: Due = -7\n- Status: Overdue = -55\n- Status: Missed = -Infinity"
+    \ type.\r\n\r\nThe first dose of a vaccine type is based on weeks from birth due\
+    \ whilst subsequent doses are based on weeks from last \r\nvaccination due.\r\n\
+    \r\nAge limits in years and thresholds in days for scheduled status are configurable\
+    \ with the following defaults:\r\n\r\n- Age = 15\r\n- Status: Scheduled = 28\r\
+    \n- Status: Upcoming = 7\r\n- Status: Due = -7\r\n- Status: Overdue = -55\r\n\
+    - Status: Missed = -Infinity"
   meta:
     classification: restricted
     domain: clinical
@@ -4430,16 +3806,8 @@
       name: id
     sex:
       data_type: character varying(255)
-      description: 'Sex of patient.
-
-
-        One of:
-
-        - `male`
-
-        - `female`
-
-        - `other`'
+      description: "Sex of patient.\r\n\r\nOne of:\r\n- `male`\r\n- `female`\r\n-\
+        \ `other`"
       name: sex
       tags:
       - quasi_identifier
@@ -4453,27 +3821,14 @@
     tags:
     - base
     - patient
-  description: 'The central record for a patient.
-
-
-    ⚠️ The full contents of this table are synced to all devices, and in larger deployments
-    this may be
-
-    hundreds of thousands of records (or even millions), so it is critical to keep
-    the row size small.
-
-
-    Only contains basic patient data (name, dob, etc.): the bare minimum to be able
-    to find that patient
-
-    in the system from the search page.
-
-
-    The remainder of the patient data is stored in the `patient_additional_data` table,
-    which is only
-
-    synced to a device once it has marked that patient for sync (in the `patient_facility`
-    table).'
+  description: "The central record for a patient.\r\n\r\n⚠️ The full contents of this\
+    \ table are synced to all devices, and in larger deployments this may be\r\nhundreds\
+    \ of thousands of records (or even millions), so it is critical to keep the row\
+    \ size small.\r\n\r\nOnly contains basic patient data (name, dob, etc.): the bare\
+    \ minimum to be able to find that patient\r\nin the system from the search page.\r\
+    \n\r\nThe remainder of the patient data is stored in the `patient_additional_data`\
+    \ table, which is only\r\nsynced to a device once it has marked that patient for\
+    \ sync (in the `patient_facility` table)."
   meta:
     classification: restricted
     domain: clinical
@@ -4580,26 +3935,16 @@
       name: registration_date
     sex:
       data_type: text
-      description: 'Sex of patient.
-
-
-        One of:
-
-        - `male`
-
-        - `female`
-
-        - `other` from history.'
+      description: "Sex of patient.\r\n\r\nOne of:\r\n- `male`\r\n- `female`\r\n-\
+        \ `other` from history."
       name: sex
       tags:
       - quasi_identifier
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in patients
-        history.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in patients\
+        \ history."
       name: updated_by_user_id
     village_id:
       data_type: text
@@ -4612,27 +3957,14 @@
     - base
     - patient
     - log
-  description: 'Change logs for The central record for a patient.
-
-
-    ⚠️ The full contents of this table are synced to all devices, and in larger deployments
-    this may be
-
-    hundreds of thousands of records (or even millions), so it is critical to keep
-    the row size small.
-
-
-    Only contains basic patient data (name, dob, etc.): the bare minimum to be able
-    to find that patient
-
-    in the system from the search page.
-
-
-    The remainder of the patient data is stored in the `patient_additional_data` table,
-    which is only
-
-    synced to a device once it has marked that patient for sync (in the `patient_facility`
-    table).'
+  description: "Change logs for The central record for a patient.\r\n\r\n⚠️ The full\
+    \ contents of this table are synced to all devices, and in larger deployments\
+    \ this may be\r\nhundreds of thousands of records (or even millions), so it is\
+    \ critical to keep the row size small.\r\n\r\nOnly contains basic patient data\
+    \ (name, dob, etc.): the bare minimum to be able to find that patient\r\nin the\
+    \ system from the search page.\r\n\r\nThe remainder of the patient data is stored\
+    \ in the `patient_additional_data` table, which is only\r\nsynced to a device\
+    \ once it has marked that patient for sync (in the `patient_facility` table)."
   meta:
     classification: restricted
     domain: clinical
@@ -4668,16 +4000,8 @@
       name: registration_date
     sex:
       data_type: character varying(255)
-      description: 'Sex of patient.
-
-
-        One of:
-
-        - `male`
-
-        - `female`
-
-        - `other`'
+      description: "Sex of patient.\r\n\r\nOne of:\r\n- `male`\r\n- `female`\r\n-\
+        \ `other`"
       name: sex
       tags:
       - quasi_identifier
@@ -4691,28 +4015,15 @@
     tags:
     - base
     - patient
-  description: 'Only includes patients that have been merged. The central record for
-    a patient.
-
-
-    ⚠️ The full contents of this table are synced to all devices, and in larger deployments
-    this may be
-
-    hundreds of thousands of records (or even millions), so it is critical to keep
-    the row size small.
-
-
-    Only contains basic patient data (name, dob, etc.): the bare minimum to be able
-    to find that patient
-
-    in the system from the search page.
-
-
-    The remainder of the patient data is stored in the `patient_additional_data` table,
-    which is only
-
-    synced to a device once it has marked that patient for sync (in the `patient_facility`
-    table).'
+  description: "Only includes patients that have been merged. The central record for\
+    \ a patient.\r\n\r\n⚠️ The full contents of this table are synced to all devices,\
+    \ and in larger deployments this may be\r\nhundreds of thousands of records (or\
+    \ even millions), so it is critical to keep the row size small.\r\n\r\nOnly contains\
+    \ basic patient data (name, dob, etc.): the bare minimum to be able to find that\
+    \ patient\r\nin the system from the search page.\r\n\r\nThe remainder of the patient\
+    \ data is stored in the `patient_additional_data` table, which is only\r\nsynced\
+    \ to a device once it has marked that patient for sync (in the `patient_facility`\
+    \ table)."
   meta:
     classification: restricted
     domain: clinical
@@ -4760,21 +4071,14 @@
       name: id
     noun:
       data_type: character varying(255)
-      description: 'The subject of the action/permission, usually the model or resource
-        being affected.
-
-
-        Nouns are defined in `PascalCase` and are singular.'
+      description: "The subject of the action/permission, usually the model or resource\
+        \ being affected.\r\n\r\nNouns are defined in `PascalCase` and are singular."
       name: noun
     object_id:
       data_type: character varying(255)
-      description: 'An optional object ID to specialise the permission.
-
-
-        If this is not set the permission is generally for the entire class of objects,
-        if it _is_ set then
-
-        the permission is _only_ for the specific object.'
+      description: "An optional object ID to specialise the permission.\r\n\r\nIf\
+        \ this is not set the permission is generally for the entire class of objects,\
+        \ if it _is_ set then\r\nthe permission is _only_ for the specific object."
       name: object_id
     role_id:
       data_type: character varying(255)
@@ -4783,33 +4087,18 @@
       name: role_id
     verb:
       data_type: character varying(255)
-      description: 'The action verb for this permission.
-
-
-        Some common verbs include: `create`, `read`, `write`, `list`.'
+      description: "The action verb for this permission.\r\n\r\nSome common verbs\
+        \ include: `create`, `read`, `write`, `list`."
       name: verb
   config:
     tags:
     - base
     - administration
-  description: 'These are associations of permissions to roles.
-
-
-    Permissions are modeled on the concept of a sentence like
-
-
-    ```
-
-    ROLE can VERB the NOUN
-
-    ROLE can VERB the NOUN which is specifically the OBJECT ID
-
-    ```
-
-
-    See also the [`roles`](#!/source/source.tamanu.tamanu.roles) and
-
-    [`users`](#!/source/source.tamanu.tamanu.users) tables.'
+  description: "These are associations of permissions to roles.\r\n\r\nPermissions\
+    \ are modeled on the concept of a sentence like\r\n\r\n```\r\nROLE can VERB the\
+    \ NOUN\r\nROLE can VERB the NOUN which is specifically the OBJECT ID\r\n```\r\n\
+    \r\nSee also the [`roles`](#!/source/source.tamanu.tamanu.roles) and\r\n[`users`](#!/source/source.tamanu.tamanu.users)\
+    \ tables."
   meta:
     classification: confidential
     domain: admin
@@ -5158,10 +4447,8 @@
 - columns:
     code:
       data_type: character varying(255)
-      description: 'Machine-friendly short name for the question.
-
-
-        This is also used to refer to questions within criteria and such.'
+      description: "Machine-friendly short name for the question.\r\n\r\nThis is also\
+        \ used to refer to questions within criteria and such."
       name: code
     default_options:
       data_type: text
@@ -5177,10 +4464,8 @@
       name: id
     indicator:
       data_type: character varying(255)
-      description: 'Another name for the data element.
-
-
-        It''s named `indicator` from mimicry of Tupaia.'
+      description: "Another name for the data element.\r\n\r\nIt's named `indicator`\
+        \ from mimicry of Tupaia."
       name: indicator
     name:
       data_type: character varying(255)
@@ -5188,10 +4473,7 @@
       name: name
     type:
       data_type: character varying(31)
-      description: 'Type of the field.
-
-
-        Types are here: <https://github.com/beyondessential/tamanu/blob/main/packages/constants/src/surveys.ts>'
+      description: "Type of the field.\r\n\r\nTypes are here: <https://github.com/beyondessential/tamanu/blob/main/packages/constants/src/surveys.ts>"
       name: type
     visualisation_config:
       data_type: text
@@ -5201,13 +4483,9 @@
     tags:
     - base
     - reference
-  description: 'Describes how a survey question gets stored.
-
-
-    See [survey screen components](#!/source/source.tamanu.tamanu.survey_screen_components),
-    which
-
-    describes how the question is displayed.'
+  description: "Describes how a survey question gets stored.\r\n\r\nSee [survey screen\
+    \ components](#!/source/source.tamanu.tamanu.survey_screen_components), which\r\
+    \ndescribes how the question is displayed."
   meta:
     classification: internal
     domain: admin
@@ -5225,14 +4503,8 @@
       name: code
     currently_at_type:
       data_type: text
-      description: 'Defines what kind of location the registry can be filtered with.
-
-
-        One of:
-
-        - `village`
-
-        - `facility`'
+      description: "Defines what kind of location the registry can be filtered with.\r\
+        \n\r\nOne of:\r\n- `village`\r\n- `facility`"
       name: currently_at_type
     id:
       data_type: character varying(255)
@@ -5248,28 +4520,22 @@
       name: program_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in program_registries."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registries."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'Table of program registries.
-
-
-    This provides functionality to track a patient population defined by a particular
-    disease or
-
-    condition, and follow this population over time.
-
-
-    This table defines the different registries available to track users with.'
+  description: "Table of program registries.\r\n\r\nThis provides functionality to\
+    \ track a patient population defined by a particular disease or\r\ncondition,\
+    \ and follow this population over time.\r\n\r\nThis table defines the different\
+    \ registries available to track users with."
   meta:
     classification: internal
     domain: admin
@@ -5287,30 +4553,9 @@
       name: code
     color:
       data_type: text
-      description: 'A color for the clinical status.
-
-
-        One of:
-
-        - `purple`
-
-        - `pink`
-
-        - `orange`
-
-        - `yellow`
-
-        - `blue`
-
-        - `green`
-
-        - `grey`
-
-        - `red`
-
-        - `brown`
-
-        - `teal`'
+      description: "A color for the clinical status.\r\n\r\nOne of:\r\n- `purple`\r\
+        \n- `pink`\r\n- `orange`\r\n- `yellow`\r\n- `blue`\r\n- `green`\r\n- `grey`\r\
+        \n- `red`\r\n- `brown`\r\n- `teal`"
       name: color
     id:
       data_type: character varying(255)
@@ -5322,19 +4567,18 @@
       name: name
     program_registry_id:
       data_type: character varying(255)
-      description: 'Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)
-
-        the status is a part of.'
+      description: "Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)\r\
+        \nthe status is a part of."
       name: program_registry_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in program_registry_clinical_statuses."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registry_clinical_statuses."
       name: visibility_status
   config:
     tags:
@@ -5370,13 +4614,13 @@
       name: program_registry_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in program_registry_condition_categories."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registry_condition_categories."
       name: visibility_status
   config:
     tags:
@@ -5411,19 +4655,18 @@
       name: name
     program_registry_id:
       data_type: character varying(255)
-      description: 'Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)
-
-        the condition is a part of.'
+      description: "Reference to the [Program Registry](#!/source/source.tamanu.tamanu.program_registries)\r\
+        \nthe condition is a part of."
       name: program_registry_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in program_registry_conditions."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in program_registry_conditions."
       name: visibility_status
   config:
     tags:
@@ -5489,39 +4732,33 @@
       name: name
     type:
       data_type: character varying(255)
-      description: 'Class of the data (referred to in code).
-
-
-        Whenever this table is referred to in a relationship, it''s to a specific
-        `type` here. For example a
-
-        table might have a `diagnosis_id`, which is a reference to this table, for
-        specifically only the
-
-        rows with `type = diagnosis`.'
+      description: "Class of the data (referred to in code).\r\n\r\nWhenever this\
+        \ table is referred to in a relationship, it's to a specific `type` here.\
+        \ For example a\r\ntable might have a `diagnosis_id`, which is a reference\
+        \ to this table, for specifically only the\r\nrows with `type = diagnosis`."
       name: type
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in reference_data."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in reference_data."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: "User imported reference data for the environment grouped by type.\n\
-    \n- Catch-all for simple reference data types - there are a LOT of kinds of reference\
-    \ data that exist as just an ID, a \nstring label, and occasionally a code; these\
-    \ are all grouped into this table to avoid overcomplicating the schema.\n- Occasionally\
-    \ a type of simple reference data will gain some complexity, at which point it\
-    \ will be refactored/migrated \nout to use its own table.\n- Simple reference\
-    \ data types include a code, type, name and visibility status.\n- Example types\
-    \ include `diagnosis`, `procedures`"
+  description: "User imported reference data for the environment grouped by type.\r\
+    \n\r\n- Catch-all for simple reference data types - there are a LOT of kinds of\
+    \ reference data that exist as just an ID, a \r\nstring label, and occasionally\
+    \ a code; these are all grouped into this table to avoid overcomplicating the\
+    \ schema.\r\n- Occasionally a type of simple reference data will gain some complexity,\
+    \ at which point it will be refactored/migrated \r\nout to use its own table.\r\
+    \n- Simple reference data types include a code, type, name and visibility status.\r\
+    \n- Example types include `diagnosis`, `procedures`"
   meta:
     classification: internal
     domain: admin
@@ -5555,10 +4792,8 @@
     tags:
     - base
     - reference
-  description: 'Entity hierarchy for reference data.
-
-
-    Some reference datas can be organised in a hierarchy. This is how that''s done.'
+  description: "Entity hierarchy for reference data.\r\n\r\nSome reference datas can\
+    \ be organised in a hierarchy. This is how that's done."
   meta:
     classification: internal
     domain: admin
@@ -5583,16 +4818,8 @@
       name: referred_facility
     status:
       data_type: character varying(255)
-      description: 'Status of the referral.
-
-
-        One of:
-
-        - `pending`
-
-        - `cancelled`
-
-        - `completed`'
+      description: "Status of the referral.\r\n\r\nOne of:\r\n- `pending`\r\n- `cancelled`\r\
+        \n- `completed`"
       name: status
     survey_response_id:
       data_type: character varying(255)
@@ -5603,19 +4830,19 @@
     tags:
     - base
     - clinical
-  description: "[Referrals](https://en.wikipedia.org/wiki/Referral_(medicine)).\n\n\
-    Referrals use a confusing mix of data in the `referrals` table and\n[`survey_response_answers`](#!/source/source.tamanu.tamanu.survey_response_answers)\
-    \ identified by\nthe text of the question they are for. \n\nSome additional data\
-    \ is captured in\n[survey response answers](#!/source/source.tamanu.tamanu.survey_response_answers),\
-    \ but this is\nvariable and not enforced through any validation:\n- Where the\
-    \ person is being referred to can be captured by a range of questions, sometimes\
-    \ with a\n  list of hard coded facility name options, or location groups, or departments.\n\
-    - Who the referral is \"completed by\" can be captured by a question either the\
-    \ name\n  'Referring doctor' or 'Referral completed by'.\n- Some referrals are\
-    \ the product of a previous screening survey. In some cases (e.g. Samoa) there\
-    \ is\n  a SurveyLink question that captures which survey led to this referral,\
-    \ in others (e.g. Nauru)\n  there is no such question so the two survey responses\
-    \ cannot be reliably linked."
+  description: "[Referrals](https://en.wikipedia.org/wiki/Referral_(medicine)).\r\n\
+    \r\nReferrals use a confusing mix of data in the `referrals` table and\r\n[`survey_response_answers`](#!/source/source.tamanu.tamanu.survey_response_answers)\
+    \ identified by\r\nthe text of the question they are for. \r\n\r\nSome additional\
+    \ data is captured in\r\n[survey response answers](#!/source/source.tamanu.tamanu.survey_response_answers),\
+    \ but this is\r\nvariable and not enforced through any validation:\r\n- Where\
+    \ the person is being referred to can be captured by a range of questions, sometimes\
+    \ with a\r\n  list of hard coded facility name options, or location groups, or\
+    \ departments.\r\n- Who the referral is \"completed by\" can be captured by a\
+    \ question either the name\r\n  'Referring doctor' or 'Referral completed by'.\r\
+    \n- Some referrals are the product of a previous screening survey. In some cases\
+    \ (e.g. Samoa) there is\r\n  a SurveyLink question that captures which survey\
+    \ led to this referral, in others (e.g. Nauru)\r\n  there is no such question\
+    \ so the two survey responses cannot be reliably linked."
   meta:
     classification: restricted
     domain: clinical
@@ -5675,13 +4902,10 @@
     tags:
     - base
     - administration
-  description: 'These are sets of permissions that are given to users to determine
-    what they can do in Tamanu.
-
-
-    The actual permissions are associated to the role in the
-
-    [`permissions`](#!/source/source.tamanu.tamanu.permissions) table.'
+  description: "These are sets of permissions that are given to users to determine\
+    \ what they can do in Tamanu.\r\n\r\nThe actual permissions are associated to\
+    \ the role in the\r\n[`permissions`](#!/source/source.tamanu.tamanu.permissions)\
+    \ table."
   meta:
     classification: confidential
     domain: admin
@@ -5744,10 +4968,8 @@
       name: id
     is_notified:
       data_type: boolean
-      description: 'If the [survey](#!/source/source.tamanu.tamanu.surveys) is `notifiable`,
-        whether this response''s
-
-        notification has been sent.'
+      description: "If the [survey](#!/source/source.tamanu.tamanu.surveys) is `notifiable`,\
+        \ whether this response's\r\nnotification has been sent."
       name: is_notified
     result_text:
       data_type: text
@@ -5771,22 +4993,14 @@
     tags:
     - base
     - clinical
-  description: 'A response to a survey (as recorded by a practitioner).
-
-
-    Typically surveys are filled on behalf of patients as part of an encounter.
-
-
-    Because there are multiple distinct kinds of dates at play here:
-
-    - `created_at`, `updated_at`, `deleted_at` are system data for syncing and cannot
-    be relied on for realtime
-
-    - `start_time`, `end_time` are real datetimes automatically recorded when starting
-    and submitting a survey response
-
-    - in survey response answers, there could be a data element for targeting the
-    date of when exactly the data is recorded in real time.'
+  description: "A response to a survey (as recorded by a practitioner).\r\n\r\nTypically\
+    \ surveys are filled on behalf of patients as part of an encounter.\r\n\r\nBecause\
+    \ there are multiple distinct kinds of dates at play here:\r\n- `created_at`,\
+    \ `updated_at`, `deleted_at` are system data for syncing and cannot be relied\
+    \ on for realtime\r\n- `start_time`, `end_time` are real datetimes automatically\
+    \ recorded when starting and submitting a survey response\r\n- in survey response\
+    \ answers, there could be a data element for targeting the date of when exactly\
+    \ the data is recorded in real time."
   meta:
     classification: restricted
     domain: clinical
@@ -5800,11 +5014,8 @@
 - columns:
     calculation:
       data_type: character varying(255)
-      description: 'Math expression to do calculations on the entered value before
-        it''s saved.
-
-
-        For example `questionCode + 3`.'
+      description: "Math expression to do calculations on the entered value before\
+        \ it's saved.\r\n\r\nFor example `questionCode + 3`."
       name: calculation
     component_index:
       data_type: integer
@@ -5816,10 +5027,8 @@
       name: config
     data_element_id:
       data_type: character varying(255)
-      description: 'Reference to the [data element](#!/source/source.tamanu.tamanu.program_data_elements)
-        configuring
-
-        how the data from the question is stored.'
+      description: "Reference to the [data element](#!/source/source.tamanu.tamanu.program_data_elements)\
+        \ configuring\r\nhow the data from the question is stored."
       name: data_element_id
     detail:
       data_type: character varying(255)
@@ -5835,11 +5044,9 @@
       name: options
     screen_index:
       data_type: integer
-      description: 'Screen this component should appear on.
-
-
-        Surveys can have multiple "screens" or pages, this index sets where this particular
-        question sits.'
+      description: "Screen this component should appear on.\r\n\r\nSurveys can have\
+        \ multiple \"screens\" or pages, this index sets where this particular question\
+        \ sits."
       name: screen_index
     survey_id:
       data_type: character varying(255)
@@ -5856,35 +5063,31 @@
       name: validation_criteria
     visibility_criteria:
       data_type: character varying(255)
-      description: "JSON criteria that determines when this component is visible.\n\
-        \nA criteria is a list of other components' codes and the value that will\
-        \ make this question show up:\n\n```json\n{\n  \"otherQuestion\": \"Yes\"\n\
-        }\n```\n\nThere can also be the special criterium `{\"hidden\": true}` which\
-        \ always hides the question, and the\nspecial key `\"_conjunction\": \"or\"\
-        ` which makes it so _any one_ item in the list is sufficient to\nshow the\
-        \ question, instead of the default where _all_ items must match."
+      description: "JSON criteria that determines when this component is visible.\r\
+        \n\r\nA criteria is a list of other components' codes and the value that will\
+        \ make this question show up:\r\n\r\n```json\r\n{\r\n  \"otherQuestion\":\
+        \ \"Yes\"\r\n}\r\n```\r\n\r\nThere can also be the special criterium `{\"\
+        hidden\": true}` which always hides the question, and the\r\nspecial key `\"\
+        _conjunction\": \"or\"` which makes it so _any one_ item in the list is sufficient\
+        \ to\r\nshow the question, instead of the default where _all_ items must match."
       name: visibility_criteria
     visibility_status:
       data_type: character varying(255)
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in survey_screen_components."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in survey_screen_components."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'Describes how a survey question gets displayed.
-
-
-    See [program data element](#!/source/source.tamanu.tamanu.program_data_elements),
-    which describes
-
-    how the data from the question is stored.'
+  description: "Describes how a survey question gets displayed.\r\n\r\nSee [program\
+    \ data element](#!/source/source.tamanu.tamanu.program_data_elements), which describes\r\
+    \nhow the data from the question is stored."
   meta:
     classification: internal
     domain: admin
@@ -5906,10 +5109,8 @@
       name: id
     is_notifiable:
       data_type: boolean
-      description: 'Whether filling this survey sends a notification email.
-
-
-        These are sent by the `SurveyCompletionNotifierProcessor` scheduled task.'
+      description: "Whether filling this survey sends a notification email.\r\n\r\n\
+        These are sent by the `SurveyCompletionNotifierProcessor` scheduled task."
       name: is_notifiable
     is_sensitive:
       data_type: boolean
@@ -5930,37 +5131,25 @@
       name: program_id
     survey_type:
       data_type: character varying(255)
-      description: 'Type of survey.
-
-
-        One of:
-
-        - `programs`
-
-        - `referral`
-
-        - `obsolete`
-
-        - `vitals`'
+      description: "Type of survey.\r\n\r\nOne of:\r\n- `programs`\r\n- `referral`\r\
+        \n- `obsolete`\r\n- `vitals`"
       name: survey_type
     visibility_status:
       data_type: character varying(255)
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in surveys."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in surveys."
       name: visibility_status
   config:
     tags:
     - base
     - reference
-  description: 'Surveys, aka custom forms that can be filled by practitioners.
-
-
-    These are composed of [screen components](#!/source/source.tamanu.tamanu.survey_screen_components).'
+  description: "Surveys, aka custom forms that can be filled by practitioners.\r\n\
+    \r\nThese are composed of [screen components](#!/source/source.tamanu.tamanu.survey_screen_components)."
   meta:
     classification: internal
     domain: admin
@@ -6062,10 +5251,8 @@
 - columns:
     display_id:
       data_type: character varying(255)
-      description: 'Display identifier for the user.
-
-
-        This may be the employee code or badge number.'
+      description: "Display identifier for the user.\r\n\r\nThis may be the employee\
+        \ code or badge number."
       name: display_id
     display_name:
       data_type: character varying(255)
@@ -6081,46 +5268,34 @@
       name: id
     phone_number:
       data_type: character varying(255)
-      description: 'Phone number for the user.
-
-
-        This is not currently available anywhere visible.'
+      description: "Phone number for the user.\r\n\r\nThis is not currently available\
+        \ anywhere visible."
       name: phone_number
     role:
       data_type: character varying(255)
-      description: 'The role of the user, which sets their permission level.
-
-
-        The special values `admin` and `system` indicate a superadmin and a system
-        user respectively.'
+      description: "The role of the user, which sets their permission level.\r\n\r\
+        \nThe special values `admin` and `system` indicate a superadmin and a system\
+        \ user respectively."
       name: role
     visibility_status:
       data_type: character varying(255)
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in users."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in users."
       name: visibility_status
   config:
     tags:
     - base
     - administration
-  description: 'Records of each user that can login to Tamanu.
-
-
-    This includes machine users.
-
-
-    There is one special user account with an all-zero `id`, which is the global "system"
-    user. This is
-
-    used as a pseudo identity where the Tamanu system itself takes an action that
-    normally is performed
-
-    by a human or API user.'
+  description: "Records of each user that can login to Tamanu.\r\n\r\nThis includes\
+    \ machine users.\r\n\r\nThere is one special user account with an all-zero `id`,\
+    \ which is the global \"system\" user. This is\r\nused as a pseudo identity where\
+    \ the Tamanu system itself takes an action that normally is performed\r\nby a\
+    \ human or API user."
   meta:
     classification: restricted
     domain: admin
@@ -6168,17 +5343,14 @@
       name: batch
     circumstance_ids:
       data_type: array
-      description: 'Array of references to [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=vaccineCircumstance`).'
+      description: "Array of references to [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=vaccineCircumstance`)."
       name: circumstance_ids
     consent_given_by:
       data_type: text
-      description: 'Free text field recording who gave consent for the vaccination.
-
-        This is usually the patient themselves, but may differ for children or dependent
-
-        persons or other cases.'
+      description: "Free text field recording who gave consent for the vaccination.\r\
+        \nThis is usually the patient themselves, but may differ for children or dependent\r\
+        \npersons or other cases."
       name: consent_given_by
     datetime:
       data_type: timestamp
@@ -6186,10 +5358,8 @@
       name: datetime
     department_id:
       data_type: character varying(255)
-      description: 'Reference to the [Department](#!/source/source.tamanu.tamanu.departments)
-        at which the vaccine was
-
-        given.'
+      description: "Reference to the [Department](#!/source/source.tamanu.tamanu.departments)\
+        \ at which the vaccine was\r\ngiven."
       name: department_id
     disease:
       data_type: text
@@ -6202,13 +5372,10 @@
       name: encounter_id
     given_by_id:
       data_type: text
-      description: 'Free text field for the name of the health practitioner who administered
-        the
-
-        vaccine. This is defaulted to the `display_name` of the logged-in User, but
-        can
-
-        be changed. It is not a requirement that the administerer is a Tamanu User.'
+      description: "Free text field for the name of the health practitioner who administered\
+        \ the\r\nvaccine. This is defaulted to the `display_name` of the logged-in\
+        \ User, but can\r\nbe changed. It is not a requirement that the administerer\
+        \ is a Tamanu User."
       name: given_by_id
     id:
       data_type: character varying(255)
@@ -6228,20 +5395,14 @@
       name: is_given_elsewhere
     location_id:
       data_type: character varying(255)
-      description: 'Reference to the [Location](#!/source/source.tamanu.tamanu.locations)
-        at which the vaccine was
-
-        given.'
+      description: "Reference to the [Location](#!/source/source.tamanu.tamanu.locations)\
+        \ at which the vaccine was\r\ngiven."
       name: location_id
     not_given_reason_id:
       data_type: character varying(255)
-      description: 'Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=vaccineNotGivenReason`).
-
-
-        These are presented as a dropdown for ease of recording and reporting, alongside
-        the free-text field.'
+      description: "Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=vaccineNotGivenReason`).\r\n\r\nThese are presented as a dropdown\
+        \ for ease of recording and reporting, alongside the free-text field."
       name: not_given_reason_id
     reason:
       data_type: character varying(255)
@@ -6250,27 +5411,24 @@
       name: reason
     recorded_by_id:
       data_type: character varying(255)
-      description: 'Reference to the [User](#!/source/source.tamanu.tamanu.users)
-        who recorded this vaccination.
-
-        This may differ from the User or person who administered the vaccine.'
+      description: "Reference to the [User](#!/source/source.tamanu.tamanu.users)\
+        \ who recorded this vaccination.\r\nThis may differ from the User or person\
+        \ who administered the vaccine."
       name: recorded_by_id
     scheduled_vaccine_id:
       data_type: character varying(255)
-      description: 'Reference to the [Scheduled Vaccine](#!/source/source.tamanu.tamanu.scheduled_vaccines)
-        that was
-
-        administered.'
+      description: "Reference to the [Scheduled Vaccine](#!/source/source.tamanu.tamanu.scheduled_vaccines)\
+        \ that was\r\nadministered."
       name: scheduled_vaccine_id
     status:
       data_type: character varying(255)
-      description: "Status of vaccine administrations recorded. \n\nThe `RECORDED_IN_ERROR`\
-        \ status is assigned to vaccines initially recorded\nas `GIVEN` that are then\
-        \ deleted.\n\nThe `HISTORICAL` status is assigned to vaccines initially recorded\
-        \ as \n`NOT_GIVEN` that are then recorded as `GIVEN`. This `HISTORICAL` status\
-        \ \nkeeps a record that the vaccine was marked as `NOT_GIVEN` but hides this\n\
-        record from the frontend to avoid confusion or conflict with the `GIVEN`\n\
-        record."
+      description: "Status of vaccine administrations recorded. \r\n\r\nThe `RECORDED_IN_ERROR`\
+        \ status is assigned to vaccines initially recorded\r\nas `GIVEN` that are\
+        \ then deleted.\r\n\r\nThe `HISTORICAL` status is assigned to vaccines initially\
+        \ recorded as \r\n`NOT_GIVEN` that are then recorded as `GIVEN`. This `HISTORICAL`\
+        \ status \r\nkeeps a record that the vaccine was marked as `NOT_GIVEN` but\
+        \ hides this\r\nrecord from the frontend to avoid confusion or conflict with\
+        \ the `GIVEN`\r\nrecord."
       name: status
     vaccine_brand:
       data_type: text
@@ -6284,12 +5442,9 @@
     tags:
     - base
     - clinical
-  description: 'Table of vaccines administered to patients.
-
-
-    Vaccinations are recorded via the Vaccinations modal; they are selected
-
-    from a list of Scheduled Vaccines and linked to a Patient via an Encounter.'
+  description: "Table of vaccines administered to patients.\r\n\r\nVaccinations are\
+    \ recorded via the Vaccinations modal; they are selected\r\nfrom a list of Scheduled\
+    \ Vaccines and linked to a Patient via an Encounter."
   meta:
     classification: restricted
     domain: clinical
@@ -6311,17 +5466,14 @@
       name: changelog_id
     circumstance_ids:
       data_type: text
-      description: 'Array of references to [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=vaccineCircumstance`). from history.'
+      description: "Array of references to [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=vaccineCircumstance`). from history."
       name: circumstance_ids
     consent_given_by:
       data_type: text
-      description: 'Free text field recording who gave consent for the vaccination.
-
-        This is usually the patient themselves, but may differ for children or dependent
-
-        persons or other cases. from history.'
+      description: "Free text field recording who gave consent for the vaccination.\r\
+        \nThis is usually the patient themselves, but may differ for children or dependent\r\
+        \npersons or other cases. from history."
       name: consent_given_by
     created_at:
       data_type: timestamp
@@ -6334,10 +5486,8 @@
       name: datetime
     department_id:
       data_type: text
-      description: 'Reference to the [Department](#!/source/source.tamanu.tamanu.departments)
-        at which the vaccine was
-
-        given. from history.'
+      description: "Reference to the [Department](#!/source/source.tamanu.tamanu.departments)\
+        \ at which the vaccine was\r\ngiven. from history."
       name: department_id
     disease:
       data_type: text
@@ -6351,14 +5501,10 @@
       name: encounter_id
     given_by:
       data_type: text
-      description: 'Free text field for the name of the health practitioner who administered
-        the
-
-        vaccine. This is defaulted to the `display_name` of the logged-in User, but
-        can
-
-        be changed. It is not a requirement that the administerer is a Tamanu User.
-        from history.'
+      description: "Free text field for the name of the health practitioner who administered\
+        \ the\r\nvaccine. This is defaulted to the `display_name` of the logged-in\
+        \ User, but can\r\nbe changed. It is not a requirement that the administerer\
+        \ is a Tamanu User. from history."
       name: given_by
     id:
       data_type: text
@@ -6379,10 +5525,8 @@
       name: is_given_elsewhere
     location_id:
       data_type: text
-      description: 'Reference to the [Location](#!/source/source.tamanu.tamanu.locations)
-        at which the vaccine was
-
-        given. from history.'
+      description: "Reference to the [Location](#!/source/source.tamanu.tamanu.locations)\
+        \ at which the vaccine was\r\ngiven. from history."
       name: location_id
     logged_at:
       data_type: timestamp
@@ -6391,13 +5535,10 @@
       name: logged_at
     not_given_reason_id:
       data_type: text
-      description: 'Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)
-
-        (`type=vaccineNotGivenReason`).
-
-
-        These are presented as a dropdown for ease of recording and reporting, alongside
-        the free-text field. from history.'
+      description: "Reference to a [Reference Data](#!/source/source.tamanu.tamanu.reference_data)\r\
+        \n(`type=vaccineNotGivenReason`).\r\n\r\nThese are presented as a dropdown\
+        \ for ease of recording and reporting, alongside the free-text field. from\
+        \ history."
       name: not_given_reason_id
     reason:
       data_type: text
@@ -6406,28 +5547,24 @@
       name: reason
     recorded_by_id:
       data_type: text
-      description: 'Reference to the [User](#!/source/source.tamanu.tamanu.users)
-        who recorded this vaccination.
-
-        This may differ from the User or person who administered the vaccine. from
-        history.'
+      description: "Reference to the [User](#!/source/source.tamanu.tamanu.users)\
+        \ who recorded this vaccination.\r\nThis may differ from the User or person\
+        \ who administered the vaccine. from history."
       name: recorded_by_id
     scheduled_vaccine_id:
       data_type: text
-      description: 'Reference to the [Scheduled Vaccine](#!/source/source.tamanu.tamanu.scheduled_vaccines)
-        that was
-
-        administered. from history.'
+      description: "Reference to the [Scheduled Vaccine](#!/source/source.tamanu.tamanu.scheduled_vaccines)\
+        \ that was\r\nadministered. from history."
       name: scheduled_vaccine_id
     status:
       data_type: text
-      description: "Status of vaccine administrations recorded. \n\nThe `RECORDED_IN_ERROR`\
-        \ status is assigned to vaccines initially recorded\nas `GIVEN` that are then\
-        \ deleted.\n\nThe `HISTORICAL` status is assigned to vaccines initially recorded\
-        \ as \n`NOT_GIVEN` that are then recorded as `GIVEN`. This `HISTORICAL` status\
-        \ \nkeeps a record that the vaccine was marked as `NOT_GIVEN` but hides this\n\
-        record from the frontend to avoid confusion or conflict with the `GIVEN`\n\
-        record. from history."
+      description: "Status of vaccine administrations recorded. \r\n\r\nThe `RECORDED_IN_ERROR`\
+        \ status is assigned to vaccines initially recorded\r\nas `GIVEN` that are\
+        \ then deleted.\r\n\r\nThe `HISTORICAL` status is assigned to vaccines initially\
+        \ recorded as \r\n`NOT_GIVEN` that are then recorded as `GIVEN`. This `HISTORICAL`\
+        \ status \r\nkeeps a record that the vaccine was marked as `NOT_GIVEN` but\
+        \ hides this\r\nrecord from the frontend to avoid confusion or conflict with\
+        \ the `GIVEN`\r\nrecord. from history."
       name: status
     updated_at:
       data_type: timestamp
@@ -6436,11 +5573,9 @@
       name: updated_at
     updated_by_user_id:
       data_type: text
-      description: 'The value of the `updated_by_user_id` field of the change data.
-
-
-        This is extracted from the data to make it easier to query on. in vaccine
-        administrations history.'
+      description: "The value of the `updated_by_user_id` field of the change data.\r\
+        \n\r\nThis is extracted from the data to make it easier to query on. in vaccine\
+        \ administrations history."
       name: updated_by_user_id
     vaccine_brand:
       data_type: text
@@ -6455,12 +5590,9 @@
     - base
     - clinical
     - log
-  description: 'Change logs of Table of vaccines administered to patients.
-
-
-    Vaccinations are recorded via the Vaccinations modal; they are selected
-
-    from a list of Scheduled Vaccines and linked to a Patient via an Encounter.'
+  description: "Change logs of Table of vaccines administered to patients.\r\n\r\n\
+    Vaccinations are recorded via the Vaccinations modal; they are selected\r\nfrom\
+    \ a list of Scheduled Vaccines and linked to a Patient via an Encounter."
   meta:
     classification: restricted
     domain: clinical
@@ -6480,7 +5612,7 @@
     dose_label:
       data_type: character varying(255)
       description: "Dose label indicates what will appear on the front end of Tamanu\
-        \ re when the dose is due. It can be a time in a child's \nlife (e.g. 'Birth',\
+        \ re when the dose is due. It can be a time in a child's \r\nlife (e.g. 'Birth',\
         \ '6 weeks') or a dose of vaccine (e.g. 'Dose 1', 'Dose 2')"
       name: dose_label
     id:
@@ -6490,14 +5622,14 @@
     index:
       data_type: integer
       description: "This column is used to show when a second dose is due in relation\
-        \ to the first dose. For example, if dose 1 is due at 6 \nweeks and dose 2\
-        \ is due at 10 weeks, this column would read '4' against the 10 week dose\
-        \ as dose 2 is due 4 weeks after \ndose 1 is given."
+        \ to the first dose. For example, if dose 1 is due at 6 \r\nweeks and dose\
+        \ 2 is due at 10 weeks, this column would read '4' against the 10 week dose\
+        \ as dose 2 is due 4 weeks after \r\ndose 1 is given."
       name: index
     label:
       data_type: character varying(255)
       description: "Contents of the label column is what will be displayed on the\
-        \ front end of Tamanu \nunder fields labelled 'Vaccine'. This is where the\
+        \ front end of Tamanu \r\nunder fields labelled 'Vaccine'. This is where the\
         \ vaccine name is listed. E.g. 'BCG'."
       name: label
     sort_index:
@@ -6507,36 +5639,36 @@
     vaccine_id:
       data_type: character varying(255)
       description: "Use the vaccineId column to link the id column of the Reference\
-        \ Data sheet Drug to the vaccine schedule. Copy the exact \nid from the id\
-        \ column in the reference data sheet Drug and paste it in the vaccineId column\
-        \ in the Scheduled Vaccine \nsheet."
+        \ Data sheet Drug to the vaccine schedule. Copy the exact \r\nid from the\
+        \ id column in the reference data sheet Drug and paste it in the vaccineId\
+        \ column in the Scheduled Vaccine \r\nsheet."
       name: vaccine_id
     visibility_status:
       data_type: text
-      description: "The visibility status of the record.\n\n- `current` indicates\
-        \ the record is currently in use and should be visible and accessible to users\n\
-        \  on the User Interface.\n- `historical` indicates that the record is no\
-        \ longer in use and should not be visible nor\n  accessible to users. However,\
-        \ the record may still be present in Reporting.\n- `merged` indicates that\
-        \ the record has been merged, is no longer in use and should not be visible\n\
-        \  nor accessible to users.\n\nThe default value is `current`. in vaccine_schedules."
+      description: "The visibility status of the record.\r\n\r\n- `current` indicates\
+        \ the record is currently in use and should be visible and accessible to users\r\
+        \n  on the User Interface.\r\n- `historical` indicates that the record is\
+        \ no longer in use and should not be visible nor\r\n  accessible to users.\
+        \ However, the record may still be present in Reporting.\r\n- `merged` indicates\
+        \ that the record has been merged, is no longer in use and should not be visible\r\
+        \n  nor accessible to users.\r\n\r\nThe default value is `current`. in vaccine_schedules."
       name: visibility_status
     weeks_from_birth_due:
       data_type: integer
       description: "This column is used to tell Tamanu how many weeks from the child's\
-        \ date of birth a vaccine is due. This will populate \nthe front end within\
+        \ date of birth a vaccine is due. This will populate \r\nthe front end within\
         \ the Vaccine schedule section in the column 'Due date'. For a vaccine to\
-        \ appear in the Vaccine \nschedule a dose must have a `weeksFromBirthDue`\
-        \ entered into the reference data. \n\nThis field should be used only for\
-        \ the first dose of the vaccine. Subsequent doses should use \n`weeks_from_last_vaccination_due`"
+        \ appear in the Vaccine \r\nschedule a dose must have a `weeksFromBirthDue`\
+        \ entered into the reference data. \r\n\r\nThis field should be used only\
+        \ for the first dose of the vaccine. Subsequent doses should use \r\n`weeks_from_last_vaccination_due`"
       name: weeks_from_birth_due
     weeks_from_last_vaccination_due:
       data_type: integer
       description: "This column is used to show when a second dose is due in relation\
-        \ to the first dose. For example, if dose 1 is due at 6 \nweeks and dose 2\
-        \ is due at 10 weeks, this column would read '4' against the 10 week dose\
-        \ as dose 2 is due 4 weeks after \ndose 1 is given. The order of a vaccine\
-        \ dose is defined at the `index` field. \n\nThis field should not be used\
+        \ to the first dose. For example, if dose 1 is due at 6 \r\nweeks and dose\
+        \ 2 is due at 10 weeks, this column would read '4' against the 10 week dose\
+        \ as dose 2 is due 4 weeks after \r\ndose 1 is given. The order of a vaccine\
+        \ dose is defined at the `index` field. \r\n\r\nThis field should not be used\
         \ for the first dose but for subsequent doses. First dose should use `weeks_from_birth_due`"
       name: weeks_from_last_vaccination_due
   config:
@@ -6544,10 +5676,10 @@
     - base
     - clinical
   description: "A vaccine schedule listing all vaccines expected to be given to a\
-    \ child as part of a country wide Expanded Program of \nImmunisation can be incorporated\
-    \ into Tamanu to show each dose and due date on the front end of the system. \n\
-    \nFirst dose of a vaccine should use `weeks_from_birth_due` whilst subsequent\
-    \ doses should use \n`weeks_from_last_vaccination_due`."
+    \ child as part of a country wide Expanded Program of \r\nImmunisation can be\
+    \ incorporated into Tamanu to show each dose and due date on the front end of\
+    \ the system. \r\n\r\nFirst dose of a vaccine should use `weeks_from_birth_due`\
+    \ whilst subsequent doses should use \r\n`weeks_from_last_vaccination_due`."
   meta:
     classification: restricted
     domain: clinical
