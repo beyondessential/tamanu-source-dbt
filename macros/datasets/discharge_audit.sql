@@ -58,15 +58,18 @@ encounter_details as (
 ),
 
 -- BL-010: diagnoses recorded against the encounter, split primary from secondary and
--- rolled up so the one-row-per-encounter grain is preserved. Matches the column shape of
--- the admissions dataset. The encounter_diagnoses base model already drops deleted rows
--- and diagnoses of disproven or error certainty.
+-- rolled up so the one-row-per-encounter grain is preserved. Same four columns as the
+-- admissions dataset, but the name columns carry the name alone -- the code already has
+-- its own column, so appending it to the name repeated it and left neither column clean
+-- to filter or group on. admissions.sql still appends; the two differ on this until it
+-- is changed too. The encounter_diagnoses base model already drops deleted rows and
+-- diagnoses of disproven or error certainty.
 encounter_diagnosis_summary as (
     select
         edx.encounter_id,
         string_agg(
             case when edx.is_primary
-                    then rd.name || ' (' || rd.code || ')'
+                    then rd.name
             end,
             '; '
             order by edx.datetime
@@ -80,7 +83,7 @@ encounter_diagnosis_summary as (
         ) as primary_diagnoses_codes,
         string_agg(
             case when not edx.is_primary
-                    then rd.name || ' (' || rd.code || ')'
+                    then rd.name
             end,
             '; '
             order by edx.datetime
