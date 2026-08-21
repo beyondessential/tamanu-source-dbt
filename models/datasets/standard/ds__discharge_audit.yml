@@ -114,3 +114,15 @@ models:
 
       - name: later_edit_count
         description: "{{ doc('ds__discharge_audit__later_edit_count') }}"
+
+      - name: primary_diagnoses
+        description: "{{ doc('generic__diagnoses') }} that are primary for the encounter."
+
+      - name: primary_diagnoses_codes
+        description: "{{ doc('generic__diagnosis_codes') }} that are primary for the encounter."
+
+      - name: secondary_diagnoses
+        description: "{{ doc('generic__diagnoses') }} that are secondary for the encounter."
+
+      - name: secondary_diagnoses_codes
+        description: "{{ doc('generic__diagnosis_codes') }} that are secondary for the encounter."
