@@ -1,0 +1,44 @@
+{
+  "query": "select\nuser_name as \"User name\",\nuser_role as \"User role\",\ndisplay_id as \"Patient ID\",\npatient_category as \"Patient category\",\ntriage_category as \"Triage category\",\nfacility as \"Facility\",\ndepartment as \"Department\",\nlocation_group as \"Area\",\nlocation as \"Location\",\nto_char(((encounter_start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Encounter start date and time\",\nto_char(((encounter_end_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Encounter end date and time\",\nto_char(((first_note_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Notes start date and time\",\nto_char(((last_note_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney')), 'YYYY-MM-DD HH24:MI:SS') as \"Notes end date and time\",\nis_discharged as \"Discharges (has the patient been discharged)\",\nnon_discharge_by_clinicians as \"Non-discharge by clinicians\"\nfrom \"reporting\".\"ds__user_audit\"\nwhere\n((encounter_start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n>= \n:fromDate\nand\n((encounter_start_datetime at time zone 'Australia/Sydney') at time zone coalesce(nullif(:timezone, ''), 'Australia/Sydney'))\n<= \n:toDate\nand\ncase\nwhen \n:departmentId is null then true\nelse department_id = \n:departmentId\nend\nand\ncase\nwhen \n:locationGroupId is null then true\nelse location_group_id = \n:locationGroupId\nend\norder by encounter_start_datetime",
+  "name": "User audit line list",
+  "notes": "This report generates a summary of user activity for all current and discharged inpatient, emergency and outpatient encounters for the selected date range. Encounters are listed in chronological order by encounter start date and time. \n\nThe following details are included for each encounter:\n- User name: The user assigned as the supervising clinician at the time of report generation or at time of discharge  \n- Role: The role of the supervising clinician \n- Patient category: Patient billing type\n- Triage category: Triage category for the patient if an emergency encounter\n- Department: Assigned department at the time of report generation or at time of discharge  \n- Area: Assigned area at the time of report generation or at time of discharge  \n- Location: Assigned location at the time of report generation or at time of discharge\n- Notes start time: The time first note was completed (excludes system generated notes)\n- Notes end time: The time the final note was completed (excludes system generated notes)\n- Discharges: Specifies whether or not the patient has been discharged\n- Non-discharge by clinicians: If patient is automatically discharged, this column will display the name of the clinician who last authored a note or who the note was written on behalf of",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "24hours",
+    "dataSources": [
+      "thisFacility"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      }
+    ]
+  },
+  "tamanuVersion": "~2.54.0"
+}

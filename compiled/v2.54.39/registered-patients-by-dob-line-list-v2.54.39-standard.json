@@ -1,0 +1,16 @@
+{
+  "query": "select\nto_char(registration_date, 'YYYY-MM-DD') as \"Registration date\",\nregistered_by as \"Registered by\",\nfirst_name as \"First name\",\nmiddle_name as \"Middle name\",\nlast_name as \"Last name\",\ncultural_name as \"Cultural name\",\ndisplay_id as \"Patient ID\",\nsex as \"Sex\",\nvillage as \"Village\",\nto_char(date_of_birth, 'YYYY-MM-DD') as \"Date of birth\",\nregistration_type as \"Registration type\",\nbirth_certificate as \"Birth certificate\",\ndriving_license as \"Driving license\",\npassport as \"Passport\",\nblood_type as \"Blood type\",\ntitle as \"Title\",\nmarital_status as \"Marital status\",\nprimary_contact_number as \"Primary contact number\",   -- noqa:disable=LT05\nsecondary_contact_number as \"Secondary contact number\",   -- noqa:disable=LT05\ncountry_of_birth as \"Country of birth\",\nnationality as \"Nationality\",\nethnicity as \"Ethnicity\",\noccupation as \"Occupation\",\nreligion as \"Religion\",\npatient_billing_type as \"Billing type\"\nfrom \"reporting\".\"ds__patients\"\nwhere date_of_birth >= \n:fromDate\nand\ndate_of_birth <= \n:toDate\norder by date_of_birth, last_name, first_name",
+  "name": "Registered patients by DOB line list",
+  "status": "published",
+  "notes": "This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. ",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "7days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": []
+  },
+  "tamanuVersion": "~2.54.0"
+}
