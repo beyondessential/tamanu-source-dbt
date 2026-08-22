@@ -105,11 +105,14 @@ likewise deferred (BL-005, BL-006): only the source values are populated for now
 - **BL-008:** `visit_occurrence_id` is NULL on the registry branch — the condition is recorded
   against the enrolment, not an encounter.
 - **BL-009:** `person_id` comes from `patient_program_registrations.patient_id`, reached through
-  `patient_program_registration_conditions.patient_program_registration_id`. The branch is scoped
-  to the enrolments `clinical__episode` models (its BL-001): a condition tracked alongside an
-  enrolment is only a diagnosis if the enrolment is one, so conditions on enrolments recorded in
-  error, and on patients merged away, are excluded. Both would otherwise be diagnoses with no
-  episode behind them and no `clinical__person` row to answer for them.
+  `patient_program_registration_conditions.patient_program_registration_id`, read through
+  `int__program_enrolments` (`clinical__episode`'s BL-026) rather than the base registration
+  table. The branch is scoped to the enrolments `clinical__episode` models: a condition tracked
+  alongside an enrolment is only a diagnosis if the enrolment is one, so conditions on enrolments
+  recorded in error, and on patients merged away, are excluded. Both would otherwise be diagnoses
+  with no episode behind them and no `clinical__person` row to answer for them. Reading the
+  shared model rather than restating the rule is what keeps this branch's population from
+  drifting from the episode's.
 - **BL-010:** `condition_status_source_value` is the condition category code (`confirmed`,
   `suspected`, `resolved`, …), the registry's equivalent of encounter-diagnosis certainty.
   `is_primary` is NULL: a registry condition is not ranked against the others on the enrolment.

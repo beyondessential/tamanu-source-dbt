@@ -2,11 +2,12 @@ unit_tests:
   - name: test_clinical__condition_occurrence_registry_branch_population
     model: clinical__condition_occurrence
     description: >
-      BL-009, BL-011, AC-013. The registry branch inherits clinical__episode's population: a
-      condition tracked alongside an enrolment is only a diagnosis if the enrolment is one.
-      Four conditions go in -- one valid, one on an enrolment recorded in error, one on a
-      patient merged away, one deleted -- and only the valid one comes out, with no visit FK
-      and the condition category as its status.
+      BL-009, BL-011, BL-026, AC-013. The registry branch inherits clinical__episode's
+      population by reading int__program_enrolments, the model that defines it, rather than
+      rebuilding it: a condition tracked alongside an enrolment is only a diagnosis if the
+      enrolment is one. Four conditions go in -- one valid, one on an enrolment recorded in
+      error, one on a patient merged away, one deleted -- and only the valid one comes out,
+      with no visit FK and the condition category as its status.
     given:
       - input: ref('patient_program_registration_conditions')
         format: sql
@@ -19,22 +20,14 @@ unit_tests:
           union all
           select 'cond_004', '2024-02-04 10:00:00'::timestamp, 'prc_001', 'pat_001;preg_001', 'cat_001', 'usr_001', '2024-03-01 10:00:00'::timestamp
 
-      - input: ref('patient_program_registrations')
+      # pat_003;preg_001 is absent: the intermediate already drops enrolments on a patient
+      # merged away (BL-001, BL-026), so this branch never sees it
+      - input: ref('int__program_enrolments')
         format: sql
         rows: |
-          select 'pat_001;preg_001' as id, 'pat_001' as patient_id, 'active' as registration_status
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, 'active' as registration_status
           union all
           select 'pat_002;preg_001', 'pat_002', 'recordedInError'
-          union all
-          select 'pat_003;preg_001', 'pat_003', 'active'
-
-      # pat_003 is absent, standing for a record merged away
-      - input: ref('patients')
-        format: sql
-        rows: |
-          select 'pat_001' as id
-          union all
-          select 'pat_002'
 
       - input: ref('program_registry_conditions')
         format: sql

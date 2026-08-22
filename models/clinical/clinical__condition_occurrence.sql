@@ -22,10 +22,6 @@ registration_conditions as (
     select * from {{ ref('patient_program_registration_conditions') }}
 ),
 
-registrations as (
-    select * from {{ ref('patient_program_registrations') }}
-),
-
 registry_conditions as (
     select * from {{ ref('program_registry_conditions') }}
 ),
@@ -34,19 +30,14 @@ condition_categories as (
     select * from {{ ref('program_registry_condition_categories') }}
 ),
 
-patients as (
-    select * from {{ ref('patients') }}
-),
-
--- the population clinical__episode models (its BL-001): a condition tracked alongside an
--- enrolment is only a diagnosis if the enrolment is one. Without this the branch emits
--- conditions against enrolments recorded in error, and against patients merged away, which
--- have no episode and no clinical__person row to answer for them (BL-009)
+-- the population clinical__episode models, read from the model that defines it rather than
+-- rebuilt here (BL-009, BL-026). A condition tracked alongside an enrolment is only a
+-- diagnosis if the enrolment is one: without this the branch emits conditions against
+-- enrolments recorded in error, and against patients merged away, which have no episode and
+-- no clinical__person row to answer for them
 enrolments as (
-    select r.*
-    from registrations r
-    join patients p on p.id = r.patient_id
-    where r.registration_status != 'recordedInError'
+    select * from {{ ref('int__program_enrolments') }}
+    where registration_status != 'recordedInError'
 ),
 
 -- encounter diagnosis branch (BL-001)
@@ -89,7 +80,7 @@ encounter_branch as (
 registry_branch as (
     select
         rc.id as condition_occurrence_id,
-        r.patient_id as person_id,
+        r.person_id,
 
         rc.datetime::date as condition_start_date,
         rc.datetime as condition_start_datetime,
@@ -114,7 +105,7 @@ registry_branch as (
         prc.name as condition_source_name
 
     from registration_conditions rc
-    join enrolments r on r.id = rc.patient_program_registration_id
+    join enrolments r on r.enrolment_id = rc.patient_program_registration_id
     left join registry_conditions prc on prc.id = rc.program_registry_condition_id
     left join condition_categories cc on cc.id = rc.program_registry_condition_category_id
     -- a removed condition is not a condition the patient has (BL-011)
