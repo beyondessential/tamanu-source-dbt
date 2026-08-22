@@ -62,6 +62,13 @@ models:
       - name: condition_type_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__condition_occurrence__condition_type_source_value') }}"
+        data_tests:
+          # AC-008: the two branches are the only provenances, and this column is what tells
+          # them apart (BL-006, BL-007)
+          - accepted_values:
+              name: ac_008_clinical__condition_occurrence_type_source_value_accepted
+              arguments:
+                values: ["encounter diagnosis", "program registry condition"]
       - name: condition_status_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__condition_occurrence__condition_status_source_value') }}"

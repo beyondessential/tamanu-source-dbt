@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `clinical` |
 | **Materialisation** | env-aware — `view` in the production bundle (`reporting_*`), `table` on the replica (`analytics*`) |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-22 |
@@ -21,6 +21,14 @@ hangs off an encounter. See
 [D1](../../.maui/knowledge/architecture/data-architecture/decisions.md) (OMOP-lite),
 [D2](../../.maui/knowledge/architecture/data-architecture/decisions.md) (layer mapping),
 [D10](../../.maui/knowledge/architecture/data-architecture/decisions.md) (sources from `bases/`).
+
+**Layer.** OMOP categorises `EPISODE` under Standardized Derived Elements, which D2 maps to
+`derived__`. This model sits in `clinical__` for usage simplicity, as
+`clinical__observation_period` does for the same reason: its rows are asserted, one per source
+record, with nothing computed, where `derived__` is for computed analytic constructs. The
+`derived__episode_<name>` slot stays reserved for what
+[`derived-elements-conventions.md`](../../.maui/knowledge/standards/derived-elements-conventions.md)
+describes — clinically meaningful multi-domain sequences — which an enrolment is not.
 
 Three companions land in the same change: `int__registration_status_history`, a registry-condition
 branch on `clinical__condition_occurrence`, and `ds__patient_program_registrations` rebased onto
@@ -83,6 +91,7 @@ joins here (→ `program_registries`, → `program_registry_clinical_statuses`, 
 | `episode_source_value` | text | `program_registries.code` — the registry the patient is enrolled in |
 | `episode_source_name` | text | `program_registries.name` |
 | `program_id` | text | `programs.id` — the program the registry belongs to |
+| `episode_parent_id` | text | NULL — no parent; children arrive as `derived__episode_*` (OQ-001) |
 | `episode_number` | int | NULL — a patient holds at most one episode per registry |
 | `registration_status` | text | `active` or `inactive` |
 | `clinical_status_source_value` | text | `program_registry_clinical_statuses.code`; NULL when no status is set |
@@ -115,8 +124,9 @@ joins here (→ `program_registries`, → `program_registry_clinical_statuses`, 
 - **BL-008:** `clinical_status_source_value` is the status currently held; a status a patient passed
   through is visible only in `int__registration_status_history`.
 - **BL-009:** `*_concept_id` columns are emitted as NULL, pending the `vocab__` layer (D2).
-- **BL-010:** `episode_number` is NULL: the composite source key admits at most one episode per
-  patient per registry, so there is no sequence to number.
+- **BL-010:** `episode_parent_id` and `episode_number` are emitted as NULL: the composite source
+  key admits at most one episode per patient per registry, so there is neither a parent nor a
+  sequence to number. Both columns are present for schema conformance (OQ-001).
 - **BL-011:** Registry, clinical status, facility, village and history joins are `left join` — an
   enrolment with no clinical status set, or no registering facility, is still a valid enrolment.
 
@@ -165,8 +175,10 @@ BL-007. It is rebased so the enrolment facts have one definition.
 - **BL-023:** Patient demographics, `patient_additional_data` contact and administrative columns,
   and the related-condition aggregation stay in the dataset: they are Tupaia presentation concerns
   and not part of the OMOP episode.
-- **BL-024:** The dataset's output columns and their names are unchanged, so consumers see no
-  difference.
+- **BL-024:** The dataset's output columns, their names and their order are unchanged, so no
+  consumer's column contract moves.
+- **BL-025:** Reading through `clinical__episode` drops enrolments recorded in error, which the
+  dataset previously listed. Row content changes even though the column set does not.
 
 ## Acceptance criteria
 
@@ -189,12 +201,12 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-015 | Each registration's latest history row matches `clinical__episode`'s current status | BL-014 | singular test |
 | AC-016 | An `inactive` registration with no `deactivated_datetime` has an end iff a qualifying history entry exists | BL-004, BL-006 | singular test |
 | AC-017 | `ds__patient_program_registrations` emits the same column set as before the rebase | BL-024 | singular test asserting the column list |
-| AC-018 | `episode_concept_id`, `episode_object_concept_id` and `episode_number` are always null | BL-009, BL-010 | singular test |
+| AC-018 | `episode_concept_id`, `episode_object_concept_id`, `episode_parent_id` and `episode_number` are always null | BL-009, BL-010 | singular test |
 | AC-019 | Registry-condition rows have a null `visit_occurrence_id`, and encounter-diagnosis rows do not | BL-017 | singular test on `clinical__condition_occurrence` |
 | AC-020 | `condition_type_source_value` is `encounter diagnosis` or `program registry condition` | BL-020 | `accepted_values` |
 | AC-021 | No registry-condition row corresponds to a source row with a `deletion_date` | BL-021 | singular test |
 | AC-022 | Every registry-condition `person_id` appears in `clinical__person` | BL-018 | `relationships` |
-| AC-023 | `ds__patient_program_registrations` row count equals `clinical__episode` row count | BL-022 | singular test |
+| AC-023 | `ds__patient_program_registrations` row count equals `clinical__episode` row count | BL-022, BL-025 | singular test |
 | AC-024 | Registry-condition `condition_status_source_value` values all appear in `program_registry_condition_categories.code` | BL-019 | `relationships` |
 | AC-025 | `ds__patient_program_registrations` still emits the patient, contact and related-condition columns | BL-023 | covered by AC-017's column-list assertion |
 
@@ -234,20 +246,31 @@ is a real analytic object rather than a hypothetical one — the DAK's Annex C i
 and VER.3 are all keyed on regimen, and Annex A carries the inputs (`HIV.D.DE444` regimen
 prescribed, `HIV.D.DE418` reason for substitution, `HIV.D.DE466` treatment-limiting toxicity).
 
-Three things block it, and they are worth stating because they decide *when* rather than *whether*:
+**Recommendation.** Emit `episode_parent_id` and `episode_number` now, always NULL, so the table is
+schema-conformant and gaining children later changes no consumer's contract. Build the children as
+`derived__episode_art_regimen` rather than here: a regimen line collapsed from consecutive
+same-regimen answers *is* the computed multi-domain sequence that layer is for, and its
+`episode_parent_id` points at this model's row. That split satisfies both OMOP's categorisation and
+the repo's convention, and it puts the computed thing in the computed layer while the asserted
+enrolment stays here.
 
-1. **The regimen answers are not yet coded.** The DAK leaves the regimen list country-configured
-   (Table 13), so `HIV.D.DE75` and `HIV.D.DE444` are emitted as free text in the WHO-DAK HIV forms.
-   An era boundary computed by comparing free-text regimen strings across visits would be wrong in a
+The link from a regimen episode back to the records evidencing it is OMOP's `EPISODE_EVENT`, which
+maps an episode to the `clinical__observation` rows carrying the regimen answers. Nothing in this
+repo emits it yet; it is the natural companion to the first `derived__episode_*` model rather than
+to this one.
+
+Three things decide *when*, not *whether*:
+
+1. **The regimen answers are not coded.** The DAK leaves the regimen list country-configured
+   (Table 13), so `HIV.D.DE75` and `HIV.D.DE444` arrive as free text from the WHO-DAK HIV forms. An
+   era boundary computed by comparing free-text regimen strings across visits would be wrong in a
    way that is invisible downstream. A deployment supplying a local coded list removes this.
-2. **An era is a derived element, not a clinical fact.** OMOP puts `drug_era` and `condition_era` in
-   its Standardized Derived Elements category, which maps to this repo's `derived__` layer (D2).
-   A regimen era assembled by collapsing consecutive same-regimen observations belongs there,
-   alongside the cohorts, rather than in `clinical__` beside the enrolment it hangs off.
-3. **One episode source.** `episode_parent_id` with a single source is a column that is always
-   NULL. It earns its place when the second source exists.
+2. **No `vocab__` layer.** Without it (D2, OQ-005) a child episode cannot say *which* regimen it
+   represents except as a source string, so the hierarchy would carry sequence without identity.
+3. **One episode source.** `episode_parent_id` with a single source is a permanently NULL column;
+   it earns its keep when the second source exists.
 
-Until then, regimen history is answerable from `clinical__observation` (the regimen answers) joined
+Until then, regimen history is answerable by joining `clinical__observation` (the regimen answers)
 to `clinical__episode` (the enrolment) — the same question, without a hierarchy to maintain.
 
 ## Change log
