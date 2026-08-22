@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-03 |
-| **Last updated** | 2026-08-22 |
+| **Last updated** | 2026-08-23 |
 
 The OMOP-lite `CONDITION_OCCURRENCE` domain — one row per recorded diagnosis, from two
 sources: encounter diagnoses and program-registry conditions. The encounter branch hangs off
@@ -88,7 +88,8 @@ likewise deferred (BL-005, BL-006): only the source values are populated for now
 - **BL-004:** `condition_start_date` / `condition_start_datetime` come from the diagnosis
   `date` (always present). `condition_end_date` / `condition_end_datetime` are NULL —
   Tamanu encounter diagnoses are point-in-time and carry no resolution date; no sentinel is
-  substituted.
+  substituted. Registry conditions carry no resolution date either, so the end columns are NULL
+  on both branches and AC-007 asserts that directly.
 - **BL-005:** `condition_status_source_value` is the raw `certainty`; `is_primary` is
   carried as the primary/secondary flag. `condition_status_concept_id` is deferred (no
   status vocabulary in use). The base model already drops `disproven` and `error`
@@ -104,11 +105,16 @@ likewise deferred (BL-005, BL-006): only the source values are populated for now
 - **BL-008:** `visit_occurrence_id` is NULL on the registry branch — the condition is recorded
   against the enrolment, not an encounter.
 - **BL-009:** `person_id` comes from `patient_program_registrations.patient_id`, reached through
-  `patient_program_registration_conditions.patient_program_registration_id`.
+  `patient_program_registration_conditions.patient_program_registration_id`. The branch is scoped
+  to the enrolments `clinical__episode` models (its BL-001): a condition tracked alongside an
+  enrolment is only a diagnosis if the enrolment is one, so conditions on enrolments recorded in
+  error, and on patients merged away, are excluded. Both would otherwise be diagnoses with no
+  episode behind them and no `clinical__person` row to answer for them.
 - **BL-010:** `condition_status_source_value` is the condition category code (`confirmed`,
   `suspected`, `resolved`, …), the registry's equivalent of encounter-diagnosis certainty.
   `is_primary` is NULL: a registry condition is not ranked against the others on the enrolment.
-- **BL-011:** A condition with a deletion datetime is excluded.
+- **BL-011:** A condition with a deletion datetime is excluded (the source `deletion_date`,
+  which `bases/patient_program_registration_conditions` exposes as `deleted_datetime`).
 
 ## Acceptance criteria
 
@@ -120,12 +126,13 @@ likewise deferred (BL-005, BL-006): only the source values are populated for now
 | AC-004 | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | BL-002 | dbt `relationships` |
 | AC-005 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-002 | dbt `relationships` |
 | AC-006 | `condition_start_datetime` is `not_null` | BL-004 | dbt `not_null` |
-| AC-007 | When `condition_end_datetime` is non-null, `condition_end_datetime >= condition_start_datetime` | BL-004 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
+| AC-007 | `condition_end_datetime` and `condition_end_date` are always null | BL-004 | `dbt_expectations.expect_column_values_to_be_null` |
 | AC-008 | `condition_type_source_value` is `encounter diagnosis` or `program registry condition` | BL-006, BL-007 | dbt `accepted_values` |
 | AC-009 | Registry-branch rows have a null `visit_occurrence_id`; encounter-branch rows do not | BL-008 | dbt singular test |
 | AC-010 | Every registry-branch `person_id` exists in `clinical__person.person_id` | BL-009 | covered by AC-003 |
 | AC-011 | Every non-null registry-branch `condition_status_source_value` exists in `program_registry_condition_categories.code` | BL-010 | dbt singular test |
 | AC-012 | No registry-branch row corresponds to a source condition with a deletion datetime | BL-011 | dbt singular test |
+| AC-013 | Every registry-branch row's enrolment appears in `clinical__episode` | BL-009 | dbt singular test |
 
 ## Registry entry
 
@@ -154,3 +161,5 @@ elements — only `metric__` / `derived__` artefacts get a `metric_definitions.c
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-22 | Maui team | Program-registry conditions added as a second branch (BL-007..BL-011), resolving OQ-1. |
+| 2026-08-23 | Maui team | Registry branch scoped to the enrolments `clinical__episode` models (BL-009), so a condition on an enrolment recorded in error or on a merged-away patient no longer becomes an orphan diagnosis. New AC-013. |
+| 2026-08-23 | Maui team | AC-007 restated as the null assertion the model actually carries: both branches hardcode the end columns, so the pair test it replaced matched no rows and asserted nothing. |

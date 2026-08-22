@@ -76,6 +76,12 @@ Code of the program registry the patient is enrolled in.
 Name of the program registry the patient is enrolled in.
 {% enddocs %}
 
+{% docs clinical__episode__program_registry_id %}
+The program registry the patient is enrolled in. `episode_source_value` carries its code and
+`episode_source_name` its name; this is the key itself, for a consumer joining back to the
+registry's own configuration.
+{% enddocs %}
+
 {% docs clinical__episode__program_id %}
 The program the registry belongs to.
 {% enddocs %}
@@ -93,6 +99,12 @@ Sequence of this episode among its siblings under a parent. NULL — nothing to 
 {% docs clinical__episode__registration_status %}
 Whether the enrolment is `active` or `inactive`. Enrolments recorded in error are
 excluded from the model entirely.
+{% enddocs %}
+
+{% docs clinical__episode__clinical_status_id %}
+Key of the clinical status the patient currently holds in this registry, NULL where no status
+has been set. `clinical_status_source_value` and `clinical_status_source_name` carry its code
+and name.
 {% enddocs %}
 
 {% docs clinical__episode__clinical_status_source_value %}
@@ -124,11 +136,24 @@ Name of the facility or village the patient is currently managed at.
 {% enddocs %}
 
 {% docs clinical__episode__care_site_id %}
-Facility the patient was enrolled at. Foreign key to `ref__care_site.care_site_id`.
+Facility the patient was enrolled at. Foreign key to `ref__care_site.care_site_id`, resolving
+to a `care_site_type = 'facility'` row.
+
+Coarser than the care site on a visit, which is a location: an enrolment is registered at a
+facility and never at a room. `ref__care_site` carries a row per facility for this reason, so
+the clinical layer keeps one care-site join target across every grain.
 {% enddocs %}
 
 {% docs clinical__episode__provider_id %}
 Clinician who enrolled the patient. Foreign key to `ref__provider.provider_id`.
+{% enddocs %}
+
+{% docs clinical__episode__deactivated_datetime %}
+Datetime the patient was removed from the registry, as recorded on the registration.
+
+This is the source fact, not the episode boundary: `episode_end_datetime` falls back to the
+logged transition to inactive where no deactivation was recorded, and stays NULL on an active
+registration even where a stale deactivation stamp survives a reactivation.
 {% enddocs %}
 
 {% docs clinical__episode__deactivated_by_provider_id %}

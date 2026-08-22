@@ -61,9 +61,9 @@ D5, which joins `ref__care_site` on `care_site_id`).
 
 ## Grain
 
-**One row per:** care site — a Tamanu `department` **or** a `location`, with
-`care_site_type` discriminating. `care_site_id` is unique across both because department
-and location ids occupy disjoint UUID spaces. Soft-deleted rows are filtered by the base
+**One row per:** care site — a Tamanu `department`, a `location` **or** a `facility`, with
+`care_site_type` discriminating. `care_site_id` is unique across all three because
+department, location and facility ids occupy disjoint UUID spaces. Soft-deleted rows are filtered by the base
 models. The join to `bases/facilities` is many-to-one, so grain is preserved; it is a
 `left join`, so a care site whose facility is unset or soft-deleted is still emitted with
 the facility-derived columns NULL. Facility-level aggregation is available via the
@@ -73,12 +73,12 @@ denormalised `facility_id` / `facility_name` columns without a second model.
 
 | Column | Type | Notes |
 |---|---|---|
-| `care_site_id` | uuid | `departments.id` or `locations.id`. Native UUID PK — no remap to OMOP integer IDs (D1). OMOP `CARE_SITE.care_site_id` |
-| `care_site_type` | text | `'department'` or `'location'` — which Tamanu entity the row represents. Lets consumers pick the grain |
-| `care_site_name` | text | `departments.name` or `locations.name`. OMOP `CARE_SITE.care_site_name` |
-| `care_site_source_value` | text | `departments.code` or `locations.code`. OMOP `CARE_SITE.care_site_source_value` |
+| `care_site_id` | uuid | `departments.id`, `locations.id` or `facilities.id`. Native UUID PK — no remap to OMOP integer IDs (D1). OMOP `CARE_SITE.care_site_id` |
+| `care_site_type` | text | `'department'`, `'location'` or `'facility'` — which Tamanu entity the row represents. Lets consumers pick the grain |
+| `care_site_name` | text | `departments.name`, `locations.name` or `facilities.name`. OMOP `CARE_SITE.care_site_name` |
+| `care_site_source_value` | text | `departments.code`, `locations.code` or `facilities.code`. OMOP `CARE_SITE.care_site_source_value` |
 | `place_of_service_source_value` | text | `facilities.type`. OMOP `CARE_SITE.place_of_service_source_value`. NULL when the care site has no facility |
-| `facility_id` | uuid | `departments.facility_id` or `locations.facility_id` (matching the row's grain). Parent facility FK, denormalised. NULL when unset |
+| `facility_id` | uuid | `departments.facility_id` or `locations.facility_id` (matching the row's grain); on a facility row, the facility's own id. Parent facility FK, denormalised. NULL when unset |
 | `facility_name` | text | `facilities.name`. Parent facility name, denormalised. NULL when the facility is unset/removed |
 
 OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.
@@ -91,9 +91,9 @@ vocabulary can derive the concept downstream.
 
 - **BL-001:** One row per care site, sourced from `{{ ref('departments') }}`,
   `{{ ref('locations') }}`, and `{{ ref('facilities') }}` only (D10) — never `public.*`.
-  Soft-delete filtering is inherited from the base models. The department and location id
-  spaces are disjoint, so the union preserves a unique `care_site_id`; the facility join is
-  many-to-one, so grain is preserved.
+  Soft-delete filtering is inherited from the base models. The department, location and
+  facility id spaces are disjoint, so the union preserves a unique `care_site_id`; the
+  facility join is many-to-one, so grain is preserved.
 - **BL-002:** OMOP column naming is applied — `id → care_site_id`, `name → care_site_name`,
   `code → care_site_source_value` — across both grains. The parent
   facility's `type` is carried verbatim as `place_of_service_source_value`. No
@@ -116,8 +116,9 @@ vocabulary can derive the concept downstream.
   `catchment_id` matches no `ref__location` row, so there is no value to back the column.
   Columns are added only when a real value backs them (the `ref__location` precedent);
   revisit if a deployment geocodes facility addresses into `ref__location`-compatible rows.
-- **BL-005:** The model is the `union all` of two grains — departments
-  (`care_site_type = 'department'`) and locations (`care_site_type = 'location'`) —
+- **BL-005:** The model is the `union all` of three grains — departments
+  (`care_site_type = 'department'`), locations (`care_site_type = 'location'`) and
+  facilities (`care_site_type = 'facility'`, BL-007) —
   because OMOP `CARE_SITE` is a single heterogeneous table. `care_site_id` on both
   `clinical__visit_occurrence` and `clinical__visit_detail` is FK-tested against
   location-type rows here (the encounter's / segment's physical location). Neither model
@@ -134,17 +135,26 @@ vocabulary can derive the concept downstream.
   so that `clinical__visit_occurrence.care_site_id` and `clinical__visit_detail.care_site_id`
   (both real `locations.id`-shaped values, their own BL-006 in each spec) have a row to
   resolve against.
+- **BL-007:** The `facility` grain wraps every Tamanu facility as a care site in its own
+  right. It exists so `clinical__episode.care_site_id` has a row to resolve against: an
+  enrolment is registered at a facility and never at a department or a room, so its care
+  site is coarser than a visit's. Without this grain a facility-shaped FK in `clinical__`
+  would have to point at `bases/facilities`, which D2 forbids — `clinical__` models join
+  `ref__` wrappers, not bases, so the layer contract holds and the models stay portable
+  across OMOP tooling. A facility row's `facility_id` is its own id, so facility-level
+  aggregation over the column works uniformly across all three grains.
 
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | `care_site_id` is `not_null` | grain | dbt `not_null` |
-| AC-002 | `care_site_id` is `unique` (one row per care site across both grains — relies on the disjoint department / location UUID spaces, BL-001) | grain | dbt `unique` |
+| AC-002 | `care_site_id` is `unique` (one row per care site across all three grains — relies on the disjoint department / location / facility UUID spaces, BL-001) | grain | dbt `unique` |
 | AC-003 | A department denormalises into a `care_site_type='department'` row carrying `facility_id`, `facility_name`, and `place_of_service_source_value` | BL-002, BL-003, BL-005 | dbt unit test (`test_ref__care_site_department_denormalises_facility`) |
 | AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
-| AC-005 | `care_site_type` is `not_null` and one of `department` / `location` | BL-005 | dbt `not_null` + `accepted_values` |
+| AC-005 | `care_site_type` is `not_null` and one of `department` / `location` / `facility` | BL-005, BL-007 | dbt `not_null` + `accepted_values` |
 | AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-006 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
+| AC-007 | A facility becomes a `care_site_type='facility'` row whose `facility_id` is its own id | BL-002, BL-007 | dbt unit test (`test_ref__care_site_facility_is_its_own_care_site`) |
 
 ## Registry entry
 
@@ -165,4 +175,5 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 |---|---|
 | `clinical__visit_occurrence` | `care_site_id` FK → location-type rows (AC-008 there, its own BL-006) |
 | `clinical__visit_detail` | `care_site_id` FK → location-type rows (the segment's location) |
+| `clinical__episode` | `care_site_id` FK → facility-type rows (the registering facility, BL-007) |
 | `metric__` / `dataset__` | facility-level disaggregation |

@@ -10,6 +10,10 @@ registration_conditions as (
     select * from {{ ref('patient_program_registration_conditions') }}
 ),
 
+episode as (
+    select * from {{ ref('clinical__episode') }}
+),
+
 condition_categories as (
     select * from {{ ref('program_registry_condition_categories') }}
 ),
@@ -46,8 +50,23 @@ ac_012 as (
     join registration_conditions rc on rc.id = co.condition_occurrence_id
     where co.condition_type_source_value = 'program registry condition'
         and rc.deleted_datetime is not null
+),
+
+-- AC-013: a registry condition belongs to a modelled enrolment (BL-009). Conditions on
+-- enrolments recorded in error, or on patients merged away, have no episode to hang off and
+-- no clinical__person row behind them
+ac_013 as (
+    select
+        co.condition_occurrence_id,
+        'AC-013' as failed_ac
+    from condition_occurrence co
+    join registration_conditions rc on rc.id = co.condition_occurrence_id
+    left join episode e on e.episode_id = rc.patient_program_registration_id
+    where co.condition_type_source_value = 'program registry condition'
+        and e.episode_id is null
 )
 
 select condition_occurrence_id, failed_ac from ac_009
 union all select condition_occurrence_id, failed_ac from ac_011
 union all select condition_occurrence_id, failed_ac from ac_012
+union all select condition_occurrence_id, failed_ac from ac_013

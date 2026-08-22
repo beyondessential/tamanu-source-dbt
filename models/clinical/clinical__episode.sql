@@ -30,26 +30,41 @@ reference_data as (
     select * from {{ ref('reference_data') }}
 ),
 
+patients as (
+    select * from {{ ref('patients') }}
+),
+
 status_history as (
     select * from {{ ref('int__registration_status_history') }}
 ),
 
 -- when the registration became inactive, for an episode closed by a status change rather than
 -- a deactivation (BL-004). Earliest such change, so a registration reactivated and closed
--- again reports the first close rather than the latest
+-- again reports the first close rather than the latest.
+--
+-- Logged changes only. The history also carries a synthetic current-state row, stamped at the
+-- enrolment datetime where nothing was logged; drawing an end from that would close every
+-- pre-2.33.0 inactive registration at its own start instead of leaving it open (BL-006)
 became_inactive as (
     select
         episode_id,
         min(logged_at) as inactive_at
     from status_history
     where registration_status = 'inactive'
+        and history_source = 'change log'
     group by episode_id
 ),
 
--- an enrolment recorded in error is a data-entry mistake, not a clinical fact (BL-002)
+-- the modelled population (BL-001). An enrolment recorded in error is a data-entry mistake
+-- rather than a clinical fact (BL-002), and an enrolment left on a patient record that has
+-- been merged away belongs to a person clinical__person does not carry, so neither reaches
+-- the model. int__registration_status_history scopes itself identically -- it cannot read
+-- this model without a cycle -- so that the two agree row for row (AC-014)
 enrolments as (
-    select * from registrations
-    where registration_status != 'recordedInError'
+    select r.*
+    from registrations r
+    join patients p on p.id = r.patient_id
+    where r.registration_status != 'recordedInError'
 ),
 
 resolved as (
@@ -58,20 +73,25 @@ resolved as (
         e.patient_id as person_id,
         e.datetime as episode_start_datetime,
 
-        -- deactivation closes the episode; failing that, the logged transition to inactive
-        -- does. An inactive registration with neither reads as open, which happens when the
-        -- change predates the log's coverage floor (BL-004, BL-006)
+        -- only an inactive registration has ended: an active one is open whatever else the
+        -- record carries, so a deactivation stamp left behind by a reactivation cannot close
+        -- it (BL-005). Within an inactive registration deactivation wins, and failing that the
+        -- logged transition to inactive does. With neither the episode reads as open, which
+        -- happens when the change predates the log's coverage floor (BL-004, BL-006)
         case
-            when e.deactivated_datetime is not null then e.deactivated_datetime
-            when e.registration_status = 'inactive' then bi.inactive_at
+            when e.registration_status != 'inactive' then null
+            else coalesce(e.deactivated_datetime, bi.inactive_at)
         end as episode_end_datetime,
         case
+            when e.registration_status != 'inactive' then null
             when e.deactivated_datetime is not null then 'deactivation'
-            when e.registration_status = 'inactive' and bi.inactive_at is not null
-                then 'status change'
+            when bi.inactive_at is not null then 'status change'
         end as episode_end_source,
 
         e.registration_status,
+        e.deactivated_datetime,
+        e.program_registry_id,
+        e.clinical_status_id,
         pr.code as episode_source_value,
         pr.name as episode_source_name,
         pr.program_id,
@@ -124,6 +144,7 @@ select
     'program registry' as episode_type_source_value,
     episode_source_value,
     episode_source_name,
+    program_registry_id,
     program_id,
 
     -- no parent and no sequence: the composite key admits one episode per patient per
@@ -132,6 +153,7 @@ select
     null::int as episode_number,
 
     registration_status,
+    clinical_status_id,
     clinical_status_source_value,
     clinical_status_source_name,
     currently_at_type,
@@ -139,6 +161,7 @@ select
     currently_at_name,
     care_site_id,
     provider_id,
+    deactivated_datetime,
     deactivated_by_provider_id
 
 from resolved

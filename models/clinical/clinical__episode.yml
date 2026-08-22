@@ -88,6 +88,12 @@ models:
       - name: episode_source_name
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__episode_source_name') }}"
+      - name: program_registry_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__program_registry_id') }}"
+        data_tests:
+          - not_null:
+              name: clinical__episode_program_registry_id_not_null
       - name: program_id
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__program_id') }}"
@@ -108,6 +114,9 @@ models:
               name: ac_002_clinical__episode_registration_status_accepted
               arguments:
                 values: ["active", "inactive"]
+      - name: clinical_status_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__clinical_status_id') }}"
       - name: clinical_status_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__clinical_status_source_value') }}"
@@ -141,6 +150,9 @@ models:
       - name: provider_id
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__provider_id') }}"
+      - name: deactivated_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('clinical__episode__deactivated_datetime') }}"
       - name: deactivated_by_provider_id
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__deactivated_by_provider_id') }}"

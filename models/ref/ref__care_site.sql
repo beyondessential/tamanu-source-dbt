@@ -1,10 +1,12 @@
 -- ref__care_site -- OMOP CARE_SITE wrapper. Heterogeneous by design: one row per Tamanu
--- department (the organizational care unit, care_site_type = 'department') and one row per
--- location (the physical room/bed, care_site_type = 'location'). Locations feed both
--- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id. Each care
--- site is denormalised with its parent facility. Native UUID PK (D1). Sources only from
--- bases/ (D10); OMOP column naming applied (D2).
--- See specs/dbt-model/ref__care_site.md for BL-001..BL-006.
+-- department (the organizational care unit, care_site_type = 'department'), one row per
+-- location (the physical room/bed, care_site_type = 'location') and one row per facility
+-- (the site as a whole, care_site_type = 'facility'). Locations feed both
+-- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id;
+-- facilities feed clinical__episode.care_site_id, an enrolment being registered at a
+-- facility and never at a room. Each care site is denormalised with its parent facility.
+-- Native UUID PK (D1). Sources only from bases/ (D10); OMOP column naming applied (D2).
+-- See specs/dbt-model/ref__care_site.md for BL-001..BL-007.
 
 with departments as (
     select * from {{ ref('departments') }}
@@ -40,10 +42,24 @@ location_sites as (
     from locations loc
 ),
 
+-- the site as a whole (BL-001, BL-007). Its parent facility is itself, so the join below
+-- denormalises the facility's own name and type onto it
+facility_sites as (
+    select
+        'facility'    as care_site_type,
+        f.id::varchar as care_site_id,
+        f.name        as care_site_name,
+        f.code        as care_site_source_value,
+        f.id          as facility_id
+    from facilities f
+),
+
 care_sites as (
     select * from department_sites
     union all
     select * from location_sites
+    union all
+    select * from facility_sites
 )
 
 select

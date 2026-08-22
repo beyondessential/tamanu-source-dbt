@@ -1,7 +1,9 @@
 -- ds__patient_program_registrations -- consumer-shaped registry line list.
 --
--- Enrolment facts come from clinical__episode, so the currently-at resolution and the episode
--- boundaries have one definition rather than two that drift (BL-022). Patient demographics,
+-- Every enrolment fact -- registration status and datetime, registry, clinical status,
+-- currently-at, registering facility, registered-by, deactivation -- comes from
+-- clinical__episode, so the currently-at resolution and the episode boundaries have one
+-- definition rather than two that drift (BL-022). Patient demographics,
 -- patient_additional_data contact and administrative columns, and the related-condition
 -- aggregation stay here: they are Tupaia presentation concerns and not part of the OMOP
 -- episode (BL-023). The output column set is unchanged (BL-024).
@@ -60,24 +62,23 @@ select
     c.conditions as related_conditions,
     c.condition_category_ids as related_condition_category_ids,
     c.condition_categories as related_condition_categories,
-    prcs.id as clinical_status_id,
+    ep.clinical_status_id,
     ep.clinical_status_source_name as clinical_status,
     ep.registration_status,
-    ppr.program_registry_id,
+    ep.program_registry_id,
     subdivision.id as subdivision_id,
     subdivision.name as subdivision,
     division.id as division_id,
     division.name as division,
     ep.episode_start_datetime as registration_datetime,
-    ppr.deactivated_by_id,
+    ep.deactivated_by_provider_id as deactivated_by_id,
     deactivated_by.display_name as deactivated_by,
-    ppr.deactivated_datetime,
+    ep.deactivated_datetime,
     pad.primary_contact_number,
     pad.secondary_contact_number,
     pad.emergency_contact_name,
     pad.emergency_contact_number
 from {{ ref('clinical__episode') }} ep
-join {{ ref('patient_program_registrations') }} ppr on ppr.id = ep.episode_id
 join {{ ref('patients') }} p on p.id = ep.person_id
 left join {{ ref("patient_additional_data") }} pad on pad.patient_id = p.id
 left join {{ ref('facilities') }} registering_facility on registering_facility.id = ep.care_site_id
@@ -86,5 +87,4 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('reference_data') }} subdivision on subdivision.id = pad.subdivision_id
 left join {{ ref('reference_data') }} division on division.id = pad.division_id
 left join related_conditions c on c.patient_program_registration_id = ep.episode_id
-left join {{ ref('program_registry_clinical_statuses') }} prcs on prcs.id = ppr.clinical_status_id
-left join {{ ref('users') }} deactivated_by on deactivated_by.id = ppr.deactivated_by_id
+left join {{ ref('users') }} deactivated_by on deactivated_by.id = ep.deactivated_by_provider_id

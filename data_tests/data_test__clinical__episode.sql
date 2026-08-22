@@ -10,6 +10,10 @@ registrations as (
     select * from {{ ref('patient_program_registrations') }}
 ),
 
+patients as (
+    select * from {{ ref('patients') }}
+),
+
 program_registries as (
     select * from {{ ref('program_registries') }}
 ),
@@ -18,20 +22,42 @@ history as (
     select * from {{ ref('int__registration_status_history') }}
 ),
 
--- AC-005: episode_end_source names the rule that closed the episode, so it is
--- 'deactivation' exactly when a deactivation datetime was recorded, and 'status change'
--- exactly when the end came from the logged transition instead (BL-004)
+-- the only kind of history entry that may close an episode: a logged transition to inactive.
+-- The synthetic current-state row is stamped at the enrolment datetime where nothing was
+-- logged, so drawing an end from it would close the episode at its own start (BL-004, BL-006)
+logged_inactive as (
+    select episode_id
+    from history
+    where registration_status = 'inactive'
+        and history_source = 'change log'
+    group by episode_id
+),
+
+-- AC-005: episode_end_source names the rule that closed the episode. Only an inactive
+-- registration ends (BL-005), and within one it is 'deactivation' exactly when a deactivation
+-- datetime was recorded and 'status change' exactly when the end came from the logged
+-- transition instead (BL-004). Compared with `is distinct from` so a NULL source is judged
+-- rather than skipped by three-valued logic
+expected_end_source as (
+    select
+        e.episode_id,
+        case
+            when r.registration_status != 'inactive' then null
+            when r.deactivated_datetime is not null then 'deactivation'
+            when h.episode_id is not null then 'status change'
+        end as expected_source
+    from episode e
+    join registrations r on r.id = e.episode_id
+    left join logged_inactive h on h.episode_id = e.episode_id
+),
+
 ac_005 as (
     select
         e.episode_id,
         'AC-005' as failed_ac
     from episode e
-    join registrations r on r.id = e.episode_id
-    where (r.deactivated_datetime is not null) != (e.episode_end_source = 'deactivation')
-        or (
-            e.episode_end_source = 'status change'
-            and r.deactivated_datetime is not null
-        )
+    join expected_end_source x on x.episode_id = e.episode_id
+    where e.episode_end_source is distinct from x.expected_source
 ),
 
 -- AC-006: the two end columns are derived from one value, so they are null together (BL-004)
@@ -63,7 +89,8 @@ ac_008 as (
         and (currently_at_id is not null or currently_at_name is not null)
 ),
 
--- AC-012: every enrolment that is not recorded-in-error reaches the model (BL-001, BL-002)
+-- AC-012: every enrolment in the modelled population reaches the model -- not recorded in
+-- error, and on a patient clinical__person carries (BL-001, BL-002)
 ac_012 as (
     select
         'row count' as episode_id,
@@ -72,24 +99,25 @@ ac_012 as (
         select
             (select count(*) from episode) as modelled,
             (
-                select count(*) from registrations
-                where registration_status != 'recordedInError'
+                select count(*)
+                from registrations r
+                join patients p on p.id = r.patient_id
+                where r.registration_status != 'recordedInError'
             ) as expected
     ) counts
     where modelled != expected
 ),
 
 -- AC-016: an inactive enrolment with no deactivation datetime has an end exactly when the
--- history offers a transition to draw it from (BL-004, BL-006)
+-- history offers a *logged* transition to draw it from. Without one the change predates the
+-- log's coverage floor and the episode reads as open (BL-004, BL-006)
 ac_016 as (
     select
         e.episode_id,
         'AC-016' as failed_ac
     from episode e
     join registrations r on r.id = e.episode_id
-    left join (
-        select episode_id from history where registration_status = 'inactive' group by episode_id
-    ) h on h.episode_id = e.episode_id
+    left join logged_inactive h on h.episode_id = e.episode_id
     where r.registration_status = 'inactive'
         and r.deactivated_datetime is null
         and (h.episode_id is not null) != (e.episode_end_datetime is not null)
@@ -118,17 +146,16 @@ ac_013 as (
     having count(*) > 1
 ),
 
--- AC-014: history belongs to a modelled episode (BL-012). Recorded-in-error enrolments are
--- excluded from the episode model, so they are excluded here too
+-- AC-014: every history row belongs to a modelled episode (BL-012). The history is built over
+-- the same population the episode is, recorded-in-error enrolments excluded from both, so this
+-- holds without exception
 ac_014 as (
     select
         h.episode_id,
         'AC-014' as failed_ac
     from history h
-    join registrations r on r.id = h.episode_id
     left join episode e on e.episode_id = h.episode_id
-    where r.registration_status != 'recordedInError'
-        and e.episode_id is null
+    where e.episode_id is null
 ),
 
 -- AC-015: the last thing the history says about a registration is what the episode reports
@@ -146,9 +173,8 @@ ac_015 as (
         from history
         order by episode_id, change_number desc
     ) latest on latest.episode_id = e.episode_id
-    join registrations r on r.id = e.episode_id
-    where latest.registration_status != e.registration_status
-        or coalesce(latest.clinical_status_id, '') != coalesce(r.clinical_status_id, '')
+    where latest.registration_status is distinct from e.registration_status
+        or latest.clinical_status_id is distinct from e.clinical_status_id
 ),
 
 -- AC-009 as a cross-check on the source rather than the accepted_values list: the model must

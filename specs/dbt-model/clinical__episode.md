@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-22 |
-| **Last updated** | 2026-08-22 |
+| **Last updated** | 2026-08-23 |
 
 The OMOP-lite `EPISODE` domain — one row per patient enrolment in a program registry. Program
 registries are how Tamanu tracks a patient over a long-running care programme (HIV, TB, NCD), and
@@ -58,17 +58,18 @@ coverage, loss to follow-up — and `ds__patient_program_registrations`.
 (`<patient_id>;<program_registry_id>`, assigned before insert), so the source table holds current
 state and is updated in place rather than appended to. `id` carries a `unique` test at source. The
 joins here (→ `program_registries`, → `program_registry_clinical_statuses`, → `facilities`, →
-`reference_data`, → `int__registration_status_history`) are all many-to-one, so grain is preserved.
+`reference_data`, → `patients`, → `int__registration_status_history`) are all many-to-one, so grain is preserved;
+the history is aggregated to one row per registration before it is joined.
 
 ## Inputs
 
 | Reference | Why we need it |
 |---|---|
 | `{{ ref('patient_program_registrations') }}` | The enrolment: patient, registry, status, dates, currently-at |
-| `{{ ref('program_registries') }}` | Registry name and code; `currently_at_type` decides which currently-at column is meaningful |
+| `{{ ref('program_registries') }}` | Registry name, code and program; `currently_at_type` decides which currently-at column is meaningful |
 | `{{ ref('program_registry_clinical_statuses') }}` | Clinical status name and code |
-| `{{ ref('programs') }}` | The program the registry belongs to |
 | `{{ ref('facilities') }}` | Registering facility, and currently-at facility |
+| `{{ ref('patients') }}` | Scopes the model to the people `clinical__person` carries (BL-001) |
 | `{{ ref('reference_data') }}` | Currently-at village |
 | `{{ ref('int__registration_status_history') }}` | When the registration became `inactive`, for the episode end (BL-004) |
 
@@ -79,7 +80,7 @@ joins here (→ `program_registries`, → `program_registry_clinical_statuses`, 
 | Column | Type | Notes |
 |---|---|---|
 | `episode_id` | text | `patient_program_registrations.id`. Native composite key — no remap to OMOP integer ids (D1) |
-| `person_id` | uuid | `patient_id`. FK to `clinical__person.person_id` |
+| `person_id` | text | `patient_id`. FK to `clinical__person.person_id` |
 | `episode_concept_id` | int | NULL — deferred to the future `vocab__` layer (D2) |
 | `episode_start_date` | date | Date component of the enrolment datetime |
 | `episode_start_datetime` | timestamp | `patient_program_registrations.datetime`. Non-null |
@@ -90,34 +91,50 @@ joins here (→ `program_registries`, → `program_registry_clinical_statuses`, 
 | `episode_type_source_value` | text | Constant `'program registry'` — provenance and union discriminator |
 | `episode_source_value` | text | `program_registries.code` — the registry the patient is enrolled in |
 | `episode_source_name` | text | `program_registries.name` |
-| `program_id` | text | `programs.id` — the program the registry belongs to |
+| `program_registry_id` | text | `program_registry_id` — the registry key itself, for a consumer joining back to its configuration |
+| `program_id` | text | `program_registries.program_id` — the program the registry belongs to |
 | `episode_parent_id` | text | NULL — no parent; children arrive as `derived__episode_*` (OQ-001) |
 | `episode_number` | int | NULL — a patient holds at most one episode per registry |
 | `registration_status` | text | `active` or `inactive` |
+| `clinical_status_id` | text | `clinical_status_id`; NULL when no status is set |
 | `clinical_status_source_value` | text | `program_registry_clinical_statuses.code`; NULL when no status is set |
 | `clinical_status_source_name` | text | `program_registry_clinical_statuses.name` |
 | `currently_at_type` | text | `facility` or `village`, from the registry's configuration |
 | `currently_at_id` | text | The facility or village id, whichever `currently_at_type` names |
 | `currently_at_name` | text | Resolved name of that facility or village |
-| `care_site_id` | uuid | `registering_facility_id`. FK to `ref__care_site.care_site_id` |
-| `provider_id` | uuid | `registered_by_id`. FK to `ref__provider.provider_id` |
-| `deactivated_by_provider_id` | uuid | `deactivated_by_id`; NULL while the episode is open |
+| `care_site_id` | text | `registering_facility_id`. FK to `ref__care_site.care_site_id`, resolving to a `care_site_type = 'facility'` row (BL-011) |
+| `provider_id` | text | `registered_by_id`. FK to `ref__provider.provider_id` |
+| `deactivated_datetime` | timestamp | `deactivated_datetime` as recorded — the source fact, not the boundary; `episode_end_datetime` can differ (BL-004, BL-005) |
+| `deactivated_by_provider_id` | text | `deactivated_by_id`; NULL while the episode is open |
 
 ## Business logic
 
 - **BL-001:** One row per patient per program registry, taken from
   `bases/patient_program_registrations` without deduplication — the source id is a composite of
-  patient and registry and is unique.
+  patient and registry and is unique. The population is the enrolments belonging to a patient
+  `bases/patients` carries, which excludes the soft-deleted, the test patient and any record
+  merged away (`visibility_status = 'merged'`). A registration's id embeds its patient id, so a
+  merge cannot repoint it the way it repoints an encounter; the enrolment is left behind on a
+  record no longer in `clinical__person`, and modelling it would give the episode a
+  `person_id` no person answers to. `int__registration_status_history` and the registry-condition
+  branch of `clinical__condition_occurrence` scope themselves identically.
 - **BL-002:** Rows with `registration_status = 'recordedInError'` are excluded; that enrolment is a
   data-entry mistake rather than a clinical fact.
 - **BL-003:** `episode_start_datetime` is the registration `datetime`, and is never NULL.
-- **BL-004:** `episode_end_datetime` is `deactivated_datetime` when set, otherwise the `logged_at`
-  of the earliest `int__registration_status_history` entry in which the registration became
-  `inactive`. `episode_end_source` records which of the two applied.
-- **BL-005:** An episode is open — both end columns NULL — when the registration is `active`.
+- **BL-004:** Only an `inactive` registration ends. For one, `episode_end_datetime` is
+  `deactivated_datetime` when set, otherwise the `logged_at` of the earliest
+  `int__registration_status_history` entry in which the registration became `inactive`.
+  `episode_end_source` records which of the two applied. Only an entry sourced from the change
+  log qualifies: the history also carries a synthetic current-state row (BL-014), stamped at the
+  enrolment datetime where nothing was logged, and drawing an end from that would close every
+  pre-coverage registration at its own start.
+- **BL-005:** An episode is open — both end columns and `episode_end_source` NULL — whenever the
+  registration is `active`. BL-005 takes precedence over BL-004: an active registration is open
+  even where a `deactivated_datetime` survives on the record, which a reactivation leaves behind.
+  `deactivated_datetime` is emitted unchanged so the stamp is still visible.
 - **BL-006:** A registration that is `inactive` with no `deactivated_datetime` and no qualifying
-  history entry has a NULL end and reads as open, which happens when the transition predates the
-  change log's coverage floor (BL-015).
+  logged history entry has a NULL end and reads as open, which happens when the transition
+  predates the change log's coverage floor (BL-015).
 - **BL-007:** `currently_at_id` and `currently_at_name` resolve from `facility_id` when the
   registry's `currently_at_type` is `facility`, and from `village_id` when it is `village`. The
   other column is ignored even when populated, since only the configured one is maintained.
@@ -129,6 +146,14 @@ joins here (→ `program_registries`, → `program_registry_clinical_statuses`, 
   sequence to number. Both columns are present for schema conformance (OQ-001).
 - **BL-011:** Registry, clinical status, facility, village and history joins are `left join` — an
   enrolment with no clinical status set, or no registering facility, is still a valid enrolment.
+  The `patients` join of BL-001 is the one exception, being a population filter rather than a
+  lookup.
+
+  `care_site_id` is the registering facility, which is a coarser care site than the location a
+  visit carries — an enrolment is registered at a facility and never at a room. `ref__care_site`
+  gained a `care_site_type = 'facility'` grain (its BL-007) so this FK resolves inside the
+  reference layer: D2 has `clinical__` models join `ref__` wrappers rather than bases, which is
+  what keeps the layer contract intact and the models portable across OMOP tooling.
 
 ### `int__registration_status_history`
 
@@ -140,6 +165,9 @@ only from `bases/patient_program_registrations_change_logs`. Retention and loss-
 questions about transitions rather than current state.
 
 - **BL-012:** One row per change-log entry, ordered by `logged_at` within a registration.
+  Entries are scoped to the registrations `clinical__episode` models, so a recorded-in-error
+  enrolment (BL-002) contributes no history and every history row belongs to an episode
+  (AC-014).
 - **BL-013:** `registration_status` and `clinical_status_id` are the values as at that entry, read
   from the logged record snapshot.
 - **BL-014:** The current state also appears as the final row, so a status held now is visible in
@@ -148,7 +176,8 @@ questions about transitions rather than current state.
   changed before that release has no history for the change, so its first history row is not
   necessarily its enrolment.
 - **BL-016:** Sourced only from `bases/` (D10) — the change-log base already excludes the test
-  patient.
+  patient and floors coverage at Tamanu 2.33.0. `history_source` distinguishes a logged change
+  from the synthetic current-state row, which BL-004 depends on.
 
 ### Registry conditions in `clinical__condition_occurrence`
 
@@ -163,15 +192,20 @@ that model's spec. Its clauses live there; the shape differs from encounter diag
   `suspected`, `resolved`, …), the registry's equivalent of encounter-diagnosis certainty.
 - **BL-020:** `condition_type_source_value` is the constant `'program registry condition'`,
   distinguishing the branch from `'encounter diagnosis'`.
-- **BL-021:** Conditions with a `deletion_date` are excluded.
+- **BL-021:** Conditions with a deletion datetime are excluded (the source `deletion_date`,
+  which `bases/patient_program_registration_conditions` exposes as `deleted_datetime`).
 
 ### `ds__patient_program_registrations` rebased
 
 The dataset currently reads `bases/` directly and resolves currently-at itself, duplicating
 BL-007. It is rebased so the enrolment facts have one definition.
 
-- **BL-022:** Enrolment facts — registration status and datetime, clinical status, currently-at,
-  registering facility, registered-by, deactivation — are read from `clinical__episode`.
+- **BL-022:** Enrolment facts — registration status and datetime, program registry, clinical
+  status, currently-at, registering facility, registered-by, deactivation — are read from
+  `clinical__episode`, which joins no base registration table at all. `clinical_status_id`,
+  `program_registry_id` and `deactivated_datetime` are on the model for this reason: without
+  them the dataset would have to reach past it for three columns, which is the drift this
+  clause exists to prevent.
 - **BL-023:** Patient demographics, `patient_additional_data` contact and administrative columns,
   and the related-condition aggregation stay in the dataset: they are Tupaia presentation concerns
   and not part of the OMOP episode.
@@ -188,20 +222,21 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-002 | `registration_status` is `active` or `inactive` only | BL-002 | `accepted_values` |
 | AC-003 | `episode_start_datetime` is not null | BL-003 | dbt `not_null` |
 | AC-004 | `episode_end_datetime >= episode_start_datetime` where the end is not null | BL-004 | `dbt_utils.expression_is_true` |
-| AC-005 | `episode_end_source` is `deactivation` exactly when `deactivated_datetime` is set, and `status change` exactly when the end came from history | BL-004 | singular test |
+| AC-005 | On an `inactive` registration `episode_end_source` is `deactivation` exactly when `deactivated_datetime` is set and `status change` exactly when the end came from a logged transition; on an `active` one it is null | BL-004, BL-005 | singular test |
 | AC-006 | `episode_end_date` is null exactly when `episode_end_datetime` is null | BL-004, BL-005 | singular test |
-| AC-007 | Every `active` registration has both end columns null | BL-005 | singular test |
+| AC-007 | Every `active` registration has both end columns and `episode_end_source` null, whatever `deactivated_datetime` holds | BL-005 | singular test |
 | AC-008 | `currently_at_id` is null whenever the registry's `currently_at_type` is null | BL-007 | singular test |
 | AC-009 | `currently_at_type` is `facility`, `village`, or null | BL-007 | `accepted_values` |
 | AC-010 | Every `person_id` appears in `clinical__person` | BL-001 | dbt `relationships` |
 | AC-011 | Every non-null `care_site_id` appears in `ref__care_site` | BL-011 | `relationships` |
-| AC-012 | Row count equals the source count of non-`recordedInError`, non-deleted registrations | BL-001, BL-002 | singular test |
+| AC-012 | Row count equals the source count of non-`recordedInError`, non-deleted registrations held by a patient in `bases/patients` | BL-001, BL-002 | singular test |
 | AC-013 | `(episode_id, logged_at)` is unique in the history | BL-012 | `dbt_utils.unique_combination_of_columns` |
-| AC-014 | Every history `episode_id` appears in `clinical__episode` | BL-012 | `relationships` |
+| AC-014 | Every history `episode_id` appears in `clinical__episode`, without exception | BL-012 | singular test |
 | AC-015 | Each registration's latest history row matches `clinical__episode`'s current status | BL-014 | singular test |
-| AC-016 | An `inactive` registration with no `deactivated_datetime` has an end iff a qualifying history entry exists | BL-004, BL-006 | singular test |
+| AC-016 | An `inactive` registration with no `deactivated_datetime` has an end iff a logged history entry putting it `inactive` exists — the synthetic current-state row does not qualify | BL-004, BL-006 | singular test |
 | AC-017 | `ds__patient_program_registrations` emits the same column set as before the rebase | BL-024 | singular test asserting the column list |
 | AC-018 | `episode_concept_id`, `episode_object_concept_id`, `episode_parent_id` and `episode_number` are always null | BL-009, BL-010 | singular test |
+| AC-026 | `program_registry_id` is not null | BL-022 | dbt `not_null` |
 | AC-019 | Registry-condition rows have a null `visit_occurrence_id`, and encounter-diagnosis rows do not | BL-017 | singular test on `clinical__condition_occurrence` |
 | AC-020 | `condition_type_source_value` is `encounter diagnosis` or `program registry condition` | BL-020 | `accepted_values` |
 | AC-021 | No registry-condition row corresponds to a source row with a `deletion_date` | BL-021 | singular test |
@@ -278,3 +313,5 @@ to `clinical__episode` (the enrolment) — the same question, without a hierarch
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-22 | Maui team | Initial draft. Episode end resolves through the change log rather than `deactivated_datetime` alone; `ds__patient_program_registrations` rebased onto this model so currently-at has one definition. |
+| 2026-08-23 | Maui team | Review pass. Population scoped to patients `clinical__person` carries, so AC-010 and AC-023 hold across a patient merge — a registration id embeds its patient id and cannot be repointed by one. AC-011 fixed: it related the registering facility to `ref__care_site.care_site_id`, which held only departments and locations, so it failed on every episode with a registering facility. `ref__care_site` gained a facility grain (its BL-007) rather than the FK being repointed at `bases/facilities`, which D2 forbids. |
+| 2026-08-23 | Maui team | Conformance pass against the implementation. BL-004 restricted to logged history entries, so BL-006 is reachable rather than closing every pre-coverage registration at its own start; BL-005 given precedence over a stale deactivation stamp, resolving its conflict with AC-007. History scoped to non-recorded-in-error registrations so AC-014 holds unconditionally. `program_registry_id`, `clinical_status_id` and `deactivated_datetime` added so BL-022 is met in full. `programs` dropped from Inputs (never referenced); id columns retyped from `uuid` to `text`. |
