@@ -3,14 +3,14 @@ unit_tests:
     model: clinical__episode
     description: >
       BL-005, AC-007. An active registration is open whatever else the record carries. A
-      reactivation leaves the deactivation stamp behind on the row, so deactivated_datetime
-      and deactivated_by_id are populated while the patient is enrolled; neither may close
-      the episode. Both are still emitted, so the stamp remains visible.
+      reactivation leaves the deactivation stamp behind on the row, so deactivated_datetime and
+      deactivated_by_id are populated while the patient is enrolled; neither may close the
+      episode. Both are still emitted, so the stamp remains visible.
     given:
-      - input: ref('patient_program_registrations')
+      - input: ref('int__program_enrolments')
         format: sql
         rows: |
-          select 'pat_001;preg_001' as id, '2024-01-10 09:00:00'::timestamp as datetime, 'active' as registration_status, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'stat_001' as clinical_status_id, 'usr_001' as registered_by_id, 'fac_001' as registering_facility_id, 'fac_001' as facility_id, null::text as village_id, 'usr_002' as deactivated_by_id, '2024-05-01 08:00:00'::timestamp as deactivated_datetime
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, '2024-05-01 08:00:00'::timestamp as deactivated_datetime, 'usr_002' as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, 'stat_001' as clinical_status_id, 'ON_ART' as clinical_status_code, 'On ART' as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
 
       - input: ref('int__registration_status_history')
         format: sql
@@ -18,32 +18,6 @@ unit_tests:
           select 'pat_001;preg_001' as episode_id, '2024-05-01 08:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'change log' as history_source
           union all
           select 'pat_001;preg_001', '2024-09-01 08:00:00'::timestamp, 'active', 'change log'
-
-      - input: ref('program_registries')
-        format: sql
-        rows: |
-          select 'preg_001' as id, 'HIV' as code, 'HIV Program' as name, 'facility' as currently_at_type, 'prog_001' as program_id
-
-      - input: ref('program_registry_clinical_statuses')
-        format: sql
-        rows: |
-          select 'stat_001' as id, 'ON_ART' as code, 'On ART' as name
-
-      - input: ref('facilities')
-        format: sql
-        rows: |
-          select 'fac_001' as id, 'Central Hospital' as name
-
-      - input: ref('reference_data')
-        format: sql
-        rows: |
-          select null::text as id, null::text as name
-          where false
-
-      - input: ref('patients')
-        format: sql
-        rows: |
-          select 'pat_001' as id
 
     expect:
       format: sql

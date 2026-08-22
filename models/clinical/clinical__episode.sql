@@ -6,32 +6,16 @@
 -- record, nothing computed -- so the model sits in clinical__ on the same grounds as
 -- observation_period. An assembled episode (an ART regimen line) belongs in derived__.
 --
+-- The enrolment facts are resolved once in int__program_enrolments and shared with
+-- ds__patient_program_registrations (BL-026); this model filters that population to the
+-- clinical one and adds the episode boundaries and OMOP shaping.
+--
 -- Sources only from bases/ and intermediate (D10). *_concept_id deferred to the future vocab__
 -- layer (BL-009).
 -- See specs/dbt-model/clinical__episode.md for BL-001..BL-011.
 
-with registrations as (
-    select * from {{ ref('patient_program_registrations') }}
-),
-
-program_registries as (
-    select * from {{ ref('program_registries') }}
-),
-
-clinical_statuses as (
-    select * from {{ ref('program_registry_clinical_statuses') }}
-),
-
-facilities as (
-    select * from {{ ref('facilities') }}
-),
-
-reference_data as (
-    select * from {{ ref('reference_data') }}
-),
-
-patients as (
-    select * from {{ ref('patients') }}
+with all_enrolments as (
+    select * from {{ ref('int__program_enrolments') }}
 ),
 
 status_history as (
@@ -55,23 +39,18 @@ became_inactive as (
     group by episode_id
 ),
 
--- the modelled population (BL-001). An enrolment recorded in error is a data-entry mistake
--- rather than a clinical fact (BL-002), and an enrolment left on a patient record that has
--- been merged away belongs to a person clinical__person does not carry, so neither reaches
--- the model. int__registration_status_history scopes itself identically -- it cannot read
--- this model without a cycle -- so that the two agree row for row (AC-014)
+-- an enrolment recorded in error is a data-entry mistake, not a clinical fact (BL-002). The
+-- merged-patient exclusion is already applied upstream (BL-001, BL-026)
 enrolments as (
-    select r.*
-    from registrations r
-    join patients p on p.id = r.patient_id
-    where r.registration_status != 'recordedInError'
+    select * from all_enrolments
+    where registration_status != 'recordedInError'
 ),
 
 resolved as (
     select
-        e.id as episode_id,
-        e.patient_id as person_id,
-        e.datetime as episode_start_datetime,
+        e.enrolment_id as episode_id,
+        e.person_id,
+        e.enrolment_datetime as episode_start_datetime,
 
         -- only an inactive registration has ended: an active one is open whatever else the
         -- record carries, so a deactivation stamp left behind by a reactivation cannot close
@@ -92,36 +71,20 @@ resolved as (
         e.deactivated_datetime,
         e.program_registry_id,
         e.clinical_status_id,
-        pr.code as episode_source_value,
-        pr.name as episode_source_name,
-        pr.program_id,
-        cs.code as clinical_status_source_value,
-        cs.name as clinical_status_source_name,
-
-        -- only the column the registry is configured for is maintained, so the other is
-        -- ignored even when populated (BL-007)
-        pr.currently_at_type,
-        case pr.currently_at_type
-            when 'facility' then e.facility_id
-            when 'village' then e.village_id
-        end as currently_at_id,
-        case pr.currently_at_type
-            when 'facility' then currently_at_facility.name
-            when 'village' then currently_at_village.name
-        end as currently_at_name,
-
+        e.registry_code as episode_source_value,
+        e.registry_name as episode_source_name,
+        e.program_id,
+        e.clinical_status_code as clinical_status_source_value,
+        e.clinical_status_name as clinical_status_source_name,
+        e.currently_at_type,
+        e.currently_at_id,
+        e.currently_at_name,
         e.registering_facility_id as care_site_id,
         e.registered_by_id as provider_id,
         e.deactivated_by_id as deactivated_by_provider_id
 
     from enrolments e
-    -- every lookup is left-joined: an enrolment with no clinical status set, or no registering
-    -- facility, is still a valid enrolment (BL-011)
-    left join program_registries pr on pr.id = e.program_registry_id
-    left join clinical_statuses cs on cs.id = e.clinical_status_id
-    left join became_inactive bi on bi.episode_id = e.id
-    left join facilities currently_at_facility on currently_at_facility.id = e.facility_id
-    left join reference_data currently_at_village on currently_at_village.id = e.village_id
+    left join became_inactive bi on bi.episode_id = e.enrolment_id
 )
 
 select

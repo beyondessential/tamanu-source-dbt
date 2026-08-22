@@ -71,6 +71,7 @@ the history is aggregated to one row per registration before it is joined.
 | `{{ ref('facilities') }}` | Registering facility, and currently-at facility |
 | `{{ ref('patients') }}` | Scopes the model to the people `clinical__person` carries (BL-001) |
 | `{{ ref('reference_data') }}` | Currently-at village |
+| `{{ ref('int__program_enrolments') }}` | The enrolment facts, resolved once and shared with the dataset (BL-026) |
 | `{{ ref('int__registration_status_history') }}` | When the registration became `inactive`, for the episode end (BL-004) |
 
 `bases/patient_program_registrations` already excludes soft-deleted rows and the test patient.
@@ -195,6 +196,23 @@ that model's spec. Its clauses live there; the shape differs from encounter diag
 - **BL-021:** Conditions with a deletion datetime are excluded (the source `deletion_date`,
   which `bases/patient_program_registration_conditions` exposes as `deleted_datetime`).
 
+### `int__program_enrolments`
+
+**Grain.** One row per patient enrolment in a program registry — the same grain as this model,
+one status wider.
+
+**Why it exists.** `clinical__episode` and `ds__patient_program_registrations` need the same
+enrolment facts resolved the same way, but not the same rows: the episode is a clinical fact and
+excludes enrolments recorded in error, while the dataset lists them for the removed-patients
+report (BL-025). Resolving currently-at in both is the duplication BL-022 exists to prevent, so
+the resolution lives here once and each consumer filters it.
+
+- **BL-026:** One row per enrolment held by a patient `bases/patients` carries, whatever its
+  registration status, with registry, clinical status and currently-at resolved (BL-007) and the
+  lookups left-joined (BL-011). Recorded-in-error rows are kept and `clinical__episode` drops
+  them; merged-away patients are excluded here, so both consumers inherit BL-001's population
+  rule from one place. Ephemeral, so it materialises nothing.
+
 ### `ds__patient_program_registrations` rebased
 
 The dataset currently reads `bases/` directly and resolves currently-at itself, duplicating
@@ -202,17 +220,22 @@ BL-007. It is rebased so the enrolment facts have one definition.
 
 - **BL-022:** Enrolment facts — registration status and datetime, program registry, clinical
   status, currently-at, registering facility, registered-by, deactivation — are read from
-  `clinical__episode`, which joins no base registration table at all. `clinical_status_id`,
-  `program_registry_id` and `deactivated_datetime` are on the model for this reason: without
-  them the dataset would have to reach past it for three columns, which is the drift this
-  clause exists to prevent.
+  `int__program_enrolments` (BL-026), the same model `clinical__episode` reads, so the two
+  cannot drift. The dataset joins no base registration table at all.
 - **BL-023:** Patient demographics, `patient_additional_data` contact and administrative columns,
   and the related-condition aggregation stay in the dataset: they are Tupaia presentation concerns
   and not part of the OMOP episode.
 - **BL-024:** The dataset's output columns, their names and their order are unchanged, so no
   consumer's column contract moves.
-- **BL-025:** Reading through `clinical__episode` drops enrolments recorded in error, which the
-  dataset previously listed. Row content changes even though the column set does not.
+- **BL-025:** The dataset keeps enrolments recorded in error. They are not clinical facts, so
+  they have no episode (BL-002), but `program-registry-removed-patients-line-list` lists them
+  and always has — its filter is `registration_status != 'active'`, which catches
+  `recordedInError` alongside `inactive`. Dropping them would silently shorten a shipped
+  in-product report. This is why the dataset reads `int__program_enrolments` rather than
+  `clinical__episode`: the two populations differ by exactly this one status.
+
+  `program-registry-line-list`, the other consumer, filters `registration_status = 'active'`
+  and is unaffected — the two reports partition the dataset between them.
 
 ## Acceptance criteria
 
@@ -241,9 +264,12 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-020 | `condition_type_source_value` is `encounter diagnosis` or `program registry condition` | BL-020 | `accepted_values` |
 | AC-021 | No registry-condition row corresponds to a source row with a `deletion_date` | BL-021 | singular test |
 | AC-022 | Every registry-condition `person_id` appears in `clinical__person` | BL-018 | `relationships` |
-| AC-023 | `ds__patient_program_registrations` row count equals `clinical__episode` row count | BL-022, BL-025 | singular test |
+| AC-023 | `ds__patient_program_registrations` row count equals `clinical__episode` row count plus the recorded-in-error enrolments | BL-022, BL-025, BL-026 | singular test |
 | AC-024 | Registry-condition `condition_status_source_value` values all appear in `program_registry_condition_categories.code` | BL-019 | `relationships` |
 | AC-025 | `ds__patient_program_registrations` still emits the patient, contact and related-condition columns | BL-023 | covered by AC-017's column-list assertion |
+
+BL-026 is asserted by AC-023 (the two populations differ by exactly the recorded-in-error
+rows) together with AC-008 and AC-009, which pin the currently-at resolution it now owns.
 
 BL-013, BL-015 and BL-016 carry no acceptance criterion: the first two describe what the change log
 can and cannot show, and the third is a sourcing rule enforced by review rather than by a test.
@@ -252,11 +278,12 @@ BL-008 is asserted indirectly by AC-015, which pins the history's final row to t
 ## Lineage
 
 ```
-bases/patient_program_registrations ──┬──►  clinical__episode  ──┬──►  derived__cohort_*
-bases/program_registries            ──┤          ▲               ├──►  metric__ programme indicators
-bases/program_registry_clinical_...  ─┘          │               └──►  ds__patient_program_registrations
-                                                 │
-bases/patient_program_registrations_change_logs ─┴──►  int__registration_status_history
+bases/patient_program_registrations ──┬──►  int__program_enrolments  ─┬─►  clinical__episode  ─┬─►  derived__cohort_*
+bases/program_registries            ──┤    (all statuses)          │         ▲           └─►  metric__ programme indicators
+bases/program_registry_clinical_...  ─┤                            │         │
+bases/facilities / reference_data   ──┘                            └─►  ds__patient_program_registrations
+                                                                       │
+bases/patient_program_registrations_change_logs ──►  int__registration_status_history ─┘
 
 bases/patient_program_registration_conditions   ──►  clinical__condition_occurrence
                                                        (second branch, resolves its OQ-1)
@@ -313,5 +340,6 @@ to `clinical__episode` (the enrolment) — the same question, without a hierarch
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-22 | Maui team | Initial draft. Episode end resolves through the change log rather than `deactivated_datetime` alone; `ds__patient_program_registrations` rebased onto this model so currently-at has one definition. |
+| 2026-08-23 | Maui team | Enrolment resolution extracted to `int__program_enrolments` so `clinical__episode` and `ds__patient_program_registrations` share one definition across two populations. The dataset keeps enrolments recorded in error: `program-registry-removed-patients-line-list` lists them and dropping them silently shortened a shipped report (BL-025 reversed). |
 | 2026-08-23 | Maui team | Review pass. Population scoped to patients `clinical__person` carries, so AC-010 and AC-023 hold across a patient merge — a registration id embeds its patient id and cannot be repointed by one. AC-011 fixed: it related the registering facility to `ref__care_site.care_site_id`, which held only departments and locations, so it failed on every episode with a registering facility. `ref__care_site` gained a facility grain (its BL-007) rather than the FK being repointed at `bases/facilities`, which D2 forbids. |
 | 2026-08-23 | Maui team | Conformance pass against the implementation. BL-004 restricted to logged history entries, so BL-006 is reachable rather than closing every pre-coverage registration at its own start; BL-005 given precedence over a stale deactivation stamp, resolving its conflict with AC-007. History scoped to non-recorded-in-error registrations so AC-014 holds unconditionally. `program_registry_id`, `clinical_status_id` and `deactivated_datetime` added so BL-022 is met in full. `programs` dropped from Inputs (never referenced); id columns retyped from `uuid` to `text`. |

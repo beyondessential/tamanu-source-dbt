@@ -66,20 +66,26 @@ with ac_017 as (
              and actual_columns != expected_columns else 'false' }}
 ),
 
--- AC-023: the dataset is one row per episode. Reading through clinical__episode drops
--- enrolments recorded in error (BL-025), and must drop nothing else and duplicate nothing
+-- AC-023: the dataset is one row per enrolment, which is every episode plus the enrolments
+-- recorded in error -- not clinical facts, so absent from clinical__episode, but listed by the
+-- removed-patients report and always have been (BL-025, BL-026). It must drop nothing else and
+-- duplicate nothing
 ac_023 as (
     select
         'AC-023' as failed_ac,
-        counts.episodes::text as expected_columns,
+        (counts.episodes + counts.recorded_in_error)::text as expected_columns,
         counts.dataset_rows::text as actual_columns
     from (
         select
             (select count(*) from {{ ref('clinical__episode') }}) as episodes,
+            (
+                select count(*) from {{ ref('int__program_enrolments') }}
+                where registration_status = 'recordedInError'
+            ) as recorded_in_error,
             (select count(*) from {{ ref('ds__patient_program_registrations') }})
                 as dataset_rows
     ) counts
-    where counts.episodes != counts.dataset_rows
+    where counts.episodes + counts.recorded_in_error != counts.dataset_rows
 )
 
 select failed_ac, expected_columns, actual_columns from ac_017
