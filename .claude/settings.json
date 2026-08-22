@@ -5,11 +5,17 @@
         "source": "directory",
         "path": "./.maui"
       }
+    },
+    "bes": {
+      "source": {
+        "source": "github",
+        "repo": "beyondessential/claude-plugins"
+      }
     }
   },
   "enabledPlugins": {
-    "maui-tamanu@maui-team": true,
+    "maui-tamanu@bes": true,
     "maui-internal@maui-team": true,
-    "maui-core@maui-team": true
+    "maui-core@bes": true
   }
 }
