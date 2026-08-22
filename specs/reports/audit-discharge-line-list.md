@@ -88,9 +88,9 @@ a deleted or merged patient are out of scope.
 | `dischargeRecordedBy` | text | User who completed the discharge form |
 | `dischargeIsAutomatic` | text | `Yes` / `No` |
 | `dischargeLaterEditCount` | integer | Edits after the discharge was first recorded |
-| `diagnosesPrimary` | text | Primary diagnoses for the encounter, as `name (code)` |
+| `diagnosesPrimary` | text | Primary diagnoses for the encounter, names only; semicolon-separated |
 | `diagnosesPrimaryCodes` | text | Codes of the primary diagnoses |
-| `diagnosesSecondary` | text | Secondary diagnoses for the encounter, as `name (code)` |
+| `diagnosesSecondary` | text | Secondary diagnoses for the encounter, names only; semicolon-separated |
 | `diagnosesSecondaryCodes` | text | Codes of the secondary diagnoses |
 
 ## Business logic
@@ -125,8 +125,8 @@ a deleted or merged patient are out of scope.
   from "not known".
 - **BL-009:** Facility scope is partitioned by the `is_sensitive` macro argument.
 - **BL-010:** Diagnoses are aggregated to semicolon-separated strings per encounter so the
-  one-row-per-encounter grain holds, split primary from secondary and name from code to match
-  the column shape of the admissions line list. Each group is ordered by the date the diagnosis
+  one-row-per-encounter grain holds, split primary from secondary and name from code — the same
+  four columns as the admissions line list. Each group is ordered by the date the diagnosis
   was recorded, and is null where the encounter has none of that kind. The
   `encounter_diagnoses` base model already excludes deleted rows and diagnoses of disproven or
   error certainty.
@@ -135,6 +135,13 @@ a deleted or merged patient are out of scope.
   admission. The column is therefore never earlier than `admission_datetime`, and on clamped
   rows it is not literally the value keyed into the discharge form.
   `days_between_discharge_and_recording` is computed from the clamped value.
+- **BL-012:** The diagnosis name columns carry the name alone. An earlier revision appended
+  the code as `name (code)`, which duplicated what `diagnosesPrimaryCodes` /
+  `diagnosesSecondaryCodes` already hold and left neither column clean — the name could not be
+  grouped or filtered on without stripping the suffix, and the code column was redundant
+  beside it. Splitting name from code is the point of having four columns rather than two.
+  `macros/datasets/admissions.sql` still appends the code to its own diagnosis names, so the
+  two datasets differ on this until it is changed there too.
 
 ## Acceptance criteria
 
@@ -186,4 +193,5 @@ _None._
 |---|---|---|
 | 2026-08-14 | Maui team | Initial spec and implementation, named "Audit - discharge line list", cut against the `2.54` version branch for the Kiribati deployment. Adds the `discharges_change_logs` base model, `created_datetime` on the `discharges` base model, the `ds__discharge_audit` dataset and the standard + sensitive report pair. |
 | 2026-08-21 | Maui team | Added primary and secondary diagnosis columns to the dataset and report, aggregating the encounter's diagnoses to one row (BL-010). |
+| 2026-08-21 | Maui team | Dropped the appended code from the diagnosis name columns (BL-012); the code already has its own column. `admissions.sql` unchanged, so the two datasets differ on this for now. |
 | 2026-08-21 | Maui team | Brought the spec back in line with the code where it had drifted: partial change log coverage (BL-002 and Risks), the `end_date` clamp inherited from the encounters base (BL-011), earliest-wins dedup in BL-001, the null-location blind spot shared by the dataset and AC-001's test, and the `warn` severity the acceptance tests run at. Documentation only, no code change. |
