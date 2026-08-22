@@ -14,8 +14,8 @@
     }
   },
   "enabledPlugins": {
-    "maui-tamanu@bes": true,
+    "tamanu@bes": true,
     "maui-internal@maui-team": true,
-    "maui-core@bes": true
+    "bes-skills@bes": true
   }
 }
