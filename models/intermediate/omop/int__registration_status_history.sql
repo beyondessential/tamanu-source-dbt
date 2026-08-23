@@ -14,23 +14,21 @@ with change_logs as (
     select * from {{ ref('patient_program_registrations_change_logs') }}
 ),
 
-registrations as (
-    select * from {{ ref('patient_program_registrations') }}
-),
-
-patients as (
-    select * from {{ ref('patients') }}
-),
-
--- the same population clinical__episode models, kept in step by hand because this model is
--- upstream of it and cannot read it (BL-001, BL-002, AC-014). An enrolment recorded in error
--- is a data-entry mistake, and so is the passage through the statuses that led to it; an
--- enrolment on a merged-away patient belongs to nobody clinical__person carries
+-- the population clinical__episode models, read from where it is defined rather than rebuilt
+-- (BL-001, BL-002, BL-026, AC-014). An enrolment recorded in error is a data-entry mistake, and
+-- so is the passage through the statuses that led to it; merged-away patients are already
+-- excluded upstream
 enrolments as (
-    select r.*
-    from registrations r
-    join patients p on p.id = r.patient_id
-    where r.registration_status != 'recordedInError'
+    select
+        enrolment_id as id,
+        person_id as patient_id,
+        program_registry_id,
+        enrolment_datetime as datetime,
+        registration_status,
+        clinical_status_id,
+        registered_by_id
+    from {{ ref('int__program_enrolments') }}
+    where registration_status != 'recordedInError'
 ),
 
 -- every logged change, valued as at the change (BL-013). The base model already excludes the
@@ -50,11 +48,13 @@ logged as (
 ),
 
 last_logged as (
-    select
+    select distinct on (episode_id)
         episode_id,
-        max(logged_at) as last_logged_at
+        logged_at as last_logged_at,
+        registration_status as last_logged_status,
+        clinical_status_id as last_logged_clinical_status_id
     from logged
-    group by episode_id
+    order by episode_id asc, logged_at desc
 ),
 
 -- current state, so a registration whose changes predate the log's coverage floor still has
@@ -73,21 +73,33 @@ current_state as (
         r.registration_status,
         r.clinical_status_id,
         r.registered_by_id as changed_by_provider_id,
-        'current' as history_source
+        'current' as history_source,
+        -- the log's latest snapshot should already be current state, since the log is written on
+        -- update. Where it is not, the table is what the registration says it is now
+        (
+            r.registration_status is distinct from l.last_logged_status
+            or r.clinical_status_id is distinct from l.last_logged_clinical_status_id
+        ) as diverges_from_log
     from enrolments r
     left join last_logged l on l.episode_id = r.id
 ),
 
 combined as (
-    select * from logged
+    select
+        *,
+        false as diverges_from_log
+    from logged
     union all
     select * from current_state
 ),
 
--- A registration with logged changes has current state already represented by its latest
--- logged row -- that change is what produced it -- so the two collide on logged_at and the
--- logged row wins: it names the user who acted. Current state survives as its own row only
--- where nothing was logged, which is what keeps AC-013 true (BL-012, BL-014)
+-- A registration with logged changes has current state already represented by its latest logged
+-- row -- that change is what produced it -- so the two collide on logged_at and the logged row
+-- wins: it names the user who acted. Current state survives as its own row where nothing was
+-- logged, and where the log's latest snapshot disagrees with it: a log that has lost a row would
+-- otherwise make the history's last word a stale one, and AC-015 a build failure rather than
+-- something a consumer can see. One row per collision either way, which is what keeps AC-013
+-- true (BL-012, BL-014)
 deduplicated as (
     select distinct on (episode_id, logged_at)
         episode_id,
@@ -99,7 +111,14 @@ deduplicated as (
         changed_by_provider_id,
         history_source
     from combined
-    order by episode_id, logged_at, case history_source when 'change log' then 0 else 1 end
+    order by
+        episode_id,
+        logged_at,
+        case
+            when history_source = 'current' and diverges_from_log then 0
+            when history_source = 'change log' then 1
+            else 2
+        end
 )
 
 select

@@ -80,9 +80,11 @@ select
     e.registered_by_id
 
 from enrolments e
--- every lookup is left-joined: an enrolment with no clinical status set, or no registering
+-- the registry is what the enrolment is in, so it is required: an enrolment whose registry has
+-- been deleted is one neither consumer lists (BL-011)
+join program_registries pr on pr.id = e.program_registry_id
+-- every other lookup is left-joined: an enrolment with no clinical status set, or no registering
 -- facility, is still a valid enrolment (BL-011)
-left join program_registries pr on pr.id = e.program_registry_id
 left join clinical_statuses cs on cs.id = e.clinical_status_id
 left join facilities currently_at_facility on currently_at_facility.id = e.facility_id
 left join reference_data currently_at_village on currently_at_village.id = e.village_id

@@ -1,0 +1,31 @@
+unit_tests:
+  - name: test_int__registration_status_history_divergent_current_state
+    model: int__registration_status_history
+    description: >
+      BL-014. The change log is written on update, so its latest entry should already say what the
+      registration says now — and where it does, that entry is the final history row because it
+      names the user who acted. Where it does not, the log has lost an entry, and the registration
+      itself is what the patient's status is: current state becomes the final row rather than being
+      dropped in favour of a stale one. Two enrolments at the same last-logged moment, one agreeing
+      with the log and one not.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, 'cs_002' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+          union all
+          select 'pat_002;preg_001', 'pat_002', '2024-01-10 09:00:00'::timestamp, 'inactive', 'cs_003', 'preg_001', 'usr_001'
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          union all
+          select 'pat_002;preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'pat_002', 'preg_001', 'usr_002'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 1

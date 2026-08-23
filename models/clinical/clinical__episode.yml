@@ -150,9 +150,21 @@ models:
       - name: provider_id
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__provider_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_027_clinical__episode_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
       - name: deactivated_datetime
         data_type: timestamp without time zone
         description: "{{ doc('clinical__episode__deactivated_datetime') }}"
       - name: deactivated_by_provider_id
         data_type: character varying(255)
         description: "{{ doc('clinical__episode__deactivated_by_provider_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_027_clinical__episode_deactivated_by_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id

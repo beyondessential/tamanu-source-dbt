@@ -157,5 +157,8 @@ registration even where a stale deactivation stamp survives a reactivation.
 {% enddocs %}
 
 {% docs clinical__episode__deactivated_by_provider_id %}
-Clinician who removed the patient from the registry, NULL while the enrolment is open.
+Clinician who removed the patient from the registry, as recorded on the registration.
+
+Like `deactivated_datetime` this is the source fact: a reactivated registration keeps the
+stamp its removal left behind, so an open enrolment can carry one.
 {% enddocs %}

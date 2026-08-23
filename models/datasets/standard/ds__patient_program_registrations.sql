@@ -53,7 +53,7 @@ select
     registered_by.id as registered_by_id,
     registered_by.display_name as registered_by,
 
-    -- resolved once, in clinical__episode (BL-022)
+    -- resolved once, in int__program_enrolments (BL-022)
     ep.currently_at_name as currently_at,
     ep.currently_at_type,
 
