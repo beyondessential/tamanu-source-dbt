@@ -182,19 +182,11 @@ questions about transitions rather than current state.
 
 ### Registry conditions in `clinical__condition_occurrence`
 
-Registry conditions become a second branch of `clinical__condition_occurrence`, resolving OQ-1 in
-that model's spec. Its clauses live there; the shape differs from encounter diagnoses in five ways.
-
-- **BL-017:** `visit_occurrence_id` is NULL — a registry condition is recorded against the
-  enrolment, not an encounter.
-- **BL-018:** `person_id` comes from `patient_program_registrations.patient_id` via
-  `patient_program_registration_conditions.patient_program_registration_id`.
-- **BL-019:** `condition_status_source_value` is the condition category code (`confirmed`,
-  `suspected`, `resolved`, …), the registry's equivalent of encounter-diagnosis certainty.
-- **BL-020:** `condition_type_source_value` is the constant `'program registry condition'`,
-  distinguishing the branch from `'encounter diagnosis'`.
-- **BL-021:** Conditions with a deletion datetime are excluded (the source `deletion_date`,
-  which `bases/patient_program_registration_conditions` exposes as `deleted_datetime`).
+Registry conditions become a second branch of `clinical__condition_occurrence`, resolving OQ-1
+in that model's spec, which owns the branch: its BL-007 to BL-011 state the union, the null
+`visit_occurrence_id`, the person route through the enrolment, the condition-category status
+and the deletion exclusion, and its AC-008 to AC-013 assert them. What this spec owes that
+branch is the episode every registry-condition row hangs off, which its AC-013 checks.
 
 ### `int__program_enrolments`
 
@@ -260,13 +252,8 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-017 | `ds__patient_program_registrations` emits the same column set as before the rebase | BL-024 | singular test asserting the column list |
 | AC-018 | `episode_concept_id`, `episode_object_concept_id`, `episode_parent_id` and `episode_number` are always null | BL-009, BL-010 | singular test |
 | AC-026 | `program_registry_id` is not null | BL-022 | dbt `not_null` |
-| AC-019 | Registry-condition rows have a null `visit_occurrence_id`, and encounter-diagnosis rows do not | BL-017 | singular test on `clinical__condition_occurrence` |
-| AC-020 | `condition_type_source_value` is `encounter diagnosis` or `program registry condition` | BL-020 | `accepted_values` |
-| AC-021 | No registry-condition row corresponds to a source row with a `deletion_date` | BL-021 | singular test |
-| AC-022 | Every registry-condition `person_id` appears in `clinical__person` | BL-018 | `relationships` |
 | AC-023 | `ds__patient_program_registrations` row count equals `clinical__episode` row count plus the recorded-in-error enrolments | BL-022, BL-025, BL-026 | singular test |
-| AC-024 | Registry-condition `condition_status_source_value` values all appear in `program_registry_condition_categories.code` | BL-019 | `relationships` |
-| AC-025 | `ds__patient_program_registrations` still emits the patient, contact and related-condition columns | BL-023 | covered by AC-017's column-list assertion |
+| AC-025 | `ds__patient_program_registrations` still emits the patient, contact and related-condition columns | BL-023 | covered by AC-017's column-list assertion, which names them |
 
 BL-026 is asserted by AC-023 (the two populations differ by exactly the recorded-in-error
 rows) together with AC-008 and AC-009, which pin the currently-at resolution it now owns.
@@ -339,7 +326,4 @@ to `clinical__episode` (the enrolment) — the same question, without a hierarch
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-08-22 | Maui team | Initial draft. Episode end resolves through the change log rather than `deactivated_datetime` alone; `ds__patient_program_registrations` rebased onto this model so currently-at has one definition. |
-| 2026-08-23 | Maui team | Enrolment resolution extracted to `int__program_enrolments` so `clinical__episode` and `ds__patient_program_registrations` share one definition across two populations. The dataset keeps enrolments recorded in error: `program-registry-removed-patients-line-list` lists them and dropping them silently shortened a shipped report (BL-025 reversed). |
-| 2026-08-23 | Maui team | Review pass. Population scoped to patients `clinical__person` carries, so AC-010 and AC-023 hold across a patient merge — a registration id embeds its patient id and cannot be repointed by one. AC-011 fixed: it related the registering facility to `ref__care_site.care_site_id`, which held only departments and locations, so it failed on every episode with a registering facility. `ref__care_site` gained a facility grain (its BL-007) rather than the FK being repointed at `bases/facilities`, which D2 forbids. |
-| 2026-08-23 | Maui team | Conformance pass against the implementation. BL-004 restricted to logged history entries, so BL-006 is reachable rather than closing every pre-coverage registration at its own start; BL-005 given precedence over a stale deactivation stamp, resolving its conflict with AC-007. History scoped to non-recorded-in-error registrations so AC-014 holds unconditionally. `program_registry_id`, `clinical_status_id` and `deactivated_datetime` added so BL-022 is met in full. `programs` dropped from Inputs (never referenced); id columns retyped from `uuid` to `text`. |
+| 2026-08-23 | Maui team | Initial spec. `clinical__episode` over program registries, with the episode end resolved through the change log rather than `deactivated_datetime` alone, and `int__program_enrolments` holding the enrolment resolution that `clinical__episode` and `ds__patient_program_registrations` share across their two populations — the dataset keeps enrolments recorded in error, which `program-registry-removed-patients-line-list` lists. `ref__care_site` gained a facility grain (its BL-007) so AC-011 can relate a registering facility without repointing the FK at `bases/facilities`, which D2 forbids. |
