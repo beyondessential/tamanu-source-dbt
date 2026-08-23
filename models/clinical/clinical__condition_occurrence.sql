@@ -31,7 +31,8 @@ condition_categories as (
 ),
 
 -- the population clinical__episode models, read from the model that defines it rather than
--- rebuilt here (BL-009, BL-026). A condition tracked alongside an enrolment is only a
+-- rebuilt here (BL-009; the population rule is clinical__episode.md's BL-026). A condition
+-- tracked alongside an enrolment is only a
 -- diagnosis if the enrolment is one: without this the branch emits conditions against
 -- enrolments recorded in error, and against patients merged away, which have no episode and
 -- no clinical__person row to answer for them
