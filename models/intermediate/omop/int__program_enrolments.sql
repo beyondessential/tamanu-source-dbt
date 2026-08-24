@@ -1,5 +1,5 @@
--- int__program_enrolments -- one row per patient enrolment in a program registry, with the
--- registry, clinical status and currently-at resolved (BL-026).
+-- int__program_enrolments -- BL-026: one row per patient enrolment in a program registry, with
+-- the registry, clinical status and currently-at resolved.
 --
 -- Two models need these facts and they must not drift: clinical__episode, which is the OMOP
 -- EPISODE domain and so carries only clinical facts, and ds__patient_program_registrations,
@@ -8,9 +8,9 @@
 -- fact (BL-002) but is still something the removed-patients report lists (BL-025) -- so the
 -- resolution lives here and each consumer filters it rather than resolving it again.
 --
--- Recorded-in-error rows are kept; clinical__episode drops them. Patients merged away are not:
--- a registration id embeds its patient id, so a merge cannot repoint it and the enrolment
--- strands on a record bases/patients drops (BL-001).
+-- BL-001: recorded-in-error rows are kept and clinical__episode drops them, but patients merged
+-- away are excluded here. A registration id embeds its patient id, so a merge cannot repoint it
+-- and the enrolment would otherwise strand on a record bases/patients drops.
 --
 -- Ephemeral, so this is inlined into each consumer and materialises nothing.
 --
@@ -40,7 +40,7 @@ patients as (
     select * from {{ ref('patients') }}
 ),
 
--- every enrolment held by a patient clinical__person carries, whatever its status (BL-001)
+-- BL-001: every enrolment held by a patient clinical__person carries, whatever its status
 enrolments as (
     select r.*
     from registrations r
@@ -64,8 +64,8 @@ select
     cs.code as clinical_status_code,
     cs.name as clinical_status_name,
 
-    -- only the column the registry is configured for is maintained, so the other is ignored
-    -- even when populated (BL-007)
+    -- BL-007: only the column the registry is configured for is maintained, so the other is
+    -- ignored even when populated
     pr.currently_at_type,
     case pr.currently_at_type
         when 'facility' then e.facility_id
@@ -80,11 +80,11 @@ select
     e.registered_by_id
 
 from enrolments e
--- the registry is what the enrolment is in, so it is required: an enrolment whose registry has
--- been deleted is one neither consumer lists (BL-011)
+-- BL-011: the registry is what the enrolment is in, so it is required -- an enrolment whose
+-- registry has been deleted is one neither consumer lists (AC-012)
 join program_registries pr on pr.id = e.program_registry_id
--- every other lookup is left-joined: an enrolment with no clinical status set, or no registering
--- facility, is still a valid enrolment (BL-011)
+-- BL-011: every other lookup is left-joined. An enrolment with no clinical status set, or no
+-- registering facility, is still a valid enrolment
 left join clinical_statuses cs on cs.id = e.clinical_status_id
 left join facilities currently_at_facility on currently_at_facility.id = e.facility_id
 left join reference_data currently_at_village on currently_at_village.id = e.village_id

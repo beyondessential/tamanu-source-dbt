@@ -1,20 +1,25 @@
 -- ds__patient_program_registrations -- consumer-shaped registry line list.
 --
--- Every enrolment fact -- registration status and datetime, registry, clinical status,
--- currently-at, registering facility, registered-by, deactivation -- comes from
--- int__program_enrolments, resolved once and shared with clinical__episode so the two cannot
--- drift (BL-022, BL-026). This model reads the wider population: an enrolment recorded in
--- error is not a clinical fact and so is absent from clinical__episode, but the
--- removed-patients report lists it and always has (BL-025). Patient demographics,
--- patient_additional_data contact and administrative columns, and the related-condition
--- aggregation stay here: they are Tupaia presentation concerns and not part of the OMOP
--- episode (BL-023). The output column set is unchanged (BL-024).
+-- BL-022: every enrolment fact -- registration status and datetime, registry, clinical
+-- status, currently-at, registering facility, registered-by, deactivation -- comes from
+-- int__program_enrolments, resolved once and shared with clinical__episode so the two
+-- cannot drift.
+-- BL-023: patient demographics, patient_additional_data contact and administrative columns,
+-- and the related-condition aggregation stay here -- Tupaia presentation concerns, not part
+-- of the OMOP episode.
+-- BL-024: the output column set, names and order are unchanged.
+-- BL-025: this model reads the wider population. An enrolment recorded in error is not a
+-- clinical fact and so is absent from clinical__episode, but the removed-patients report
+-- lists it and always has.
 --
 -- Spec: specs/dbt-model/clinical__episode.md, BL-022..BL-026.
 
+-- BL-022: aggregated on the condition's own registration key, so no base registration table
+-- is joined here either -- the enrolment population comes from int__program_enrolments alone,
+-- and the left join to this aggregate below scopes it to that population
 with related_conditions as (
     select
-        ppr.id as patient_program_registration_id,
+        pprc.patient_program_registration_id,
         string_agg(
             prc.name, '; '
             order by pprc.datetime
@@ -32,10 +37,9 @@ with related_conditions as (
             order by pprc.datetime
         ) as condition_category_ids
     from {{ ref('patient_program_registration_conditions') }} pprc
-    join {{ ref('patient_program_registrations') }} ppr on ppr.id = pprc.patient_program_registration_id
     left join {{ ref('program_registry_conditions') }} prc on prc.id = pprc.program_registry_condition_id
     left join {{ ref('program_registry_condition_categories') }} prcc on prcc.id = pprc.program_registry_condition_category_id
-    group by ppr.id
+    group by pprc.patient_program_registration_id
 )
 
 select
@@ -53,7 +57,7 @@ select
     registered_by.id as registered_by_id,
     registered_by.display_name as registered_by,
 
-    -- resolved once, in int__program_enrolments (BL-022)
+    -- BL-022: resolved once, in int__program_enrolments
     ep.currently_at_name as currently_at,
     ep.currently_at_type,
 

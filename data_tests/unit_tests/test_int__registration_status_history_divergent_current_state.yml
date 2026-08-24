@@ -4,10 +4,12 @@ unit_tests:
     description: >
       BL-014. The change log is written on update, so its latest entry should already say what the
       registration says now — and where it does, that entry is the final history row because it
-      names the user who acted. Where it does not, the log has lost an entry, and the registration
-      itself is what the patient's status is: current state becomes the final row rather than being
-      dropped in favour of a stale one. Two enrolments at the same last-logged moment, one agreeing
-      with the log and one not.
+      names the user who acted, and the synthetic current-state row is redundant and dropped.
+      Where it does not, the log has lost an entry: both rows are kept at the shared instant, the
+      logged change because it is a real attributed change BL-004 may need, and current state
+      because it is what the patient's status is, sorting last so the history's final word matches
+      clinical__episode. Two enrolments at the same last-logged moment, one agreeing with the log
+      and one not.
     given:
       - input: ref('int__program_enrolments')
         format: sql
@@ -28,4 +30,32 @@ unit_tests:
       rows: |
         select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
         union all
-        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 1
+        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'usr_002', 'change log', 1
+        union all
+        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 2
+
+  - name: test_int__registration_status_history_keeps_logged_inactive
+    model: int__registration_status_history
+    description: >
+      BL-004, BL-014, AC-016. Where current state diverges from the log only in clinical status,
+      the logged transition to inactive is still a real attributed change and survives alongside
+      the synthetic current-state row. clinical__episode draws the episode end from that logged
+      row, so suppressing it in favour of current state would leave an inactive registration
+      reading as open.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_003;preg_001' as enrolment_id, 'pat_003' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, 'cs_005' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'pat_003;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'pat_003' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_003;preg_001' as episode_id, 'pat_003' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'pat_003;preg_001', 'pat_003', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_005', 'usr_001', 'current', 2

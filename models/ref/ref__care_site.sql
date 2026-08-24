@@ -42,8 +42,9 @@ location_sites as (
     from locations loc
 ),
 
--- the site as a whole (BL-001, BL-007). Its parent facility is itself, so the join below
--- denormalises the facility's own name and type onto it
+-- BL-007: the site as a whole. Its parent facility is itself, so the join below denormalises
+-- the facility's own name and type onto it, and facility-level aggregation over facility_id
+-- works uniformly across all three grains (BL-001)
 facility_sites as (
     select
         'facility'    as care_site_type,

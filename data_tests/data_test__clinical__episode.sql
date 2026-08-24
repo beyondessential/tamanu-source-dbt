@@ -90,7 +90,9 @@ ac_008 as (
 ),
 
 -- AC-012: every enrolment in the modelled population reaches the model -- not recorded in
--- error, and on a patient clinical__person carries (BL-001, BL-002)
+-- error, on a patient clinical__person carries, and in a registry that still exists, the
+-- registry join being inner because an enrolment is an enrolment *in a registry*
+-- (BL-001, BL-002, BL-011)
 ac_012 as (
     select
         'row count' as episode_id,
@@ -102,6 +104,7 @@ ac_012 as (
                 select count(*)
                 from registrations r
                 join patients p on p.id = r.patient_id
+                join program_registries pr on pr.id = r.program_registry_id
                 where r.registration_status != 'recordedInError'
             ) as expected
     ) counts
@@ -136,13 +139,15 @@ ac_018 as (
         or episode_number is not null
 ),
 
--- AC-013: one history row per registration per logged moment (BL-012)
+-- AC-013: one history row per registration per logged moment per source (BL-012). A logged
+-- change and the synthetic current-state row share an instant where the log has lost an
+-- entry, and history_source is what tells them apart (BL-014)
 ac_013 as (
     select
         episode_id,
         'AC-013' as failed_ac
     from history
-    group by episode_id, logged_at
+    group by episode_id, logged_at, history_source
     having count(*) > 1
 ),
 

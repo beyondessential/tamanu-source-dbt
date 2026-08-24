@@ -1,17 +1,16 @@
--- clinical__episode -- OMOP-lite EPISODE domain. One row per patient enrolment in a program
--- registry (BL-001), the clinical layer's first longitudinal subject: every other clinical__
--- table hangs off an encounter, where an enrolment spans them.
+-- clinical__episode -- OMOP-lite EPISODE domain. The clinical layer's first longitudinal
+-- subject: every other clinical__ table hangs off an encounter, where an enrolment spans them.
 --
 -- OMOP categorises EPISODE as a derived element, but these rows are asserted -- one per source
 -- record, nothing computed -- so the model sits in clinical__ on the same grounds as
 -- observation_period. An assembled episode (an ART regimen line) belongs in derived__.
 --
--- The enrolment facts are resolved once in int__program_enrolments and shared with
+-- BL-001: one row per patient enrolment in a program registry, on a patient bases/patients
+-- carries. The enrolment facts are resolved once in int__program_enrolments and shared with
 -- ds__patient_program_registrations (BL-026); this model filters that population to the
 -- clinical one and adds the episode boundaries and OMOP shaping.
 --
--- Sources only from bases/ and intermediate (D10). *_concept_id deferred to the future vocab__
--- layer (BL-009).
+-- Sources only from bases/ and intermediate (D10).
 -- See specs/dbt-model/clinical__episode.md for BL-001..BL-011.
 
 with all_enrolments as (
@@ -22,13 +21,13 @@ status_history as (
     select * from {{ ref('int__registration_status_history') }}
 ),
 
--- when the registration became inactive, for an episode closed by a status change rather than
--- a deactivation (BL-004). Earliest such change, so a registration reactivated and closed
+-- BL-004: when the registration became inactive, for an episode closed by a status change
+-- rather than a deactivation. Earliest such change, so a registration reactivated and closed
 -- again reports the first close rather than the latest.
 --
--- Logged changes only. The history also carries a synthetic current-state row, stamped at the
--- enrolment datetime where nothing was logged; drawing an end from that would close every
--- pre-2.33.0 inactive registration at its own start instead of leaving it open (BL-006)
+-- BL-006: logged changes only. The history also carries a synthetic current-state row, stamped
+-- at the enrolment datetime where nothing was logged; drawing an end from that would close
+-- every pre-2.33.0 inactive registration at its own start instead of leaving it open
 became_inactive as (
     select
         episode_id,
@@ -39,7 +38,7 @@ became_inactive as (
     group by episode_id
 ),
 
--- an enrolment recorded in error is a data-entry mistake, not a clinical fact (BL-002). The
+-- BL-002: an enrolment recorded in error is a data-entry mistake, not a clinical fact. The
 -- merged-patient exclusion is already applied upstream (BL-001, BL-026)
 enrolments as (
     select * from all_enrolments
@@ -50,13 +49,16 @@ resolved as (
     select
         e.enrolment_id as episode_id,
         e.person_id,
+        -- BL-003: the registration datetime, never null
         e.enrolment_datetime as episode_start_datetime,
 
-        -- only an inactive registration has ended: an active one is open whatever else the
-        -- record carries, so a deactivation stamp left behind by a reactivation cannot close
-        -- it (BL-005). Within an inactive registration deactivation wins, and failing that the
-        -- logged transition to inactive does. With neither the episode reads as open, which
-        -- happens when the change predates the log's coverage floor (BL-004, BL-006)
+        -- BL-005: only an inactive registration has ended -- an active one is open whatever
+        -- else the record carries, so a deactivation stamp left behind by a reactivation
+        -- cannot close it.
+        -- BL-004: within an inactive registration deactivation wins, and failing that the
+        -- logged transition to inactive does.
+        -- BL-006: with neither the episode reads as open, which happens when the change
+        -- predates the log's coverage floor
         case
             when e.registration_status != 'inactive' then null
             else coalesce(e.deactivated_datetime, bi.inactive_at)
@@ -74,6 +76,8 @@ resolved as (
         e.registry_code as episode_source_value,
         e.registry_name as episode_source_name,
         e.program_id,
+        -- BL-008: the status currently held. A status the patient passed through is visible
+        -- only in int__registration_status_history
         e.clinical_status_code as clinical_status_source_value,
         e.clinical_status_name as clinical_status_source_name,
         e.currently_at_type,
@@ -88,12 +92,12 @@ resolved as (
 )
 
 select
-    -- identity: the source id is a composite of patient and registry, so it is already unique
-    -- and needs no remap to an OMOP integer id (BL-001, D1)
+    -- BL-001: identity. The source id is a composite of patient and registry, so it is
+    -- already unique and needs no remap to an OMOP integer id (D1)
     episode_id,
     person_id,
 
-    -- concept ids deferred to vocab__ (BL-009)
+    -- BL-009: concept ids deferred to vocab__
     null::int as episode_concept_id,
     null::int as episode_object_concept_id,
 
@@ -110,8 +114,8 @@ select
     program_registry_id,
     program_id,
 
-    -- no parent and no sequence: the composite key admits one episode per patient per
-    -- registry. Both columns are present for schema conformance (BL-010)
+    -- BL-010: no parent and no sequence -- the composite key admits one episode per patient
+    -- per registry. Both columns are present for schema conformance
     null::text as episode_parent_id,
     null::int as episode_number,
 

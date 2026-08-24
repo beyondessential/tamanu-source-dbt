@@ -1,9 +1,10 @@
 -- clinical__condition_occurrence -- OMOP-lite CONDITION_OCCURRENCE domain. One row per
--- recorded diagnosis, unioning two sources: encounter diagnoses (BL-001) and program-registry
--- conditions (BL-007). The FK graph anchors on the encounter for the first (BL-002) and on the
--- enrolment for the second, which has no encounter. The source code is retained and
--- condition_concept_id is deferred to the future vocab__ layer (BL-003). Sources only from
--- bases/ (D10).
+-- recorded diagnosis, unioning two sources: encounter diagnoses and program-registry
+-- conditions. The FK graph anchors on the encounter for the first and on the enrolment for the
+-- second, which has no encounter. Sources only from bases/ and intermediate (D10).
+--
+-- BL-003: the source code is retained and condition_concept_id is deferred to the future
+-- vocab__ layer.
 -- See specs/dbt-model/clinical__condition_occurrence.md for BL-001..BL-011.
 
 with encounter_diagnoses as (
@@ -30,44 +31,42 @@ condition_categories as (
     select * from {{ ref('program_registry_condition_categories') }}
 ),
 
--- the population clinical__episode models, read from the model that defines it rather than
--- rebuilt here (BL-009; the population rule is clinical__episode.md's BL-026). A condition
--- tracked alongside an enrolment is only a
--- diagnosis if the enrolment is one: without this the branch emits conditions against
--- enrolments recorded in error, and against patients merged away, which have no episode and
--- no clinical__person row to answer for them
+-- BL-009: the population clinical__episode models, read from the model that defines it rather
+-- than rebuilt here (the population rule is clinical__episode.md's BL-026). A condition tracked
+-- alongside an enrolment is only a diagnosis if the enrolment is one: without this the branch
+-- emits conditions against enrolments recorded in error, and against patients merged away,
+-- which have no episode and no clinical__person row to answer for them
 enrolments as (
     select * from {{ ref('int__program_enrolments') }}
     where registration_status != 'recordedInError'
 ),
 
--- encounter diagnosis branch (BL-001)
+-- BL-001: encounter diagnosis branch
 encounter_branch as (
     select
-        -- identity (BL-001)
         ed.id as condition_occurrence_id,
 
-        -- person anchored on the encounter (BL-002)
+        -- BL-002: person anchored on the encounter
         e.patient_id as person_id,
 
-        -- diagnosis datetimes; encounter diagnoses are point-in-time, so no end (BL-004)
+        -- BL-004: diagnosis datetimes. Encounter diagnoses are point-in-time, so no end
         ed.datetime::date as condition_start_date,
         ed.datetime       as condition_start_datetime,
         null::date        as condition_end_date,
         null::timestamp   as condition_end_datetime,
 
-        -- provenance: every row here is an EHR encounter diagnosis (BL-006)
+        -- BL-006: provenance -- every row here is an EHR encounter diagnosis
         'encounter diagnosis' as condition_type_source_value,
 
-        -- status + primary/secondary flag; certainty retained verbatim (BL-005)
+        -- BL-005: status and primary/secondary flag, certainty retained verbatim
         ed.certainty  as condition_status_source_value,
         ed.is_primary as is_primary,
 
-        -- provider + visit FKs (BL-002)
+        -- BL-002: provider and visit FKs
         ed.diagnosed_by_id as provider_id,
         ed.encounter_id    as visit_occurrence_id,
 
-        -- diagnosis ICD-10 code + name; concept_id deferred to vocab__ (BL-003)
+        -- BL-003: diagnosis ICD-10 code and name, concept_id deferred to vocab__
         rd.code as condition_source_value,
         rd.name as condition_source_name
 
@@ -76,13 +75,14 @@ encounter_branch as (
     left join reference_data rd on rd.id = ed.diagnosis_id
 ),
 
--- program-registry condition branch (BL-007). A condition tracked alongside an enrolment: no
--- encounter, so no visit FK (BL-008), and the person comes through the registration (BL-009)
+-- BL-007: program-registry condition branch. A condition tracked alongside an enrolment, so no
+-- encounter behind it (BL-008) and the person reached through the registration (BL-009)
 registry_branch as (
     select
         rc.id as condition_occurrence_id,
         r.person_id,
 
+        -- BL-004: registry conditions carry no resolution date either, so no end
         rc.datetime::date as condition_start_date,
         rc.datetime as condition_start_datetime,
         null::date as condition_end_date,
@@ -90,16 +90,16 @@ registry_branch as (
 
         'program registry condition' as condition_type_source_value,
 
-        -- the category is the registry's equivalent of encounter-diagnosis certainty:
-        -- confirmed, suspected, resolved and so on (BL-010)
+        -- BL-010: the category is the registry's equivalent of encounter-diagnosis certainty
+        -- -- confirmed, suspected, resolved and so on
         cc.code as condition_status_source_value,
 
-        -- a registry condition is not ranked against the others on the enrolment
+        -- BL-010: a registry condition is not ranked against the others on the enrolment
         null::boolean as is_primary,
 
         rc.recorded_by_id as provider_id,
 
-        -- recorded against the enrolment, not an encounter (BL-008)
+        -- BL-008: recorded against the enrolment, not an encounter
         null::varchar as visit_occurrence_id,
 
         prc.code as condition_source_value,
@@ -109,7 +109,7 @@ registry_branch as (
     join enrolments r on r.enrolment_id = rc.patient_program_registration_id
     left join registry_conditions prc on prc.id = rc.program_registry_condition_id
     left join condition_categories cc on cc.id = rc.program_registry_condition_category_id
-    -- a removed condition is not a condition the patient has (BL-011)
+    -- BL-011: a removed condition is not a condition the patient has
     where rc.deleted_datetime is null
 )
 
