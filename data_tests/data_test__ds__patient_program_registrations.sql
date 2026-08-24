@@ -1,6 +1,6 @@
 -- Singular tests for ds__patient_program_registrations after its rebase onto
 -- clinical__episode. One row per violation, tagged with the acceptance criterion it breaks.
--- See specs/dbt-model/clinical__episode.md, AC-017 and AC-023.
+-- See specs/dbt-model/clinical__episode.md, AC-017, AC-023 and AC-028.
 
 {% set expected_columns = [
     'patient_program_registration_id',
@@ -86,7 +86,37 @@ ac_023 as (
                 as dataset_rows
     ) counts
     where counts.episodes + counts.recorded_in_error != counts.dataset_rows
+),
+
+-- AC-028: the rebase reports the registration's own clinical_status_id rather than the id of the
+-- joined status row (BL-022), so an id with no name means the status is gone from
+-- bases/program_registry_clinical_statuses -- not that the dataset dropped a resolvable one. The
+-- pre-rebase model blanked both columns together, and this is the one case where the two differ
+ac_028 as (
+    select
+        'AC-028' as failed_ac,
+        d.patient_program_registration_id as expected_columns,
+        d.clinical_status_id as actual_columns
+    from {{ ref('ds__patient_program_registrations') }} d
+    join {{ ref('program_registry_clinical_statuses') }} s on s.id = d.clinical_status_id
+    where d.clinical_status_id is not null
+        and d.clinical_status is null
 )
 
-select failed_ac, expected_columns, actual_columns from ac_017
-union all select failed_ac, expected_columns, actual_columns from ac_023
+select
+    failed_ac,
+    expected_columns,
+    actual_columns
+from ac_017
+union all
+select
+    failed_ac,
+    expected_columns,
+    actual_columns
+from ac_023
+union all
+select
+    failed_ac,
+    expected_columns,
+    actual_columns
+from ac_028

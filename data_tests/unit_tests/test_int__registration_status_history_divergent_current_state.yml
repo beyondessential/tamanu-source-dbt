@@ -21,18 +21,18 @@ unit_tests:
       - input: ref('patient_program_registrations_change_logs')
         format: sql
         rows: |
-          select 'pat_001;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          select 'cl_101' as changelog_id, 'pat_001;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
           union all
-          select 'pat_002;preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'pat_002', 'preg_001', 'usr_002'
+          select 'cl_102', 'pat_002;preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'pat_002', 'preg_001', 'usr_002'
 
     expect:
       format: sql
       rows: |
-        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        select 'cl_101' as changelog_id, 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_002' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
         union all
-        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'usr_002', 'change log', 1
+        select 'cl_102', 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'active', 'cs_001', 'usr_002', 'change log', 1
         union all
-        select 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 2
+        select null::varchar, 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 2
 
   - name: test_int__registration_status_history_keeps_logged_inactive
     model: int__registration_status_history
@@ -51,11 +51,11 @@ unit_tests:
       - input: ref('patient_program_registrations_change_logs')
         format: sql
         rows: |
-          select 'pat_003;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'pat_003' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          select 'cl_103' as changelog_id, 'pat_003;preg_001' as id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'pat_003' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
 
     expect:
       format: sql
       rows: |
-        select 'pat_003;preg_001' as episode_id, 'pat_003' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        select 'cl_103' as changelog_id, 'pat_003;preg_001' as episode_id, 'pat_003' as person_id, 'preg_001' as program_registry_id, '2024-06-01 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'cs_004' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
         union all
-        select 'pat_003;preg_001', 'pat_003', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_005', 'usr_001', 'current', 2
+        select null::varchar, 'pat_003;preg_001', 'pat_003', 'preg_001', '2024-06-01 09:00:00'::timestamp, 'inactive', 'cs_005', 'usr_001', 'current', 2

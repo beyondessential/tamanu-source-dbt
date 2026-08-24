@@ -139,15 +139,28 @@ ac_018 as (
         or episode_number is not null
 ),
 
--- AC-013: one history row per registration per logged moment per source (BL-012). A logged
--- change and the synthetic current-state row share an instant where the log has lost an
--- entry, and history_source is what tells them apart (BL-014)
-ac_013 as (
+-- AC-013: the history carries one row per change-log entry, keyed by the log's own
+-- changelog_id, so entries sharing an instant are told apart rather than collapsed (BL-012)
+ac_013_logged as (
+    select
+        min(episode_id) as episode_id,
+        'AC-013' as failed_ac
+    from history
+    where changelog_id is not null
+    group by changelog_id
+    having count(*) > 1
+),
+
+-- AC-013: and one synthetic current-state row per registration at most, identified by a null
+-- changelog_id -- it is kept only where nothing logged at the last instant matches current
+-- state (BL-014)
+ac_013_current as (
     select
         episode_id,
         'AC-013' as failed_ac
     from history
-    group by episode_id, logged_at, history_source
+    where changelog_id is null
+    group by episode_id
     having count(*) > 1
 ),
 
@@ -163,23 +176,27 @@ ac_014 as (
     where e.episode_id is null
 ),
 
--- AC-015: the last thing the history says about a registration is what the episode reports
--- as current (BL-014)
+-- AC-015: at a registration's latest history instant, something says what the episode reports
+-- as current -- either a logged entry that already agrees, or the synthetic row kept because
+-- none did (BL-014). Asked of the instant rather than of the single last row, because the log
+-- may have written two entries at that instant and their order is not knowable (BL-012)
 ac_015 as (
     select
         e.episode_id,
         'AC-015' as failed_ac
     from episode e
-    join (
-        select distinct on (episode_id)
-            episode_id,
-            registration_status,
-            clinical_status_id
-        from history
-        order by episode_id, change_number desc
-    ) latest on latest.episode_id = e.episode_id
-    where latest.registration_status is distinct from e.registration_status
-        or latest.clinical_status_id is distinct from e.clinical_status_id
+    where not exists (
+            select 1
+            from history h
+            where h.episode_id = e.episode_id
+                and h.logged_at = (
+                    select max(latest.logged_at)
+                    from history latest
+                    where latest.episode_id = e.episode_id
+                )
+                and h.registration_status is not distinct from e.registration_status
+                and h.clinical_status_id is not distinct from e.clinical_status_id
+        )
 ),
 
 -- AC-009 as a cross-check on the source rather than the accepted_values list: the model must
@@ -194,14 +211,62 @@ ac_009 as (
     where coalesce(e.currently_at_type, '') != coalesce(pr.currently_at_type, '')
 )
 
-select episode_id, failed_ac from ac_005
-union all select episode_id, failed_ac from ac_006
-union all select episode_id, failed_ac from ac_007
-union all select episode_id, failed_ac from ac_008
-union all select episode_id, failed_ac from ac_009
-union all select episode_id, failed_ac from ac_012
-union all select episode_id, failed_ac from ac_013
-union all select episode_id, failed_ac from ac_014
-union all select episode_id, failed_ac from ac_015
-union all select episode_id, failed_ac from ac_016
-union all select episode_id, failed_ac from ac_018
+select
+    episode_id,
+    failed_ac
+from ac_005
+union all
+select
+    episode_id,
+    failed_ac
+from ac_006
+union all
+select
+    episode_id,
+    failed_ac
+from ac_007
+union all
+select
+    episode_id,
+    failed_ac
+from ac_008
+union all
+select
+    episode_id,
+    failed_ac
+from ac_009
+union all
+select
+    episode_id,
+    failed_ac
+from ac_012
+union all
+select
+    episode_id,
+    failed_ac
+from ac_013_logged
+union all
+select
+    episode_id,
+    failed_ac
+from ac_013_current
+union all
+select
+    episode_id,
+    failed_ac
+from ac_014
+union all
+select
+    episode_id,
+    failed_ac
+from ac_015
+union all
+select
+    episode_id,
+    failed_ac
+from ac_016
+union all
+select
+    episode_id,
+    failed_ac
+from ac_018

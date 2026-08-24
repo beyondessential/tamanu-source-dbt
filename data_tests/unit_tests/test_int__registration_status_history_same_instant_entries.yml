@@ -1,0 +1,58 @@
+unit_tests:
+  - name: test_int__registration_status_history_same_instant_kept
+    model: int__registration_status_history
+    description: >
+      BL-012, AC-013. Two change-log entries written at one instant are both kept. The log's id is
+      a uuid, so there is no last-write-wins to collapse them by, and collapsing on an arbitrary
+      key could discard the entry that carries the transition — here the one putting the
+      registration inactive, which is the entry clinical__episode draws the episode end from
+      (BL-004). changelog_id tells the two apart, so AC-013 holds without either being dropped.
+      Current state agrees with one of them, so no synthetic row is added (BL-014).
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, 'cs_002' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'cl_001' as changelog_id, 'pat_001;preg_001' as id, '2024-06-01 10:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_001' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          union all
+          select 'cl_002', 'pat_001;preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'cs_002', 'pat_001', 'preg_001', 'usr_003'
+
+    expect:
+      format: sql
+      rows: |
+        select 'cl_001' as changelog_id, 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2024-06-01 10:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_001' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'cl_002', 'pat_001;preg_001', 'pat_001', 'preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'cs_002', 'usr_003', 'change log', 2
+
+  - name: test_int__registration_status_history_same_instant_none_agrees
+    model: int__registration_status_history
+    description: >
+      BL-014, AC-015. Divergence is asked of the whole last logged instant, not of one row picked
+      out of it: where neither same-instant entry says what the registration says now, the
+      synthetic current-state row is kept alongside both and sorts last, so the history's latest
+      instant still carries current state.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_002;preg_001' as enrolment_id, 'pat_002' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, 'cs_003' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'cl_003' as changelog_id, 'pat_002;preg_001' as id, '2024-06-01 10:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_001' as clinical_status_id, 'pat_002' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          union all
+          select 'cl_004', 'pat_002;preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'cs_002', 'pat_002', 'preg_001', 'usr_003'
+
+    expect:
+      format: sql
+      rows: |
+        select 'cl_003' as changelog_id, 'pat_002;preg_001' as episode_id, 'pat_002' as person_id, 'preg_001' as program_registry_id, '2024-06-01 10:00:00'::timestamp as logged_at, 'active' as registration_status, 'cs_001' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'cl_004', 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'cs_002', 'usr_003', 'change log', 2
+        union all
+        select null::varchar, 'pat_002;preg_001', 'pat_002', 'preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'cs_003', 'usr_001', 'current', 3
