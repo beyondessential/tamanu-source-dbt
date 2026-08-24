@@ -32,6 +32,13 @@
     'dsd_eligibility_assessed_date': 'whodakhiv-d-de761',
     'dsd_enrolled': 'whodakhiv-d-de762',
     'dsd_start_date': 'whodakhiv-d-de763',
+    'art_stopped_date': 'whodakhiv-d-de41',
+    'art_stopped_reason': 'whodakhiv-d-de217',
+    'regimen_substitution_reason': 'whodakhiv-d-de418',
+    'substitution_first_line_date': 'whodakhiv-d-de481',
+    'substitution_second_line_date': 'whodakhiv-d-de487',
+    'substitution_third_line_date': 'whodakhiv-d-de493',
+    'key_population': 'whodakhiv-b-de50',
 } %}
 
 with responses as (
@@ -91,9 +98,10 @@ pivoted as (
             {%- endfor %}
         )
     group by a.response_id
-)
+),
 
-select
+typed as (
+    select
     r.response_id,
     r.patient_id,
     r.facility_id,
@@ -110,10 +118,18 @@ select
     v.hiv_status_raw as hiv_status,
     v.hiv_test_result_raw as hiv_test_result,
     v.viral_load_reason_raw as viral_load_reason,
+    v.art_stopped_reason_raw as art_stopped_reason,
+    v.regimen_substitution_reason_raw as regimen_substitution_reason,
+    -- a MultiSelect answer, so this is a JSON array of the values the client selected.
+    -- int__who_dak_hiv_key_populations unnests it; nothing else should parse it
+    v.key_population_raw as key_population_json,
+
 
     {% for column in ['hiv_test_date', 'hiv_test_result_returned_date', 'hiv_diagnosis_date',
                       'art_start_date', 'baseline_cd4_test_date', 'viral_load_sample_date',
-                      'dsd_eligibility_assessed_date', 'dsd_start_date'] %}
+                      'dsd_eligibility_assessed_date', 'dsd_start_date', 'art_stopped_date',
+                      'substitution_first_line_date', 'substitution_second_line_date',
+                      'substitution_third_line_date'] %}
         case
             when v.{{ column }}_raw ~ '^\d{4}-\d{2}-\d{2}' then left(v.{{ column }}_raw, 10)::date
         end as {{ column }},
@@ -134,6 +150,19 @@ select
 
 {% endfor %}
 
-from dak_responses r
-join pivoted v on v.response_id = r.response_id
-join person p on p.person_id = r.patient_id
+    from dak_responses r
+    join pivoted v on v.response_id = r.response_id
+    join person p on p.person_id = r.patient_id
+)
+
+select
+    *,
+    -- BL-023: ART.9 counts a regimen substitution on any line, so the three dates collapse to
+    -- the earliest recorded one -- which line it was is not part of the indicator. least()
+    -- ignores NULLs in Postgres, so a client with only a third-line date gets that one
+    least(
+        substitution_first_line_date,
+        substitution_second_line_date,
+        substitution_third_line_date
+    ) as regimen_substitution_date
+from typed

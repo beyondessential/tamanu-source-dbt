@@ -12,21 +12,33 @@ unit_tests:
       - input: ref('int__who_dak_hiv_form_answers')
         format: sql
         rows: |
-          select 'resp_late' as response_id, 'pat_late' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-06-10 09:00:00'::timestamp as submitted_datetime, 'male' as sex, 1986 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, '2026-06-10'::date as art_start_date, '2026-06-10'::date as baseline_cd4_test_date, null::date as viral_load_sample_date, null::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, 150::numeric as baseline_cd4_count, null::numeric as viral_load_result, true as on_art, null::boolean as dsd_eligible, null::boolean as dsd_enrolled
+          select 'resp_late' as response_id, 'pat_late' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-06-10 09:00:00'::timestamp as submitted_datetime, 'male' as sex, 1986 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, '2026-06-10'::date as art_start_date, '2026-06-10'::date as baseline_cd4_test_date, null::date as viral_load_sample_date, null::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, 150::numeric as baseline_cd4_count, null::numeric as viral_load_result, true as on_art, null::boolean as dsd_eligible, null::boolean as dsd_enrolled, null::text as art_stopped_reason, null::text as regimen_substitution_reason, null::text as key_population_json, null::date as art_stopped_date, null::date as substitution_first_line_date, null::date as substitution_second_line_date, null::date as substitution_third_line_date, null::date as regimen_substitution_date
           union all
-          select 'resp_ok', 'pat_ok', 'fac_001', 'carevisit', '2026-06-11 09:00:00'::timestamp, 'female', 1986, 1, 1, null::text, null::text, null::text, null::date, null::date, null::date, '2026-06-11'::date, '2026-06-11'::date, null::date, null::date, null::date, 350::numeric, null::numeric, true, null::boolean, null::boolean
+          select 'resp_ok', 'pat_ok', 'fac_001', 'carevisit', '2026-06-11 09:00:00'::timestamp, 'female', 1986, 1, 1, null::text, null::text, null::text, null::date, null::date, null::date, '2026-06-11'::date, '2026-06-11'::date, null::date, null::date, null::date, 350::numeric, null::numeric, true, null::boolean, null::boolean, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date
           union all
-          select 'resp_ungated', 'pat_ungated', 'fac_001', 'prepvisit', '2026-06-12 09:00:00'::timestamp, 'male', 1986, 1, 1, null::text, null::text, null::text, null::date, null::date, null::date, '2026-06-12'::date, '2026-06-12'::date, null::date, null::date, null::date, 150::numeric, null::numeric, true, null::boolean, null::boolean
+          select 'resp_ungated', 'pat_ungated', 'fac_001', 'prepvisit', '2026-06-12 09:00:00'::timestamp, 'male', 1986, 1, 1, null::text, null::text, null::text, null::date, null::date, null::date, '2026-06-12'::date, '2026-06-12'::date, null::date, null::date, null::date, 150::numeric, null::numeric, true, null::boolean, null::boolean, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date
+
+      # the point-in-time indicators read these; empty here, so this test sees only the
+      # event-anchored ones
+      - input: ref('int__who_dak_hiv_client_month_state')
+        format: sql
+        rows: |
+          select null::date as month_start, null::date as month_end, null::text as patient_id, null::text as facility_id, null::boolean as on_art, null::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, null::int as months_on_art, null::int as months_on_dsd, null::text as sex, null::int as age_years where false
+
+      - input: ref('int__who_dak_hiv_key_populations')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as key_population where false
 
     expect:
       format: sql
       rows: |
-        select 'who_dak_hiv_art_cd4_at_initiation' as metric_id, null::text as variant_id, 'pat_late' as subject_id, 'patient' as subject_grain, '2026-06-01'::date as period_start, '2026-06-30'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'male' as sex, 40 as age_years
+        select 'who_dak_hiv_art_cd4_at_initiation' as metric_id, null::text as variant_id, 'pat_late' as subject_id, 'patient' as subject_grain, '2026-06-01'::date as period_start, '2026-06-30'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'male' as sex, 40 as age_years, null::int as months_on_dsd, null::text as key_population
         union all
-        select 'who_dak_hiv_art_cd4_at_initiation', null::text, 'pat_ok', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 40
+        select 'who_dak_hiv_art_cd4_at_initiation', null::text, 'pat_ok', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 40, null::int, null::text
         union all
-        select 'who_dak_hiv_art_initiated', null::text, 'pat_late', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 40
+        select 'who_dak_hiv_art_initiated', null::text, 'pat_late', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 40, null::int, null::text
         union all
-        select 'who_dak_hiv_art_initiated', null::text, 'pat_ok', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 40
+        select 'who_dak_hiv_art_initiated', null::text, 'pat_ok', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 40, null::int, null::text
         union all
-        select 'who_dak_hiv_art_late_initiation', null::text, 'pat_late', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 40
+        select 'who_dak_hiv_art_late_initiation', null::text, 'pat_late', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 40, null::int, null::text

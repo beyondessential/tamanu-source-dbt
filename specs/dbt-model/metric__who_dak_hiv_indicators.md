@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `metric__who_dak_hiv_indicators` (11 registered indicators) |
+| **Name** | `metric__who_dak_hiv_indicators` (16 registered indicators) |
 | **Type** | dbt model (canonical definitions) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
@@ -21,9 +21,9 @@ forms are generated from Web Annex A, so a question code *is* a DAK data element
 makes Web Annex C's indicator definitions, written in terms of those elements, computable
 without a local interpretation layer.
 
-Eleven of Annex C's 140 are implemented: the counts whose numerator and denominator can both be
-read from the data elements those forms collect. Each is registered separately and emits a
-count, so a rate is formed by the consumer from a numerator and its denominator. Annex C's
+Sixteen counts are implemented, covering nine Annex C indicators: those whose numerator and
+denominator can both be read from the data elements those forms collect. Each count is registered
+separately, so a rate is formed by the consumer from a numerator and its denominator. Annex C's
 `Ref no.` is on every registry row, which is what the DAK's GAM 2023, Global Fund 2023 and
 PEPFAR MER 2.6.1 crosswalk sheets key on — so an indicator here resolves to the line those
 reports ask for.
@@ -36,22 +36,23 @@ reports ask for.
 | ART.4 | New ART patients | `who_dak_hiv_art_initiated` | a count (Annex C gives 1) |
 | ART.5 | Late ART initiation | `who_dak_hiv_art_late_initiation` | `who_dak_hiv_art_cd4_at_initiation` |
 | DSD.3 | DSD ART coverage | `who_dak_hiv_dsd_enrolled` | `who_dak_hiv_dsd_eligible` |
+| ART.1 | People living with HIV on ART | `who_dak_hiv_art_on_art` | a population estimate, not Tamanu's |
+| ART.1 | …by key population | `who_dak_hiv_art_on_art_key_population` | — |
+| ART.9 | ARV toxicity prevalence | `who_dak_hiv_art_toxicity` | `who_dak_hiv_art_on_art` |
+| DSD.4 | Retention in DSD ART models | `who_dak_hiv_dsd_retained` | `who_dak_hiv_dsd_retention_eligible` |
 
 ## Scope: what is not implemented, and why
 
 - **49 of the 140** declare no numerator computable from DAK data (`Not included in DAK` —
   survey-based, commodity stock, or another system). Nothing in Tamanu can supply them.
-- **Point-in-time indicators** need a monthly spine carrying each client's last known state
-  forward: `ART.1` (people on ART *at* the reporting date), `DSD.4` (retention at 12/24/36/48/60
-  months). That is a different model shape; see OQ-001.
-- **`ART.9` ARV toxicity** needs a first-line regimen substitution date. The generated form
-  carries second- and third-line substitution dates but not first, so the numerator would
-  undercount silently.
 - **Population denominators** (`ART.1` treatment coverage over estimated PLHIV) are estimates
-  from outside Tamanu and are not registered.
-- **Key population disaggregation**, which Annex C asks for on most indicators, is a
-  MultiSelect answer: one client can hold several values, so it cannot be a column on a
-  one-row-per-client count without changing what a sum means. Not emitted; see OQ-002.
+  from outside Tamanu, so the count is registered and the rate is not.
+- **The other 77 covered indicators are not implemented yet, and that is a backlog rather than
+  an obstacle.** `tupaia-data-product`'s `tamanu/who-dak/annex_c_coverage.py` reports which
+  Annex C indicators the generated forms can compute — 86 of the 140 at the time of writing —
+  so the remaining work is enumerable and each addition is a predicate over
+  `int__who_dak_hiv_form_answers` or `int__who_dak_hiv_client_month_state`. Nothing structural
+  is missing.
 
 ## Grain
 
@@ -60,12 +61,13 @@ client-count indicator, `test` on HTS.2, where Annex C counts tests rather than 
 
 ## Output schema
 
-D5 wide format, plus `subject_grain`, `facility_id`, `sex` and `age_years`. `period_start` is the
+D5 wide format, plus `subject_grain`, `facility_id`, `sex`, `age_years`, and
+`months_on_dsd` / `key_population` for the two indicators that carry them. `period_start` is the
 first day of the reporting month and `period_end` the last; `value_numeric` is always 1.
 
 ## Business logic
 
-- **BL-001:** Each output row's `metric_id` is one of the eleven registered in
+- **BL-001:** Each output row's `metric_id` is one of the sixteen registered in
   `documentations/metrics/who_dak_hiv.yml`; the registry row carries the definition and this
   model is its implementation.
 - **BL-002:** The DAK data elements are read from `who-dak-hiv` form submissions, identified by
@@ -117,6 +119,36 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   group explicitly. The shipping decision is the one recorded in
   `metric__program_registry_enrolment.md` BL-011.
 
+- **BL-018:** The point-in-time indicators read `int__who_dak_hiv_client_month_state`, which
+  carries each client's last known state to the end of every complete month. `ART.1` counts
+  clients on ART *at* the reporting period end date, so a client not seen during the month is
+  still counted: the record says they are on treatment until it says otherwise.
+- **BL-019:** State is carried forward per element, not per submission. A later visit recording
+  a viral load but silent on DSD enrolment must not blank the DSD state, so each attribute takes
+  the most recent submission that carried a value for it.
+- **BL-020:** Only complete months are emitted, so a partial current month cannot read as a fall
+  in the caseload.
+- **BL-021:** A client's facility in a month is the one that last recorded anything about them,
+  so a transfer moves their counts to the receiving facility from the month it records them.
+- **BL-022:** Key population is a MultiSelect: a client can belong to several. It is therefore a
+  bridge (`int__who_dak_hiv_key_populations`) feeding a separate metric whose rows are
+  client-population pairs, not a column on the counts of people — a column would force one value
+  per client, and adding the pairs to a people count would double a client in two populations.
+  Summing the key-population metric across populations double-counts such a client, which is
+  what Annex C's own disaggregation does. The membership is a standing attribute, so the latest
+  answer wins.
+- **BL-023:** `ART.9` counts a client whose treatment stopped for toxicity or whose regimen was
+  substituted for toxicity on any line; the three substitution dates collapse to the earliest
+  recorded one, since which line it was is not part of the indicator. A client with both a stop
+  and a substitution in one month counts once.
+- **BL-024:** `ART.1` emits the count only. Annex C's denominators are the estimated number of
+  people living with HIV, or the estimate of those who know their status; both are external, so
+  a coverage rate is formed outside this model.
+- **BL-025:** `DSD.4` is reported at 12, 24, 36, 48 and 60 months. `months_on_dsd` is emitted
+  from twelve months upwards and the consumer selects the cohort, rather than the model carrying
+  five near-identical metrics that would say the same thing five times and drift apart the first
+  time one changed.
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test |
@@ -135,8 +167,11 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-012 | A client tested twice in a month is two tests and one client, attributed to the earlier test's facility | BL-007, BL-010 | unit test `..._hts_grain` |
 | AC-013 | ART.3 excludes a client on ART under six months, a targeted test, and a result of exactly 1000 | BL-012 | unit test `..._art3_viral_suppression` |
 | AC-014 | ART.5 counts a CD4 under 200 in the numerator and 350 in the denominator only; a client with no HIV-positive evidence is in neither | BL-008, BL-013 | unit test `..._art5_and_plhiv_gate` |
+| AC-015 | ART.1 counts a client on ART at the month end without an event in the month; DSD.4 counts only clients twelve or more months in, and retention among them only those still enrolled | BL-018, BL-025 | unit test `..._point_in_time` |
+| AC-016 | `months_on_dsd` is 12 or more on the DSD.4 metrics and null on every other | BL-025 | `dbt_utils.expression_is_true`, both directions |
+| AC-017 | `key_population` is set on the key-population metric and null on every other | BL-022 | `dbt_utils.expression_is_true`, both directions |
 
-The three unit tests carry the definitional weight. No deployment has captured these forms yet,
+The four unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
 definition holds before there is data, and each of AC-012 to AC-014 pins a boundary a reader
 would otherwise have to take on trust.
@@ -144,7 +179,8 @@ would otherwise have to take on trust.
 ## Dependencies
 
 `int__who_dak_hiv_form_answers` (over `survey_responses`, `survey_response_answers`, `surveys`,
-`encounters`, `locations`, `clinical__person`), `metric_definitions`.
+`encounters`, `locations`, `clinical__person`), `int__who_dak_hiv_client_month_state`,
+`int__who_dak_hiv_key_populations`, `metric_definitions`.
 
 ## Consumers
 
@@ -155,8 +191,7 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Whether to build the monthly last-known-state spine that `ART.1` and `DSD.4` need, and whether it belongs here or in `derived__`. | Data Lead | next phase |
-| OQ-002 | How to disaggregate by key population, which Annex C asks for on most indicators and which is a MultiSelect answer — a bridge table, or one metric per population. | Data Lead | next phase |
+| OQ-001 | Which of the remaining covered Annex C indicators to implement, and in what order — the DAK's own reporting priorities, or a deployment's GAM / Global Fund / MER obligations. | Data Lead | per deployment |
 
 ## Related
 
@@ -170,4 +205,4 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-08-24 | Maui team | Initial spec. Eleven Annex C indicators over the generated DAK forms, as counts with the rate left to the consumer; point-in-time and key-population indicators deferred to OQ-001 and OQ-002. |
+| 2026-08-24 | Maui team | Initial spec. Sixteen counts over nine Annex C indicators from the generated DAK forms, as counts with the rate left to the consumer. `int__who_dak_hiv_client_month_state` carries each client's last known state to a month end, which is what `ART.1` and `DSD.4` need; key population is a bridge feeding a separate metric of client-population pairs, because a column would make a count of people wrong. |

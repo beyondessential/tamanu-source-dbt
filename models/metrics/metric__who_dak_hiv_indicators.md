@@ -2,8 +2,9 @@
 D5 metric view for the WHO SMART guidelines HIV Digital Adaptation Kit indicators registered in
 documentations/metrics/who_dak_hiv.yml. One row per qualifying subject per reporting month.
 
-Web Annex C of the DAK defines 140 indicators. Eleven are here: the counts computable from the
-DAK's own data elements as the generated `who-dak-hiv` forms collect them. Each is a **count**,
+Web Annex C of the DAK defines 140 indicators. Sixteen counts are here, covering nine of them:
+those computable from the DAK's own data elements as the generated `who-dak-hiv` forms collect
+them. Each is a **count**,
 and a rate is formed from a numerator and its denominator — HIV positivity is
 `who_dak_hiv_hts_client_positive` over `who_dak_hiv_hts_client_tested`, viral suppression is
 `who_dak_hiv_art_viral_suppression` over `who_dak_hiv_art_routine_viral_load` — at whatever
@@ -18,6 +19,10 @@ maps to the GAM, Global Fund and PEPFAR MER lines those crosswalk sheets define.
 | ART.4 | New ART patients | `who_dak_hiv_art_initiated` | — a count |
 | ART.5 | Late ART initiation | `who_dak_hiv_art_late_initiation` | `who_dak_hiv_art_cd4_at_initiation` |
 | DSD.3 | DSD ART coverage | `who_dak_hiv_dsd_enrolled` | `who_dak_hiv_dsd_eligible` |
+| ART.1 | People living with HIV on ART | `who_dak_hiv_art_on_art` | an external population estimate |
+| ART.1 | …by key population | `who_dak_hiv_art_on_art_key_population` | — |
+| ART.9 | ARV toxicity prevalence | `who_dak_hiv_art_toxicity` | `who_dak_hiv_art_on_art` |
+| DSD.4 | Retention in DSD ART models | `who_dak_hiv_dsd_retained` | `who_dak_hiv_dsd_retention_eligible` |
 
 **Monthly, per subject.** Annex C counts *clients* in a reporting period, so the period is the
 month and a client qualifying twice in one month contributes one row — unlike the
@@ -30,13 +35,19 @@ visit was never submitted is not in `who_dak_hiv_art_initiated`. Nothing here re
 state from elsewhere in Tamanu — the enrolment view of the same programme is
 `metric__program_registry_enrolment`, over the program registry rather than the forms.
 
+**Point-in-time and event-anchored indicators sit side by side.** `ART.4` counts an initiation
+in the month it happened; `ART.1` counts everyone whose last recorded state is on ART at the
+month end, whether or not they were seen. The second reads
+`int__who_dak_hiv_client_month_state`, which carries each attribute forward from the last form
+that recorded it — so a visit noting a viral load does not blank a DSD enrolment it never
+mentioned.
+
 **What is not here, and why.** Of Annex C's 140, 49 declare no numerator computable from DAK
-data at all ("Not included in DAK" — survey-based, stock data, another system). Of the rest,
-the ones needing a point-in-time reconstruction (`ART.1` people on ART *at the reporting date*,
-`DSD.4` retention at 12/24/36 months) need a monthly spine carrying each client's last known
-state forward, which is a different model shape and is not built. `ART.9` ARV toxicity needs a
-first-line substitution date the generated form does not carry. The remainder need elements the
-selected forms do not collect.
+data at all ("Not included in DAK" — survey-based, stock data, another system). Annex C's
+population denominators (`ART.1` treatment coverage over estimated PLHIV) come from outside
+Tamanu, so the count is emitted and the rate is not. The rest of the covered indicators are a
+backlog rather than an obstacle: `tupaia-data-product`'s `annex_c_coverage.py` reports which of
+them the forms can compute, and each is a predicate over the same two intermediates.
 {% enddocs %}
 
 {% docs metric__who_dak_hiv_indicators__subject_grain %}
@@ -103,4 +114,24 @@ NULL -- unused by these indicators.
 The registered indicator id, one of the eleven in documentations/metrics/who_dak_hiv.yml. Each
 carries Annex C's own `Ref no.` in its registry row, so an id here resolves to a DAK indicator
 and through it to the GAM, Global Fund and MER lines that reference it.
+{% enddocs %}
+
+{% docs metric__who_dak_hiv_indicators__months_on_dsd %}
+Whole months between the client's DSD ART start date and the end of the reporting month.
+
+Only the DSD.4 metrics carry it, and only from twelve months. Annex C reports that indicator at
+12, 24, 36, 48 and 60 months, so the duration is emitted and the consumer selects the cohort --
+five near-identical metrics would say the same thing five times and drift apart the first time
+one of them changed.
+{% enddocs %}
+
+{% docs metric__who_dak_hiv_indicators__key_population %}
+The DAK key population the row counts the client in — sex worker, person who injects drugs, and
+so on, as the client's most recent form recorded it.
+
+Only `who_dak_hiv_art_on_art_key_population` carries it. That metric's rows are
+client-population pairs, because key population is a MultiSelect and a client can belong to
+several: summing across populations therefore double-counts such a client, which is what Annex
+C's own disaggregation does. The plain count of people is `who_dak_hiv_art_on_art`, and keeping
+them as separate metrics is what stops one being mistaken for the other.
 {% enddocs %}

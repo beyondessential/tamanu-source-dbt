@@ -1,0 +1,59 @@
+unit_tests:
+  - name: test_metric__who_dak_hiv_indicators_point_in_time
+    model: metric__who_dak_hiv_indicators
+    description: >
+      BL-018, BL-022, BL-025. ART.1 counts clients on ART at the month end from the carried-forward
+      state, so a client not seen during the month is still counted. DSD.4 counts only clients whose
+      model started twelve or more months earlier, and retention among them is those still enrolled --
+      so the client six months in is in neither, and the one who lapsed is in the denominator only.
+      The key-population rows show the bridge: a client in two populations contributes to both, which
+      is why that is a separate metric from the plain count of people.
+    given:
+      - input: ref('int__who_dak_hiv_client_month_state')
+        format: sql
+        rows: |
+          select '2026-06-01'::date as month_start, '2026-06-30'::date as month_end, 'pat_retained' as patient_id, 'fac_001' as facility_id, true as on_art, '2024-01-01'::date as art_start_date, true as dsd_enrolled, '2024-12-01'::date as dsd_start_date, 29 as months_on_art, 18 as months_on_dsd, 'female' as sex, 41 as age_years
+          union all
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_lapsed', 'fac_001', true, '2024-01-01'::date, false, '2024-12-01'::date, 29, 18, 'male', 41
+          union all
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_recent', 'fac_002', true, '2024-01-01'::date, true, '2025-12-01'::date, 29, 6, 'male', 41
+          union all
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_off_art', 'fac_002', false, '2024-01-01'::date, true, '2024-12-01'::date, 29, 18, 'female', 41
+
+      - input: ref('int__who_dak_hiv_key_populations')
+        format: sql
+        rows: |
+          select 'pat_retained' as patient_id, 'Sex worker' as key_population
+          union all
+          select 'pat_retained', 'People who inject drugs'
+
+      # every client here is gated in by a care visit, and no event-anchored indicator fires
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'resp_1' as response_id, 'pat_retained' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-05-01 09:00:00'::timestamp as submitted_datetime, 'female' as sex, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::text as art_stopped_reason, null::text as regimen_substitution_reason, null::text as key_population_json, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, null::date as art_start_date, null::date as baseline_cd4_test_date, null::date as viral_load_sample_date, null::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, null::date as art_stopped_date, null::date as substitution_first_line_date, null::date as substitution_second_line_date, null::date as substitution_third_line_date, null::numeric as baseline_cd4_count, null::numeric as viral_load_result, null::boolean as on_art, null::boolean as dsd_eligible, null::boolean as dsd_enrolled, null::date as regimen_substitution_date
+          union all
+          select 'resp_2', 'pat_lapsed', 'fac_001', 'carevisit', '2026-05-01 09:00:00'::timestamp, 'male', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean, null::date
+          union all
+          select 'resp_3', 'pat_recent', 'fac_002', 'carevisit', '2026-05-01 09:00:00'::timestamp, 'male', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean, null::date
+          union all
+          select 'resp_4', 'pat_off_art', 'fac_002', 'carevisit', '2026-05-01 09:00:00'::timestamp, 'female', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean, null::date
+
+    expect:
+      format: sql
+      rows: |
+        select 'who_dak_hiv_art_on_art' as metric_id, null::text as variant_id, 'pat_retained' as subject_id, 'patient' as subject_grain, '2026-06-01'::date as period_start, '2026-06-30'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'female' as sex, 41 as age_years, null::int as months_on_dsd, null::text as key_population
+        union all
+        select 'who_dak_hiv_art_on_art', null::text, 'pat_lapsed', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 41, null::int, null::text
+        union all
+        select 'who_dak_hiv_art_on_art', null::text, 'pat_recent', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_002', 'male', 41, null::int, null::text
+        union all
+        select 'who_dak_hiv_art_on_art_key_population', null::text, 'pat_retained;Sex worker', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, null::int, 'Sex worker'
+        union all
+        select 'who_dak_hiv_art_on_art_key_population', null::text, 'pat_retained;People who inject drugs', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, null::int, 'People who inject drugs'
+        union all
+        select 'who_dak_hiv_dsd_retention_eligible', null::text, 'pat_retained', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, 18, null::text
+        union all
+        select 'who_dak_hiv_dsd_retention_eligible', null::text, 'pat_lapsed', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 41, 18, null::text
+        union all
+        select 'who_dak_hiv_dsd_retained', null::text, 'pat_retained', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, 18, null::text

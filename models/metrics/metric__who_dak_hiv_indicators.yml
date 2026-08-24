@@ -72,6 +72,11 @@ models:
                   - who_dak_hiv_art_viral_suppression
                   - who_dak_hiv_dsd_eligible
                   - who_dak_hiv_dsd_enrolled
+                  - who_dak_hiv_art_on_art
+                  - who_dak_hiv_art_toxicity
+                  - who_dak_hiv_dsd_retention_eligible
+                  - who_dak_hiv_dsd_retained
+                  - who_dak_hiv_art_on_art_key_population
           # Definition <-> implementation link: every metric__ view asserts its ids are
           # registered in the canonical registry.
           - relationships:
@@ -149,3 +154,41 @@ models:
         description: "{{ doc('metric__who_dak_hiv_indicators__age_years') }}"
         # BL-015: a measure, not a dimension -- Annex C disaggregates by age but not by any one
         # banding, so the data table bands it.
+      - name: months_on_dsd
+        data_type: integer
+        description: "{{ doc('metric__who_dak_hiv_indicators__months_on_dsd') }}"
+        data_tests:
+          # AC-016 (BL-025): DSD.4 reports retention at twelve months and beyond, so a row of
+          # either DSD.4 metric carries a duration and no other row does. Both halves matter:
+          # a NULL here would silently drop a client from every cohort a consumer selects.
+          - dbt_utils.expression_is_true:
+              name: ac_016_metric__who_dak_hiv_indicators_months_on_dsd_present
+              arguments:
+                expression: ">= 12"
+              config:
+                where: "metric_id in ('who_dak_hiv_dsd_retention_eligible', 'who_dak_hiv_dsd_retained')"
+          - dbt_utils.expression_is_true:
+              name: ac_016a_metric__who_dak_hiv_indicators_months_on_dsd_absent
+              arguments:
+                expression: "is null"
+              config:
+                where: "metric_id not in ('who_dak_hiv_dsd_retention_eligible', 'who_dak_hiv_dsd_retained')"
+      - name: key_population
+        data_type: text
+        description: "{{ doc('metric__who_dak_hiv_indicators__key_population') }}"
+        data_tests:
+          # AC-017 (BL-022): the key-population metric counts client-population pairs, so its
+          # rows carry a population and no other metric's do -- if they did, a plain count of
+          # people would double a client in two populations.
+          - dbt_utils.expression_is_true:
+              name: ac_017_metric__who_dak_hiv_indicators_key_population_present
+              arguments:
+                expression: "is not null"
+              config:
+                where: "metric_id = 'who_dak_hiv_art_on_art_key_population'"
+          - dbt_utils.expression_is_true:
+              name: ac_017a_metric__who_dak_hiv_indicators_key_population_absent
+              arguments:
+                expression: "is null"
+              config:
+                where: "metric_id != 'who_dak_hiv_art_on_art_key_population'"

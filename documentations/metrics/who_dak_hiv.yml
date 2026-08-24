@@ -292,3 +292,147 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_on_art
+  kind: metric
+  name: People living with HIV on ART (ART.1)
+  description: >-
+    People living with HIV recorded as on antiretroviral therapy at the end of the reporting month.
+  numerator_description: >-
+    COUNT of clients whose last recorded state at the reporting period end date is on ART. A point-in-time
+    count, so a client not seen during the month is still counted -- the record says they are on treatment
+    until it says otherwise
+  denominator_description: >-
+    Not registered: Annex C's denominators are the estimated number of people living with HIV, or the
+    estimate of those who know their status, both of which come from outside Tamanu
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.1
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.27 (ART.1, "People living with HIV on
+    ART") -- the second 95 of the UNAIDS targets, and the count a treatment coverage figure divides by a
+    population estimate. Also serves as ART.9's denominator, which Annex C words as clients on ART within
+    the reporting period.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_toxicity
+  kind: metric
+  name: Treatment-limiting ARV toxicity (ART.9 numerator)
+  description: >-
+    Clients whose ART was stopped or whose regimen was substituted for toxicity during the reporting
+    month.
+  numerator_description: >-
+    COUNT of clients with a date ART stopped in the reporting period for reason toxicity or side effects,
+    plus clients on ART with a first-, second- or third-line regimen substitution date in the period for
+    the same reason. A client with both counts once
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.9
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.35 (ART.9, "ARV toxicity prevalence").
+    Prevalence is this count over who_dak_hiv_art_on_art, which is Annex C's denominator of clients on ART
+    within the reporting period.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_retention_eligible
+  kind: metric
+  name: Clients due for DSD retention reporting (DSD.4 denominator)
+  description: >-
+    Clients on ART whose differentiated service delivery model started at least twelve months before the
+    end of the reporting month.
+  numerator_description: >-
+    COUNT of clients on ART at the reporting period end date whose DSD ART start date is twelve or more
+    months earlier. Annex C reports retention at 12, 24, 36, 48 and 60 months; months_on_dsd is emitted so
+    a consumer selects the cohort rather than the model carrying five near-identical metrics
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.4
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.56 (DSD.4, "Retention in DSD ART models").
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - months_on_dsd
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_retained
+  kind: metric
+  name: Retention in DSD ART models (DSD.4 numerator)
+  description: >-
+    Clients still enrolled in a differentiated service delivery model twelve or more months after starting
+    it.
+  numerator_description: >-
+    COUNT of clients meeting who_dak_hiv_dsd_retention_eligible whose last recorded state is enrolled in a
+    DSD ART model
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.4
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.56 (DSD.4). Retention is this count over
+    who_dak_hiv_dsd_retention_eligible, at whichever months_on_dsd cohort the consumer selects.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - months_on_dsd
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_on_art_key_population
+  kind: metric
+  name: People living with HIV on ART, by key population (ART.1)
+  description: >-
+    ART.1 disaggregated by key population: one row per client per key population they are recorded as
+    belonging to.
+  numerator_description: >-
+    COUNT of client-population pairs where the client's last recorded state at the reporting period end
+    date is on ART. Key population is a MultiSelect, so a client belonging to two populations contributes
+    to both -- summing across populations therefore double-counts that client, which is what Annex C's own
+    disaggregation does
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.1
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.27 (ART.1), whose disaggregation list
+    includes key population member type. Registered separately from who_dak_hiv_art_on_art rather than
+    added to it as a column, because one client can hold several populations and a column would make the
+    plain count of people wrong. The same bridge disaggregates any other indicator that needs it.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - key_population
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+

@@ -39,5 +39,12 @@ where trim(d) not in (
         -- program_registry_enrolment's exit provenance: whether the enrolment's end was
         -- recorded as a deactivation or inferred from the change log. Grouped by a service
         -- auditing a retention figure, so it is part of the contract rather than incidental.
-        'episode_end_source'
+        'episode_end_source',
+        -- who_dak_hiv_dsd_retention_*: whole months since the client's DSD model started, so a
+        -- consumer selects Annex C's 12/24/36/48/60-month cohort rather than the model carrying
+        -- five near-identical metrics.
+        'months_on_dsd',
+        -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
+        -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
+        'key_population'
     )
