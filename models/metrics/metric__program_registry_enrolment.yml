@@ -1,0 +1,179 @@
+version: 2
+
+models:
+  - name: metric__program_registry_enrolment
+    description: "{{ doc('metric__program_registry_enrolment') }}"
+    config:
+      tags:
+        - clinical
+    # BL-013: no data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment
+    # that bands a value differently adds a file there rather than forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # BL-011: unlike the emergency metrics, a row here is patient-identifiable. subject_id
+      # is clinical__episode's episode_id, which is the composite `<patient id>;<registry id>`
+      # -- the patient's own id, in the clear. Registry membership is also the sensitive fact
+      # itself: that a patient is in an HIV register is the diagnosis. Restricted, and a
+      # consumer's data table must set its permission groups deliberately.
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-001 (BL-003): one row per enrolment. A duplicate would double-count a patient in
+      # any consumer that sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__program_registry_enrolment_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-002 (BL-002): the enrolment cannot end before it began. Only closed enrolments are
+      # in scope -- an open one has no period_end.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_002_metric__program_registry_enrolment_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
+      # AC-003 (BL-006): period_end and episode_end_source are two halves of one fact, so a
+      # closed enrolment with no source, or a source with no boundary, means the two have
+      # drifted. Both are NULL on an open enrolment.
+      - dbt_utils.expression_is_true:
+          name: ac_003_metric__program_registry_enrolment_end_source_matches_end
+          arguments:
+            expression: "(period_end is null) = (episode_end_source is null)"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('program_registry__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__program_registry_enrolment_metric_id_not_null
+          - accepted_values:
+              name: ac_004_metric__program_registry_enrolment_metric_id_values
+              arguments:
+                values:
+                  - program_registry_enrolment
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_005_metric__program_registry_enrolment_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('program_registry__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('program_registry__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__program_registry_enrolment_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: "{{ doc('metric__program_registry_enrolment__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_007_metric__program_registry_enrolment_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: "{{ doc('metric__program_registry_enrolment__period_end') }}"
+        # BL-002: deliberately no not_null test -- NULL means the enrolment is open, which is
+        # the state most enrolments are in. Ordering is asserted by AC-002 on the model, since
+        # a column-grain test cannot compare two columns.
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('program_registry__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__program_registry_enrolment_period_granularity_not_null
+          - accepted_values:
+              name: ac_008_metric__program_registry_enrolment_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__program_registry_enrolment__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_009_metric__program_registry_enrolment_value_numeric_not_null
+          # BL-003: one enrolment per row, so the count contribution is always 1. A value
+          # other than 1 would mean the model had silently re-aggregated.
+          - accepted_values:
+              name: ac_009_metric__program_registry_enrolment_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('program_registry__value_boolean') }}"
+      - name: registry_code
+        data_type: character varying(255)
+        description: "{{ doc('metric__program_registry_enrolment__registry_code') }}"
+        data_tests:
+          # BL-004: the registry is what the enrolment is in, and clinical__episode requires
+          # it, so a NULL here means that guarantee has been lost. Tupaia's array filter
+          # drops NULL rows, which would silently disappear the enrolment.
+          - not_null:
+              name: ac_010_metric__program_registry_enrolment_registry_code_not_null
+      - name: registry_name
+        data_type: character varying(255)
+        description: "{{ doc('metric__program_registry_enrolment__registry_name') }}"
+      - name: clinical_status_code
+        data_type: character varying(255)
+        description: "{{ doc('metric__program_registry_enrolment__clinical_status_code') }}"
+        # BL-005: nullable. A deployment that has not set a status for an enrolment has one
+        # with no cascade position, and inventing a label for it here would report a
+        # clinical fact that does not exist. A consumer that groups by it handles the NULL.
+      - name: clinical_status
+        data_type: character varying(255)
+        description: "{{ doc('metric__program_registry_enrolment__clinical_status') }}"
+      - name: registration_status
+        data_type: text
+        description: "{{ doc('metric__program_registry_enrolment__registration_status') }}"
+        data_tests:
+          - not_null:
+              name: ac_011_metric__program_registry_enrolment_registration_status_not_null
+          - accepted_values:
+              name: ac_011_metric__program_registry_enrolment_registration_status_values
+              arguments:
+                values: ['active', 'inactive']
+      - name: episode_end_source
+        data_type: text
+        description: "{{ doc('metric__program_registry_enrolment__episode_end_source') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_012_metric__program_registry_enrolment_end_source_values
+              arguments:
+                values: ['deactivation', 'status change']
+      - name: currently_at_type
+        data_type: text
+        description: "{{ doc('metric__program_registry_enrolment__currently_at_type') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_013_metric__program_registry_enrolment_currently_at_type_values
+              arguments:
+                values: ['facility', 'village']
+      - name: currently_at_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__program_registry_enrolment__currently_at_id') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} that registered the patient."
+        # BL-008: nullable. A registration recorded with no registering facility is still a
+        # registration, and clinical__episode keeps it (its BL-011).
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('program_registry__age_years') }} at enrolment."
+        # BL-013: a measure, not a dimension -- the age classification is the consumer's, so
+        # this is absent from the registry's disaggregations and is banded by the data table.

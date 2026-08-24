@@ -21,5 +21,18 @@ where trim(d) not in (
         -- ed_visit's arrival hour
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
-        'discharge_disposition'
+        'discharge_disposition',
+        -- program_registry_enrolment's registry: which programme the enrolment is in. One
+        -- metric serves every registry a deployment configures, so the registry is a
+        -- disaggregation rather than a metric_id per programme.
+        'registry_code',
+        -- program_registry_enrolment's cascade position -- the registry's own clinical status
+        -- list, which no metric can enumerate for a registry it has not seen.
+        'clinical_status_code',
+        -- program_registry_enrolment's registration state, active or inactive
+        'registration_status',
+        -- program_registry_enrolment's currently-at: the facility or village the patient is
+        -- followed at now, which is not necessarily the one that registered them
+        -- (facility_id). Read with currently_at_type, which names which of the two it is.
+        'currently_at_id'
     )
