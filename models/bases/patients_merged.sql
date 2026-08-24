@@ -20,6 +20,5 @@ select
         {%- endif -%}
     {%- endfor %}
 from {{ source('tamanu', 'patients') }}
-where deleted_at is null
-    and id != '{{ var("test_patient") }}'
+where id != '{{ var("test_patient") }}'
     and visibility_status = 'merged'
