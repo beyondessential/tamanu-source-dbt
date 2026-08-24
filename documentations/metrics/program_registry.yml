@@ -19,7 +19,9 @@ metrics:
     Patient program registrations, excluding those recorded in error, counted at the registration
     datetime. The row is a span, so a consumer may instead count enrolments open during a period --
     period_start before its end and period_end null or after its start -- which is a different number
-    over the same rows
+    over the same rows. An enrolment closed before Tamanu 2.33.0 carries no recorded end and so reads
+    as open, which makes registration_status the column answering whether a patient exited and
+    period_end the column answering when a dated exit happened
   denominator_description: null
   data_source: tamanu
   definition_source: BES
