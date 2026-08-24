@@ -12,6 +12,5 @@ select
     village_id,
     (created_at at time zone '{{ var("timezone") }}')::date as registration_date
 from {{ source('tamanu', 'patients') }}
-where deleted_at is null
-    and id != '{{ var("test_patient") }}'
+where id != '{{ var("test_patient") }}'
     and visibility_status = 'merged'
