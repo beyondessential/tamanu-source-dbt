@@ -38,17 +38,8 @@ outpatient_visits as (
         -- this model resolving that join itself
         loc.id as location_id,
         pr.gender_source_value as sex,
-        -- age in whole years at the visit; null year_of_birth -> null. month_of_birth/
-        -- day_of_birth are extracted from the same date_of_birth column in
-        -- clinical__person, so they're populated whenever year_of_birth is -- make_date
-        -- below never errors on a partial date.
-        case
-            when pr.year_of_birth is not null then
-                extract(year from age(
-                    vd.visit_detail_start_date,
-                    make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
-                ))::int
-        end as age_years
+        -- age in whole years at the visit; the NULL rule lives in the macro
+        {{ age_years('vd.visit_detail_start_date', 'pr') }} as age_years
     from visit_detail vd
     -- inner join: a visit_detail row cannot exist without its parent encounter, so this
     -- always resolves
@@ -63,7 +54,8 @@ outpatient_visits as (
     -- excluded from the metric rather than surfacing with a NULL facility_id
     join locations loc
         on loc.id = vd.care_site_id
-    where vd.preceding_visit_detail_id is null
+    where
+        vd.preceding_visit_detail_id is null
         and vd.visit_detail_concept_id = 9202 -- OMOP 'Outpatient Visit'
 )
 
