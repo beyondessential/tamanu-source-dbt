@@ -100,9 +100,10 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   month contributes two. HTS.3 counts the same clients once.
 - **BL-011:** ART.4 counts an initiation in the month the ART start date falls in.
 - **BL-012:** ART.3 counts a routine viral load only for a client whose ART start date is more
-  than six months before the end of the reporting period, and counts suppression below 1000
-  copies/mL. Both conditions are Annex C's: a targeted test, taken because treatment is
-  suspected to be failing, would bias suppression downwards.
+  than six months before the end of the reporting period — the month's last day less six months,
+  not its first — and counts suppression below 1000 copies/mL. Both conditions are Annex C's: a
+  targeted test, taken because treatment is suspected to be failing, would bias suppression
+  downwards. The cutoff is written once and shared by the numerator and the denominator.
 - **BL-013:** ART.5 pairs an ART start with a baseline CD4 count in the same month, and counts
   late initiation below 200 cells/mm³.
 - **BL-014:** DSD.3's denominator is clients assessed eligible in the period — the electronic
@@ -135,15 +136,28 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   client-population pairs, not a column on the counts of people — a column would force one value
   per client, and adding the pairs to a people count would double a client in two populations.
   Summing the key-population metric across populations double-counts such a client, which is
-  what Annex C's own disaggregation does. The membership is a standing attribute, so the latest
-  answer wins.
+  what Annex C's own disaggregation does. The DAK collects the element twice, on the HTS visit
+  and on the PMTCT pathway, and a client's populations are the union of both: reading one alone
+  would drop a client seen only on the other from every disaggregated count. The membership is a
+  standing attribute, so the latest answer per element wins.
 - **BL-023:** `ART.9` counts a client whose treatment stopped for toxicity or whose regimen was
-  substituted for toxicity on any line; the three substitution dates collapse to the earliest
-  recorded one, since which line it was is not part of the indicator. A client with both a stop
-  and a substitution in one month counts once.
+  substituted for toxicity on any line. Each line's substitution date is tested against the
+  reporting period on its own: which line it was is not part of the indicator, but the *dates*
+  are, so collapsing them to one would lose a client's later substitution entirely. A client with
+  more than one qualifying event in a month counts once.
 - **BL-024:** `ART.1` emits the count only. Annex C's denominators are the estimated number of
   people living with HIV, or the estimate of those who know their status; both are external, so
   a coverage rate is formed outside this model.
+- **BL-026:** A recorded ART stop ends the on-ART state from the month the stop is dated,
+  whether or not the form that recorded it also answered "On ART" — otherwise a client whose
+  treatment stopped stays in ART.1 for ever and the cascade's headline number only grows. A
+  later ART start date supersedes an earlier stop: that client is on a second course, and the
+  old stop says nothing about it. The state is read from the dated stop rather than from the
+  recording form's submission, so a stop entered late still takes effect in the month treatment
+  ended — the same rule `ART.4` uses for an initiation.
+- **BL-027:** The spine's horizon is the last complete month, overridable through the
+  `who_dak_hiv_spine_end` var so a backfill can be reproduced and a test can assert a fixed set
+  of months.
 - **BL-025:** `DSD.4` is reported at 12, 24, 36, 48 and 60 months. `months_on_dsd` is emitted
   from twelve months upwards and the consumer selects the cohort, rather than the model carrying
   five near-identical metrics that would say the same thing five times and drift apart the first
@@ -170,8 +184,11 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-015 | ART.1 counts a client on ART at the month end without an event in the month; DSD.4 counts only clients twelve or more months in, and retention among them only those still enrolled | BL-018, BL-025 | unit test `..._point_in_time` |
 | AC-016 | `months_on_dsd` is 12 or more on the DSD.4 metrics and null on every other | BL-025 | `dbt_utils.expression_is_true`, both directions |
 | AC-017 | `key_population` is set on the key-population metric and null on every other | BL-022 | `dbt_utils.expression_is_true`, both directions |
+| AC-018 | A client substituted on first line in one month and third line in another is counted in both; a stop for toxicity counts in the month it is dated | BL-023 | unit test `..._art9_toxicity` |
+| AC-019 | ART.3's six-month cutoff is the sample month's last day less six months: a client who started 2025-12-29 qualifies for a June sample and one who started 2025-12-31 does not | BL-012 | unit test `..._art3_six_month_boundary` |
+| AC-020 | A recorded ART stop ends the on-ART state from its own month, and a later ART start supersedes it | BL-026 | unit test `test_int__who_dak_hiv_client_month_state_art_stop` |
 
-The four unit tests carry the definitional weight. No deployment has captured these forms yet,
+The seven unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
 definition holds before there is data, and each of AC-012 to AC-014 pins a boundary a reader
 would otherwise have to take on trust.

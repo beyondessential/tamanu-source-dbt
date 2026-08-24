@@ -16,6 +16,17 @@
 -- Sources only from intermediate and clinical__ (D10). Nothing here bands age or resolves a
 -- facility to a consumer's own code: both are the consumer layer's (BL-015, BL-016).
 
+-- BL-012: "more than six months before the reporting period end date", where the reporting
+-- period is the month the sample falls in -- so the cutoff is that month's last day less six
+-- months, not its first. Written once because ART.3's numerator and denominator share it, and a
+-- rule duplicated across two selects is a rule that drifts.
+{% set art_established_six_months %}
+    a.art_start_date < (
+        date_trunc('month', a.viral_load_sample_date)
+        + interval '1 month' - interval '1 day' - interval '6 months'
+    )::date
+{% endset %}
+
 with answers as (
     select * from {{ ref('int__who_dak_hiv_form_answers') }}
 ),
@@ -73,10 +84,7 @@ events as (
         'who_dak_hiv_hts_test_positive',
         'test',
         a.response_id,
-        least(
-            coalesce(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
-            coalesce(a.hiv_diagnosis_date, a.hiv_test_result_returned_date)
-        ),
+        least(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
         a.*
     from answers a
     where a.hiv_test_result = 'HIV-positive'
@@ -102,10 +110,7 @@ events as (
         'who_dak_hiv_hts_client_positive',
         'patient',
         a.patient_id,
-        least(
-            coalesce(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
-            coalesce(a.hiv_diagnosis_date, a.hiv_test_result_returned_date)
-        ),
+        least(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
         a.*
     from answers a
     where a.hiv_test_result = 'HIV-positive'
@@ -175,8 +180,7 @@ events as (
     where a.on_art
         and a.viral_load_sample_date is not null
         and a.viral_load_reason = 'Routine viral load test'
-        and a.art_start_date
-        < (date_trunc('month', a.viral_load_sample_date) + interval '1 month' - interval '6 months')::date
+        and {{ art_established_six_months }}
 
     union all
 
@@ -193,8 +197,7 @@ events as (
         and a.viral_load_sample_date is not null
         and a.viral_load_reason = 'Routine viral load test'
         and a.viral_load_result < 1000
-        and a.art_start_date
-        < (date_trunc('month', a.viral_load_sample_date) + interval '1 month' - interval '6 months')::date
+        and {{ art_established_six_months }}
 
     union all
 
@@ -235,12 +238,19 @@ events as (
         'who_dak_hiv_art_toxicity',
         'patient',
         a.patient_id,
-        coalesce(a.art_stopped_date, a.regimen_substitution_date),
+        a.art_stopped_date,
         a.*
     from answers a
     join plhiv on plhiv.patient_id = a.patient_id
     where a.art_stopped_reason like '%Toxicity%'
         and a.art_stopped_date is not null
+
+    -- one branch per regimen line, because Annex C counts a substitution on *any* line whose
+    -- date falls in the reporting period. Collapsing the three dates into one -- which line it
+    -- was is not part of the indicator -- keeps only one of them, so a client substituted on
+    -- first line in January and on third line in June would go uncounted in June (BL-023).
+    -- More than one in the same month is reduced to a single row below.
+    {%- for line in ['first', 'second', 'third'] %}
 
     union all
 
@@ -248,13 +258,14 @@ events as (
         'who_dak_hiv_art_toxicity',
         'patient',
         a.patient_id,
-        a.regimen_substitution_date,
+        a.substitution_{{ line }}_line_date,
         a.*
     from answers a
     join plhiv on plhiv.patient_id = a.patient_id
     where a.on_art
         and a.regimen_substitution_reason like '%Toxicity%'
-        and a.regimen_substitution_date is not null
+        and a.substitution_{{ line }}_line_date is not null
+    {%- endfor %}
 ),
 
 -- BL-018: the point-in-time indicators. These are counted from the carried-forward state at a

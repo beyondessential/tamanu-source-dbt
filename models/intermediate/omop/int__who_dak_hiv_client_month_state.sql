@@ -12,6 +12,11 @@
 -- says nothing about DSD enrolment must not blank the DSD state. Each attribute therefore takes
 -- the most recent submission that actually carried a value for it (BL-019).
 --
+-- Carried forward is not carried forever. A recorded ART stop ends the on-ART state from the stop
+-- date, whether or not the form that recorded it also answered "On ART" (BL-026) -- without that,
+-- a client whose treatment stopped would stay in ART.1 indefinitely, and the cascade's headline
+-- number would only ever grow.
+--
 -- Only complete months are emitted, so a partial current month cannot read as a fall in the
 -- caseload (BL-020).
 --
@@ -23,11 +28,19 @@ with answers as (
     select * from {{ ref('int__who_dak_hiv_form_answers') }}
 ),
 
--- BL-020: the reporting spine, first submission month to the last complete month
+-- BL-020: the reporting spine, first submission month to the last complete month.
+--
+-- The horizon is a var so a backfill can be reproduced and a unit test can assert a fixed set of
+-- months: left unset it is the last complete month, which moves with the calendar.
+{% set spine_end = var('who_dak_hiv_spine_end', none) %}
 bounds as (
     select
         date_trunc('month', min(submitted_datetime))::date as first_month,
+        {% if spine_end -%}
+        date_trunc('month', date '{{ spine_end }}')::date as last_month
+        {%- else -%}
         (date_trunc('month', current_date) - interval '1 month')::date as last_month
+        {%- endif %}
     from answers
 ),
 
@@ -79,6 +92,17 @@ state_events as (
         dsd_start_date::text
     from answers
     where dsd_start_date is not null
+    union all
+    -- BL-026: the date treatment stopped, which ends the on-ART state rather than being one more
+    -- fact beside it
+    select
+        patient_id,
+        submitted_datetime,
+        facility_id,
+        'art_stopped_date',
+        art_stopped_date::text
+    from answers
+    where art_stopped_date is not null
 ),
 
 -- the latest value each attribute held at each month end
@@ -116,7 +140,8 @@ pivoted as (
         max(case when s.attribute = 'on_art' then s.value end) = 'true' as on_art,
         max(case when s.attribute = 'art_start_date' then s.value end)::date as art_start_date,
         max(case when s.attribute = 'dsd_enrolled' then s.value end) = 'true' as dsd_enrolled,
-        max(case when s.attribute = 'dsd_start_date' then s.value end)::date as dsd_start_date
+        max(case when s.attribute = 'dsd_start_date' then s.value end)::date as dsd_start_date,
+        max(case when s.attribute = 'art_stopped_date' then s.value end)::date as art_stopped_date
     from state_as_at s
     group by s.month_start, s.month_end, s.patient_id
 )
@@ -126,7 +151,23 @@ select
     p.month_end,
     p.patient_id,
     c.facility_id,
-    p.on_art,
+
+    -- BL-026: on ART as at the month end. A stop dated on or before the month end ends the
+    -- state, unless treatment restarted after it -- a client with a later ART start date is on
+    -- their second course, and the old stop says nothing about it.
+    --
+    -- Read from the dated stop rather than from the stop form's own submission, so a stop
+    -- recorded late still takes effect in the month treatment actually ended, the same rule ART.4
+    -- uses for an initiation.
+    coalesce(p.on_art, false)
+    and not (
+        p.art_stopped_date is not null
+        and p.art_stopped_date <= p.month_end
+        and (p.art_start_date is null or p.art_stopped_date > p.art_start_date)
+    ) as on_art,
+
+    p.on_art as on_art_recorded,
+    p.art_stopped_date,
     p.art_start_date,
     p.dsd_enrolled,
     p.dsd_start_date,

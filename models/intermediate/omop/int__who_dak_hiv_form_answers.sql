@@ -38,7 +38,8 @@
     'substitution_first_line_date': 'whodakhiv-d-de481',
     'substitution_second_line_date': 'whodakhiv-d-de487',
     'substitution_third_line_date': 'whodakhiv-d-de493',
-    'key_population': 'whodakhiv-b-de50',
+    'key_population_hts': 'whodakhiv-b-de50',
+    'key_population_pmtct': 'whodakhiv-e-de114',
 } %}
 
 with responses as (
@@ -120,9 +121,12 @@ typed as (
     v.viral_load_reason_raw as viral_load_reason,
     v.art_stopped_reason_raw as art_stopped_reason,
     v.regimen_substitution_reason_raw as regimen_substitution_reason,
-    -- a MultiSelect answer, so this is a JSON array of the values the client selected.
-    -- int__who_dak_hiv_key_populations unnests it; nothing else should parse it
-    v.key_population_raw as key_population_json,
+    -- MultiSelect answers, so each is a JSON array of the values the client selected. The DAK
+    -- asks for key population on the HTS visit and again on the PMTCT pathway, and a client seen
+    -- only on one of them must not be missing from the disaggregation, so both are carried.
+    -- int__who_dak_hiv_key_populations unnests them; nothing else should parse them
+    v.key_population_hts_raw as key_population_hts_json,
+    v.key_population_pmtct_raw as key_population_pmtct_json,
 
 
     {% for column in ['hiv_test_date', 'hiv_test_result_returned_date', 'hiv_diagnosis_date',
@@ -155,14 +159,4 @@ typed as (
     join person p on p.person_id = r.patient_id
 )
 
-select
-    *,
-    -- BL-023: ART.9 counts a regimen substitution on any line, so the three dates collapse to
-    -- the earliest recorded one -- which line it was is not part of the indicator. least()
-    -- ignores NULLs in Postgres, so a client with only a third-line date gets that one
-    least(
-        substitution_first_line_date,
-        substitution_second_line_date,
-        substitution_third_line_date
-    ) as regimen_substitution_date
-from typed
+select * from typed
