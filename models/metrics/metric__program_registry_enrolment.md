@@ -11,13 +11,22 @@ one data table over this model serves all of them, and a consumer that wants one
 filters to its code.
 
 Aggregate by summing `value_numeric` (always 1) over any subset of the disaggregations --
-registry, clinical status, registration status, currently-at, registering facility, sex, age.
-Nothing is pre-aggregated, so no dimension has to be collapsed to get a total.
+registry, clinical status, registration status, currently-at, exit provenance, registering
+facility, sex. Nothing is pre-aggregated, so no dimension has to be collapsed to get a total.
+`age_years` is a measure rather than a disaggregation: it is emitted unbanded, and the
+consumer's data table bands it.
 
 **Enrolments open on a date** are those whose `period_start` has passed and whose `period_end`
 is null or later. **Exits** are rows with a `period_end`. The exited share at any grain is
 `sum(value_numeric) filter (where period_end is not null) / sum(value_numeric)`, which is what
 makes retention answerable without a second metric.
+
+**A NULL `period_end` has two meanings, and retention reads them as one.** Most are enrolments
+that are open. The rest are enrolments recorded as `inactive` whose closing change predates the
+change log's coverage floor (Tamanu 2.33.0): nothing records when they ended, so they read as
+open and inflate the retained share. `registration_status = 'inactive'` with a NULL `period_end`
+identifies them exactly, so a service can size the effect -- and on a deployment upgraded well
+past 2.33.0 it is a shrinking historical tail rather than a standing bias.
 
 **A cascade is a group-by, not a column.** `clinical_status_code` carries the registry's own
 status list -- "Diagnosed, not on ART", "On ART", "Lost to follow up" -- and no metric can

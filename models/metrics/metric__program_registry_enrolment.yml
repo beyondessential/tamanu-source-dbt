@@ -17,6 +17,12 @@ models:
       # -- the patient's own id, in the clear. Registry membership is also the sensitive fact
       # itself: that a patient is in an HIV register is the diagnosis. Restricted, and a
       # consumer's data table must set its permission groups deliberately.
+      #
+      # This is the classification, not a shipping gate: the `restricted` *tag* is gated on
+      # has_sensitive_facility, a deployment feature rather than a statement about PII, and
+      # tagging this would withhold the metric from deployments without sensitive facilities.
+      # The shipped schema already holds patient-identifiable relations by design -- see
+      # BL-011 in the spec.
       pii: true
       classification: restricted
     data_tests:

@@ -16,7 +16,10 @@ metrics:
     the end of the registration, disaggregated by registry and by the patient's clinical status within
     it.
   numerator_description: >-
-    Patient program registrations, excluding those recorded in error, counted on the registration date
+    Patient program registrations, excluding those recorded in error, counted at the registration
+    datetime. The row is a span, so a consumer may instead count enrolments open during a period --
+    period_start before its end and period_end null or after its start -- which is a different number
+    over the same rows
   denominator_description: null
   data_source: tamanu
   definition_source: BES
@@ -38,7 +41,9 @@ metrics:
   - registry_code
   - clinical_status_code
   - registration_status
+  - currently_at_type
   - currently_at_id
+  - episode_end_source
   - facility_id
   - sex
   variant_of: null

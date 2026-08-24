@@ -34,5 +34,10 @@ where trim(d) not in (
         -- program_registry_enrolment's currently-at: the facility or village the patient is
         -- followed at now, which is not necessarily the one that registered them
         -- (facility_id). Read with currently_at_type, which names which of the two it is.
-        'currently_at_id'
+        'currently_at_id',
+        'currently_at_type',
+        -- program_registry_enrolment's exit provenance: whether the enrolment's end was
+        -- recorded as a deactivation or inferred from the change log. Grouped by a service
+        -- auditing a retention figure, so it is part of the contract rather than incidental.
+        'episode_end_source'
     )

@@ -107,7 +107,18 @@ facility crosswalked to a Tupaia entity code.
   is inner, which drops nothing — `clinical__episode`'s own AC-010 guarantees the person exists.
 - **BL-011:** A row is patient-identifiable: `subject_id` embeds the patient id, and registry
   membership is itself the sensitive fact. `pii: true`, `classification: restricted`, and a
-  consumer's data table sets its permission groups deliberately.
+  consumer's data table names its permission group explicitly rather than inheriting the
+  deployment's general user group.
+
+  The model carries no `restricted` **tag**, so it ships in the compiled reporting bundle like
+  every other `metric__` view. The tag and the classification are different axes: the tag gates a
+  model on `has_sensitive_facility`, which is a deployment feature rather than a statement about
+  PII, so tagging this would withhold the metric from every deployment without sensitive
+  facilities — the opposite of what is wanted. The shipped schema is patient-identifiable by
+  design: `bases/patients` and `ds__patient_program_registrations` are both `pii: true`,
+  `classification: restricted` and both ship, the latter carrying patient names alongside the
+  registry and clinical status that back the program-registry reports. This metric adds no class
+  of exposure that schema does not already hold.
 - **BL-012:** The Tamanu ids for facility, village and registry are emitted as they are.
   Translating them to a consumer's identifiers — a Tupaia entity code, a DHIS2 org unit — is a
   consumer-layer concern.
