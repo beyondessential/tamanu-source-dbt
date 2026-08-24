@@ -95,9 +95,10 @@ facility crosswalked to a Tupaia entity code.
   status list, as a disaggregation. It is nullable — an enrolment with no status set has no
   cascade position, and inventing one would report a clinical fact that does not exist.
 - **BL-006:** Retention is derived from the boundaries rather than asserted: the exited share is
-  `sum(value_numeric) filter (where period_end is not null) / sum(value_numeric)`.
-  `episode_end_source` names which rule resolved the boundary, so a consumer can separate a
-  deactivation from a logged status change, and is NULL exactly when `period_end` is.
+  `sum(value_numeric) filter (where period_end is not null) / sum(value_numeric)`, which measures
+  the *dated* exits (BL-014). `episode_end_source` names which rule resolved the boundary, so a
+  consumer can separate a deactivation from a logged status change, and is NULL exactly when
+  `period_end` is.
 - **BL-007:** `currently_at_id` is where the patient is followed now, read with
   `currently_at_type`, which names whether that is a facility or a village.
 - **BL-008:** `facility_id` is the registering facility, which is not necessarily where the
@@ -124,6 +125,11 @@ facility crosswalked to a Tupaia entity code.
   consumer-layer concern.
 - **BL-013:** No `data_table_*` meta on the model. Presentation — which columns filter, how age
   bands — is configured per consumer in `tupaia-data-product`.
+- **BL-014:** An `inactive` enrolment can carry a NULL `period_end`, `clinical__episode`'s BL-006
+  leaving the boundary unresolved where the closing change predates the change log's coverage
+  floor. Exit *status* is therefore read from `registration_status` and exit *timing* from
+  `period_end`, so BL-006's share understates total exits by that shrinking historical tail and a
+  consumer measuring whether a patient left reads the status instead.
 
 ## Acceptance criteria
 
@@ -142,6 +148,7 @@ facility crosswalked to a Tupaia entity code.
 | AC-011 | `registration_status` is not null and is `active` or `inactive` | BL-006 | `not_null`, `accepted_values` |
 | AC-012 | `episode_end_source` is `deactivation` or `status change` | BL-006 | `accepted_values` |
 | AC-013 | `currently_at_type` is `facility` or `village` | BL-007 | `accepted_values` |
+| AC-014 | `registration_status`, `period_end` and `episode_end_source` match `clinical__episode` row-for-row, so an `inactive` row with a NULL `period_end` is BL-006's tail and never a boundary this metric dropped | BL-006, BL-014 | singular test |
 
 BL-005, BL-008 and BL-009 carry no acceptance criterion: each states that a column is nullable
 and unbanded, which is the absence of a constraint rather than one to assert. BL-010 to BL-013 are
@@ -174,3 +181,4 @@ indicator to a national HMIS or DHIS2 reads the same metric.
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-24 | Maui team | Initial spec. Registry-agnostic enrolment metric over `clinical__episode`, with the cascade as a disaggregation and retention derived from the enrolment boundaries. |
+| 2026-08-24 | Maui team | BL-014 and AC-014 added. The metric inherits `clinical__episode`'s BL-006, so an `inactive` enrolment whose closing change predates the change log's coverage floor has no `period_end` and BL-006's share reads it as retained: the rule for which column answers *whether* a patient exited and which answers *when* now sits in the spec and in the registered definition, and AC-014 pins the boundary columns to the episode so the combination can only ever come from BL-006. |

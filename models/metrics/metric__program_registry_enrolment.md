@@ -48,6 +48,10 @@ NULL means the enrolment is open, which is the state most enrolments are in -- s
 open enrolments is a count of NULLs here, not an absence of data. See `clinical__episode` for
 how the boundary is resolved: a deactivation where one was recorded, otherwise the logged
 transition to inactive.
+
+A NULL also covers the enrolment closed before the change log's coverage floor, whose end
+nothing records (BL-014). This column answers *when* a dated exit happened; `registration_status`
+answers *whether* the patient exited.
 {% enddocs %}
 
 {% docs metric__program_registry_enrolment__value_numeric %}
@@ -80,7 +84,8 @@ Display name of the current clinical status, for a consumer that labels a series
 
 {% docs metric__program_registry_enrolment__registration_status %}
 Whether the registration is `active` or `inactive`. An inactive registration is one the
-service has closed; `period_end` carries when.
+service has closed, and this is the column to read for *whether* a patient exited: `period_end`
+carries when, but only where the closing change was recorded (BL-014).
 {% enddocs %}
 
 {% docs metric__program_registry_enrolment__episode_end_source %}
