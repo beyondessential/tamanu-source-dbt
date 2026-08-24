@@ -1,0 +1,43 @@
+unit_tests:
+  - name: test_metric__who_dak_hiv_indicators_dsd_coverage
+    model: metric__who_dak_hiv_indicators
+    description: >
+      BL-014, DSD.3. Annex C gives the numerator no date element, and enrolment in a DSD
+      model is a standing answer a care visit repeats -- so dating it by the submission
+      would count a client every month they were seen against a denominator that counts
+      them once, and the coverage rate would climb past 100%. Both sides are anchored on
+      the eligibility assessment instead.
+
+      pat_enrolled was assessed eligible in June and is enrolled: numerator and
+      denominator. pat_not_enrolled was assessed and is not: denominator only.
+      pat_no_assessment is enrolled but was never assessed, so a submission-dated
+      numerator would have counted them with no denominator row at all -- here they are
+      in neither.
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'resp_enrolled' as response_id, 'pat_enrolled' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-06-20 09:00:00'::timestamp as submitted_datetime, 'male' as sex, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::text as art_stopped_reason, null::text as regimen_substitution_reason, null::text as key_population_hts_json, null::text as key_population_pmtct_json, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, null::date as art_start_date, null::date as baseline_cd4_test_date, null::date as viral_load_sample_date, '2026-06-10'::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, null::date as art_stopped_date, null::date as substitution_first_line_date, null::date as substitution_second_line_date, null::date as substitution_third_line_date, null::numeric as baseline_cd4_count, null::numeric as viral_load_result, true as on_art, true as dsd_eligible, true as dsd_enrolled
+          union all
+          select 'resp_not_enrolled', 'pat_not_enrolled', 'fac_001', 'carevisit', '2026-06-21 09:00:00'::timestamp, 'female', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, '2026-06-11'::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, true, true, false
+          union all
+          select 'resp_no_assessment', 'pat_no_assessment', 'fac_001', 'carevisit', '2026-06-22 09:00:00'::timestamp, 'male', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, true, null::boolean, true
+
+      - input: ref('int__who_dak_hiv_client_month_state')
+        format: sql
+        rows: |
+          select null::date as month_start, null::date as month_end, null::text as patient_id, null::text as facility_id, null::boolean as on_art, null::boolean as on_art_recorded, null::date as art_stopped_date, null::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, null::int as months_on_art, null::int as months_on_dsd, null::text as sex, null::int as age_years where false
+
+      - input: ref('int__who_dak_hiv_key_populations')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as key_population where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'who_dak_hiv_dsd_eligible' as metric_id, null::text as variant_id, 'pat_enrolled' as subject_id, 'patient' as subject_grain, '2026-06-01'::date as period_start, '2026-06-30'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'male' as sex, 41 as age_years, null::int as months_on_dsd, null::text as key_population
+        union all
+        select 'who_dak_hiv_dsd_eligible', null::text, 'pat_not_enrolled', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, null::int, null::text
+        union all
+        select 'who_dak_hiv_dsd_enrolled', null::text, 'pat_enrolled', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 41, null::int, null::text

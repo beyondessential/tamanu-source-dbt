@@ -107,8 +107,12 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 - **BL-013:** ART.5 pairs an ART start with a baseline CD4 count in the same month, and counts
   late initiation below 200 cells/mm³.
 - **BL-014:** DSD.3's denominator is clients assessed eligible in the period — the electronic
-  branch of the two Annex C offers. Its numerator has no date element in Annex C, so the
-  submission recording the enrolment places it.
+  branch of the two Annex C offers. Its numerator has no date element in Annex C at all, and
+  "currently enrolled in a DSD ART model" is a standing answer a care visit repeats every time,
+  so dating it by the submission would put a client in the numerator in every month they were
+  seen while the denominator counts them in one — a coverage figure that climbs past 100% and
+  keeps going. The numerator is therefore anchored on the same eligibility assessment as the
+  denominator: of the clients assessed eligible this month, those recorded as enrolled.
 - **BL-015:** `facility_id` is the qualifying submission's facility, from the encounter's
   location, and is nullable: dropping a client with no location would understate a national
   count to protect a facility one.
@@ -163,6 +167,15 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   five near-identical metrics that would say the same thing five times and drift apart the first
   time one changed.
 
+- **BL-028:** An indicator's numerator counts a subset of its denominator's population, on the
+  same date element. Annex C's HTS.2 and HTS.3 numerators admit a positive placed by its HIV
+  diagnosis date where the denominators require the results-returned date, which lets a positive
+  count in a period its own denominator does not — a positivity rate above 100%. Both numerators
+  therefore use the denominator's predicate and date.
+- **BL-029:** Where the latest answer wins, the ordering puts NULLs last. A response that was
+  never completed carries no submission datetime, and Postgres sorts NULLs first under `desc`,
+  so an abandoned submission would outrank every real one and discard every later correction.
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test |
@@ -187,8 +200,11 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-018 | A client substituted on first line in one month and third line in another is counted in both; a stop for toxicity counts in the month it is dated | BL-023 | unit test `..._art9_toxicity` |
 | AC-019 | ART.3's six-month cutoff is the sample month's last day less six months: a client who started 2025-12-29 qualifies for a June sample and one who started 2025-12-31 does not | BL-012 | unit test `..._art3_six_month_boundary` |
 | AC-020 | A recorded ART stop ends the on-ART state from its own month, and a later ART start supersedes it | BL-026 | unit test `test_int__who_dak_hiv_client_month_state_art_stop` |
+| AC-021 | Every numerator's rows are a subset of its denominator's, per period and subject | BL-028 | singular test over each registered pair |
+| AC-022 | A positive result with no results-returned date is in neither HTS numerator nor its denominator | BL-028 | unit test `..._hts_grain` |
+| AC-023 | A DSD.3 numerator row exists only where the same client has a denominator row in the same month | BL-014 | unit test `..._dsd_coverage` |
 
-The seven unit tests carry the definitional weight. No deployment has captured these forms yet,
+The eight unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
 definition holds before there is data, and each of AC-012 to AC-014 pins a boundary a reader
 would otherwise have to take on trust.

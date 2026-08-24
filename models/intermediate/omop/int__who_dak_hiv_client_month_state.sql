@@ -187,13 +187,7 @@ select
     end::int as months_on_dsd,
 
     per.gender_source_value as sex,
-    case
-        when per.year_of_birth is not null then
-            extract(year from age(
-                p.month_end,
-                make_date(per.year_of_birth, per.month_of_birth, per.day_of_birth)
-            ))::int
-    end as age_years
+    {{ age_years('p.month_end', 'per') }} as age_years
 
 from pivoted p
 left join latest_contact c on c.month_start = p.month_start and c.patient_id = p.patient_id

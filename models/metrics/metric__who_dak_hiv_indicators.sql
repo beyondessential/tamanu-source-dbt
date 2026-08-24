@@ -1,8 +1,9 @@
 -- metric__who_dak_hiv_indicators -- D5 metric view for the WHO SMART guidelines HIV DAK
 -- indicators registered in documentations/metrics/who_dak_hiv.yml.
--- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md (BL-001..BL-016).
+-- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md (BL-001..BL-028).
 --
--- Eleven of Web Annex C's 140 indicators: the ones whose numerator and denominator are
+-- Sixteen counts over nine of Web Annex C's 140 indicators: the ones whose numerator and
+-- denominator are
 -- computable from the DAK's own data elements, as the generated forms collect them. Each
 -- emits a count, and a rate is formed by the consumer from a numerator and its denominator --
 -- so ART.3 viral suppression is who_dak_hiv_art_viral_suppression over
@@ -78,17 +79,19 @@ events as (
 
     union all
 
-    -- HTS.2 positive results returned (numerator). Either date places it in the period, so
-    -- the earlier of the two anchors the count
+    -- HTS.2 positive results returned (numerator). Same population as the denominator, plus a
+    -- positive result: a test in the numerator must be one the denominator counted, or the
+    -- positivity rate it feeds can exceed 100% (BL-028)
     select
         'who_dak_hiv_hts_test_positive',
         'test',
         a.response_id,
-        least(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
+        a.hiv_test_result_returned_date,
         a.*
     from answers a
     where a.hiv_test_result = 'HIV-positive'
-        and coalesce(a.hiv_test_result_returned_date, a.hiv_diagnosis_date) is not null
+        and a.hiv_test_date is not null
+        and a.hiv_test_result_returned_date is not null
 
     union all
 
@@ -105,17 +108,17 @@ events as (
 
     union all
 
-    -- HTS.3 clients testing positive (numerator)
+    -- HTS.3 clients testing positive (numerator). Subset of the denominator, per BL-028
     select
         'who_dak_hiv_hts_client_positive',
         'patient',
         a.patient_id,
-        least(a.hiv_test_result_returned_date, a.hiv_diagnosis_date),
+        a.hiv_test_result_returned_date,
         a.*
     from answers a
     where a.hiv_test_result = 'HIV-positive'
         and a.hiv_test_date is not null
-        and coalesce(a.hiv_test_result_returned_date, a.hiv_diagnosis_date) is not null
+        and a.hiv_test_result_returned_date is not null
 
     union all
 
@@ -217,17 +220,24 @@ events as (
     union all
 
     -- DSD.3 clients enrolled in a DSD ART model (numerator). Annex C gives this numerator no
-    -- date element, so the submission recording the enrolment places it (BL-013)
+    -- date element at all, and "currently enrolled" is a standing answer a care visit repeats
+    -- every time -- so dating it by the submission would put a client in the numerator in every
+    -- month they were seen, against a denominator that counts them in one. The ratio would climb
+    -- past 100% and keep going. Anchored on the same eligibility assessment as the denominator
+    -- instead, which makes the pair a coverage figure: of those assessed eligible this month,
+    -- how many are enrolled (BL-014)
     select
         'who_dak_hiv_dsd_enrolled',
         'patient',
         a.patient_id,
-        a.submitted_datetime::date,
+        a.dsd_eligibility_assessed_date,
         a.*
     from answers a
     join plhiv on plhiv.patient_id = a.patient_id
     where a.on_art
+        and a.dsd_eligible
         and a.dsd_enrolled
+        and a.dsd_eligibility_assessed_date is not null
 
     union all
 
@@ -242,9 +252,13 @@ events as (
         a.*
     from answers a
     join plhiv on plhiv.patient_id = a.patient_id
-    where a.art_stopped_reason like '%Toxicity%'
+    where a.art_stopped_reason ilike '%toxicity%'
         and a.art_stopped_date is not null
 
+    -- Annex A carries a reason per line as well (HIV.D.DE482, DE488), but neither is on the
+    -- generated form and Annex C's numerator names the generic HIV.D.DE418, so that is the
+    -- reason read here for every line.
+    --
     -- one branch per regimen line, because Annex C counts a substitution on *any* line whose
     -- date falls in the reporting period. Collapsing the three dates into one -- which line it
     -- was is not part of the indicator -- keeps only one of them, so a client substituted on
@@ -263,7 +277,7 @@ events as (
     from answers a
     join plhiv on plhiv.patient_id = a.patient_id
     where a.on_art
-        and a.regimen_substitution_reason like '%Toxicity%'
+        and a.regimen_substitution_reason ilike '%toxicity%'
         and a.substitution_{{ line }}_line_date is not null
     {%- endfor %}
 ),
@@ -419,7 +433,7 @@ all_rows as (
 
 select
     metric_id,
-    -- BL-014: the standard definition, with no deployment variant
+    -- BL-001: the standard definition, with no deployment variant
     null::text as variant_id,
     subject_id::varchar as subject_id,
     subject_grain,

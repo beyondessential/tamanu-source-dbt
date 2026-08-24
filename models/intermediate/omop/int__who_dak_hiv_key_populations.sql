@@ -43,14 +43,18 @@ recorded as (
 ),
 
 -- the most recent answer per element, so a re-interview on one pathway does not discard what the
--- other recorded
+-- other recorded.
+--
+-- `nulls last`, because a response that was never completed carries a NULL submitted_datetime and
+-- Postgres sorts NULLs first under `desc` -- which would let an abandoned submission outrank every
+-- real one and discard every later correction (BL-029).
 latest as (
     select distinct on (patient_id, source_element)
         patient_id,
         source_element,
         value
     from recorded
-    order by patient_id asc, source_element asc, submitted_datetime desc
+    order by patient_id asc, source_element asc, submitted_datetime desc nulls last
 )
 
 -- distinct, because the two elements share most of their option list and a client recorded as a

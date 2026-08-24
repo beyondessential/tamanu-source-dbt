@@ -53,7 +53,13 @@ select
 
     -- BL-006: whether the enrolment is still open, and what closed it. registration_status is
     -- the registration's own state; episode_end_source names the rule that resolved the
-    -- boundary, so a consumer can tell a deactivation from a logged status change
+    -- boundary, so a consumer can tell a deactivation from a logged status change.
+    --
+    -- BL-014: the two are not interchangeable. An enrolment closed before the change log's
+    -- coverage floor is inactive with no period_end (clinical__episode's BL-006), so exit
+    -- status is read here and exit timing from period_end -- both carried through unchanged
+    -- from the episode, which AC-014 pins, so this metric can never be the thing that lost a
+    -- boundary
     e.registration_status,
     e.episode_end_source,
 
@@ -72,13 +78,7 @@ select
     -- BL-009: age in whole years at enrolment.
     -- BL-013: unbanded -- an age classification is a presentation choice a deployment may set
     -- differently, so the consumer's data table bands it
-    case
-        when p.year_of_birth is not null then
-            extract(year from age(
-                e.episode_start_date,
-                make_date(p.year_of_birth, p.month_of_birth, p.day_of_birth)
-            ))::int
-    end as age_years
+    {{ age_years('e.episode_start_date', 'p') }} as age_years
 
 from episodes e
 -- BL-010: inner join. An episode's person is guaranteed by clinical__episode's own AC-010,

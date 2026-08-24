@@ -2,10 +2,14 @@ unit_tests:
   - name: test_metric__who_dak_hiv_indicators_hts_grain
     model: metric__who_dak_hiv_indicators
     description: >
-      BL-007, BL-010, HTS.2 and HTS.3. Annex C counts tests for HTS.2 and clients for HTS.3,
-      so the same submissions have to produce different totals: a client tested twice in a
-      month is two tests and one client. It also pins the attribution rule -- the client rows
-      carry the facility of the earlier test (fac_001), not the later one.
+      BL-007, BL-010, BL-028, HTS.2 and HTS.3. Annex C counts tests for HTS.2 and clients
+      for HTS.3, so the same submissions have to produce different totals: a client tested
+      twice in a month is two tests and one client, and the client rows carry the facility
+      of the earlier test (fac_001), not the later one.
+
+      pat_c is positive and diagnosed in the period but has no results-returned date. A
+      numerator has to be a subset of its denominator or the positivity rate it feeds can
+      exceed 100%, so that client is in neither.
     given:
       - input: ref('int__who_dak_hiv_form_answers')
         format: sql
@@ -15,6 +19,8 @@ unit_tests:
           select 'resp_a2', 'pat_a', 'fac_002', 'htsvisit', '2026-06-20 09:00:00'::timestamp, 'female', 1996, 1, 1, null::text, 'HIV-positive', null::text, null::text, null::text, null::text, null::text, '2026-06-20'::date, '2026-06-20'::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean
           union all
           select 'resp_b', 'pat_b', 'fac_001', 'htsvisit', '2026-06-07 09:00:00'::timestamp, 'male', 2000, 1, 1, null::text, 'HIV-negative', null::text, null::text, null::text, null::text, null::text, '2026-06-07'::date, '2026-06-07'::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean
+          union all
+          select 'resp_c', 'pat_c', 'fac_001', 'htsvisit', '2026-06-09 09:00:00'::timestamp, 'male', 2000, 1, 1, null::text, 'HIV-positive', null::text, null::text, null::text, null::text, null::text, '2026-06-09'::date, null::date, '2026-06-09'::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean
 
       - input: ref('int__who_dak_hiv_client_month_state')
         format: sql
