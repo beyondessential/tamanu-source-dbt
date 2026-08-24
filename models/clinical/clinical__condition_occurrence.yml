@@ -12,12 +12,10 @@ models:
       pii: true
       classification: restricted
     data_tests:
-      # AC-007: encounter diagnoses are point-in-time, so the model hardcodes the end
-      # columns to NULL (clinical__condition_occurrence.sql). Assert that invariant
-      # directly. The previous end >= start pair test was scoped to
-      # "condition_end_datetime is not null", which matches zero rows and asserted
-      # nothing; if a future override ever populates an end, this test flags it for a
-      # deliberate revisit rather than passing silently (BL-004).
+      # AC-007: neither source records a resolution date, so both branches hardcode the
+      # end columns to NULL. Asserted as the null invariant itself rather than as an
+      # end-after-start comparison, so a branch that ever populates an end flags for a
+      # deliberate revisit instead of passing on an empty row set (BL-004).
       - dbt_expectations.expect_column_values_to_be_null:
           name: ac_007_clinical__condition_occurrence_end_datetime_null
           arguments:
@@ -62,6 +60,13 @@ models:
       - name: condition_type_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__condition_occurrence__condition_type_source_value') }}"
+        data_tests:
+          # AC-008: the two branches are the only provenances, and this column is what tells
+          # them apart (BL-006, BL-007)
+          - accepted_values:
+              name: ac_008_clinical__condition_occurrence_type_source_value_accepted
+              arguments:
+                values: ["encounter diagnosis", "program registry condition"]
       - name: condition_status_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__condition_occurrence__condition_status_source_value') }}"

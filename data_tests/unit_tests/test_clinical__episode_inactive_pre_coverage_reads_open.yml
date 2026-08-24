@@ -1,0 +1,24 @@
+unit_tests:
+  - name: test_clinical__episode_inactive_pre_coverage_reads_open
+    model: clinical__episode
+    description: >
+      BL-006, AC-016. A registration that went inactive before the change log's coverage floor
+      (Tamanu 2.33.0) has no logged transition to draw an end from, so it reads as open. Its
+      only history row is the synthetic current-state row, which the history stamps at the
+      enrolment datetime because nothing was logged; drawing an end from that row would close
+      the episode at its own start, which is what this pins against.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, null::text as clinical_status_id, null::text as clinical_status_code, null::text as clinical_status_name, 'village' as currently_at_type, 'vil_001' as currently_at_id, 'Tarawa' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+
+      - input: ref('int__registration_status_history')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'current' as history_source
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, null::int as episode_concept_id, null::int as episode_object_concept_id, '2024-01-10'::date as episode_start_date, '2024-01-10 09:00:00'::timestamp as episode_start_datetime, null::date as episode_end_date, null::timestamp as episode_end_datetime, null::text as episode_end_source, 'program registry' as episode_type_source_value, 'HIV' as episode_source_value, 'HIV Program' as episode_source_name, 'preg_001' as program_registry_id, 'prog_001' as program_id, null::text as episode_parent_id, null::int as episode_number, 'inactive' as registration_status, null::text as clinical_status_id, null::text as clinical_status_source_value, null::text as clinical_status_source_name, 'village' as currently_at_type, 'vil_001' as currently_at_id, 'Tarawa' as currently_at_name, 'fac_001' as care_site_id, 'usr_001' as provider_id, null::timestamp as deactivated_datetime, null::text as deactivated_by_provider_id
