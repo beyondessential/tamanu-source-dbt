@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Mint maui-team read token
         id: maui-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.MAUI_APP_ID }}
           private-key: ${{ secrets.MAUI_APP_KEY }}
@@ -69,7 +69,7 @@ jobs:
             "https://github.com/beyondessential/maui-team"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Full history + tags: the tag audit needs reachable tags, and telling
           # a never-built bundle from a deliberately pruned one needs all history.
