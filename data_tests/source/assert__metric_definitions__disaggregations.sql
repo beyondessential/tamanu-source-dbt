@@ -21,5 +21,21 @@ where trim(d) not in (
         -- ed_visit's arrival hour
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
-        'discharge_disposition'
+        'discharge_disposition',
+        -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
+        -- metric per setting. It is the encounter's type as it now stands, not the phase the
+        -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
+        -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
+        'encounter_type',
+        -- encounter_diagnosis's recorded diagnosis, as code and as readable label. Emitted
+        -- ungrouped: deployments differ in what they code diagnoses with, so any chapter or
+        -- block grouping is applied downstream over diagnosis_code rather than registered here.
+        'diagnosis_code',
+        'diagnosis',
+        -- encounter_diagnosis's certainty -- confirmed, suspected and the rest of the
+        -- deployment's list. Disproven and in-error diagnoses never reach the metric.
+        'diagnosis_certainty',
+        -- encounter_diagnosis's principal/secondary flag, so a casemix view can count each
+        -- encounter once without a separate primary-diagnosis metric.
+        'is_primary'
     )
