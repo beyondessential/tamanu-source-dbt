@@ -66,6 +66,12 @@ models:
       - name: medication
         data_type: character varying(255)
         description: "{{ doc('generic__reference_data') }} name of the prescribed medication."
+      - name: prescriber_id
+        data_type: character varying(255)
+        description: "{{ doc('prescriptions__prescriber_id') }}"
+      - name: prescriber
+        data_type: character varying(255)
+        description: "{{ doc('users__display_name') }} of the clinician who prescribed the medication. Empty when no prescriber was recorded against the prescription."
       - name: quantity
         data_type: integer
         description: "{{ doc('prescriptions__quantity') }}"
