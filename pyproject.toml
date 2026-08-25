@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tamanu-source-dbt"
-version = "2.60.14"
+version = "2.60.15"
 description = "A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets"
 readme = "README.md"
 requires-python = ">=3.12"
