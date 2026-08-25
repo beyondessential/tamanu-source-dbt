@@ -46,5 +46,21 @@ where trim(d) not in (
         'months_on_dsd',
         -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
         -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
-        'key_population'
+        'key_population',
+        -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
+        -- metric per setting. It is the encounter's type as it now stands, not the phase the
+        -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
+        -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
+        'encounter_type',
+        -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
+        -- deployments differ in what they code diagnoses with, so any chapter or block
+        -- grouping is applied downstream over diagnosis_code rather than registered here.
+        'diagnosis_code',
+        'diagnosis',
+        -- diagnosis's certainty -- confirmed, suspected and the rest of the deployment's
+        -- list. Disproven and in-error diagnoses never reach the metric.
+        'diagnosis_certainty',
+        -- diagnosis's principal/secondary flag, so a casemix view can count each encounter
+        -- once without a separate primary-diagnosis metric.
+        'is_primary'
     )
