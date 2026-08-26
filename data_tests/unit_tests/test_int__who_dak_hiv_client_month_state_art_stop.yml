@@ -1,0 +1,61 @@
+unit_tests:
+  - name: test_int__who_dak_hiv_client_month_state_art_stop
+    model: int__who_dak_hiv_client_month_state
+    description: >
+      BL-026. Carried forward is not carried forever: a recorded ART stop ends the on-ART state
+      from the month it is dated, whether or not the form that recorded it also answered "On ART".
+      Without that, a client whose treatment stopped stays in ART.1 indefinitely and the cascade's
+      headline number only ever grows.
+
+      Two clients start ART in January and are recorded as stopping in March. One stays stopped --
+      off ART in March and April. The other restarts in April, and the old stop says nothing about
+      the new course, so they are on ART again. Both read as on ART in January and February, before
+      the stop.
+
+      on_art_recorded is emitted beside on_art so the derivation stays visible: the form still says
+      what it said, and the stop is what changes the answer.
+
+      The spine horizon is pinned to April by the who_dak_hiv_spine_end var; left unset it is the
+      last complete month, which would make the expected set move with the calendar.
+    overrides:
+      vars:
+        who_dak_hiv_spine_end: '2026-04-30'
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_stopped' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-01-10 09:00:00'::timestamp as submitted_datetime, true as on_art, '2026-01-05'::date as art_start_date, null::date as art_stopped_date, null::date as dsd_start_date, null::boolean as dsd_enrolled
+          union all
+          select 'r2', 'pat_stopped', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean
+          union all
+          select 'r3', 'pat_restarted', 'fac_001', 'carevisit', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean
+          union all
+          select 'r4', 'pat_restarted', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean
+          union all
+          select 'r5', 'pat_restarted', 'fac_001', 'carevisit', '2026-04-10 09:00:00'::timestamp, true, '2026-04-01'::date, null::date, null::date, null::boolean
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_stopped' as person_id, 'male' as gender_source_value, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth
+          union all
+          select 'pat_restarted', 'male', 1985, 1, 1
+
+    expect:
+      format: sql
+      rows: |
+        select '2026-01-01'::date as month_start, '2026-01-31'::date as month_end, 'pat_restarted' as patient_id, 'fac_001' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 0 as months_on_art, null::int as months_on_dsd, 'male' as sex, 41 as age_years
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_restarted', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_restarted', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_restarted', 'fac_001', true, true, '2026-03-15'::date, '2026-04-01'::date, null::boolean, null::date, 0, null::int, 'male', 41
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41
