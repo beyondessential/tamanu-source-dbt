@@ -402,6 +402,7 @@ select
     p.sex as "{{ translate_label('patientSex') }}",
     eth.name as "{{ translate_label('patientEthnicity') }}",
     bt.name as "{{ translate_label('patientBillingType') }}",
+    division.name as "{{ translate_label('patientDivision') }}",
     village.name as "{{ translate_label('patientVillage') }}",
     to_char({{ to_user_selected_timezone('eis.start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
     to_char({{ to_user_selected_timezone('eis.end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
@@ -487,6 +488,8 @@ left join {{ ref('reference_data') }} village
     on village.id = p.village_id
 left join {{ ref('reference_data') }} bt
     on bt.id = eis.patient_billing_type_id
+left join {{ ref('reference_data') }} division
+    on division.id = pad.division_id
 left join {{ ref('reference_data') }} am
     on am.id = t.arrival_mode_id
 left join {{ ref('reference_data') }} dd
