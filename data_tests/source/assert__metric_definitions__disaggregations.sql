@@ -22,6 +22,14 @@ where trim(d) not in (
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition',
+        -- inpatient_admission's ward (department) the patient was admitted to
+        'admission_ward_id',
+        -- inpatient_admission's referral source, carried as recorded
+        'admission_source',
+        -- inpatient_admission's admission-mode flag: a prior ED/triage/observation phase
+        'is_admitted_via_emergency',
+        -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
+        'principal_diagnosis__icd10_chapter',
         -- program_registry_enrolment's registry: which programme the enrolment is in. One
         -- metric serves every registry a deployment configures, so the registry is a
         -- disaggregation rather than a metric_id per programme.
