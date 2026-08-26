@@ -1,0 +1,92 @@
+unit_tests:
+  - name: ac_014_metric__birth_projection
+    model: metric__birth
+    description: >
+      The D5 projection and the three numerator-only subsets. BL-003: period_start is the date
+      of birth at day granularity -- birth_time plays no part, since it cannot change a
+      day-truncated result -- falling back to registration_date where no date of birth is held,
+      and period_end equals period_start. BL-005/BL-006/BL-007: a birth appears in
+      low_birth_weight, preterm_birth or low_apgar_5min only where the relevant measure is
+      recorded and under its threshold -- a NULL measure emits no subset row and is not
+      subtracted from birth's count. BL-010: facility_id stays NULL for a birth with no
+      birth_facility_id rather than dropping the row. BL-013: value_numeric is 1 per row and
+      subject_id is the newborn's patient_id.
+
+      Covers the thresholds against controlled rows, because a deployment database carries no
+      guarantee of a birth at each boundary.
+
+    given:
+      # b_1: at a facility, all three measures recorded and all three under threshold
+      # b_2: no measure under threshold -- birth only. Boundary values: exactly 2.5 kg,
+      #      exactly 37 weeks and exactly 7 are all NOT low/preterm/low-Apgar
+      # b_3: home birth (no facility), every measure NULL -- birth only, facility_id NULL
+      # b_4: birth_time set but ignored at day granularity (BL-003)
+      # b_5: no date_of_birth -- period_start falls back to registration_date (BL-003)
+      - input: ref('patient_birth_data')
+        format: sql
+        rows: |
+          select 'b_1' as patient_id, '06:30'::time as birth_time, 34.0::float as gestational_age_estimate, 'midwife' as attendant_at_birth, null::varchar as name_of_attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, 2.1::numeric as birth_weight, 45.0::numeric as birth_length, 5 as apgar_score_one_minute, 6 as apgar_score_five_minutes, 8 as apgar_score_ten_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-05-15'::date as registration_date
+          union all
+          select 'b_2', '11:00'::time, 37.0::float, 'doctor', null::varchar, 'single', 'elective_c_section', 2.5::numeric, 50.0::numeric, 9, 7, 9, 'health_facility', 'fac_1', '2024-05-16'::date
+          union all
+          select 'b_3', '18:45'::time, null::float, 'traditional_birth_attentdant', null::varchar, 'single', 'normal_vaginal_delivery', null::numeric, null::numeric, null::integer, null::integer, null::integer, 'home', null::varchar, '2024-05-17'::date
+          union all
+          select 'b_4', '23:30'::time, 40.0::float, 'nurse', null::varchar, 'plural', 'breech', 3.2::numeric, 51.0::numeric, 9, 9, 9, 'health_facility', 'fac_1', '2024-05-20'::date
+          union all
+          select 'b_5', null::time, 39.0::float, 'doctor', null::varchar, 'single', 'forceps', 3.0::numeric, 49.0::numeric, 9, 9, 9, 'other', 'fac_1', '2024-06-01'::date
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'b_1' as id, '2024-05-15'::date as date_of_birth
+          union all
+          select 'b_2', '2024-05-16'::date
+          union all
+          select 'b_3', '2024-05-17'::date
+          union all
+          select 'b_4', '2024-05-19'::date
+          union all
+          select 'b_5', null::date
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'b_1' as person_id, 'Female' as gender_source_value
+          union all
+          select 'b_2', 'Male'
+          union all
+          select 'b_3', 'Female'
+          union all
+          select 'b_4', 'Male'
+          union all
+          select 'b_5', 'Female'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_1' as id
+
+    expect:
+      format: sql
+      rows: |
+        select 'birth' as metric_id, null::text as variant_id, 'b_1'::varchar as subject_id, '2024-05-15 00:00'::timestamp as period_start, '2024-05-15 00:00'::timestamp as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'Female' as sex, 'normal_vaginal_delivery' as birth_delivery_type, 'midwife' as attendant_at_birth, 'health_facility' as registered_birth_place, 'single' as birth_type, 2.1::numeric as birth_weight, 34.0::numeric as gestational_age_estimate, 6 as apgar_score_five_minutes
+        union all
+        select 'birth', null::text, 'b_2'::varchar, '2024-05-16 00:00'::timestamp, '2024-05-16 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Male', 'elective_c_section', 'doctor', 'health_facility', 'single', 2.5::numeric, 37.0::numeric, 7
+        union all
+        -- BL-010: home birth keeps its row with a NULL facility_id
+        select 'birth', null::text, 'b_3'::varchar, '2024-05-17 00:00'::timestamp, '2024-05-17 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, null::varchar, 'Female', 'normal_vaginal_delivery', 'traditional_birth_attentdant', 'home', 'single', null::numeric, null::numeric, null::integer
+        union all
+        -- BL-003: birth_time 23:30 is ignored -- period_start is date_of_birth at midnight
+        select 'birth', null::text, 'b_4'::varchar, '2024-05-19 00:00'::timestamp, '2024-05-19 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Male', 'breech', 'nurse', 'health_facility', 'plural', 3.2::numeric, 40.0::numeric, 9
+        union all
+        -- BL-003: no date_of_birth, so period_start falls back to registration_date
+        select 'birth', null::text, 'b_5'::varchar, '2024-06-01 00:00'::timestamp, '2024-06-01 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'forceps', 'doctor', 'other', 'single', 3.0::numeric, 39.0::numeric, 9
+        union all
+        -- BL-005: only b_1 is under 2.5 kg. b_2 is exactly 2.5 (not low), b_3 has none
+        select 'low_birth_weight', null::text, 'b_1'::varchar, '2024-05-15 00:00'::timestamp, '2024-05-15 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', 2.1::numeric, 34.0::numeric, 6
+        union all
+        -- BL-006: only b_1 is under 37 weeks. b_2 is exactly 37 (not preterm), b_3 has none
+        select 'preterm_birth', null::text, 'b_1'::varchar, '2024-05-15 00:00'::timestamp, '2024-05-15 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', 2.1::numeric, 34.0::numeric, 6
+        union all
+        -- BL-007: only b_1 is under 7. b_2 is exactly 7 (not low), b_3 has none
+        select 'low_apgar_5min', null::text, 'b_1'::varchar, '2024-05-15 00:00'::timestamp, '2024-05-15 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', 2.1::numeric, 34.0::numeric, 6
