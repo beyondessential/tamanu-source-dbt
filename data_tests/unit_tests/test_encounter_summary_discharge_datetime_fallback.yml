@@ -82,7 +82,7 @@ unit_tests:
       - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select 'pat_001' as patient_id, null::text as ethnicity_id, null::text as division_id
+          select 'pat_001' as patient_id, null::text as ethnicity_id, null::text as division_id, null::text as subdivision_id
 
       - input: ref('reference_data')
         format: sql
@@ -181,6 +181,7 @@ unit_tests:
           'Male' as "Sex",
           null::text as "Ethnicity",
           null::text as "Billing type",
+          null::text as "Sub-division",
           null::text as "Division",
           null::text as "Village",
           '2024-01-15 10:00:00' as "Encounter start date and time",
