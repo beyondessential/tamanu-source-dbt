@@ -6,8 +6,9 @@ downstream clinical event.
 {% enddocs %}
 
 {% docs clinical__person__person_source_value %}
-The patient's display identifier (medical record number). Populated on reporting
-targets only; NULL on the replica, where the identifier is withheld.
+The patient's display identifier (medical record number). Tagged
+`direct_identifier`: masking is applied to the replica, not by dbt, so the
+column is populated on every target.
 {% enddocs %}
 
 {% docs clinical__person__gender_concept_id %}

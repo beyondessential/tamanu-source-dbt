@@ -43,10 +43,9 @@ DBT_PROJECT = BASE_DIR / "dbt_project.yml"
 PYPROJECT = BASE_DIR / "pyproject.toml"
 COMPILED_DIR = BASE_DIR / "compiled"
 
-# The three aggregate artefacts that are committed. Everything else the build emits
+# The two aggregate artefacts that are committed. Everything else the build emits
 # (the per-report JSONs) is gitignored via `compiled/*/*.json` and stays untracked.
 AGGREGATES = (
-    ("analytics-metadata", "yml"),
     ("reporting-schema", "sql"),
     ("reporting-docs", "html"),
 )
@@ -54,9 +53,9 @@ AGGREGATES = (
 # reporting-docs is deliberately not diffed. dbt's docs bundle embeds the manifest,
 # which lists `sources` and `depends_on.nodes` in a non-deterministic order, so two
 # builds of identical code never match byte for byte. Comparing it would report a
-# change on every release and teach everyone to ignore the comparison. The schema and
-# metadata artefacts are deterministic, and they are the ones that describe behaviour.
-COMPARABLE = frozenset({"analytics-metadata", "reporting-schema"})
+# change on every release and teach everyone to ignore the comparison. The schema
+# artefact is deterministic, and it is the one that describes behaviour.
+COMPARABLE = frozenset({"reporting-schema"})
 
 PROTECTED_BRANCH = re.compile(r"^(main|\d+\.\d+)$")
 VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
@@ -346,7 +345,7 @@ def check_database(series, allow_mismatch=False):
 
 
 def bundle_paths(version):
-    """Return the expected paths of the three committed aggregates for `version`."""
+    """Return the expected paths of the two committed aggregates for `version`."""
     return [
         COMPILED_DIR / f"v{version}" / f"{name}-v{version}-standard.{ext}"
         for name, ext in AGGREGATES
@@ -357,17 +356,9 @@ def bundle_is_built(version):
     return all(path.exists() for path in bundle_paths(version))
 
 
-# dbt stamps every build with fresh timestamps and an invocation id. They say nothing
-# about what the release contains, so they are normalised out alongside the version --
-# otherwise every rebuild looks like it changed something.
-BUILD_METADATA = re.compile(
-    r'"(generated_at|invocation_id|invocation_started_at|run_started_at)":\s*"[^"]*"'
-)
-
-
 def normalise(text, version):
-    """Blank out the version stamp and build metadata, to compare on content alone."""
-    return BUILD_METADATA.sub(r'"\1": "NORMALISED"', text.replace(version, "VERSION"))
+    """Blank out the version stamp, to compare on content alone."""
+    return text.replace(version, "VERSION")
 
 
 def compare_bundles(new_version, old_version):
@@ -430,9 +421,9 @@ def render_commit_message(new_version, old_version, commits, diff_summary):
         f"Bumps {old_version} -> {new_version} and commits the compiled reporting",
         "bundle for that version.",
         "",
-        "Per .gitignore (compiled/*/*.json) only the three aggregate artefacts are",
-        "committed -- reporting-schema, reporting-docs, analytics-metadata. The",
-        "per-report JSONs are build output and stay untracked.",
+        "Per .gitignore (compiled/*/*.json) only the two aggregate artefacts are",
+        "committed -- reporting-schema and reporting-docs. The per-report JSONs",
+        "are build output and stay untracked.",
         "",
         "## What's in this release",
         "",
@@ -488,9 +479,9 @@ def render_pr_body(
 Bumps `{old_version}` → `{new_version}` and commits the compiled reporting bundle for
 that version.
 
-Per `.gitignore` (`compiled/*/*.json`) only the three aggregate artefacts are committed —
-`reporting-schema`, `reporting-docs`, `analytics-metadata`. The per-report JSONs are
-build output and stay untracked.
+Per `.gitignore` (`compiled/*/*.json`) only the two aggregate artefacts are committed —
+`reporting-schema` and `reporting-docs`. The per-report JSONs are build output and stay
+untracked.
 
 ## What's in this release
 
@@ -536,9 +527,9 @@ def _describe_diff(diff_summary):
     changed = {name: count for name, count in known.items() if count}
     if not changed:
         return (
-            "The regenerated reporting-schema and analytics-metadata are byte-identical "
-            "to the previous bundle once the version stamp is normalised: no report or "
-            "model behaviour changes in this release." + footnote
+            "The regenerated reporting-schema is byte-identical to the previous bundle "
+            "once the version stamp is normalised: no report or model behaviour changes "
+            "in this release." + footnote
         )
 
     detail = ", ".join(f"{name} ({count} lines)" for name, count in sorted(changed.items()))

@@ -5,6 +5,8 @@ unit_tests:
       AC-004 and AC-006. A discharge whose entered discharge date precedes its recorded date
       by several days reports the positive gap, the change log supplies the recording user and
       the later-edit count, and an automatically created discharge is flagged rather than dropped.
+      AC-008: the encounter's diagnoses roll up into a single row, split primary from
+      secondary, each group ordered by when it was recorded.
     given:
       - input: ref('discharges')
         format: sql
@@ -54,9 +56,24 @@ unit_tests:
       - input: ref('reference_data')
         format: sql
         rows: |
-          select 'vil_001' as id, 'Village A' as name
+          select 'vil_001' as id, 'Village A' as name, 'villageA' as code
           union all
-          select 'disp_001', 'Home'
+          select 'disp_001', 'Home', 'home'
+          union all
+          select 'diag_001', 'Malaria', 'B54'
+          union all
+          select 'diag_002', 'Anaemia', 'D64.9'
+          union all
+          select 'diag_003', 'Pneumonia', 'J18.9'
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select 'edx_001' as id, 'enc_001' as encounter_id, 'diag_002' as diagnosis_id, false as is_primary, '2024-03-09 10:00:00'::timestamp as datetime
+          union all
+          select 'edx_002', 'enc_001', 'diag_001', true, '2024-03-09 12:00:00'::timestamp
+          union all
+          select 'edx_003', 'enc_001', 'diag_003', false, '2024-03-09 08:00:00'::timestamp
 
       - input: ref('users')
         format: sql
@@ -70,6 +87,6 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'dis_001' as discharge_id, 'enc_001' as encounter_id, 'admission' as encounter_type, 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'fac_001' as facility_id, 'Central Hospital' as facility, 'dept_001' as department_id, 'General Medicine' as department, 'loc_001' as location_id, 'Room 1' as location, '2024-03-08 11:00:00'::timestamp as admission_datetime, '2024-03-10 16:00:00'::timestamp as discharge_datetime_entered, '2024-03-14 08:05:00'::timestamp as discharge_recorded_datetime, 4 as days_between_discharge_and_recording, 'disp_001' as discharge_disposition_id, 'Home' as discharge_disposition, 'cli_001' as discharger_id, 'Dr Alice Wilson' as discharger_on_form, 'usr_001' as recorded_by_user_id, 'Nurse Bob Martinez' as recorded_by_user, false as is_auto_discharge, 1 as later_edit_count
+        select 'dis_001' as discharge_id, 'enc_001' as encounter_id, 'admission' as encounter_type, 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'fac_001' as facility_id, 'Central Hospital' as facility, 'dept_001' as department_id, 'General Medicine' as department, 'loc_001' as location_id, 'Room 1' as location, '2024-03-08 11:00:00'::timestamp as admission_datetime, '2024-03-10 16:00:00'::timestamp as discharge_datetime_entered, '2024-03-14 08:05:00'::timestamp as discharge_recorded_datetime, 4 as days_between_discharge_and_recording, 'disp_001' as discharge_disposition_id, 'Home' as discharge_disposition, 'cli_001' as discharger_id, 'Dr Alice Wilson' as discharger_on_form, 'usr_001' as recorded_by_user_id, 'Nurse Bob Martinez' as recorded_by_user, false as is_auto_discharge, 1 as later_edit_count, 'Malaria' as primary_diagnoses, 'B54' as primary_diagnoses_codes, 'Pneumonia; Anaemia' as secondary_diagnoses, 'J18.9; D64.9' as secondary_diagnoses_codes
         union all
-        select 'dis_002', 'enc_002', 'clinic', 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'Female', null, null, 'fac_001', 'Central Hospital', 'dept_001', 'General Medicine', 'loc_001', 'Room 1', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, 0, null, null, 'cli_001', 'Dr Alice Wilson', '00000000-0000-0000-0000-000000000000', null, true, 0
+        select 'dis_002', 'enc_002', 'clinic', 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'Female', null, null, 'fac_001', 'Central Hospital', 'dept_001', 'General Medicine', 'loc_001', 'Room 1', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, 0, null, null, 'cli_001', 'Dr Alice Wilson', '00000000-0000-0000-0000-000000000000', null, true, 0, null, null, null, null

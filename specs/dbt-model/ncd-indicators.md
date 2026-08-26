@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| **Name** | MSF NCD indicators (suite of 27 `metric__` indicators) |
+| **Name** | MSF NCD indicators (suite of 31 `metric__` indicators) |
 | **Type** | dbt model suite (canonical definitions) |
 | **Layer** | `metric` |
 | **Materialisation** | view |
@@ -14,7 +14,7 @@
 | **Created** | 2026-06-11 |
 | **Last updated** | 2026-06-11 |
 
-Canonical definitions for the 27 MSF NCD indicators registered in
+Canonical definitions for the 31 MSF NCD indicators registered in
 `documentations/metrics/*.yml`. Implementations are deployment-specific
 (see § Implementations). This spec governs the *definitions* — what each
 indicator measures, output shape, semantic invariants. Implementation
@@ -31,12 +31,12 @@ indicators answer "how many NCD patients are enrolled / active / exited
 
 **Clinical context.** MSF deployments run a chronic NCD program registry
 within Tamanu. Indicators are computed monthly for DHIS2 reporting and
-for ad-hoc analyses. The 27 indicators cover four indicator families:
+for ad-hoc analyses. The 31 indicators cover four indicator families:
 
 | Family | Indicators |
 |---|---|
 | Activity | `consultations_new`, `consultations_followup`, `patients_active`, `patients_new`, `diagnoses`, `diagnoses_new`, `referred_specialist` |
-| Exits | `exit_ltfu`, `exit_deceased`, `exit_transferred`, `exit_other` |
+| Exits | `exit_ltfu`, `exit_deceased`, `exit_transferred`, `exit_other` (disease-segmented) and their not-disaggregated-by-diagnosis siblings `exit_ltfu_total`, `exit_deceased_total`, `exit_transferred_total`, `exit_other_total` — separate DHIS2 data elements for the same program-exit events |
 | Quality of care | `htn_bp_measured`, `htn_bp_controlled`, `diabetes_bp_measured`, `diabetes_bp_controlled`, `diabetes_hba1c_measured`, `diabetes_hba1c_controlled` |
 | 6-month cohort evaluation | `cohort_6m_patients_active`, `cohort_6m_htn_active`, `cohort_6m_diabetes_active`, `cohort_6m_retention_percent`, `cohort_6m_htn_bp_measured_percent`, `cohort_6m_htn_bp_control_percent`, `cohort_6m_diabetes_bp_measured_percent`, `cohort_6m_diabetes_bp_control_percent`, `cohort_6m_diabetes_hba1c_measured_percent`, `cohort_6m_diabetes_hba1c_control_percent` |
 
@@ -52,8 +52,8 @@ registry `disaggregations`:
 indicators (consultations, diagnoses, exits, referrals — 9 indicators).
 
 **`age_group × sex × facility_id`** — non-disease-segmented indicators
-(active/new patients, quality-of-care measures, cohort evaluation — 18
-indicators).
+(active/new patients, quality-of-care measures, cohort evaluation, and the
+four `exit_*_total` indicators — 22 indicators).
 
 Numerator/denominator definitions per indicator live in the registry row
 (`numerator_description`, `denominator_description` columns of
@@ -66,7 +66,7 @@ D5 wide format. Each `metric__` view emits:
 
 | Column | Type | Notes |
 |---|---|---|
-| `metric_id` | text | One of the 27 indicator IDs from `metric_definitions.csv` |
+| `metric_id` | text | One of the 31 indicator IDs from `metric_definitions.csv` |
 | `variant_id` | text | NULL on the standard definition; deployment-set for definition variants |
 | `subject_id` | uuid | NULL — these are pre-aggregated, not per-patient rows |
 | `period_start` | date | First day of the reporting month |
@@ -87,7 +87,8 @@ D5 wide format. Each `metric__` view emits:
 - **BL-004:** `value_numeric` is the indicator value. Counts are integers; percentages are rounded to one decimal.
 - **BL-005:** Row inclusion follows the indicator definition — count indicators emit rows only for slices where the count is positive; percentage indicators emit rows only for slices where the denominator is positive. Empty slices are not emitted as zero rows.
 - **BL-006:** `facility_id` semantics differ per indicator (registering vs encounter vs referring facility) — recorded in each metric's `description` in the registry.
-- **BL-007:** All 27 indicators share the same `definition_source = MSF` and follow MSF NCD program operational definitions. Deployment-specific variants flag definition variance via the `variant_of` registry mechanism (D5).
+- **BL-007:** All 31 indicators share the same `definition_source = MSF` and follow MSF NCD program operational definitions. Deployment-specific variants flag definition variance via the `variant_of` registry mechanism (D5).
+- **BL-008:** `exit_ltfu_total` / `exit_deceased_total` / `exit_transferred_total` / `exit_other_total` report the same program-exit events as `exit_ltfu` / `exit_deceased` / `exit_transferred` / `exit_other` respectively, but for a distinct DHIS2 data element that is not disaggregated by diagnosis — implementations emit both the disease-segmented and the total row for every qualifying exit.
 
 ## Acceptance criteria
 
@@ -97,11 +98,11 @@ D5 wide format. Each `metric__` view emits:
 | AC-002 | `period_granularity = 'month'` on every row | BL-003 | dbt `accepted_values` |
 | AC-003 | `value_numeric` is `not_null` on every row | BL-004 | dbt `not_null` |
 | AC-004 | Composite PK (`metric_id`, `period_start`, disaggregations) is unique within each view | BL-001..BL-006 | dbt `dbt_utils.unique_combination_of_columns` |
-| AC-005 | All 27 `metric_id`s in the registry appear as rows in the implementation views (no orphaned registry entries during steady-state operation) | BL-001 | dbt singular test |
+| AC-005 | All 31 `metric_id`s in the registry appear as rows in the implementation views (no orphaned registry entries during steady-state operation) | BL-001 | dbt singular test |
 
 ## Registry entries
 
-27 rows in `documentations/metrics/*.yml`, all with `kind = metric`,
+31 rows in `documentations/metrics/*.yml`, all with `kind = metric`,
 `definition_source = MSF`, `data_source = tamanu`. See the seed for
 per-indicator `description`, `numerator_description`,
 `denominator_description`, `unit`, `subject_grain`, and `disaggregations`.

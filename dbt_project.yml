@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.61.1
+version: 2.62.2
 config-version: 2
 profile: tamanu_source_dbt
 
@@ -57,6 +57,16 @@ models:
       +materialized: view
       +tags:
         - base
+      # Tupaia data tables resolve location_group_name via a two-hop join through
+      # these two models (metric__outpatient_visit emits location_id only, per its
+      # BL-006/BL-007), so they need to sit in `public_tupaia` alongside the metrics
+      # on the analytics replica, same reasoning and same mechanism as the metrics:
+      # block below. Every other base model stays untouched -- this is scoped to just
+      # the two models Tupaia actually joins on.
+      locations:
+        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
+      location_groups:
+        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
     intermediate:
       +materialized: ephemeral
     ref:
@@ -95,6 +105,13 @@ models:
       # earns the heavier materialisation, so an unrecognised target falls through to view
       # rather than materialising a table by default.
       +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      # Tupaia reads the metrics from `public_tupaia`, so that is where they build on the
+      # analytics replica. Absolute, not a suffix -- see macros/generate_schema_name.sql,
+      # without which dbt resolves this to `analytics_public_tupaia`. Empty on every other
+      # target, which leaves them in the target's own schema: metric views ship in the
+      # compiled reporting bundle, and production Tamanu must not gain a `public_tupaia`
+      # schema of metric tables.
+      +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
       +tags:
         - metrics
     datasets:

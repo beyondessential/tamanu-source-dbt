@@ -2,13 +2,18 @@
 -- (data element, indicator); joined in the report layer on
 -- indicator = metric__ncd_indicators.metric_id.
 --
--- The 27 UIDs are shared across MSF OCA deployments (global to the MSF OCA
+-- The 31 UIDs are shared across MSF OCA deployments (global to the MSF OCA
 -- DHIS2 instance), confirmed against the NCD indicators source sheet. Disabled in
 -- this repo; an MSF OCA deployment re-enables the maps/msf_oca models in its own
 -- dbt_project.yml. The disaggregation each indicator uses is chosen in
 -- the report layer per config: consultations / diagnoses / exits / referrals join
 -- map__dhis_coc_disease_age_sex; active-care / measurement / cohort join the
 -- age x sex COC map.
+--
+-- The four `exit_*_total` rows are the not-disaggregated-by-diagnosis siblings of
+-- exit_ltfu / exit_deceased / exit_transferred / exit_other -- separate DHIS2 data
+-- elements for the same program-exit events, reported without a disease-category
+-- breakdown, so they join the age x sex COC map instead.
 select * from (
     values
     -- Consultations
@@ -23,11 +28,17 @@ select * from (
     ('TGfoSq64wXr', 'patients_active'),
     ('URrPYOHZ4i1', 'patients_new'),
 
-    -- Programme exits
+    -- Program exits
     ('u2RPykkuQ9n', 'exit_ltfu'),
     ('ApzxVSP0YAO', 'exit_deceased'),
     ('AcK20EAaBSm', 'exit_transferred'),
     ('fLY5ILuLJwH', 'exit_other'),
+
+    -- Program exits (not disaggregated by diagnosis)
+    ('tHEKnb10d3D', 'exit_ltfu_total'),
+    ('W7VmjaTuJqC', 'exit_deceased_total'),
+    ('nxneni1Dtu5', 'exit_transferred_total'),
+    ('VLNtPSIvQIR', 'exit_other_total'),
 
     -- Referrals
     ('O44JlJopQkf', 'referred_specialist'),

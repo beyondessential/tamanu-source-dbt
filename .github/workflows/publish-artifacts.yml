@@ -98,12 +98,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -132,7 +132,7 @@ jobs:
   # -------------------------------------------------------------------------
   # Runs for every release in every repo.
   #
-  # Canonical artifacts (analytics-metadata, reporting-schema, reporting-docs):
+  # Canonical artifacts (reporting-schema, reporting-docs):
   #   standard only:  M.m.x/<artifact>-vM.m.x-standard.<ext>
   #
   # Reports folder (all repos):
@@ -148,10 +148,10 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ap-southeast-2
           role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
@@ -182,7 +182,7 @@ jobs:
 
           # Canonical artifacts: standard only, uploaded to the top-level folder
           if [ "$DEPLOYMENT" = "standard" ]; then
-            for artifact in analytics-metadata reporting-schema reporting-docs; do
+            for artifact in reporting-schema reporting-docs; do
               file=$(ls compiled/v$VERSION/$artifact-* 2>/dev/null | head -1 || true)
               [ -z "$file" ] && continue
               filename=$(basename "$file")
@@ -195,7 +195,7 @@ jobs:
           for file in compiled/v$VERSION/*; do
             filename=$(basename "$file")
             case "$filename" in
-              analytics-metadata-*|reporting-schema-*|reporting-docs-*) continue ;;
+              reporting-schema-*|reporting-docs-*) continue ;;
             esac
             renamed="${filename//v$VERSION/v$VX}"
             aws s3 cp "$file" "$BUCKET/$S3_DIR/$REPORTS_FOLDER/$renamed"
@@ -208,10 +208,6 @@ jobs:
 
           # Register canonical artifacts with meta-server: standard only
           if [ "$DEPLOYMENT" = "standard" ]; then
-            curl -v "$META_URL/artifacts/$S3_DIR/analytics-metadata/any" \
-              --cert meta.crt --key meta.key \
-              --data-binary "$BASE_URL/analytics-metadata-v$VX-$DEPLOYMENT.yml"
-
             curl -v "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-schema-v$VX-$DEPLOYMENT.sql"

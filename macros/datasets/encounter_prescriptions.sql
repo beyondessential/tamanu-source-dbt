@@ -20,6 +20,8 @@ select
     pr.medication_id,
     m.code as medication_code,
     m.name as medication,
+    pr.prescriber_id,
+    prescriber.display_name as prescriber,
     pr.route,
     pr.quantity,
     pr.repeats,
@@ -45,6 +47,9 @@ join {{ ref("facilities") }} f
     and f.is_sensitive = {{ is_sensitive }}
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
+-- prescriber_id is nullable, so this must stay a left join or prescriptions
+-- recorded without a prescriber would drop out of the dataset entirely
+left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id
 join {{ ref("reference_data")}} m on m.id = pr.medication_id
 
 {% endmacro %}

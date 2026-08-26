@@ -28,13 +28,9 @@ sex_map as (
 select
     -- identity (BL-001)
     p.id as person_id,
-    -- source business identifier (display_id / MRN); a direct identifier that
-    -- bases/ drops on analytics targets, so NULL on the replica (BL-006)
-    {% if is_analytics_target() -%}
-    null::text as person_source_value,
-    {%- else -%}
+    -- source business identifier (display_id / MRN). Masking of direct
+    -- identifiers is applied on the replica, not here (BL-006)
     p.display_id as person_source_value,
-    {%- endif %}
 
     -- gender: concept shadow + retained source value (BL-002)
     sm.concept_id as gender_concept_id,

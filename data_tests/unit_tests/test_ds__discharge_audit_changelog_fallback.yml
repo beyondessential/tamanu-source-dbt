@@ -46,7 +46,13 @@ unit_tests:
       - input: ref('reference_data')
         format: sql
         rows: |
-          select null::text as id, null::text as name
+          select null::text as id, null::text as name, null::text as code
+          where false
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::timestamp as datetime
           where false
 
       - input: ref('users')
@@ -58,4 +64,4 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'dis_003' as discharge_id, 'enc_003' as encounter_id, 'admission' as encounter_type, 'pat_003' as patient_id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'Male' as sex, null as village_id, null as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null as department_id, null as department, 'loc_001' as location_id, 'Room 1' as location, '2024-01-01 09:00:00'::timestamp as admission_datetime, '2024-01-03 12:00:00'::timestamp as discharge_datetime_entered, '2024-01-05 07:45:00'::timestamp as discharge_recorded_datetime, 2 as days_between_discharge_and_recording, null as discharge_disposition_id, null as discharge_disposition, null as discharger_id, null as discharger_on_form, null as recorded_by_user_id, null as recorded_by_user, false as is_auto_discharge, null::integer as later_edit_count
+        select 'dis_003' as discharge_id, 'enc_003' as encounter_id, 'admission' as encounter_type, 'pat_003' as patient_id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'Male' as sex, null as village_id, null as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null as department_id, null as department, 'loc_001' as location_id, 'Room 1' as location, '2024-01-01 09:00:00'::timestamp as admission_datetime, '2024-01-03 12:00:00'::timestamp as discharge_datetime_entered, '2024-01-05 07:45:00'::timestamp as discharge_recorded_datetime, 2 as days_between_discharge_and_recording, null as discharge_disposition_id, null as discharge_disposition, null as discharger_id, null as discharger_on_form, null as recorded_by_user_id, null as recorded_by_user, false as is_auto_discharge, null::integer as later_edit_count, null::text as primary_diagnoses, null::text as primary_diagnoses_codes, null::text as secondary_diagnoses, null::text as secondary_diagnoses_codes

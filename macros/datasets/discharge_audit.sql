@@ -57,6 +57,49 @@ encounter_details as (
     left join {{ ref('departments') }} dept on dept.id = e.department_id
 ),
 
+-- BL-010: diagnoses recorded against the encounter, split primary from secondary and
+-- rolled up so the one-row-per-encounter grain is preserved. Same four columns as the
+-- admissions dataset, but the name columns carry the name alone -- the code already has
+-- its own column, so appending it to the name repeated it and left neither column clean
+-- to filter or group on. admissions.sql still appends; the two differ on this until it
+-- is changed too. The encounter_diagnoses base model already drops deleted rows and
+-- diagnoses of disproven or error certainty.
+encounter_diagnosis_summary as (
+    select
+        edx.encounter_id,
+        string_agg(
+            case when edx.is_primary
+                    then rd.name
+            end,
+            '; '
+            order by edx.datetime
+        ) as primary_diagnoses,
+        string_agg(
+            case when edx.is_primary
+                    then rd.code
+            end,
+            '; '
+            order by edx.datetime
+        ) as primary_diagnoses_codes,
+        string_agg(
+            case when not edx.is_primary
+                    then rd.name
+            end,
+            '; '
+            order by edx.datetime
+        ) as secondary_diagnoses,
+        string_agg(
+            case when not edx.is_primary
+                    then rd.code
+            end,
+            '; '
+            order by edx.datetime
+        ) as secondary_diagnoses_codes
+    from {{ ref('encounter_diagnoses') }} edx
+    join {{ ref('reference_data') }} rd on rd.id = edx.diagnosis_id
+    group by edx.encounter_id
+),
+
 discharge_audit as (
     select
         dr.discharge_id,
@@ -119,7 +162,11 @@ select
     -- BL-005: the nil UUID audit user has no matching user, so this renders blank
     recorder.display_name as recorded_by_user,
     da.is_auto_discharge,
-    da.later_edit_count
+    da.later_edit_count,
+    eds.primary_diagnoses,
+    eds.primary_diagnoses_codes,
+    eds.secondary_diagnoses,
+    eds.secondary_diagnoses_codes
 from discharge_audit da
 -- BL-001: the patient base drops deleted, merged and test patients, and this join
 -- carries that exclusion into the grain
@@ -128,5 +175,6 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('reference_data') }} disposition on disposition.id = da.discharge_disposition_id
 left join {{ ref('users') }} discharger on discharger.id = da.discharger_id
 left join {{ ref('users') }} recorder on recorder.id = da.recorded_by_user_id
+left join encounter_diagnosis_summary eds on eds.encounter_id = da.encounter_id
 
 {% endmacro %}

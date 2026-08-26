@@ -1,0 +1,170 @@
+version: 2
+
+models:
+  - name: clinical__episode
+    description: "{{ doc('clinical__episode') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-004: an episode must not end before it starts (BL-004). or_equal permits an
+      # enrolment closed the day it opened, which a same-day transfer produces.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_004_clinical__episode_end_at_or_after_start
+          arguments:
+            column_A: episode_end_datetime
+            column_B: episode_start_datetime
+            or_equal: true
+            row_condition: "episode_end_datetime is not null"
+    columns:
+      - name: episode_id
+        data_type: text
+        description: "{{ doc('clinical__episode__episode_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__episode_episode_id_not_null
+          - unique:
+              name: ac_001_clinical__episode_episode_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__person_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_010_clinical__episode_person_id_not_null
+          - relationships:
+              name: ac_010_clinical__episode_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: episode_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__episode__episode_concept_id') }}"
+      - name: episode_object_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__episode__episode_object_concept_id') }}"
+      - name: episode_start_date
+        data_type: date
+        description: "{{ doc('clinical__episode__episode_start_date') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_clinical__episode_episode_start_date_not_null
+      - name: episode_start_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('clinical__episode__episode_start_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_003_clinical__episode_episode_start_datetime_not_null
+      - name: episode_end_date
+        data_type: date
+        description: "{{ doc('clinical__episode__episode_end_date') }}"
+      - name: episode_end_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('clinical__episode__episode_end_datetime') }}"
+      - name: episode_end_source
+        data_type: text
+        description: "{{ doc('clinical__episode__episode_end_source') }}"
+        data_tests:
+          # AC-005: only the two rules can close an episode (BL-004)
+          - accepted_values:
+              name: ac_005_clinical__episode_episode_end_source_accepted
+              arguments:
+                values: ["deactivation", "status change"]
+      - name: episode_type_source_value
+        data_type: text
+        description: "{{ doc('clinical__episode__episode_type_source_value') }}"
+        data_tests:
+          - accepted_values:
+              name: clinical__episode_episode_type_source_value_accepted
+              arguments:
+                values: ["program registry"]
+      - name: episode_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__episode_source_value') }}"
+      - name: episode_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__episode_source_name') }}"
+      - name: program_registry_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__program_registry_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_026_clinical__episode_program_registry_id_not_null
+      - name: program_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__program_id') }}"
+      - name: episode_parent_id
+        data_type: text
+        description: "{{ doc('clinical__episode__episode_parent_id') }}"
+      - name: episode_number
+        data_type: integer
+        description: "{{ doc('clinical__episode__episode_number') }}"
+      - name: registration_status
+        data_type: text
+        description: "{{ doc('clinical__episode__registration_status') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_clinical__episode_registration_status_not_null
+          # AC-002: recordedInError enrolments are excluded from the model (BL-002)
+          - accepted_values:
+              name: ac_002_clinical__episode_registration_status_accepted
+              arguments:
+                values: ["active", "inactive"]
+      - name: clinical_status_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__clinical_status_id') }}"
+      - name: clinical_status_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__clinical_status_source_value') }}"
+      - name: clinical_status_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__clinical_status_source_name') }}"
+      - name: currently_at_type
+        data_type: text
+        description: "{{ doc('clinical__episode__currently_at_type') }}"
+        data_tests:
+          # AC-009: the registry configures one or the other, or neither (BL-007)
+          - accepted_values:
+              name: ac_009_clinical__episode_currently_at_type_accepted
+              arguments:
+                values: ["facility", "village"]
+      - name: currently_at_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__currently_at_id') }}"
+      - name: currently_at_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__currently_at_name') }}"
+      - name: care_site_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__care_site_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_011_clinical__episode_care_site_id_in_ref__care_site
+              arguments:
+                to: ref('ref__care_site')
+                field: care_site_id
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__provider_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_027_clinical__episode_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+      - name: deactivated_datetime
+        data_type: timestamp without time zone
+        description: "{{ doc('clinical__episode__deactivated_datetime') }}"
+      - name: deactivated_by_provider_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__episode__deactivated_by_provider_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_027_clinical__episode_deactivated_by_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
