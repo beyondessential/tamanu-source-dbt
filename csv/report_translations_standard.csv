@@ -328,6 +328,10 @@ report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
 report.reporting.rolePermissions,Role permissions
+report.reporting.surveyResult,Result
+report.reporting.surveySignatureSigned,Signed
+report.reporting.surveySignatureUnsigned,Unsigned
+report.reporting.surveySubmissionTime,Submission time
 report.reporting.triageActiveCareDateTime,Time of active care/admission
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
