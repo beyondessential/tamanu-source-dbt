@@ -63,7 +63,7 @@ unit_tests:
       - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select null::text as patient_id, null::text as ethnicity_id
+          select null::text as patient_id, null::text as ethnicity_id, null::text as division_id
           where false
 
       - input: ref('triages')
@@ -192,6 +192,7 @@ unit_tests:
           'male'               as "Sex",
           null::text           as "Ethnicity",
           null::text           as "Billing type",
+          null::text           as "Division",
           null::text           as "Village",
           '2024-03-15 10:00'   as "Encounter start date and time",
           null::text           as "Encounter end date and time",
