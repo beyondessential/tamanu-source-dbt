@@ -1,0 +1,46 @@
+# Morbidity metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: encounter_diagnosis
+  kind: metric
+  name: Diagnoses
+  description: >-
+    Diagnoses recorded against a clinical encounter. One row per diagnosis, so an encounter with
+    several diagnoses contributes one each.
+  numerator_description: >-
+    Encounter diagnoses still standing -- excluding those a clinician marked disproven or entered
+    in error -- counted on the date the diagnosis was recorded
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded diagnoses, which no external body registers as an indicator: ICD-10 is a
+    classification of diagnoses, not a definition of a morbidity count, and WHO's and AIHW's
+    morbidity reporting is built on cause-of-admission and cause-of-death groupings over a national
+    coding standard rather than on a plain count of what clinicians recorded. Deployments also
+    differ in what they code diagnoses with -- some use real ICD-10, others a local reference-data
+    list -- so this metric emits the diagnosis as recorded and leaves any grouping to the consumer,
+    which is what lets it serve deployments on either. Pending alignment with the deploying
+    country's national HMIS definition.
+  unit: count
+  subject_grain: diagnosis
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - sex
+  - diagnosis_code
+  - diagnosis
+  - diagnosis_certainty
+  - is_primary
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__encounter_diagnosis.md
