@@ -186,6 +186,21 @@ Facility, Area
 
 ---
 
+### Encounter prescription discharge summary *(sensitive version available)*
+
+**Report Description**
+
+This report shows quantity of medication marked for pharmacy discharge for a given drug within a specified date range, based on encounter prescriptions. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
+
+
+---
+
 ### Encounter summary by end date *(sensitive version available)*
 
 **Report Description**
