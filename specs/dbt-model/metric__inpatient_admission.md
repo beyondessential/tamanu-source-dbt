@@ -194,7 +194,7 @@ D5 wide format, plus seven disaggregation/measure columns.
 | AC-006 | `value_numeric` is `not_null` and always `1` | BL-006, BL-011 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | BL-011 | `not_null` |
-| AC-009 | The shared base resolves as specified: admission segment selection (incl. an ED-preceded admission), `is_admitted_via_emergency` on concept 262, admission source and discharge disposition fallbacks, principal diagnosis earliest-wins, length of stay, open-encounter handling | BL-003–BL-005, BL-012–BL-015 | unit test `ac_009_int__inpatient_visits_derivations` |
+| AC-009 | The shared base resolves as specified: admission segment selection (incl. an ED-preceded admission), `is_admitted_via_emergency` on concept 262, admission source and discharge disposition fallbacks, principal diagnosis earliest-wins, length of stay, open-encounter handling | BL-003–BL-005, BL-012–BL-015 | unit test `ac_009_int__inpatient_admission_derivations` |
 | AC-010 | `is_admitted_via_emergency` is `not_null` | BL-005 | `not_null` |
 | AC-011 | `admission_source` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
@@ -213,7 +213,7 @@ One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`
 
 | Ref | Layer | Role |
 |---|---|---|
-| `int__inpatient_visits` | `intermediate/omop/` | The shared base; every ref below is reached through it |
+| `int__inpatient_admission` | `intermediate/omop/` | The shared base; every ref below is reached through it |
 | `clinical__visit_detail` | `clinical/` | Admission segment: inclusion, timing, location, department, encounter id (BL-003, BL-007, BL-011) |
 | `clinical__visit_occurrence` | `clinical/` | Encounter end (BL-002) and concept 262 (BL-005) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
@@ -252,7 +252,7 @@ this view, add it here, and update `documentations/metrics/inpatient.yml` `statu
 | Artefact | Relationship |
 |---|---|
 | `metric__emergency_visit` / `metric__emergency_stay` | Cover the ED side of the encounter; `is_admitted` there and `is_admitted_via_emergency` here describe the same admissions from opposite ends |
-| `int__inpatient_visits` | The shared base this metric projects |
+| `int__inpatient_admission` | The shared base this metric projects |
 | `ds__admissions` / `ds__sensitive_admissions` | Unrelated, pre-existing Tamanu-report-layer admissions dataset (raw `encounters`, not OMOP) — not reconciled with this metric |
 
 ## Open questions

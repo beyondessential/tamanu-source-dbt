@@ -1,4 +1,4 @@
--- int__inpatient_visits -- one row per inpatient admission, carrying every attribute
+-- int__inpatient_admission -- one row per inpatient admission, carrying every attribute
 -- metric__inpatient_admission disaggregates by.
 --
 -- Shared base for metric__inpatient_admission and any inpatient metric added later.
