@@ -1,0 +1,119 @@
+unit_tests:
+  - name: ac_009_int__inpatient_admission_derivations
+    model: int__inpatient_admission
+    description: >
+      Behavioural coverage for the shared admission base. BL-003: an admission is the
+      earliest segment whose OMOP visit concept is 9201 -- for a direct admission that is the
+      first segment; for an admission reached via the ED it is the later segment, not the
+      ED intake segment, and an encounter with no 9201 segment at all is excluded entirely.
+      BL-005: is_admitted_via_emergency follows visit-level concept 262. BL-007:
+      admission_ward_id is the admission segment's department, nullable. BL-012:
+      admission_source falls back to 'Not recorded' for a missing referral source. BL-013: a
+      second is_primary row does not duplicate the admission -- the earliest wins, and a
+      missing principal diagnosis stays NULL (the metric layer applies the 'Not recorded'
+      label). BL-014: discharge_disposition falls back to 'Not recorded' for a missing
+      discharge record. BL-015: length of stay is emitted in minutes, unbanded, NULL while the
+      encounter is open.
+
+    given:
+      # inp_1 is a direct admission: one segment, concept 9201.
+      # inp_2 is admitted via the ED: an ED segment (9203) precedes the admission segment
+      #       (9201) -- the admission is attributed to the later segment, not the first.
+      # inp_3 is a direct admission still open: no visit_end, no discharge, no diagnosis.
+      # inp_4 is a direct admission with no referral source, no discharge record and no
+      #       principal diagnosis -- exercises every 'Not recorded' / NULL fallback at once.
+      # inp_ed_only has no segment at concept 9201 at all -- out of scope, no row expected.
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
+          union all
+          select 'vd_2a', 'inp_2', 'per_1', 'loc_ed', 'dept_ed', '2024-06-02 07:00'::timestamp, 9203
+          union all
+          select 'vd_2b', 'inp_2', 'per_1', 'loc_ward', 'dept_surg', '2024-06-02 09:30'::timestamp, 9201
+          union all
+          select 'vd_3', 'inp_3', 'per_1', 'loc_ward', null::text, '2024-06-03 14:00'::timestamp, 9201
+          union all
+          select 'vd_4', 'inp_4', 'per_1', 'loc_ward', 'dept_med', '2024-06-04 05:00'::timestamp, 9201
+          union all
+          select 'vd_ed_only', 'inp_ed_only', 'per_1', 'loc_ed', 'dept_ed', '2024-06-07 09:00'::timestamp, 9203
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'inp_1' as visit_occurrence_id, 9201 as visit_concept_id, '2024-06-05 12:00'::timestamp as visit_end_datetime
+          union all
+          select 'inp_2', 262, '2024-06-06 08:00'::timestamp
+          union all
+          select 'inp_3', 9201, null::timestamp
+          union all
+          select 'inp_4', 9201, '2024-06-04 20:00'::timestamp
+          union all
+          select 'inp_ed_only', 9203, '2024-06-07 10:00'::timestamp
+
+      # BL-012: inp_1 has a referral source; the rest do not.
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'inp_1' as id, 'ref_gp' as referral_source_id
+          union all
+          select 'inp_2', null::text
+          union all
+          select 'inp_3', null::text
+          union all
+          select 'inp_4', null::text
+          union all
+          select 'inp_ed_only', null::text
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'male' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ward' as id, 'fac_1' as facility_id
+          union all
+          select 'loc_ed', 'fac_1'
+
+      # BL-014: inp_1 and inp_2 have discharge records; inp_3 and inp_4 do not.
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select 'inp_1' as encounter_id, 'disp_home' as disposition_id
+          union all
+          select 'inp_2', 'disp_transfer'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'ref_gp' as id, 'General practitioner referral' as name
+          union all
+          select 'disp_home', 'Home'
+          union all
+          select 'disp_transfer', 'Transfer to another facility'
+
+      # BL-013: inp_1 carries two is_primary rows -- the earlier (A00.0) must win. inp_2 has
+      # one principal diagnosis. inp_3 and inp_4 have none.
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select 'co_1' as condition_occurrence_id, 'inp_1' as visit_occurrence_id, true as is_primary, 'A00.0' as condition_source_value, '2024-06-01 11:00'::timestamp as condition_start_datetime
+          union all
+          select 'co_2', 'inp_1', true, 'B00.0', '2024-06-01 12:00'::timestamp
+          union all
+          select 'co_3', 'inp_1', false, 'E11.9', '2024-06-01 11:30'::timestamp
+          union all
+          select 'co_4', 'inp_2', true, 'J45.9', '2024-06-02 10:00'::timestamp
+
+    expect:
+      format: sql
+      rows: |
+        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition
+        union all
+        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility'
+        union all
+        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded'
+        union all
+        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded'
