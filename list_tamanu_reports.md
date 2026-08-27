@@ -40,6 +40,7 @@ The below information is included for each discharge:
 - Discharging clinician named on the form, and the user who completed the form. These are often different people.
 - Whether the discharge was automatic. Tamanu discharges some encounters automatically, for example outpatient encounters left open overnight, and encounters closed on registering a patient death. Use the discharge type filter to include or exclude these.
 - Number of times the discharge was edited after it was first recorded.
+- Primary and secondary diagnoses recorded against the encounter, with their diagnosis codes in separate columns.
 
 Discharges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.
 
@@ -181,6 +182,21 @@ This report generates a list of all active encounters with their associated diet
 Facility, Area
 
 **Default date range**: allTime
+
+
+---
+
+### Encounter prescription discharge summary *(sensitive version available)*
+
+**Report Description**
+
+This report shows quantity of medication marked for pharmacy discharge for a given drug within a specified date range, based on encounter prescriptions. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
 
 
 ---
