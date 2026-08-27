@@ -1,0 +1,29 @@
+-- BL-001: Source rows are prescriptions from ds__encounter_prescriptions marked as selected
+-- for pharmacy discharge -- the pre-dispensing-module proxy for "sent to / dispensed by
+-- pharmacy", used by deployments that have not gone live on the pharmacy dispensing module.
+-- BL-002: No date cutoff -- this report is ongoing, for deployments that have never migrated
+-- to the pharmacy dispensing module.
+select
+    ep.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
+    ep.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
+    sum(ep.quantity) as "{{ translate_label('encounterPrescriptionQuantity') }}"
+from {{ ref('ds__encounter_prescriptions') }} ep
+where
+    ep.is_selected_for_discharge = true
+    and
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else ep.facility_id = {{ parameter('facilityId') }}
+    end
+    and
+    case
+        when {{ parameter('medicationId') }} is null then true
+        else ep.medication_id = {{ parameter('medicationId') }}
+    end
+    and
+    {{ to_user_selected_timezone('ep.datetime') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
+    and
+    {{ to_user_selected_timezone('ep.datetime') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
+group by ep.medication_id, ep.medication, ep.medication_code
