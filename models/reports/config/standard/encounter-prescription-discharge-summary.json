@@ -1,0 +1,28 @@
+{
+  "query": "replace this",
+  "name": "Encounter prescription discharge summary",
+  "status": "published",
+  "notes": "This report shows quantity of medication marked for pharmacy discharge for a given drug within a specified date range, based on encounter prescriptions. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Drug",
+        "name": "medicationId",
+        "suggesterEndpoint": "drug"
+      }
+    ]
+  }
+}
