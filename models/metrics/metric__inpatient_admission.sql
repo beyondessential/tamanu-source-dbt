@@ -13,8 +13,8 @@
 --
 -- The registry carries the definition; this model is its implementation (BL-001).
 
-with inpatient_visits as (
-    select * from {{ ref('int__inpatient_visits') }}
+with inpatient_admission as (
+    select * from {{ ref('int__inpatient_admission') }}
 )
 
 -- BL-005: whether the admission arrived via the emergency department is a disaggregation
@@ -66,4 +66,4 @@ select
     -- BL-015: total length of stay as an inpatient, in minutes. Unbanded, for the same
     -- reason as age.
     length_of_stay__minutes
-from inpatient_visits
+from inpatient_admission
