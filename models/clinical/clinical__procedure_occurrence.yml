@@ -1,0 +1,97 @@
+version: 2
+
+models:
+  - name: clinical__procedure_occurrence
+    description: >-
+      OMOP-lite PROCEDURE_OCCURRENCE domain. One row per recorded procedure. Free-text
+      note/completed_note stay behind at bases/procedures, which is why this model can be
+      unrestricted where that one is restricted.
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      classification: internal
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_clinical__procedure_occurrence_grain
+          arguments:
+            combination_of_columns:
+              - procedure_occurrence_id
+          config:
+            severity: error
+    columns:
+      - name: procedure_occurrence_id
+        data_type: character varying(255)
+        description: The Tamanu procedure id.
+        data_tests:
+          - not_null:
+              name: ac_clinical__procedure_occurrence_id_not_null
+          - unique:
+              name: ac_clinical__procedure_occurrence_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: The patient the procedure was performed on, reached through the encounter.
+        data_tests:
+          - relationships:
+              name: ac_clinical__procedure_occurrence_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: procedure_date
+        data_type: date
+        description: The date the procedure was performed.
+        data_tests:
+          - not_null:
+              name: ac_clinical__procedure_occurrence_procedure_date_not_null
+      - name: procedure_datetime
+        data_type: timestamp
+        description: >-
+          The date and, where recorded, the time of day the procedure started. Midnight where no
+          start time was recorded.
+        data_tests:
+          - not_null:
+              name: ac_clinical__procedure_occurrence_procedure_datetime_not_null
+      - name: procedure_type_concept_id
+        data_type: integer
+        description: >-
+          Constant 32817 (EHR administrative record) -- provenance, not the procedure's own
+          type. The procedure itself is procedure_source_value/procedure_source_name;
+          procedure_concept_id is deferred to the future vocab__ layer.
+      - name: provider_id
+        data_type: character varying(255)
+        description: The clinician who performed the procedure.
+        data_tests:
+          - relationships:
+              name: ac_clinical__procedure_occurrence_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: The encounter the procedure was recorded against.
+        data_tests:
+          - relationships:
+              name: ac_clinical__procedure_occurrence_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: location_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu location the procedure was performed at -- not necessarily the encounter's
+          own care_site_id (e.g. a theatre rather than the admission ward). Carried as the raw
+          Tamanu id; resolving it to a facility is a consumer-layer concern, the same convention
+          clinical__visit_occurrence's care_site_id uses.
+      - name: procedure_source_value
+        data_type: character varying(255)
+        description: The procedure type's reference-data code, as recorded. NULL where unresolved.
+      - name: procedure_source_name
+        data_type: character varying(255)
+        description: The procedure type's reference-data name, as recorded. NULL where unresolved.
+      - name: is_completed
+        data_type: boolean
+        description: >-
+          Whether the procedure was marked completed. Coalesced to false -- never NULL.
