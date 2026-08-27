@@ -30,6 +30,35 @@ where trim(d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- inpatient_admission's 30-day readmission flag: true where the same patient's
+        -- immediately preceding admission discharged no more than 30 days before this one
+        -- started
+        'is_readmission_within_30_days',
+        -- program_registry_enrolment's registry: which programme the enrolment is in. One
+        -- metric serves every registry a deployment configures, so the registry is a
+        -- disaggregation rather than a metric_id per programme.
+        'registry_code',
+        -- program_registry_enrolment's cascade position -- the registry's own clinical status
+        -- list, which no metric can enumerate for a registry it has not seen.
+        'clinical_status_code',
+        -- program_registry_enrolment's registration state, active or inactive
+        'registration_status',
+        -- program_registry_enrolment's currently-at: the facility or village the patient is
+        -- followed at now, which is not necessarily the one that registered them
+        -- (facility_id). Read with currently_at_type, which names which of the two it is.
+        'currently_at_id',
+        'currently_at_type',
+        -- program_registry_enrolment's exit provenance: whether the enrolment's end was
+        -- recorded as a deactivation or inferred from the change log. Grouped by a service
+        -- auditing a retention figure, so it is part of the contract rather than incidental.
+        'episode_end_source',
+        -- who_dak_hiv_dsd_retention_*: whole months since the client's DSD model started, so a
+        -- consumer selects Annex C's 12/24/36/48/60-month cohort rather than the model carrying
+        -- five near-identical metrics.
+        'months_on_dsd',
+        -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
+        -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
+        'key_population',
         -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
         -- metric per setting. It is the encounter's type as it now stands, not the phase the
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
@@ -45,5 +74,11 @@ where trim(d) not in (
         'diagnosis_certainty',
         -- encounter_diagnosis's principal/secondary flag, so a casemix view can count each
         -- encounter once without a separate primary-diagnosis metric.
-        'is_primary'
+        'is_primary',
+        -- procedure's recorded procedure, as code and as readable label. Emitted ungrouped,
+        -- the same reasoning as diagnosis/diagnosis_code above.
+        'procedure',
+        'procedure_code',
+        -- procedure's completion flag
+        'is_completed'
     )

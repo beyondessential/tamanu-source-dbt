@@ -89,6 +89,7 @@ D5 wide format, plus seven disaggregation/measure columns.
 | `principal_diagnosis__icd10_chapter` | text | WHO ICD-10 chapter, `'Not recorded'` or `'Unclassified'` (BL-013). Always populated (AC-013) |
 | `discharge_disposition` | text | `'Not recorded'` or the disposition name (BL-014). Always populated (AC-014) |
 | `length_of_stay__minutes` | numeric | Admission to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
+| `is_readmission_within_30_days` | boolean | True where the same patient's immediately preceding admission discharged no more than 30 days before this one started (BL-016). Always populated (AC-017) |
 
 ## Business logic
 
@@ -181,6 +182,15 @@ D5 wide format, plus seven disaggregation/measure columns.
   minutes, held to 2 dp. NULL while the encounter is open. Unbanded — a length-of-stay band is
   a presentation choice a deployment may set differently, so the metric emits the duration and
   the consumer's data table bands it.
+- **BL-016 (30-day readmission):** `is_readmission_within_30_days` is true where this patient's
+  immediately preceding admission (by `admission_start__datetime`) discharged no more than 30
+  days before this one started. The patient identifier used to order admissions against each
+  other is internal to `int__inpatient_admission` and is never selected into this model's
+  output — the same derive-but-don't-expose pattern BL-004's `age_years` already uses against
+  the birth date, so this does not change the BL-010 classification. Coalesced to `false` (never
+  NULL, for the same reason as BL-005 and BL-012) where there is no previous admission, the
+  previous one is still open (no `visit_end__datetime` to measure the gap from), or the two
+  overlap (a data-entry anomaly, not a readmission).
 
 ## Acceptance criteria
 
@@ -202,12 +212,13 @@ D5 wide format, plus seven disaggregation/measure columns.
 | AC-014 | `discharge_disposition` is `not_null` | BL-014 | `not_null` |
 | AC-015 | `length_of_stay__minutes` is non-negative where present | BL-015 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | The D5 projection over the shared base: `period_end` is the encounter end, the diagnosis code is grouped to its chapter here, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_016_metric__inpatient_admission_projection` |
+| AC-017 | `is_readmission_within_30_days` is `not_null` | BL-016 | `not_null` |
 
 ## Registry entry
 
 One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`,
 `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition`.
+`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days`.
 
 ## Dependencies
 
@@ -262,3 +273,4 @@ this view, add it here, and update `documentations/metrics/inpatient.yml` `statu
 | OQ-001 | Should a follow-up `metric__inpatient_transfer` (ward/department transfers within an admission) be added, mirroring `data-staging`'s `ds__inpatient_transfers`? | bes-maui | TBD |
 | OQ-002 | Bed occupancy / census (`data-staging`'s `ds__inpatient_census`, `fct_bed_occupancy`) is a point-in-time snapshot, not a per-event grain — it does not fit the D5 metric shape used here and would need a date-spine model. Deferred out of scope for this spec. | bes-maui | TBD |
 | OQ-003 | Which Tupaia dashboard or Tamanu report is the first consumer, and does it need `admission_ward_id` resolved to a name at the data-table layer (as `principal_diagnosis__icd10_chapter` etc. are)? | bes-maui | TBD |
+| OQ-004 | `is_readmission_within_30_days` (BL-016) counts a readmission to *any* facility in the deployment, not just the discharging one — a patient discharged from one facility and admitted to another 10 days later still counts. Revisit if a consumer specifically wants same-facility-only. | bes-maui | TBD |
