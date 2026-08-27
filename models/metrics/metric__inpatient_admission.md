@@ -170,3 +170,22 @@ bands it.
 A measure, not a dimension: continuous, so no data table exposes it as a filter and it is
 absent from the registry's disaggregations. NULL while the encounter is open.
 {% enddocs %}
+
+{% docs metric__inpatient_admission__is_readmission_within_30_days %}
+True where the immediately preceding admission for the same patient discharged no more than 30
+days before this one started.
+
+Computed by ordering each patient's admissions by start time internally -- the patient
+identifier used to do that is never selected into this model's output, the same "derive from,
+don't expose" pattern age_years already uses against the birth date. This row still carries no
+patient identifier: the flag says an admission followed another one within 30 days, not which
+admission, when, or for whom.
+
+A disaggregation, so a consumer groups by it or filters to it -- e.g. the share of admissions
+that are readmissions is sum(value_numeric) filter (where is_readmission_within_30_days) /
+sum(value_numeric), the same ratio shape as is_admitted_via_emergency.
+
+Never NULL -- the data tables expose this as an array filter, and Tupaia's array filter drops
+NULL rows, so the model coalesces to false where there is no previous admission, the previous
+one is still open, or the two overlap (a data-entry anomaly, not a readmission).
+{% enddocs %}
