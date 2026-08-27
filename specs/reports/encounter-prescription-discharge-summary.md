@@ -16,26 +16,20 @@
 
 ## Purpose
 
-Tamanu has two mechanisms for recording medication given to a patient: the newer pharmacy
-dispensing module (`medication_dispenses`, reported by `medication-dispensed-summary` /
-`sensitive-medication-dispensed-summary`), and the older encounter-prescriptions workflow, where
-a prescription marked `is_selected_for_discharge` is the pre-dispensing-module proxy for "sent to
-/ dispensed by pharmacy".
+Tamanu records discharge medication in two different places. `is_selected_for_discharge` on
+`encounter_prescriptions` is set by the clinician at discharge, for every medication the patient
+leaves with -- whether or not it goes through pharmacy. `medication_dispenses` is a separate,
+later record: pharmacy staff physically handing the medication over, using Tamanu's own dispense
+workflow.
 
-`medication-dispensed-summary` only reads `medication_dispenses`, so it is always empty for any
-deployment that has not gone live on the pharmacy dispensing module and is still recording
-discharge medication through encounter prescriptions -- Fiji is the case that surfaced this (a
-support ticket investigating why the report was blank found `medication_dispenses` genuinely has
-zero rows there, confirmed directly against production).
+`medication-dispensed-summary` only reads `medication_dispenses`, so it is always empty for a
+deployment where pharmacy doesn't use that workflow -- even though clinicians are still
+discharging patients with medication. Fiji is the first such case.
 
-`tamanu-dbt-msf` already solved the same underlying source-data problem for its own migration
-with `msf-medication-dispensed-summary-historical`, which reads `ds__encounter_prescriptions`
-filtered on `is_selected_for_discharge = true` with a hard cutoff at their dispensing-module
-go-live date. This report reuses that same source-data pattern (without a cutoff, for a
-deployment that has never migrated), but its output shape follows what the requester (Fiji, via
-Kaushik) actually asked for -- item code, item name, and an aggregate quantity for the selected
-date range -- which matches `medication-dispensed-summary`'s shape, not the MSF historical
-report's per-day breakdown with a patient count.
+This report reads `ds__encounter_prescriptions` filtered on `is_selected_for_discharge = true` --
+the same source pattern `msf-medication-dispensed-summary-historical` (`tamanu-dbt-msf`) uses --
+but with no cutoff date, and with `medication-dispensed-summary`'s output shape: item code, item
+name, and an aggregate quantity for the selected date range.
 
 **Consumer:** Tamanu reporting UI. Fiji in the first instance.
 
