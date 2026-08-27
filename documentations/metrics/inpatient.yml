@@ -40,6 +40,7 @@ metrics:
   - is_admitted_via_emergency
   - principal_diagnosis__icd10_chapter
   - discharge_disposition
+  - is_readmission_within_30_days
   variant_of: null
   owner: bes-maui
   status: draft
