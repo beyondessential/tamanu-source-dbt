@@ -22,6 +22,14 @@ where trim(d) not in (
         'ed_start__hour',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition',
+        -- inpatient_admission's ward (department) the patient was admitted to
+        'admission_ward_id',
+        -- inpatient_admission's referral source, carried as recorded
+        'admission_source',
+        -- inpatient_admission's admission-mode flag: a prior ED/triage/observation phase
+        'is_admitted_via_emergency',
+        -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
+        'principal_diagnosis__icd10_chapter',
         -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
         -- metric per setting. It is the encounter's type as it now stands, not the phase the
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
