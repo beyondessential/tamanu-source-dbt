@@ -190,7 +190,7 @@ Facility, Area
 
 **Report Description**
 
-This report shows quantity of medication marked for pharmacy discharge for a given drug within a specified date range, based on encounter prescriptions. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.
+This report shows the total quantity of medication selected for discharge for a given drug within a specified date range, based on what clinicians recorded at discharge rather than pharmacy dispensing records. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.
 
 **Filters**
 
