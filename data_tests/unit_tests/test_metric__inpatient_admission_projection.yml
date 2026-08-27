@@ -7,21 +7,23 @@ unit_tests:
       hospital -- at 'minute' granularity, and period_end stays NULL while the encounter is
       open. BL-011: value_numeric is 1 per admission and subject_id is the encounter id.
       BL-013: the principal diagnosis code is grouped to its ICD-10 chapter here rather than
-      in the base. The inclusion rule and the derived timings are covered by
-      ac_009_int__inpatient_admission_derivations against int__inpatient_admission.
+      in the base. BL-016: is_readmission_within_30_days passes through unchanged -- it is
+      computed in the base, not recomputed here. The inclusion rule and the derived timings are
+      covered by ac_009_int__inpatient_admission_derivations against int__inpatient_admission.
 
     given:
       - input: ref('int__inpatient_admission')
         format: sql
         rows: |
-          select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition
+          select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
           union all
-          -- open encounter: no end, and not yet diagnosed
-          select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::numeric, null::text, 'Not recorded'
+          -- open encounter: no end, and not yet diagnosed. is_readmission_within_30_days true,
+          -- to show the projection passes it through unchanged rather than recomputing it.
+          select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::numeric, null::text, 'Not recorded', true
 
     expect:
       format: sql
       rows: |
-        select 'inpatient_admission' as metric_id, null::text as variant_id, 'inp_1'::varchar as subject_id, '2024-06-01 10:00'::timestamp as period_start, '2024-06-05 12:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 33 as age_years, 'dept_med' as admission_ward_id, 'General practitioner referral' as admission_source, false as is_admitted_via_emergency, 'I Certain infectious and parasitic diseases' as principal_diagnosis__icd10_chapter, 'Home' as discharge_disposition, 5880.00::numeric as length_of_stay__minutes
+        select 'inpatient_admission' as metric_id, null::text as variant_id, 'inp_1'::varchar as subject_id, '2024-06-01 10:00'::timestamp as period_start, '2024-06-05 12:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 33 as age_years, 'dept_med' as admission_ward_id, 'General practitioner referral' as admission_source, false as is_admitted_via_emergency, 'I Certain infectious and parasitic diseases' as principal_diagnosis__icd10_chapter, 'Home' as discharge_disposition, 5880.00::numeric as length_of_stay__minutes, false as is_readmission_within_30_days
         union all
-        select 'inpatient_admission', null::text, 'inp_3'::varchar, '2024-06-03 14:00'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 33, null::text, 'Not recorded', false, 'Not recorded', 'Not recorded', null::numeric
+        select 'inpatient_admission', null::text, 'inp_3'::varchar, '2024-06-03 14:00'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 33, null::text, 'Not recorded', false, 'Not recorded', 'Not recorded', null::numeric, true
