@@ -65,5 +65,7 @@ select
     discharge_disposition,
     -- BL-015: total length of stay as an inpatient, in minutes. Unbanded, for the same
     -- reason as age.
-    length_of_stay__minutes
+    length_of_stay__minutes,
+    -- BL-016
+    is_readmission_within_30_days
 from inpatient_admission

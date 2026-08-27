@@ -11,18 +11,27 @@ unit_tests:
       admission_source falls back to 'Not recorded' for a missing referral source. BL-013: a
       second is_primary row does not duplicate the admission -- the earliest wins, and a
       missing principal diagnosis stays NULL (the metric layer applies the 'Not recorded'
-      label). BL-014: discharge_disposition falls back to 'Not recorded' for a missing
+      label).       BL-014: discharge_disposition falls back to 'Not recorded' for a missing
       discharge record. BL-015: length of stay is emitted in minutes, unbanded, NULL while the
-      encounter is open.
+      encounter is open. BL-016: is_readmission_within_30_days is true only where the same
+      patient's immediately preceding admission discharged no more than 30 days before this one
+      started -- false for no previous admission, a previous admission still open, an
+      overlapping pair, or a gap over 30 days.
 
     given:
       # inp_1 is a direct admission: one segment, concept 9201.
       # inp_2 is admitted via the ED: an ED segment (9203) precedes the admission segment
       #       (9201) -- the admission is attributed to the later segment, not the first.
+      #       Also exercises BL-016's overlap guard: inp_2 starts before inp_1 (its person's
+      #       first admission in start order) has been discharged.
       # inp_3 is a direct admission still open: no visit_end, no discharge, no diagnosis.
       # inp_4 is a direct admission with no referral source, no discharge record and no
       #       principal diagnosis -- exercises every 'Not recorded' / NULL fallback at once.
+      #       Also still-open-previous-admission for BL-016 (inp_3 has no visit_end).
       # inp_ed_only has no segment at concept 9201 at all -- out of scope, no row expected.
+      # per_2's three admissions are in genuine chronological sequence, for BL-016: inp_5 has no
+      #       previous admission (false); inp_6 starts 7 days after inp_5's discharge (true);
+      #       inp_7 starts 44 days after inp_6's discharge (false -- over 30 days).
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
@@ -37,6 +46,12 @@ unit_tests:
           select 'vd_4', 'inp_4', 'per_1', 'loc_ward', 'dept_med', '2024-06-04 05:00'::timestamp, 9201
           union all
           select 'vd_ed_only', 'inp_ed_only', 'per_1', 'loc_ed', 'dept_ed', '2024-06-07 09:00'::timestamp, 9203
+          union all
+          select 'vd_5', 'inp_5', 'per_2', 'loc_ward', 'dept_med', '2024-07-01 09:00'::timestamp, 9201
+          union all
+          select 'vd_6', 'inp_6', 'per_2', 'loc_ward', 'dept_med', '2024-07-10 09:00'::timestamp, 9201
+          union all
+          select 'vd_7', 'inp_7', 'per_2', 'loc_ward', 'dept_med', '2024-08-25 09:00'::timestamp, 9201
 
       - input: ref('clinical__visit_occurrence')
         format: sql
@@ -50,6 +65,12 @@ unit_tests:
           select 'inp_4', 9201, '2024-06-04 20:00'::timestamp
           union all
           select 'inp_ed_only', 9203, '2024-06-07 10:00'::timestamp
+          union all
+          select 'inp_5', 9201, '2024-07-03 09:00'::timestamp
+          union all
+          select 'inp_6', 9201, '2024-07-12 09:00'::timestamp
+          union all
+          select 'inp_7', 9201, '2024-08-27 09:00'::timestamp
 
       # BL-012: inp_1 has a referral source; the rest do not.
       - input: ref('encounters')
@@ -64,11 +85,19 @@ unit_tests:
           select 'inp_4', null::text
           union all
           select 'inp_ed_only', null::text
+          union all
+          select 'inp_5', null::text
+          union all
+          select 'inp_6', null::text
+          union all
+          select 'inp_7', null::text
 
       - input: ref('clinical__person')
         format: sql
         rows: |
           select 'per_1' as person_id, 'male' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth
+          union all
+          select 'per_2', 'female', 1985, 3, 20
 
       - input: ref('locations')
         format: sql
@@ -77,7 +106,8 @@ unit_tests:
           union all
           select 'loc_ed', 'fac_1'
 
-      # BL-014: inp_1 and inp_2 have discharge records; inp_3 and inp_4 do not.
+      # BL-014: inp_1 and inp_2 have discharge records; inp_3, inp_4 and per_2's admissions do
+      # not.
       - input: ref('discharges')
         format: sql
         rows: |
@@ -95,7 +125,7 @@ unit_tests:
           select 'disp_transfer', 'Transfer to another facility'
 
       # BL-013: inp_1 carries two is_primary rows -- the earlier (A00.0) must win. inp_2 has
-      # one principal diagnosis. inp_3 and inp_4 have none.
+      # one principal diagnosis. inp_3, inp_4 and per_2's admissions have none.
       - input: ref('clinical__condition_occurrence')
         format: sql
         rows: |
@@ -110,10 +140,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition
+        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
         union all
-        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility'
+        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false
         union all
-        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded'
+        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded'
+        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false
+        union all
+        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
+        union all
+        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true
+        union all
+        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
