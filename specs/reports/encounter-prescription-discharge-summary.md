@@ -62,9 +62,9 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 
 | Column (translation key) | Type | Description |
 |---|---|---|
-| `prescriptionMedication` | text | Medication name -- "item name" in the request (reused label, shared with `medication-dispensed-summary`) |
-| `prescriptionMedicationCode` | text | Medication reference-data code -- "item code" in the request (reused label) |
-| `prescriptionQuantity` | integer | Sum of `quantity` across matching prescriptions for the medication, for the whole selected date range -- "aggregate quantity dispensed within selected time period" in the request (reused label) |
+| `encounterPrescriptionMedication` | text | Medication name |
+| `encounterPrescriptionMedicationCode` | text | Medication reference-data code |
+| `encounterPrescriptionQuantity` | integer | Sum of `quantity` across matching prescriptions for the medication, for the whole selected date range |
 
 ## Business logic
 
@@ -72,21 +72,17 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
   filtered to `is_selected_for_discharge = true` -- the pre-dispensing-module proxy for a
   prescription being sent to / dispensed by pharmacy, mirroring the source logic of
   `msf-medication-dispensed-summary-historical.sql` in `tamanu-dbt-msf`.
-- **BL-002:** Unlike the MSF historical report, there is no cutoff date, since this is an
-  ongoing report for deployments that have never migrated off encounter prescriptions, not a
-  bridge to a migration date. See Risks for what to do if a deployment using this report later
-  migrates.
+- **BL-002:** No date cutoff -- this is an ongoing report for deployments that have never
+  migrated off encounter prescriptions. See Risks for what to do if a deployment using this
+  report later migrates.
 - **BL-003:** Date range filters on `datetime` (the prescription's local date and time, per
   `ds__encounter_prescriptions.yml`), converted to the viewer-selected timezone, matching the
   convention in `medication-dispensed-summary.sql`.
-- **BL-004:** Output columns and their translation keys (`prescriptionMedication`,
-  `prescriptionMedicationCode`, `prescriptionQuantity`) are reused verbatim from
-  `medication-dispensed-summary` / `sensitive-medication-dispensed-summary` rather than given new
-  keys, since the columns mean the same thing (medication identity and a summed quantity) --
-  avoids duplicate translation labels for an identical concept. Deliberately does not follow
-  `msf-medication-dispensed-summary-historical`'s column names or per-day shape: the requester
-  asked only for item code, item name, and an aggregate quantity for the selected period, with no
-  date breakdown or patient count.
+- **BL-004:** Output columns and their translation keys (`encounterPrescriptionMedication`,
+  `encounterPrescriptionMedicationCode`, `encounterPrescriptionQuantity`) are shared with
+  `medication-dispensed-summary` / `sensitive-medication-dispensed-summary` and
+  `prescription-line-list` / `sensitive-prescription-line-list`, since the columns mean the same
+  thing across all of them: medication identity and a quantity.
 - **BL-005:** Grouped by `medication_id`, `medication`, `medication_code` -- one row per
   medication for the whole selected range, matching the grain and grouping of
   `medication-dispensed-summary`.
