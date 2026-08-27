@@ -166,3 +166,11 @@ models:
               arguments:
                 min_value: 0
                 row_condition: "length_of_stay__minutes is not null"
+      - name: is_readmission_within_30_days
+        data_type: boolean
+        description: "{{ doc('metric__inpatient_admission__is_readmission_within_30_days') }}"
+        data_tests:
+          # The model coalesces to false precisely so this holds: Tupaia's array filter drops
+          # NULL rows, so a NULL here would silently disappear the admission.
+          - not_null:
+              name: ac_017_metric__inpatient_admission_is_readmission_within_30_days_not_null
