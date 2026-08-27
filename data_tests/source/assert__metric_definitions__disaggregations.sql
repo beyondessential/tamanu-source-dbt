@@ -30,6 +30,10 @@ where trim(d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- inpatient_admission's 30-day readmission flag: true where the same patient's
+        -- immediately preceding admission discharged no more than 30 days before this one
+        -- started
+        'is_readmission_within_30_days',
         -- program_registry_enrolment's registry: which programme the enrolment is in. One
         -- metric serves every registry a deployment configures, so the registry is a
         -- disaggregation rather than a metric_id per programme.
@@ -70,5 +74,11 @@ where trim(d) not in (
         'diagnosis_certainty',
         -- diagnosis's principal/secondary flag, so a casemix view can count each encounter
         -- once without a separate primary-diagnosis metric.
-        'is_primary'
+        'is_primary',
+        -- procedure's recorded procedure, as code and as readable label. Emitted ungrouped,
+        -- the same reasoning as diagnosis/diagnosis_code above.
+        'procedure',
+        'procedure_code',
+        -- procedure's completion flag
+        'is_completed'
     )
