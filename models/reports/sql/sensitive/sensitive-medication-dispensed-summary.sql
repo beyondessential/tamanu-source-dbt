@@ -1,7 +1,7 @@
 select
-    md.medication as "{{ translate_label('prescriptionMedication') }}",
-    md.medication_code as "{{ translate_label('prescriptionMedicationCode') }}",
-    sum(md.quantity) as "{{ translate_label('prescriptionQuantity') }}"
+    md.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
+    md.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
+    sum(md.quantity) as "{{ translate_label('encounterPrescriptionQuantity') }}"
 from {{ ref('ds__sensitive_medication_dispenses') }} md
 where
     case
