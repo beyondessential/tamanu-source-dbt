@@ -8,10 +8,10 @@ unit_tests:
       open. BL-011: value_numeric is 1 per admission and subject_id is the encounter id.
       BL-013: the principal diagnosis code is grouped to its ICD-10 chapter here rather than
       in the base. The inclusion rule and the derived timings are covered by
-      ac_009_int__inpatient_visits_derivations against int__inpatient_visits.
+      ac_009_int__inpatient_admission_derivations against int__inpatient_admission.
 
     given:
-      - input: ref('int__inpatient_visits')
+      - input: ref('int__inpatient_admission')
         format: sql
         rows: |
           select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition

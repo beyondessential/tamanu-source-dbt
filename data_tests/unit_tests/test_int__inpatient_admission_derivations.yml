@@ -1,6 +1,6 @@
 unit_tests:
-  - name: ac_009_int__inpatient_visits_derivations
-    model: int__inpatient_visits
+  - name: ac_009_int__inpatient_admission_derivations
+    model: int__inpatient_admission
     description: >
       Behavioural coverage for the shared admission base. BL-003: an admission is the
       earliest segment whose OMOP visit concept is 9201 -- for a direct admission that is the
