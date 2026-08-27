@@ -82,6 +82,11 @@ admissions as (
         -- BL-011: the encounter id is the subject. One admission segment per encounter, so
         -- this is unique across the rows emitted here.
         adm.visit_occurrence_id,
+        -- BL-016: carried only to order this patient's admissions against each other, below --
+        -- never selected past the next CTE, which is what keeps this model unrestricted
+        -- (BL-010): the readmission flag says an admission followed another one within 30 days,
+        -- not which admission, when, or for whom.
+        adm.person_id,
         adm.admission_start__datetime,
         -- Encounter end is discharge from hospital. NULL = encounter still open.
         vo.visit_end_datetime as visit_end__datetime,
@@ -145,6 +150,18 @@ admissions as (
     -- BL-010: no facilities.is_sensitive filter, so this covers standard and sensitive
     -- facilities alike.
     where adm.admission_rank = 1
+),
+
+-- BL-016: 30-day readmission. previous_discharge__datetime is this patient's immediately
+-- preceding admission's visit_end__datetime, found by ordering their admissions by start time --
+-- person_id exists only to define that ordering and is dropped after this CTE.
+admissions_with_readmission as (
+    select
+        *,
+        lag(visit_end__datetime) over (
+            partition by person_id order by admission_start__datetime
+        ) as previous_discharge__datetime
+    from admissions
 )
 
 select
@@ -166,5 +183,17 @@ select
     principal_diagnosis_code,
     -- BL-014: 'Not recorded' covers an admission with no discharge record. Never NULL, for the
     -- same reason as admission_source.
-    coalesce(discharge_disposition_raw, 'Not recorded') as discharge_disposition
-from admissions
+    coalesce(discharge_disposition_raw, 'Not recorded') as discharge_disposition,
+    -- BL-016: true only where the immediately preceding admission for the same patient
+    -- discharged no more than 30 days before this one started. The
+    -- admission_start__datetime >= previous_discharge__datetime guard excludes an overlapping
+    -- pair (a data-entry anomaly, not a readmission) as well as the ordinary case of two
+    -- genuinely separate admissions. False, not NULL, where there is no previous admission, or
+    -- the previous one is still open (previous_discharge__datetime NULL) -- an open admission
+    -- has no discharge yet to measure the gap from.
+    coalesce(
+        admission_start__datetime >= previous_discharge__datetime
+        and admission_start__datetime - previous_discharge__datetime <= interval '30 days',
+        false
+    ) as is_readmission_within_30_days
+from admissions_with_readmission
