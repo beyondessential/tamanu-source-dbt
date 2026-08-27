@@ -1,0 +1,46 @@
+# AIHW-aligned inpatient (admitted patient care) metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: inpatient_admission
+  kind: metric
+  name: Inpatient admissions
+  description: >-
+    Hospital admissions, from becoming an inpatient to discharge from hospital. One row per
+    admission.
+  numerator_description: >-
+    Encounters with a segment whose first recorded instance is typed as an inpatient visit,
+    counted on the date that segment began
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '695137'
+  definition_rationale: >-
+    Admission/discharge dates follow AIHW METeOR "Episode of admitted patient care" admission
+    date (695137) and separation date (270025). AIHW's admission mode (269976) and mode of
+    separation (722644) are fixed, small vocabularies with no guaranteed mapping to Tamanu's
+    deployment-configured reference data, so admission_source and discharge_disposition are
+    carried as-recorded (BES composition) rather than implementations of those coded
+    vocabularies -- is_admitted_via_emergency covers the one admission-mode category Tamanu can
+    derive unambiguously. Pending alignment with the deploying country's national HMIS
+    definition.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  - sex
+  - admission_ward_id
+  - admission_source
+  - is_admitted_via_emergency
+  - principal_diagnosis__icd10_chapter
+  - discharge_disposition
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__inpatient_admission.md
