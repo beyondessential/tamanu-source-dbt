@@ -81,6 +81,62 @@ The generated assets are saved in the `compiled/` folder. The documentation is v
 - Compiled report JSON files: `compiled/reports/`
 - Import script: `compiled/reports/importReports.js`
 - Versioned documentation: `compiled/v{VERSION}/reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
+- Versioned report catalogue: `compiled/v{VERSION}/report-catalogue-v{VERSION}-{DEPLOYMENT}.html`
+  (see [Report catalogue](#report-catalogue-non-technical-documentation))
+
+## Report catalogue (non-technical documentation)
+
+dbt docs documents the model layer for analysts and developers. The report catalogue
+answers the question everyone else asks: *which report do I run, what can I filter it
+by, and what columns will I get back?*
+
+```bash
+python scripts/generate_report_docs.py
+```
+
+This writes two files into `compiled/v{VERSION}/`:
+
+- `report-catalogue-v{VERSION}-standard.html` — a self-contained, searchable page
+  (~90 KB, works offline, no external assets)
+- `report-catalogue-v{VERSION}-standard.json` — the same data, machine-readable
+
+Everything is derived, nothing is hand-written:
+
+| Source | Supplies |
+| --- | --- |
+| `models/reports/config/standard/*.json` | Name, description, filters, default date range |
+| `models/reports/sql/standard/*.sql` and `macros/reports/*.sql` | Output columns, in order |
+| `csv/report_translations_standard.csv` | The user-facing text of each column header |
+| `models/reports/config/sensitive/` | Whether a sensitive variant exists |
+
+Because the column headers come from the same translation CSV that `translate_label`
+reads at compile time, **no database connection is required** — the generator runs
+anywhere the repository is checked out, and `build_reporting_assets.py` calls it as
+part of a release build.
+
+The output is a pure function of those inputs, so a rebuild is byte-identical unless
+one of them changed. CI enforces that: edit a report config or its SQL without
+regenerating the catalogue and `checks.yml` fails. Run the generator and commit the
+result alongside the change.
+
+Standard reports only. The generator reads `models/reports/config/standard`, which
+deployment repos do not carry, so `build_reporting_assets.py` skips it for them.
+
+### Versioning and publication
+
+Each release publishes to its own `M.m.x` prefix in the artifacts bucket, alongside
+the dbt docs and reporting schema:
+
+```
+https://tamanu-translations.data.bes.au/2.62.x/report-catalogue-v2.62.x-standard.html
+```
+
+Older versions stay where they are, so a deployment running 2.60.x keeps its matching
+documentation. The in-page version picker moves between the versions that have a
+published catalogue; `FIRST_CATALOGUE_VERSION` in the generator is the floor, so the
+picker never links to a release that predates the catalogue. Each version is also
+registered with the meta-server as the `report-catalogue` artifact, the same way
+`reporting-docs` and `reporting-schema` are.
 
 ## Sensitive Facility Reporting
 

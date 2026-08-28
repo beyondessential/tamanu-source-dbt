@@ -25,6 +25,9 @@ uv.lock
 
 # Build and generated files
 compiled/*/*.json
+# ...but the report catalogue's JSON is half of a published artifact pair, so it is
+# tracked: a plain `git add` must not commit the .html and drop the .json beside it.
+!compiled/*/report-catalogue-*.json
 /logs/
 macros/default_translations.sql
 models/surveys/

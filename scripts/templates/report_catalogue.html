@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tamanu report catalogue</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --navy: #123049;
+    --accent: #0a7a8c;
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #dfe3e8;
+    --text: #1b2733;
+    --muted: #5c6b7a;
+    --chip: #eef2f5;
+    --warn-bg: #fdf3e3;
+    --warn-border: #e6c98b;
+    --warn-text: #6b4a12;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --navy: #0d1f2e;
+      --accent: #4fc3d4;
+      --bg: #10161c;
+      --surface: #18212a;
+      --border: #2c3844;
+      --text: #e3e9ef;
+      --muted: #97a5b3;
+      --chip: #222d38;
+      --warn-bg: #2c2413;
+      --warn-border: #6b5626;
+      --warn-text: #e8cf9a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+  header.masthead { background: var(--navy); color: #fff; padding: 1.75rem 0 1.5rem; }
+  header.masthead .wrap { padding-bottom: 0; }
+  header.masthead h1 { margin: 0 0 .35rem; font-size: 1.6rem; letter-spacing: -.01em; }
+  header.masthead p { margin: 0; color: #b9cbdb; font-size: .95rem; }
+  .version-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: 1rem; }
+  .version-row label { color: #b9cbdb; font-size: .85rem; }
+  select {
+    font: inherit; font-size: .9rem; padding: .3rem 1.75rem .3rem .6rem;
+    border-radius: 6px; border: 1px solid rgba(255,255,255,.35);
+    background: rgba(255,255,255,.1); color: #fff; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23ffffff' d='M1 1l5 5 5-5'/></svg>");
+    background-repeat: no-repeat; background-position: right .55rem center; background-size: .6rem;
+  }
+  select option { color: #1b2733; background: #fff; }
+
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 1.25rem 0 .75rem; border-bottom: 1px solid var(--border); }
+  #search {
+    width: 100%; font: inherit; padding: .7rem .9rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+  .chip {
+    font: inherit; font-size: .85rem; padding: .3rem .75rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .count { margin: .9rem 0 0; color: var(--muted); font-size: .88rem; }
+
+  h2.category { font-size: .8rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 2rem 0 .6rem; }
+
+  details.report {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: .5rem; overflow: hidden;
+  }
+  details.report[open] { border-color: var(--accent); }
+  summary { padding: .85rem 1rem; cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: .6rem; align-items: baseline; }
+  summary::-webkit-details-marker { display: none; }
+  summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .report-name { font-weight: 600; }
+  .col-count { color: var(--muted); font-size: .85rem; }
+  .badge {
+    font-size: .72rem; padding: .12rem .5rem; border-radius: 999px;
+    background: var(--chip); color: var(--muted); white-space: nowrap;
+  }
+  .body { padding: 0 1rem 1.1rem; border-top: 1px solid var(--border); }
+  .body h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 1.2rem 0 .5rem; }
+  .body p { margin: .6rem 0; }
+  .body ul { margin: .5rem 0; padding-left: 1.2rem; }
+
+  dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: .3rem 1rem; margin: 1rem 0 0; font-size: .92rem; }
+  dl.meta dt { color: var(--muted); }
+  dl.meta dd { margin: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: .4rem .6rem .4rem 0; vertical-align: top; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: .82rem; }
+  ol.columns { margin: .5rem 0 0; padding-left: 1.6rem; columns: 2; column-gap: 2rem; }
+  ol.columns li { margin-bottom: .2rem; break-inside: avoid; }
+  @media (max-width: 34rem) { ol.columns { columns: 1; } }
+
+  .note { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); padding: .6rem .8rem; border-radius: 8px; font-size: .88rem; margin-top: .8rem; }
+  .empty { padding: 2.5rem 0; color: var(--muted); text-align: center; }
+  footer { margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem; }
+  footer a { color: var(--accent); }
+
+  @media print {
+    .controls, header.masthead .version-row { display: none; }
+    details.report { break-inside: avoid; border-color: #ccc; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>Tamanu report catalogue</h1>
+    <p>Every standard report available in Tamanu &mdash; what it shows, how you can filter it, and the columns you get back.</p>
+    <div class="version-row">
+      <label for="version">Version</label>
+      <select id="version"></select>
+      <span id="generated" style="color:#b9cbdb;font-size:.85rem"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search reports, filters or columns&hellip;" autocomplete="off" aria-label="Search reports">
+    <div class="chips" id="chips" role="group" aria-label="Filter by report type"></div>
+    <p class="count" id="count"></p>
+  </div>
+  <main id="results"></main>
+  <footer>
+    <p id="footer-version"></p>
+    <p>Generated from the report definitions in
+      <a href="https://github.com/beyondessential/tamanu-source-dbt">tamanu-source-dbt</a>.
+      For model-level and column-level technical documentation, see the dbt docs bundle
+      published alongside this file.</p>
+  </footer>
+</div>
+
+<script id="catalogue-data" type="application/json">__CATALOGUE_DATA__</script>
+<script>
+(function () {
+  "use strict";
+
+  var data = JSON.parse(document.getElementById("catalogue-data").textContent);
+  var reports = data.reports;
+  var activeCategory = "All";
+  var query = "";
+
+  var CATEGORY_ORDER = ["Line lists", "Summaries", "Audit and data quality", "Other reports"];
+
+  function categories() {
+    var seen = {};
+    reports.forEach(function (r) { seen[r.category] = true; });
+    var found = CATEGORY_ORDER.filter(function (c) { return seen[c]; });
+    Object.keys(seen).forEach(function (c) {
+      if (found.indexOf(c) === -1) { found.push(c); }
+    });
+    return ["All"].concat(found);
+  }
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) { node.className = className; }
+    if (text !== undefined && text !== null) { node.textContent = text; }
+    return node;
+  }
+
+  // The report descriptions are authored as plain text with blank-line paragraphs
+  // and "- " bullets. Render that shape rather than dumping it into one block.
+  function renderDescription(text) {
+    var fragment = document.createDocumentFragment();
+    if (!text) { return fragment; }
+
+    text.split(/\n\s*\n/).forEach(function (block) {
+      var lines = block.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+      var paragraph = [];
+      var list = null;
+
+      function flushParagraph() {
+        if (paragraph.length) {
+          fragment.appendChild(el("p", null, paragraph.join(" ")));
+          paragraph = [];
+        }
+      }
+      function flushList() {
+        if (list) {
+          fragment.appendChild(list);
+          list = null;
+        }
+      }
+
+      lines.forEach(function (line) {
+        if (line.indexOf("- ") === 0) {
+          flushParagraph();
+          if (!list) { list = el("ul"); }
+          list.appendChild(el("li", null, line.slice(2)));
+        } else {
+          flushList();
+          paragraph.push(line);
+        }
+      });
+
+      flushParagraph();
+      flushList();
+    });
+
+    return fragment;
+  }
+
+  function matches(report) {
+    if (activeCategory !== "All" && report.category !== activeCategory) { return false; }
+    if (!query) { return true; }
+    var haystack = [
+      report.name,
+      report.description,
+      report.columns.join(" "),
+      report.filters.map(function (f) { return f.label; }).join(" ")
+    ].join(" ").toLowerCase();
+    return query.split(/\s+/).every(function (term) { return haystack.indexOf(term) !== -1; });
+  }
+
+  function buildReport(report) {
+    var details = el("details", "report");
+    details.id = report.id;
+
+    var summary = el("summary");
+    summary.appendChild(el("span", "report-name", report.name));
+    var columnLabel = report.columns.length + (report.columns.length === 1 ? " column" : " columns");
+    summary.appendChild(el("span", "col-count", columnLabel + (report.dynamic_columns ? "+" : "")));
+    if (report.has_sensitive_variant) {
+      summary.appendChild(el("span", "badge", "Sensitive version available"));
+    }
+    details.appendChild(summary);
+
+    var body = el("div", "body");
+
+    body.appendChild(el("h4", null, "What this report shows"));
+    body.appendChild(renderDescription(report.description));
+
+    var meta = el("dl", "meta");
+    function addMeta(term, value) {
+      if (!value) { return; }
+      meta.appendChild(el("dt", null, term));
+      meta.appendChild(el("dd", null, value));
+    }
+    addMeta("Default date range", report.default_date_range);
+    addMeta("Can be run for", report.data_sources.join(" or "));
+    body.appendChild(meta);
+
+    if (report.filters.length) {
+      body.appendChild(el("h4", null, "Filters you can apply"));
+      var table = el("table");
+      var head = el("tr");
+      head.appendChild(el("th", null, "Filter"));
+      head.appendChild(el("th", null, "How it works"));
+      table.appendChild(head);
+      report.filters.forEach(function (filter) {
+        var row = el("tr");
+        row.appendChild(el("td", null, filter.label));
+        var behaviour = filter.behaviour;
+        if (filter.options && filter.options.length) {
+          behaviour += ": " + filter.options.join(", ");
+        }
+        row.appendChild(el("td", null, behaviour));
+        table.appendChild(row);
+      });
+      body.appendChild(table);
+    }
+
+    if (report.columns.length) {
+      body.appendChild(el("h4", null, "Columns in the exported file"));
+      var list = el("ol", "columns");
+      report.columns.forEach(function (column) { list.appendChild(el("li", null, column)); });
+      body.appendChild(list);
+    }
+
+    if (report.dynamic_columns) {
+      body.appendChild(el("div", "note",
+        "This report adds further columns based on your deployment's reference data " +
+        "(for example one column per configured price list or insurance plan), so the " +
+        "exported file will contain more columns than those listed above."));
+    }
+
+    details.appendChild(body);
+    return details;
+  }
+
+  function render() {
+    var results = document.getElementById("results");
+    results.textContent = "";
+
+    var visible = reports.filter(matches);
+    var total = reports.length;
+    document.getElementById("count").textContent =
+      visible.length === total
+        ? "Showing all " + total + " reports"
+        : "Showing " + visible.length + " of " + total + " reports";
+
+    if (!visible.length) {
+      results.appendChild(el("p", "empty", "No reports match that search."));
+      return;
+    }
+
+    categories().slice(1).forEach(function (category) {
+      var inCategory = visible.filter(function (r) { return r.category === category; });
+      if (!inCategory.length) { return; }
+      results.appendChild(el("h2", "category", category));
+      inCategory.forEach(function (report) { results.appendChild(buildReport(report)); });
+    });
+
+    openFromHash();
+  }
+
+  function openFromHash() {
+    var id = decodeURIComponent(window.location.hash.replace("#", ""));
+    if (!id) { return; }
+    var target = document.getElementById(id);
+    if (target && target.tagName === "DETAILS") {
+      target.open = true;
+      target.scrollIntoView({ block: "center" });
+    }
+  }
+
+  function buildChips() {
+    var container = document.getElementById("chips");
+    categories().forEach(function (category) {
+      var chip = el("button", "chip", category);
+      chip.type = "button";
+      chip.setAttribute("aria-pressed", String(category === activeCategory));
+      chip.addEventListener("click", function () {
+        activeCategory = category;
+        Array.prototype.forEach.call(container.children, function (other) {
+          other.setAttribute("aria-pressed", String(other === chip));
+        });
+        render();
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function buildVersionPicker() {
+    var select = document.getElementById("version");
+    var versions = data.available_versions.length ? data.available_versions : [data.version_series];
+    versions.forEach(function (version) {
+      var option = el("option", null, "v" + version);
+      option.value = version;
+      if (version === data.version_series) { option.selected = true; }
+      select.appendChild(option);
+    });
+    select.disabled = versions.length < 2;
+    select.addEventListener("change", function () {
+      // Every release publishes to the same versioned path, so switching version is
+      // a sibling lookup that works from S3 and from a local copy alike.
+      var name = "report-catalogue-v" + select.value + "-" + data.deployment + ".html";
+      window.location.href = "../" + select.value + "/" + name;
+    });
+  }
+
+  document.getElementById("search").addEventListener("input", function (event) {
+    query = event.target.value.trim().toLowerCase();
+    render();
+  });
+  window.addEventListener("hashchange", openFromHash);
+
+  document.getElementById("generated").textContent =
+    data.report_count + " reports · Tamanu " + data.version;
+  document.getElementById("footer-version").textContent =
+    "Tamanu " + data.deployment + " reports, version " + data.version +
+    " · " + data.report_count + " reports documented.";
+
+  buildVersionPicker();
+  buildChips();
+  render();
+})();
+</script>
+</body>
+</html>

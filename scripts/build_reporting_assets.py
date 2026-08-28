@@ -81,6 +81,13 @@ def main():
         )
         move_file(source_file, target_file)
 
+        # Plain-language catalogue of the standard reports, for the people who run
+        # reports rather than build them. Standard only: it reads
+        # models/reports/config/standard, which deployment repos do not carry.
+        if DEPLOYMENT == "standard":
+            cprint("Generating report catalogue...", "info")
+            execute_command(f"python {SCRIPTS_DIR / 'generate_report_docs.py'}")
+
         # Generate language-specific reports
         for language in supported_languages:
             execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')

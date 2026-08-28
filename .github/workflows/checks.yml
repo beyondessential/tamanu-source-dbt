@@ -37,6 +37,7 @@ jobs:
         run: |
           python scripts/generate_translation_macro.py
           python scripts/generate_metric_definitions_macro.py
+          python scripts/generate_report_docs.py
 
       - name: Fail if generated macros drift from their CSVs
         run: |
@@ -49,3 +50,23 @@ jobs:
             exit 1
           fi
           echo "Generated macros are in sync."
+
+      - name: Fail if the report catalogue drifts from the report definitions
+        # The catalogue is a pure function of the report configs, report SQL and the
+        # translation CSV, so a rebuild is byte-identical unless one of those changed
+        # without the catalogue being regenerated -- which would ship documentation
+        # that no longer matches the reports it describes.
+        #
+        # Checks tracked changes AND untracked files: a version bump writes the
+        # catalogue to a brand new compiled/v<version>/ directory, which `git diff`
+        # alone would not see.
+        run: |
+          DRIFT=$(git status --porcelain -- 'compiled/*/report-catalogue-*')
+          if [ -n "$DRIFT" ]; then
+            echo "::error::The report catalogue is out of sync with the report definitions."
+            echo "Run the generator and commit the result:"
+            echo "  python scripts/generate_report_docs.py"
+            echo "$DRIFT"
+            exit 1
+          fi
+          echo "Report catalogue is in sync."

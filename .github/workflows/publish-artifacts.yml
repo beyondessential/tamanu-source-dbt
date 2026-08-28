@@ -8,7 +8,8 @@ name: Publish Artifacts
 #   tamanu-dbt-fiji    → fiji
 #
 # S3 layout:
-#   standard:   M.m.x/<artifact>-vM.m.x-standard.<ext>   (canonical artifacts)
+#   standard:   M.m.x/<artifact>-vM.m.x-standard.<ext>   (canonical artifacts:
+#               reporting-schema, reporting-docs, report-catalogue)
 #               M.m.x/reporting-standard/                  (reports)
 #   deployment: M.m.x/<deployment>/reporting-<deployment>/ (reports only)
 #
@@ -180,14 +181,17 @@ jobs:
 
           REPORTS_FOLDER="reporting-$DEPLOYMENT"
 
-          # Canonical artifacts: standard only, uploaded to the top-level folder
+          # Canonical artifacts: standard only, uploaded to the top-level folder.
+          # report-catalogue ships two files (.html and .json), so every match is
+          # uploaded rather than just the first.
           if [ "$DEPLOYMENT" = "standard" ]; then
-            for artifact in reporting-schema reporting-docs; do
-              file=$(ls compiled/v$VERSION/$artifact-* 2>/dev/null | head -1 || true)
-              [ -z "$file" ] && continue
-              filename=$(basename "$file")
-              renamed="${filename//v$VERSION/v$VX}"
-              aws s3 cp "$file" "$BUCKET/$S3_DIR/$renamed"
+            for artifact in reporting-schema reporting-docs report-catalogue; do
+              for file in compiled/v$VERSION/$artifact-*; do
+                [ -e "$file" ] || continue
+                filename=$(basename "$file")
+                renamed="${filename//v$VERSION/v$VX}"
+                aws s3 cp "$file" "$BUCKET/$S3_DIR/$renamed"
+              done
             done
           fi
 
@@ -195,7 +199,7 @@ jobs:
           for file in compiled/v$VERSION/*; do
             filename=$(basename "$file")
             case "$filename" in
-              reporting-schema-*|reporting-docs-*) continue ;;
+              reporting-schema-*|reporting-docs-*|report-catalogue-*) continue ;;
             esac
             renamed="${filename//v$VERSION/v$VX}"
             aws s3 cp "$file" "$BUCKET/$S3_DIR/$REPORTS_FOLDER/$renamed"
@@ -215,6 +219,10 @@ jobs:
             curl -v "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-docs-v$VX-$DEPLOYMENT.html"
+
+            curl -v "$META_URL/artifacts/$S3_DIR/report-catalogue/any" \
+              --cert meta.crt --key meta.key \
+              --data-binary "$BASE_URL/report-catalogue-v$VX-$DEPLOYMENT.html"
           fi
 
           # Register reports folder with meta-server: all repos
