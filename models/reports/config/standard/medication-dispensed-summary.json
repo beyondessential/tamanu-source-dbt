@@ -18,7 +18,7 @@
         "filterBySelectedFacility": true
       },
       {
-        "parameterField": "ParameterSuggesterSelectField",
+        "parameterField": "ParameterAutocompleteField",
         "label": "Drug",
         "name": "medicationId",
         "suggesterEndpoint": "drug"
