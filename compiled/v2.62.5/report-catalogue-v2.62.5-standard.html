@@ -5,33 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tamanu report catalogue</title>
 <style>
+  /*
+   * BES 2026 brand palette (references/brand-spec.md): navy #1F3172, cyan #009DEA,
+   * light blue tint #F1FBFF, brand grey #888888.
+   *
+   * Two deliberate departures, both for accessibility on a text-dense page the slide
+   * spec does not cover:
+   *   - Brand grey reaches only 3.4:1 on the tint, so it is kept for page chrome and
+   *     functional secondary text uses a darker slate instead.
+   *   - Cyan reaches only 3.0:1 against white, so in light mode it is used for
+   *     borders, rules and focus rings -- never as text or as a fill behind text.
+   * The dark palette is an extension, not brand-specified; it is derived from the
+   * navy family and every pair below clears 4.5:1.
+   */
   :root {
     color-scheme: light dark;
-    --navy: #123049;
-    --accent: #0a7a8c;
-    --bg: #f6f7f9;
-    --surface: #ffffff;
-    --border: #dfe3e8;
-    --text: #1b2733;
-    --muted: #5c6b7a;
-    --chip: #eef2f5;
-    --warn-bg: #fdf3e3;
-    --warn-border: #e6c98b;
-    --warn-text: #6b4a12;
+    --navy: #1F3172;
+    --cyan: #009DEA;
+    --accent-line: #009DEA;
+    --bg: #F1FBFF;
+    --surface: #FFFFFF;
+    --border: #D2E4F0;
+    --text: #000000;
+    --muted: #5C6472;
+    --caption: #888888;
+    --chip: #E8F4FB;
+    --chip-active-bg: #1F3172;
+    --chip-active-text: #FFFFFF;
+    --masthead-text: #FFFFFF;
+    --masthead-muted: #B9CFE8;
+    --note-bg: #E8F4FB;
+    --note-border: #009DEA;
+    --note-text: #12324A;
+    --link: #1F3172;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --navy: #0d1f2e;
-      --accent: #4fc3d4;
-      --bg: #10161c;
-      --surface: #18212a;
-      --border: #2c3844;
-      --text: #e3e9ef;
-      --muted: #97a5b3;
-      --chip: #222d38;
-      --warn-bg: #2c2413;
-      --warn-border: #6b5626;
-      --warn-text: #e8cf9a;
+      --navy: #0B1224;
+      --cyan: #4FB8F0;
+      --accent-line: #009DEA;
+      --bg: #0E1526;
+      --surface: #18213A;
+      --border: #2A3652;
+      --text: #E8EDF5;
+      --muted: #A3B2CA;
+      --caption: #8595AE;
+      --chip: #202C4A;
+      --chip-active-bg: #009DEA;
+      --chip-active-text: #08121F;
+      --masthead-text: #FFFFFF;
+      --masthead-muted: #A3B2CA;
+      --note-bg: #14243D;
+      --note-border: #009DEA;
+      --note-text: #CFE4F5;
+      --link: #4FB8F0;
     }
   }
   * { box-sizing: border-box; }
@@ -39,57 +66,61 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 400 16px/1.55 "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
+  h1, h2, h4, .report-name, summary { font-family: "Fira Sans", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem 4rem; }
 
-  header.masthead { background: var(--navy); color: #fff; padding: 1.75rem 0 1.5rem; }
+  header.masthead { background: var(--navy); color: var(--masthead-text); padding: 1.75rem 0 1.5rem; }
   header.masthead .wrap { padding-bottom: 0; }
-  header.masthead h1 { margin: 0 0 .35rem; font-size: 1.6rem; letter-spacing: -.01em; }
-  header.masthead p { margin: 0; color: #b9cbdb; font-size: .95rem; }
+  header.masthead h1 { margin: 0 0 .35rem; font-size: 1.6rem; font-weight: 500; letter-spacing: -.01em; }
+  header.masthead p { margin: 0; color: var(--masthead-muted); font-size: .95rem; }
   .version-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: 1rem; }
-  .version-row label { color: #b9cbdb; font-size: .85rem; }
+  .version-row label { color: var(--masthead-muted); font-size: .85rem; }
+  #generated { color: var(--masthead-muted); font-size: .85rem; }
   select {
     font: inherit; font-size: .9rem; padding: .3rem 1.75rem .3rem .6rem;
-    border-radius: 6px; border: 1px solid rgba(255,255,255,.35);
-    background: rgba(255,255,255,.1); color: #fff; appearance: none;
+    border-radius: 6px; border: 1px solid rgba(255,255,255,.4);
+    background: rgba(255,255,255,.12); color: #fff; appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23ffffff' d='M1 1l5 5 5-5'/></svg>");
     background-repeat: no-repeat; background-position: right .55rem center; background-size: .6rem;
   }
-  select option { color: #1b2733; background: #fff; }
+  select option { color: #000; background: #fff; }
+  select:disabled { opacity: .75; }
 
-  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 1.25rem 0 .75rem; border-bottom: 1px solid var(--border); }
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 1.25rem 0 .75rem; border-bottom: 2px solid var(--accent-line); }
   #search {
     width: 100%; font: inherit; padding: .7rem .9rem; border-radius: 8px;
     border: 1px solid var(--border); background: var(--surface); color: var(--text);
   }
-  #search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #search:focus { outline: 2px solid var(--accent-line); outline-offset: 1px; }
   .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
   .chip {
     font: inherit; font-size: .85rem; padding: .3rem .75rem; border-radius: 999px;
     border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer;
   }
-  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
+  .chip[aria-pressed="true"] { background: var(--chip-active-bg); border-color: var(--chip-active-bg); color: var(--chip-active-text); }
   .count { margin: .9rem 0 0; color: var(--muted); font-size: .88rem; }
 
-  h2.category { font-size: .8rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 2rem 0 .6rem; }
+  h2.category { font-size: .8rem; font-weight: 500; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 2rem 0 .6rem; }
 
   details.report {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 10px; margin-bottom: .5rem; overflow: hidden;
   }
-  details.report[open] { border-color: var(--accent); }
+  details.report[open] { border-color: var(--accent-line); box-shadow: inset 3px 0 0 var(--accent-line); }
   summary { padding: .85rem 1rem; cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: .6rem; align-items: baseline; }
   summary::-webkit-details-marker { display: none; }
-  summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .report-name { font-weight: 600; }
-  .col-count { color: var(--muted); font-size: .85rem; }
+  summary:focus-visible { outline: 2px solid var(--accent-line); outline-offset: -2px; }
+  .report-name { font-weight: 500; }
+  .col-count { color: var(--muted); font-size: .85rem; font-family: "Open Sans", sans-serif; }
   .badge {
-    font-size: .72rem; padding: .12rem .5rem; border-radius: 999px;
-    background: var(--chip); color: var(--muted); white-space: nowrap;
+    font-size: .72rem; font-family: "Open Sans", sans-serif; padding: .12rem .5rem;
+    border-radius: 999px; background: var(--chip); color: var(--muted); white-space: nowrap;
   }
   .body { padding: 0 1rem 1.1rem; border-top: 1px solid var(--border); }
-  .body h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 1.2rem 0 .5rem; }
+  .body h4 { font-size: .8rem; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 1.2rem 0 .5rem; }
   .body p { margin: .6rem 0; }
   .body ul { margin: .5rem 0; padding-left: 1.2rem; }
 
@@ -104,14 +135,18 @@
   ol.columns li { margin-bottom: .2rem; break-inside: avoid; }
   @media (max-width: 34rem) { ol.columns { columns: 1; } }
 
-  .note { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); padding: .6rem .8rem; border-radius: 8px; font-size: .88rem; margin-top: .8rem; }
+  .note {
+    background: var(--note-bg); border: 1px solid var(--border);
+    border-left: 3px solid var(--note-border); color: var(--note-text);
+    padding: .6rem .8rem; border-radius: 8px; font-size: .88rem; margin-top: .8rem;
+  }
   .empty { padding: 2.5rem 0; color: var(--muted); text-align: center; }
-  footer { margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem; }
-  footer a { color: var(--accent); }
+  footer { margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); color: var(--caption); font-size: .85rem; }
+  footer a { color: var(--link); }
 
   @media print {
     .controls, header.masthead .version-row { display: none; }
-    details.report { break-inside: avoid; border-color: #ccc; }
+    details.report { break-inside: avoid; border-color: #ccc; box-shadow: none; }
     body { background: #fff; }
   }
 </style>

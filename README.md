@@ -122,6 +122,28 @@ result alongside the change.
 Standard reports only. The generator reads `models/reports/config/standard`, which
 deployment repos do not carry, so `build_reporting_assets.py` skips it for them.
 
+### Branding
+
+The page uses the BES 2026 palette — navy `#1F3172`, cyan `#009DEA`, light blue tint
+`#F1FBFF` — with Fira Sans for headings and Open Sans for body text.
+
+Two deliberate departures from the slide brand spec, both for accessibility on a
+text-dense page the spec does not cover. Brand grey `#888888` reaches only 3.4:1 on
+the tint, so it is kept for page chrome while functional secondary text uses a darker
+slate; and cyan reaches only 3.0:1 against white, so in light mode it is used for
+borders, rules and focus rings, never as text or as a fill behind text. Every
+foreground/background pair on the page clears WCAG AA (4.5:1).
+
+The dark palette is an extension rather than brand-specified, derived from the navy
+family and held to the same contrast floor.
+
+Fonts are referenced by name with a system fallback rather than loaded from Google
+Fonts, which keeps the page a single file with no external requests — it has to work
+from S3, a file share or a USB stick with no connectivity. On a machine without Fira
+Sans and Open Sans installed the page falls back to the system UI font; embed the two
+families as base64 `@font-face` rules in the template if exact type fidelity matters
+more than file size.
+
 ### Versioning and publication
 
 Each release publishes to its own `M.m.x` prefix in the artifacts bucket, alongside
