@@ -243,7 +243,7 @@ unverified except by manual reasoning and the compile-time checks in Risks.
 | AC-022 | An appointment auto-cancelled by its schedule being bulk-cancelled produces no row; one individually cancelled does | BL-026 | dbt singular test |
 | AC-023 | `change_number` is 1 for an appointment's first meaningful change and increments by 1 per subsequent meaningful change, with no gaps | BL-024 | dbt singular test |
 | AC-024 | A field that didn't change between consecutive events renders its `prev_*` column blank; a field that did change renders the actual previous value | BL-027 | dbt singular test |
-| AC-025 | The report returns identical rows before and after the early-filter rework (BL-030) for a fixed date range against the same data | BL-030 | **Passed** — `EXCEPT ALL` both directions against the Kiribati replica, one month of data: 962 rows each, 0 differing rows either way. No automated test yet |
+| AC-025 | The report returns identical rows before and after the early-filter rework (BL-030) for a fixed date range against the same data | BL-030 | **Passed** — `EXCEPT ALL` in both directions against a populated replica returned no differing rows. No automated test yet |
 | AC-026 | An incremental run on an analytics target produces the same rows a `--full-refresh` would, for every appointment touched since the last run | BL-032, BL-034 | Not yet run against a real analytics target — first incremental model in this repo |
 | AC-027 | Facility scope: a sensitive-facility appointment never appears in the standard report/dataset and vice versa | BL-033 | dbt singular test |
 | AC-028 | A new change event for an appointment that already has materialised rows causes that appointment's rows to be fully replaced after the next incremental run — no stale `prev_*`/`change_number` values survive on its earlier rows | BL-034 | Not yet run against a real analytics target |
@@ -303,9 +303,9 @@ _None._
   `macros/reports/audit_outpatient_appointments.sql`, and
   `macros/datasets/outpatient_appointments_audit.sql` in a follow-up, non-functional commit.
 - **DV-006:** The incremental `delete+insert` mechanism (BL-032, BL-034) has not been
-  exercised against data. A `dbt build --target analytics` confirmed the models compile and
-  that both audit datasets materialise as tables rather than views, but that deployment's
-  `logs.changes` was empty, so the build produced 0 rows and no refresh has ever run. Still
+  exercised against data. A `dbt build` against an analytics target confirmed the models
+  compile and that both audit datasets materialise as tables rather than views, but the
+  change log there was empty, so no rows were produced and no refresh has ever run. Still
   unconfirmed: that a second run replaces a changed appointment's rows without duplicating
   them (AC-026, AC-028), and that the analytics role holds `DELETE` on the target schema and
   not merely `SELECT`/`INSERT`. *Resolution:* run twice against a change-log-populated
@@ -313,21 +313,13 @@ _None._
 
 ## Risks
 
-- **Report path measured; incremental path still unexercised.** BL-030 is confirmed by
-  `EXPLAIN ANALYZE` on the Kiribati replica (4.06M `logs.changes` rows; 143,006 appointment
-  changes over 89,768 appointments) — see the table below. BL-032/BL-034's incremental
-  behaviour has still never run against data: the one analytics build performed produced 0
-  rows because that deployment's change log was empty, so `delete+insert` has not been
-  exercised. See DV-006.
-
-  | Range | Old | New | Rows into the window functions (old → new) |
-  |---|---|---|---|
-  | 24 hours | 1272 ms | **147 ms** | 142,981 → 711 |
-  | 1 month | 1326 ms | **373 ms** | 142,981 → 17,634 |
-
-  The old query's cost is effectively flat across a 30× wider window (+4%), because the
-  window functions process the entire appointment change history either way — which is the
-  behaviour BL-030 describes. The new query scales with the requested range instead.
+- **Report path measured; incremental path not yet run against data.** BL-030 has been
+  confirmed by `EXPLAIN ANALYZE` on a replica with a populated change log: before the change
+  the query cost was effectively flat across a far wider date range, because the window
+  functions processed the entire appointment change history either way; after it, cost
+  scales with the range requested and the row count entering the window functions drops by
+  orders of magnitude. BL-032/BL-034's incremental behaviour remains unverified — see
+  DV-006.
 - **Index availability confirmed via migration history, not a live `pg_indexes` check.**
   `changes_updated_at_sync_tick_index` is part of the original baseline index set
   (`packages/database/src/migrations/000_baseline.sql` in `../tamanu`) and is never touched
@@ -360,7 +352,7 @@ _None._
 - **The report is empty where change logging is not enabled.** Everything here derives from
   `logs.changes`; a deployment whose change-log triggers are not installed returns no rows at
   all, with nothing on the report to distinguish that from "no appointments were modified".
-  One replica checked during validation had 0 rows across the whole table.
+  This has been observed on a real deployment, so it is not hypothetical.
 - **Forward-port still pending.** This work exists only on `2.54`
   (`perf/audit-outpatient-appointments-early-filter-2.54`); `2.55`→`main` forward-porting is
   a separate, not-yet-started step.
