@@ -4,7 +4,8 @@
     config(
         materialized='incremental' if target.name.startswith('analytics') else 'view',
         incremental_strategy='delete+insert',
-        unique_key='appointment_id'
+        unique_key='appointment_id',
+        enabled=(var('has_sensitive_facility', false) if is_sensitive else true)
     )
 }}
 
@@ -20,160 +21,67 @@
 -- BL-035: a refresh is not self-healing. dbt deletes only ids present in the new result, and
 -- candidates come from the change log alone -- so a zero-row recompute, a soft-delete, a
 -- sensitivity flip or a renamed join target all leave stale rows behind.
+--
+-- BL-038: the sensitive variant is disabled unless the deployment has sensitive facilities.
+-- A permanently empty incremental table has watermark 0, so every run would rescan the whole
+-- change log to emit nothing -- worse than the view it replaced.
 
-with
-{% if is_incremental() %}
-candidate_appointment_ids as (
-    -- BL-032: >= not >. A sync tick is shared by every row written in that session, so a
-    -- strict comparison would permanently skip rows landing on the boundary tick after the
-    -- last run read it. Reprocessing that tick is free -- BL-034 is idempotent per
-    -- appointment.
-    select distinct c.record_id as appointment_id
-    from {{ ref('outpatient_appointments_change_events') }} c
-    where c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
-),
-{% endif %}
-
-change_evaluation as (
-    select
-        cl.*,
-        -- BL-025: which field changes count as meaningful
-        case
-            -- Status changed to Cancelled
-            when cl.status = 'Cancelled' and cl.prev_status is distinct from 'Cancelled' then true
-            -- Any non-status fields changed
-            when (
-                cl.prev_start_datetime is distinct from cl.start_datetime
-                or cl.prev_end_datetime is distinct from cl.end_datetime
-                or cl.prev_clinician_id is distinct from cl.clinician_id
-                or cl.prev_location_group_id is distinct from cl.location_group_id
-                or cl.prev_appointment_type_id is distinct from cl.appointment_type_id
-                or cl.prev_is_high_priority is distinct from cl.is_high_priority
-            ) then true
-            else false
-        end as is_meaningful_change
-    from (
-        {{ outpatient_appointments_change_log_events(
-            record_id_filter="c.record_id in (select appointment_id from candidate_appointment_ids)" if is_incremental() else none
-        ) }}
-    ) cl
-    -- BL-036: restricts the audit to the population bases/outpatient_appointments defines,
-    -- and supplies cancelled_at_date for BL-026 without reading the source table
-    join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
-    where
-        -- BL-026: drop appointments auto-cancelled by a schedule bulk-cancellation, keeping
-        -- individual cancellations
-        not (
-            cl.status = 'Cancelled'
-            and a.cancelled_at_date is not null
-            and cl.start_datetime::date > a.cancelled_at_date::date
-        )
-),
-
-numbered_changes as (
-    select
-        ce.*,
-        -- BL-024: 1 for the first meaningful change, incrementing per appointment
-        row_number() over (
-            partition by ce.appointment_id
-            order by ce.modified_datetime
-        ) as change_number
-    from change_evaluation ce
-    where ce.is_meaningful_change = true
-        and ce.change_sequence > 1  -- BL-023: exclude the creation event
+{%- set candidate_filter -%}
+c.record_id in (
+    select distinct c2.record_id
+    from {{ ref('outpatient_appointments_change_events') }} c2
+    where c2.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 )
+{%- endset -%}
 
 select
-    fc.change_id,
-    fc.appointment_id,
-    fc.change_number,
-    -- Patient details
-    p.id as patient_id,
-    p.display_id,
-    p.first_name,
-    p.last_name,
-    p.date_of_birth,
-    -- Current appointment details
-    fc.start_datetime as appointment_start_datetime,
-    fc.end_datetime as appointment_end_datetime,
-    apt.name as appointment_type,
-    fc.appointment_type_id,
-    clinician.display_name as clinician,
-    fc.clinician_id,
-    lg.name as location_group,
-    fc.location_group_id,
-    case when fc.is_high_priority then 'Yes' else 'No' end as priority,
-    fc.schedule_id,
-    case
-        when fc.schedule_id is not null then 'Yes'
-        else 'No'
-    end as is_repeating,
-    -- Modification details
-    creator.display_name as created_by,
-    fc.created_by_user_id,
-    modifier.display_name as modified_by,
-    fc.modified_by_user_id,
-    fc.modified_datetime,
-    -- Incremental cursor for analytics builds (see header comment) -- not report-facing,
-    -- but must be a persisted column so later runs can read the watermark back from it.
-    fc.updated_at_sync_tick,
-    case when fc.status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
-    -- BL-027: previous values, blank where unchanged
-    case
-        when fc.prev_start_datetime is distinct from fc.start_datetime
-        then fc.prev_start_datetime
-    end as prev_start_datetime,
-    case
-        when fc.prev_end_datetime is distinct from fc.end_datetime
-        then fc.prev_end_datetime
-    end as prev_end_datetime,
-    case
-        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
-        then prev_apt.name
-    end as prev_appointment_type,
-    case
-        when fc.prev_appointment_type_id is distinct from fc.appointment_type_id
-        then fc.prev_appointment_type_id
-    end as prev_appointment_type_id,
-    case
-        when fc.prev_clinician_id is distinct from fc.clinician_id
-        then prev_clinician.display_name
-    end as prev_clinician,
-    case
-        when fc.prev_clinician_id is distinct from fc.clinician_id
-        then fc.prev_clinician_id
-    end as prev_clinician_id,
-    case
-        when fc.prev_location_group_id is distinct from fc.location_group_id
-        then prev_lg.name
-    end as prev_location_group,
-    case
-        when fc.prev_location_group_id is distinct from fc.location_group_id
-        then fc.prev_location_group_id
-    end as prev_location_group_id,
-    case
-        when fc.prev_is_high_priority is not null
-            and fc.prev_is_high_priority is distinct from fc.is_high_priority
-        then case when fc.prev_is_high_priority then 'Yes' else 'No' end
-    end as prev_priority,
-    -- Facility details for filtering
-    f.id as facility_id,
-    f.name as facility
-from numbered_changes fc
-join {{ ref('patients') }} p on p.id = fc.patient_id
-left join {{ ref('users') }} clinician on clinician.id = fc.clinician_id
-left join {{ ref('users') }} prev_clinician on prev_clinician.id = fc.prev_clinician_id
-left join {{ ref('users') }} creator on creator.id = fc.created_by_user_id
-left join {{ ref('users') }} modifier on modifier.id = fc.modified_by_user_id
--- BL-028: patient, area and facility are inner joins, so an event whose
--- location_group_id is null or dangling produces no row at all
-join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
-left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
-left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
-left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
--- BL-033: facility scope partitioned by the is_sensitive argument
-join {{ ref('facilities') }} f on f.id = lg.facility_id
-    and f.is_sensitive = {{ is_sensitive }}
+    change_id,
+    appointment_id,
+    change_number,
+    patient_id,
+    display_id,
+    first_name,
+    last_name,
+    date_of_birth,
+    start_datetime as appointment_start_datetime,
+    end_datetime as appointment_end_datetime,
+    appointment_type,
+    appointment_type_id,
+    clinician,
+    clinician_id,
+    location_group,
+    location_group_id,
+    case when is_high_priority then 'Yes' else 'No' end as priority,
+    schedule_id,
+    case when schedule_id is not null then 'Yes' else 'No' end as is_repeating,
+    created_by,
+    created_by_user_id,
+    modified_by,
+    modified_by_user_id,
+    modified_datetime,
+    -- BL-032: persisted so a later run can read the watermark back from it. The comparison
+    -- above is >= not >: a sync tick is shared by every row written in that session, so a
+    -- strict one would permanently skip rows landing on the boundary tick after the last run
+    -- read it. Reprocessing that tick is free -- BL-034 is idempotent per appointment.
+    updated_at_sync_tick,
+    case when status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
+    prev_start_datetime,
+    prev_end_datetime,
+    prev_appointment_type,
+    prev_appointment_type_id,
+    prev_clinician,
+    prev_clinician_id,
+    prev_location_group,
+    prev_location_group_id,
+    case when prev_is_high_priority then 'Yes' else 'No' end as prev_priority,
+    facility_id,
+    facility
+from (
+    {{ outpatient_appointments_audit_core(
+        is_sensitive=is_sensitive,
+        record_id_filter=candidate_filter if is_incremental() else none
+    ) }}
+) core
 -- BL-034: no tail filter on the cursor, deliberately. delete+insert removes all of a
 -- candidate's existing rows, so this must re-emit its full history, not just changed rows.
 

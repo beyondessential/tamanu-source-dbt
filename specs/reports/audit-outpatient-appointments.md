@@ -99,10 +99,11 @@ review obligation, not an automated one (DV-007).
   (`change_sequence = 1`) is excluded at report and dataset grain, but *retained* by the
   extraction macro because `outpatient_appointments_dataset` uses it to find the creator.
 - **BL-024:** `change_number` is `row_number()` per `appointment_id` ordered by
-  `modified_datetime`, over rows surviving BL-025, the creation exclusion, BL-026 and
-  BL-036 — all four are applied upstream of the numbering. It orders on
-  `modified_datetime` alone, unlike the extraction macro's `(logged_at, record_updated_at,
-  id)`, so events sharing a timestamp get an arbitrary, run-unstable order.
+  `(modified_datetime, change_sequence)`, over rows surviving BL-025, the creation
+  exclusion, BL-026 and BL-036 — all four are applied upstream of the numbering.
+  `change_sequence` is the tiebreaker: without it, events sharing a `modified_datetime`
+  would number arbitrarily and differ between the report, the dataset and successive
+  refreshes of the materialised table.
 - **BL-025:** A change is meaningful when the status became `Cancelled`, or any of
   start/end datetime, clinician, location group, appointment type or priority differs from
   the preceding event. A non-cancelling status transition produces no row.
@@ -135,7 +136,10 @@ review obligation, not an automated one (DV-007).
   unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
   lookup), filtered by the report (BL-030), and filtered by the incremental dataset
   (BL-032). Filtering narrows *which* appointments are included, never how much of an
-  included appointment's history is seen.
+  included appointment's history is seen. Everything downstream of the extraction —
+  meaningfulness, numbering, the joins and the `prev_*` resolution — is shared too, in
+  `outpatient_appointments_audit_core()`; the report and dataset differ only in projection,
+  so they cannot drift on business logic.
 - **BL-032:** The datasets build as `view` except on analytics targets, where they are
   incremental. The cursor is `updated_at_sync_tick` — the cursor Tamanu's own sync readers
   use (no clock-skew risk) and the one `logs.changes` column still btree-indexed after
@@ -174,6 +178,11 @@ review obligation, not an automated one (DV-007).
 
   The joins to `patients` and `location_groups` behave the same way: a patient later
   soft-deleted or merged takes their audit trail with them (BL-028).
+- **BL-038:** The sensitive variant of the dataset is disabled unless the deployment sets
+  `has_sensitive_facility`. A permanently empty incremental table keeps a watermark of 0, so
+  every run would rescan the whole change log to emit nothing — worse than the view it
+  replaced. Gated in the macro's `config()`, not `dbt_project.yml`, because `var()` does not
+  resolve while project config is rendered.
 - **BL-037:** `bases/outpatient_appointments_change_events` carries the change-log filters
   and no window functions, because both the report (by date) and the dataset (by tick) must
   narrow the log *before* the windowed reconstruction. Filtering the windowed base cannot
@@ -229,6 +238,11 @@ _None._
 
 - **DV-004:** No automated tests for the base models, datasets or report; every AC above is
   unverified by tooling. *Resolution:* add the planned singular tests.
+- **DV-008:** The shared-core refactor (BL-031) and the `change_sequence` tiebreaker
+  (BL-024) have been validated only by `dbt parse` — the replica was unreachable, so neither
+  the compiled SQL nor row-for-row parity has been re-checked since. Both are expected to be
+  output-neutral apart from tie ordering, but that is reasoning, not measurement.
+  *Resolution:* re-run the parity check and the two-run incremental validation.
 - **DV-007:** `check_spec_anchors.py` is not run by CI — `.github/workflows/checks.yml`
   does not invoke it — so even its ID-set check is advisory. *Resolution:* add it to the
   checks workflow, and consider `--strict-spec-coverage` so an unanchored clause fails
