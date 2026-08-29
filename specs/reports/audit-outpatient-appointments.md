@@ -281,10 +281,10 @@ unverified except by manual reasoning and the compile-time checks in Risks.
 | AC-023 | `change_number` is 1 for an appointment's first meaningful change and increments by 1 per subsequent meaningful change, with no gaps | BL-024 | dbt singular test |
 | AC-024 | A field that didn't change between consecutive events renders its `prev_*` column blank; a field that did change renders the actual previous value | BL-027 | dbt singular test |
 | AC-025 | The report returns identical rows before and after the early-filter rework (BL-030) for a fixed date range against the same data | BL-030 | **Passed** — `EXCEPT ALL` in both directions against a populated replica returned no differing rows. No automated test yet |
-| AC-026 | An incremental run on an analytics target produces the same rows a `--full-refresh` would, for every appointment touched since the last run | BL-032, BL-034 | Not yet run against a real analytics target — first incremental model in this repo |
+| AC-026 | An incremental run on an analytics target produces the same rows a `--full-refresh` would, for every appointment touched since the last run | BL-032, BL-034 | **Partly passed** — a second run over an unchanged change log was idempotent (no row-count change, no duplicates). Not yet exercised with new change events arriving between runs |
 | AC-027 | Facility scope: a sensitive-facility appointment never appears in the standard report/dataset and vice versa | BL-033 | dbt singular test |
-| AC-028 | A new change event for an appointment that already has materialised rows causes that appointment's rows to be fully replaced after the next incremental run — no stale `prev_*`/`change_number` values survive on its earlier rows | BL-034 | Not yet run against a real analytics target |
-| AC-029 | Rows written on the same sync tick as the previous run's high-water mark are still picked up by the next incremental run, rather than being skipped permanently | BL-032 | Not yet run against a real analytics target |
+| AC-028 | A new change event for an appointment that already has materialised rows causes that appointment's rows to be fully replaced after the next incremental run — no stale `prev_*`/`change_number` values survive on its earlier rows | BL-034 | **Partly passed** — the second run deleted and re-inserted the candidate appointments' rows rather than appending, with zero duplicate `change_id`s. The replacement mechanism is confirmed; a genuinely new event has not yet been observed through it |
+| AC-029 | Rows written on the same sync tick as the previous run's high-water mark are still picked up by the next incremental run, rather than being skipped permanently | BL-032 | **Passed** — the second run reprocessed the rows sitting on the watermark tick; a strict `>` would have selected no candidates |
 | AC-030 | After an appointment recomputes to zero rows, or a facility's `is_sensitive` flips, an incremental run leaves the stale rows in place and only a `--full-refresh` corrects them — the documented behaviour, asserted so it is not mistaken for a bug later | BL-035 | Not yet run against a real analytics target |
 
 ## Lineage
@@ -341,24 +341,27 @@ _None._
   *Resolution:* add the anchoring comments to `macros/bases/outpatient_appointments_change_logs.sql`,
   `macros/reports/audit_outpatient_appointments.sql`, and
   `macros/datasets/outpatient_appointments_audit.sql` in a follow-up, non-functional commit.
-- **DV-006:** The incremental `delete+insert` mechanism (BL-032, BL-034) has not been
-  exercised against data. A `dbt build` against an analytics target confirmed the models
-  compile and that both audit datasets materialise as tables rather than views, but the
-  change log there was empty, so no rows were produced and no refresh has ever run. Still
-  unconfirmed: that a second run replaces a changed appointment's rows without duplicating
-  them (AC-026, AC-028), and that the analytics role holds `DELETE` on the target schema and
-  not merely `SELECT`/`INSERT`. *Resolution:* run twice against a change-log-populated
+- **DV-006:** The incremental `delete+insert` mechanism (BL-032, BL-034) is only partly
+  verified. A full build followed by a second run has been exercised against a populated
+  change log: rows were replaced rather than duplicated, the watermark tick was reprocessed
+  (AC-029), and the role held the `DELETE` the strategy requires. Not yet observed: a run in
+  which genuinely new change events arrive between builds, so the "later rows of a changed
+  appointment are rebuilt correctly" half of AC-026/AC-028 rests on the replacement
+  mechanism being sound rather than on having seen it happen. BL-035's stale-row cases
+  (AC-030) are untested entirely. *Resolution:* run twice against a change-log-populated
   analytics target before this reaches production analytics.
 
 ## Risks
 
-- **Report path measured; incremental path not yet run against data.** BL-030 has been
-  confirmed by `EXPLAIN ANALYZE` on a replica with a populated change log: before the change
-  the query cost was effectively flat across a far wider date range, because the window
-  functions processed the entire appointment change history either way; after it, cost
-  scales with the range requested and the row count entering the window functions drops by
-  orders of magnitude. BL-032/BL-034's incremental behaviour remains unverified — see
-  DV-006.
+- **Measured against a populated change log.** BL-030: before the change, query cost was
+  effectively flat across a far wider date range, because the window functions processed the
+  entire appointment change history either way; after it, cost scales with the range
+  requested and the row count entering the window functions drops by orders of magnitude.
+  BL-032/BL-034: a full build followed by a second run replaced the affected appointments'
+  rows rather than duplicating them, and the rows sitting *on* the watermark tick were
+  reprocessed — which is the `>=` comparison doing its job, since a strict `>` would have
+  found no candidates at all. What remains untested is behaviour when genuinely new change
+  events arrive between runs, and the stale-row cases in BL-035.
 - **The chosen cursor depends on an index that Tamanu migrations have been actively
   changing.** BL-032 selects `updated_at_sync_tick` partly because
   `changes_updated_at_sync_tick_index` is a btree, where `logged_at` is BRIN-only. That
