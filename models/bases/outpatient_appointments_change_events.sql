@@ -11,7 +11,8 @@ select
     c.updated_at_sync_tick,
     c.record_data
 from {{ source('logs__tamanu', 'changes') }} c
--- BL-023: the audit's population filters
+-- BL-037: the change-log source filters. A row is excluded where the appointment was
+-- already flagged deleted when that row was written -- see BL-035 case 4
 where c.table_name = 'appointments'
     and c.record_deleted_at is null
     and (c.record_data ->> 'appointment_type_id') is not null

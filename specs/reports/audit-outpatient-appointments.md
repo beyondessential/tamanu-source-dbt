@@ -75,24 +75,32 @@ Standard and sensitive share one macro, so columns are identical by construction
 | `auditModifiedBy`, `auditModifiedDateTime` | text | Who made this change, and when |
 | `auditPrevAppointmentDateTime`, `auditPrevAppointmentType`, `auditPrevClinician`, `auditPrevLocationGroup`, `auditPrevPriority` | text | Previous values, blank if unchanged (BL-027) |
 
-The dataset emits a different shape entirely — snake_case, unformatted, no translation keys
-— covering the same facts plus `change_id`, `patient_id`, `facility_id`/`facility`,
-`updated_at_sync_tick` (the incremental cursor), the raw `*_id` columns behind each
-resolved name, and `appointment_end_datetime`/`prev_end_datetime`, which have no report
-equivalent.
+The dataset emits a different shape entirely — 37 columns to the report's 20, snake_case,
+unformatted, no translation keys. Beyond the same facts it carries `change_id`,
+`appointment_id` (the `unique_key` BL-034 replaces on), `patient_id`, `schedule_id`,
+`facility_id`/`facility`, `updated_at_sync_tick` (the incremental cursor), the raw
+`*_id` columns behind each resolved name, and `appointment_end_datetime` /
+`prev_end_datetime`, which have no report equivalent.
 
 ## Business logic
 
-Each clause is anchored in the implementing SQL as a `-- BL-XXX:` comment, so
-`check_spec_anchors.py` fails if a clause and its code drift apart.
+Each clause is anchored in the implementing SQL as a `-- BL-XXX:` comment, so a reader
+can move between rule and code. Note what that does *not* buy: `check_spec_anchors.py`
+only checks that anchor IDs and clause IDs are the same set — it never compares comment
+text to the code beneath it, does not care which file an anchor sits in, and warns
+rather than fails on a clause with no anchor. Keeping a clause true to its code is a
+review obligation, not an automated one (DV-007).
 
 - **BL-023:** One row per meaningful change event, from
-  `bases/outpatient_appointments_change_events` — which excludes soft-deleted change rows,
-  rows with no `appointment_type_id`, and the test patient. The creation event
+  `bases/outpatient_appointments_change_events` — which excludes rows whose appointment
+  was already flagged deleted when that row was written (`record_deleted_at`, not a
+  property of the change row itself), rows with no `appointment_type_id`, and the test
+  patient. The creation event
   (`change_sequence = 1`) is excluded at report and dataset grain, but *retained* by the
   extraction macro because `outpatient_appointments_dataset` uses it to find the creator.
 - **BL-024:** `change_number` is `row_number()` per `appointment_id` ordered by
-  `modified_datetime`, over rows passing BL-025 and the creation exclusion. It orders on
+  `modified_datetime`, over rows surviving BL-025, the creation exclusion, BL-026 and
+  BL-036 — all four are applied upstream of the numbering. It orders on
   `modified_datetime` alone, unlike the extraction macro's `(logged_at, record_updated_at,
   id)`, so events sharing a timestamp get an arbitrary, run-unstable order.
 - **BL-025:** A change is meaningful when the status became `Cancelled`, or any of
@@ -115,8 +123,10 @@ Each clause is anchored in the implementing SQL as a `-- BL-XXX:` comment, so
   "changes to appointments scheduled around now", not "edits made recently". `toDate` is
   compared as a date, so an appointment later in the day on `toDate` is excluded — the house
   pattern, though `audit_discharge_line_list` deliberately deviates.
-- **BL-030 (report):** The report first finds `appointment_id`s with an event in
-  `[fromDate, toDate]` via a plain filtered scan with no window functions, then reconstructs
+- **BL-030 (report):** The report first finds `appointment_id`s having an event whose
+  `appointment_start_datetime` falls in `[fromDate, toDate]` — the appointment's
+  scheduled time, not when the edit happened (BL-029) — via a plain filtered scan with
+  no window functions, then reconstructs
   full history only for those — `lag()`/`first_value()`/`change_sequence` need an
   appointment's entire history to be correct. The date filter is re-applied at the end, so
   correctness never depends on the early filter being exact.
@@ -219,6 +229,10 @@ _None._
 
 - **DV-004:** No automated tests for the base models, datasets or report; every AC above is
   unverified by tooling. *Resolution:* add the planned singular tests.
+- **DV-007:** `check_spec_anchors.py` is not run by CI — `.github/workflows/checks.yml`
+  does not invoke it — so even its ID-set check is advisory. *Resolution:* add it to the
+  checks workflow, and consider `--strict-spec-coverage` so an unanchored clause fails
+  rather than warns.
 - **DV-006:** The incremental mechanism is only partly verified. A full build then a second
   run has been exercised: rows were replaced not duplicated, the watermark tick reprocessed,
   and the role held the required `DELETE`. Not observed: a run where new events arrive
