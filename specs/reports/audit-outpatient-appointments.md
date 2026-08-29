@@ -11,7 +11,7 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6857](https://linear.app/bes/issue/MAUI-6857/audit-outpatient-appointments-report-times-out-full-change-log-scan) |
-| **Repo** | `tamanu-source-dbt`, version branch `2.54` (branch `perf/audit-outpatient-appointments-early-filter-2.54`; forward-port to `2.55`→`main` pending as a separate step) |
+| **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-29 |
 | **Last updated** | 2026-08-29 |
 
@@ -248,6 +248,24 @@ current code carries these comments yet (see Divergence, DV-005).
 
   The `--full-refresh` cadence is therefore a correctness requirement of this model, not a
   tuning choice, and should be scheduled wherever it is built incrementally.
+- **BL-036 (audit history is retained for deleted appointments; D10 exemption):** This model
+  reads `logs.changes` and `appointment_schedules` directly rather than through `bases/`,
+  which D10 otherwise forbids. The exemption is deliberate and specific to audit models:
+  `bases/` exist partly to filter soft-deleted rows, and an audit trail must retain the
+  history of records that were later deleted — filtering them is the opposite of the
+  requirement.
+
+  Concretely, `bases/outpatient_appointments.sql` excludes any appointment whose *current*
+  `deleted_at` is set; this model instead excludes only change-log rows already flagged
+  deleted when they were written. So a soft-deleted appointment keeps the history recorded
+  before its deletion here, while disappearing entirely from `ds__outpatient_appointments`
+  and the outpatient line list. The audit population intentionally differs from every other
+  appointment model.
+
+  The exemption is narrow. It covers the change-log source and the schedule lookup that
+  BL-026 needs; every other dimension — patient, clinician, area, facility, appointment type
+  — is still resolved through `ref()` models and inherits their filters normally, including
+  the exclusion of deleted, merged and test patients.
 
 ## Acceptance criteria
 
@@ -341,15 +359,15 @@ _None._
   scales with the range requested and the row count entering the window functions drops by
   orders of magnitude. BL-032/BL-034's incremental behaviour remains unverified — see
   DV-006.
-- **Index availability confirmed via migration history, not a live `pg_indexes` check.**
-  `changes_updated_at_sync_tick_index` is part of the original baseline index set
-  (`packages/database/src/migrations/000_baseline.sql` in `../tamanu`) and is never touched
-  by either later migration (`1765504440717-AddAuditLogsRecordTypeRecordIdIndexes.ts`,
-  2025-12-16, central-only swap of a different index; or
-  `1785467282357-dropUnusedChangelogIndexes.ts`, 2026-08-03, drops six *other* indexes). It
-  is present on both central and facility servers, and since `2.54` predates both of those
-  migrations, `2.54` carries the full original baseline index set unmodified — confirmed via
-  migration history, still not via a live `pg_indexes` query on an actual target database.
+- **The chosen cursor depends on an index that Tamanu migrations have been actively
+  changing.** BL-032 selects `updated_at_sync_tick` partly because
+  `changes_updated_at_sync_tick_index` is a btree, where `logged_at` is BRIN-only. That
+  index is part of Tamanu's baseline set and is not touched by the two migrations that
+  reshaped the others (`AddAuditLogsRecordTypeRecordIdIndexes`, a central-only swap of a
+  different index; and `dropUnusedChangelogIndexes`, which drops six *other* indexes). This
+  was established from migration history, not from a live `pg_indexes` query, and the
+  indexes present depend on which of those migrations the target deployment has run — so
+  confirm against the actual database rather than assuming.
 - **BL-029's filter semantics are easy to misread.** The 24-hour default date range filters
   on the appointment's own start time, not on when the edit happened. This is intentional,
   existing behaviour, but still worth flagging since it reads naturally as "recent edits" to
@@ -368,20 +386,18 @@ _None._
   whatever role the connection uses for that target; confirm the analytics-target role has
   `DELETE` and not merely `SELECT`/`INSERT` before the first incremental run.
 - **This report reads `logs.changes` and `appointment_schedules` directly**, unlike every
-  other report in the repo, which reaches its data through `ref()` models. That deviates
-  from D10 ("Reporting sources from `bases/`, never from `public.*`"). It also means the
-  executing role needs privileges on those objects in its own right, rather than inheriting
-  them from a `reporting` view's owner as the previous version did.
+  other report in the repo. That is a deliberate D10 exemption for audit models (BL-036),
+  not an oversight — but it carries a practical consequence: the executing role needs
+  privileges on those objects in its own right, rather than inheriting them from a
+  `reporting` view owner as the previous version did. A role with access only to the
+  `reporting` schema cannot run this report.
 - **The report is empty where change logging is not enabled.** Everything here derives from
   `logs.changes`; a deployment whose change-log triggers are not installed returns no rows at
   all, with nothing on the report to distinguish that from "no appointments were modified".
   This has been observed on a real deployment, so it is not hypothetical.
-- **Forward-port still pending.** This work exists only on `2.54`
-  (`perf/audit-outpatient-appointments-early-filter-2.54`); `2.55`→`main` forward-porting is
-  a separate, not-yet-started step.
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-08-29 | Maui team | Initial spec, written retrospectively alongside the performance rework: report-level early appointment-id filtering (BL-030), the shared `outpatient_appointments_change_log_events()` extraction macro (BL-031), the dataset's incremental materialisation on analytics targets keyed on `updated_at_sync_tick` (BL-032), and its delete-by-`appointment_id`-then-full-reinsert incremental strategy (BL-034). Cut against the `2.54` version branch. |
+| 2026-08-29 | Maui team | Initial spec, written retrospectively alongside the performance rework: report-level early appointment-id filtering (BL-030), the shared `outpatient_appointments_change_log_events()` extraction macro (BL-031), the dataset's incremental materialisation on analytics targets keyed on `updated_at_sync_tick` (BL-032), its delete-by-`appointment_id`-then-full-reinsert incremental strategy (BL-034), and the limits of an incremental refresh (BL-035). |
