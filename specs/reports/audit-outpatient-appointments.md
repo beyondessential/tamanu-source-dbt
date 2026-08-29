@@ -75,8 +75,11 @@ Standard and sensitive share one macro, so columns are identical by construction
 | `auditModifiedBy`, `auditModifiedDateTime` | text | Who made this change, and when |
 | `auditPrevAppointmentDateTime`, `auditPrevAppointmentType`, `auditPrevClinician`, `auditPrevLocationGroup`, `auditPrevPriority` | text | Previous values, blank if unchanged (BL-027) |
 
-The dataset additionally carries `facility_id`/`facility` and `updated_at_sync_tick` (the
-incremental cursor, not report-facing).
+The dataset emits a different shape entirely — snake_case, unformatted, no translation keys
+— covering the same facts plus `change_id`, `patient_id`, `facility_id`/`facility`,
+`updated_at_sync_tick` (the incremental cursor), the raw `*_id` columns behind each
+resolved name, and `appointment_end_datetime`/`prev_end_datetime`, which have no report
+equivalent.
 
 ## Business logic
 
@@ -96,8 +99,11 @@ Code should reference these IDs as `-- BL-XXX:` comments; it does not yet (DV-00
   the preceding event. A non-cancelling status transition produces no row.
 - **BL-026:** Appointments auto-cancelled by a schedule bulk-cancellation are excluded, to
   distinguish them from individual cancellations: dropped when `status = 'Cancelled'`, the
-  schedule's `cancelled_at_date` (via `ref('outpatient_appointments')`) is set, and
-  `start_datetime` falls after it. `schedule_id` never changes once set, so this is stable.
+  schedule's `cancelled_at_date` is set, and the *change event's* `start_datetime` falls
+  after it. `cancelled_at_date` is reached through the appointment's **current**
+  `schedule_id` (via `ref('outpatient_appointments')`), not the `schedule_id` recorded on
+  each event. Those differ only if a schedule was attached after the first change was
+  logged; `schedule_id` is not otherwise mutated.
 - **BL-027:** `prev_*` columns populate only where the value differs from the current row's,
   otherwise blank. `prev_priority` carries an extra `is not null` guard, so a transition out
   of null renders blank — the other columns do not do this.
@@ -105,7 +111,9 @@ Code should reference these IDs as `-- BL-XXX:` comments; it does not yet (DV-00
   `location_group_id` is null or dangling produces no row at all.
 - **BL-029 (report):** `fromDate`/`toDate` filter the event's own
   `appointment_start_datetime`, not `modified_datetime`. With the 24-hour default this means
-  "changes to appointments scheduled around now", not "edits made recently".
+  "changes to appointments scheduled around now", not "edits made recently". `toDate` is
+  compared as a date, so an appointment later in the day on `toDate` is excluded — the house
+  pattern, though `audit_discharge_line_list` deliberately deviates.
 - **BL-030 (report):** The report first finds `appointment_id`s with an event in
   `[fromDate, toDate]` via a plain filtered scan with no window functions, then reconstructs
   full history only for those — `lag()`/`first_value()`/`change_sequence` need an
@@ -138,12 +146,23 @@ Code should reference these IDs as `-- BL-XXX:` comments; it does not yet (DV-00
   2. Changes outside the change log don't trigger reprocessing. A facility's `is_sensitive`
      flipping is the sharpest case: rows stay in the standard dataset indefinitely.
   3. A hard delete from `logs.changes` is undetectable, writing no new tick.
+  4. **A soft-delete is invisible to candidate detection.** The candidate CTE reads
+     `outpatient_appointments_change_events`, which filters `record_deleted_at is null`, so
+     the row recording a deletion is never seen and the appointment never becomes a
+     candidate. BL-036 therefore does not propagate to an incremental table: the dataset can
+     retain rows for appointments the report excludes.
 
   A periodic `--full-refresh` is therefore a correctness requirement, not tuning.
-- **BL-036:** Soft-deleted appointments are excluded, matching the population
-  `bases/outpatient_appointments` defines, enforced by an inner join to it. This is a
-  *current-state* test, unlike the change log's own `record_deleted_at` (state when each row
-  was written) — the join is what enforces it.
+- **BL-036:** The audit covers the population `bases/outpatient_appointments` defines,
+  enforced by an inner join to it. That excludes more than soft-deletes, and all of it on
+  *current* state rather than state at the time of each event:
+  - appointments with `deleted_at` set;
+  - appointments **hard-deleted** from `appointments` — their whole audit trail disappears;
+  - appointments whose *current* `appointment_type_id` is null, even if every logged event
+    had one.
+
+  The joins to `patients` and `location_groups` behave the same way: a patient later
+  soft-deleted or merged takes their audit trail with them (BL-028).
 - **BL-037:** `bases/outpatient_appointments_change_events` carries the change-log filters
   and no window functions, because both the report (by date) and the dataset (by tick) must
   narrow the log *before* the windowed reconstruction. Filtering the windowed base cannot
@@ -154,14 +173,17 @@ Code should reference these IDs as `-- BL-XXX:` comments; it does not yet (DV-00
 ## Acceptance criteria
 
 No automated tests exist yet (DV-004); statuses below come from manual verification against
-a populated replica.
+a populated replica. **The incremental statuses (AC-026, AC-028, AC-029) were measured
+before the candidate query was rewritten to read the thin base (BL-037), so they attest to
+the mechanism rather than to the query now in place — they need re-running.** AC-025 was
+re-verified after that rewrite.
 
 | ID | Criterion | Implements | Status |
 |---|---|---|---|
 | AC-020 | No row for the creation event | BL-023 | planned test |
 | AC-021 | Non-cancelling status transitions produce no row; cancellations do | BL-025 | planned test |
 | AC-022 | Schedule bulk-cancellations excluded; individual cancellations kept | BL-026 | planned test |
-| AC-023 | `change_number` starts at 1 and increments with no gaps | BL-024 | planned test |
+| AC-023 | `change_number` counts only rows surviving BL-025, the creation exclusion, BL-026 and BL-036 — so an appointment with one meaningful change among several events numbers it 1 | BL-024 | planned test |
 | AC-024 | Unchanged fields render `prev_*` blank; changed fields show the previous value | BL-027 | planned test |
 | AC-025 | Output identical before and after the BL-030 rework for a fixed range | BL-030 | **passed** — `EXCEPT ALL` both directions, no differing rows |
 | AC-026 | An incremental run matches what `--full-refresh` would produce | BL-032, BL-034 | **partly passed** — a second run was idempotent; not exercised with new events arriving between runs |
@@ -216,6 +238,16 @@ _None._
   connection uses — not merely `SELECT`/`INSERT`.
 - **First incremental model in this repo**, so there is no local precedent if the
   replace-by-`appointment_id` mechanism proves wrong for an unconsidered edge case.
+- **The incremental branch and the PII-masking branch test different target prefixes.**
+  BL-032 keys on `target.name.startswith('analytics')`, while `bases/patients` strips
+  direct identifiers under `is_analytics_target()`, which tests `analytics_`. On a target
+  named `analytics_*` the dataset is incremental *and* selects three columns that no longer
+  exist. Repo-wide for all datasets, not specific to this model, but it makes "analytics
+  targets" an imprecise precondition.
+- **The watermark is the maximum over *emitted* rows, not scanned rows.** BL-023/025/026/036
+  all drop rows before the select, so `max(updated_at_sync_tick)` can sit well below the
+  log's true maximum. Safe — the candidate set is a superset — but a refresh can reprocess
+  considerably more than "since the last run".
 - **`IS DISTINCT FROM` in `CASE WHEN` breaks `sqlfluff`'s parser**, so four compiled models
   sit in `.sqlfluffignore`. A parser limitation, not an SQL defect.
 - **The report is empty where change logging is not enabled** — nothing distinguishes that
