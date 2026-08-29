@@ -58,7 +58,7 @@ status-only transitions that don't change to `Cancelled` (BL-023, BL-025).
 
 | Reference | Why we need it |
 |---|---|
-| `ref('outpatient_appointment_change_events')` | The appointment change history, as a thin window-function-free base so it can be filtered with pushdown (BL-037) |
+| `ref('outpatient_appointments_change_events')` | The appointment change history, as a thin window-function-free base so it can be filtered with pushdown (BL-037) |
 | `ref('outpatient_appointments')` | Restricts to the appointment population `bases/` defines, and supplies the schedule's `cancelled_at_date` for BL-026 |
 | `ref('patients')` | Patient demographics |
 | `ref('users')` (aliased 4 ways: clinician, prev_clinician, creator, modifier) | Display names for the clinician and the users who created/modified the appointment |
@@ -108,7 +108,7 @@ Each rule has an ID. Reference these IDs in implementing code (`-- BL-023:`); no
 current code carries these comments yet (see Divergence, DV-005).
 
 - **BL-023:** Grain is one meaningful change event to an appointment, sourced from
-  `bases/outpatient_appointment_change_events`, which excludes soft-deleted change records,
+  `bases/outpatient_appointments_change_events`, which excludes soft-deleted change records,
   rows with no `appointment_type_id` (non-appointment noise in the same log), and the
   configured test patient. The initial creation event (`change_sequence = 1`) is excluded at
   the report and dataset grain — the report shows modifications, not creation. It is
@@ -260,7 +260,7 @@ current code carries these comments yet (see Divergence, DV-005).
   Note this is a *current-state* test, unlike the change log's own `record_deleted_at`, which
   reflects deletion state at the time each row was written. The join is what enforces the
   rule; the change-log filter alone would leave pre-deletion history in place.
-- **BL-037 (thin change-event base):** `bases/outpatient_appointment_change_events` carries
+- **BL-037 (thin change-event base):** `bases/outpatient_appointments_change_events` carries
   the change-log source filters and nothing else — deliberately no window functions. Two
   consumers need to narrow the change log before the windowed reconstruction runs: the report
   by date range (BL-030) and the dataset by sync tick (BL-032). Filtering the *windowed* base

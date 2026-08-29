@@ -38,7 +38,7 @@ with appointment_changes as (
             partition by c.record_id
             order by c.logged_at, c.record_updated_at, c.id
         ) as change_sequence
-    from {{ ref('outpatient_appointment_change_events') }} c
+    from {{ ref('outpatient_appointments_change_events') }} c
     {%- if record_id_filter %}
     where {{ record_id_filter }}
     {%- endif %}

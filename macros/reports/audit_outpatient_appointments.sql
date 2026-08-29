@@ -12,7 +12,7 @@
 -- never depends on this being exact.
 with candidate_appointment_ids as (
     select distinct c.record_id as appointment_id
-    from {{ ref('outpatient_appointment_change_events') }} c
+    from {{ ref('outpatient_appointments_change_events') }} c
     where {{ to_user_selected_timezone("(c.record_data ->> 'start_time')::timestamp") }}
             >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
         and {{ to_user_selected_timezone("(c.record_data ->> 'start_time')::timestamp") }}

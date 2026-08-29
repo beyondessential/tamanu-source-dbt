@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: outpatient_appointment_change_events
+  - name: outpatient_appointments_change_events
     description: >
       Thin projection of appointment rows in the change log, carrying the source filters but
       no window functions, so consumers can filter it with predicate pushdown. The windowed

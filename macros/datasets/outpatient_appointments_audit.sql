@@ -30,7 +30,7 @@ candidate_appointment_ids as (
     -- run read it. Reprocessing that tick is free -- delete+insert is idempotent per
     -- appointment. BL-032.
     select distinct c.record_id as appointment_id
-    from {{ ref('outpatient_appointment_change_events') }} c
+    from {{ ref('outpatient_appointments_change_events') }} c
     where c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 ),
 {% endif %}
