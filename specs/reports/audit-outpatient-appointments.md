@@ -189,11 +189,17 @@ current code carries these comments yet (see Divergence, DV-005).
   including the `table_name` and jsonb GIN indexes — post-migration, `logged_at` is
   BRIN-only, a poor fit for a selective watermark predicate. The first build (or any
   `--full-refresh`) computes the full unfiltered history, matching the base model.
-  Subsequent incremental runs identify which `appointment_id`s have any `logs.changes` row
-  past the watermark `max(updated_at_sync_tick)` already in the table
-  (`outpatient_appointments_audit_incremental_candidates()`, mirroring BL-030 at build time
-  instead of report-request time) and reprocess them per BL-034 — this narrowing is what
-  keeps a refresh cheap; it does not by itself decide what gets written.
+  Subsequent incremental runs identify which `appointment_id`s have a `logs.changes` row at
+  or past the watermark `max(updated_at_sync_tick)` already in the table (an inline
+  `candidate_appointment_ids` CTE, mirroring BL-030 at build time instead of
+  report-request time) and reprocess them per BL-034 — this narrowing is what keeps a
+  refresh cheap; it does not by itself decide what gets written.
+
+  The comparison is `>=`, not `>`. A sync tick is shared by every row written in that sync
+  session, so a strict comparison would permanently skip any row landing on the boundary
+  tick after the previous run read it — those rows would never be picked up again, because
+  the watermark has already moved past them. Reprocessing the boundary tick costs nothing,
+  since BL-034's replacement is idempotent per appointment.
 - **BL-033:** Facility scope is partitioned by the `is_sensitive` macro argument on both the
   report and the dataset — the standard/sensitive split used throughout this repo.
 - **BL-034 (incremental replacement strategy — not a plain append):** A plain append
@@ -224,11 +230,24 @@ current code carries these comments yet (see Divergence, DV-005).
   runs first, against an untouched target, and the delete is keyed off the result it
   produced.
 
-  *Known limitation:* an appointment that becomes a candidate but recomputes to zero rows
-  (e.g. its only meaningful change stops being meaningful after a history correction) is
-  absent from the result, so its stale rows are not deleted. This requires a correction to
-  already-written `logs.changes` history, which does not occur in normal operation on an
-  append-only audit log; `--full-refresh` is the remedy.
+- **BL-035 (incremental refresh is not self-healing):** `delete+insert` removes only the
+  `appointment_id`s present in the new result, and candidates are detected from
+  `logs.changes` alone. Three consequences, all requiring a periodic `--full-refresh` rather
+  than being corrected by the next incremental run:
+
+  1. **An appointment that recomputes to zero rows keeps its stale rows.** It is absent from
+     the result, so nothing deletes it. This is reachable in normal operation, not only by
+     correcting history: under BL-026, an individually-cancelled appointment whose schedule
+     is *later* bulk-cancelled flips from included to excluded, and its previously
+     materialised row survives.
+  2. **Changes outside `logs.changes` do not trigger reprocessing.** The output also depends
+     on `appointment_schedules`, `facilities.is_sensitive`, `location_groups`, `users` and
+     `patients`. Flipping a facility's sensitivity is the sharpest case: the affected rows
+     stay in the standard dataset and never appear in the sensitive one, indefinitely.
+  3. **A hard delete from `logs.changes` is undetectable**, since it writes no new sync tick.
+
+  The `--full-refresh` cadence is therefore a correctness requirement of this model, not a
+  tuning choice, and should be scheduled wherever it is built incrementally.
 
 ## Acceptance criteria
 
@@ -247,6 +266,8 @@ unverified except by manual reasoning and the compile-time checks in Risks.
 | AC-026 | An incremental run on an analytics target produces the same rows a `--full-refresh` would, for every appointment touched since the last run | BL-032, BL-034 | Not yet run against a real analytics target — first incremental model in this repo |
 | AC-027 | Facility scope: a sensitive-facility appointment never appears in the standard report/dataset and vice versa | BL-033 | dbt singular test |
 | AC-028 | A new change event for an appointment that already has materialised rows causes that appointment's rows to be fully replaced after the next incremental run — no stale `prev_*`/`change_number` values survive on its earlier rows | BL-034 | Not yet run against a real analytics target |
+| AC-029 | Rows written on the same sync tick as the previous run's high-water mark are still picked up by the next incremental run, rather than being skipped permanently | BL-032 | Not yet run against a real analytics target |
+| AC-030 | After an appointment recomputes to zero rows, or a facility's `is_sensitive` flips, an incremental run leaves the stale rows in place and only a `--full-refresh` corrects them — the documented behaviour, asserted so it is not mistaken for a bug later | BL-035 | Not yet run against a real analytics target |
 
 ## Lineage
 
@@ -340,15 +361,17 @@ _None._
   places post-rework (BL-030, BL-031). A future reader finding these four files ignored by
   `sqlfluff` should look here rather than assume it's accidental.
 - **First incremental model in this repo.** No other model in `tamanu-source-dbt` uses
-  `materialized='incremental'` today, and none uses a `pre_hook`-based delete (see DV-006)
-  — there is no local precedent to compare behaviour against if something about the
-  delete-by-`appointment_id`-then-reinsert mechanism (BL-034) turns out to be wrong for an
-  edge case not yet considered.
-- **`pre_hook` DELETE requires write permission the report/reporting role may not have.**
-  `pre_hook`/`post_hook` run under whatever role the dbt connection uses for that target;
-  confirm the analytics-target role has `DELETE` on this dataset's schema before the first
-  incremental run, not just `SELECT`/`INSERT` (which a read-mostly reporting role might be
-  scoped to).
+  `materialized='incremental'` today (see DV-006) — there is no local precedent to compare
+  behaviour against if something about the delete-by-`appointment_id`-then-reinsert
+  mechanism (BL-034) turns out to be wrong for an edge case not yet considered.
+- **`delete+insert` requires DELETE on the target schema.** dbt issues the delete under
+  whatever role the connection uses for that target; confirm the analytics-target role has
+  `DELETE` and not merely `SELECT`/`INSERT` before the first incremental run.
+- **This report reads `logs.changes` and `appointment_schedules` directly**, unlike every
+  other report in the repo, which reaches its data through `ref()` models. That deviates
+  from D10 ("Reporting sources from `bases/`, never from `public.*`"). It also means the
+  executing role needs privileges on those objects in its own right, rather than inheriting
+  them from a `reporting` view's owner as the previous version did.
 - **The report is empty where change logging is not enabled.** Everything here derives from
   `logs.changes`; a deployment whose change-log triggers are not installed returns no rows at
   all, with nothing on the report to distinguish that from "no appointments were modified".
