@@ -1,16 +1,14 @@
 {% macro outpatient_appointments_change_log_events(record_id_filter=none) %}
--- Shared change-log extraction for outpatient appointments. Three callers: the base model
--- (unfiltered), the audit report, and the audit dataset's incremental build. BL-031.
---
--- record_id_filter narrows WHICH appointments are included, never how much of an included
--- appointment's history is seen -- the window functions below need the full history per
--- appointment to stay correct.
+-- BL-031: shared change-log extraction. Three callers: the base model (unfiltered), the
+-- audit report, and the audit dataset's incremental build. record_id_filter narrows WHICH
+-- appointments are included, never how much of an included appointment's history is seen --
+-- the window functions below need each appointment's full history to stay correct.
 with appointment_changes as (
     select
         c.id as change_id,
         c.record_id as appointment_id,
         c.logged_at at time zone '{{ var("timezone") }}' as modified_datetime,
-        -- Incremental cursor: monotonic and btree-indexed, unlike logged_at. BL-032.
+        -- BL-032: incremental cursor -- monotonic and btree-indexed, unlike logged_at
         c.updated_at_sync_tick,
         c.updated_by_user_id as modified_by_user_id,
         -- Extract current values from the change log record_data
@@ -23,7 +21,7 @@ with appointment_changes as (
         (c.record_data ->> 'is_high_priority')::boolean as is_high_priority,
         c.record_data ->> 'status' as status,
         (c.record_data ->> 'schedule_id')::uuid as schedule_id,
-        -- Get creator from the first change_sequence (initial creation)
+        -- BL-023: creator comes from the retained creation event
         first_value(c.updated_by_user_id) over (
             partition by c.record_id
             order by c.logged_at, c.record_updated_at, c.id

@@ -3,13 +3,11 @@
 -- Outpatient Appointment Audit Report
 -- One row per change event, with current and previous appointment details.
 --
--- The logic lives here rather than in a dataset view so the date range can be applied
--- before the change-log window functions, which would otherwise block predicate pushdown
--- and force a full logs.changes scan on every run. BL-030.
-
--- Narrows to appointments with an event in range, using no window functions so the
--- predicate reaches the scan. The final WHERE re-applies the same filter, so correctness
--- never depends on this being exact.
+-- BL-030: the logic lives here, not in a dataset view, so the date range can be applied
+-- before the change-log window functions -- which would otherwise block predicate pushdown
+-- and force a full change-log scan on every run. The candidate CTE below uses no window
+-- functions so the predicate reaches the scan; the final WHERE re-applies the same filter,
+-- so correctness never depends on the early filter being exact.
 with candidate_appointment_ids as (
     select distinct c.record_id as appointment_id
     from {{ ref('outpatient_appointments_change_events') }} c
@@ -22,7 +20,7 @@ with candidate_appointment_ids as (
 change_evaluation as (
     select
         cl.*,
-        -- Determine if this change has meaningful field modifications
+        -- BL-025: which field changes count as meaningful
         case
             -- Status changed to Cancelled
             when cl.status = 'Cancelled' and cl.prev_status is distinct from 'Cancelled' then true
@@ -42,13 +40,12 @@ change_evaluation as (
             record_id_filter="c.record_id in (select appointment_id from candidate_appointment_ids)"
         ) }}
     ) cl
-    -- Inner join: restricts the audit to the appointment population bases/ defines, which
-    -- excludes soft-deleted appointments (BL-036), and supplies the schedule's
-    -- cancelled_at_date without reading the source table.
+    -- BL-036: restricts the audit to the population bases/outpatient_appointments defines,
+    -- and supplies cancelled_at_date for BL-026 without reading the source table
     join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
     where
-        -- Exclude appointments that were automatically cancelled when the schedule was cancelled
-        -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
+        -- BL-026: drop appointments auto-cancelled by a schedule bulk-cancellation, keeping
+        -- individual cancellations
         not (
             cl.status = 'Cancelled'
             and a.cancelled_at_date is not null
@@ -59,14 +56,14 @@ change_evaluation as (
 numbered_changes as (
     select
         ce.*,
-        -- Assign change number: starts from 1 for first modification
+        -- BL-024: 1 for the first meaningful change, incrementing per appointment
         row_number() over (
             partition by ce.appointment_id
             order by ce.modified_datetime
         ) as change_number
     from change_evaluation ce
     where ce.is_meaningful_change = true
-        and ce.change_sequence > 1  -- Exclude initial creation
+        and ce.change_sequence > 1  -- BL-023: exclude the creation event
 )
 
 select
@@ -91,7 +88,7 @@ select
     modifier.display_name as "{{ translate_label('auditModifiedBy') }}",
     to_char({{ to_user_selected_timezone('fc.modified_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('auditModifiedDateTime') }}",
     case when fc.status = 'Cancelled' then 'Yes' else 'No' end as "{{ translate_label('appointmentIsCancelled') }}",
-    -- Previous appointment details (only shown if different from current)
+    -- BL-027: previous values, blank where unchanged
     case
         when fc.prev_start_datetime is distinct from fc.start_datetime
         then to_char({{ to_user_selected_timezone('fc.prev_start_datetime') }}, '{{ var("datetime_format") }}')
@@ -114,6 +111,8 @@ select
         then case when fc.prev_is_high_priority then 'Yes' else 'No' end
     end as "{{ translate_label('auditPrevPriority') }}"
 from numbered_changes fc
+-- BL-028: patient, area and facility are inner joins, so an event whose
+-- location_group_id is null or dangling produces no row at all
 join {{ ref('patients') }} p on p.id = fc.patient_id
 left join {{ ref('users') }} clinician on clinician.id = fc.clinician_id
 left join {{ ref('users') }} prev_clinician on prev_clinician.id = fc.prev_clinician_id
@@ -123,11 +122,12 @@ join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
--- Join to facility for filtering by sensitivity
+-- BL-033: facility scope partitioned by the is_sensitive argument
 join {{ ref('facilities') }} f on f.id = lg.facility_id
     and f.is_sensitive = {{ is_sensitive }}
 where
-    -- Date range filter on appointment datetime (safety net -- see header comment)
+    -- BL-029: filters the event's own appointment start, not when the edit was made.
+    -- Also the BL-030 safety net -- see header.
     {{ to_user_selected_timezone('fc.start_datetime') }}
         >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     and

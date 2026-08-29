@@ -83,7 +83,8 @@ equivalent.
 
 ## Business logic
 
-Code should reference these IDs as `-- BL-XXX:` comments; it does not yet (DV-005).
+Each clause is anchored in the implementing SQL as a `-- BL-XXX:` comment, so
+`check_spec_anchors.py` fails if a clause and its code drift apart.
 
 - **BL-023:** One row per meaningful change event, from
   `bases/outpatient_appointments_change_events` — which excludes soft-deleted change rows,
@@ -218,8 +219,6 @@ _None._
 
 - **DV-004:** No automated tests for the base models, datasets or report; every AC above is
   unverified by tooling. *Resolution:* add the planned singular tests.
-- **DV-005:** BL clauses are not anchored with `-- BL-XXX:` comments in the SQL.
-  *Resolution:* add them in a follow-up, non-functional commit.
 - **DV-006:** The incremental mechanism is only partly verified. A full build then a second
   run has been exercised: rows were replaced not duplicated, the watermark tick reprocessed,
   and the role held the required `DELETE`. Not observed: a run where new events arrive

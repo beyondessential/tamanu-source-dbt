@@ -1,7 +1,7 @@
--- Thin projection of the appointment change log: the source filters, no window functions.
--- Consumers that need to narrow by date or appointment can filter this and have the
--- predicate reach the scan; the windowed reconstruction lives in
--- outpatient_appointments_change_log_events(), which cannot be filtered that way. BL-037.
+-- BL-037: thin projection of the appointment change log -- source filters, no window
+-- functions, so consumers can filter it and have the predicate reach the scan. The windowed
+-- reconstruction lives in outpatient_appointments_change_log_events(), which cannot be
+-- filtered that way.
 select
     c.id,
     c.record_id,
@@ -11,6 +11,7 @@ select
     c.updated_at_sync_tick,
     c.record_data
 from {{ source('logs__tamanu', 'changes') }} c
+-- BL-023: the audit's population filters
 where c.table_name = 'appointments'
     and c.record_deleted_at is null
     and (c.record_data ->> 'appointment_type_id') is not null

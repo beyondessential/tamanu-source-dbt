@@ -12,23 +12,22 @@
 -- One row per meaningful modification to an appointment, excluding creation and status-only
 -- changes. Full, unfiltered history -- the report applies its own date range. BL-023, BL-025.
 --
--- delete+insert keyed on appointment_id, not append: change_number and the prev_* columns
--- come from window functions partitioned by appointment_id, so a new event invalidates that
--- appointment's LATER rows, whose own cursor never moves. Append would leave them stale.
--- BL-034.
+-- BL-034: delete+insert keyed on appointment_id, not append. change_number and the prev_*
+-- columns come from window functions partitioned by appointment_id, so a new event
+-- invalidates that appointment's LATER rows, whose own cursor never moves; append would
+-- leave them stale.
 --
--- Incremental refresh is not self-healing: dbt only deletes ids present in the new result,
--- and candidates are detected from logs.changes alone. An appointment recomputing to zero
--- rows, or a change in facility sensitivity or a joined name, leaves stale rows behind.
--- Needs a periodic --full-refresh. BL-035.
+-- BL-035: a refresh is not self-healing. dbt deletes only ids present in the new result, and
+-- candidates come from the change log alone -- so a zero-row recompute, a soft-delete, a
+-- sensitivity flip or a renamed join target all leave stale rows behind.
 
 with
 {% if is_incremental() %}
 candidate_appointment_ids as (
-    -- >= not >: a sync tick is shared by every row written in that session, so a strict
-    -- comparison would permanently skip rows landing on the boundary tick after the last
-    -- run read it. Reprocessing that tick is free -- delete+insert is idempotent per
-    -- appointment. BL-032.
+    -- BL-032: >= not >. A sync tick is shared by every row written in that session, so a
+    -- strict comparison would permanently skip rows landing on the boundary tick after the
+    -- last run read it. Reprocessing that tick is free -- BL-034 is idempotent per
+    -- appointment.
     select distinct c.record_id as appointment_id
     from {{ ref('outpatient_appointments_change_events') }} c
     where c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
@@ -38,7 +37,7 @@ candidate_appointment_ids as (
 change_evaluation as (
     select
         cl.*,
-        -- Determine if this change has meaningful field modifications
+        -- BL-025: which field changes count as meaningful
         case
             -- Status changed to Cancelled
             when cl.status = 'Cancelled' and cl.prev_status is distinct from 'Cancelled' then true
@@ -58,13 +57,12 @@ change_evaluation as (
             record_id_filter="c.record_id in (select appointment_id from candidate_appointment_ids)" if is_incremental() else none
         ) }}
     ) cl
-    -- Inner join: restricts the audit to the appointment population bases/ defines, which
-    -- excludes soft-deleted appointments (BL-036), and supplies the schedule's
-    -- cancelled_at_date without reading the source table.
+    -- BL-036: restricts the audit to the population bases/outpatient_appointments defines,
+    -- and supplies cancelled_at_date for BL-026 without reading the source table
     join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
     where
-        -- Exclude appointments that were automatically cancelled when the schedule was cancelled
-        -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
+        -- BL-026: drop appointments auto-cancelled by a schedule bulk-cancellation, keeping
+        -- individual cancellations
         not (
             cl.status = 'Cancelled'
             and a.cancelled_at_date is not null
@@ -75,14 +73,14 @@ change_evaluation as (
 numbered_changes as (
     select
         ce.*,
-        -- Assign change number: starts from 1 for first modification
+        -- BL-024: 1 for the first meaningful change, incrementing per appointment
         row_number() over (
             partition by ce.appointment_id
             order by ce.modified_datetime
         ) as change_number
     from change_evaluation ce
     where ce.is_meaningful_change = true
-        and ce.change_sequence > 1  -- Exclude initial creation
+        and ce.change_sequence > 1  -- BL-023: exclude the creation event
 )
 
 select
@@ -120,7 +118,7 @@ select
     -- but must be a persisted column so later runs can read the watermark back from it.
     fc.updated_at_sync_tick,
     case when fc.status = 'Cancelled' then 'Yes' else 'No' end as is_cancelled,
-    -- Previous appointment details (only shown if different from current)
+    -- BL-027: previous values, blank where unchanged
     case
         when fc.prev_start_datetime is distinct from fc.start_datetime
         then fc.prev_start_datetime
@@ -162,6 +160,8 @@ select
     f.id as facility_id,
     f.name as facility
 from numbered_changes fc
+-- BL-028: patient, area and facility are inner joins, so an event whose
+-- location_group_id is null or dangling produces no row at all
 join {{ ref('patients') }} p on p.id = fc.patient_id
 left join {{ ref('users') }} clinician on clinician.id = fc.clinician_id
 left join {{ ref('users') }} prev_clinician on prev_clinician.id = fc.prev_clinician_id
@@ -171,10 +171,10 @@ join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join {{ ref('location_groups') }} prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
--- Join to facility for filtering by sensitivity
+-- BL-033: facility scope partitioned by the is_sensitive argument
 join {{ ref('facilities') }} f on f.id = lg.facility_id
     and f.is_sensitive = {{ is_sensitive }}
--- No tail filter on the cursor, deliberately: delete+insert removes all of a candidate's
--- existing rows, so this must re-emit its full history, not just the changed rows. BL-034.
+-- BL-034: no tail filter on the cursor, deliberately. delete+insert removes all of a
+-- candidate's existing rows, so this must re-emit its full history, not just changed rows.
 
 {% endmacro %}
