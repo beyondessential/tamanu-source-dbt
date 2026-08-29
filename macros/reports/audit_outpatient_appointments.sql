@@ -12,12 +12,8 @@
 -- never depends on this being exact.
 with candidate_appointment_ids as (
     select distinct c.record_id as appointment_id
-    from {{ source('logs__tamanu', 'changes') }} c
-    where c.table_name = 'appointments'
-        and c.record_deleted_at is null
-        and (c.record_data ->> 'appointment_type_id') is not null
-        and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
-        and {{ to_user_selected_timezone("(c.record_data ->> 'start_time')::timestamp") }}
+    from {{ ref('outpatient_appointment_change_events') }} c
+    where {{ to_user_selected_timezone("(c.record_data ->> 'start_time')::timestamp") }}
             >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
         and {{ to_user_selected_timezone("(c.record_data ->> 'start_time')::timestamp") }}
             <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
@@ -46,14 +42,17 @@ change_evaluation as (
             record_id_filter="c.record_id in (select appointment_id from candidate_appointment_ids)"
         ) }}
     ) cl
-    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id
+    -- Inner join: restricts the audit to the appointment population bases/ defines, which
+    -- excludes soft-deleted appointments (BL-036), and supplies the schedule's
+    -- cancelled_at_date without reading the source table.
+    join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
     where
         -- Exclude appointments that were automatically cancelled when the schedule was cancelled
         -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
         not (
             cl.status = 'Cancelled'
-            and s.cancelled_at_date is not null
-            and cl.start_datetime::date > s.cancelled_at_date::date
+            and a.cancelled_at_date is not null
+            and cl.start_datetime::date > a.cancelled_at_date::date
         )
 ),
 

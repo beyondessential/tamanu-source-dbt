@@ -58,8 +58,8 @@ status-only transitions that don't change to `Cancelled` (BL-023, BL-025).
 
 | Reference | Why we need it |
 |---|---|
-| `source('logs__tamanu', 'changes')` | The appointment change history itself — `table_name = 'appointments'` |
-| `source('tamanu', 'appointment_schedules')` | Detects bulk schedule cancellation, to exclude auto-cancelled appointments from the audit (BL-026) |
+| `ref('outpatient_appointment_change_events')` | The appointment change history, as a thin window-function-free base so it can be filtered with pushdown (BL-037) |
+| `ref('outpatient_appointments')` | Restricts to the appointment population `bases/` defines, and supplies the schedule's `cancelled_at_date` for BL-026 |
 | `ref('patients')` | Patient demographics |
 | `ref('users')` (aliased 4 ways: clinician, prev_clinician, creator, modifier) | Display names for the clinician and the users who created/modified the appointment |
 | `ref('location_groups')` (current + previous) | Area names |
@@ -68,8 +68,8 @@ status-only transitions that don't change to `Cancelled` (BL-023, BL-025).
 
 ### Freshness expectations
 
-The live report reads directly against `logs.changes` and its joined bases at request time —
-always current as of the moment the report runs. The dataset, on analytics targets, is only
+The live report reads through `bases/` at request time — always current as of the moment the
+report runs. The dataset, on analytics targets, is only
 as fresh as its last incremental build (BL-032).
 
 ## Output schema
@@ -108,7 +108,7 @@ Each rule has an ID. Reference these IDs in implementing code (`-- BL-023:`); no
 current code carries these comments yet (see Divergence, DV-005).
 
 - **BL-023:** Grain is one meaningful change event to an appointment, sourced from
-  `logs.changes` where `table_name = 'appointments'`, excluding soft-deleted change records,
+  `bases/outpatient_appointment_change_events`, which excludes soft-deleted change records,
   rows with no `appointment_type_id` (non-appointment noise in the same log), and the
   configured test patient. The initial creation event (`change_sequence = 1`) is excluded at
   the report and dataset grain — the report shows modifications, not creation. It is
@@ -129,9 +129,10 @@ current code carries these comments yet (see Divergence, DV-005).
   `Arrived`) is not meaningful and produces no row.
 - **BL-026:** An appointment auto-cancelled when its parent schedule was cancelled (bulk
   "cancel this and all future appointments") is excluded from the audit, distinguishing it
-  from an individually-cancelled appointment. Detected via a left join to
-  `appointment_schedules`: excluded when `status = 'Cancelled'`, the schedule's
-  `cancelled_at_date` is set, and the appointment's `start_datetime` falls after that date.
+  from an individually-cancelled appointment. `cancelled_at_date` comes from
+  `ref('outpatient_appointments')`, which already resolves it per appointment: excluded when
+  `status = 'Cancelled'`, that date is set, and the appointment's `start_datetime` falls
+  after it.
   `schedule_id` never changes on an existing appointment once set, so this join is stable
   across an appointment's history.
 - **BL-027:** Previous-value columns (`prev_start_datetime`, `prev_clinician`, etc.) are
@@ -238,8 +239,9 @@ current code carries these comments yet (see Divergence, DV-005).
   1. **An appointment that recomputes to zero rows keeps its stale rows.** It is absent from
      the result, so nothing deletes it. This is reachable in normal operation, not only by
      correcting history: under BL-026, an individually-cancelled appointment whose schedule
-     is *later* bulk-cancelled flips from included to excluded, and its previously
-     materialised row survives.
+     is *later* bulk-cancelled flips from included to excluded; and under BL-036, so does an
+     appointment that is soft-deleted after its rows were materialised. Both leave the
+     previously written rows behind.
   2. **Changes outside `logs.changes` do not trigger reprocessing.** The output also depends
      on `appointment_schedules`, `facilities.is_sensitive`, `location_groups`, `users` and
      `patients`. Flipping a facility's sensitivity is the sharpest case: the affected rows
@@ -248,24 +250,24 @@ current code carries these comments yet (see Divergence, DV-005).
 
   The `--full-refresh` cadence is therefore a correctness requirement of this model, not a
   tuning choice, and should be scheduled wherever it is built incrementally.
-- **BL-036 (audit history is retained for deleted appointments; D10 exemption):** This model
-  reads `logs.changes` and `appointment_schedules` directly rather than through `bases/`,
-  which D10 otherwise forbids. The exemption is deliberate and specific to audit models:
-  `bases/` exist partly to filter soft-deleted rows, and an audit trail must retain the
-  history of records that were later deleted — filtering them is the opposite of the
-  requirement.
+- **BL-036 (soft-deleted appointments are excluded):** The audit covers the same appointment
+  population as the rest of the appointment models. An inner join to
+  `ref('outpatient_appointments')` applies that base's filters, so an appointment whose
+  current `deleted_at` is set drops out of the audit entirely, along with its history —
+  matching `ds__outpatient_appointments` and the outpatient line list rather than diverging
+  from them.
 
-  Concretely, `bases/outpatient_appointments.sql` excludes any appointment whose *current*
-  `deleted_at` is set; this model instead excludes only change-log rows already flagged
-  deleted when they were written. So a soft-deleted appointment keeps the history recorded
-  before its deletion here, while disappearing entirely from `ds__outpatient_appointments`
-  and the outpatient line list. The audit population intentionally differs from every other
-  appointment model.
-
-  The exemption is narrow. It covers the change-log source and the schedule lookup that
-  BL-026 needs; every other dimension — patient, clinician, area, facility, appointment type
-  — is still resolved through `ref()` models and inherits their filters normally, including
-  the exclusion of deleted, merged and test patients.
+  Note this is a *current-state* test, unlike the change log's own `record_deleted_at`, which
+  reflects deletion state at the time each row was written. The join is what enforces the
+  rule; the change-log filter alone would leave pre-deletion history in place.
+- **BL-037 (thin change-event base):** `bases/outpatient_appointment_change_events` carries
+  the change-log source filters and nothing else — deliberately no window functions. Two
+  consumers need to narrow the change log before the windowed reconstruction runs: the report
+  by date range (BL-030) and the dataset by sync tick (BL-032). Filtering the *windowed* base
+  cannot work — Postgres will not push a predicate below a `WindowAgg`, and measurement
+  confirmed a partition-key filter is not pushed either, leaving the full history scanned. A
+  window-free base is therefore what makes the early filter possible while keeping every
+  model on `ref()`.
 
 ## Acceptance criteria
 
@@ -388,12 +390,6 @@ _None._
 - **`delete+insert` requires DELETE on the target schema.** dbt issues the delete under
   whatever role the connection uses for that target; confirm the analytics-target role has
   `DELETE` and not merely `SELECT`/`INSERT` before the first incremental run.
-- **This report reads `logs.changes` and `appointment_schedules` directly**, unlike every
-  other report in the repo. That is a deliberate D10 exemption for audit models (BL-036),
-  not an oversight — but it carries a practical consequence: the executing role needs
-  privileges on those objects in its own right, rather than inheriting them from a
-  `reporting` view owner as the previous version did. A role with access only to the
-  `reporting` schema cannot run this report.
 - **The report is empty where change logging is not enabled.** Everything here derives from
   `logs.changes`; a deployment whose change-log triggers are not installed returns no rows at
   all, with nothing on the report to distinguish that from "no appointments were modified".

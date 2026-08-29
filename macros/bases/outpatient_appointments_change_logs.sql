@@ -38,14 +38,10 @@ with appointment_changes as (
             partition by c.record_id
             order by c.logged_at, c.record_updated_at, c.id
         ) as change_sequence
-    from {{ source('logs__tamanu', 'changes') }} c
-    where c.table_name = 'appointments'
-        and c.record_deleted_at is null
-        and (c.record_data ->> 'appointment_type_id') is not null
-        and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
-        {%- if record_id_filter %}
-        and {{ record_id_filter }}
-        {%- endif %}
+    from {{ ref('outpatient_appointment_change_events') }} c
+    {%- if record_id_filter %}
+    where {{ record_id_filter }}
+    {%- endif %}
 )
 
 select

@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: outpatient_appointment_change_events
+    description: >
+      Thin projection of appointment rows in the change log, carrying the source filters but
+      no window functions, so consumers can filter it with predicate pushdown. The windowed
+      reconstruction of previous values and change numbering sits downstream in
+      outpatient_appointments_change_log_events().
+    config:
+      tags:
+        - base
+        - clinical
+        - audit
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: false
+      classification: restricted
+    columns:
+      - name: id
+        description: "{{ doc('logs__changes__id') }}"
+
+      - name: record_id
+        description: "{{ doc('logs__changes__record_id') }}"
+
+      - name: logged_at
+        description: "{{ doc('logs__changes__logged_at') }}"
+
+      - name: record_updated_at
+        description: "{{ doc('logs__changes__record_updated_at') }}"
+
+      - name: updated_by_user_id
+        description: "{{ doc('logs__changes__updated_by_user_id') }}"
+
+      - name: updated_at_sync_tick
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."
+
+      - name: record_data
+        description: "{{ doc('logs__changes__record_data') }}"

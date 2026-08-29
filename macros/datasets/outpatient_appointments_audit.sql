@@ -25,19 +25,13 @@
 with
 {% if is_incremental() %}
 candidate_appointment_ids as (
-    -- No record_deleted_at filter: a row turning deleted is itself a reason to reprocess
-    -- the appointment, even though it produces no output row. BL-034.
-    --
     -- >= not >: a sync tick is shared by every row written in that session, so a strict
     -- comparison would permanently skip rows landing on the boundary tick after the last
     -- run read it. Reprocessing that tick is free -- delete+insert is idempotent per
     -- appointment. BL-032.
     select distinct c.record_id as appointment_id
-    from {{ source('logs__tamanu', 'changes') }} c
-    where c.table_name = 'appointments'
-        and (c.record_data ->> 'appointment_type_id') is not null
-        and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
-        and c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
+    from {{ ref('outpatient_appointment_change_events') }} c
+    where c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 ),
 {% endif %}
 
@@ -64,14 +58,17 @@ change_evaluation as (
             record_id_filter="c.record_id in (select appointment_id from candidate_appointment_ids)" if is_incremental() else none
         ) }}
     ) cl
-    left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = cl.schedule_id
+    -- Inner join: restricts the audit to the appointment population bases/ defines, which
+    -- excludes soft-deleted appointments (BL-036), and supplies the schedule's
+    -- cancelled_at_date without reading the source table.
+    join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
     where
         -- Exclude appointments that were automatically cancelled when the schedule was cancelled
         -- (Keep appointments that were individually cancelled, not bulk-cancelled via schedule)
         not (
             cl.status = 'Cancelled'
-            and s.cancelled_at_date is not null
-            and cl.start_datetime::date > s.cancelled_at_date::date
+            and a.cancelled_at_date is not null
+            and cl.start_datetime::date > a.cancelled_at_date::date
         )
 ),
 
