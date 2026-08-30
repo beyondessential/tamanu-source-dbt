@@ -157,12 +157,18 @@ monthly period counts.
   if they are the recorded author/clinician (`provider_id`) on ≥1 event counted
   by the **canonical** BL-002 set in that month. `subject_grain = user`. This is
   a period activity count, deliberately different from the legacy `total_users`
-  (which counts user accounts that exist, cumulatively). Events with a NULL
+  (which counts user accounts that exist, cumulatively). Only `provider_id`s that
+  **resolve to a real Tamanu user** (`ref__provider`) are counted: the vaccination
+  branches of `clinical__drug_exposure` / `clinical__observation` set
+  `provider_id = coalesce(recorded_by_id, given_by)`, and `given_by` is free text
+  that need not reference a user — counting it raw would invent phantom users and
+  double-count a clinician recorded both ways. Events with a NULL or unresolvable
   `provider_id` contribute no user. **Emitted at national grain only** (one row
   per month, `facility_id` NULL = whole deployment): a distinct-user count is
   **non-additive** across facilities, so it must not be split by facility and
-  then summed. This also matches the consumer's ask (`total_users` is a national
-  figure, MAUI-6780).
+  then summed. It therefore carries **no `disaggregations`** in the registry.
+  This also matches the consumer's ask (`total_users` is a national figure,
+  MAUI-6780).
 
 - **BL-004 (not yet implemented — see OQ-003):** System and machine users
   *will be* excluded — the all-zero `id` "system" user and machine/integration
@@ -216,7 +222,7 @@ monthly period counts.
 |---|---|---|---|---|
 | `clinical_events` | Clinical events recorded in Tamanu (OMOP-lite) | `event` | `sex,facility_id` | — |
 | `clinical_events_legacy` | Clinical events recorded in Tamanu (legacy parity) | `event` | `sex,facility_id` | `clinical_events` |
-| `active_users` | Active Tamanu users | `user` | `facility_id` | — |
+| `active_users` | Active Tamanu users | `user` | — (national, non-additive: BL-003) | — |
 
 The canonical row (`clinical_events`) is the north-star OMOP-lite definition;
 `clinical_events_legacy` is its `variant_of` parity bridge (BL-002c).
@@ -305,3 +311,4 @@ deployments adopt it, add a row here rather than forking the definition.
 | 2026-08-08 | @julianam-w | Resolved OQ-001 (OMOP-lite canonical + `clinical_events_legacy` parity variant, BL-002c) and OQ-002 (`active_users` = active authors). Added variant to registry, output `variant_id`, and AC-008. |
 | 2026-08-08 | @julianam-w | `definition_source` set to BES; status → `approved`. |
 | 2026-08-08 | @julianam-w | Code-review fixes (PR #684): `active_users` re-grained to national (non-additive fix); legacy parity re-modelled as its own `metric_id` `clinical_events_legacy` (no double-count) so `variant_id` is always NULL; BL-004 marked not-yet-implemented; `published_datetime` bug; vaccination allow-list; program-registry first-log guard; diagnoses/notes/documents parity notes added to OQ-005; AC-005/007/008 revised; env-aware materialisation. |
+| 2026-08-30 | @julianam-w | Code-review fixes: `active_users` now semi-joins `ref__provider` so free-text `given_by` values cannot be counted as phantom users (BL-003); registry `disaggregations` for `active_users` cleared to match the national grain it actually emits (was `facility_id`, always NULL per BL-003/BL-006/AC-005). |

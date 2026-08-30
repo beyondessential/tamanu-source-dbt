@@ -67,8 +67,11 @@ metrics:
   definition_rationale: BES PHR MEL / EOPO1 platform-usage indicator
   unit: count
   subject_grain: user
-  disaggregations:
-  - facility_id
+  # Deliberately none: active_users is emitted at national grain only
+  # (facility_id NULL on every row, BL-003/BL-006, asserted by AC-005) because a
+  # distinct-user count is not additive across facilities. Declaring facility_id
+  # here would make registry-driven consumers build an always-empty dimension.
+  disaggregations: []
   variant_of: null
   owner: bes-maui
   status: approved

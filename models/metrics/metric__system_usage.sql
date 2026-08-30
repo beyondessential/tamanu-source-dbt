@@ -95,6 +95,16 @@ clinical_events_canonical as (
 -- consumer's actual ask (bes__phr_mel_1_1.total_users, MAUI-6780) is the national
 -- number. So we compute count(distinct provider_id) over the whole deployment and
 -- do NOT split by facility. NULL provider contributes nobody.
+--
+-- BL-003: only provider_ids that resolve to a real Tamanu user are counted.
+-- clinical__drug_exposure and clinical__observation set
+-- provider_id = coalesce(recorded_by_id, given_by), and given_by is free text
+-- that may not reference a user at all -- which is why both of those models
+-- scope their provider FK test off these rows. Counting provider_id raw would
+-- invent phantom "users" from hand-typed names, and would count one clinician
+-- twice when they appear both as a UUID and as a typed name. The semi-join
+-- against ref__provider (provider_id unique, AC-002) cannot fan out, and it
+-- subsumes the NULL check since NULL never matches IN.
 active_users_metric as (
     select
         'active_users'::text as metric_id,
@@ -104,7 +114,7 @@ active_users_metric as (
         null::text as sex,
         count(distinct provider_id)::numeric as value_numeric
     from omop_enriched
-    where provider_id is not null
+    where provider_id in (select provider_id from {{ ref('ref__provider') }})
     group by period_start
 ),
 
