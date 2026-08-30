@@ -76,7 +76,7 @@ definition, per every other metric in this registry.
 **One row per `(metric_id, subject_id)`.** Asserted by AC-001 at `error` severity.
 
 `subject_id` is the newborn's Tamanu `patient_id`, matching the registry's `subject_grain:
-person` — `patient_birth_data` is a person-level table with no encounter concept, one row per
+patient` — `patient_birth_data` is a patient-level table with no encounter concept, one row per
 birth registration. A twin birth is two `patient_birth_data` rows (one per baby), so grain
 uniqueness holds without a fan-out guard; AC-001 is the backstop if that assumption ever breaks.
 
@@ -94,12 +94,12 @@ D5 wide format, plus six disaggregation columns and four measure attributes.
 | `period_granularity` | text | Constant `'day'` |
 | `value_numeric` | numeric | Always `1` (AC-006) |
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
-| `facility_id` | varchar(255) | Birth facility (BL-010). Nullable — a home or other-place birth has none |
+| `facility_id` | varchar(255) | Birth facility, as recorded (BL-010). Nullable — a home or other-place birth has none |
 | `sex` | varchar(255) | Newborn's `clinical__person.gender_source_value` (BL-004) |
-| `birth_delivery_type` | text | Raw source value — `normal_vaginal_delivery`, `breech`, `emergency_c_section`, `elective_c_section`, `vacuum_extraction`, `forceps`, `other` (BL-009). Ungrouped |
-| `attendant_at_birth` | text | Raw source value — `doctor`, `midwife`, `nurse`, `traditional_birth_attentdant` [sic, matches the source data], `other` (BL-009). Ungrouped |
-| `registered_birth_place` | text | Raw source value — `health_facility`, `home`, `other` (BL-009). Ungrouped |
-| `birth_type` | text | `single` or `plural` (BL-009) |
+| `birth_delivery_type` | text | Raw source value — `normal_vaginal_delivery`, `breech`, `emergency_c_section`, `elective_c_section`, `vacuum_extraction`, `forceps`, `other` (BL-009). Ungrouped. Never NULL — unrecorded reads `'Not recorded'` (AC-015) |
+| `attendant_at_birth` | text | Raw source value — `doctor`, `midwife`, `nurse`, `traditional_birth_attentdant` [sic, matches the source data], `other` (BL-009). Ungrouped. Never NULL — unrecorded reads `'Not recorded'` (AC-015) |
+| `registered_birth_place` | text | Raw source value — `health_facility`, `home`, `other` (BL-009). Ungrouped. Never NULL — unrecorded reads `'Not recorded'` (AC-015) |
+| `birth_type` | text | `single` or `plural` (BL-009). Never NULL — unrecorded reads `'Not recorded'` (AC-015) |
 | `birth_weight` | numeric | Kilograms, 1 dp as recorded. A measure, not a dimension (BL-014) |
 | `gestational_age_estimate` | numeric | Completed weeks as recorded. A measure, not a dimension (BL-014) |
 | `apgar_score_five_minutes` | integer | As recorded. A measure, not a dimension (BL-014) |
@@ -153,26 +153,51 @@ carries no `data_table_*` meta.
   preterm-birth rate and low-Apgar rate are each `sum(value_numeric) filter (where metric_id =
   '<subset>') / sum(value_numeric) filter (where metric_id = 'birth')` at the consumer's grain.
   Per D5 "Rate scale" a rate is a 0–1 fraction, unrounded.
-- **BL-009 (delivery/attendant/place disaggregations, ungrouped):** `birth_delivery_type`,
-  `attendant_at_birth`, `registered_birth_place` and `birth_type` pass through as the raw source
-  value. Relabelling to a human-readable form (as `ds__births` does for a line list) is a
-  presentation choice left to the consumer's data table, the same division of labour as
-  `principal_diagnosis_code` in `ed_visit` BL-013.
-- **BL-010 (facility attribution, nullable):** `facility_id` is `patient_birth_data
-  .birth_facility_id`, left-joined against `bases/facilities`, and left **nullable** — unlike
+- **BL-009 (delivery/attendant/place disaggregations, ungrouped, never NULL):**
+  `birth_delivery_type`, `attendant_at_birth`, `registered_birth_place` and `birth_type` pass
+  through as the raw source value. Relabelling to a human-readable form (as `ds__births` does for
+  a line list) is a presentation choice left to the consumer's data table, the same division of
+  labour as `principal_diagnosis_code` in `ed_visit` BL-013.
+
+  All four are nullable in `patient_birth_data` and all four are coalesced to `'Not recorded'`,
+  asserted by AC-015 — the sibling metrics' convention (`ed_visit`'s `triage_score`,
+  `metric__procedure`'s `procedure_code`, `inpatient_admission`'s
+  `principal_diagnosis__icd10_chapter`). Tupaia's array filter drops NULL rows, so a raw NULL
+  would silently remove the birth from a "by delivery type" or "by attendant" split, and the
+  split would stop reconciling with the `birth` total — a card that quietly under-reports rather
+  than one that visibly has a gap.
+
+  **This is the opposite call to BL-010's `facility_id`, deliberately.** A NULL `facility_id`
+  states something true about the birth — it did not happen at a Tamanu facility. A NULL delivery
+  type states nothing about the birth, only about the record: the field was not filled in. The
+  model fills what is merely unrecorded and preserves what is meaningful.
+- **BL-010 (facility attribution, nullable, carried as recorded):** `facility_id` is
+  `patient_birth_data.birth_facility_id` **as recorded**, and left **nullable** — unlike
   `ed_visit`'s inner-joined facility, a home or other-place birth genuinely has none, and dropping
   those rows would bias "deliveries by place" toward facility births, defeating the point of the
-  disaggregation. No placeholder is coalesced here; a NULL is presentation's to label (the same
+  disaggregation.
+
+  The id is deliberately **not** resolved against `bases/facilities`. That base filters
+  `deleted_at is null`, so a birth at a facility since retired would come back NULL from the join
+  and fall into the home/other-place bucket — a data gap wearing the costume of a real home birth,
+  which is exactly what the clause below promises a NULL here never is. The join bought nothing
+  (it was a left join, so it filtered no rows) and cost the one guarantee this column makes. No placeholder is coalesced here; a NULL is presentation's to label (the same
   `unmatched_label` pattern the Tupaia facility crosswalk already uses in the consumer layer).
 - **BL-011 (materialisation is env-aware):** `table` when `target.name` starts with `analytics`,
   `view` otherwise, on the `metrics:` block in `dbt_project.yml` — the existing repo-wide rule,
   unchanged by this model.
-- **BL-012 (classification):** `pii: false` — no name or date of birth is emitted — but
-  `classification: restricted`, inherited from `patient_birth_data`'s own `restricted`
-  classification rather than downgraded to `internal`. A row carries a specific newborn's
-  `subject_id`, birth date and facility; in a small deployment, or any facility with a low birth
-  count, that combination can identify a specific mother and baby, which an anonymous encounter
-  id in `ed_visit` cannot. **The line this sets.** Any consumer of this model inherits `restricted`
+- **BL-012 (classification):** `pii: false` — no *direct* identifier is emitted: no name, no
+  patient display id, no address or village, none of what `ds__births` carries and is flagged
+  `pii: true` for. The newborn's date of birth **is** present, as `period_start`; `pii: false` is
+  the repo's flag for direct identifiers, and a date of birth is a quasi-identifier (as
+  `bases/patients` tags it), not a direct one.
+
+  That quasi-identifier is precisely why the classification is `restricted`, inherited from
+  `patient_birth_data`'s own `restricted` classification rather than downgraded to `internal`. A
+  row carries a specific newborn's `subject_id`, birth date and facility; in a small deployment,
+  or any facility with a low birth count, that combination can identify a specific mother and
+  baby, which an anonymous encounter id in `ed_visit` cannot. The `pii` flag and the
+  classification are doing different jobs here, and only the second one is load-bearing. **The line this sets.** Any consumer of this model inherits `restricted`
   handling; loosening it requires revisiting this clause, not just the consumer's own
   classification.
 - **BL-013 (per-birth grain):** one row per birth, `subject_id` = the newborn's `patient_id`,
@@ -199,17 +224,25 @@ carries no `data_table_*` meta.
 | AC-010 | Every `low_birth_weight` row has `birth_weight < 2.5` | BL-005 | `dbt_utils.expression_is_true` |
 | AC-011 | Every `preterm_birth` row has `gestational_age_estimate < 37` | BL-006 | `dbt_utils.expression_is_true` |
 | AC-012 | Every `low_apgar_5min` row has `apgar_score_five_minutes < 7` | BL-007 | `dbt_utils.expression_is_true` |
-| AC-013 | Every subset `subject_id` also has a `birth` row for the same subject | BL-002, grain | singular test |
-| AC-014 | The D5 projection resolves as specified: both `period_start` fallbacks, `birth_time` ignored at day granularity, each threshold's boundary excluded, a NULL measure emitting no subset row, and a facility-less birth keeping its row | BL-003, BL-005–BL-007, BL-010, BL-013 | unit test `ac_014_metric__birth_projection` |
+| AC-013 | Subset membership matches the source predicate over the included population, both directions: every qualifying `birth` has its subset row, and every subset row has a `birth` row whose source measure meets the threshold | BL-002, BL-005–BL-007, grain | singular test |
+| AC-014 | The D5 projection resolves as specified: both `period_start` fallbacks, `birth_time` ignored at day granularity, each threshold's boundary excluded, a NULL measure emitting no subset row, a facility-less birth keeping its row, a facility absent from `bases/facilities` keeping its id, and unrecorded disaggregations reading `'Not recorded'` | BL-003, BL-005–BL-007, BL-009, BL-010, BL-013 | unit test `ac_014_metric__birth_projection` |
+| AC-015 | `birth_delivery_type`, `attendant_at_birth`, `registered_birth_place` and `birth_type` are each `not_null` | BL-009 | `not_null` × 4 |
 
 AC-010 through AC-012 assert the thresholds against whatever rows a deployment holds; AC-014
 asserts them against controlled rows at each boundary, since no deployment database guarantees a
 birth at 2.5 kg, 37 weeks and Apgar 7.
 
+**On AC-013's shape.** The three subsets are `where` filters over one shared CTE, so a test that
+joins the model to itself is structurally incapable of failing and gives the criterion no
+regression cover. The singular test therefore re-derives subset membership from
+`patient_birth_data`'s measures over the model's own `birth` population, and compares both
+directions. It bites if a subset is ever rebuilt on its own base, or if a threshold drifts from
+BL-005–BL-007 — which is the change the criterion exists to catch.
+
 ## Registry entry
 
 Four active rows in `documentations/metrics/maternity.yml` — `birth`, `low_birth_weight`,
-`preterm_birth`, `low_apgar_5min` — each `kind: metric`, `subject_grain: person`, `status:
+`preterm_birth`, `low_apgar_5min` — each `kind: metric`, `subject_grain: patient`, `status:
 approved`, `spec_path` pointing here, `variant_of: null`.
 `disaggregations: facility_id,sex,birth_delivery_type,attendant_at_birth,registered_birth_place,
 birth_type` on every row (identical across the four, since they share a base).
@@ -224,7 +257,6 @@ Every disaggregation must be added to the allowlist in
 | `patient_birth_data` | `bases/` | Birth record: delivery type, attendant, place, weight, gestational age, Apgar (BL-002–BL-010) |
 | `patients` | `bases/` | Inclusion filter and date of birth for the reporting-period fallback (BL-002, BL-003) |
 | `clinical__person` | `clinical/` | Sex (BL-004) |
-| `facilities` | `bases/` | Birth facility name/existence (BL-010) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
@@ -270,3 +302,4 @@ Every disaggregation must be added to the allowlist in
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-26 | Maui team | Initial draft |
+| 2026-08-30 | Maui team | BL-009: the four disaggregations coalesce to `'Not recorded'` (new AC-015) — a raw NULL was droppable by Tupaia's array filter. BL-010: `facility_id` carried as recorded rather than left-joined to `bases/facilities`, which turned a soft-deleted facility into an apparent home birth. BL-012: corrected the `pii: false` justification — the newborn's date of birth *is* emitted as `period_start`. AC-013 restated as a source-anchored, falsifiable check. Registry `subject_grain` corrected to `patient` |

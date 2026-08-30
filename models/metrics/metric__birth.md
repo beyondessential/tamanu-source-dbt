@@ -72,9 +72,14 @@ NULL -- this metric's value is the count in value_numeric.
 {% enddocs %}
 
 {% docs metric__birth__facility_id %}
-The birth facility (patient_birth_data.birth_facility_id). Nullable: a home or other-place
-birth genuinely has none -- unlike ed_visit's inner-joined facility, no row is excluded or
-coalesced here to force a value.
+The birth facility, carried as patient_birth_data.birth_facility_id exactly as recorded.
+Nullable: a home or other-place birth genuinely has none -- unlike ed_visit's inner-joined
+facility, no row is excluded or coalesced here to force a value.
+
+The id is deliberately not resolved against bases/facilities. That base filters
+deleted_at is null, so a birth at a facility since retired would come back NULL and join the
+home/other-place bucket -- turning a data gap into what reads as a real home birth, the one
+thing a NULL here is documented never to be.
 
 **A data table must label the NULL, not filter it.** Tupaia's array filter drops NULL rows, so
 exposing this column as an array filter silently removes every home and other-place birth --
@@ -88,14 +93,21 @@ here the NULL is meaningful, so it survives to the consumer and the consumer han
 Raw source value: normal_vaginal_delivery, breech, emergency_c_section, elective_c_section,
 vacuum_extraction, forceps or other. Ungrouped -- relabelling to a human-readable form (as
 ds__births does for a line list) is the consumer's data table's job.
+
+Never NULL: an unrecorded delivery type reads 'Not recorded'. Tupaia's array filter drops NULL
+rows, so a raw NULL would silently remove the birth from a "by delivery type" split and stop it
+reconciling with the birth total. Unlike facility_id, a NULL here carries no meaning of its own
+-- it is an unfilled field, not a home birth -- so the model fills it rather than passing the
+problem to the consumer.
 {% enddocs %}
 
 {% docs metric__birth__attendant_at_birth %}
 Raw source value: doctor, midwife, nurse, traditional_birth_attentdant [sic, matches the
-source data] or other. Ungrouped, same treatment as birth_delivery_type.
+source data] or other. Ungrouped and never NULL, same treatment as birth_delivery_type --
+an unrecorded attendant reads 'Not recorded'.
 {% enddocs %}
 
 {% docs metric__birth__registered_birth_place %}
-Raw source value: health_facility, home or other. Ungrouped, same treatment as
-birth_delivery_type.
+Raw source value: health_facility, home or other. Ungrouped and never NULL, same treatment
+as birth_delivery_type -- an unrecorded place reads 'Not recorded'.
 {% enddocs %}

@@ -29,19 +29,18 @@ person as (
     select * from {{ ref('clinical__person') }}
 ),
 
-facilities as (
-    select * from {{ ref('facilities') }}
-),
-
 -- BL-002: inner join to patients drops soft-deleted, merged and test patients.
 -- BL-003: period_start is the date of birth, falling back to the registration date where the
 -- patient record carries no date of birth. birth_time is deliberately absent: at day
 -- granularity it cannot change the result, since date_of_birth + birth_time truncates to the
 -- same day as date_of_birth alone.
 -- BL-004: sex is the newborn's own clinical__person.gender_source_value.
--- BL-010: facility is left-joined and left nullable -- a home or other-place birth
--- genuinely has none, and dropping those rows would bias "deliveries by place" toward
--- facility births.
+-- BL-010: facility is carried as the recorded birth_facility_id and left nullable -- a home
+-- or other-place birth genuinely has none, and dropping those rows would bias "deliveries by
+-- place" toward facility births. Deliberately not joined to bases/facilities: that base
+-- filters deleted_at is null, so a birth at a since-retired facility would come back NULL and
+-- land in the home/other-place bucket -- a data gap wearing the costume of a real home birth,
+-- which is precisely what BL-010 promises a NULL here never is.
 births as (
     select
         pbd.patient_id as subject_id,
@@ -52,7 +51,7 @@ births as (
                 pbd.registration_date::timestamp
             )
         ) as period_start,
-        f.id as facility_id,
+        pbd.birth_facility_id as facility_id,
         per.gender_source_value as sex,
         pbd.birth_delivery_type,
         pbd.attendant_at_birth,
@@ -64,7 +63,6 @@ births as (
     from patient_birth_data pbd
     join patients p on p.id = pbd.patient_id
     join person per on per.person_id = pbd.patient_id
-    left join facilities f on f.id = pbd.birth_facility_id
 ),
 
 -- D5 wide format: one row per (metric_id, subject_id). birth is every row; the three
@@ -121,11 +119,16 @@ select
     facility_id,
     sex,
     -- BL-009: raw source values, ungrouped -- relabelling to a human-readable form is a
-    -- presentation choice left to the consumer's data table.
-    birth_delivery_type,
-    attendant_at_birth,
-    registered_birth_place,
-    birth_type,
+    -- presentation choice left to the consumer's data table. All four are nullable in
+    -- patient_birth_data and all four coalesce to 'Not recorded', the sibling metrics'
+    -- convention (ed_visit's triage_score, procedure's procedure_code): Tupaia's array filter
+    -- drops NULL rows, so a raw NULL would disappear the birth from a "by delivery type" card
+    -- and stop the split reconciling with the birth total. Unlike facility_id (BL-010), a NULL
+    -- here carries no meaning of its own -- it is an unfilled field, not a home birth.
+    coalesce(birth_delivery_type, 'Not recorded') as birth_delivery_type,
+    coalesce(attendant_at_birth, 'Not recorded') as attendant_at_birth,
+    coalesce(registered_birth_place, 'Not recorded') as registered_birth_place,
+    coalesce(birth_type, 'Not recorded') as birth_type,
     -- BL-014: measures, not dimensions -- continuous, so banding is the consumer's.
     birth_weight,
     gestational_age_estimate,

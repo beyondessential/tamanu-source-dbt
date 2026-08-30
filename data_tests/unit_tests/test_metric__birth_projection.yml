@@ -8,9 +8,12 @@ unit_tests:
       and period_end equals period_start. BL-005/BL-006/BL-007: a birth appears in
       low_birth_weight, preterm_birth or low_apgar_5min only where the relevant measure is
       recorded and under its threshold -- a NULL measure emits no subset row and is not
-      subtracted from birth's count. BL-010: facility_id stays NULL for a birth with no
-      birth_facility_id rather than dropping the row. BL-013: value_numeric is 1 per row and
-      subject_id is the newborn's patient_id.
+      subtracted from birth's count. BL-009: the four delivery/attendant/place disaggregations
+      coalesce to 'Not recorded', never NULL, so a Tupaia array filter cannot drop the birth.
+      BL-010: facility_id stays NULL for a birth with no birth_facility_id rather than dropping
+      the row, and is carried as recorded -- a facility missing from bases/facilities because it
+      was soft-deleted keeps its id rather than reading as a home birth. BL-013: value_numeric is
+      1 per row and subject_id is the newborn's patient_id.
 
       Covers the thresholds against controlled rows, because a deployment database carries no
       guarantee of a birth at each boundary.
@@ -22,6 +25,8 @@ unit_tests:
       # b_3: home birth (no facility), every measure NULL -- birth only, facility_id NULL
       # b_4: birth_time set but ignored at day granularity (BL-003)
       # b_5: no date_of_birth -- period_start falls back to registration_date (BL-003)
+      # b_6: facility soft-deleted (absent from facilities) and all four disaggregations
+      #      NULL -- id passes through (BL-010), disaggregations read 'Not recorded' (BL-009)
       - input: ref('patient_birth_data')
         format: sql
         rows: |
@@ -34,6 +39,8 @@ unit_tests:
           select 'b_4', '23:30'::time, 40.0::float, 'nurse', null::varchar, 'plural', 'breech', 3.2::numeric, 51.0::numeric, 9, 9, 9, 'health_facility', 'fac_1', '2024-05-20'::date
           union all
           select 'b_5', null::time, 39.0::float, 'doctor', null::varchar, 'single', 'forceps', 3.0::numeric, 49.0::numeric, 9, 9, 9, 'other', 'fac_1', '2024-06-01'::date
+          union all
+          select 'b_6', null::time, 41.0::float, null::varchar, null::varchar, null::varchar, null::varchar, 3.4::numeric, 52.0::numeric, 9, 9, 9, null::varchar, 'fac_retired', '2024-06-02'::date
 
       - input: ref('patients')
         format: sql
@@ -47,6 +54,8 @@ unit_tests:
           select 'b_4', '2024-05-19'::date
           union all
           select 'b_5', null::date
+          union all
+          select 'b_6', '2024-06-02'::date
 
       - input: ref('clinical__person')
         format: sql
@@ -60,11 +69,8 @@ unit_tests:
           select 'b_4', 'Male'
           union all
           select 'b_5', 'Female'
-
-      - input: ref('facilities')
-        format: sql
-        rows: |
-          select 'fac_1' as id
+          union all
+          select 'b_6', 'Male'
 
     expect:
       format: sql
@@ -81,6 +87,11 @@ unit_tests:
         union all
         -- BL-003: no date_of_birth, so period_start falls back to registration_date
         select 'birth', null::text, 'b_5'::varchar, '2024-06-01 00:00'::timestamp, '2024-06-01 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'forceps', 'doctor', 'other', 'single', 3.0::numeric, 39.0::numeric, 9
+        union all
+        -- BL-010: fac_retired is not in bases/facilities (soft-deleted), and the id still
+        -- comes through -- a retired facility is not a home birth
+        -- BL-009: all four disaggregations unrecorded, so all four read 'Not recorded'
+        select 'birth', null::text, 'b_6'::varchar, '2024-06-02 00:00'::timestamp, '2024-06-02 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_retired', 'Male', 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 3.4::numeric, 41.0::numeric, 9
         union all
         -- BL-005: only b_1 is under 2.5 kg. b_2 is exactly 2.5 (not low), b_3 has none
         select 'low_birth_weight', null::text, 'b_1'::varchar, '2024-05-15 00:00'::timestamp, '2024-05-15 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', 2.1::numeric, 34.0::numeric, 6
