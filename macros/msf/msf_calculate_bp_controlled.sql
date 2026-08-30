@@ -11,17 +11,23 @@
 
     Parameters are SQL expressions: sbp/dbp numeric, has_diabetes/has_htn
     1/0 flags. Returns 1 when the most recent BP meets the applicable
-    target, else 0.
+    target, else 0. A patient in neither cohort also returns 0, not NULL, so
+    callers must restrict rows to the diabetic or hypertensive cohort before
+    aggregating -- this macro grades a row and does not define the denominator.
 #}
+    -- Diabetes is scored in its own nested case: a diabetic patient must meet
+    -- <130 and can never be rescored against the laxer <140 target.
     case
-        when {{ has_diabetes }} = 1
-            and {{ sbp }} < 130
-            and {{ dbp }} < 90
-        then 1
-        when {{ has_htn }} = 1
-            and {{ sbp }} < 140
-            and {{ dbp }} < 90
-        then 1
+        when {{ has_diabetes }} = 1 then
+            case
+                when {{ sbp }} < 130 and {{ dbp }} < 90 then 1
+                else 0
+            end
+        when {{ has_htn }} = 1 then
+            case
+                when {{ sbp }} < 140 and {{ dbp }} < 90 then 1
+                else 0
+            end
         else 0
     end
 {% endmacro %}
