@@ -75,6 +75,12 @@ where trim(d) not in (
         -- encounter_diagnosis's principal/secondary flag, so a casemix view can count each
         -- encounter once without a separate primary-diagnosis metric.
         'is_primary',
+        -- birth's delivery mode, attendant, place of birth and single/plural outcome
+        -- (MAUI-6838). Raw source values, ungrouped -- relabelling is the consumer's.
+        'birth_delivery_type',
+        'attendant_at_birth',
+        'registered_birth_place',
+        'birth_type',
         -- procedure's recorded procedure, as code and as readable label. Emitted ungrouped,
         -- the same reasoning as diagnosis/diagnosis_code above.
         'procedure',
