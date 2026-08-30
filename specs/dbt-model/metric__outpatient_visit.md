@@ -28,8 +28,8 @@ Outpatient department activity at a Tamanu facility, one row per visit.
 attendance, it carries no admission/departure distinction, so there is no equivalent to
 `metric__emergency_visit`/`metric__emergency_stay`'s split. One metric covers it.
 
-**Who reads it.** The Tupaia "Hospital Administration" dashboard for Queen of Sheba
-Hospital, via a data table over this view.
+**Who reads it.** Tupaia "Hospital Administration" dashboard cards, via a data table over this
+view.
 
 ## Definition sources
 
@@ -175,7 +175,7 @@ which keeps the registry and the model from drifting.
 
 | Consumer | Use |
 |---|---|
-| `tupaia-data-product` `tamanu` source | Data table over this view, backing OPD visuals for Queen of Sheba |
+| `tupaia-data-product` `tamanu` source | Data table over this view, backing OPD visuals |
 
 **What a consumer must do:**
 

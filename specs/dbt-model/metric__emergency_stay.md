@@ -11,7 +11,7 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
-| **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) |
+| **Linear issue** | [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-12 |
 | **Last updated** | 2026-08-13 |
 
@@ -39,8 +39,8 @@ the same filter. They differ in the period measured and what they disaggregate b
 Use this model for duration and disposition questions, `metric__emergency_visit` for
 arrival, waiting-time, diagnosis and admission questions.
 
-**Who reads it.** The Tupaia "Hospital Administration → Emergency" dashboard for Queen of Sheba
-Hospital (MAUI-6694), via a data table over this view.
+**Who reads it.** Tupaia "Hospital Administration → Emergency" dashboard cards, via a data table
+over this view.
 
 ## Definition sources
 
@@ -224,7 +224,7 @@ models.
 
 | Consumer | Use |
 |---|---|
-| `tupaia-data-product` `tamanu` source | Data table over this view, backing Emergency cards on time in the ED and discharge disposition (MAUI-6694) |
+| `tupaia-data-product` `tamanu` source | Data table `emergency_stay__standard`, backing Emergency cards on time in the ED and discharge disposition |
 
 **What a consumer must do:**
 
@@ -248,4 +248,3 @@ models.
 | `metric__emergency_visit` | Same rows, same base; measures total length of stay and arrival-side attributes |
 | `int__emergency_visits` | The shared base both metrics project |
 | `ds__emergency_triage` | Report-layer emergency dataset at triage grain, with PII. Source of the waiting-time and disposition logic these metrics reuse |
-| MAUI-6694 | Queen of Sheba Hospital, Ghana — Hospital Administration → Emergency |

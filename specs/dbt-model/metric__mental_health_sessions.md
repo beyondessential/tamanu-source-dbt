@@ -117,21 +117,16 @@ D5 wide format. Each `metric__` view emits:
 seed for per-indicator `description`, `subject_grain`, and `unit`.
 
 All 3 rows are `status = approved` in the registry, shipping in
-`tamanu-source-dbt` v2.54.18. The MSF Kule implementation and its deployment
-spec follow; once Kule bumps its `tamanu-source-dbt` pin to a release containing
-these rows, its `metric_definitions` relationships test can move from `warn` to
-`error`.
+`tamanu-source-dbt` v2.54.18. An implementation holds its `metric_definitions`
+relationships test at `warn` until its deployment's pin reaches a release
+carrying these rows, then moves it to `error`.
 
 ## Implementations
 
-| Deployment | Repo | Implementation spec |
-|---|---|---|
-| MSF Kule | `tamanu-dbt-msf-kule` | [`specs/dbt-model/metric__mental_health_sessions.md`](https://github.com/beyondessential/tamanu-dbt-msf-kule/blob/main/specs/dbt-model/metric__mental_health_sessions.md) |
-
-Currently the only implementation. When a second deployment adopts these
-indicators, this section gains a row and any definition-level divergence
-gets captured here (or as a `variant_of` registry row, per D5) rather than
-in either deployment's own spec.
+Implemented in deployment repos; each implementation spec links here from its
+identity block. A definition-level divergence between two implementations is
+captured in this spec, or as a `variant_of` registry row per D5 -- never in one
+deployment's own spec, where the other's readers would not see it.
 
 ## Open questions
 

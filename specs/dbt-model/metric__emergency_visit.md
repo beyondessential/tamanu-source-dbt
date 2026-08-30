@@ -11,7 +11,7 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
-| **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
+| **Linear issue** | [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
 | **Last updated** | 2026-08-19 |
 
@@ -31,8 +31,8 @@ type changes over time. Counting attendances therefore means counting encounters
 in the ED — counting encounters currently typed as emergency would drop every admitted-via-ED
 patient at the moment of admission.
 
-**Who reads it.** The Tupaia "Hospital Administration → Emergency" dashboard for Queen of Sheba
-Hospital (MAUI-6694), via a data table over this view.
+**Who reads it.** Tupaia "Hospital Administration → Emergency" dashboard cards, via a data table
+over this view.
 
 `metric__emergency_stay` covers the same rows over the ED portion of the stay; that spec's
 § Purpose carries the division of labour.
@@ -309,7 +309,7 @@ keeps the registry and the model from drifting.
 
 | Consumer | Use |
 |---|---|
-| `tupaia-data-product` `tamanu` source | Data table `tamanu_qos__emergency_care`, backing three Emergency cards for Queen of Sheba (MAUI-6694) |
+| `tupaia-data-product` `tamanu` source | Data table `emergency_visit__standard`, backing the Emergency dashboard cards |
 
 Those cards use metric-agnostic templates (`line__metric_count`, `bar__metric_split`,
 `line__metric_ratio`) parameterised by metric id, so any deployment materialising this model gets
@@ -341,4 +341,3 @@ them from configuration alone.
 | `int__emergency_visits` | The shared base both metrics project |
 | `ds__encounters_emergency` | Report-layer emergency dataset at triage grain, with PII |
 | `der__cohort_ncd_6m` | Per-subject derived artefact — the reference for `subject_id` semantics |
-| MAUI-6694 | Queen of Sheba Hospital, Ghana — Hospital Administration → Emergency |

@@ -34,8 +34,7 @@ It counts diagnosis events, not people. A patient seen twice for the same condit
 contributes two rows -- the question it answers is how much of a condition is being
 diagnosed, not how many people have it.
 
-**Who reads it.** The Tupaia "Morbidity" dashboard, via a data table over this view --
-initially for Tokelau.
+**Who reads it.** The Tupaia "Morbidity" dashboard, via a data table over this view.
 
 ## Definition sources
 

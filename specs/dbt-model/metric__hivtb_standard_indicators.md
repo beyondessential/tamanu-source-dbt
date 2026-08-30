@@ -11,7 +11,7 @@
 | **Status** | `approved` (one interpretation pending MSF confirmation — see § Residual definitional cautions) |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Linear issue** | [MAUI-6626](https://linear.app/bes/issue/MAUI-6626/msf-kule-dhis2-standard-indicators-hivandtb-report) |
+| **Linear issue** | [MAUI-6626](https://linear.app/bes/issue/MAUI-6626) |
 | **Created** | 2026-07-27 |
 | **Last updated** | 2026-07-27 |
 
@@ -23,10 +23,10 @@ details (which upstream models feed each, point-in-time reconstruction mechanics
 survey-column mappings, DHIS2 window/backfill vars, unit tests) live in the
 deployment specs.
 
-**BL numbering is shared with the MSF Kule implementation spec** (and with the
+**BL numbering is shared with each deployment implementation spec** (and with the
 `-- BL-0xx` comments in `metric__hivtb_standard_indicators.sql`): BL-002 is
-`pmtct_hiv_positive_delivering` in both, and so on. Keep them aligned so a code
-comment resolves to the same clause in either spec.
+`pmtct_hiv_positive_delivering` everywhere, and so on. Keep them aligned so a
+code comment resolves to the same clause in every spec.
 
 ## Purpose
 
@@ -223,14 +223,10 @@ form submissions. See the seed for each indicator's `description`,
 
 ## Implementations
 
-| Deployment | Repo | Implementation spec |
-|---|---|---|
-| MSF Kule | `tamanu-dbt-msf-kule` | [`specs/dbt-model/metric__hivtb_standard_indicators.md`](https://github.com/beyondessential/tamanu-dbt-msf-kule/blob/main/specs/dbt-model/metric__hivtb_standard_indicators.md) |
-
-Currently the only implementation. When a second deployment adopts these
-indicators, this section gains a row and any definition-level divergence gets
-captured here (or as a `variant_of` registry row, per D5) rather than in either
-deployment's own spec.
+Implemented in deployment repos; each implementation spec links here from its
+identity block. A definition-level divergence between two implementations is
+captured in this spec, or as a `variant_of` registry row per D5 -- never in one
+deployment's own spec, where the other's readers would not see it.
 
 ## Residual definitional cautions
 
