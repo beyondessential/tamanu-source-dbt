@@ -119,12 +119,12 @@ review obligation, not an automated one (DV-007).
   of null renders blank — the other columns do not do this.
 - **BL-028:** Patient, location group and facility are inner joins, so an event whose
   `location_group_id` is null or dangling produces no row at all.
-- **BL-029 (report):** `fromDate`/`toDate` filter the event's own
+- **BL-029:** `fromDate`/`toDate` filter the event's own
   `appointment_start_datetime`, not `modified_datetime`. With the 24-hour default this means
   "changes to appointments scheduled around now", not "edits made recently". `toDate` is
   compared as a date, so an appointment later in the day on `toDate` is excluded — the house
   pattern, though `audit_discharge_line_list` deliberately deviates.
-- **BL-030 (report):** The report first finds `appointment_id`s having an event whose
+- **BL-030:** The report first finds `appointment_id`s having an event whose
   `appointment_start_datetime` falls in `[fromDate, toDate]` — the appointment's
   scheduled time, not when the edit happened (BL-029) — via a plain filtered scan with
   no window functions, then reconstructs
