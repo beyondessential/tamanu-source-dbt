@@ -35,7 +35,7 @@ models:
       - name: metric_id
         description: >
           clinical_events or active_users. Joins to the canonical
-          metric_definitions registry (csv/metric_definitions.csv).
+          metric_definitions registry (documentations/metrics/system_usage.yml).
         tests:
           - not_null
           - accepted_values:

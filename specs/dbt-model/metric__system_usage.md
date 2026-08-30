@@ -16,7 +16,7 @@
 | **Last updated** | 2026-08-08 |
 
 Canonical definitions for two generic, deployment-agnostic Tamanu adoption
-indicators registered in `csv/metric_definitions.csv`:
+indicators registered in `documentations/metrics/system_usage.yml`:
 
 - `clinical_events` — how much clinical activity was captured in Tamanu.
 - `active_users` — how many Tamanu users were active.
@@ -101,7 +101,7 @@ asks for activity "between 01 Jan – 30 Jun 2026", i.e. the sum of the six
 monthly period counts.
 
 - **BL-001:** Every output row carries `metric_id` set to its registered
-  identifier in `csv/metric_definitions.csv`. Joining a consumer to the registry
+  identifier in the metric registry. Joining a consumer to the registry
   on `metric_id` returns the definition.
 
 - **BL-002 (`clinical_events`):** Count of clinical-event **records** whose event
@@ -213,7 +213,7 @@ monthly period counts.
 
 ## Registry entries
 
-3 new rows in `csv/metric_definitions.csv`, all `kind = metric`,
+3 new entries in `documentations/metrics/system_usage.yml`, all `kind = metric`,
 `data_source = tamanu`, `definition_source = BES`,
 `unit = count`, `owner = bes-maui`, `status = approved`,
 `spec_path = specs/dbt-model/metric__system_usage.md`:
