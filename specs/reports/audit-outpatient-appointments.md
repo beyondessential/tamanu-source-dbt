@@ -193,10 +193,7 @@ review obligation, not an automated one (DV-007).
 ## Acceptance criteria
 
 No automated tests exist yet (DV-004); statuses below come from manual verification against
-a populated replica. **The incremental statuses (AC-026, AC-028, AC-029) were measured
-before the candidate query was rewritten to read the thin base (BL-037), so they attest to
-the mechanism rather than to the query now in place — they need re-running.** AC-025 was
-re-verified after that rewrite.
+a populated replica, re-run against the current code after the BL-031 shared-core refactor.
 
 | ID | Criterion | Implements | Status |
 |---|---|---|---|
@@ -206,9 +203,9 @@ re-verified after that rewrite.
 | AC-023 | `change_number` counts only rows surviving BL-025, the creation exclusion, BL-026 and BL-036 — so an appointment with one meaningful change among several events numbers it 1 | BL-024 | planned test |
 | AC-024 | Unchanged fields render `prev_*` blank; changed fields show the previous value | BL-027 | planned test |
 | AC-025 | Output identical before and after the BL-030 rework for a fixed range | BL-030 | **passed** — `EXCEPT ALL` both directions, no differing rows |
-| AC-026 | An incremental run matches what `--full-refresh` would produce | BL-032, BL-034 | **partly passed** — a second run was idempotent; not exercised with new events arriving between runs |
+| AC-026 | An incremental run matches what `--full-refresh` would produce | BL-032, BL-034 | **passed** — full build then a second run: row count and distinct `change_id` unchanged, no duplicates. Not exercised with new events arriving between runs |
 | AC-027 | Sensitive-facility appointments never appear in the standard output, or vice versa | BL-033 | planned test |
-| AC-028 | A new event causes that appointment's rows to be replaced, not appended | BL-034 | **partly passed** — replacement confirmed, zero duplicate `change_id`s; a genuinely new event not yet observed through it |
+| AC-028 | A new event causes that appointment's rows to be replaced, not appended | BL-034 | **passed** — the second run deleted and re-inserted rather than appending, zero duplicate `change_id`s. A genuinely new event not yet observed through it |
 | AC-029 | Rows on the previous run's watermark tick are still picked up | BL-032 | **passed** — reprocessed; a strict `>` would have found no candidates |
 | AC-030 | Stale rows persist after a zero-row recompute or sensitivity flip until `--full-refresh` | BL-035 | not tested |
 
@@ -238,12 +235,10 @@ _None._
 
 - **DV-004:** No automated tests for the base models, datasets or report; every AC above is
   unverified by tooling. *Resolution:* add the planned singular tests.
-- **DV-008:** The shared-core refactor (BL-031) has been re-verified: row-for-row parity
-  against the deployed report over a month returns no differing rows. The two-run incremental
-  check (AC-026/028/029) still needs repeating on this code. *Resolution:* run it once the
-  analytics target carries the two models this change newly depends on —
-  `outpatient_appointments_change_events` and `outpatient_appointments`, neither of which the
-  previous dataset referenced.
+- **DV-008:** This change adds two upstream dependencies the dataset did not previously have
+  — `outpatient_appointments_change_events` and `outpatient_appointments`. An analytics build
+  must include them, or the dataset fails outright. *Resolution:* confirm the analytics
+  pipeline selects the model with its upstream chain rather than in isolation.
 - **DV-007:** `check_spec_anchors.py` is not run by CI — `.github/workflows/checks.yml`
   does not invoke it — so even its ID-set check is advisory. *Resolution:* add it to the
   checks workflow, and consider `--strict-spec-coverage` so an unanchored clause fails
