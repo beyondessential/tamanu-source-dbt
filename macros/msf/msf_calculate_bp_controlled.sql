@@ -11,15 +11,12 @@
 
     Parameters are SQL expressions: sbp/dbp numeric, has_diabetes/has_htn
     1/0 flags. Returns 1 when the most recent BP meets the applicable
-    target, else 0.
+    target, else 0. A patient in neither cohort also returns 0, not NULL, so
+    callers must restrict rows to the diabetic or hypertensive cohort before
+    aggregating -- this macro grades a row and does not define the denominator.
 #}
-    -- The outer case selects the COHORT, the inner case evaluates that
-    -- cohort's target. Keeping those two decisions separate is what enforces
-    -- "diabetes takes precedence": a diabetic patient is always scored against
-    -- the <130 target and can never fall through to the laxer hypertensive
-    -- branch. (Flattening this back into sibling when-clauses reintroduces
-    -- that fall-through -- e.g. a diabetic + hypertensive patient at 135/85
-    -- would be scored controlled against the <140 target.)
+    -- Diabetes is scored in its own nested case: a diabetic patient must meet
+    -- <130 and can never be rescored against the laxer <140 target.
     case
         when {{ has_diabetes }} = 1 then
             case
