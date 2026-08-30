@@ -30,12 +30,18 @@ relations as (
 
 -- each village paired with itself and every ancestor (BL-003)
 -- (cast to text so the anchor and recursive terms share a column type)
-ancestry (location_id, ancestor_id) as (
-    select id::text, id::text from places where level = 'village'
+-- depth guard: reference_data_relations is user-maintained with no DB-level
+-- acyclicity constraint, so a data cycle (A->B->A) would otherwise recurse until
+-- it exhausts memory. The address hierarchy is at most 5 levels
+-- (village->settlement->subdivision->division->country), so depth < 10 is ample
+-- headroom while still bounding a cyclic walk.
+ancestry (location_id, ancestor_id, depth) as (
+    select id::text, id::text, 0 from places where level = 'village'
     union all
-    select a.location_id, r.parent_id::text
+    select a.location_id, r.parent_id::text, a.depth + 1
     from ancestry a
     inner join relations r on r.child_id = a.ancestor_id
+    where a.depth < 10
 ),
 
 ancestor_levels as (
