@@ -26,6 +26,9 @@ models:
       - name: modified_datetime
         description: "{{ doc('outpatient_appointments_change_logs__modified_datetime') }}"
 
+      - name: updated_at_sync_tick
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."
+
       - name: modified_by_user_id
         description: "{{ doc('outpatient_appointments_change_logs__modified_by_user_id') }}"
 
