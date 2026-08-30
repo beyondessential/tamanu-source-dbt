@@ -238,11 +238,12 @@ _None._
 
 - **DV-004:** No automated tests for the base models, datasets or report; every AC above is
   unverified by tooling. *Resolution:* add the planned singular tests.
-- **DV-008:** The shared-core refactor (BL-031) and the `change_sequence` tiebreaker
-  (BL-024) have been validated only by `dbt parse` — the replica was unreachable, so neither
-  the compiled SQL nor row-for-row parity has been re-checked since. Both are expected to be
-  output-neutral apart from tie ordering, but that is reasoning, not measurement.
-  *Resolution:* re-run the parity check and the two-run incremental validation.
+- **DV-008:** The shared-core refactor (BL-031) has been re-verified: row-for-row parity
+  against the deployed report over a month returns no differing rows. The two-run incremental
+  check (AC-026/028/029) still needs repeating on this code. *Resolution:* run it once the
+  analytics target carries the two models this change newly depends on —
+  `outpatient_appointments_change_events` and `outpatient_appointments`, neither of which the
+  previous dataset referenced.
 - **DV-007:** `check_spec_anchors.py` is not run by CI — `.github/workflows/checks.yml`
   does not invoke it — so even its ID-set check is advisory. *Resolution:* add it to the
   checks workflow, and consider `--strict-spec-coverage` so an unanchored clause fails

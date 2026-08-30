@@ -32,7 +32,8 @@ c.record_id in (
     from {{ ref('outpatient_appointments_change_events') }} c2
     where c2.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 )
-{%- endset -%}
+{%- endset %}
+
 
 select
     change_id,
@@ -73,7 +74,10 @@ select
     prev_clinician_id,
     prev_location_group,
     prev_location_group_id,
-    case when prev_is_high_priority then 'Yes' else 'No' end as prev_priority,
+    case
+        when prev_is_high_priority then 'Yes'
+        when prev_is_high_priority is false then 'No'
+    end as prev_priority,
     facility_id,
     facility
 from (

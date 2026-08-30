@@ -21,7 +21,8 @@ c.record_id in (
         and {{ to_user_selected_timezone("(c2.record_data ->> 'start_time')::timestamp") }}
             <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
 )
-{%- endset -%}
+{%- endset %}
+
 
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
@@ -43,7 +44,10 @@ select
     prev_appointment_type as "{{ translate_label('auditPrevAppointmentType') }}",
     prev_clinician as "{{ translate_label('auditPrevClinician') }}",
     prev_location_group as "{{ translate_label('auditPrevLocationGroup') }}",
-    case when prev_is_high_priority then 'Yes' else 'No' end as "{{ translate_label('auditPrevPriority') }}"
+    case
+        when prev_is_high_priority then 'Yes'
+        when prev_is_high_priority is false then 'No'
+    end as "{{ translate_label('auditPrevPriority') }}"
 from (
     {{ outpatient_appointments_audit_core(
         is_sensitive=is_sensitive,
