@@ -1,0 +1,180 @@
+version: 2
+
+models:
+  - name: metric__birth
+    description: "{{ doc('metric__birth') }}"
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta -- the Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      # BL-012: restricted, inherited from patient_birth_data's own restricted
+      # classification. A row carries a specific newborn's subject_id, birth date and
+      # facility -- in a low-birth-count deployment that combination can identify a
+      # specific mother and baby.
+      classification: restricted
+    data_tests:
+      # One row per (metric_id, subject_id). A duplicate would double-count a birth in any
+      # consumer that sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__birth_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-007 (BL-003): a birth is a point event, so period_end always equals period_start.
+      - dbt_utils.expression_is_true:
+          name: ac_007_metric__birth_period_end_equals_start
+          arguments:
+            expression: "period_end = period_start"
+      # AC-010 (BL-005): every low_birth_weight row is actually under the WHO/UNICEF
+      # threshold.
+      - dbt_utils.expression_is_true:
+          name: ac_010_metric__birth_low_birth_weight_threshold
+          arguments:
+            expression: "birth_weight < 2.5"
+          config:
+            where: "metric_id = 'low_birth_weight'"
+      # AC-011 (BL-006): every preterm_birth row is actually under the WHO threshold.
+      - dbt_utils.expression_is_true:
+          name: ac_011_metric__birth_preterm_threshold
+          arguments:
+            expression: "gestational_age_estimate < 37"
+          config:
+            where: "metric_id = 'preterm_birth'"
+      # AC-012 (BL-007): every low_apgar_5min row is actually under the low-Apgar
+      # threshold.
+      - dbt_utils.expression_is_true:
+          name: ac_012_metric__birth_low_apgar_threshold
+          arguments:
+            expression: "apgar_score_five_minutes < 7"
+          config:
+            where: "metric_id = 'low_apgar_5min'"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__birth__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__birth_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__birth_metric_id_values
+              arguments:
+                values:
+                  - birth
+                  - low_birth_weight
+                  - preterm_birth
+                  - low_apgar_5min
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry. Registry ships in the same repo and
+          # release as this model, so held at error -- no version-skew reason for warn.
+          - relationships:
+              name: ac_003_metric__birth_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__birth__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__birth__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__birth_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: "{{ doc('metric__birth__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__birth_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: "{{ doc('metric__birth__period_end') }}"
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__birth__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__birth_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__birth_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__birth__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__birth_value_numeric_not_null
+          - accepted_values:
+              name: ac_006_metric__birth_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('metric__birth__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__birth__facility_id') }}"
+        # BL-010: deliberately nullable -- a home or other-place birth has none. No
+        # not_null test, unlike ed_visit's inner-joined facility. Carried straight from
+        # patient_birth_data rather than joined to bases/facilities, so a birth at a
+        # since-retired facility keeps its id instead of masquerading as a home birth.
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }} of the newborn."
+        data_tests:
+          - not_null:
+              name: ac_009_metric__birth_sex_not_null
+      - name: birth_delivery_type
+        data_type: text
+        description: "{{ doc('metric__birth__birth_delivery_type') }}"
+        data_tests:
+          # AC-015 (BL-009): the model coalesces to 'Not recorded' precisely so this holds --
+          # Tupaia's array filter drops NULL rows, so a NULL here would silently disappear the
+          # birth from a "by delivery type" split.
+          - not_null:
+              name: ac_015_metric__birth_birth_delivery_type_not_null
+      - name: attendant_at_birth
+        data_type: text
+        description: "{{ doc('metric__birth__attendant_at_birth') }}"
+        data_tests:
+          # AC-015 (BL-009), same reasoning as birth_delivery_type.
+          - not_null:
+              name: ac_015_metric__birth_attendant_at_birth_not_null
+      - name: registered_birth_place
+        data_type: text
+        description: "{{ doc('metric__birth__registered_birth_place') }}"
+        data_tests:
+          # AC-015 (BL-009), same reasoning as birth_delivery_type.
+          - not_null:
+              name: ac_015_metric__birth_registered_birth_place_not_null
+      - name: birth_type
+        data_type: text
+        description: "{{ doc('patient_birth_data__birth_type') }}"
+        data_tests:
+          # AC-015 (BL-009), same reasoning as birth_delivery_type.
+          - not_null:
+              name: ac_015_metric__birth_birth_type_not_null
+      - name: birth_weight
+        data_type: numeric
+        description: "{{ doc('patient_birth_data__birth_weight') }}"
+        # BL-014: a measure, not a dimension -- banding is the consumer's.
+      - name: gestational_age_estimate
+        data_type: numeric
+        description: "{{ doc('patient_birth_data__gestational_age_estimate') }}"
+        # BL-014: a measure, not a dimension -- banding is the consumer's.
+      - name: apgar_score_five_minutes
+        data_type: integer
+        description: "{{ doc('patient_birth_data__apgar_score_five_minutes') }}"
+        # BL-014: a measure, not a dimension -- banding is the consumer's.
