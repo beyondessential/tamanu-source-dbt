@@ -80,7 +80,7 @@ where trim(d) not in (
         'birth_delivery_type',
         'attendant_at_birth',
         'registered_birth_place',
-        'birth_type'
+        'birth_type',
         -- procedure's recorded procedure, as code and as readable label. Emitted ungrouped,
         -- the same reasoning as diagnosis/diagnosis_code above.
         'procedure',
