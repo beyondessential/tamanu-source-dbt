@@ -24,6 +24,12 @@ ac_007 as (
         != (select count(*) from {{ ref('int__encounter_invoice_amounts') }})
 )
 
+-- AC-005 and AC-007 are shape guards, not data assertions. clinical__cost defines
+-- total_paid as paid_by_patient + paid_by_payer over the same expressions, and
+-- selects from int__encounter_invoice_amounts with no join or filter, so both hold
+-- by construction today. They exist to fail if a later edit introduces an
+-- independent payment expression or a filter -- a green run here says the SQL
+-- still has that shape, not that the data reconciles.
 select cost_id, failed_ac from ac_005
 union all
 select cost_id, failed_ac from ac_007

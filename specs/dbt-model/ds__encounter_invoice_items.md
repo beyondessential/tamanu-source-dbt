@@ -61,7 +61,7 @@ preserved.
 
 | Upstream | Columns used |
 |---|---|
-| `int__encounter_invoice_item_amounts` | `invoice_item_id`, `invoice_id`, `product_id`, `product_name`, `category`, `quantity`, `unit_price`, `item_discount_amount`, `discounted_total`, `insurance_coverage`, `source_record_type`, `source_record_id`, `date` |
+| `int__encounter_invoice_item_amounts` | `invoice_item_id`, `invoice_id`, `product_id`, `product_name`, `category`, `quantity`, `unit_price`, `item_adjustment`, `discounted_total`, `insurance_coverage`, `source_record_type`, `source_record_id`, `date` |
 | `invoices` | `id`, `encounter_id`, `status`, `datetime` |
 
 ### Freshness expectations
