@@ -259,6 +259,12 @@ _None._
   time, which reads naturally as "recent edits". Intentional and pre-existing.
 - **`delete+insert` needs `DELETE` on the target schema**, under whatever role the analytics
   connection uses — not merely `SELECT`/`INSERT`.
+- **On a non-persistent target the incremental buys nothing.** An existing but empty table
+  has a watermark of 0, so every appointment is a candidate and the run is a full recompute —
+  verified: a truncated table rebuilt completely and correctly, but took ~74s against ~1s for
+  a delta run. Where the database does not persist between builds, this behaves exactly like
+  a `table` materialisation at the same cost. The design only pays off on a persistent
+  analytics database.
 - **First incremental model in this repo**, so there is no local precedent if the
   replace-by-`appointment_id` mechanism proves wrong for an unconsidered edge case.
 - **The incremental branch and the PII-masking branch test different target prefixes.**
