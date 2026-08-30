@@ -24,7 +24,13 @@ models:
         description: "{{ doc('outpatient_appointments_change_logs__appointment_id') }}"
 
       - name: change_number
-        description: "{{ doc('ds__outpatient_appointments_audit__change_number') }}"
+        description: >
+          Sequential change number for this appointment where initial creation is excluded,
+          1 = first modification, 2 = second modification, etc. This differs from
+          `change_sequence`, which numbers every logged change including the initial
+          creation:
+
+          {{ doc('outpatient_appointments_change_logs__change_sequence') }}
 
       - name: patient_id
         description: "{{ doc('outpatient_appointments_change_logs__patient_id') }}"
@@ -72,7 +78,11 @@ models:
         description: "{{ doc('outpatient_appointments_change_logs__schedule_id') }}"
 
       - name: is_repeating
-        description: "{{ doc('ds__outpatient_appointments_audit__is_repeating') }}"
+        description: >
+          Whether the appointment is part of a repeating schedule. Values: Yes (non-null),
+          No (null).
+
+          {{ doc('outpatient_appointments_change_logs__schedule_id') }}
 
       - name: created_by
         description: "{{ doc('users__display_name') }} who created the appointment"
@@ -89,8 +99,17 @@ models:
       - name: modified_datetime
         description: "{{ doc('outpatient_appointments_change_logs__modified_datetime') }}"
 
+      - name: updated_at_sync_tick
+        description: >
+          {{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes. Incremental
+          build cursor on analytics targets (see macros/datasets/outpatient_appointments_audit.sql)
+          -- not otherwise report-facing.
+
       - name: is_cancelled
-        description: "{{ doc('ds__outpatient_appointments_audit__is_cancelled') }}"
+        description: >
+          Whether the current status is 'Cancelled'. Values: Yes/No.
+
+          {{ doc('outpatient_appointments_change_logs__status') }}
 
       - name: prev_start_datetime
         description: "{{ doc('outpatient_appointments_change_logs__prev_start_datetime') }}"
