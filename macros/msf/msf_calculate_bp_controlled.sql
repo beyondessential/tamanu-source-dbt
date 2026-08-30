@@ -13,15 +13,24 @@
     1/0 flags. Returns 1 when the most recent BP meets the applicable
     target, else 0.
 #}
+    -- The outer case selects the COHORT, the inner case evaluates that
+    -- cohort's target. Keeping those two decisions separate is what enforces
+    -- "diabetes takes precedence": a diabetic patient is always scored against
+    -- the <130 target and can never fall through to the laxer hypertensive
+    -- branch. (Flattening this back into sibling when-clauses reintroduces
+    -- that fall-through -- e.g. a diabetic + hypertensive patient at 135/85
+    -- would be scored controlled against the <140 target.)
     case
-        when {{ has_diabetes }} = 1
-            and {{ sbp }} < 130
-            and {{ dbp }} < 90
-        then 1
-        when {{ has_htn }} = 1
-            and {{ sbp }} < 140
-            and {{ dbp }} < 90
-        then 1
+        when {{ has_diabetes }} = 1 then
+            case
+                when {{ sbp }} < 130 and {{ dbp }} < 90 then 1
+                else 0
+            end
+        when {{ has_htn }} = 1 then
+            case
+                when {{ sbp }} < 140 and {{ dbp }} < 90 then 1
+                else 0
+            end
         else 0
     end
 {% endmacro %}
