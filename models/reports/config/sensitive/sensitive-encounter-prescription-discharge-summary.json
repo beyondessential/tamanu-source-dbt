@@ -1,8 +1,8 @@
 {
   "query": "replace this",
-  "name": "Medication dispensed summary",
-  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range, based on dispense records.",
+  "name": "Sensitive encounter prescription discharge summary",
   "status": "published",
+  "notes": "This report shows the total quantity of medication selected for discharge for a given drug within a specified date range for sensitive facilities, based on what clinicians recorded at discharge rather than pharmacy dispensing records. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Sensitive medication dispensed summary' report.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "30days",
