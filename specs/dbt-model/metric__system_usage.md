@@ -7,13 +7,13 @@
 | **Name** | Tamanu system usage (suite of 2 `metric__` indicators: `clinical_events`, `active_users`) |
 | **Type** | dbt model suite (canonical definitions) |
 | **Layer** | `metric` (D5 wide format) |
-| **Materialisation** | view |
+| **Materialisation** | env-aware: table on the analytics replica, view elsewhere (inherited from the `metrics` block in `dbt_project.yml`) |
 | **Status** | `approved` |
 | **Owner** | @julianam-w |
 | **Linear issue** | [MAUI-6780](https://linear.app/bes/issue/MAUI-6780/data-request-for-mid-year-phr-report) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-08 |
-| **Last updated** | 2026-08-08 |
+| **Last updated** | 2026-08-30 |
 
 Canonical definitions for two generic, deployment-agnostic Tamanu adoption
 indicators registered in `documentations/metrics/system_usage.yml`:
@@ -114,9 +114,22 @@ monthly period counts.
 - **BL-002a (event date):** The month a record belongs to is determined by its
   clinical event datetime (the OMOP domain's event date — e.g.
   `condition_start_datetime`, `drug_exposure_start_datetime`,
-  `measurement_datetime`, `observation_datetime`), converted to the deployment
-  timezone, **not** the row's `created_at` (UTC ingest time). Records with a NULL
-  event date are excluded.
+  `measurement_datetime`, `observation_datetime`), **not** the row's `created_at`
+  (UTC ingest time). Records with a NULL event date are excluded.
+
+  **No timezone conversion is applied, and none must be.** Every event datetime
+  reaching this model originates in a Tamanu `date_time_string` column
+  (`character(19)` — e.g. `encounter_diagnoses.date`, `administered_vaccines.date`,
+  `medication_dispenses.dispensed_at`), which holds local wall-clock time with no
+  offset; `bases/` casts it to a naive `timestamp`. `date_trunc('month', ...)` over
+  that value therefore already buckets by deployment-local month. Passing it through
+  `to_user_selected_timezone` would re-interpret an already-local timestamp as
+  `var('timezone')` (default `Australia/Sydney`) and shift it, moving
+  month-boundary events into the wrong month for every deployment not on that
+  timezone — including FSM and Tokelau, the first two consumers. That macro is also
+  a no-op outside `dbt compile`, so it would change nothing in the analytics
+  materialisation while corrupting the compiled reporting bundle. AC-009 pins the
+  boundary behaviour so a future conversion cannot be added silently.
 
 - **BL-002b (OMOP-lite canonical scope — divergence from legacy is expected):**
   The canonical `clinical_events` count (`variant_id` NULL) is defined on the
@@ -138,7 +151,7 @@ monthly period counts.
   A separate registered metric (`variant_of clinical_events`) that reproduces the
   legacy `data-staging` `ds__clinical_events` total 1:1, so consumers keep a
   continuous series across the `data-staging` sunset (D7). It counts, per month
-  and facility (and patient `sex`), one row per record across the same 16
+  and facility (and patient `sex`), one row per record across the same 17
   legacy event types at the legacy grain, sourced directly from `bases/`
   (not the OMOP-lite domains): notes recorded; procedures; lab requests
   received; lab requests resulted (published); imaging requests received;
@@ -210,6 +223,8 @@ monthly period counts.
 | AC-005 | `sex` **and** `facility_id` are NULL on every `active_users` row (national grain) | BL-003, BL-007 | singular test |
 | AC-006 | Every `metric_id` resolves to a row in `metric_definitions` | BL-001 | `relationships` |
 | AC-007 | Every month with an `active_users` row also has a canonical `clinical_events` row (no users without events) | BL-003 | singular test |
+| AC-008 | `variant_id` is NULL on every row — the legacy series is its own `metric_id`, never a `variant_id` value | BL-002c | `dbt_utils.expression_is_true` |
+| AC-009 | An event dated in the last minute of a month buckets into that month, not the next (no timezone shift), and a NULL event datetime contributes no row | BL-002a | dbt unit test |
 
 ## Registry entries
 
@@ -294,13 +309,17 @@ deployments adopt it, add a row here rather than forking the definition.
 - **OQ-002 → resolved (2026-08-08):** `active_users` counts distinct users who
   **authored a clinical event** in the month (active authors), per BL-003 — not
   user accounts and not logins.
+- **OQ-004 → resolved (2026-08-30):** No deployment timezone source is needed.
+  Every event datetime feeding the model is a `date_time_string`
+  (`character(19)`) local wall-clock value, so `date_trunc('month', ...)` already
+  buckets by deployment-local month; applying `to_user_selected_timezone` would
+  shift it and corrupt the bucketing (BL-002a). Guarded by AC-009.
 
 ## Open questions
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
 | OQ-003 | Confirm the canonical way to identify system / test / machine users to exclude (BL-004) — is there a `users.role` value or a seed of excluded user ids shared across deployments? | @julianam-w | TBD |
-| OQ-004 | Confirm the deployment timezone source used for BL-002a month bucketing (per-deployment `var('timezone')`, used by `to_user_selected_timezone`). | @julianam-w | TBD |
 | OQ-005 | The `clinical_events_legacy` metric (BL-002c) was authored offline and validated only by `dbt parse` — its **numeric parity** with `data-staging` `ds__clinical_events` must be confirmed on a real deployment DB before it is relied on for reporting. Parity checkpoints to verify: (a) vaccination status allow-list (`GIVEN/NOT_GIVEN/UNKNOWN`) vs the legacy Given/Not given/Unknown mapping; (b) program-registry status-change detection now excludes the first log per registration — confirm the legacy `dim_patient_program_registrations` did the same; (c) diagnoses — the base `encounter_diagnoses` excludes `disproven`/`error`, confirm legacy `fct_diagnoses` matches; (d) notes — legacy may exclude system-generated notes (this branch counts all `record_type = 'Encounter'` notes); (e) patient-letter documents — legacy may filter `document_metadata.type` (this branch counts all encounter-linked documents). | @julianam-w | before FSM/Tokelau go-live |
 
 ## Change log
@@ -311,4 +330,5 @@ deployments adopt it, add a row here rather than forking the definition.
 | 2026-08-08 | @julianam-w | Resolved OQ-001 (OMOP-lite canonical + `clinical_events_legacy` parity variant, BL-002c) and OQ-002 (`active_users` = active authors). Added variant to registry, output `variant_id`, and AC-008. |
 | 2026-08-08 | @julianam-w | `definition_source` set to BES; status → `approved`. |
 | 2026-08-08 | @julianam-w | Code-review fixes (PR #684): `active_users` re-grained to national (non-additive fix); legacy parity re-modelled as its own `metric_id` `clinical_events_legacy` (no double-count) so `variant_id` is always NULL; BL-004 marked not-yet-implemented; `published_datetime` bug; vaccination allow-list; program-registry first-log guard; diagnoses/notes/documents parity notes added to OQ-005; AC-005/007/008 revised; env-aware materialisation. |
+| 2026-08-30 | @julianam-w | Spec-conformance pass: corrected the legacy event-type count (16 → 17, matching both the enumeration and the model's 17 union branches), corrected the Materialisation row to the env-aware project setting, and refreshed Last updated. Added the missing AC-008 (`variant_id` always NULL), referenced by earlier changelog entries but never in the table. Resolved OQ-004 and rewrote BL-002a: event datetimes are `date_time_string` local wall-clock values, so no timezone conversion is applied or wanted; added AC-009 and a dbt unit test pinning month-boundary bucketing and NULL-date exclusion. |
 | 2026-08-30 | @julianam-w | Code-review fixes: `active_users` now semi-joins `ref__provider` so free-text `given_by` values cannot be counted as phantom users (BL-003); registry `disaggregations` for `active_users` cleared to match the national grain it actually emits (was `facility_id`, always NULL per BL-003/BL-006/AC-005). |

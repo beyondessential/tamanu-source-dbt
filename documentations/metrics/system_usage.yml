@@ -34,7 +34,7 @@ metrics:
   kind: metric
   name: Clinical events recorded in Tamanu (legacy parity)
   description: >-
-    Legacy-parity reproduction of data-staging ds__clinical_events: one row per record across 16
+    Legacy-parity reproduction of data-staging ds__clinical_events: one row per record across 17
     legacy event types (notes, procedures, lab and imaging requests and results, medications,
     vaccinations, births, forms, referrals, vitals, deaths, diagnoses, patient letters,
     program-registry adds and status changes) in the reporting month.
