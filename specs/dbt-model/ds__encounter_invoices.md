@@ -45,7 +45,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 
 ## Business logic
 
-(Clause numbers are shared with the consuming report spec, which this was split from, and match the `-- BL-NNN` anchors in `models/datasets/standard/ds__encounter_invoices.sql`.)
+(Clause numbers are shared with the consuming report spec, which this was split from. The invoice-level aggregation lives in `models/intermediate/standard/int__encounter_invoice_amounts.sql` — the ephemeral both this dataset and `clinical__cost` consume; `models/datasets/standard/ds__encounter_invoices.sql` is a thin projection over it. The **per-item** arithmetic below (BL-006/007/008 and the per-item part of BL-010) is implemented once in the shared `invoice_item_amounts()` macro, anchored `BL-002/003/004` in `ds__encounter_invoice_items.md`; this spec describes the same logic from the invoice perspective. The `test_int__encounter_invoice_amounts_*` unit tests target the ephemeral.)
 
 - **BL-006:** Resolve exactly one price list per invoice, mirroring Tamanu's `getIdForPatientEncounter`: match on facility (direct match, or no facility rule and no other current price list claims this facility), patient billing type (the encounter's, falling back to the patient's additional-data billing type), and patient age in completed years at the invoice date (exact value, or min/max range). When several price lists match, the lowest `evaluation_order` wins, then earliest `created_at`, then `code` (price lists with no `evaluation_order` sort last, matching the application).
 - **BL-007:** Item unit price falls back through `invoice_items.price_final` → `invoice_items.manual_entry_price` → `invoice_price_list_items.price` → `0`. The price-list item must be non-hidden and bound to the encounter's resolved price list and the item's product.
@@ -53,7 +53,8 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 - **BL-009:** `invoice_total` is the sum of BL-008 across the invoice's items (null when the invoice has no items).
 - **BL-010:** Insurance coverage is resolved per insurance plan currently linked to the invoice (mirroring the app's per-plan `insurancePlanItems`). For each plan, the coverage percentage is the finalised snapshot for that (item, plan) when present, otherwise the live per-product coverage, falling back to the plan default, then 0. Percentages are summed across the item's plans, the applied coverage is `min(discounted_total × total_pct / 100, discounted_total)`, summed across insurable items per invoice, rounded to 2 dp.
 - **BL-011:** `invoice_discount` is the invoice's discount percentage applied to its patient subtotal (`invoice_total − insurance_coverage`), rounded to 2 dp. Mirrors `getInvoiceLevelDiscountAmount`. Duplicate discounts (no DB uniqueness) resolve to the most recently applied.
-- **BL-012:** `patient_payment` is `sum(payments) − sum(refunds)`, restricted to payments linked to an `invoice_patient_payments` row. Refunds are identified by `original_payment_id is not null` and subtracted.
+- **BL-012:** `patient_payment` is the net patient payment: the sum of payments carrying an `invoice_patient_payments` row that are neither a reversal (`original_payment_id` set) nor themselves reversed (a reversal points at them). A refund reverses the *entire* original (Tamanu has no partial refund), so excluding both sides of a refunded pair yields the net — mirroring the app's `getInvoiceSummary`.
+- **BL-013:** `insurer_payment` is the net insurer payment, computed the same way over payments carrying an `invoice_insurer_payments` row. Unlike a patient refund, an insurer payment reversal does **not** get its own `invoice_insurer_payments` row (Tamanu has no insurer-refund endpoint), so the reversal is netted by *excluding the reversed original*, not by a negative-reversal lookup. No `status` filter — `invoice_payments.amount` is the amount actually paid and the insurer status is derived from it, so rejected rows contribute 0 and partial rows their real value. Computed here in the shared ephemeral and consumed by `clinical__cost.paid_by_payer`; `ds__encounter_invoices` does not project it.
 - **BL-015:** `invoice_finalised_datetime` is the most recent `logged_at` from `logs.changes` where `status = 'finalised'` and the previous status was not `'finalised'`, presented in the deployment timezone (`var('timezone')`).
 - **BL-016:** `products_no_category` concatenates the item name — the finalised `product_name_final`, falling back to the live `invoice_products.name` for in-progress invoices — of the invoice's items whose product has no category, ordered by item `date`.
 
@@ -74,7 +75,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 | AC-011 | Combined per-item coverage above 100% is capped at the item's discounted total. | BL-010 |
 | AC-012 | A negatively discounted insurable item is included in coverage, capped at the (negative) discounted total. | BL-008, BL-010 |
 
-ACs are covered by the `test_ds__encounter_invoices_*` unit tests.
+ACs are covered by the `test_int__encounter_invoice_amounts_*` unit tests.
 
 ## Change log
 

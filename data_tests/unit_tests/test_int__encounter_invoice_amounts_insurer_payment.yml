@@ -1,0 +1,148 @@
+unit_tests:
+  - name: test_int__encounter_invoice_amounts_insurer_payment
+    model: int__encounter_invoice_amounts
+    description: >
+      insurer_payment sums insurer payments and nets refunds by EXCLUDING the reversed
+      original (BL-013), with NO status filter (amount is the actual amount paid; status
+      is derived from it, so a $0 rejected contributes 0 and a partial its real value).
+      Here: a $100 paid, a $30 partial, a $0 rejected, and a $100 refund of the paid one.
+      The refund has original_payment_id set but -- unlike a patient refund -- carries no
+      invoice_insurer_payments row, so the model excludes the reversed $100 original and
+      the reversal itself, giving insurer_payment = 30 + 0 = 30. (The old negate-by-own-
+      link approach would wrongly return 130.) A separate $25 patient payment stays on
+      patient_payment, proving the two aggregates are disjoint.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          -- insurer: $100 paid, $30 partial, $0 rejected, $100 refund of the paid one; plus a $25 patient payment
+          select '00000000-0000-0000-0000-000000000010'::uuid as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 100.00::numeric as amount, null::uuid as original_payment_id
+          union all
+          select '00000000-0000-0000-0000-000000000011'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 30.00::numeric, null::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000012'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 0.00::numeric, null::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000013'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::uuid
+          union all
+          select '00000000-0000-0000-0000-000000000020'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 25.00::numeric, null::uuid
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          -- status is unused by the model (derived from amount in the app) -- shown for clarity.
+          -- The $100 refund (payment ...013) deliberately has NO row here: an insurer
+          -- reversal does not get its own invoice_insurer_payments row (Tamanu has no
+          -- insurer-refund endpoint), so the model must net it by excluding the reversed
+          -- original (...010), not by finding the reversal's own insurer link.
+          select '00000000-0000-0000-0000-000000000030'::uuid as id, '00000000-0000-0000-0000-000000000010'::uuid as invoice_payment_id, 'paid' as status
+          union all
+          select '00000000-0000-0000-0000-000000000031'::uuid, '00000000-0000-0000-0000-000000000011'::uuid, 'partial'
+          union all
+          select '00000000-0000-0000-0000-000000000032'::uuid, '00000000-0000-0000-0000-000000000012'::uuid, 'rejected'
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000040'::uuid as id, '00000000-0000-0000-0000-000000000020'::uuid as invoice_payment_id
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::uuid as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::uuid as id where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          50.00::numeric as invoice_total,
+          null::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          25.00::numeric as patient_payment,
+          30.00::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV' as display_id
