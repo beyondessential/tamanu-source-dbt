@@ -24,16 +24,13 @@ select
     p.discontinued as is_discontinued,
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
-    -- discontinued_date is varchar(255) -- Tamanu's dateTimeString -- so it can hold text
-    -- that is not a date. A bare cast aborts the entire model when it does, and only on a
-    -- target where the consuming clinical/ models materialise as tables (analytics): a view
-    -- never evaluates the cast, which is why release builds stayed green while an analytics
-    -- build failed on the same data. Guard it so malformed text yields null rather than
-    -- taking the build down. A genuinely discontinued prescription is identified by
-    -- is_discontinued, not by this column, so nulling unparseable text loses no signal.
+    -- discontinued_date is a dateTimeString varchar and can hold non-date text, so the cast
+    -- is guarded -- unparseable text yields null and is_discontinued remains the signal for
+    -- a discontinuation. Prefix-anchored and truncated so a fractional part, a zone offset
+    -- or minute precision still parse.
     case
-        when p.discontinued_date ~ '^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}:\d{2})?$'
-            then p.discontinued_date::timestamp
+        when p.discontinued_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])'
+            then left(p.discontinued_date, 19)::timestamp
     end as discontinued_datetime
 from {{ source('tamanu', 'prescriptions') }} p
 where p.deleted_at is null

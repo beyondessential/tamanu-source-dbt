@@ -49,9 +49,9 @@ How many times this prescription can be repeatedly dispensed without a new presc
 {% docs prescriptions__discontinued_date %}
 If the prescription was discontinued, when that happened.
 
-Null when the underlying value is not a parseable date. Tamanu stores this as a
-dateTimeString (varchar), so the column can hold arbitrary text; use `is_discontinued`
-to tell whether a prescription was discontinued, not the presence of this timestamp.
+Stored as a dateTimeString (varchar), so it can hold text that is not a date. The base
+model's `discontinued_datetime` is null in that case, so use `is_discontinued` to tell
+whether a prescription was discontinued rather than the presence of a timestamp.
 {% enddocs %}
 
 {% docs prescriptions__end_date_legacy %}

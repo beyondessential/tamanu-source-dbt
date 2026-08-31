@@ -1,0 +1,69 @@
+version: 2
+
+unit_tests:
+  - name: test_prescriptions_discontinued_datetime_guard
+    model: prescriptions
+    description: >
+      discontinued_date is a dateTimeString varchar, so it can hold text that is not a
+      date. This pins what discontinued_datetime does with every shape it can receive --
+      the canonical second-precision form, the non-canonical but castable forms a
+      dateTimeString legitimately carries (fractional seconds, a zone offset, minute
+      precision, date only), non-date text, and null. Only the last two yield null -- a
+      valid timestamp in a non-canonical shape must survive rather than be discarded,
+      which a fully anchored pattern would not do.
+    given:
+      - input: source('tamanu', 'prescriptions')
+        format: sql
+        rows: |
+          select 'rx_canonical'::text as id, null::text as date, null::text as start_date, null::text as end_date, null::text as medication_id, null::text as prescriber_id, null::text as indication, null::text as route, null::integer as quantity, null::integer as repeats, null::boolean as is_ongoing, null::boolean as is_prn, null::boolean as is_variable_dose, null::numeric as dose_amount, null::text as dosing_unit, null::text as dispensing_unit, null::numeric as unit_conversion, null::text as frequency, null::numeric as duration_value, null::text as duration_unit, null::boolean as is_phone_order, null::text as ideal_times, true::boolean as discontinued, null::text as discontinuing_clinician_id, null::text as discontinuing_reason, '2024-01-05 09:30:00'::text as discontinued_date, null::timestamp as deleted_at
+          union all
+          select 'rx_fractional'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 09:30:00.123'::text, null::timestamp
+          union all
+          select 'rx_offset'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05T09:30:00+13:00'::text, null::timestamp
+          union all
+          select 'rx_minute'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 09:30'::text, null::timestamp
+          union all
+          select 'rx_date_only'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05'::text, null::timestamp
+          union all
+          select 'rx_junk'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, false::boolean, null::text, null::text, 'Prescription.discontinuedDate.20b1b9a9-e907-0000-b555-e43b6010f862'::text, null::timestamp
+          union all
+          select 'rx_null'::text, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, false::boolean, null::text, null::text, null::text, null::timestamp
+
+      - input: source('tamanu', 'encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep_1'::text as id, 'rx_canonical'::text as prescription_id, 'enc_1'::text as encounter_id, null::timestamp as deleted_at
+          union all
+          select 'ep_2'::text, 'rx_fractional'::text, 'enc_1'::text, null::timestamp
+          union all
+          select 'ep_3'::text, 'rx_offset'::text, 'enc_1'::text, null::timestamp
+          union all
+          select 'ep_4'::text, 'rx_minute'::text, 'enc_1'::text, null::timestamp
+          union all
+          select 'ep_5'::text, 'rx_date_only'::text, 'enc_1'::text, null::timestamp
+          union all
+          select 'ep_6'::text, 'rx_junk'::text, 'enc_1'::text, null::timestamp
+          union all
+          select 'ep_7'::text, 'rx_null'::text, 'enc_1'::text, null::timestamp
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, null::timestamp as deleted_at
+
+    expect:
+      format: sql
+      rows: |
+        select 'rx_canonical'::text as id, null::timestamp as datetime, null::timestamp as start_datetime, null::timestamp as end_datetime, null::text as medication_id, null::text as prescriber_id, null::text as indication, null::text as route, null::integer as quantity, null::integer as repeats, null::boolean as is_ongoing, null::boolean as is_prn, null::boolean as is_variable_dose, null::numeric as dose_amount, null::text as dosing_unit, null::text as dispensing_unit, null::numeric as unit_conversion, null::text as frequency, null::numeric as duration_value, null::text as duration_unit, null::boolean as is_phone_order, null::text as ideal_times, true::boolean as is_discontinued, null::text as discontinued_by_id, null::text as discontinuing_reason, '2024-01-05 09:30:00'::timestamp as discontinued_datetime
+        union all
+        select 'rx_fractional'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 09:30:00'::timestamp
+        union all
+        select 'rx_offset'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 09:30:00'::timestamp
+        union all
+        select 'rx_minute'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 09:30:00'::timestamp
+        union all
+        select 'rx_date_only'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, true::boolean, null::text, null::text, '2024-01-05 00:00:00'::timestamp
+        union all
+        select 'rx_junk'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, false::boolean, null::text, null::text, null::timestamp
+        union all
+        select 'rx_null'::text, null::timestamp, null::timestamp, null::timestamp, null::text, null::text, null::text, null::text, null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, null::numeric, null::text, null::numeric, null::text, null::boolean, null::text, false::boolean, null::text, null::text, null::timestamp
