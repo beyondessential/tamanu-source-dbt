@@ -1,0 +1,167 @@
+unit_tests:
+  - name: test_int__encounter_invoice_amounts_finalised_datetime
+    model: int__encounter_invoice_amounts
+    description: >
+      invoice_finalised_datetime is the most recent transition into finalised
+      status from logs.changes, in deployment-local time (Australia/Sydney,
+      AEDT UTC+11 for the January dates used here). A re-finalisation
+      (previous_status already finalised) is excluded. An invoice that never
+      finalises shows null.
+    overrides:
+      vars:
+        # tamanu-source-dbt's own default timezone. Sydney observes DST (AEDT
+        # UTC+11 / AEST UTC+10) -- the fixture dates below are all January
+        # (AEDT), so they resolve to UTC+11; adding fixture rows outside
+        # daylight-saving months would shift this to UTC+10.
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all
+          select 'enc_002', '2024-01-20 09:00:00'::timestamp, '2024-01-20 16:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, null::text as display_id
+          union all
+          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp, null::text
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001'::text as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
+          union all
+          -- First finalisation: logged_at UTC 03:00 = Sydney 14:00 (AEDT, UTC+11 in January)
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
+          union all
+          -- Re-finalisation: previous_status = 'finalised' so excluded
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-16 01:00:00+00'::timestamptz, 'finalised', 'finalised'
+          union all
+          -- enc_002 invoice: never reaches finalised
+          select '00000000-0000-0000-0000-000000000002'::text, '2024-01-20 10:00:00+00'::timestamptz, 'in_progress', null::text
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity, null::text as source_record_type, null::text as source_record_id where false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select null::text as id, null::text as category, null::boolean as insurable, null::text as name where false
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime,
+          null::numeric as invoice_total,
+          null::numeric as insurance_coverage,
+          0.00::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          null::text as display_id
+        union all
+        select
+          '00000000-0000-0000-0000-000000000002',
+          'enc_002',
+          'in_progress',
+          '2024-01-20 09:00:00'::timestamp,
+          null::timestamp,
+          null::numeric,
+          null::numeric,
+          0.00::numeric,
+          null::numeric,
+          null::numeric,
+          null::text,
+          null::text

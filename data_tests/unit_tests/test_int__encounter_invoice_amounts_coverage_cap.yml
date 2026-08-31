@@ -1,12 +1,10 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_negative_coverage
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_coverage_cap
+    model: int__encounter_invoice_amounts
     description: >
-      An insurable item driven negative by an over-large flat discount is still
-      included in insurance coverage (mirroring getInsuranceCoverageTotalAmount,
-      which has no sign filter). A $30 line less a $50 flat discount = -20; with
-      80% plan coverage the per-item coverage is least(-16, -20) = -20, so
-      insurance_coverage = -20.
+      Combined per-item insurance coverage above 100% is capped at the item's
+      discounted total (mirroring the app's Math.min). A $100 item with a plan
+      covering 120% yields least(120, 100) = 100, so insurance_coverage = 100.
     given:
       - input: ref('encounters')
         format: sql
@@ -36,7 +34,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, null::text as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -46,7 +44,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 30.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
@@ -59,6 +57,11 @@ unit_tests:
           select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
 
       - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
@@ -81,13 +84,13 @@ unit_tests:
       - input: ref('invoice_insurance_plans')
         format: sql
         rows: |
-          select 'plan_001' as id, 80::numeric as default_coverage
+          -- Plan covers 120%, more than the item total
+          select 'plan_001' as id, 120::numeric as default_coverage
 
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          -- Flat $50 discount on a $30 line -> -20
-          select '00000000-0000-0000-0000-0000000000d1'::text as id, 'item_001'::text as invoice_item_id, 50.00::numeric as amount, 'amount' as type
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
 
       - input: ref('invoice_discounts')
         format: sql
@@ -113,8 +116,10 @@ unit_tests:
           'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          -20.00::numeric as invoice_total,
-          -20.00::numeric as insurance_coverage,
+          100.00::numeric as invoice_total,
+          100.00::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          null::text as products_no_category
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          null::text as display_id
