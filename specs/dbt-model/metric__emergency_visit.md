@@ -137,6 +137,11 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   never return from `admission` to an ED phase, so any encounter with an ED segment has one
   first. An encounter that starts elsewhere and passes through an ED phase later is
   intra-hospital movement, out of scope.
+
+  The `clinical__visit_detail` CTE is declared `not materialized`. It is referenced three times,
+  so Postgres would otherwise materialise it and plan the rest of the model against an opaque
+  scan with no statistics — every row estimate collapses to 1 and the joins below turn into
+  nested loops that never finish on a deployment-sized encounter history.
 - **BL-004 (sex + age):** `sex` is `clinical__person.gender_source_value`; `age_years` is age in
   whole years at arrival, unbanded (BL-019). The join to `clinical__person` is **inner**, so an
   attendance whose patient `bases/patients` excludes as soft-deleted or merged away is excluded
@@ -205,9 +210,13 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   a placeholder, since they are measures rather than disaggregations exposed as a Tupaia array
   filter (unlike `triage_score`, which is).
 
-  Tamanu permits a second `is_primary` row, so the CTE ranks by
-  `(condition_start_datetime, condition_occurrence_id)` and joins on rank 1 — without it a second
-  principal diagnosis would duplicate the attendance and fail AC-001.
+  Tamanu permits a second `is_primary` row, so the CTE takes `distinct on (visit_occurrence_id)`
+  ordered by `(condition_start_datetime, condition_occurrence_id)` — without it a second principal
+  diagnosis would duplicate the attendance and fail AC-001. It is `distinct on` rather than a rank
+  filter on the join because Postgres only removes or hash-joins a left join whose right side it
+  can prove unique, and a `row_number() = 1` join condition is not provable — the planner
+  nested-looped the diagnosis subplan once per attendance, and no consumer that scanned the model
+  in full could finish.
 - **BL-014 (waiting time):** `waiting_time__minutes` is the wait to active care —
   `triages.closed_datetime - triages.triage_datetime`, the same rule as `ds__emergency_triage`
   BL-005 — expressed in minutes.
