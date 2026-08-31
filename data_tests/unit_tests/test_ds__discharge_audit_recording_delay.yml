@@ -11,9 +11,9 @@ unit_tests:
       - input: ref('discharges')
         format: sql
         rows: |
-          select 'dis_001' as id, 'Wound care follow up' as note, 'enc_001' as encounter_id, 'cli_001' as discharged_by_id, 'disp_001' as disposition_id, '2024-03-14 08:05:00'::timestamp as created_datetime
+          select 'dis_001' as id, 'Wound care follow up' as note, 'enc_001' as encounter_id, 'cli_001' as discharged_by_id, 'disp_001' as disposition_id
           union all
-          select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null, '2024-03-11 22:00:00'::timestamp
+          select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
 
       - input: ref('discharges_change_logs')
         format: sql

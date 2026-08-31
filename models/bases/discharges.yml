@@ -26,6 +26,3 @@ models:
       - name: disposition_id
         data_type: character varying
         description: "{{ doc('discharges__disposition_id') }}"
-      - name: created_datetime
-        data_type: timestamp
-        description: "{{ doc('discharges__created_datetime') }}"
