@@ -39,7 +39,7 @@ jobs:
       # maui-team so the submodule can be fetched (REVIEW.md lives at .maui/REVIEW.md).
       - name: Mint maui-team read token
         id: maui-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.MAUI_APP_ID }}
           private-key: ${{ secrets.MAUI_APP_KEY }}
@@ -66,7 +66,7 @@ jobs:
       # submodules: false so checkout's GITHUB_TOKEN auth is not applied to the maui-team
       # fetch; .maui is initialised explicitly below using the App-token URL rewrite above.
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ steps.pr.outputs.sha }}
           fetch-depth: 0

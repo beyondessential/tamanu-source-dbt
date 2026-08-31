@@ -122,6 +122,9 @@ report.reporting.encounterLocationGroupHistoryDateTimes,Area history date and ti
 report.reporting.encounterLocationHistory,Location history
 report.reporting.encounterLocationHistoryDateTimes,Location history date and times
 report.reporting.encounterNonDischargeClinician,Non-discharge by clinicians
+report.reporting.encounterPrescriptionMedication,Medication
+report.reporting.encounterPrescriptionMedicationCode,Code
+report.reporting.encounterPrescriptionQuantity,Quantity
 report.reporting.encounterReasonForEncounter,Reason for encounter
 report.reporting.encounterStartDate,Encounter start date
 report.reporting.encounterStartDateTime,Encounter start date and time
@@ -282,9 +285,6 @@ report.reporting.prescriptionFrequency,Frequency
 report.reporting.prescriptionIsOngoing,Is ongoing
 report.reporting.prescriptionIsPRN,Is PRN
 report.reporting.prescriptionIsVariableDose,Is variable dose
-report.reporting.prescriptionMedication,Medication
-report.reporting.prescriptionMedicationCode,Code
-report.reporting.prescriptionQuantity,Quantity
 report.reporting.prescriptionRepeats,Repeats
 report.reporting.prescriptionRoute,Route
 report.reporting.prescriptionSelectedForDischarge,Prescription selected for discharge
@@ -328,6 +328,10 @@ report.reporting.reportingDate,Date
 report.reporting.reportingMonth,Month
 report.reporting.requestingDepartment,Requesting department
 report.reporting.rolePermissions,Role permissions
+report.reporting.surveyResult,Result
+report.reporting.surveySignatureSigned,Signed
+report.reporting.surveySignatureUnsigned,Unsigned
+report.reporting.surveySubmissionTime,Submission time
 report.reporting.triageActiveCareDateTime,Time of active care/admission
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
