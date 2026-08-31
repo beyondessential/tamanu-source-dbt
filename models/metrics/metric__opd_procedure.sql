@@ -29,8 +29,9 @@ locations as (
 
 -- BL-003: the segment active at the procedure's own timestamp, not the encounter's first or
 -- current segment. distinct on picks the latest segment that had already started by
--- procedure_datetime -- segments are contiguous and non-overlapping (clinical__visit_detail
--- BL-002), so exactly one is ever the "active" one at any timestamp within the encounter.
+-- procedure_datetime; tie-broken on visit_detail_id, the same tiebreak
+-- clinical__visit_detail's own segment-ordering window uses for its zero-length-segment case
+-- (BL-002).
 procedure_segment as (
     select distinct on (po.procedure_occurrence_id)
         po.procedure_occurrence_id,
@@ -39,7 +40,7 @@ procedure_segment as (
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
         and vd.visit_detail_start_datetime <= po.procedure_datetime
-    order by po.procedure_occurrence_id, vd.visit_detail_start_datetime desc
+    order by po.procedure_occurrence_id, vd.visit_detail_start_datetime desc, vd.visit_detail_id desc
 ),
 
 procedures as (

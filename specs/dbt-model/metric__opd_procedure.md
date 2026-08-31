@@ -104,8 +104,7 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   `procedure_datetime` has `visit_detail_concept_id = 9202` (OMOP "Outpatient Visit") --
   the same concept, covering `clinic`, `imaging` and `vaccination`
   (`models/maps/map__omop_visit_type.sql`), that `metric__outpatient_visit` uses for
-  `opd_visit`. Decision confirmed by Juliana Mitchell-Wong (Slack, MAUI-6862): "split to
-  OPD/IPD based on time."
+  `opd_visit` (decision: MAUI-6862, split OPD/IPD by time rather than by encounter grain).
 
   The active segment is found with an as-of join -- the latest `clinical__visit_detail` row
   for the encounter whose `visit_detail_start_datetime` is at or before the procedure's

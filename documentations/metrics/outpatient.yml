@@ -63,8 +63,8 @@ metrics:
     activity, and deployments differ in what they code procedures with. This metric emits
     the procedure as recorded and leaves any grouping to the consumer, the same approach
     metric__procedure takes. Attribution is by the segment active when the procedure
-    happened (Juliana Mitchell-Wong, Slack: "split to OPD/IPD based on time"), matching the
-    OMOP CDM's own PROCEDURE_OCCURRENCE.visit_detail_id convention -- not opd_visit's
+    happened, matching the OMOP CDM's own PROCEDURE_OCCURRENCE.visit_detail_id
+    convention -- not opd_visit's
     first-segment rule, so the two can disagree for an encounter whose outpatient segment
     is not its first (spec BL-003). Pending alignment with the deploying country's national
     HMIS definition.
