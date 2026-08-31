@@ -24,10 +24,12 @@ select
     p.discontinued as is_discontinued,
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
-    -- discontinued_date is a dateTimeString varchar and can hold non-date text, so the cast
-    -- is guarded -- unparseable text yields null and is_discontinued remains the signal for
-    -- a discontinuation. Prefix-anchored and truncated so a fractional part, a zone offset
-    -- or minute precision still parse.
+    -- discontinued_date is a plain varchar in Tamanu, not one of its normalised
+    -- dateTimeType columns, so it can hold text that is not a date -- a seeded database
+    -- fills it with a `Prescription.discontinuedDate.<id>` placeholder. The cast is
+    -- guarded -- unparseable text yields null and is_discontinued remains the signal for
+    -- a discontinuation. Prefix-anchored and truncated so a fractional part, a zone
+    -- offset or minute precision still parse.
     case
         when p.discontinued_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])'
             then left(p.discontinued_date, 19)::timestamp

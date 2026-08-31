@@ -4,8 +4,8 @@ unit_tests:
   - name: test_prescriptions_discontinued_datetime_guard
     model: prescriptions
     description: >
-      discontinued_date is a dateTimeString varchar, so it can hold text that is not a
-      date. This pins what discontinued_datetime does with every shape it can receive --
+      discontinued_date is a plain varchar in Tamanu rather than a normalised dateTimeType
+      column, so it can hold text that is not a date. This pins what discontinued_datetime does with every shape it can receive --
       the canonical second-precision form, the non-canonical but castable forms a
       dateTimeString legitimately carries (fractional seconds, a zone offset, minute
       precision, date only), non-date text, and null. Only the last two yield null -- a
