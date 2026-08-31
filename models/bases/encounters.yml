@@ -53,6 +53,3 @@ models:
       - name: planned_location_start_datetime
         data_type: timestamp
         description: "{{ doc('encounters__planned_location_start_time') }}"
-      - name: discharge_draft
-        data_type: jsonb
-        description: "{{ doc('encounters__discharge_draft') }}"
