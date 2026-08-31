@@ -4,10 +4,9 @@ models:
   - name: metric__opd_procedure
     description: >-
       D5 metric view for the opd_procedure indicator registered in documentations/metrics/*.yml:
-      opd_procedure. One row per recorded procedure performed during an outpatient (OMOP 9202)
-      encounter -- per-procedure (subject) grain, so a consumer aggregates at whatever grain it
-      needs. Kept separate from metric__procedure by deliberate decision (MAUI-6862), rather
-      than a consumer filtering that metric on encounter_type.
+      opd_procedure. One row per recorded procedure whose active clinical__visit_detail segment
+      at the procedure's own time carries OMOP concept 9202 (see spec BL-003) -- per-procedure
+      (subject) grain, so a consumer aggregates at whatever grain it needs.
     config:
       tags:
         - clinical
