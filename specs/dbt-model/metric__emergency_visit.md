@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-19 |
+| **Last updated** | 2026-08-31 |
 
 Canonical definition for `ed_visit`: one row per ED attendance, spanning arrival in the ED
 to discharge from hospital at minute resolution.
@@ -211,12 +211,10 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   filter (unlike `triage_score`, which is).
 
   Tamanu permits a second `is_primary` row, so the CTE takes `distinct on (visit_occurrence_id)`
-  ordered by `(condition_start_datetime, condition_occurrence_id)` — without it a second principal
-  diagnosis would duplicate the attendance and fail AC-001. It is `distinct on` rather than a rank
-  filter on the join because Postgres only removes or hash-joins a left join whose right side it
-  can prove unique, and a `row_number() = 1` join condition is not provable — the planner
-  nested-looped the diagnosis subplan once per attendance, and no consumer that scanned the model
-  in full could finish.
+  ordered by `(condition_start_datetime asc, condition_occurrence_id asc)` — without it a second
+  principal diagnosis would duplicate the attendance and fail AC-001. That form also makes the
+  grain provable to the planner, which drops the join for a consumer selecting no diagnosis
+  column.
 - **BL-014 (waiting time):** `waiting_time__minutes` is the wait to active care —
   `triages.closed_datetime - triages.triage_datetime`, the same rule as `ds__emergency_triage`
   BL-005 — expressed in minutes.
@@ -351,3 +349,9 @@ them from configuration alone.
 | `ds__encounters_emergency` | Report-layer emergency dataset at triage grain, with PII |
 | `der__cohort_ncd_6m` | Per-subject derived artefact — the reference for `subject_id` semantics |
 | MAUI-6694 | Queen of Sheba Hospital, Ghana — Hospital Administration → Emergency |
+
+## Change log
+
+| Date | Author | Change |
+|---|---|---|
+| 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |

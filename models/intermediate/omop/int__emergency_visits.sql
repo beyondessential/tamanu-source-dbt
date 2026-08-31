@@ -10,10 +10,10 @@
 -- Specs: specs/dbt-model/metric__emergency_visit.md,
 -- specs/dbt-model/metric__emergency_stay.md
 
--- BL-003 (metric__emergency_visit.md): `not materialized` -- this CTE is referenced three times, and without the hint Postgres
--- materialises it, which hides the base tables' statistics behind an opaque scan. Every row
--- estimate downstream then collapses to 1, the planner nested-loops the joins below, and a
--- query that scans the model in full never returns.
+-- BL-003 (metric__emergency_visit.md): `not materialized` -- this CTE is referenced three
+-- times, and without the hint Postgres materialises it, which hides the base tables'
+-- statistics behind an opaque scan. Every row estimate downstream then collapses to 1, the
+-- planner nested-loops the joins below, and a query that scans the model in full never returns.
 with visit_detail as not materialized (
     select * from {{ ref('clinical__visit_detail') }}
 ),
@@ -53,11 +53,8 @@ condition_occurrence as (
 -- BL-013: at most one principal diagnosis per encounter. Tamanu does not stop a second
 -- is_primary row being recorded, so the earliest is taken (condition_occurrence_id breaks a
 -- datetime tie) -- without this the join below would fan out and duplicate an attendance.
---
--- `distinct on` rather than a ranked row_number: it puts the one-row-per-encounter grain into
--- the query shape, where Postgres can prove it, the same as bases/discharges. A rank filter
--- carried into the join condition is not provable, which left the planner nested-looping this
--- subplan once per attendance -- see the join below.
+-- `distinct on` puts that grain into the query shape, where the planner can prove it and drop
+-- the join for a consumer that selects no diagnosis column.
 principal_diagnoses as (
     select distinct on (visit_occurrence_id)
         visit_occurrence_id,
@@ -65,7 +62,7 @@ principal_diagnoses as (
         condition_source_name
     from condition_occurrence
     where is_primary
-    order by visit_occurrence_id, condition_start_datetime, condition_occurrence_id
+    order by visit_occurrence_id asc, condition_start_datetime asc, condition_occurrence_id asc
 ),
 
 -- BL-003: the ED intake segment of each encounter -- the first history segment whose OMOP
@@ -189,9 +186,7 @@ attendances as (
     left join triages tr
         on tr.encounter_id = vd.visit_occurrence_id
     -- BL-013: left join -- an attendance with no principal diagnosis still counts. `distinct on`
-    -- above holds it to one row per encounter, so this cannot fan out -- and because that grain
-    -- is provable, a consumer that selects no diagnosis column (metric__emergency_stay, and
-    -- every grain test) has the join removed outright rather than re-run per attendance.
+    -- above holds it to one row per encounter, so this cannot fan out.
     left join principal_diagnoses pdx
         on pdx.visit_occurrence_id = vd.visit_occurrence_id
     -- BL-017: left join -- an attendance with no discharge record still counts. bases/discharges
