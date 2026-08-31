@@ -10,7 +10,7 @@
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
+| **Repo** | `tamanu-source-dbt` (branch line `2.57`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
 | **Last updated** | 2026-08-31 |
