@@ -167,7 +167,7 @@ Resolved during implementation — none outstanding.
 
 | ID | Divergence | Resolution |
 |---|---|---|
-| DV-001 | The per-item arithmetic lived inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not shared | **Resolved:** extracted into the `invoice_item_amounts()` macro, embedded by both `int__encounter_invoice_item_amounts` and `int__encounter_invoice_amounts`. Behaviour-preserving (AC-008): the `test_int__encounter_invoice_amounts_*` unit tests exercise the extracted arithmetic, changed only by the two `source_record_*` columns added to their `invoice_items` mocks, and pass. |
+| DV-001 | The per-item arithmetic lived inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not shared | **Resolved:** extracted into the `invoice_item_amounts()` macro, embedded by both `int__encounter_invoice_item_amounts` and `int__encounter_invoice_amounts`. Behaviour-preserving (AC-008): the `test_int__encounter_invoice_amounts_*` unit tests exercise the extracted arithmetic and pass, changed by the extraction itself only by the two `source_record_*` columns added to their `invoice_items` mocks. That evidence was established on `2.57`, where the extraction landed. On `main` it holds only from #1163: until then `main` kept the pre-extraction `test_ds__encounter_invoices_*` copies, which name the projection as the model under test and cannot compile, so AC-008 was unverified here in the interval. See the 2026-08-31 change-log entry. |
 
 ## Change log
 
