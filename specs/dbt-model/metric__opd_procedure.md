@@ -99,28 +99,32 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   hardcoded NULL, asserted by AC-009 as the null invariant itself (a procedure is
   point-in-time, so there is no closing date to emit, the same reasoning `metric__procedure`
   uses).
-- **BL-003 (outpatient scope, and its grain caveat):** a procedure is included when its
-  encounter's `clinical__visit_occurrence.visit_concept_id = 9202` (OMOP "Outpatient
-  Visit"), which covers `clinic`, `imaging` and `vaccination` via
-  `models/maps/map__omop_visit_type.sql` -- the same three encounter types, and the same
-  OMOP concept, `metric__outpatient_visit` uses for `opd_visit`.
+- **BL-003 (outpatient scope: the segment active when the procedure happened):** a
+  procedure is included when the `clinical__visit_detail` segment active at its own
+  `procedure_datetime` has `visit_detail_concept_id = 9202` (OMOP "Outpatient Visit") --
+  the same concept, covering `clinic`, `imaging` and `vaccination`
+  (`models/maps/map__omop_visit_type.sql`), that `metric__outpatient_visit` uses for
+  `opd_visit`. Decision confirmed by Juliana Mitchell-Wong (Slack, MAUI-6862): "split to
+  OPD/IPD based on time."
 
-  **This is filtered at the whole-encounter grain** (`clinical__visit_occurrence`), the
-  same relation `metric__procedure` already joins to for `encounter_type`. It is **not**
-  filtered at `clinical__visit_detail`'s first-segment grain
-  (`visit_detail_concept_id = 9202`, `preceding_visit_detail_id is null`), which is what
-  `metric__outpatient_visit` itself uses for `opd_visit`. For the ordinary case -- an
-  encounter that is outpatient from start to finish -- the two grains agree. They can
-  disagree for a multi-segment encounter whose first recorded phase was **not** outpatient
-  (e.g. triage before being seen in clinic): `metric__outpatient_visit` would exclude it (its
-  first segment is not 9202), while `metric__opd_procedure` would still include a procedure
-  recorded against it (the encounter's overall type is 9202 once redirected to clinic). This
-  is expected to be rare, and is a genuine, open definitional gap rather than an
-  implementation bug -- a consumer cross-referencing `opd_visit` counts against
-  `opd_procedure` counts should read this note first if the two do not reconcile exactly.
-  Tightening this to the first-segment grain, matching `opd_visit` exactly, is a candidate
-  follow-up once real deployment data shows whether the disagreement is actually rare or
-  not.
+  The active segment is found with an as-of join -- the latest `clinical__visit_detail` row
+  for the encounter whose `visit_detail_start_datetime` is at or before the procedure's
+  timestamp -- rather than the encounter's first segment (`opd_visit`'s own grain) or its
+  current/final segment. This is also the standard OMOP answer: the CDM spec's own
+  `PROCEDURE_OCCURRENCE.visit_detail_id` field description gives the identical case ("if
+  the Person was in the ICU at the time of the Procedure ... the VISIT_DETAIL record would
+  reflect the ICU stay during the hospital visit") as the reason `PROCEDURE_OCCURRENCE`
+  carries a `visit_detail_id` distinct from `visit_occurrence_id` at all.
+
+  This resolves the disagreement this BL previously flagged for a patient seen in clinic
+  and later admitted -- a procedure performed during the clinic segment now correctly
+  counts as OPD, matching `opd_visit`, regardless of what the encounter became afterward.
+  One narrower disagreement remains: `opd_visit` counts a visit only when its **first**
+  segment is 9202, while this metric counts a procedure whenever **its own** segment is
+  9202, wherever that segment sits in the encounter. An encounter that starts in
+  triage/emergency and is later redirected to clinic is therefore not counted by `opd_visit`
+  at all, but a procedure performed during that later clinic segment does count here --
+  read this note before treating a mismatch between the two metrics' counts as a bug.
 - **BL-004 (facility attribution):** `facility_id` is resolved through `bases/locations` on
   the procedure's own `location_id` -- not the encounter's `care_site_id` -- the same
   convention `metric__procedure` and `clinical__procedure_occurrence` use, since a procedure
@@ -177,7 +181,7 @@ registration -- no vocabulary change was needed for this metric.
 | Ref | Layer | Role |
 |---|---|---|
 | `clinical__procedure_occurrence` | `clinical/` | Procedure date, type, completion, location, person and visit FKs (BL-002, BL-004, BL-006) |
-| `clinical__visit_occurrence` | `clinical/` | Outpatient scope via `visit_concept_id` (BL-003) |
+| `clinical__visit_detail` | `clinical/` | Outpatient scope: the segment active at the procedure's own timestamp (BL-003) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
 | `locations` | `bases/` | Facility id of the procedure's own location (BL-004) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
@@ -195,9 +199,11 @@ registration -- no vocabulary change was needed for this metric.
    day-resolution dates, so a monthly card applies its own month bucketing and filters the
    current month itself.
 3. **Band `age_years` itself.** No band set is emitted here.
-4. **Read BL-003 before reconciling against `opd_visit`.** The two metrics scope
-   "outpatient" at different grains (whole-encounter here, first-segment there) and can
-   disagree for a multi-segment encounter -- see BL-003 before treating a mismatch as a bug.
+4. **Read BL-003 before reconciling against `opd_visit`.** Both metrics are segment-grain
+   decisions, but at different points in the encounter -- the segment active at the
+   procedure's own time here, the encounter's first segment there. An encounter that starts
+   in triage/emergency and is later redirected to clinic can have `opd_procedure` counts
+   with no matching `opd_visit` count -- see BL-003 before treating a mismatch as a bug.
 
 ## Related
 

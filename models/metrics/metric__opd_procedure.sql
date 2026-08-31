@@ -7,10 +7,7 @@
 --
 -- "Outpatient" is OMOP concept 9202, the same definition metric__outpatient_visit uses -- it
 -- covers clinic, imaging and vaccination encounters (models/maps/map__omop_visit_type.sql).
--- Filtered here on clinical__visit_occurrence.visit_concept_id, the whole-encounter grain
--- metric__procedure already joins to -- not clinical__visit_detail's first-segment grain,
--- which is what metric__outpatient_visit itself filters on. The two can disagree for a
--- multi-segment encounter, though this is rare in practice.
+-- BL-003 details the segment this is evaluated against.
 --
 -- The registry carries the definition; this model is its implementation.
 
@@ -18,8 +15,8 @@ with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
 ),
 
-visit_occurrence as (
-    select * from {{ ref('clinical__visit_occurrence') }}
+visit_detail as (
+    select * from {{ ref('clinical__visit_detail') }}
 ),
 
 person as (
@@ -28,6 +25,21 @@ person as (
 
 locations as (
     select * from {{ ref('locations') }}
+),
+
+-- BL-003: the segment active at the procedure's own timestamp, not the encounter's first or
+-- current segment. distinct on picks the latest segment that had already started by
+-- procedure_datetime -- segments are contiguous and non-overlapping (clinical__visit_detail
+-- BL-002), so exactly one is ever the "active" one at any timestamp within the encounter.
+procedure_segment as (
+    select distinct on (po.procedure_occurrence_id)
+        po.procedure_occurrence_id,
+        vd.visit_detail_concept_id
+    from procedure_occurrence po
+    join visit_detail vd
+        on vd.visit_occurrence_id = po.visit_occurrence_id
+        and vd.visit_detail_start_datetime <= po.procedure_datetime
+    order by po.procedure_occurrence_id, vd.visit_detail_start_datetime desc
 ),
 
 procedures as (
@@ -46,19 +58,15 @@ procedures as (
         -- age in whole years at the procedure; the NULL rule lives in the macro
         {{ age_years('po.procedure_date', 'pr') }} as age_years
     from procedure_occurrence po
-    -- inner join: resolves for every procedure whose encounter type is covered by
-    -- map__omop_visit_type, which clinical__visit_occurrence inner-joins -- an uncovered type
-    -- would drop the procedure rather than surface it, the same tradeoff metric__procedure
-    -- makes
-    join visit_occurrence vo
-        on vo.visit_occurrence_id = po.visit_occurrence_id
+    join procedure_segment ps
+        on ps.procedure_occurrence_id = po.procedure_occurrence_id
     join person pr
         on pr.person_id = po.person_id
     -- inner join: a procedure's location resolving to nothing is an anomaly, excluded rather
     -- than attributed to a NULL facility -- the same convention metric__procedure uses
     join locations loc
         on loc.id = po.location_id
-    where vo.visit_concept_id = 9202
+    where ps.visit_detail_concept_id = 9202
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
