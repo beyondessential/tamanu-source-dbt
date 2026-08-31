@@ -1,15 +1,14 @@
 unit_tests:
-  - name: test_ds__discharge_audit_changelog_fallback
+  - name: test_ds__discharge_audit_no_changelog_coverage
     model: ds__discharge_audit
     description: >
-      AC-003. A discharge with no change log coverage still appears, taking its recorded
-      date and time from the discharge record's own creation time, with no recording user
-      and no edit count.
+      AC-003. A discharge with no change log coverage still appears, with no recorded date
+      and time, no recording delay, no recording user and no edit count.
     given:
       - input: ref('discharges')
         format: sql
         rows: |
-          select 'dis_003' as id, null as note, 'enc_003' as encounter_id, null as discharged_by_id, null as disposition_id, '2024-01-05 07:45:00'::timestamp as created_datetime
+          select 'dis_003' as id, null as note, 'enc_003' as encounter_id, null as discharged_by_id, null as disposition_id
 
       - input: ref('discharges_change_logs')
         format: sql
@@ -64,4 +63,4 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'dis_003' as discharge_id, 'enc_003' as encounter_id, 'admission' as encounter_type, 'pat_003' as patient_id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'Male' as sex, null as village_id, null as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null as department_id, null as department, 'loc_001' as location_id, 'Room 1' as location, '2024-01-01 09:00:00'::timestamp as admission_datetime, '2024-01-03 12:00:00'::timestamp as discharge_datetime_entered, '2024-01-05 07:45:00'::timestamp as discharge_recorded_datetime, 2 as days_between_discharge_and_recording, null as discharge_disposition_id, null as discharge_disposition, null as discharger_id, null as discharger_on_form, null as recorded_by_user_id, null as recorded_by_user, false as is_auto_discharge, null::integer as later_edit_count, null::text as primary_diagnoses, null::text as primary_diagnoses_codes, null::text as secondary_diagnoses, null::text as secondary_diagnoses_codes
+        select 'dis_003' as discharge_id, 'enc_003' as encounter_id, 'admission' as encounter_type, 'pat_003' as patient_id, 'P003' as display_id, 'Bob' as first_name, 'Johnson' as last_name, '1975-12-10'::date as date_of_birth, 'Male' as sex, null as village_id, null as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null as department_id, null as department, 'loc_001' as location_id, 'Room 1' as location, '2024-01-01 09:00:00'::timestamp as admission_datetime, '2024-01-03 12:00:00'::timestamp as discharge_datetime_entered, null::timestamp as discharge_recorded_datetime, null::integer as days_between_discharge_and_recording, null as discharge_disposition_id, null as discharge_disposition, null as discharger_id, null as discharger_on_form, null as recorded_by_user_id, null as recorded_by_user, false as is_auto_discharge, null::integer as later_edit_count, null::text as primary_diagnoses, null::text as primary_diagnoses_codes, null::text as secondary_diagnoses, null::text as secondary_diagnoses_codes
