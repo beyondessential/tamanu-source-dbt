@@ -13,6 +13,14 @@
 
 Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data-staging` and deployment-specific `tamanu-dbt-*` repos.
 
+## Postgres version floor
+
+Models may use Postgres 12+ syntax. `int__emergency_visits` declares a CTE `not materialized`
+(the only use of it in `models/`), which a pre-12 server rejects at parse time — that fails
+`dbt parse` for the whole project, not just that model. `.github/workflows/checks.yml` runs
+`pytest` and the generated-macro drift guard only, so nothing in CI catches a version regression
+here.
+
 ## Change log base models
 
 Change log base models extract from `{{ source('logs__tamanu', 'changes') }}` and must filter out test patient data. The pattern varies by how close the entity is to the patient:
