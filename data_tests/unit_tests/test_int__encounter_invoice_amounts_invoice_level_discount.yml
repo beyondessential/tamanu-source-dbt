@@ -1,10 +1,9 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_payment_totals
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_invoice_level_discount
+    model: int__encounter_invoice_amounts
     description: >
-      invoice_total sums discounted item totals. insurance_coverage applies
-      plan coverage percentages to insurable items (60% default_coverage on a
-      $100 total = $60). patient_payment nets payments minus refunds.
+      An invoice-level discount of 20% on a $100 item total (no insurance
+      coverage) yields invoice_discount = (100 - 0) * 0.2 = 20.
     given:
       - input: ref('encounters')
         format: sql
@@ -34,7 +33,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -44,25 +43,27 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          -- Two items: 30 * 2 = 60, 40 * 1 = 40, total = 100. Product is insurable with 60% coverage.
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation A' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 30.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity
-          union all
-          select 'item_002'::text, '00000000-0000-0000-0000-000000000001', 'Consultation B', '2024-01-15'::date, 'prod_001', 40.00::numeric, null::numeric, 1::integer
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, 'Consultation' as category, true as insurable, null::text as name
+          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000011'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 25.00::numeric as amount, null::text as original_payment_id
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000021'::text as id, '00000000-0000-0000-0000-000000000011'::text as invoice_payment_id
+          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -72,8 +73,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          -- Invoice linked to plan_001
-          select 'iiip_001' as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'plan_001' as invoice_insurance_plan_id
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -83,8 +83,7 @@ unit_tests:
       - input: ref('invoice_insurance_plans')
         format: sql
         rows: |
-          -- Plan with 60% default coverage: item_001 = 60 * 0.6 = 36, item_002 = 40 * 0.6 = 24, total = 60
-          select 'plan_001' as id, 60::numeric as default_coverage
+          select null::text as id, null::numeric as default_coverage where false
 
       - input: ref('invoice_item_discounts')
         format: sql
@@ -94,7 +93,8 @@ unit_tests:
       - input: ref('invoice_discounts')
         format: sql
         rows: |
-          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
+          -- 20% invoice-level discount
+          select '00000000-0000-0000-0000-000000000001'::text as invoice_id, 0.2::numeric as percentage, '2024-01-14 09:00:00'::timestamp as applied_time, '00000000-0000-0000-0000-0000000000d1'::text as id
 
       - input: ref('invoice_price_lists')
         format: sql
@@ -116,7 +116,9 @@ unit_tests:
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
           100.00::numeric as invoice_total,
-          60.00::numeric as insurance_coverage,
-          0.00::numeric as invoice_discount,
-          25.00::numeric as patient_payment,
-          null::text as products_no_category
+          null::numeric as insurance_coverage,
+          20.00::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          'Consultation' as products_no_category,
+          'INV' as display_id
