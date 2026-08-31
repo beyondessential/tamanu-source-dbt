@@ -2,11 +2,8 @@
 -- documentations/metrics/*.yml: opd_procedure.
 --
 -- Per-procedure (subject) grain: one row per recorded procedure performed during an outpatient
--- encounter, value_numeric 1, so a consumer aggregates at whatever grain it needs.
---
--- A separate metric rather than a metric__procedure consumer filtering on encounter_type, by
--- deliberate decision (MAUI-6862): kept apart from every other setting rather than mixed with
--- it.
+-- encounter, value_numeric 1, so a consumer aggregates at whatever grain it needs. See
+-- specs/dbt-model/metric__opd_procedure.md BL-001 for why this is its own metric.
 --
 -- "Outpatient" is OMOP concept 9202, the same definition metric__outpatient_visit uses -- it
 -- covers clinic, imaging and vaccination encounters (models/maps/map__omop_visit_type.sql).

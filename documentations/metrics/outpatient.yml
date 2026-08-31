@@ -56,12 +56,11 @@ metrics:
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    A count of recorded procedures scoped to the outpatient setting, kept as its own metric
-    rather than a metric__procedure consumer filtering on encounter_type (MAUI-6862). No
-    external body registers a single procedure-count indicator -- procedure classifications
-    (e.g. ICD-10-PCS, CPT) code what a procedure is, not how a deployment should count
-    procedure activity, and deployments differ in what they code procedures with. This metric
-    emits the procedure as recorded and leaves any grouping to the consumer, the same approach
+    A count of recorded procedures scoped to the outpatient setting. No external body
+    registers a single procedure-count indicator -- procedure classifications (e.g.
+    ICD-10-PCS, CPT) code what a procedure is, not how a deployment should count procedure
+    activity, and deployments differ in what they code procedures with. This metric emits
+    the procedure as recorded and leaves any grouping to the consumer, the same approach
     metric__procedure takes. Pending alignment with the deploying country's national HMIS
     definition.
   unit: count
