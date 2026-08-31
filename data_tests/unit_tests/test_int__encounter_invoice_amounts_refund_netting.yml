@@ -1,11 +1,10 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_billing_type_fallback
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_refund_netting
+    model: int__encounter_invoice_amounts
     description: >
-      When the encounter has no patient_billing_type_id, price-list matching
-      falls back to the patient's additional-data billing type (mirroring
-      getIdForPatientEncounter). The price list requires billingType-Private,
-      which the patient's additional data supplies, so the $50 price applies.
+      patient_payment nets payments minus refunds. A $100 payment followed by a
+      $100 refund (original_payment_id set) produces $0 net for that pair; a
+      separate $40 payment remains, so net patient_payment is $40.
     given:
       - input: ref('encounters')
         format: sql
@@ -30,13 +29,12 @@ unit_tests:
       - input: ref('patient_additional_data')
         format: sql
         rows: |
-          -- Encounter has no billing type; the patient's additional data supplies it
-          select 'pat_001' as patient_id, 'billingType-Private' as patient_billing_type_id
+          select null::text as patient_id, null::text as patient_billing_type_id where false
 
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-001' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -46,7 +44,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
@@ -56,12 +54,26 @@ unit_tests:
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
+          -- $100 payment, then $100 refund (nets to 0), plus a separate $40 payment
+          select '00000000-0000-0000-0000-000000000010'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 100.00::numeric as amount, null::text as original_payment_id
+          union all
+          select '00000000-0000-0000-0000-000000000011'::text, '00000000-0000-0000-0000-000000000001'::text, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::text
+          union all
+          select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 40.00::numeric, null::text
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_payment_id where false
+          select '00000000-0000-0000-0000-000000000020'::text as id, '00000000-0000-0000-0000-000000000010'::text as invoice_payment_id
+          union all
+          select '00000000-0000-0000-0000-000000000021'::text, '00000000-0000-0000-0000-000000000011'::text
+          union all
+          select '00000000-0000-0000-0000-000000000022'::text, '00000000-0000-0000-0000-000000000012'::text
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id, null::text as status where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -96,13 +108,12 @@ unit_tests:
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          -- Requires billingType-Private, supplied via the patient's additional data
-          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientType": "billingType-Private"}'::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, 'current' as visibility_status
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
 
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select 'pl_001' as invoice_price_list_id, 'prod_001' as invoice_product_id, 50.00::numeric as price, false as is_hidden
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
 
     expect:
       format: sql
@@ -110,11 +121,13 @@ unit_tests:
         select
           '00000000-0000-0000-0000-000000000001' as invoice_id,
           'enc_001' as encounter_id,
-          'in_progress' as status,
+          'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
           50.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
-          null::numeric as patient_payment,
-          null::text as products_no_category
+          40.00::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV-001' as display_id

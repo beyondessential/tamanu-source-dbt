@@ -1,10 +1,12 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_refund_netting
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_mixed_plan_coverage
+    model: int__encounter_invoice_amounts
     description: >
-      patient_payment nets payments minus refunds. A $100 payment followed by a
-      $100 refund (original_payment_id set) produces $0 net for that pair; a
-      separate $40 payment remains, so net patient_payment is $40.
+      An insurable item on two linked plans where only one is finalised. Plan A
+      has a finalised snapshot (50%); plan B has no snapshot and uses its live
+      default (30%). Coverage resolves per plan, so total coverage = 50% + 30% =
+      80% of the $100 item = 80 (not 50, which item-level all-finalised logic
+      would give).
     given:
       - input: ref('encounters')
         format: sql
@@ -34,7 +36,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-001' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -44,41 +46,40 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Lab Test' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
+          select 'prod_001' as id, 'Lab' as category, true as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          -- $100 payment, then $100 refund (nets to 0), plus a separate $40 payment
-          select '00000000-0000-0000-0000-000000000010'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 100.00::numeric as amount, null::text as original_payment_id
-          union all
-          select '00000000-0000-0000-0000-000000000011'::text, '00000000-0000-0000-0000-000000000001'::text, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::text
-          union all
-          select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 40.00::numeric, null::text
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
 
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000020'::text as id, '00000000-0000-0000-0000-000000000010'::text as invoice_payment_id
-          union all
-          select '00000000-0000-0000-0000-000000000021'::text, '00000000-0000-0000-0000-000000000011'::text
-          union all
-          select '00000000-0000-0000-0000-000000000022'::text, '00000000-0000-0000-0000-000000000012'::text
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id, null::text as status where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
         rows: |
-          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+          -- Only plan_a is finalised (50%); plan_b has no snapshot
+          select 'fin_a'::text as id, 'item_001'::text as invoice_item_id, 'plan_a' as invoice_insurance_plan_id, 50::numeric as coverage_value_final
 
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
+          select 'iiip_a' as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'plan_a' as invoice_insurance_plan_id
+          union all
+          select 'iiip_b', '00000000-0000-0000-0000-000000000001'::text, 'plan_b'
 
       - input: ref('invoice_insurance_plan_items')
         format: sql
@@ -88,7 +89,10 @@ unit_tests:
       - input: ref('invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::numeric as default_coverage where false
+          -- plan_a default 80 (overridden by finalised 50); plan_b default 30 (live)
+          select 'plan_a' as id, 80::numeric as default_coverage
+          union all
+          select 'plan_b', 30::numeric
 
       - input: ref('invoice_item_discounts')
         format: sql
@@ -119,8 +123,10 @@ unit_tests:
           'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          50.00::numeric as invoice_total,
-          null::numeric as insurance_coverage,
+          100.00::numeric as invoice_total,
+          80.00::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
-          40.00::numeric as patient_payment,
-          null::text as products_no_category
+          null::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV-001' as display_id

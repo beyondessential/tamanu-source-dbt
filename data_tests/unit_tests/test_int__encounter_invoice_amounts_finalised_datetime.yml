@@ -1,6 +1,6 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_finalised_datetime
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_finalised_datetime
+    model: int__encounter_invoice_amounts
     description: >
       invoice_finalised_datetime is the most recent transition into finalised
       status from logs.changes, in deployment-local time (Australia/Sydney,
@@ -52,9 +52,9 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-001' as display_id
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp
+          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp, 'INV-002'
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -73,7 +73,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity where false
+          select null::text as id, null::text as invoice_id, null::text as product_name_final, null::date as date, null::text as product_id, null::numeric as price_final, null::numeric as manual_entry_price, null::integer as quantity, null::text as source_record_type, null::text as source_record_id where false
 
       - input: ref('invoice_products')
         format: sql
@@ -89,6 +89,11 @@ unit_tests:
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id, null::text as status where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -143,7 +148,9 @@ unit_tests:
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          null::text as products_no_category
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV-001' as display_id
         union all
         select
           '00000000-0000-0000-0000-000000000002',
@@ -155,4 +162,6 @@ unit_tests:
           null::numeric,
           0.00::numeric,
           null::numeric,
-          null::text
+          null::numeric,
+          null::text,
+          'INV-002'

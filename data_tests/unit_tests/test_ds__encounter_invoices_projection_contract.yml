@@ -1,0 +1,31 @@
+unit_tests:
+  - name: test_ds__encounter_invoices_projection_contract
+    model: ds__encounter_invoices
+    description: >
+      ds__encounter_invoices is a thin projection over int__encounter_invoice_amounts
+      and its docstring promises the original output contract exactly (column set,
+      order, semantics). The billing arithmetic itself is tested against the
+      intermediate, so this guards only the projection: the ten published columns pass
+      through unaltered, and the intermediate's two extra columns (insurer_payment,
+      display_id -- consumed by clinical__cost, not by this dataset) stay unpublished.
+      A column dropped, renamed or reordered by a later edit breaks this test.
+    given:
+      - input: ref('int__encounter_invoice_amounts')
+        format: sql
+        rows: |
+          select 'inv1' as invoice_id, 'enc1' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as invoice_datetime, '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 8.00::numeric as invoice_discount, 25.00::numeric as patient_payment, 55.00::numeric as insurer_payment, 'Consultation' as products_no_category, 'INV-001' as display_id
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'inv1' as invoice_id,
+          'enc1' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime,
+          100.00::numeric as invoice_total,
+          60.00::numeric as insurance_coverage,
+          8.00::numeric as invoice_discount,
+          25.00::numeric as patient_payment,
+          'Consultation' as products_no_category

@@ -1,16 +1,16 @@
 unit_tests:
-  - name: test_ds__encounter_invoices_patient_type_filter
-    model: ds__encounter_invoices
+  - name: test_int__encounter_invoice_amounts_price_list_fallback
+    model: int__encounter_invoice_amounts
     description: >
-      A price list with a patientType rule is skipped when the encounter's
-      billing type does not match. The rule requires billingType-Private but
-      the encounter is billingType-Charity, so the price-list price ($50) is not
-      used and the item falls through to $0.
+      Items without price_final or manual_entry_price resolve their price from
+      invoice_price_list_items matched by facility and patient age. Patient is
+      34 at facility fac_001; the rule matches facilityId=fac_001 and age max
+      64, so the price-list price ($75) is used. invoice_total = 75 * 2 = 150.
     given:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, 'billingType-Charity' as patient_billing_type_id
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
 
       - input: ref('locations')
         format: sql
@@ -35,7 +35,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-001' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -45,12 +45,13 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity
+          -- No price_final or manual_entry_price; price resolved from price list
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'X-Ray' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
         rows: |
-          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
+          select 'prod_001' as id, 'Imaging' as category, false as insurable, null::text as name
 
       - input: ref('invoice_payments')
         format: sql
@@ -61,6 +62,11 @@ unit_tests:
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id, null::text as status where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -95,13 +101,13 @@ unit_tests:
       - input: ref('invoice_price_lists')
         format: sql
         rows: |
-          -- Price list requires billingType-Private; encounter has Charity
-          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientType": "billingType-Private"}'::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, 'current' as visibility_status
+          -- Price list matches facility fac_001 and age <= 64
+          select 'pl_001' as id, 'pl_001' as code, '{"facilityId": "fac_001", "patientAge": {"max": 64}}'::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, 'current' as visibility_status
 
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select 'pl_001' as invoice_price_list_id, 'prod_001' as invoice_product_id, 50.00::numeric as price, false as is_hidden
+          select 'pl_001' as invoice_price_list_id, 'prod_001' as invoice_product_id, 75.00::numeric as price, false as is_hidden
 
     expect:
       format: sql
@@ -112,8 +118,10 @@ unit_tests:
           'in_progress' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
-          0::numeric as invoice_total,
+          150.00::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
-          'Consultation' as products_no_category
+          null::numeric as insurer_payment,
+          null::text as products_no_category,
+          'INV-001' as display_id
