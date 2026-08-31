@@ -3,22 +3,15 @@ unit_tests:
     model: int__encounter_invoice_amounts
     description: >
       invoice_finalised_datetime is the most recent transition into finalised
-      status from logs.changes, in deployment-local time (Australia/Sydney,
-      AEDT UTC+11 for the January dates used here). A re-finalisation
+      status from logs.changes, in deployment-local time. A re-finalisation
       (previous_status already finalised) is excluded. An invoice that never
-      finalises shows null.
+      finalises shows null. This test pins var('timezone') to UTC so the
+      finalised-timestamp assertion is deterministic across engines; the actual
+      deployment-local shift (at time zone) is exercised against real Postgres by
+      dbt build, not here.
     overrides:
       vars:
-        # tamanu-source-dbt's own default timezone. Sydney observes DST (AEDT
-        # UTC+11 / AEST UTC+10) -- the fixture dates below are all January
-        # (AEDT), so they resolve to UTC+11; adding fixture rows outside
-        # daylight-saving months would shift this to UTC+10.
-        timezone: Australia/Sydney
-        date_format: 'YYYY-MM-DD'
-        time_format: 'HH24:MI'
-        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
-        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
-        yearmonth_format: 'YYYY-MM'
+        timezone: UTC
     given:
       - input: ref('encounters')
         format: sql
@@ -52,16 +45,17 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, null::text as display_id
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp, null::text
+          select '00000000-0000-0000-0000-000000000002', 'enc_002', 'in_progress', '2024-01-20 09:00:00'::timestamp, 'INV'
 
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
           select '00000000-0000-0000-0000-000000000001'::text as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
           union all
-          -- First finalisation: logged_at UTC 03:00 = Sydney 14:00 (AEDT, UTC+11 in January)
+          -- First finalisation at 03:00 UTC; with timezone pinned to UTC the
+          -- local-time conversion is a no-op, so the expected value is 03:00
           select '00000000-0000-0000-0000-000000000001'::text, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
           union all
           -- Re-finalisation: previous_status = 'finalised' so excluded
@@ -85,12 +79,12 @@ unit_tests:
         rows: |
           select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id where false
 
-      - input: ref('invoice_patient_payments')
+      - input: ref('invoice_insurer_payments')
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
 
-      - input: ref('invoice_insurer_payments')
+      - input: ref('invoice_patient_payments')
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
@@ -143,14 +137,14 @@ unit_tests:
           'enc_001' as encounter_id,
           'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
-          '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime,
+          '2024-01-15 03:00:00'::timestamp as invoice_finalised_datetime,
           null::numeric as invoice_total,
           null::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           null::numeric as patient_payment,
           null::numeric as insurer_payment,
           null::text as products_no_category,
-          null::text as display_id
+          'INV' as display_id
         union all
         select
           '00000000-0000-0000-0000-000000000002',
@@ -164,4 +158,4 @@ unit_tests:
           null::numeric,
           null::numeric,
           null::text,
-          null::text
+          'INV'

@@ -34,7 +34,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, null::text as display_id
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -61,6 +61,11 @@ unit_tests:
           union all
           select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 40.00::numeric, null::text
 
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
       - input: ref('invoice_patient_payments')
         format: sql
         rows: |
@@ -69,11 +74,6 @@ unit_tests:
           select '00000000-0000-0000-0000-000000000021'::text, '00000000-0000-0000-0000-000000000011'::text
           union all
           select '00000000-0000-0000-0000-000000000022'::text, '00000000-0000-0000-0000-000000000012'::text
-
-      - input: ref('invoice_insurer_payments')
-        format: sql
-        rows: |
-          select null::text as id, null::text as invoice_payment_id where false
 
       - input: ref('invoice_item_finalised_insurances')
         format: sql
@@ -130,4 +130,4 @@ unit_tests:
           40.00::numeric as patient_payment,
           null::numeric as insurer_payment,
           null::text as products_no_category,
-          null::text as display_id
+          'INV' as display_id
