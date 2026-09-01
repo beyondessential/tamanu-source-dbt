@@ -86,5 +86,15 @@ where trim(d) not in (
         'procedure',
         'procedure_code',
         -- procedure's completion flag
-        'is_completed'
+        'is_completed',
+        -- immunisation_dose's antigen
+        'disease',
+        -- immunisation_dose's EPI-style age cohort, banded in months
+        'age_group__who_epi_schedule',
+        -- immunisation_dose's schedule dose position (e.g. 'Dose 1', 'Dose 2')
+        'dose_label',
+        -- immunisation_dose's patient home village, distinct from facility_id
+        'patient_location_id',
+        -- immunisation_refusal's reason a dose was not given
+        'reason'
     )
