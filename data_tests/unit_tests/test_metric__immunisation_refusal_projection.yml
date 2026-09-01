@@ -1,0 +1,42 @@
+unit_tests:
+  - name: ac_009_metric__immunisation_refusal_projection
+    model: metric__immunisation_refusal
+    description: >
+      BL-001: only the 'vaccination not given' clinical__observation branch is counted, and
+      only rows that resolve in int__vaccine_administration_attributes -- an attempt whose
+      facility or patient fails to resolve there is excluded. BL-002: period_start and
+      period_end are both the attempt date. BL-005: disease falls back to 'Not recorded' when
+      blank. BL-006: age_months is banded into EPI months-based cohorts. BL-007: dose_label
+      falls back to 'Not recorded' when blank. BL-008: patient_location_id passes through
+      unchanged, including NULL when not recorded. BL-009: reason falls back to 'Not
+      recorded' when neither a coded nor free-text reason was captured.
+
+    given:
+      - input: ref('clinical__observation')
+        format: sql
+        rows: |
+          select 'ng_1' as observation_id, '2024-06-01'::date as observation_date, 'vaccination not given' as observation_type_source_value
+          union all
+          select 'ng_2', '2023-01-15'::date, 'vaccination not given'
+          union all
+          -- no matching int__vaccine_administration_attributes row (facility/patient did not
+          -- resolve there) -> excluded
+          select 'ng_3', '2024-06-02'::date, 'vaccination not given'
+          union all
+          -- a different observation type -> excluded
+          select 'obs_1', '2024-06-04'::date, 'program survey'
+
+      - input: ref('int__vaccine_administration_attributes')
+        format: sql
+        rows: |
+          select 'ng_1' as administered_vaccine_id, 'fac_1' as facility_id, 'Measles' as disease, 'Dose 1' as dose_label, 'female' as sex, 'vil_1' as patient_location_id, 'Parent declined' as not_given_reason, 60 as age_months
+          union all
+          -- blank disease/dose_label/reason -> 'Not recorded'. no village on record -> NULL passes through.
+          select 'ng_2', 'fac_1', null::text, null::text, 'male', null::text, null::text, 12
+
+    expect:
+      format: sql
+      rows: |
+        select 'immunisation_refusal' as metric_id, null::text as variant_id, 'ng_1'::varchar as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 'Measles' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id, 'Parent declined' as reason
+        union all
+        select 'immunisation_refusal', null::text, 'ng_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text, 'Not recorded'
