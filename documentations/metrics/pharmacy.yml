@@ -1,0 +1,45 @@
+# Pharmacy dispensing activity: ordered drug lines and their dispensing status.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: pharmacy_order
+  kind: metric
+  name: Pharmacy orders
+  description: >-
+    Ordered drug lines placed to pharmacy, and whether each has been fully dispensed. One row
+    per ordered drug line, not per pharmacy order and not per physical dispense event.
+  numerator_description: >-
+    Ordered drug lines, counted on the date the pharmacy order was placed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    No external indicator anchor (AIHW/WHO/DHIS2) defines "dispensing status" as a standard
+    concept -- this is a BES composition over Tamanu's own pharmacy workflow. The unit counted
+    is the ordered drug line (pharmacy_order_prescriptions), the grain the pharmacy queue is
+    actually worked against, rather than the pharmacy order (which can bundle several lines) or
+    the physical dispense event (an ordered line can be partially filled across 0..n dispenses).
+    is_completed splits the total into dispensed vs pending; a consumer forms the dispensing
+    rate downstream as sum(value_numeric) filter (where is_completed) / sum(value_numeric),
+    never stored as a percentage, matching the rate convention fixed for metric__emergency_visit
+    (MAUI-6787). Flag for realignment if a national HMIS or WHO essential-medicines indicator
+    for dispensing surfaces later.
+  unit: count
+  subject_grain: pharmacy_order_prescription
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - drug_source_value
+  - drug_source_name
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: null

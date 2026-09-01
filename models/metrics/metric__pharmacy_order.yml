@@ -1,0 +1,146 @@
+version: 2
+
+models:
+  - name: metric__pharmacy_order
+    description: >-
+      D5 metric view for the pharmacy order indicator registered in documentations/metrics/*.yml:
+      pharmacy_order. One row per ordered drug line (pharmacy_order_prescriptions, not the
+      pharmacy order and not the physical dispense event) -- per-drug-line (subject) grain, so a
+      consumer aggregates at whatever grain it needs. is_completed splits the total into
+      dispensed vs still-pending, so a dispensing rate is formed downstream as
+      sum(value_numeric) filter (where is_completed) / sum(value_numeric), never stored as a
+      percentage.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment that
+    # bands or scopes differently adds a file there rather than forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-drug-line rows, but the subject is a pharmacy_order_prescriptions id with no patient
+      # identifier, name or birth date alongside it -- no patient is identifiable through a row,
+      # so this stays unrestricted and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per ordered drug line. A duplicate would double-count it in any consumer that
+      # sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_metric__pharmacy_order_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # A pharmacy order is point-in-time, so period_end is hardcoded NULL. Asserted as the null
+      # invariant itself rather than as an end-after-start comparison, so a change that ever
+      # populates it flags for a deliberate revisit instead of passing on an empty row set.
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_metric__pharmacy_order_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'pharmacy_order'.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_metric_id_not_null
+          - accepted_values:
+              name: ac_metric__pharmacy_order_metric_id_values
+              arguments:
+                values:
+                  - pharmacy_order
+          - relationships:
+              name: ac_metric__pharmacy_order_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu pharmacy_order_prescriptions id -- one ordered drug line.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The date the pharmacy order was placed.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: >-
+          NULL -- a pharmacy order is point-in-time and the model emits no resolution date for
+          it.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_period_granularity_not_null
+          - accepted_values:
+              name: ac_metric__pharmacy_order_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: >-
+          Always 1 -- one drug line per row. Sum it to count ordered drug lines over any
+          grouping; sum it filtered by is_completed for the dispensed count.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_value_numeric_not_null
+          - accepted_values:
+              name: ac_metric__pharmacy_order_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: The Tamanu facility id the pharmacy order was placed at.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: is_completed
+        data_type: boolean
+        description: >-
+          Whether this drug line has been fully dispensed (Tamanu's own field on
+          pharmacy_order_prescriptions -- true once all repeats have been dispensed for a
+          discharge prescription). Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_is_completed_not_null
+      - name: drug_source_value
+        data_type: text
+        description: >-
+          The ordered drug's reference-data code, alongside drug_source_name so a card can scope
+          to one drug by code, which survives a reference-data rename where the name does not.
+          Never NULL -- falls back to 'Not recorded' where the underlying prescription or
+          medication reference does not resolve.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_drug_source_value_not_null
+      - name: drug_source_name
+        data_type: text
+        description: >-
+          The ordered drug as recorded, ungrouped -- the label to rank and trend by. No
+          therapeutic-class grouping is applied: no reference mapping for it exists yet. Never
+          NULL -- falls back to 'Not recorded', same as drug_source_value.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_drug_source_name_not_null
