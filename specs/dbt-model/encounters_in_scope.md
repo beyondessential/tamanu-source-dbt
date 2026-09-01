@@ -136,6 +136,40 @@ end-to-end. AC-003 was verified for that adoption by a full-project compiled dif
 2952 compiled models changed, both intended, and both token-identical apart from the
 superset columns and one redundant wrapping paren.
 
+### Row-level verification against real data (2026-09-02)
+
+Both compiled variants were run pre- and post-adoption against a populated
+`reporting_release` database with the date range widened to `[2000-01-01, 2100-01-01]`
+and every optional filter null, and compared with `except all` in both directions:
+
+| Variant | Rows before | Rows after | Only in before | Only in after |
+|---|---|---|---|---|
+| `audit-encounter-invoice` | 687 | 687 | 0 | 0 |
+| `sensitive-audit-encounter-invoice` | 0 | 0 | 0 | 0 |
+
+**What that run did and did not establish.** The standard variant is a real result: 687
+rows compared, byte-identical, spanning 6 distinct `encounter_type` values and including
+the one open encounter (null `end_datetime`), so the BL-003 `includeOpenEncounters`
+branch was exercised.
+
+The sensitive comparison is **vacuous** — every facility in that database has
+`is_sensitive = false`, so both sides legitimately return zero rows. BL-001's
+`is_sensitive = true` half therefore has no real-data coverage here; it rests on the
+compiled-SQL equivalence and on
+`test_encounter_summary_by_start_date_excludes_sensitive_facilities`-style fixtures
+elsewhere. Three further conditions were not differentiated by this dataset:
+
+- only one facility is reached by any encounter, so the multi-facility partition and the
+  `facilityId` filter were not distinguished;
+- `ds__encounter_invoices` is empty, so all invoice columns were null on both sides —
+  immaterial here, since the extraction does not touch the financial CTEs;
+- no encounter has a null or dangling `location_id`, so BL-006's row-dropping inner join
+  was not observed in practice.
+
+None of these are regressions introduced by the extraction — they are gaps in the
+available data. A run against a database with sensitive facilities and multiple
+facilities in use would close them.
+
 ## Callers
 
 | Caller | Adopted | Notes |
