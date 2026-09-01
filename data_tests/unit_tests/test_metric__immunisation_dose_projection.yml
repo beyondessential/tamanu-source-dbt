@@ -1,0 +1,42 @@
+unit_tests:
+  - name: ac_009_metric__immunisation_dose_projection
+    model: metric__immunisation_dose
+    description: >
+      BL-001: only vaccination-type clinical__drug_exposure rows are counted, and only those
+      that resolve in int__vaccine_administration_attributes -- a dose whose facility or
+      patient fails to resolve there is excluded. BL-002: period_start and period_end are
+      both the dose date. BL-005: disease falls back to 'Not recorded' when blank. BL-006:
+      age_months (resolved upstream in the shared attributes model) is banded into EPI
+      months-based cohorts, falling back to 'Unknown age' with no age. BL-007: dose_label
+      falls back to 'Not recorded' when blank. BL-008: patient_location_id passes through
+      unchanged, including NULL when not recorded.
+
+    given:
+      - input: ref('clinical__drug_exposure')
+        format: sql
+        rows: |
+          select 'dose_1' as drug_exposure_id, '2024-06-01'::date as drug_exposure_start_date, 'vaccination' as drug_exposure_type_source_value
+          union all
+          select 'dose_2', '2023-01-15'::date, 'vaccination'
+          union all
+          -- no matching int__vaccine_administration_attributes row (facility/patient did not
+          -- resolve there) -> excluded
+          select 'dose_3', '2024-06-02'::date, 'vaccination'
+          union all
+          -- not a vaccination -> excluded
+          select 'rx_1', '2024-06-04'::date, 'prescription'
+
+      - input: ref('int__vaccine_administration_attributes')
+        format: sql
+        rows: |
+          select 'dose_1' as administered_vaccine_id, 'fac_1' as facility_id, 'Measles' as disease, 'Dose 1' as dose_label, 'female' as sex, 'vil_1' as patient_location_id, 60 as age_months
+          union all
+          -- blank disease/dose_label -> 'Not recorded'. no village on record -> NULL passes through.
+          select 'dose_2', 'fac_1', null::text, null::text, 'male', null::text, 12
+
+    expect:
+      format: sql
+      rows: |
+        select 'immunisation_dose' as metric_id, null::text as variant_id, 'dose_1'::varchar as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 'Measles' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id
+        union all
+        select 'immunisation_dose', null::text, 'dose_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text
