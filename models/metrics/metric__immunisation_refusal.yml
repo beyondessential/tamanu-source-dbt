@@ -1,0 +1,145 @@
+version: 2
+
+models:
+  - name: metric__immunisation_refusal
+    description: "{{ doc('metric__immunisation_refusal') }}"
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
+    # tables), so a deployment that bands a value differently adds a file there rather than
+    # forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-attempt rows, but the subject is an observation id with no patient identifier,
+      # name or birth date alongside it -- no patient is identifiable through a row, so this
+      # stays unrestricted and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per attempt. A duplicate would double-count a refusal in any consumer that
+      # sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__immunisation_refusal_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # A not-given attempt is a single-day point event: period_end always equals
+      # period_start.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_009_metric__immunisation_refusal_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__immunisation_refusal_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__immunisation_refusal_metric_id_values
+              arguments:
+                values:
+                  - immunisation_refusal
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_003_metric__immunisation_refusal_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_refusal__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__immunisation_refusal_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: "{{ doc('metric__immunisation_refusal__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__immunisation_refusal_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: "{{ doc('metric__immunisation_refusal__period_end') }}"
+        data_tests:
+          - not_null:
+              name: ac_011_metric__immunisation_refusal_period_end_not_null
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__immunisation_refusal_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__immunisation_refusal_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__immunisation_refusal__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__immunisation_refusal_value_numeric_not_null
+          # BL-003: one attempt per row, so the count contribution is always 1. A value other
+          # than 1 would mean the model had silently re-aggregated.
+          - accepted_values:
+              name: ac_006_metric__immunisation_refusal_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('metric__immunisation_refusal__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} the attempt is attributed to."
+        data_tests:
+          - not_null:
+              name: ac_007_metric__immunisation_refusal_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: disease
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__disease') }}"
+        data_tests:
+          - not_null:
+              name: ac_010_metric__immunisation_refusal_disease_not_null
+      - name: age_group__who_epi_schedule
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__age_group__who_epi_schedule') }}"
+        data_tests:
+          - not_null:
+              name: ac_012_metric__immunisation_refusal_age_group__who_epi_schedule_not_null
+      - name: dose_label
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_refusal__dose_label') }}"
+        data_tests:
+          - not_null:
+              name: ac_013_metric__immunisation_refusal_dose_label_not_null
+      - name: patient_location_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_refusal__patient_location_id') }}"
+        # BL-008: deliberately no not_null test -- NULL means the patient's own record
+        # carries no village, which is a real and common state, not an anomaly.
+      - name: reason
+        data_type: text
+        description: "{{ doc('metric__immunisation_refusal__reason') }}"
+        data_tests:
+          - not_null:
+              name: ac_014_metric__immunisation_refusal_reason_not_null

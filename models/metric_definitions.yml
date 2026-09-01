@@ -80,12 +80,15 @@ models:
               arguments:
                 values: ['tamanu', 'msupply', 'senaite', 'weather']
       - name: definition_source
-        description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `WHO_PEN`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `AIHW`, `MSF`) or `BES` for internal definitions.
+        description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `WHO_PEN`, `WHO_UNICEF_WUENIC`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `AIHW`, `MSF`) or `BES` for internal definitions.
         tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'AIHW', 'MSF', 'BES']
+                # AIHW: ed_visit, ed_stay, opd_visit (documentations/metrics/emergency.yml,
+                # outpatient.yml). WHO_UNICEF_WUENIC: immunisation_dose
+                # (documentations/metrics/immunisation.yml).
+                values: ['WHO_SMART_HIV', 'WHO_CORE_100', 'WHO_PEN', 'WHO_UNICEF_WUENIC', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'AIHW', 'MSF', 'BES']
       - name: definition_source_code
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
