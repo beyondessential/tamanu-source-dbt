@@ -114,6 +114,7 @@ report.reporting.encounterDepartmentHistory,Department history
 report.reporting.encounterDepartmentHistoryDateTimes,Department history date and times
 report.reporting.encounterDiet,Diet
 report.reporting.encounterEndDateTime,Encounter end date and time
+report.reporting.encounterId,Encounter ID
 report.reporting.encounterIsDischarged,Discharges (has the patient been discharged)
 report.reporting.encounterIsHospitalAdmission,Hospital admission
 report.reporting.encounterLengthOfStay,Length of stay (days)
