@@ -1,7 +1,7 @@
 # Don't build this as a package - it's a dbt project; setuptools is used only to
 # satisfy `uv pip install -e .` without auto-discovering dbt directories as Python packages.
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,6 +9,8 @@ name = "tamanu-source-dbt"
 version = "2.63.0"
 description = "A dbt project that transforms Tamanu healthcare system data into optimised reporting datasets"
 readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "dbt-core",
