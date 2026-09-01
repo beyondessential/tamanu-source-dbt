@@ -74,7 +74,10 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
 - **BL-003 (outpatient scope, by window overlap):** `condition_start_datetime` carries no
   time of day -- it is always midnight. A diagnosis's window is
   `[greatest(condition_start_datetime, visit_start_datetime), visit_end_datetime]`
-  (open-ended if the encounter has not closed). A diagnosis is included when any
+  (open-ended if the encounter has not closed). If `condition_start_datetime` falls after
+  `visit_end_datetime`, the lower bound is clamped down to `visit_end_datetime` too, so the
+  diagnosis lands in whatever segment the encounter was in right before it closed, rather
+  than in an inverted window that overlaps nothing. A diagnosis is included when any
   `clinical__visit_detail` segment for its encounter has `visit_detail_concept_id = 9202`
   and overlaps that window:
 

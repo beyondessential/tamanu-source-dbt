@@ -25,12 +25,21 @@ locations as (
 ),
 
 -- BL-003: a diagnosis's window is [greatest(condition_start_datetime, visit_start_datetime),
--- visit_end_datetime], open-ended if the encounter has not closed
+-- visit_end_datetime], open-ended if the encounter has not closed. A diagnosis dated after
+-- the encounter closed is clamped to the close time, so it lands in the last segment the
+-- encounter was in rather than falling outside every segment
 diagnosis_window as (
     select
         cco.condition_occurrence_id,
         cco.visit_occurrence_id,
-        greatest(cco.condition_start_datetime, vo.visit_start_datetime) as window_start,
+        case
+            when vo.visit_end_datetime is not null
+                then least(
+                    greatest(cco.condition_start_datetime, vo.visit_start_datetime),
+                    vo.visit_end_datetime
+                )
+            else greatest(cco.condition_start_datetime, vo.visit_start_datetime)
+        end as window_start,
         vo.visit_end_datetime as window_end
     from condition_occurrence cco
     join visit_occurrence vo
