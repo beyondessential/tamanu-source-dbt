@@ -96,5 +96,10 @@ where trim(d) not in (
         -- immunisation_dose's patient home village, distinct from facility_id
         'patient_location_id',
         -- immunisation_refusal's reason a dose was not given
-        'reason'
+        'reason',
+        -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
+        -- therapeutic-class reference mapping exists yet, the same reasoning
+        -- diagnosis/diagnosis_code and procedure/procedure_code use.
+        'drug_source_value',
+        'drug_source_name'
     )
