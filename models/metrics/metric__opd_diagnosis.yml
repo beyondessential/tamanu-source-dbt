@@ -13,7 +13,7 @@ models:
         - clinical
     # No data_table_* meta. The Tupaia data tables over this model are configured in
     # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
-    # metric__encounter_diagnosis and metric__opd_procedure use.
+    # metric__encounter_diagnosis uses.
     meta:
       owner: bes-maui
       domain: clinical
@@ -26,7 +26,7 @@ models:
       # One row per diagnosis. A duplicate would double-count it in any consumer that sums
       # value_numeric -- error even though the repo default is warn.
       - dbt_utils.unique_combination_of_columns:
-          name: ac_metric__opd_diagnosis_grain
+          name: ac_001_metric__opd_diagnosis_grain
           arguments:
             combination_of_columns:
               - metric_id
@@ -37,7 +37,7 @@ models:
       # invariant itself rather than as an end-after-start comparison, so a change that ever
       # populates it flags for a deliberate revisit instead of passing on an empty row set.
       - dbt_expectations.expect_column_values_to_be_null:
-          name: ac_metric__opd_diagnosis_period_end_null
+          name: ac_009_metric__opd_diagnosis_period_end_null
           arguments:
             column_name: period_end
     columns:
@@ -46,14 +46,14 @@ models:
         description: The registered indicator identifier. Always 'opd_diagnosis'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_metric_id_not_null
+              name: ac_002_metric__opd_diagnosis_metric_id_not_null
           - accepted_values:
-              name: ac_metric__opd_diagnosis_metric_id_values
+              name: ac_004_metric__opd_diagnosis_metric_id_values
               arguments:
                 values:
                   - opd_diagnosis
           - relationships:
-              name: ac_metric__opd_diagnosis_metric_id_registered
+              name: ac_003_metric__opd_diagnosis_metric_id_registered
               arguments:
                 to: ref('metric_definitions')
                 field: metric_id
@@ -67,13 +67,13 @@ models:
         description: The Tamanu diagnosis (condition_occurrence) id.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_subject_id_not_null
+              name: ac_008_metric__opd_diagnosis_subject_id_not_null
       - name: period_start
         data_type: date
         description: The date the diagnosis was recorded.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_period_start_not_null
+              name: ac_005_metric__opd_diagnosis_period_start_not_null
       - name: period_end
         data_type: date
         description: >-
@@ -83,9 +83,9 @@ models:
         description: Constant 'day'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_period_granularity_not_null
+              name: ac_010_metric__opd_diagnosis_period_granularity_not_null
           - accepted_values:
-              name: ac_metric__opd_diagnosis_period_granularity_is_day
+              name: ac_010_metric__opd_diagnosis_period_granularity_is_day
               arguments:
                 values: ['day']
       - name: value_numeric
@@ -93,9 +93,9 @@ models:
         description: Always 1 -- one diagnosis per row. Sum it to count diagnoses over any grouping.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_value_numeric_not_null
+              name: ac_006_metric__opd_diagnosis_value_numeric_not_null
           - accepted_values:
-              name: ac_metric__opd_diagnosis_value_numeric_is_one
+              name: ac_006_metric__opd_diagnosis_value_numeric_is_one
               arguments:
                 values: [1]
                 quote: false
@@ -109,36 +109,36 @@ models:
           qualifying outpatient segment's own care_site_id (BL-004).
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_facility_id_not_null
+              name: ac_007_metric__opd_diagnosis_facility_id_not_null
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.
       - name: diagnosis_code
-        data_type: character varying(255)
+        data_type: text
         description: >-
           The diagnosis's reference-data code, as recorded. Never NULL -- falls back to
           'Not recorded'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_diagnosis_code_not_null
+              name: ac_012_metric__opd_diagnosis_diagnosis_code_not_null
       - name: diagnosis
-        data_type: character varying(255)
+        data_type: text
         description: >-
           The diagnosis's reference-data name, alongside the code so a card can scope to one
           diagnosis by code, which survives a reference-data rename where the name does not.
           Never NULL -- falls back to diagnosis_code, then 'Not recorded'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_diagnosis_not_null
+              name: ac_011_metric__opd_diagnosis_diagnosis_not_null
       - name: diagnosis_certainty
-        data_type: character varying(255)
+        data_type: text
         description: >-
           The diagnosis's certainty as recorded (confirmed, suspected, and the rest of the
           deployment's list) -- 'disproven' and 'error' are already excluded upstream. Never
           NULL -- falls back to 'Not recorded'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_diagnosis_diagnosis_certainty_not_null
+              name: ac_013_metric__opd_diagnosis_diagnosis_certainty_not_null
       - name: is_primary
         data_type: boolean
         description: >-

@@ -153,6 +153,5 @@ registration.
 | Artefact | Relationship |
 |---|---|
 | `metric__encounter_diagnosis` | Same clinical source; carries `encounter_type` instead of an OPD/IPD split |
-| `metric__opd_procedure` | Sibling OPD metric; uses single-segment attribution instead of window overlap, since procedure timestamps are usually precise |
 | `metric__outpatient_visit` | Sibling metric in the outpatient product; first-segment grain |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
