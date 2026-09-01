@@ -51,8 +51,7 @@ One row per encounter that matches the parameter filters. An encounter without a
 
 | Reference | Why we need it |
 |---|---|
-| `ref('encounters')` | Encounter dimension |
-| `ref('locations')`, `ref('facilities')` | Facility for each encounter |
+| `encounters_in_scope()` | Shared macro resolving encounters to their facility and applying the `is_sensitive` partition (BL-001, BL-017). Reads `ref('encounters')`, `ref('locations')` and `ref('facilities')` — see `specs/dbt-model/encounters_in_scope.md` |
 | `ref('patients')` | Patient demographics + DOB for age |
 | `ref('departments')`, `ref('users')`, `ref('reference_data')` | Discharging department, supervising clinician, billing type labels |
 | `ref('ds__encounter_invoices')` | Per-invoice financials (totals, coverage, discounts, payments, finalisation). Resolves the price-list/coverage/discount logic — see its spec at `specs/dbt-model/ds__encounter_invoices.md` |
@@ -84,7 +83,8 @@ One row per encounter that matches the parameter filters. An encounter without a
 
 ## Business logic
 
-- **BL-001:** Exclude the test patient (enforced upstream by `base__encounters`).
+- **BL-001:** Exclude the test patient (enforced upstream by the `encounters` base model).
+  Realised by `encounters_in_scope()` BL-002 — see `specs/dbt-model/encounters_in_scope.md`.
 - **BL-002:** Restrict to encounters whose `start_datetime` (in the viewer's selected timezone) falls within `[fromDate, toDate]`. Both bounds are always supplied.
 - **BL-003:** Include non-discharged encounters (those with null `end_datetime`) when `includeOpenEncounters = 'yes'`; exclude them when `'no'`. Default is `'yes'`.
 - **BL-004:** Apply optional restrictions on facility, department, patient billing type, and supervising clinician. A null parameter disables that filter.
@@ -93,6 +93,9 @@ One row per encounter that matches the parameter filters. An encounter without a
 - **BL-013:** Patient subtotal is `invoiceTotal − insuranceCoverage − invoiceDiscount`.
 - **BL-014:** Patient total is `patientSubtotal − patientPayment`.
 - **BL-017:** Facility scope is partitioned by the `is_sensitive` macro argument: the standard variant covers non-sensitive facilities (`is_sensitive = false`); the sensitive variant covers sensitive facilities (`is_sensitive = true`).
+  Realised by `encounters_in_scope()` BL-001 — see `specs/dbt-model/encounters_in_scope.md`.
+  BL-002, BL-003 and BL-004 above remain this report's own, passed to that macro as
+  `extra_predicates` under its row-selecting contract (its BL-004).
 - **BL-018:** Aggregate `ds__encounter_invoices` to one row per in-scope encounter, excluding cancelled invoices: invoice total, insurance coverage, invoice discount and patient payment are summed; finalised datetime is the maximum; no-category products are concatenated (ordered by invoice datetime then id). Encounters with no non-cancelled invoices still appear with null invoice columns. An encounter that has a non-cancelled invoice with no items reads a total of 0; an encounter with no invoice at all stays null.
 - **BL-019:** Money columns (invoice total, insurance coverage, patient subtotal, patient payment, patient total) are rounded to 2 decimal places for display, matching the application's `formatDisplayPrice`. NULL is preserved.
 
@@ -125,3 +128,4 @@ _None._
 |---|---|---|
 | 2026-06-18 | Maui team | Initial spec for the report, ported from `tamanu-dbt-fsm` into the shared standard/sensitive macro pattern. Per-invoice financials live in `ds__encounter_invoices`; the report aggregates that dataset per encounter (BL-018). |
 | 2026-06-23 | Maui team | Renamed report from `encounter-invoice-audit-line-list` to `audit-encounter-invoice` (config/SQL `audit-encounter-invoice.*`, display name "Audit - encounter invoice"). No logic change. |
+| 2026-09-02 | Maui team | Extracted the `encounters_in_scope` CTE into the shared `encounters_in_scope()` macro; BL-001 and BL-017 now resolve there. No behaviour change — verified by a full-project compiled diff (2 of 2952 models changed, both intended, token-identical apart from the macro's superset columns and one redundant wrapping paren). |

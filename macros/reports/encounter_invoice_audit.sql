@@ -1,48 +1,27 @@
 {% macro encounter_invoice_audit_report(is_sensitive=false) %}
 
+{#-
+    BL-001 (test patient) and BL-017 (is_sensitive facility partition) are resolved by
+    encounters_in_scope(); see specs/dbt-model/encounters_in_scope.md. The predicates
+    below are this report's own, and reference the `e` / `f` aliases that macro
+    contracts on.
+-#}
+{%- set scope_filter -%}
+    -- BL-003: open encounters are included only when the
+    -- includeOpenEncounters flag is 'yes' (the default)
+    (
+        e.end_datetime is not null
+        or coalesce({{ parameter('includeOpenEncounters', default_value='yes') }}, 'yes') = 'yes'
+    )
+    -- BL-002: restrict to encounters whose start_datetime is in range
+    and {{ to_user_selected_timezone('e.start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    and {{ to_user_selected_timezone('e.start_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    -- BL-004: optional facility, billing type and clinician filters
+    and {{ encounter_scope_common_filters() }}
+{%- endset -%}
+
 with encounters_in_scope as (
-    select
-        e.id as encounter_id,
-        -- localise once here so downstream presentation reads plain columns
-        {{ to_user_selected_timezone('e.start_datetime') }} as start_datetime_local,
-        {{ to_user_selected_timezone('e.end_datetime') }} as end_datetime_local,
-        e.patient_id,
-        e.department_id,
-        e.clinician_id,
-        e.patient_billing_type_id,
-        f.id as facility_id,
-        f.name as facility
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} l
-        on l.id = e.location_id
-    join {{ ref('facilities') }} f
-        on f.id = l.facility_id
-        -- BL-017: facility scope partitioned by the is_sensitive argument
-        and f.is_sensitive = {{ is_sensitive }}
-    where
-        -- BL-001: the test patient is already excluded upstream by base__encounters
-        -- BL-003: open encounters are included only when the
-        -- includeOpenEncounters flag is 'yes' (the default)
-        (
-            e.end_datetime is not null
-            or coalesce({{ parameter('includeOpenEncounters', default_value='yes') }}, 'yes') = 'yes'
-        )
-        -- BL-002: restrict to encounters whose start_datetime is in range
-        and {{ to_user_selected_timezone('e.start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-        and {{ to_user_selected_timezone('e.start_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-        -- BL-004: optional facility, billing type and clinician filters
-        and case
-            when {{ parameter('facilityId') }} is null then true
-            else f.id = {{ parameter('facilityId') }}
-        end
-        and case
-            when {{ parameter('patientBillingTypeId') }} is null then true
-            else e.patient_billing_type_id = {{ parameter('patientBillingTypeId') }}
-        end
-        and case
-            when {{ parameter('supervisingClinicianId') }} is null then true
-            else e.clinician_id = {{ parameter('supervisingClinicianId') }}
-        end
+    {{ encounters_in_scope(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
 ),
 
 invoice_data as (
