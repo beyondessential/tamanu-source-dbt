@@ -240,6 +240,12 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   nor MAUI-6857 states which timestamp the date range should bound; the reading adopted here
   is drawn from MAUI-6183's stated purpose. Worth putting to Corinna, who raised the
   original card.
+- **Are outpatient appointments editable from the mobile app?** If so, DV-010 applies and
+  `logged_at` is the sync-apply time for those edits rather than the edit time. Needs a
+  Tamanu-side answer.
+- **Which server does the reporting database run on for each deployment?** DV-011's severity
+  depends on it: on a facility server the changelog is locally complete for that facility's
+  own edits, on central it is whatever sync has delivered.
 
 ## Divergence from current code
 
@@ -249,6 +255,21 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   compiled report actually runs, and the equivalence between the candidate filter and the
   final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
   singular tests; verify the compiled form against a replica.
+- **DV-011:** BL-031 needs an appointment's whole history; nothing establishes that a
+  central-server database holds it. Changelog entries are authored once on the server where
+  the change happened and travel attached to their record, bounded by the sync session's tick
+  range — and `specs/audit/changelog.md` notes a batch whose tick range is unavailable goes
+  without attached entries. A gap makes `prev_*` name the wrong predecessor and
+  `change_number` count wrong, silently. *Resolution:* establish which server the reporting
+  database runs on, then whether entry coverage there is complete; this is the report's
+  central premise, not an edge case.
+- **DV-010:** BL-029 reads `logged_at` as the moment of the edit, which does not hold for a
+  mobile-originated change. Mobile keeps no changelog, so central's own trigger authors the
+  entry as it applies the push, stamping `logged_at` with the apply time — arbitrarily later
+  than the edit on a poor connection — and taking the audit user from the session, which if
+  unset credits the nil UUID and drops the row entirely at the core's inner join to `users`.
+  *Resolution:* confirm with the Tamanu team whether appointments are editable from mobile at
+  all, and if so what audit user central sets while applying a mobile push.
 - **DV-009:** `prev_location_group` escapes the BL-033 partition. It resolves through an
   unfiltered `location_groups` left join, so an appointment moved out of a sensitive facility
   carries that facility's area name into the **standard** report's "Previous area". Long
@@ -317,6 +338,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | DV-010 and DV-011 record two sync-topology assumptions the report rests on: `logged_at` is the edit time only for changes authored on the server that made them (not mobile-originated ones), and BL-031's whole-history requirement is unestablished on a central-server database. |
 | 2026-09-02 | Maui team | BL-033 reworded to claim row admission only, and DV-009 records that `prev_location_group` escapes the partition. |
 | 2026-09-02 | Maui team | BL-039's candidate bounds are widened a day at each end. The final `WHERE` round-trips `modified_datetime` through the central zone, which is non-injective at its DST fall-back, so the unwidened filter silently dropped events logged in the repeated hour when `:timezone` differed from central (MAUI-6857). |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`: `parameter()` ignores `data_type` when compiling, so `<=` truncates to midnight outside compile only, and tests would stop agreeing with production. BL-030 split — bound-side conversion to BL-039, facility pushdown into BL-033. AC-025 retired; AC-031 to AC-034 added. |
