@@ -242,10 +242,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 ## Open questions
 
-- **BL-029's semantics have not been confirmed with the requesting PM.** Neither MAUI-6183
-  nor MAUI-6857 states which timestamp the date range should bound; the reading adopted here
-  is drawn from MAUI-6183's stated purpose. Worth putting to Corinna, who raised the
-  original card.
+_None._
 
 ## Divergence from current code
 
@@ -309,8 +306,10 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   BL-030's safety net cannot recover.
 - **BL-029 changed meaning.** The date range now filters edit time where it previously
   filtered appointment start time. Saved parameter sets, scheduled exports and user habits
-  built around the old behaviour return a different row set for the same inputs. Shipped
-  without PM re-confirmation on Juliana's call — see Open questions.
+  built around the old behaviour return a different row set for the same inputs. The reading
+  is confirmed on MAUI-6857 by its owner, drawn from MAUI-6183's stated purpose; the
+  requesting PM was not re-consulted, so a later challenge to the semantics lands here rather
+  than on the implementation.
 - **`delete+insert` needs `DELETE` on the target schema**, under whatever role the analytics
   connection uses — not merely `SELECT`/`INSERT`.
 - **On a non-persistent target the incremental buys nothing.** An existing but empty table
@@ -340,6 +339,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-029's reading confirmed on MAUI-6857 by its owner, closing the last open question. Neither Linear card states which timestamp the date range bounds, so the decision rests on MAUI-6183's stated purpose rather than a written requirement. |
 | 2026-09-02 | Maui team | Verified against Tamanu's source that `logged_at` is the edit time for every appointment entry: entries are authored once and copied verbatim, and the mobile exception cannot apply because appointments have no mobile representation. Retires DV-010. |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`, because `parameter()` ignores `data_type` when compiling and `<=` would truncate to midnight outside compile only. BL-030 split — bound-side conversion to BL-039, whose candidate bounds are widened a day at each end so a non-injective round trip through the central zone cannot drop rows; facility pushdown into BL-033, which now also resolves `prev_location_group` and its id through the partition on the same equality row admission uses. AC-025 retired; AC-031 to AC-037 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
