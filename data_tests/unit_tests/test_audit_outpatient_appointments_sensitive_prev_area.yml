@@ -1,0 +1,114 @@
+unit_tests:
+  - name: test_audit_outpatient_appointments_sensitive_prev_area
+    model: audit-outpatient-appointments
+    description: >
+      AC-036 / BL-033: the previous area resolves through the sensitivity partition. An
+      appointment moves out of a sensitive facility into a standard one, so the row is
+      admitted to the standard report on its current facility, but "Previous area" must come
+      back blank rather than naming the sensitive facility's area. Without the partitioned
+      prev_lg join this returns 'Restricted Ward'.
+      Note the cross-facility move this depends on is not a normal workflow: the
+      appointment form's Area field is hard-scoped to the logged-in facility, so this
+      state arrives via the API or a user at another facility. The test specifies
+      behaviour rather than describing a common case.
+      Backport note: this branch filters `appointment_start_datetime` with the house
+      `<= toDate`, which truncates to midnight outside compile, so the fixture's
+      appointment sits on fromDate rather than toDate to stay inside the range.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2026-09-01'
+        toDate: '2026-09-02'
+    given:
+      - input: ref('outpatient_appointments_change_events')
+        format: sql
+        rows: |
+          -- creation, in the sensitive facility (BL-023 excludes it, but it is the lag() baseline)
+          select
+            'chg_001'::text as id,
+            'appt_moved'::text as record_id,
+            '2026-09-01 08:00:00+00'::timestamptz as logged_at,
+            '2026-09-01 08:00:00+00'::timestamptz as record_updated_at,
+            'usr_001'::text as updated_by_user_id,
+            100::bigint as updated_at_sync_tick,
+            '{"start_time":"2026-09-01 09:00:00","end_time":"2026-09-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_sensitive","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
+          union all
+          -- moved out to the standard facility: admitted here, previous area must not be named
+          select
+            'chg_002'::text,
+            'appt_moved'::text,
+            '2026-09-02 11:00:00+00'::timestamptz,
+            '2026-09-02 11:00:00+00'::timestamptz,
+            'usr_002'::text,
+            200::bigint,
+            '{"start_time":"2026-09-01 09:00:00","end_time":"2026-09-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_standard","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select 'appt_moved'::text as id, null::date as cancelled_at_date
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001'::text as id, 'Dr. Alice Wilson'::text as display_name
+          union all
+          select 'usr_001'::text, 'Alice Admin'::text
+          union all
+          select 'usr_002'::text, 'Bob Admin'::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_standard'::text as id, 'Outpatients'::text as name, 'fac_standard'::text as facility_id
+          union all
+          select 'lg_sensitive'::text, 'Restricted Ward'::text, 'fac_sensitive'::text
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_standard'::text as id, 'Central Hospital'::text as name, false as is_sensitive
+          union all
+          select 'fac_sensitive'::text, 'Restricted Clinic'::text, true
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'apt_001'::text as id, 'Follow-up'::text as name
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'              as "Patient ID",
+          'John'              as "First name",
+          'Doe'               as "Last name",
+          '1990-05-15'        as "Date of birth",
+          1                   as "Change number",
+          '2026-09-01 09:00'  as "Appointment date and time",
+          'Follow-up'         as "Appointment type",
+          'Dr. Alice Wilson'  as "Clinician",
+          'Outpatients'       as "Area",
+          'No'                as "Priority appointment",
+          'No'                as "Repeating appointment",
+          'Alice Admin'       as "Appointment created by",
+          'Bob Admin'         as "Appointment modified by",
+          '2026-09-02 11:00'  as "Appointment modified date & time",
+          'No'                as "Appointment cancelled",
+          null::text          as "Previous appointment date & time",
+          null::text          as "Previous appointment type",
+          null::text          as "Previous clinician",
+          null::text          as "Previous area",
+          null::text          as "Previous priority appointment"
