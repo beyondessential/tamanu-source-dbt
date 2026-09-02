@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6857](https://linear.app/bes/issue/MAUI-6857/audit-outpatient-appointments-report-times-out-full-change-log-scan) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-29 |
-| **Last updated** | 2026-08-30 |
+| **Last updated** | 2026-09-02 |
 
 ## Purpose
 
@@ -35,8 +35,8 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 | Name | Type | Default | Purpose |
 |---|---|---|---|
-| `fromDate` | date | last 24 hours | Lower bound on the event's `appointment_start_datetime` — not on when the edit was made (BL-029) |
-| `toDate` | date | last 24 hours | Upper bound on the same column |
+| `fromDate` | date | last 24 hours | Lower bound on `modified_datetime` — when the edit was made, not the appointment's scheduled time (BL-029) |
+| `toDate` | date | last 24 hours | Upper bound on the same column, inclusive of the whole day (BL-029) |
 | `facilityId` | uuid | null | Optional single-facility restriction |
 
 ### Macro argument (report and dataset)
@@ -47,12 +47,12 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 | Reference | Why |
 |---|---|
-| `ref('outpatient_appointments_change_events')` | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
+| `ref('outpatient_appointments_change_events')` ×2 (candidate filter, extraction) | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
 | `ref('outpatient_appointments')` | Appointment population (BL-036) and the schedule's `cancelled_at_date` (BL-026) |
 | `ref('patients')` | Demographics |
 | `ref('users')` ×4 (clinician, prev_clinician, creator, modifier) | Display names |
-| `ref('location_groups')` ×2, `ref('reference_data')` ×2 | Area and appointment-type names, current and previous |
-| `ref('facilities')` | Facility name and sensitivity partition (BL-033) |
+| `ref('location_groups')` ×3, `ref('reference_data')` ×2 | Area and appointment-type names, current and previous; the third location group resolves the candidate filter's facility (BL-033) |
+| `ref('facilities')` ×2 | Facility name and sensitivity partition, at the end and in the candidate filter (BL-033) |
 
 ### Freshness
 
@@ -117,20 +117,23 @@ review obligation, not an automated one (DV-007).
 - **BL-027:** `prev_*` columns populate only where the value differs from the current row's,
   otherwise blank. `prev_priority` carries an extra `is not null` guard, so a transition out
   of null renders blank — the other columns do not do this.
+
+  Blank in `prev_location_group` therefore carries two meanings: unchanged, or changed to or
+  from a facility outside this report's partition and redacted by BL-033. The two are
+  indistinguishable in the output — see DV-012.
 - **BL-028:** Patient, location group and facility are inner joins, so an event whose
   `location_group_id` is null or dangling produces no row at all.
-- **BL-029:** `fromDate`/`toDate` filter the event's own
-  `appointment_start_datetime`, not `modified_datetime`. With the 24-hour default this means
-  "changes to appointments scheduled around now", not "edits made recently". `toDate` is
-  compared as a date, so an appointment later in the day on `toDate` is excluded — the house
-  pattern, though `audit_discharge_line_list` deliberately deviates.
-- **BL-030:** The report first finds `appointment_id`s having an event whose
-  `appointment_start_datetime` falls in `[fromDate, toDate]` — the appointment's
-  scheduled time, not when the edit happened (BL-029) — via a plain filtered scan with
-  no window functions, then reconstructs
-  full history only for those — `lag()`/`first_value()`/`change_sequence` need an
-  appointment's entire history to be correct. The date filter is re-applied at the end, so
-  correctness never depends on the early filter being exact.
+- **BL-029:** `fromDate`/`toDate` filter `modified_datetime` — when the edit was made — over
+  `[fromDate, toDate + 1 day)`, so the whole of `toDate` is in scope.
+- **BL-030:** The report finds candidate `appointment_id`s with a window-free filtered scan
+  and reconstructs full history only for those, because
+  `lag()`/`first_value()`/`change_sequence` need an appointment's entire history to be
+  correct. Every candidate predicate is re-applied at the end, so correctness never depends
+  on the early filter being exact.
+- **BL-039:** The candidate filter converts the bound rather than the column, via
+  `from_user_selected_timezone()`, so `logged_at` stays bare and prunable by its BRIN index
+  (BL-032). The bounds are widened a day at each end, which keeps the candidate set a
+  superset across DST boundaries; the final `WHERE` trims to the exact range.
 - **BL-031:** The windowed extraction is centralised in
   `outpatient_appointments_change_log_events(record_id_filter=none)`, called three ways:
   unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
@@ -148,7 +151,15 @@ review obligation, not an automated one (DV-007).
   `max(updated_at_sync_tick)`. The comparison is `>=`, not `>`: a sync tick is shared by
   every row in that session, so a strict comparison would permanently skip rows landing on
   the boundary tick after the previous run read it.
-- **BL-033:** Facility scope is partitioned by `is_sensitive` on both report and dataset.
+- **BL-033:** Which rows appear is partitioned by `is_sensitive` on both report and dataset,
+  and the report additionally applies `facilityId`. Both are applied in the candidate filter
+  as well as at the end, resolved from the facility recorded on the event and never from the
+  appointment's current row, which can differ.
+
+  `prev_location_group` and `prev_location_group_id` resolve through the same partition on
+  the same equality, so neither variant names an area outside its own half. A row whose
+  appointment crossed the boundary keeps its row but carries neither the previous area's name
+  nor its id.
 - **BL-034:** The incremental strategy is `delete+insert` on `unique_key='appointment_id'`,
   not append. `change_number` and `prev_*` come from window functions partitioned by
   `appointment_id`, so a new event invalidates that appointment's *later* rows — whose own
@@ -192,8 +203,9 @@ review obligation, not an automated one (DV-007).
 
 ## Acceptance criteria
 
-No automated tests exist yet (DV-004); statuses below come from manual verification against
-a populated replica, re-run against the current code after the BL-031 shared-core refactor.
+Four unit tests cover the report (DV-004); the remaining statuses come from manual
+verification against a populated replica, re-run against the current code after the BL-031
+shared-core refactor.
 
 | ID | Criterion | Implements | Status |
 |---|---|---|---|
@@ -202,12 +214,18 @@ a populated replica, re-run against the current code after the BL-031 shared-cor
 | AC-022 | Schedule bulk-cancellations excluded; individual cancellations kept | BL-026 | planned test |
 | AC-023 | `change_number` counts only rows surviving BL-025, the creation exclusion, BL-026 and BL-036 — so an appointment with one meaningful change among several events numbers it 1 | BL-024 | planned test |
 | AC-024 | Unchanged fields render `prev_*` blank; changed fields show the previous value | BL-027 | planned test |
-| AC-025 | Output identical before and after the BL-030 rework for a fixed range | BL-030 | **passed** — `EXCEPT ALL` both directions, no differing rows |
 | AC-026 | An incremental run matches what `--full-refresh` would produce | BL-032, BL-034 | **passed** — full build then a second run: row count and distinct `change_id` unchanged, no duplicates. Not exercised with new events arriving between runs |
 | AC-027 | Sensitive-facility appointments never appear in the standard output, or vice versa | BL-033 | planned test |
 | AC-028 | A new event causes that appointment's rows to be replaced, not appended | BL-034 | **passed** — the second run deleted and re-inserted rather than appending, zero duplicate `change_id`s. A genuinely new event not yet observed through it |
 | AC-029 | Rows on the previous run's watermark tick are still picked up | BL-032 | **passed** — reprocessed; a strict `>` would have found no candidates |
 | AC-030 | Stale rows persist after a zero-row recompute or sensitivity flip until `--full-refresh` | BL-035 | not tested |
+| AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
+| AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | not tested — the compile branch is unreachable from dbt (DV-004) |
+| AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
+| AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
+| AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
+| AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
+| AC-034 | The bound is compared against a bare `logged_at`, leaving the BRIN index usable | BL-039 | not tested — needs `EXPLAIN` on a populated replica |
 
 Performance (BL-030) was measured on a populated replica: cost was previously flat across a
 far wider date range because the window functions processed the whole history either way;
@@ -224,7 +242,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
                           │         ├─ report filter (BL-030) ──► audit-outpatient-appointments (+sensitive)
                           │         └─ tick filter (BL-032) ───► ds__outpatient_appointments_audit (+sensitive)
                           │                                            └──► analytics / Tupaia
-                          └──► candidate-id CTEs for both filters
+                          └──► candidate-id filters (report: + location_groups, facilities)
 ```
 
 ## Open questions
@@ -233,8 +251,18 @@ _None._
 
 ## Divergence from current code
 
-- **DV-004:** No automated tests for the base models, datasets or report; every AC above is
-  unverified by tooling. *Resolution:* add the planned singular tests.
+- **DV-004:** Coverage is four unit tests on the report; the base models and datasets have
+  none. Unit tests reach only the non-compile branch of `to_user_selected_timezone` /
+  `from_user_selected_timezone`, where both are near no-ops — the timezone conversion the
+  compiled report actually runs, and the equivalence between the candidate filter and the
+  final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
+  singular tests; verify the compiled form against a replica.
+- **DV-012:** A redacted previous area is indistinguishable from an unchanged one. BL-033
+  blanks `prev_location_group` when the previous area falls outside the partition, and BL-027
+  already uses blank for unchanged, so a boundary-crossing area move renders every
+  `Previous *` cell blank on a row whose only meaningful change is that move. *Resolution:*
+  decide whether the report should show a redaction marker instead, which needs a
+  `translate_label` key and so a product call, not just a modelling one.
 - **DV-008:** This change adds two upstream dependencies the dataset did not previously have
   — `outpatient_appointments_change_events` and `outpatient_appointments`. An analytics build
   must include them, or the dataset fails outright. *Resolution:* confirm the analytics
@@ -255,8 +283,48 @@ _None._
   `changes_updated_at_sync_tick_index` is baseline and untouched by the two migrations that
   changed the others, but this came from migration history, not a live `pg_indexes` check —
   and which indexes exist depends on the migrations a deployment has run. Confirm per target.
-- **BL-029 is easy to misread**: the date range filters appointment start time, not edit
-  time, which reads naturally as "recent edits". Intentional and pre-existing.
+- **`logged_at` is the edit time, not a sync timestamp.** A changelog entry is authored once
+  on the server where the change happened and copied verbatim to its peer, which pauses
+  auditing while applying, so neither `logged_at` nor `updated_by_user_id` is restamped in
+  transit. The one exception in `specs/audit/changelog.md` — central authoring entries itself
+  for mobile-originated changes, which would stamp the apply time — cannot reach appointments,
+  which have no mobile model and no entry in mobile's `modelsMap`.
+- **Deploying the BL-033 previous-area partition needs `--full-refresh`.** On analytics
+  targets both dataset variants are incremental with candidates gated on
+  `updated_at_sync_tick` (BL-032), so an appointment that already crossed the partition
+  boundary and receives no further edits keeps the old unpartitioned `prev_location_group`
+  and `prev_location_group_id` indefinitely. This is BL-035's non-self-healing property
+  applied to a logic change rather than a data change.
+- **The report must read a central-server database.** BL-031's whole-history requirement
+  holds on central and not on a facility server. A facility push snapshots rows at
+  `updated_at_sync_tick > pushSince` and attaches every entry for those rows at
+  `>= pushSince` with no upper bound, so the attach window is a tick wider than the snapshot;
+  the entry and its row are stamped in one transaction, `pg_advisory_xact_lock` holds the
+  push until writers at that tick commit, the watermark advances only on success, and the
+  first push uses `-1`. Central therefore accumulates every entry exactly once, and
+  re-delivery is idempotent (`ignoreDuplicates`). A central *pull* is bounded at both ends
+  and skipped outright when the session's tick range is unavailable or the peer is mobile, so
+  a facility holds only partial history for anything edited elsewhere. Pointed at a facility
+  database this report would compute `prev_*` and `change_number` against gaps, silently.
+- **An appointment changing facility is an edge case, not a workflow.** Tamanu's appointment
+  form resolves its Area field through the `facilityLocationGroup` suggester, which forces
+  `filterByFacility: true`, so a user can only ever pick an area in the facility they are
+  logged into — on edit as well as create. `PUT /appointments/:id` does not enforce it,
+  though, passing `locationGroupId` through unchecked, and the appointment record exists at
+  every facility after sync. So the divergence BL-033 guards against is reachable via the API
+  or via a user at another facility, and AC-032 and AC-036 specify behaviour rather than
+  describe a common occurrence.
+- **The candidate filter and the final `WHERE` are not the same predicate.**
+  `modified_datetime` is naive central time, so the final `WHERE` round-trips it back through
+  the central zone — non-injective at that zone's DST fall-back, where an event in the
+  repeated hour resolves to a different instant than the candidate filter compared. Reachable
+  on the default `Australia/Sydney` whenever `:timezone` differs from it. BL-039's widened
+  bounds absorb it; without them the row is silently dropped, which is the one direction
+  BL-030's safety net cannot recover.
+- **BL-029 changed meaning.** The date range now filters edit time where it previously
+  filtered appointment start time. Saved parameter sets, scheduled exports and user habits
+  built around the old behaviour return a different row set for the same inputs. The reading
+  is confirmed on MAUI-6857, drawn from MAUI-6183's stated purpose.
 - **`delete+insert` needs `DELETE` on the target schema**, under whatever role the analytics
   connection uses — not merely `SELECT`/`INSERT`.
 - **On a non-persistent target the incremental buys nothing.** An existing but empty table
@@ -286,4 +354,8 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-027 now states that blank in `prev_location_group` means unchanged *or* redacted by BL-033, with DV-012 recording that the two are indistinguishable. Deploying the partition needs `--full-refresh` on the analytics datasets. |
+| 2026-09-02 | Maui team | BL-029's reading confirmed on MAUI-6857 by its owner, closing the last open question. Neither Linear card states which timestamp the date range bounds, so the decision rests on MAUI-6183's stated purpose rather than a written requirement. |
+| 2026-09-02 | Maui team | Verified against Tamanu's source that `logged_at` is the edit time for every appointment entry: entries are authored once and copied verbatim, and the mobile exception cannot apply because appointments have no mobile representation. Retires DV-010. |
+| 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`, because `parameter()` ignores `data_type` when compiling and `<=` would truncate to midnight outside compile only. BL-030 split — bound-side conversion to BL-039, whose candidate bounds are widened a day at each end so a non-injective round trip through the central zone cannot drop rows; facility pushdown into BL-033, which now also resolves `prev_location_group` and its id through the partition on the same equality row admission uses. AC-025 retired; AC-031 to AC-037 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
