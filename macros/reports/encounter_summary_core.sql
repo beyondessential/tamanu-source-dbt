@@ -28,44 +28,38 @@
     for those must change the CTEs; there is no raw column to select.
 -#}
 
+{#- The facility scope and the is_sensitive partition come from encounters_core();
+    see specs/dbt-model/encounters_core.md. The predicates below are this report's own
+    and reference the `e` / `f` aliases that macro contracts on (its BL-003).
+
+    localise_timestamps is left off: this core is presentation-neutral (BL-002), so the
+    timezone shift belongs to whichever caller formats the output. -#}
+{%- set scope_filter -%}
+    {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    and {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    {%- if date_field == 'end_datetime' %}
+    and e.end_datetime is not null
+    {%- endif %}
+    and {{ encounter_scope_common_filters() }}
+{%- endset -%}
+
 with encounters_in_scope as (
     select
-        e.id as encounter_id,
-        e.start_datetime,
-        e.end_datetime,
-        e.patient_id,
-        e.location_id,
-        e.department_id,
-        e.clinician_id,
-        e.patient_billing_type_id,
-        e.reason_for_encounter,
-        f.name as facility
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} l
-        on l.id = e.location_id
-    join {{ ref('facilities') }} f
-        on f.id = l.facility_id
-        and f.is_sensitive = {{ is_sensitive }}
-    where
-        e.patient_id != '{{ var("test_patient") }}'
-        {% if date_field == 'end_datetime' %}
-        and e.end_datetime is not null
-        {% endif %}
-        and {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-        and {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-        and case
-            when {{ parameter('facilityId') }} is null then true
-            else f.id = {{ parameter('facilityId') }}
-        end
-        and case
-            when {{ parameter('patientBillingTypeId') }} is null then true
-            else e.patient_billing_type_id = {{ parameter('patientBillingTypeId') }}
-        end
-        and case
-            when {{ parameter('supervisingClinicianId') }} is null then true
-            else e.clinician_id = {{ parameter('supervisingClinicianId') }}
-        end
+        encounter_id,
+        start_datetime,
+        end_datetime,
+        patient_id,
+        location_id,
+        department_id,
+        clinician_id,
+        patient_billing_type_id,
+        reason_for_encounter,
+        facility
+    from (
+        {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
+    ) scope
 ),
+
 
 encounter_history_consolidated as (
     select
