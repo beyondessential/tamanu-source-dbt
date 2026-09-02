@@ -249,9 +249,6 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 - **Are outpatient appointments editable from the mobile app?** If so, DV-010 applies and
   `logged_at` is the sync-apply time for those edits rather than the edit time. Needs a
   Tamanu-side answer.
-- **Which server does the reporting database run on for each deployment?** DV-011's severity
-  depends on it: on a facility server the changelog is locally complete for that facility's
-  own edits, on central it is whatever sync has delivered.
 
 ## Divergence from current code
 
@@ -261,14 +258,6 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   compiled report actually runs, and the equivalence between the candidate filter and the
   final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
   singular tests; verify the compiled form against a replica.
-- **DV-011:** BL-031 needs an appointment's whole history; nothing establishes that a
-  central-server database holds it. Changelog entries are authored once on the server where
-  the change happened and travel attached to their record, bounded by the sync session's tick
-  range — and `specs/audit/changelog.md` notes a batch whose tick range is unavailable goes
-  without attached entries. A gap makes `prev_*` name the wrong predecessor and
-  `change_number` count wrong, silently. *Resolution:* establish which server the reporting
-  database runs on, then whether entry coverage there is complete; this is the report's
-  central premise, not an edge case.
 - **DV-010:** BL-029 reads `logged_at` as the moment of the edit, which does not hold for a
   mobile-originated change. Mobile keeps no changelog, so central's own trigger authors the
   entry as it applies the push, stamping `logged_at` with the apply time — arbitrarily later
@@ -296,6 +285,17 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   `changes_updated_at_sync_tick_index` is baseline and untouched by the two migrations that
   changed the others, but this came from migration history, not a live `pg_indexes` check —
   and which indexes exist depends on the migrations a deployment has run. Confirm per target.
+- **The report must read a central-server database.** BL-031's whole-history requirement
+  holds on central and not on a facility server. A facility push snapshots rows at
+  `updated_at_sync_tick > pushSince` and attaches every entry for those rows at
+  `>= pushSince` with no upper bound, so the attach window is a tick wider than the snapshot;
+  the entry and its row are stamped in one transaction, `pg_advisory_xact_lock` holds the
+  push until writers at that tick commit, the watermark advances only on success, and the
+  first push uses `-1`. Central therefore accumulates every entry exactly once, and
+  re-delivery is idempotent (`ignoreDuplicates`). A central *pull* is bounded at both ends
+  and skipped outright when the session's tick range is unavailable or the peer is mobile, so
+  a facility holds only partial history for anything edited elsewhere. Pointed at a facility
+  database this report would compute `prev_*` and `change_number` against gaps, silently.
 - **An appointment changing facility is an edge case, not a workflow.** Tamanu's appointment
   form resolves its Area field through the `facilityLocationGroup` suggester, which forces
   `filterByFacility: true`, so a user can only ever pick an area in the facility they are
@@ -344,9 +344,5 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-02 | Maui team | `prev_location_group` and `prev_location_group_id` now resolve through the BL-033 partition on the same equality the row admission uses, closing a leak that carried a sensitive facility's area into the standard report and dataset. Retires DV-009; adds AC-036 and AC-037. |
-| 2026-09-02 | Maui team | DV-010 and DV-011 record two sync-topology assumptions the report rests on: `logged_at` is the edit time only for changes authored on the server that made them (not mobile-originated ones), and BL-031's whole-history requirement is unestablished on a central-server database. |
-| 2026-09-02 | Maui team | BL-033 reworded to claim row admission only, and DV-009 records that `prev_location_group` escapes the partition. |
-| 2026-09-02 | Maui team | BL-039's candidate bounds are widened a day at each end. The final `WHERE` round-trips `modified_datetime` through the central zone, which is non-injective at its DST fall-back, so the unwidened filter silently dropped events logged in the repeated hour when `:timezone` differed from central (MAUI-6857). |
-| 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`: `parameter()` ignores `data_type` when compiling, so `<=` truncates to midnight outside compile only, and tests would stop agreeing with production. BL-030 split — bound-side conversion to BL-039, facility pushdown into BL-033. AC-025 retired; AC-031 to AC-034 added. |
+| 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`, because `parameter()` ignores `data_type` when compiling and `<=` would truncate to midnight outside compile only. BL-030 split — bound-side conversion to BL-039, whose candidate bounds are widened a day at each end so a non-injective round trip through the central zone cannot drop rows; facility pushdown into BL-033, which now also resolves `prev_location_group` and its id through the partition on the same equality row admission uses. AC-025 retired; AC-031 to AC-037 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
