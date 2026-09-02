@@ -1,20 +1,22 @@
 {% macro admissions_dataset(is_sensitive=false) %}
 
+{#- The facility scope and the is_sensitive partition come from encounters_core();
+    see specs/dbt-model/encounters_core.md. Aliased back to this dataset's existing
+    column names so nothing downstream changes. localise_timestamps is deliberately
+    left off -- BL-005: a dataset must not carry the :timezone placeholder. -#}
 with admission_encounters as (
     select
-        e.id,
-        e.patient_id,
-        e.start_datetime,
-        e.end_datetime,
-        e.location_id,
-        e.patient_billing_type_id,
-        f.id as facility_id,
-        f.name as facility_name
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} l on l.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = l.facility_id
-    where e.encounter_type = 'admission'
-        and f.is_sensitive = {{ is_sensitive }}
+        encounter_id as id,
+        patient_id,
+        start_datetime,
+        end_datetime,
+        location_id,
+        patient_billing_type_id,
+        facility_id,
+        facility as facility_name
+    from (
+        {{ encounters_core(is_sensitive=is_sensitive, encounter_type='admission') }}
+    ) eis
 ),
 
 encounter_history_consolidated as (
