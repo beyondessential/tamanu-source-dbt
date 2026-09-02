@@ -1,10 +1,12 @@
 {% macro encounter_invoice_audit_report(is_sensitive=false) %}
 
 {#-
-    BL-001 (test patient) and BL-017 (is_sensitive facility partition) are resolved by
-    encounters_core(); see specs/dbt-model/encounters_core.md. The predicates
-    below are this report's own, and reference the `e` / `f` aliases that macro
-    contracts on.
+    See specs/reports/audit-encounter-invoice.md for the BL clauses this macro implements.
+
+    Two of that spec's clauses are realised elsewhere: its BL-001 (test patient) and BL-017
+    (is_sensitive facility partition) are resolved by encounters_core(), whose own clauses
+    live in specs/dbt-model/encounters_core.md. The predicates below are this report's own,
+    and reference the `e` / `f` aliases that macro contracts on.
 -#}
 {%- set scope_filter -%}
     -- BL-003: open encounters are included only when the
