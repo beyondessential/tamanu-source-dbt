@@ -150,6 +150,13 @@ registration.
 4. Band `age_years` itself.
 5. A diagnosis may also appear in an inpatient-scoped diagnosis metric (BL-003) -- summing
    both is not the same as the total diagnosis count.
+6. `opd_diagnosis` and `opd_visit` scope "outpatient" differently, and are not a clean
+   numerator/denominator pair. `opd_visit` requires the encounter's *first* segment to be
+   9202; `opd_diagnosis` includes a diagnosis if *any* segment its window overlaps is 9202
+   (BL-003). An encounter admitted as an inpatient and later moved to a clinic contributes
+   diagnoses to `opd_diagnosis` while contributing no visit to `opd_visit` -- a "diagnoses
+   per OPD visit" ratio drawn from the two would have a numerator wider than its
+   denominator.
 
 ## Related
 

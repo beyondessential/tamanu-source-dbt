@@ -104,15 +104,13 @@ models:
         description: NULL -- unused by this metric.
       - name: facility_id
         data_type: character varying(255)
-        description: >-
-          The Tamanu facility id the diagnosis is attributed to, resolved from the earliest
-          qualifying outpatient segment's own care_site_id (BL-004).
+        description: "{{ doc('generic__facility_id') }} the diagnosis is attributed to, resolved from the earliest qualifying outpatient segment (BL-004)."
         data_tests:
           - not_null:
               name: ac_007_metric__opd_diagnosis_facility_id_not_null
       - name: sex
         data_type: character varying(255)
-        description: The patient's sex, from clinical__person.
+        description: "{{ doc('patients__sex') }}"
       - name: diagnosis_code
         data_type: text
         description: >-
