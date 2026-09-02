@@ -43,7 +43,6 @@ with encounters_in_scope as (
         e.clinician_id,
         e.patient_billing_type_id,
         e.reason_for_encounter,
-        f.id as facility_id,
         f.name as facility
     from {{ ref('encounters') }} e
     join {{ ref('locations') }} l
@@ -78,11 +77,9 @@ encounter_history_consolidated as (
         eh.datetime,
         eh.change_type,
         eh.updated_by_id,
-        eh.clinician_id,
         eh.department_id,
         eh.location_id,
         eh.encounter_type,
-        clinician.display_name as clinician_name,
         actor.display_name as updated_by_name,
         d.name as department_name,
         l.name as location_name,
@@ -101,8 +98,6 @@ encounter_history_consolidated as (
         on eis.encounter_id = eh.encounter_id
     join {{ ref('users') }} actor
         on actor.id = eh.updated_by_id
-    join {{ ref('users') }} clinician
-        on clinician.id = eh.clinician_id
     join {{ ref('departments') }} d
         on d.id = eh.department_id
     join {{ ref('locations') }} l
@@ -120,10 +115,6 @@ encounter_changes as (
             to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
         ) filter (where change_type is null or 'location' = any(change_type)) as location_datetimes,
-        array_agg(
-            location_id
-            order by datetime
-        ) filter (where change_type is null or 'location' = any(change_type)) as location_ids,
         string_agg(
             location_name, ', '
             order by datetime
@@ -187,7 +178,6 @@ encounter_changes as (
         ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
 
         -- Encountering clinician: actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
-        min(updated_by_id) filter (where change_type is null and change_sequence = 1) as encountering_clinician_id,
         min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician,
 
         -- Discharge datetimes: the time the patient was last assigned to each dimension, falls back to encounter start time if never changed
@@ -324,8 +314,7 @@ notes_raw as (
         n.note_type,
         n.record_type,
         n.record_id,
-        n.updated_note_id,
-        n.visibility_status
+        n.updated_note_id
     from {{ ref('notes') }} n
     left join {{ ref('imaging_requests') }} ir
         on n.record_type = 'ImagingRequest'
@@ -342,7 +331,6 @@ encounter_notes_deduped as (
         content,
         note_type,
         record_id,
-        visibility_status,
         row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
     from notes_raw
     where
