@@ -161,8 +161,17 @@ location_group_changes as (
             order by datetime
         ) as location_groups
     from encounter_history_consolidated
-    where (change_type is null or change_type && array['encounter_type', 'location'])
-        and (location_group_id != prev_location_group_id or prev_location_group_id is null)
+    -- BL-006 (specs/dbt-model/ds__admissions.md): the creation row is always kept and
+    -- only a *change* row is deduplicated, using `is distinct from` -- the same shape
+    -- encounter_summary_core uses. The former flat
+    -- `!= ... or prev_location_group_id is null` gated every row including the creation
+    -- row, and disagreed on two null cases: a move into an ungrouped location was
+    -- dropped, and every ungrouped move was kept.
+    where change_type is null
+        or (
+            change_type && array['encounter_type', 'location']
+            and location_group_id is distinct from prev_location_group_id
+        )
     group by encounter_id
 ),
 
