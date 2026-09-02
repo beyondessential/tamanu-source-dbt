@@ -148,7 +148,9 @@ review obligation, not an automated one (DV-007).
   `max(updated_at_sync_tick)`. The comparison is `>=`, not `>`: a sync tick is shared by
   every row in that session, so a strict comparison would permanently skip rows landing on
   the boundary tick after the previous run read it.
-- **BL-033:** Facility scope is partitioned by `is_sensitive` on both report and dataset.
+- **BL-033:** Which rows appear is partitioned by `is_sensitive` on both report and dataset.
+  `prev_location_group` and `prev_location_group_id` resolve through the same partition on the
+  same equality, so neither variant names an area outside its own half.
 - **BL-034:** The incremental strategy is `delete+insert` on `unique_key='appointment_id'`,
   not append. `change_number` and `prev_*` come from window functions partitioned by
   `appointment_id`, so a new event invalidates that appointment's *later* rows — whose own
