@@ -105,6 +105,60 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
   `to_user_selected_timezone()` do not resolve to a viewer's choice. The datetime strings
   use `var('datetime_without_seconds_format')` only.
 
+## Relationship to `encounter_summary_core`
+
+Both this dataset and `encounter_summary_core` open with a CTE named
+`encounter_history_consolidated` that resolves an encounter's history rows against
+`departments`, `locations`, `location_groups` and `users`, and adds a `row_number()` and
+a `lag()` over the same partition. **They are deliberately not merged into a shared
+macro.** They share a shape, not a definition; seven differences are load-bearing, and
+parameterising all of them would need more arguments than the ~38 shared lines are
+worth. Per the reuse decision rule this is the "not the same thing" outcome, so the
+divergences are enumerated here instead.
+
+| | Difference | `encounter_summary_core` | This dataset |
+|---|---|---|---|
+| D1 | Drive direction | history-driven, inner join to the scope | scope-driven, **left** join to history |
+| D2 | History scope | every row of the encounter | only rows whose snapshot `encounter_type` is `admission` |
+| D3 | Dimension joins | inner to `departments` and `locations` | left to both |
+| D4 | Which actor | `updated_by_id` (source `actor_id`) → `encountering_clinician` | `clinician_id` (source `examiner_id`) → `admitting_clinician` |
+| D5 | `row_number()` | `partition by encounter_id, change_type` → `change_sequence` | `partition by encounter_id, ('encounter_type' = any(change_type))` → `encounter_type_change_sequence` |
+| D6 | `change_type` narrowing | none | `is null or && {encounter_type, examiner, department, location}` |
+| D7 | Projection | selects `encounter_type`, for the `encounter_type_*` aggregates | does not |
+
+Three of these are worth expanding, because they are the ones a merge attempt would get
+wrong quietly:
+
+- **D1 and D3 are consequences of D2.** The `encounter_type` filter can eliminate every
+  history row an encounter has, so the left join to history is what keeps the encounter
+  in the output at all, and the left joins to the dimensions are what stop an all-null
+  `eh` from dropping it again. Changing any one of the three in isolation changes the
+  grain.
+- **D4 is two different people.** `bases/encounter_history` exposes both `actor_id` (who
+  made the edit) and `examiner_id` (the clinician on the encounter) under different
+  names. Neither column is redundant and neither model wants the other's.
+- **D5 is not drift.** The two `row_number()`s derive different columns for different
+  purposes — BL-003 here, the creation-row pick in the core — and both would have to
+  survive a merge under distinct names.
+
+**D6 is currently inert.** The Tamanu application writes `change_type` as an array
+containing only the four `EncounterChangeType` values — `location`, `encounter_type`,
+`department`, `examiner` — or NULL on the creation snapshot, and writes no history row at
+all when an edit touches none of those four columns. Every non-null `change_type` is
+therefore a non-empty subset of exactly the set D6 tests for overlap against, so the
+predicate excludes nothing. It defends against values older or newer versions might
+write, not against anything present today.
+
+One consequence of the application's write model applies to both consolidations and is
+easy to misread: a single edit changing several of the four columns produces **one**
+history row whose `change_type` holds several values, and the snapshot records the
+values moved *to*, not from. Every predicate over `change_type` in either model is
+therefore an array-membership or array-overlap test rather than an equality test. The
+core's `change_sequence` is the exception — it partitions by the whole array value, so
+`{location}` and `{location,department}` are separate partitions. That is harmless while
+its only consumer filters on `change_type is null`, where every creation row shares one
+partition, but it does not mean what its name suggests.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
@@ -118,6 +172,18 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
 
 ## Open questions
 
+- **OQ-002** *(owner: Maui team; due: before the next behavioural change to this
+  dataset)* — D2 above discards an encounter's pre-conversion history. Because a history
+  snapshot records the encounter's state *after* the edit, an encounter admitted from an
+  outpatient presentation carries earlier rows stamped `outpatient`, and the
+  `encounter_type = 'admission'` join predicate drops them. `admission_datetime` — and
+  so `age` (BL-008), the admitting clinician (BL-003) and the first entry of each
+  movement triple (BL-004, BL-005, BL-006) — is then taken from the conversion row
+  rather than from the encounter's actual start. `encounter_summary_core` reports the
+  true start for the same encounter. Whether the admission date should be the conversion
+  or the presentation is a product question; either way the two models should not
+  disagree. Resolving it changes report output, so it needs a row-level diff and
+  sign-off rather than riding inside a refactor.
 - **OQ-001** *(owner: Maui team; due: before the next behavioural change to this
   dataset)* — the three movement-history columns of a triple are built by separate
   aggregates over the same rows, but `string_agg` skips null names while `array_agg`

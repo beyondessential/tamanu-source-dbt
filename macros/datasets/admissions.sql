@@ -19,6 +19,9 @@ with admission_encounters as (
     ) eis
 ),
 
+{#- Not shared with encounter_summary_core's identically named CTE -- see
+    "Relationship to encounter_summary_core" in specs/dbt-model/ds__admissions.md. The
+    encounter_type predicate below is OQ-002 there, not a settled choice. -#}
 encounter_history_consolidated as (
     select
         eh.encounter_id,

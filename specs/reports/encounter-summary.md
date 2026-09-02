@@ -99,6 +99,13 @@ encounter-scoped reports apply identically. It calls `parameter()`, so it is rep
 
 Date ranges and report-specific flags are excluded from it: they differ between callers.
 
+## Relationship to `ds__admissions`
+
+`admissions_dataset` opens with a CTE of the same name and shape as this core's
+`encounter_history_consolidated`. The two are **deliberately not merged**; the seven
+load-bearing differences are enumerated once, under *Relationship to
+`encounter_summary_core`* in `specs/dbt-model/ds__admissions.md`.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
