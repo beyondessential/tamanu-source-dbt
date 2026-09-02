@@ -4,28 +4,26 @@
 -- One row per change event, with current and previous appointment details.
 --
 -- BL-029: the date range bounds when the edit was made, not the appointment's scheduled
--- time. The report exists so an administrator can see who edited appointments recently
--- (MAUI-6183), which the original start_datetime filter did not answer -- it surfaced
--- months-old edits to appointments falling in the window and hid yesterday's reschedule of
--- an appointment further out.
+-- time, so an administrator sees who edited appointments recently (MAUI-6183).
 --
 -- BL-030: the date range is applied before the change-log window functions, which would
 -- otherwise block predicate pushdown and force a full change-log scan on every run. The
 -- candidate filter below uses no window functions so the predicate reaches the scan, and it
 -- compares a bare logged_at against constant bounds, which leaves it BRIN-prunable --
 -- logged_at is BRIN-only after Tamanu migration #10639. The final WHERE re-applies the same
--- filter, so correctness never depends on the early filter being exact.
---
--- BL-033: the facility partition and facilityId are applied in the candidate filter too,
--- not only at the end. An event surviving the final WHERE satisfies the date and the
--- facility predicate on its own row, so its appointment is still a candidate -- the early
--- filter stays a superset while cutting the history reconstructed downstream.
+-- filter, so correctness never depends on the early filter being exact. The facility
+-- partition (BL-033) and facilityId are applied in the candidate filter too: an event
+-- surviving the final WHERE satisfies the date and the facility predicate on its own row,
+-- so its appointment is still a candidate.
 --
 -- Business logic lives in outpatient_appointments_audit_core() alongside the dataset; this
 -- macro only filters and formats.
 
 {%- set from_bound = parameter('fromDate', default_value='2025-01-01', data_type='date') -%}
-{%- set to_bound = parameter('toDate', default_value='2025-01-31', data_type='date') -%}
+{#- BL-029: cast before the interval arithmetic. At compile time parameter() emits a bare
+    untyped placeholder, and `unknown + interval` does not resolve to date arithmetic --
+    same reason audit_discharge_line_list casts. -#}
+{%- set to_bound = "(" ~ parameter('toDate', default_value='2025-01-31', data_type='date') | trim ~ ")::date" -%}
 
 {%- set candidate_filter -%}
 c.record_id in (

@@ -32,7 +32,13 @@
    to_user_selected_timezone: that one converts the column so it can be displayed, this one
    converts the bound so a range predicate can leave the column bare and stay prunable.
    Outside compile there is no :timezone parameter, so the central TZ applies on both sides
-   and the two macros stay consistent -- which the BL-030 safety net depends on. #}
+   and the two macros stay consistent -- which the BL-030 safety net depends on.
+
+   `timestamp at time zone` is not injective, so the pair is equivalent only in zones with no
+   DST transition at local midnight. Where one exists (America/Havana, America/Santiago) a
+   midnight bound is ambiguous and an event in the repeated hour can fall outside the
+   converted bound while satisfying the final WHERE -- the one direction the safety net
+   cannot recover. No Tamanu deployment zone transitions at midnight. #}
 {%- if flags.WHICH == 'compile' -%}
 (({{ bound | trim }})::timestamp at time zone coalesce(nullif(:timezone, ''), '{{ var("timezone") }}'))
 {%- else -%}
