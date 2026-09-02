@@ -27,7 +27,8 @@ unit_tests:
             'dept_001' as department_id,
             null::text as clinician_id,
             null::text as patient_billing_type_id,
-            null::text as reason_for_encounter
+            null::text as reason_for_encounter,
+            'clinic' as encounter_type
 
       - input: ref('encounter_history')
         format: sql
