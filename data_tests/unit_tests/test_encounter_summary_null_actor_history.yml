@@ -1,0 +1,252 @@
+unit_tests:
+  - name: test_encounter_summary_null_actor_history
+    model: encounter-summary-by-start-date
+    description: >
+      OQ-001. encounter_history.actor_id is nullable at source -- it carries no
+      not_null test, unlike department_id, location_id and examiner_id. The history
+      consolidation therefore left-joins users on it. Under the previous inner join
+      the change was dropped, and because the report inner-joins encounter_changes,
+      an encounter whose every history row had a null actor vanished from the report
+      entirely.
+
+      enc_001's only history row has a null updated_by_id, so this encounter is
+      exactly that case: it must appear, with a null Clinician rather than being
+      absent. Reverting the join to an inner join fails this test.
+
+      This cannot be demonstrated against the available database -- every one of its
+      667 encounter_history rows has a non-null actor -- so a fixture is the only way
+      to assert it.
+    overrides:
+      vars:
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, '2024-01-10 09:00:00'::timestamp as start_datetime, '2024-01-12 11:00:00'::timestamp as end_datetime, 'loc_001' as location_id, 'dept_001' as department_id, 'cli_001' as clinician_id, null::text as patient_billing_type_id, null::text as reason_for_encounter
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'Jane' as first_name, 'Doe' as last_name, '1992-08-05'::date as date_of_birth, 'female' as sex, null::text as village_id
+          union all
+          select 'pat_002', 'P002', 'Mark', 'Evans', '1988-11-22'::date, 'male', null::text
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          -- null updated_by_id: the encounter is dropped entirely under an inner join
+          select 'enc_001' as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime, null::text[] as change_type, null::text as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'clinic' as encounter_type
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr. Sam Rivera' as display_name
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Outpatient Clinic' as name
+          union all
+          select 'dept_002', 'Psychiatry'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Clinic Room 1' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+          union all
+          select 'loc_002', 'Ward B', 'fac_002', 'lg_002'
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001' as id, 'Outpatient Wing' as name
+          union all
+          select 'lg_002', 'Psychiatric Wing'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Public Hospital' as name, false as is_sensitive
+          union all
+          select 'fac_002', 'Psychiatric Hospital', true
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name, null::text as code
+          where false
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as ethnicity_id, null::text as division_id, null::text as subdivision_id
+          where false
+
+      - input: ref('triages')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
+          where false
+
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as disposition_id
+          where false
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::text as certainty, null::timestamp as datetime
+          where false
+
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as prescription_id
+          where false
+
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select null::text as id, null::boolean as is_discontinued, null::text as discontinuing_reason, null::timestamp as datetime, null::text as medication_id
+          where false
+
+      - input: ref('vaccine_administrations')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::timestamp as datetime, null::text as scheduled_vaccine_id
+          where false
+
+      - input: ref('vaccine_schedules')
+        format: sql
+        rows: |
+          select null::text as id, null::text as label, null::text as dose_label, null::text as vaccine_id
+          where false
+
+      - input: ref('procedures')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::date as date, null::text as procedure_type_id, null::text as location_id, null::text as note, null::text as completed_note
+          where false
+
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as lab_test_panel_request_id, null::text as status
+          where false
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as lab_test_panel_id
+          where false
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select null::text as lab_request_id, null::text as lab_test_type_id
+          where false
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('notes')
+        format: sql
+        rows: |
+          select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::text as visibility_status
+          where false
+
+      - input: ref('imaging_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::text as imaging_type, null::text as status
+          where false
+
+      - input: ref('imaging_request_areas')
+        format: sql
+        rows: |
+          select null::text as imaging_request_id, null::text as area_id
+          where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
+          where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::text as product_id
+          where false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select null::text as id, null::text as category
+          where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'               as "Patient ID",
+          'Jane'               as "First name",
+          'Doe'                as "Last name",
+          '1992-08-05'         as "Date of birth",
+          31                   as "Age",
+          'female'             as "Sex",
+          null::text           as "Ethnicity",
+          null::text           as "Billing type",
+          null::text           as "Sub-division",
+          null::text           as "Division",
+          null::text           as "Village",
+          '2024-01-10 09:00'   as "Encounter start date and time",
+          '2024-01-12 11:00'   as "Encounter end date and time",
+          2                    as "Length of stay (days)",
+          'Public Hospital'    as "Facility",
+          null::text           as "Emergency encounter type",
+          null::text           as "Inpatient encounter type",
+          'Clinic'             as "Outpatient encounter type",
+          null::text           as "Discharge disposition",
+          null::text           as "Triage category",
+          null::text           as "Arrival mode",
+          null::text           as "Time seen following triage/Waiting time (hh:mm:ss)",
+          null::text           as "Clinician",
+          'Dr. Sam Rivera'     as "Supervising clinician",
+          'Outpatient Clinic'  as "Discharging department",
+          '2024-01-10 09:00'   as "Time assigned to Discharging department",
+          'Outpatient Wing'    as "Discharging area",
+          '2024-01-10 09:00'   as "Time assigned to Discharging area",
+          'Clinic Room 1'      as "Discharging location",
+          '2024-01-10 09:00'   as "Time assigned to Discharging location",
+          'Outpatient Clinic'  as "Department history",
+          '2024-01-10 09:00'   as "Department history date and times",
+          'Outpatient Wing'    as "Area history",
+          '2024-01-10 09:00'   as "Area history date and times",
+          'Clinic Room 1'      as "Location history",
+          '2024-01-10 09:00'   as "Location history date and times",
+          null::text           as "Reason for encounter",
+          null::text           as "Diagnoses",
+          null::text           as "Diagnosis codes",
+          null::text           as "Medications",
+          null::text           as "Vaccinations",
+          null::text           as "Procedures",
+          null::text           as "Lab requests",
+          null::text           as "Imaging requests",
+          null::text           as "Notes",
+          null::text           as "invoiceFinalisedDateTime",
+          null::text           as "invoiceProductCategories"
