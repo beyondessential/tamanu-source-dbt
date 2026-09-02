@@ -117,6 +117,10 @@ review obligation, not an automated one (DV-007).
 - **BL-027:** `prev_*` columns populate only where the value differs from the current row's,
   otherwise blank. `prev_priority` carries an extra `is not null` guard, so a transition out
   of null renders blank — the other columns do not do this.
+
+  Blank in `prev_location_group` therefore carries two meanings: unchanged, or changed to or
+  from a facility outside this report's partition and redacted by BL-033. The two are
+  indistinguishable in the output — see DV-012.
 - **BL-028:** Patient, location group and facility are inner joins, so an event whose
   `location_group_id` is null or dangling produces no row at all.
 - **BL-029:** `fromDate`/`toDate` filter `modified_datetime` — when the edit was made — over
@@ -199,8 +203,9 @@ review obligation, not an automated one (DV-007).
 
 ## Acceptance criteria
 
-No automated tests exist yet (DV-004); statuses below come from manual verification against
-a populated replica, re-run against the current code after the BL-031 shared-core refactor.
+Four unit tests cover the report (DV-004); the remaining statuses come from manual
+verification against a populated replica, re-run against the current code after the BL-031
+shared-core refactor.
 
 | ID | Criterion | Implements | Status |
 |---|---|---|---|
@@ -214,7 +219,7 @@ a populated replica, re-run against the current code after the BL-031 shared-cor
 | AC-028 | A new event causes that appointment's rows to be replaced, not appended | BL-034 | **passed** — the second run deleted and re-inserted rather than appending, zero duplicate `change_id`s. A genuinely new event not yet observed through it |
 | AC-029 | Rows on the previous run's watermark tick are still picked up | BL-032 | **passed** — reprocessed; a strict `>` would have found no candidates |
 | AC-030 | Stale rows persist after a zero-row recompute or sensitivity flip until `--full-refresh` | BL-035 | not tested |
-| AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | not tested |
+| AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | not tested — the compile branch is unreachable from dbt (DV-004) |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
 | AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
@@ -246,12 +251,18 @@ _None._
 
 ## Divergence from current code
 
-- **DV-004:** Coverage is two unit tests on the report; the base models and datasets have
+- **DV-004:** Coverage is four unit tests on the report; the base models and datasets have
   none. Unit tests reach only the non-compile branch of `to_user_selected_timezone` /
   `from_user_selected_timezone`, where both are near no-ops — the timezone conversion the
   compiled report actually runs, and the equivalence between the candidate filter and the
   final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
   singular tests; verify the compiled form against a replica.
+- **DV-012:** A redacted previous area is indistinguishable from an unchanged one. BL-033
+  blanks `prev_location_group` when the previous area falls outside the partition, and BL-027
+  already uses blank for unchanged, so a boundary-crossing area move renders every
+  `Previous *` cell blank on a row whose only meaningful change is that move. *Resolution:*
+  decide whether the report should show a redaction marker instead, which needs a
+  `translate_label` key and so a product call, not just a modelling one.
 - **DV-008:** This change adds two upstream dependencies the dataset did not previously have
   — `outpatient_appointments_change_events` and `outpatient_appointments`. An analytics build
   must include them, or the dataset fails outright. *Resolution:* confirm the analytics
@@ -278,6 +289,12 @@ _None._
   transit. The one exception in `specs/audit/changelog.md` — central authoring entries itself
   for mobile-originated changes, which would stamp the apply time — cannot reach appointments,
   which have no mobile model and no entry in mobile's `modelsMap`.
+- **Deploying the BL-033 previous-area partition needs `--full-refresh`.** On analytics
+  targets both dataset variants are incremental with candidates gated on
+  `updated_at_sync_tick` (BL-032), so an appointment that already crossed the partition
+  boundary and receives no further edits keeps the old unpartitioned `prev_location_group`
+  and `prev_location_group_id` indefinitely. This is BL-035's non-self-healing property
+  applied to a logic change rather than a data change.
 - **The report must read a central-server database.** BL-031's whole-history requirement
   holds on central and not on a facility server. A facility push snapshots rows at
   `updated_at_sync_tick > pushSince` and attaches every entry for those rows at
@@ -337,6 +354,7 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-027 now states that blank in `prev_location_group` means unchanged *or* redacted by BL-033, with DV-012 recording that the two are indistinguishable. Deploying the partition needs `--full-refresh` on the analytics datasets. |
 | 2026-09-02 | Maui team | BL-029's reading confirmed on MAUI-6857 by its owner, closing the last open question. Neither Linear card states which timestamp the date range bounds, so the decision rests on MAUI-6183's stated purpose rather than a written requirement. |
 | 2026-09-02 | Maui team | Verified against Tamanu's source that `logged_at` is the edit time for every appointment entry: entries are authored once and copied verbatim, and the mobile exception cannot apply because appointments have no mobile representation. Retires DV-010. |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`, because `parameter()` ignores `data_type` when compiling and `<=` would truncate to midnight outside compile only. BL-030 split — bound-side conversion to BL-039, whose candidate bounds are widened a day at each end so a non-injective round trip through the central zone cannot drop rows; facility pushdown into BL-033, which now also resolves `prev_location_group` and its id through the partition on the same equality row admission uses. AC-025 retired; AC-031 to AC-037 added. |

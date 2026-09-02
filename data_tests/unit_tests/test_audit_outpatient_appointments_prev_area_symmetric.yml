@@ -23,7 +23,7 @@ unit_tests:
       - input: ref('outpatient_appointments_change_events')
         format: sql
         rows: |
-          -- creation, in the sensitive facility (BL-023 excludes it, but it is the lag() baseline)
+          -- creation, in the standard facility (BL-023 excludes it, but it is the lag() baseline)
           select
             'chg_001'::text as id,
             'appt_moved'::text as record_id,
@@ -33,7 +33,7 @@ unit_tests:
             100::bigint as updated_at_sync_tick,
             '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_standard","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
           union all
-          -- moved out to the standard facility: admitted here, previous area must not be named
+          -- moved in to the sensitive facility: admitted here, previous area must not be named
           select
             'chg_002'::text,
             'appt_moved'::text,
