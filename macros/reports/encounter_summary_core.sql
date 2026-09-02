@@ -1,35 +1,31 @@
 {% macro encounter_summary_core(date_field, is_sensitive=false) %}
 {#-
-    Encounter summary rows: everything the report needs, resolved but unformatted.
+    Encounter summary rows: the patient, the encounter's movement history and its
+    clinical aggregates, resolved and mostly unformatted.
 
     See specs/reports/encounter-summary.md for the BL clauses this macro implements.
 
-    Callers differ only in projection. This macro emits mostly raw values -- timestamps
-    stay naive, aggregates stay as arrays or text -- and each caller applies its own
-    translate_label / to_char / timezone shift. Keeping the resolution here is what lets
-    a deployment repo extend the report by joining extra columns instead of forking the
-    whole body.
+    Callers differ only in projection: timestamps stay naive and aggregates stay as
+    arrays or text, and each caller applies its own translate_label / to_char / timezone
+    shift. Calling the core is what lets a deployment repo extend the report with its own
+    joins instead of maintaining a copy of the body.
 
-    Two exceptions to "unformatted", both inherited unchanged from the pre-extraction
-    report. Seven outputs leave the core already to_char'd, from inside the CTEs rather
-    than the projection: discharge_department_datetime, discharge_location_datetime and
-    discharge_location_group_datetime; the department_datetimes, location_datetimes and
-    location_group_datetimes arrays; and the dates embedded in the procedures and notes
-    text. A caller wanting those in another format has no raw column to reach for --
-    that would need a separate change to the CTEs.
+    BL-001: encounter_id and patient_id are the join keys an extending caller needs. The
+    formatted report output exposes neither, and its patient display_id is patient-grain.
 
-    encounter_id and patient_id are emitted first and deliberately: they are the join
-    keys an extending caller needs, and the formatted report output exposes neither.
+    BL-002: the projection applies no to_char and no to_user_selected_timezone. This
+    governs the select list only -- the CTEs below do use both, so the compiled core
+    carries nine :timezone placeholders.
 
-    BL-002: the *projection* emits nothing that depends on `flags.WHICH` -- no to_char,
-    no to_user_selected_timezone -- so a caller choosing a different presentation is not
-    fighting one already applied to the columns it selects. This is a statement about the
-    select list only: the CTEs above do use both, so the compiled core carries :timezone
-    regardless. The parameter() filters in the scope CTE and the outer where are
-    report-layer, which is why this lives under macros/reports/.
+    BL-003: no order by. A caller wraps this in a subquery, where ordering is not
+    guaranteed to survive.
 
-    `order by` is deliberately absent: a caller wraps this in a subquery, where ordering
-    is not guaranteed to survive, so the caller applies its own.
+    BL-005: the parameter() filters here make this report-layer, hence macros/reports/.
+
+    BL-006: seven outputs are already formatted in the viewer's timezone, applied inside
+    the CTEs -- the three discharge_*_datetime columns, the three *_datetimes arrays, and
+    the dates embedded in the procedures and notes text. A caller needing another format
+    for those must change the CTEs; there is no raw column to select.
 -#}
 
 with encounters_in_scope as (
@@ -418,8 +414,7 @@ encounter_notes as (
 )
 
 select
-    -- BL-001: the join keys an extending caller needs. The formatted report output
-    -- exposes neither, and its patient display_id is patient-grain.
+    -- BL-001: join keys for an extending caller
     eis.encounter_id,
     eis.patient_id,
     -- patient
@@ -464,9 +459,7 @@ select
     ec.location_group_datetimes,
     ec.locations,
     ec.location_datetimes,
-    -- BL-004: the id arrays the outer filters test. Emitted because those filters
-    -- read arrays built by the aggregation, so a caller filtering the same way
-    -- needs them.
+    -- BL-004: the id arrays the outer filters test, built by the aggregation
     ec.department_ids,
     ec.location_group_ids,
     -- clinical aggregates
