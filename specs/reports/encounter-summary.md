@@ -10,7 +10,6 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Version branch** | `2.54` (origin; forward-ported upward) |
 | **Created** | 2026-09-02 |
 
 One row per encounter, with the patient, the encounter's movement history, and its
@@ -18,25 +17,10 @@ clinical aggregates flattened into a single wide row.
 
 ## Purpose
 
-The report body was a single 519-line macro with 13 CTEs. A deployment repo needing extra
-columns — Aspen joining `patient_birth_data` is the live case — had no option but to fork
-the whole body, which then drifts from the standard report with nothing in CI to catch it.
-
-Splitting resolution from presentation lets a deployment repo call
-`encounter_summary_core()` and write its own projection, adding joins, instead of forking.
-Per the reuse decision rule in `.maui/knowledge/standards/dbt-conventions.md` this is
-mechanism 4 (shared core macro) on the "there is no shared model and none is wanted"
-branch.
-
-**Why not a `ds__encounter_summary` dataset.** The date range is applied in the scope CTE,
-*before* eight grouped CTEs that each join it. A dataset view filtered from outside would
-put the range on a join-derived column, which Postgres will not push into those grouped
-subqueries, so every aggregate would be computed over the full encounter history on each
-run — the BL-030 failure mode of `audit-outpatient-appointments`, eight times over.
-
-This mirrors how `outpatient_appointments_audit_core` was piloted: originate on the
-version branch that needs it (that one landed at 2.54 and above, not 2.52), then
-forward-port upward.
+`encounter_summary_core()` resolves the rows; `encounter_summary_report()` formats them.
+The split is what lets a deployment repo extend the report — adding columns from its own
+joins — by calling the core and writing its own projection, instead of maintaining a copy
+of the body.
 
 ## Grain
 
@@ -44,101 +28,115 @@ One row per encounter in the requested sensitivity partition whose `date_field` 
 the report window. `date_field` is `start_datetime` or `end_datetime`; the `end_datetime`
 variant additionally requires a non-null `end_datetime`, so open encounters are absent.
 
+## Inputs
+
+| Argument | Purpose |
+|---|---|
+| `date_field` | `start_datetime` or `end_datetime` — which date the report window filters on |
+| `is_sensitive` | Facility partition. `false` = non-sensitive facilities only |
+
+Parameters: `fromDate`, `toDate`, `facilityId`, `patientBillingTypeId`,
+`supervisingClinicianId`, `departmentId`, `locationGroupId`.
+
 ## The core's output contract
 
-`encounter_summary_core()` emits **mostly raw** values: naive timestamps, aggregates as
-arrays or text. Every caller applies its own `translate_label` / `to_char` / timezone
-shift.
+The core emits resolved values, mostly raw: naive timestamps, aggregates as arrays or
+text. Each caller applies its own `translate_label`, `to_char` and timezone shift.
 
-**Two documented exceptions**, both inherited unchanged from the pre-extraction report.
-Seven outputs leave the core already `to_char`'d in the viewer's timezone, applied inside
-the CTEs rather than the projection: `discharge_department_datetime`,
-`discharge_location_datetime`, `discharge_location_group_datetime`; the
-`department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
-the dates embedded in the `procedures` and `notes` text. An extending caller wanting a
-different format for those has **no raw column to reach for** — that requires a separate
-change to the CTEs, not just a different projection.
+- **BL-001:** `encounter_id` and `patient_id` are emitted. They are the join keys an
+  extending caller needs; the formatted report output exposes neither, and its patient
+  `display_id` is patient-grain, so joining on it fans out across a patient's encounters.
+- **BL-002:** The core's **projection** applies no `to_char` and no
+  `to_user_selected_timezone`, so a caller's chosen presentation is not competing with
+  one already applied. This governs the select list only — the CTEs do use both, and the
+  compiled core carries nine `:timezone` placeholders as a result.
+- **BL-003:** The core applies no `order by`. A caller wraps it in a subquery, where
+  ordering is not guaranteed to survive, so ordering is the caller's responsibility.
+- **BL-004:** `department_ids` and `location_group_ids` are emitted. The `departmentId`
+  and `locationGroupId` filters test membership of arrays built by the aggregation, so
+  they cannot be applied before it, and a caller filtering the same way needs them.
+- **BL-005:** The `parameter()` filters live in the core — in the scope CTE and the outer
+  `where`. The core is therefore report-layer, and lives under `macros/reports/`.
+- **BL-006:** Seven outputs leave the core already formatted, in the viewer's timezone,
+  applied inside the CTEs: `discharge_department_datetime`,
+  `discharge_location_datetime`, `discharge_location_group_datetime`; the
+  `department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
+  the dates embedded in the `procedures` and `notes` text. A caller needing a different
+  format for any of these has no raw column to select, and must change the CTEs.
 
-- **BL-001:** `encounter_id` and `patient_id` are emitted first and deliberately. They are
-  the join keys an extending caller needs, and the *formatted* report output exposes
-  neither — its only identifier is the patient `display_id`, which is patient-grain and so
-  fans out across a patient's encounters. Without these, extending the report by joining
-  encounter-scoped data is not possible.
-- **BL-002:** The **projection** emits nothing that depends on `flags.WHICH` — no
-  `to_char`, no `to_user_selected_timezone` — so a caller choosing a different
-  presentation is not fighting one already applied to the columns it selects. This is a
-  statement about the select list only. The CTEs above it *do* use both, so the compiled
-  core carries `:timezone` (13 occurrences) regardless; the claim is not that the core is
-  placeholder-free. What the rule buys is that `to_user_selected_timezone` is a no-op
-  outside `dbt compile`, so applying it in the projection would hand a non-report caller
-  columns silently identical to the raw ones.
-- **BL-003:** `order by` is deliberately absent. A caller wraps the core in a subquery,
-  where ordering is not guaranteed to survive, so each caller applies its own.
-- **BL-004:** `department_ids` and `location_group_ids` are emitted because the outer
-  `departmentId` / `locationGroupId` filters test membership of arrays produced *by* the
-  aggregation, so they cannot be applied before it. An extending caller filtering the same
-  way needs them.
-- **BL-005:** The `parameter()` filters in the scope CTE and the outer `where` stay in the
-  core, which is why it lives under `macros/reports/` rather than beside a dataset.
+## Output
 
-## Known defects, deliberately preserved
+Patient: `display_id`, `first_name`, `last_name`, `date_of_birth`, `sex`, `ethnicity`,
+`billing_type`, `division`, `subdivision`, `village`.
 
-The extraction is behaviour-preserving, so it carries these forward unchanged. Both are
-pre-existing on every version branch, not introduced here.
+Encounter: `encounter_id`, `patient_id`, `start_datetime`, `end_datetime`, `facility`,
+`reason_for_encounter`, `encounter_type_emergency`, `encounter_type_inpatient`,
+`encounter_type_outpatient`.
 
-- **OQ-001 (B-D1):** `encounter_history.actor_id` is nullable at source — it has no
-  `not_null` test, unlike `department_id`, `location_id` and `examiner_id` — but the
-  consolidation inner-joins `users` on it. A null-actor history row is dropped, and where
-  *every* history row for an encounter has a null actor, the inner join to
-  `encounter_changes` drops the encounter from the report entirely. `admissions_dataset`
-  never joins users-as-actor and so is unaffected.
-- **OQ-002 (B-D3):** The location-group dedup uses `is distinct from`, while
-  `admissions_dataset` uses `!= or prev is null`. They disagree on two null cases: a first
-  row with a null group, and a transition *into* a null group. Affects
-  `location_group_datetimes` / `_ids` / `_groups` and `discharge_location_group_datetime`.
+Discharge: `discharge_disposition`, `discharge_department`, `discharge_location_group`,
+`discharge_location`, and the three `discharge_*_datetime` columns (BL-006).
 
-Fixing either changes report output, so each needs its own change with a row-level diff
-and sign-off — not a refactor. Note for deployment upgrades: if these land before a
-version cut, that upgrade will change encounter summary output, and encounters that
-currently do not appear will start appearing.
+Triage: `triage_score`, `triage_arrival_mode`, `triage_datetime`,
+`triage_closed_datetime` — raw component timestamps, so a caller formats the waiting time
+itself.
+
+Clinicians: `encountering_clinician`, `supervising_clinician`.
+
+Movement history: `departments`, `location_groups`, `locations` and their matching
+`*_datetimes` arrays (BL-006), plus `department_ids` and `location_group_ids` (BL-004).
+
+Clinical aggregates: `diagnoses`, `diagnosis_codes`, `medications`, `vaccinations`,
+`procedures`, `lab_requests`, `imaging_requests`, `notes`.
+
+The projection is a superset of what any single caller needs, so each caller keeps its
+own downstream column names.
+
+## Companion macro
+
+`encounter_scope_common_filters()` (`macros/reports/encounter_scope_common_filters.sql`)
+emits the facility, patient-billing-type and supervising-clinician filters that the
+encounter-scoped reports apply identically. It calls `parameter()`, so it is report-only.
+
+Date ranges and report-specific flags are excluded from it: they differ between callers.
 
 ## Acceptance criteria
 
-| ID | Criterion | Clause |
-|---|---|---|
-| AC-001 | Extracting the core changes no report output at all. | BL-002, BL-003 |
-| AC-002 | The core emits `encounter_id` and `patient_id`, so a caller can join encounter- and patient-grain data. | BL-001 |
-| AC-003 | Compiling the report yields no `:` bind placeholder originating in the core's *projection*. The core as a whole does carry them, from its CTEs and its `parameter()` filters. | BL-002 |
+| ID | Criterion | Clause | Asserted by |
+|---|---|---|---|
+| AC-001 | The report output is identical whether the body is inlined or resolved through the core. | BL-002, BL-003 | Row-level `except all` both directions, per change; recorded on the PR |
+| AC-002 | The core emits `encounter_id` and `patient_id`. | BL-001 | Structural — the four report models drop both columns, so no report-level test can assert it. A caller selecting from the core is the only observer. |
+| AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
+| AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
+| AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_by_start_date_excludes_sensitive_facilities` |
 
-### Verification (2026-09-02)
+## Open questions
 
-Both variants were run pre- and post-extraction against the current
-`reporting_release` database, date range widened to `[2000-01-01, 2100-01-01]` and every
-optional filter null, and compared with `except all` in both directions. This branch
-already carried Division and Sub-division, so the port adds no columns and the
-comparison is **exact** — no keys were excluded.
-
-| Model | Rows before | Rows after | Only in before | Only in after |
-|---|---|---|---|---|
-| `encounter-summary-by-start-date` | 654 | 654 | 0 | 0 |
-| `encounter-summary-by-end-date` | 55 | 55 | 0 | 0 |
-| `sensitive-encounter-summary-by-start-date` | 0 | 0 | 0 | 0 |
-| `sensitive-encounter-summary-by-end-date` | 0 | 0 | 0 | 0 |
-
-AC-001 holds for the standard variants. **The sensitive comparison is vacuous** — every
-facility in that database has `is_sensitive = false`, so both sides legitimately return
-zero rows. The sensitive path rests on
-`test_encounter_summary_by_start_date_excludes_sensitive_facilities` and on the extraction
-being structurally identical, not on real data.
-
-Also: 64/64 unit tests pass and 86 pytest. The seven `encounter_summary`
-fixtures are **unchanged** — they already declared `pad.division_id` / `subdivision_id`
-and the Division / Sub-division expect columns, since the report already emitted them.
-
-The report went from 525 lines to 89, plus a 550-line core.
+- **OQ-001** *(owner: Maui team; due: before the next behavioural change to this report)* —
+  `encounter_history.actor_id` is nullable at source: it carries no `not_null` test,
+  unlike `department_id`, `location_id` and `examiner_id`. The consolidation inner-joins
+  `users` on it, so a null-actor history row is dropped, and where every history row for
+  an encounter has a null actor the encounter is absent from the report entirely.
+  Resolving it changes report output — encounters that do not currently appear will start
+  appearing — so it needs a row-level diff and sign-off rather than riding inside a
+  refactor.
+- **OQ-002** *(owner: Maui team; due: before the next behavioural change to this report)* —
+  the location-group dedup uses `is distinct from`, while `admissions_dataset` uses
+  `!= or prev is null`. The two disagree on a first row with a null group, and on a
+  transition into a null group, affecting `location_group_datetimes` / `_ids` / `_groups`
+  and `discharge_location_group_datetime`. Same constraint as OQ-001.
+- **OQ-003** *(owner: Maui team; due: with OQ-001)* — the core carries columns and one
+  join that nothing reads: `clinician_name` and `clinician_id` in the history
+  consolidation (the sole reason for its `users` join), `location_ids`,
+  `encountering_clinician_id`, a second `facility_id`, and `notes.visibility_status`.
+  Removing them is safe to reason about — `encounter_history.examiner_id` is `not_null`
+  tested, so unlike OQ-001 that join cannot drop rows — but it would break the
+  byte-identity that makes an extraction diff reviewable, so it is deliberately deferred.
+- **OQ-004** *(owner: Maui team; due: with OQ-001)* — no unit test targets either
+  `sensitive-` report model, so AC-005 is asserted only through the standard variant and
+  the `is_sensitive` argument being a single join predicate.
 
 ## Change log
 
 | Date | Change |
 |---|---|
-| 2026-09-02 | Split `encounter_summary_report` into a resolution core and a presentation wrapper (525 to 89 lines, plus a 533-line core). Forward-port of the 2.54 change; Division and Sub-division already existed on this branch. |
+| 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |
