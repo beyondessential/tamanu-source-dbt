@@ -27,7 +27,9 @@ locations as (
 -- BL-003: a diagnosis's window is [greatest(condition_start_datetime, visit_start_datetime),
 -- visit_end_datetime], open-ended if the encounter has not closed. A diagnosis dated after
 -- the encounter closed is clamped to the close time, so it lands in the last segment the
--- encounter was in rather than falling outside every segment
+-- encounter was in rather than falling outside every segment. Depends on
+-- clinical__visit_detail leaving a still-open encounter's active segment end-datetime NULL
+-- rather than defaulting it to the segment's own start
 diagnosis_window as (
     select
         cco.condition_occurrence_id,
@@ -55,7 +57,7 @@ diagnosis_opd_segment as (
     join visit_detail vd
         on vd.visit_occurrence_id = dw.visit_occurrence_id
         and vd.visit_detail_concept_id = 9202
-        and vd.visit_detail_end_datetime >= dw.window_start
+        and (vd.visit_detail_end_datetime is null or vd.visit_detail_end_datetime >= dw.window_start)
         and (dw.window_end is null or vd.visit_detail_start_datetime <= dw.window_end)
     -- BL-004: facility is the earliest qualifying segment's own care_site_id
     order by dw.condition_occurrence_id, vd.visit_detail_start_datetime asc, vd.visit_detail_id asc
