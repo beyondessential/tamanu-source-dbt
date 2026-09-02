@@ -12,7 +12,8 @@
 -- filter being exact.
 --
 -- BL-039: the bound is converted rather than the column, leaving logged_at bare and
--- BRIN-prunable -- it is BRIN-only after Tamanu migration #10639.
+-- BRIN-prunable -- it is BRIN-only after Tamanu migration #10639. The bounds are widened a
+-- day at each end so the candidate set stays a superset across DST boundaries.
 --
 -- Business logic lives in outpatient_appointments_audit_core() alongside the dataset; this
 -- macro only filters and formats.
@@ -35,8 +36,13 @@ c.record_id in (
     join {{ ref('facilities') }} f2
         on f2.id = lg2.facility_id
         and f2.is_sensitive = {{ is_sensitive }}
-    where c2.logged_at >= {{ from_user_selected_timezone(from_bound) }}
-        and c2.logged_at < {{ from_user_selected_timezone(to_bound ~ " + interval '1 day'") }}
+    -- BL-030: widened a day at each end. modified_datetime is naive central time, so the
+    -- final WHERE round-trips it back through the central zone, which is non-injective at
+    -- that zone's DST fall-back -- an event in the repeated hour resolves to a different
+    -- instant than the one the candidate filter compared. Widening keeps the candidate set a
+    -- strict superset whatever the two zones are, at the cost of one extra day of history.
+    where c2.logged_at >= {{ from_user_selected_timezone(from_bound) }} - interval '1 day'
+        and c2.logged_at < {{ from_user_selected_timezone(to_bound ~ " + interval '1 day'") }} + interval '1 day'
         and case
             when {{ parameter('facilityId') }} is null then true
             else f2.id = {{ parameter('facilityId') }}

@@ -34,6 +34,11 @@
    resolves through the session TimeZone and is silently wrong. Most change-log bases in this
    repo re-expose `logged_at` already converted to local time, so check before reusing this.
 
+   A bound converted here is not interchangeable with a naive column put back through
+   `at time zone <central>`: that round trip is non-injective at the central zone's DST
+   fall-back, so the two can disagree by the DST offset. A range filter that must not lose
+   rows should widen the converted bound rather than assume the two agree.
+
    The counterpart to
    to_user_selected_timezone: that one converts the column so it can be displayed, this one
    converts the bound so a range predicate can leave the column bare and stay prunable.

@@ -47,12 +47,12 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 | Reference | Why |
 |---|---|
-| `ref('outpatient_appointments_change_events')` | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
+| `ref('outpatient_appointments_change_events')` ×2 (candidate filter, extraction) | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
 | `ref('outpatient_appointments')` | Appointment population (BL-036) and the schedule's `cancelled_at_date` (BL-026) |
 | `ref('patients')` | Demographics |
 | `ref('users')` ×4 (clinician, prev_clinician, creator, modifier) | Display names |
-| `ref('location_groups')` ×2, `ref('reference_data')` ×2 | Area and appointment-type names, current and previous |
-| `ref('facilities')` | Facility name and sensitivity partition (BL-033) |
+| `ref('location_groups')` ×3, `ref('reference_data')` ×2 | Area and appointment-type names, current and previous; the third location group resolves the candidate filter's facility (BL-033) |
+| `ref('facilities')` ×2 | Facility name and sensitivity partition, at the end and in the candidate filter (BL-033) |
 
 ### Freshness
 
@@ -128,7 +128,8 @@ review obligation, not an automated one (DV-007).
   on the early filter being exact.
 - **BL-039:** The candidate filter converts the bound rather than the column, via
   `from_user_selected_timezone()`, so `logged_at` stays bare and prunable by its BRIN index
-  (BL-032). Evaluating it needs no per-row JSON extraction, cast or timezone conversion.
+  (BL-032). The bounds are widened a day at each end, which keeps the candidate set a
+  superset across DST boundaries; the final `WHERE` trims to the exact range.
 - **BL-031:** The windowed extraction is centralised in
   `outpatient_appointments_change_log_events(record_id_filter=none)`, called three ways:
   unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
@@ -209,6 +210,7 @@ a populated replica, re-run against the current code after the BL-031 shared-cor
 | AC-029 | Rows on the previous run's watermark tick are still picked up | BL-032 | **passed** — reprocessed; a strict `>` would have found no candidates |
 | AC-030 | Stale rows persist after a zero-row recompute or sensitivity flip until `--full-refresh` | BL-035 | not tested |
 | AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | not tested |
+| AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | not tested — the compile branch is unreachable from dbt (DV-004) |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-034 | The bound is compared against a bare `logged_at`, leaving the BRIN index usable | BL-039 | not tested — needs `EXPLAIN` on a populated replica |
@@ -228,7 +230,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
                           │         ├─ report filter (BL-030) ──► audit-outpatient-appointments (+sensitive)
                           │         └─ tick filter (BL-032) ───► ds__outpatient_appointments_audit (+sensitive)
                           │                                            └──► analytics / Tupaia
-                          └──► candidate-id CTEs for both filters
+                          └──► candidate-id filters (report: + location_groups, facilities)
 ```
 
 ## Open questions
@@ -266,11 +268,13 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   `changes_updated_at_sync_tick_index` is baseline and untouched by the two migrations that
   changed the others, but this came from migration history, not a live `pg_indexes` check —
   and which indexes exist depends on the migrations a deployment has run. Confirm per target.
-- **Bound and column conversion diverge at an ambiguous local midnight.** `timestamp at time
-  zone` is not injective, so in a zone with a DST transition at local midnight the converted
-  bound is ambiguous and an event in the repeated hour can fall outside it while satisfying
-  the final `WHERE` — the one direction BL-030's safety net cannot recover. No Tamanu
-  deployment zone transitions at midnight.
+- **The candidate filter and the final `WHERE` are not the same predicate.**
+  `modified_datetime` is naive central time, so the final `WHERE` round-trips it back through
+  the central zone — non-injective at that zone's DST fall-back, where an event in the
+  repeated hour resolves to a different instant than the candidate filter compared. Reachable
+  on the default `Australia/Sydney` whenever `:timezone` differs from it. BL-039's widened
+  bounds absorb it; without them the row is silently dropped, which is the one direction
+  BL-030's safety net cannot recover.
 - **BL-029 changed meaning.** The date range now filters edit time where it previously
   filtered appointment start time. Saved parameter sets, scheduled exports and user habits
   built around the old behaviour return a different row set for the same inputs. Shipped
@@ -304,5 +308,6 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-039's candidate bounds are widened a day at each end. The final `WHERE` round-trips `modified_datetime` through the central zone, which is non-injective at its DST fall-back, so the unwidened filter silently dropped events logged in the repeated hour when `:timezone` differed from central (MAUI-6857). |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`: `parameter()` ignores `data_type` when compiling, so `<=` truncates to midnight outside compile only, and tests would stop agreeing with production. BL-030 split — bound-side conversion to BL-039, facility pushdown into BL-033. AC-025 retired; AC-031 to AC-034 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
