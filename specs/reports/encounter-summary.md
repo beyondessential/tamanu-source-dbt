@@ -111,29 +111,16 @@ Date ranges and report-specific flags are excluded from it: they differ between 
 
 ## Open questions
 
-- **OQ-001** *(owner: Maui team; due: before the next behavioural change to this report)* —
-  `encounter_history.actor_id` is nullable at source: it carries no `not_null` test,
-  unlike `department_id`, `location_id` and `examiner_id`. The consolidation inner-joins
-  `users` on it, so a null-actor history row is dropped, and where every history row for
-  an encounter has a null actor the encounter is absent from the report entirely.
-  Resolving it changes report output — encounters that do not currently appear will start
-  appearing — so it needs a row-level diff and sign-off rather than riding inside a
-  refactor.
-- **OQ-002** *(owner: Maui team; due: before the next behavioural change to this report)* —
-  the location-group dedup uses `is distinct from`, while `admissions_dataset` uses
-  `!= or prev is null`. The two disagree on a first row with a null group, and on a
-  transition into a null group, affecting `location_group_datetimes` / `_ids` / `_groups`
-  and `discharge_location_group_datetime`. Same constraint as OQ-001.
-- **OQ-003** *(owner: Maui team; due: with OQ-001)* — the core carries columns and one
-  join that nothing reads: `clinician_name` and `clinician_id` in the history
-  consolidation (the sole reason for its `users` join), `location_ids`,
-  `encountering_clinician_id`, a second `facility_id`, and `notes.visibility_status`.
-  Removing them is safe to reason about — `encounter_history.examiner_id` is `not_null`
-  tested, so unlike OQ-001 that join cannot drop rows — but it would break the
-  byte-identity that makes an extraction diff reviewable, so it is deliberately deferred.
-- **OQ-004** *(owner: Maui team; due: with OQ-001)* — no unit test targets either
-  `sensitive-` report model, so AC-005 is asserted only through the standard variant and
-  the `is_sensitive` argument being a single join predicate.
+- **OQ-002** *(owner: Maui team; due: before the next behavioural change to
+  `ds__admissions`)* — this report's location-group dedup treats a null group as a real
+  state, so a transition into a null group is recorded as a change. `admissions_dataset`
+  uses `location_group_id != prev_location_group_id or prev_location_group_id is null`,
+  which drops that transition. Both include the creation row, so that is the only
+  divergence. Aligning them means changing `admissions_dataset`, which alters the
+  admissions line list rather than this report.
+
+Resolved: OQ-001 (the history actor is left-joined), OQ-003 (the unread columns and the
+redundant `users` join are gone), OQ-004 (the sensitive variant has a unit test).
 
 ## Change log
 
