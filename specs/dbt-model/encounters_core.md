@@ -69,6 +69,7 @@ both joins are on primary keys.
 | `is_sensitive` | `false` | Facility partition. `false` = non-sensitive facilities only. |
 | `encounter_type` | `none` | Optional. Restricts to a single `encounter_type` (e.g. `'admission'`). |
 | `extra_predicates` | `none` | Optional SQL text appended to the `where` clause. |
+| `localise_timestamps` | `false` | Report-only. Adds `start_datetime_local` / `end_datetime_local`. A dataset caller must leave it off — see BL-005. |
 
 ### Upstream models
 
@@ -130,11 +131,23 @@ diff, but it is a real cost rather than none.
   value of any emitted column — only which rows survive. A future change that introduces
   a window function here would invalidate this clause and must be treated as
   behaviour-changing for every caller.
-- **BL-005:** This macro contains no `parameter()` call. Datasets build on analytics
-  targets, where `parameter()` falls through to a `var()` literal rather than a bind
-  placeholder; a filter baked in here would therefore behave differently for dataset
-  and report callers. Report-only filters live in `encounter_scope_common_filters()`
-  instead.
+- **BL-005:** This macro emits **no report-only construct by default** — nothing that
+  renders a bind placeholder under `dbt compile`. Two things would break that, and both
+  are kept out of the default path:
+    - `parameter()` is not called at all. Report-only filters live in
+      `encounter_scope_common_filters()` instead.
+    - `to_user_selected_timezone()` is called **only** under `localise_timestamps`,
+      which defaults to false. That helper emits `(... at time zone coalesce(nullif(
+      :timezone, ''), ...))` under `dbt compile` and is a plain **no-op** otherwise
+      (`macros/datetime.sql`). Both halves are hazards for a dataset caller: the compile
+      form carries `:timezone` into the reporting bundle, where
+      `generate_reporting_schema_script()` wraps compiled SQL verbatim in
+      `create or replace view` — invalid Postgres; and the run form would give a dataset
+      `*_local` columns silently identical to the raw ones, which is a misleading name
+      rather than an error.
+  The rule this generalises to: **a shared macro reachable from a dataset must not emit
+  anything that depends on `flags.WHICH`.** Grepping for `parameter(` alone does not
+  establish that — the hazard here arrived through a helper.
 - **BL-006:** `locations` and `facilities` are **inner** joins, so an encounter whose
   `location_id` is null or dangling produces no row at all. This matches what all three
   original copies did, and is what makes the facility partition total: an encounter that
@@ -172,7 +185,7 @@ maui-team#104 introduced.
 | AC-001 | With `is_sensitive=false`, no row resolves to a facility with `is_sensitive = true`, and vice versa. | BL-001 |
 | AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. | BL-002 |
 | AC-003 | Adopting the macro at a call site produces a compiled-SQL diff that is shape-only plus the superset columns — no changed join keyword, predicate or column expression. | BL-003, BL-004 |
-| AC-004 | `grep -c "parameter(" macros/encounters_core.sql` returns 0. | BL-005 |
+| AC-004 | Compiling a **dataset** caller of this macro yields SQL containing no `:` bind placeholder. Grepping for `parameter(` is necessary but not sufficient — `to_user_selected_timezone()` reaches the same hazard through a helper, so the check is on the compiled output, not the source. | BL-005 |
 | AC-005 | An encounter whose `location_id` does not resolve to a location produces no row. | BL-006 |
 
 AC-001, AC-003 and AC-005 are covered for the `encounter_invoice_audit` call site by

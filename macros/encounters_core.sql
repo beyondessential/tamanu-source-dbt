@@ -1,4 +1,5 @@
-{% macro encounters_core(is_sensitive=false, encounter_type=none, extra_predicates=none) %}
+{% macro encounters_core(is_sensitive=false, encounter_type=none, extra_predicates=none,
+                         localise_timestamps=false) %}
 {#-
     Encounters resolved to their facility, partitioned by sensitivity.
 
@@ -11,6 +12,10 @@
       is_sensitive      facility partition. false = non-sensitive facilities only.
       encounter_type    optional, restricts to one encounter_type (e.g. 'admission').
       extra_predicates  optional SQL text appended to the where clause.
+      localise_timestamps  report-only. Adds start_datetime_local / end_datetime_local.
+                        Defaults to false because to_user_selected_timezone() emits a
+                        `:timezone` bind placeholder under `dbt compile` and is a no-op
+                        otherwise -- see BL-005. A dataset caller must leave it off.
 
     Alias contract (BL-003). `extra_predicates` is raw SQL spliced into this macro's
     own where clause, so it may reference exactly these aliases:
@@ -54,11 +59,14 @@ select
     e.reason_for_encounter,
     e.start_datetime,
     e.end_datetime,
-    -- localised alongside the raw values so a caller can present either without
-    -- repeating the shift; the shift is a per-row expression, so emitting both costs
-    -- nothing and ordering by either is equivalent (it is monotonic per row)
+    {%- if localise_timestamps %}
+    -- BL-005: report-only. to_user_selected_timezone() emits a `:timezone` bind
+    -- placeholder under `dbt compile`, which a dataset must never carry, and is a plain
+    -- no-op otherwise -- so for a dataset caller these columns would be silently
+    -- identical to the raw ones. Opt in only from a report.
     {{ to_user_selected_timezone('e.start_datetime') }} as start_datetime_local,
     {{ to_user_selected_timezone('e.end_datetime') }} as end_datetime_local,
+    {%- endif %}
     e.location_id,
     e.department_id,
     e.clinician_id,

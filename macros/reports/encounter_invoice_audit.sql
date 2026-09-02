@@ -23,7 +23,7 @@
 {%- endset -%}
 
 with encounters_in_scope as (
-    {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
+    {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter, localise_timestamps=true) }}
 ),
 
 invoice_data as (
