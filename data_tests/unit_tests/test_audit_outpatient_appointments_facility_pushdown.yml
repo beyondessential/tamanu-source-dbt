@@ -9,6 +9,10 @@ unit_tests:
       change_number 2 — the number it has in the unfiltered run — which is what shows the
       pushdown narrowed candidacy per appointment without truncating that appointment's
       history.
+      Note the cross-facility move this depends on is not a normal workflow: the
+      appointment form's Area field is hard-scoped to the logged-in facility, so this
+      state arrives via the API or a user at another facility. The test specifies
+      behaviour rather than describing a common case.
     overrides:
       vars:
         timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic

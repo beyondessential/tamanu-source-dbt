@@ -1,12 +1,13 @@
 unit_tests:
-  - name: test_audit_outpatient_appointments_sensitive_prev_area
-    model: audit-outpatient-appointments
+  - name: test_audit_outpatient_appointments_prev_area_symmetric
+    model: sensitive-audit-outpatient-appointments
     description: >
-      AC-036 / BL-033: the previous area resolves through the sensitivity partition. An
-      appointment moves out of a sensitive facility into a standard one, so the row is
-      admitted to the standard report on its current facility, but "Previous area" must come
-      back blank rather than naming the sensitive facility's area. Without the partitioned
-      prev_lg join this returns 'Restricted Ward'.
+      AC-037 / BL-033: the mirror of AC-036, pinning that the partition is symmetric rather
+      than the sensitive variant being a privileged superset. An appointment moves out of a
+      standard facility into a sensitive one, so the row is admitted to the sensitive report
+      on its current facility, but "Previous area" comes back blank rather than naming the
+      standard facility's area -- the sensitive variant carries only sensitive-facility data,
+      as every other is_sensitive partition in this project does.
       Note the cross-facility move this depends on is not a normal workflow: the
       appointment form's Area field is hard-scoped to the logged-in facility, so this
       state arrives via the API or a user at another facility. The test specifies
@@ -30,7 +31,7 @@ unit_tests:
             '2026-09-01 08:00:00+00'::timestamptz as record_updated_at,
             'usr_001'::text as updated_by_user_id,
             100::bigint as updated_at_sync_tick,
-            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_sensitive","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
+            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_standard","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
           union all
           -- moved out to the standard facility: admitted here, previous area must not be named
           select
@@ -40,7 +41,7 @@ unit_tests:
             '2026-09-02 11:00:00+00'::timestamptz,
             'usr_002'::text,
             200::bigint,
-            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_standard","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_sensitive","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
 
       - input: ref('outpatient_appointments')
         format: sql
@@ -97,7 +98,7 @@ unit_tests:
           '2026-10-01 09:00'  as "Appointment date and time",
           'Follow-up'         as "Appointment type",
           'Dr. Alice Wilson'  as "Clinician",
-          'Outpatients'       as "Area",
+          'Restricted Ward'   as "Area",
           'No'                as "Priority appointment",
           'No'                as "Repeating appointment",
           'Alice Admin'       as "Appointment created by",

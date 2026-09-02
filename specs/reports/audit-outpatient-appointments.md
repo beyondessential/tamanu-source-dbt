@@ -152,9 +152,10 @@ review obligation, not an automated one (DV-007).
   as well as at the end, resolved from the facility recorded on the event and never from the
   appointment's current row, which can differ.
 
-  `prev_location_group` and `prev_location_group_id` resolve through the same partition, so a
-  standard row moved out of a sensitive facility carries neither that area's name nor its id.
-  The sensitive variant is the privileged view and resolves areas from both sides.
+  `prev_location_group` and `prev_location_group_id` resolve through the same partition on
+  the same equality, so neither variant names an area outside its own half. A row whose
+  appointment crossed the boundary keeps its row but carries neither the previous area's name
+  nor its id.
 - **BL-034:** The incremental strategy is `delete+insert` on `unique_key='appointment_id'`,
   not append. `change_number` and `prev_*` come from window functions partitioned by
   `appointment_id`, so a new event invalidates that appointment's *later* rows — whose own
@@ -216,6 +217,7 @@ a populated replica, re-run against the current code after the BL-031 shared-cor
 | AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | not tested |
 | AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | not tested — the compile branch is unreachable from dbt (DV-004) |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
+| AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-034 | The bound is compared against a bare `logged_at`, leaving the BRIN index usable | BL-039 | not tested — needs `EXPLAIN` on a populated replica |
@@ -294,6 +296,14 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   `changes_updated_at_sync_tick_index` is baseline and untouched by the two migrations that
   changed the others, but this came from migration history, not a live `pg_indexes` check —
   and which indexes exist depends on the migrations a deployment has run. Confirm per target.
+- **An appointment changing facility is an edge case, not a workflow.** Tamanu's appointment
+  form resolves its Area field through the `facilityLocationGroup` suggester, which forces
+  `filterByFacility: true`, so a user can only ever pick an area in the facility they are
+  logged into — on edit as well as create. `PUT /appointments/:id` does not enforce it,
+  though, passing `locationGroupId` through unchecked, and the appointment record exists at
+  every facility after sync. So the divergence BL-033 guards against is reachable via the API
+  or via a user at another facility, and AC-032 and AC-036 specify behaviour rather than
+  describe a common occurrence.
 - **The candidate filter and the final `WHERE` are not the same predicate.**
   `modified_datetime` is naive central time, so the final `WHERE` round-trips it back through
   the central zone — non-injective at that zone's DST fall-back, where an event in the
@@ -334,7 +344,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-02 | Maui team | `prev_location_group` and `prev_location_group_id` now resolve through the BL-033 partition, closing a leak that carried a sensitive facility's area into the standard report and dataset. Retires DV-009; adds AC-036. |
+| 2026-09-02 | Maui team | `prev_location_group` and `prev_location_group_id` now resolve through the BL-033 partition on the same equality the row admission uses, closing a leak that carried a sensitive facility's area into the standard report and dataset. Retires DV-009; adds AC-036 and AC-037. |
 | 2026-09-02 | Maui team | DV-010 and DV-011 record two sync-topology assumptions the report rests on: `logged_at` is the edit time only for changes authored on the server that made them (not mobile-originated ones), and BL-031's whole-history requirement is unestablished on a central-server database. |
 | 2026-09-02 | Maui team | BL-033 reworded to claim row admission only, and DV-009 records that `prev_location_group` escapes the partition. |
 | 2026-09-02 | Maui team | BL-039's candidate bounds are widened a day at each end. The final `WHERE` round-trips `modified_datetime` through the central zone, which is non-injective at its DST fall-back, so the unwidened filter silently dropped events logged in the repeated hour when `:timezone` differed from central (MAUI-6857). |
