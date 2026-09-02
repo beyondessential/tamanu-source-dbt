@@ -73,7 +73,13 @@ Previous clinician ID (before the change). Null for creation events (change_sequ
 {% enddocs %}
 
 {% docs outpatient_appointments_change_logs__prev_location_group_id %}
-Previous location group/area ID (before the change). Null for creation events (change_sequence = 1).
+Previous location group/area ID (before the change).
+
+Null for creation events (change_sequence = 1). In the audit dataset and report this is
+additionally null where the previous area is unchanged, where its facility falls outside the
+caller's sensitivity partition, and where the area or its facility has since been
+soft-deleted — it resolves through the partitioned join rather than straight off the change
+event, so an unresolvable area yields no id.
 {% enddocs %}
 
 {% docs outpatient_appointments_change_logs__prev_appointment_type_id %}
