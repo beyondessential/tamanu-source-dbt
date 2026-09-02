@@ -1,12 +1,12 @@
-# dbt Macro Spec: `encounters_in_scope` (shared core)
+# dbt Macro Spec: `encounters_core` (shared core)
 
 ## Identity
 
 | Field | Value |
 |---|---|
-| **Name** | `encounters_in_scope` |
+| **Name** | `encounters_core` |
 | **Type** | shared macro (no model of its own) |
-| **Layer** | cross-layer — `macros/encounters_in_scope.sql` |
+| **Layer** | cross-layer — `macros/encounters_core.sql` |
 | **Materialisation** | n/a — inlined into each caller |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
@@ -30,15 +30,23 @@ facility partition for that surface alone, and nothing in CI would catch it.
 
 ### Naming
 
-The convention gives mechanism 4 the form `<entity>_core(...)`, which would make this
-`encounters_core`. It is deliberately named `encounters_in_scope` instead, on the
-convention's own "match the existing name over inventing a regular form" rule: every
-call site already had a CTE of that name, so the adoptions read as a substitution rather
-than a rename, and the compiled diffs stay reviewable. The `_core` suffix is reserved for
-the case it was coined for — a body macro shared by a dataset and its paired report — and
-this macro has no paired dataset. The cost is that `with encounters_in_scope as ( {{
-encounters_in_scope(...) }} )` reads awkwardly at each call site; that was judged the
-lesser evil against renaming the CTE in three places.
+The macro is `encounters_core`, per the convention's `<entity>_core(...)` form for
+mechanism 4. The **CTE at each call site keeps the name `encounters_in_scope`**, which it
+already had before the extraction.
+
+That split is deliberate. Naming both the same produced
+`with encounters_in_scope as ( {{ encounters_in_scope(...) }} )`, which reads as a
+tautology and hides which half is the macro. Renaming the *CTE* instead would touch 13
+sites across `encounter_invoice_audit` and `encounter_summary` and would change the
+compiled SQL, for no behavioural gain. Renaming only the macro touches one declaration
+and one call site and — because a Jinja identifier never reaches compiled output — is
+provably zero-risk: the compiled SQL is byte-identical either side of the rename, which
+is the proof rather than an argument for it.
+
+The two names also carry different jobs. `encounters_in_scope` says what the rows *are*
+at that point in the query; `encounters_core` says what the shared macro *is*. An earlier
+draft of this spec argued for naming the macro after the CTE; that was settled the other
+way during review of #1198, while there was still one adopted call site rather than three.
 
 Per the reuse decision rule in `.maui/knowledge/standards/dbt-conventions.md`, this is
 mechanism 4 (shared core macro) on the "there is no shared model and none is wanted"
@@ -148,13 +156,13 @@ while `encounter_invoice_audit` filters on `start_datetime` and carries
 ### Anchoring note
 
 BL-001, BL-002 and BL-006 are anchored as `-- BL-00N:` comments at their implementation
-sites in `macros/encounters_in_scope.sql`. BL-003, BL-004 and BL-005 are **contract
+sites in `macros/encounters_core.sql`. BL-003, BL-004 and BL-005 are **contract
 clauses with no single code site** — they constrain what a caller may pass and what this
 macro may contain, so there is nothing to anchor them to; the macro header states them in
 prose. They are recorded here as configuration-only for the same reason BL-038 of
 `audit-outpatient-appointments` is. Note that `encounter_invoice_audit.sql` declares its
 *own* BL-002/003/004 with unrelated meanings, which is exactly why the macro header names
-this spec file (`See specs/dbt-model/encounters_in_scope.md ...`) in the file-level form
+this spec file (`See specs/dbt-model/encounters_core.md ...`) in the file-level form
 maui-team#104 introduced.
 
 ## Acceptance criteria
@@ -164,7 +172,7 @@ maui-team#104 introduced.
 | AC-001 | With `is_sensitive=false`, no row resolves to a facility with `is_sensitive = true`, and vice versa. | BL-001 |
 | AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. | BL-002 |
 | AC-003 | Adopting the macro at a call site produces a compiled-SQL diff that is shape-only plus the superset columns — no changed join keyword, predicate or column expression. | BL-003, BL-004 |
-| AC-004 | `grep -c "parameter(" macros/encounters_in_scope.sql` returns 0. | BL-005 |
+| AC-004 | `grep -c "parameter(" macros/encounters_core.sql` returns 0. | BL-005 |
 | AC-005 | An encounter whose `location_id` does not resolve to a location produces no row. | BL-006 |
 
 AC-001, AC-003 and AC-005 are covered for the `encounter_invoice_audit` call site by

@@ -1,11 +1,11 @@
-{% macro encounters_in_scope(is_sensitive=false, encounter_type=none, extra_predicates=none) %}
+{% macro encounters_core(is_sensitive=false, encounter_type=none, extra_predicates=none) %}
 {#-
     Encounters resolved to their facility, partitioned by sensitivity.
 
     The encounters -> locations -> facilities join with `f.is_sensitive` is the most
     repeated block in the repo. Keeping it here is what stops the copies drifting.
 
-    See specs/dbt-model/encounters_in_scope.md for the BL clauses this macro implements.
+    See specs/dbt-model/encounters_core.md for the BL clauses this macro implements.
 
     Arguments
       is_sensitive      facility partition. false = non-sensitive facilities only.

@@ -4,11 +4,11 @@
     facility, patient billing type, and supervising clinician. A null parameter
     disables that filter.
 
-    Emitted as predicate text for encounters_in_scope()'s `extra_predicates`, so it
+    Emitted as predicate text for encounters_core()'s `extra_predicates`, so it
     obeys the same alias contract -- it references `e` and `f` only.
 
     Report-only. It calls parameter(), so it must never be reached from a dataset
-    macro; see the note in encounters_in_scope().
+    macro; see the note in encounters_core().
 
     Date ranges and report-specific flags are deliberately NOT here. They genuinely
     differ between callers: encounter_summary filters on a caller-chosen date_field,

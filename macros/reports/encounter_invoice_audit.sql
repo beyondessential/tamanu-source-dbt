@@ -2,7 +2,7 @@
 
 {#-
     BL-001 (test patient) and BL-017 (is_sensitive facility partition) are resolved by
-    encounters_in_scope(); see specs/dbt-model/encounters_in_scope.md. The predicates
+    encounters_core(); see specs/dbt-model/encounters_core.md. The predicates
     below are this report's own, and reference the `e` / `f` aliases that macro
     contracts on.
 -#}
@@ -21,7 +21,7 @@
 {%- endset -%}
 
 with encounters_in_scope as (
-    {{ encounters_in_scope(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
+    {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
 ),
 
 invoice_data as (
