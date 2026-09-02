@@ -4,10 +4,10 @@ unit_tests:
     description: >
       BL-003's clamping. c4's encounter closed long before it was recorded -- its window
       is clamped down to the close time, landing it in the last (and only) segment rather
-      than being dropped for falling outside every segment (13e699c). c5's encounter is
-      still open -- its active segment carries a NULL end (clinical__visit_detail leaves it
-      open-ended rather than defaulting to the segment's own start), so a diagnosis dated
-      well after the segment began still matches it.
+      than being dropped for falling outside every segment. c5's encounter is still open
+      -- its active segment carries a NULL end (clinical__visit_detail leaves it open-ended
+      rather than defaulting to the segment's own start), so a diagnosis dated well after
+      the segment began still matches it.
     given:
       - input: ref('clinical__condition_occurrence')
         format: sql

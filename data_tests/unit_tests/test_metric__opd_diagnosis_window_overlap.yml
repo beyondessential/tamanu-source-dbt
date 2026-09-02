@@ -4,9 +4,14 @@ unit_tests:
     description: >
       BL-003. A diagnosis on a pure-outpatient encounter (c1) is included; on a
       pure-inpatient encounter (c2) it is excluded. c3 is dated the day its encounter
-      starts, so its window spans both an outpatient and a later inpatient segment
-      (BL-003's "valid from the encounter start to its end" rule) -- it is included via
-      the outpatient overlap, regardless of the inpatient segment its window also touches.
+      starts, so its window (BL-003:
+      `[greatest(condition_start_datetime, visit_start_datetime), visit_end_datetime]`)
+      spans both an outpatient and a later inpatient segment -- it is included via the
+      outpatient overlap, regardless of the inpatient segment its window also touches.
+      c7 is the mirror of c3: recorded on day one of a three-week admission that only
+      becomes outpatient in its final day. A diagnosis is coded against the encounter as a
+      whole, not the phase active when it was recorded, so it is still included -- the
+      window's forward reach to the encounter's end is deliberate, not an oversight.
     given:
       - input: ref('clinical__condition_occurrence')
         format: sql
@@ -16,6 +21,8 @@ unit_tests:
           select 'c2', 'p1', '2026-01-05'::date, '2026-01-05 00:00:00'::timestamp, null::date, null::timestamp, 'encounter diagnosis', 'confirmed', true, 'prov1', 'v2', 'A02', 'Pure inpatient diagnosis'
           union all
           select 'c3', 'p1', '2026-01-01'::date, '2026-01-01 00:00:00'::timestamp, null::date, null::timestamp, 'encounter diagnosis', 'confirmed', true, 'prov1', 'v3', 'A03', 'Spanning diagnosis'
+          union all
+          select 'c7', 'p1', '2026-03-01'::date, '2026-03-01 00:00:00'::timestamp, null::date, null::timestamp, 'encounter diagnosis', 'confirmed', true, 'prov1', 'v7', 'A07', 'Admission-first diagnosis'
 
       - input: ref('clinical__visit_occurrence')
         format: sql
@@ -25,6 +32,8 @@ unit_tests:
           select 'v2', 'p1', 9201, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, '2026-01-10'::date, '2026-01-10 00:00:00'::timestamp, 32817, 'prov1', 'loc2', 'admission'
           union all
           select 'v3', 'p1', 262, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, '2026-01-10'::date, '2026-01-10 00:00:00'::timestamp, 32817, 'prov1', 'loc3a', 'admission'
+          union all
+          select 'v7', 'p1', 262, '2026-03-01'::date, '2026-03-01 09:00:00'::timestamp, '2026-03-21'::date, '2026-03-21 00:00:00'::timestamp, 32817, 'prov1', 'loc7a', 'admission'
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -36,6 +45,10 @@ unit_tests:
           select 'vd3a', 'v3', 'p1', 9202, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, '2026-01-05'::date, '2026-01-05 00:00:00'::timestamp, 'loc3a', null::varchar, 'prov1', 'clinic', null::varchar
           union all
           select 'vd3b', 'v3', 'p1', 9201, '2026-01-05'::date, '2026-01-05 00:00:00'::timestamp, '2026-01-10'::date, '2026-01-10 00:00:00'::timestamp, 'loc3b', null::varchar, 'prov1', 'admission', 'vd3a'
+          union all
+          select 'vd7a', 'v7', 'p1', 9201, '2026-03-01'::date, '2026-03-01 09:00:00'::timestamp, '2026-03-20'::date, '2026-03-20 00:00:00'::timestamp, 'loc7a', null::varchar, 'prov1', 'admission', null::varchar
+          union all
+          select 'vd7b', 'v7', 'p1', 9202, '2026-03-20'::date, '2026-03-20 00:00:00'::timestamp, '2026-03-21'::date, '2026-03-21 00:00:00'::timestamp, 'loc7b', null::varchar, 'prov1', 'clinic', 'vd7a'
 
       - input: ref('clinical__person')
         format: sql
@@ -52,6 +65,10 @@ unit_tests:
           select 'loc3a', 'L3A', 'Location 3A', null::int, null::varchar, 'fac3a', 'current'
           union all
           select 'loc3b', 'L3B', 'Location 3B', null::int, null::varchar, 'fac3b', 'current'
+          union all
+          select 'loc7a', 'L7A', 'Location 7A', null::int, null::varchar, 'fac7', 'current'
+          union all
+          select 'loc7b', 'L7B', 'Location 7B', null::int, null::varchar, 'fac7', 'current'
 
     expect:
       format: sql
@@ -59,3 +76,5 @@ unit_tests:
         select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c1' as subject_id, '2026-01-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'A01' as diagnosis_code, 'Pure outpatient diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years
         union all
         select 'opd_diagnosis', null::text, 'c3', '2026-01-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac3a', 'female', 'A03', 'Spanning diagnosis', 'confirmed', true, 30
+        union all
+        select 'opd_diagnosis', null::text, 'c7', '2026-03-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac7', 'female', 'A07', 'Admission-first diagnosis', 'confirmed', true, 30

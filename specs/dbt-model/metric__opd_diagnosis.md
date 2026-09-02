@@ -71,8 +71,18 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
   `documentations/metrics/*.yml`.
 - **BL-002 (reporting period):** `period_start` is
   `clinical__condition_occurrence.condition_start_date`; `period_end` is hardcoded NULL.
-- **BL-003 (outpatient scope, by window overlap):** `condition_start_datetime` carries no
-  time of day -- it is always midnight. A diagnosis's window is
+- **BL-003 (outpatient scope, by window overlap):** a diagnosis is coded against the
+  encounter as a whole, not against whichever phase happened to be active the moment it was
+  recorded -- so its window deliberately reaches forward to the encounter's end, not just to
+  the segment nearest its own date. A diagnosis made on day one of a three-week admission
+  that later includes a same-encounter clinic phase is included in `opd_diagnosis` (and
+  would be in an inpatient-scoped equivalent too) precisely because it is attached to the
+  encounter, not to the admission phase specifically. `condition_start_datetime` carrying no
+  time of day (it is always midnight) only explains why the window cannot be narrowed
+  *within* a day -- it is not why the window reaches forward at all; that is BL-003's own
+  rule, independent of the timestamp precision available.
+
+  Concretely, a diagnosis's window is
   `[greatest(condition_start_datetime, visit_start_datetime), visit_end_datetime]`
   (open-ended if the encounter has not closed). If `condition_start_datetime` falls after
   `visit_end_datetime`, the lower bound is clamped down to `visit_end_datetime` too, so the
@@ -82,9 +92,18 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
   and overlaps that window:
 
   ```
-  visit_detail_end_datetime >= window_start
+  (visit_detail_end_datetime is null or visit_detail_end_datetime >= window_start)
   and (window_end is null or visit_detail_start_datetime <= window_end)
   ```
+
+  The `visit_detail_end_datetime is null` branch is a cross-model contract, not just a
+  NULL-safety guard: `clinical__visit_detail` (its own BL-002/AC-014) leaves the currently
+  active segment of an encounter that has not closed with a NULL end, rather than defaulting
+  it to the segment's own start -- without that, a diagnosis dated any time after that
+  segment began would fail this check and be silently dropped, the same failure mode the
+  `window_end`-based clamp above fixes for a *closed* encounter. This model's
+  `clinical__visit_detail` dependency on that NULL is guarded upstream by
+  `test_clinical__visit_detail_open_encounter_stays_open`.
 
   A diagnosis whose window overlaps segments of more than one type is included in every
   metric whose concept it overlaps -- this metric only tests for 9202; it does not exclude a

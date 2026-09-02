@@ -56,7 +56,7 @@ diagnosis_opd_segment as (
     from diagnosis_window dw
     join visit_detail vd
         on vd.visit_occurrence_id = dw.visit_occurrence_id
-        and vd.visit_detail_concept_id = 9202
+        and vd.visit_detail_concept_id = 9202 -- OMOP 'Outpatient Visit'
         and (vd.visit_detail_end_datetime is null or vd.visit_detail_end_datetime >= dw.window_start)
         and (dw.window_end is null or vd.visit_detail_start_datetime <= dw.window_end)
     -- BL-004: facility is the earliest qualifying segment's own care_site_id
