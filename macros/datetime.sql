@@ -25,3 +25,17 @@
 {{ field }}
 {%- endif -%}
 {%- endmacro -%}
+
+{%- macro from_user_selected_timezone(bound) -%}
+{# Maps a naive date/timestamp bound, expressed in the user-selected TZ, onto the absolute
+   timestamptz scale that a raw `logged_at` sits on. The counterpart to
+   to_user_selected_timezone: that one converts the column so it can be displayed, this one
+   converts the bound so a range predicate can leave the column bare and stay prunable.
+   Outside compile there is no :timezone parameter, so the central TZ applies on both sides
+   and the two macros stay consistent -- which the BL-030 safety net depends on. #}
+{%- if flags.WHICH == 'compile' -%}
+(({{ bound | trim }})::timestamp at time zone coalesce(nullif(:timezone, ''), '{{ var("timezone") }}'))
+{%- else -%}
+(({{ bound | trim }})::timestamp at time zone '{{ var("timezone") }}')
+{%- endif -%}
+{%- endmacro -%}

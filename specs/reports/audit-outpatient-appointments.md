@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6857](https://linear.app/bes/issue/MAUI-6857/audit-outpatient-appointments-report-times-out-full-change-log-scan) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-29 |
-| **Last updated** | 2026-08-30 |
+| **Last updated** | 2026-09-02 |
 
 ## Purpose
 
@@ -35,8 +35,8 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 | Name | Type | Default | Purpose |
 |---|---|---|---|
-| `fromDate` | date | last 24 hours | Lower bound on the event's `appointment_start_datetime` — not on when the edit was made (BL-029) |
-| `toDate` | date | last 24 hours | Upper bound on the same column |
+| `fromDate` | date | last 24 hours | Lower bound on `modified_datetime` — when the edit was made, not the appointment's scheduled time (BL-029) |
+| `toDate` | date | last 24 hours | Upper bound on the same column, inclusive of the whole day (BL-029) |
 | `facilityId` | uuid | null | Optional single-facility restriction |
 
 ### Macro argument (report and dataset)
@@ -119,18 +119,37 @@ review obligation, not an automated one (DV-007).
   of null renders blank — the other columns do not do this.
 - **BL-028:** Patient, location group and facility are inner joins, so an event whose
   `location_group_id` is null or dangling produces no row at all.
-- **BL-029:** `fromDate`/`toDate` filter the event's own
-  `appointment_start_datetime`, not `modified_datetime`. With the 24-hour default this means
-  "changes to appointments scheduled around now", not "edits made recently". `toDate` is
-  compared as a date, so an appointment later in the day on `toDate` is excluded — the house
-  pattern, though `audit_discharge_line_list` deliberately deviates.
-- **BL-030:** The report first finds `appointment_id`s having an event whose
-  `appointment_start_datetime` falls in `[fromDate, toDate]` — the appointment's
-  scheduled time, not when the edit happened (BL-029) — via a plain filtered scan with
-  no window functions, then reconstructs
-  full history only for those — `lag()`/`first_value()`/`change_sequence` need an
-  appointment's entire history to be correct. The date filter is re-applied at the end, so
-  correctness never depends on the early filter being exact.
+- **BL-029:** `fromDate`/`toDate` filter `modified_datetime` — when the edit was made — not
+  the event's `appointment_start_datetime`. With the 24-hour default this means "edits made
+  recently", which is what MAUI-6183 asked for: seeing which users create and edit
+  appointments.
+
+  The whole of `toDate` is in scope (`< toDate + 1 day`), because the time of day an edit was
+  recorded matters — following `audit_discharge_line_list` rather than the house `<= toDate`
+  pattern, which under a 24-hour default would exclude nearly every edit being asked about.
+  Until this change the filter was `appointment_start_datetime`, an implementation choice
+  carried from the original build that neither MAUI-6183 nor MAUI-6857 states as a
+  requirement; it surfaced months-old edits to appointments falling in the window and hid
+  yesterday's reschedule of an appointment further out.
+- **BL-030:** The report first finds `appointment_id`s having an event logged in
+  `[fromDate, toDate + 1 day)` at a facility the parameters admit, via a plain filtered scan
+  with no window functions, then reconstructs full history only for those —
+  `lag()`/`first_value()`/`change_sequence` need an appointment's entire history to be
+  correct. The filters are re-applied at the end, so correctness never depends on the early
+  filter being exact.
+
+  The candidate filter compares a bare `logged_at` against constant bounds, so the column
+  stays prunable by its BRIN index (BL-032) and needs no per-row JSON extraction, cast or
+  timezone conversion to evaluate — the bound is converted instead of the column, via
+  `from_user_selected_timezone()`.
+
+  The facility partition (BL-033) and `facilityId` are pushed into the candidate filter as
+  well, which cuts how much history is reconstructed whenever a facility is selected. Sound
+  because an event surviving the final `WHERE` satisfies the date and the facility predicate
+  on the same row, so its appointment is necessarily still a candidate. Filtering candidates
+  on the *appointment's* current facility or start time would not be sound: either can
+  differ from the values recorded on the event, so true positives would be lost and the
+  final `WHERE` could not recover them.
 - **BL-031:** The windowed extraction is centralised in
   `outpatient_appointments_change_log_events(record_id_filter=none)`, called three ways:
   unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
@@ -202,7 +221,10 @@ a populated replica, re-run against the current code after the BL-031 shared-cor
 | AC-022 | Schedule bulk-cancellations excluded; individual cancellations kept | BL-026 | planned test |
 | AC-023 | `change_number` counts only rows surviving BL-025, the creation exclusion, BL-026 and BL-036 — so an appointment with one meaningful change among several events numbers it 1 | BL-024 | planned test |
 | AC-024 | Unchanged fields render `prev_*` blank; changed fields show the previous value | BL-027 | planned test |
-| AC-025 | Output identical before and after the BL-030 rework for a fixed range | BL-030 | **passed** — `EXCEPT ALL` both directions, no differing rows |
+| AC-025 | Output identical before and after the BL-030 rework for a fixed range | BL-030 | **superseded** — held for the original rework, but BL-029 now deliberately changes the row set, so parity against the pre-MAUI-6857 report is no longer the criterion |
+| AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)`, and no event in that window at an admitted facility is missing | BL-029, BL-030 | not tested |
+| AC-032 | Pushing `facilityId` into the candidate filter returns the same rows as filtering only at the end | BL-030, BL-033 | not tested |
+| AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | not tested |
 | AC-026 | An incremental run matches what `--full-refresh` would produce | BL-032, BL-034 | **passed** — full build then a second run: row count and distinct `change_id` unchanged, no duplicates. Not exercised with new events arriving between runs |
 | AC-027 | Sensitive-facility appointments never appear in the standard output, or vice versa | BL-033 | planned test |
 | AC-028 | A new event causes that appointment's rows to be replaced, not appended | BL-034 | **passed** — the second run deleted and re-inserted rather than appending, zero duplicate `change_id`s. A genuinely new event not yet observed through it |
@@ -229,7 +251,10 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 ## Open questions
 
-_None._
+- **BL-029's semantics have not been confirmed with the requesting PM.** Neither MAUI-6183
+  nor MAUI-6857 states which timestamp the date range should bound; the reading adopted here
+  is drawn from MAUI-6183's stated purpose. Worth putting to Corinna, who raised the
+  original card.
 
 ## Divergence from current code
 
@@ -255,8 +280,10 @@ _None._
   `changes_updated_at_sync_tick_index` is baseline and untouched by the two migrations that
   changed the others, but this came from migration history, not a live `pg_indexes` check —
   and which indexes exist depends on the migrations a deployment has run. Confirm per target.
-- **BL-029 is easy to misread**: the date range filters appointment start time, not edit
-  time, which reads naturally as "recent edits". Intentional and pre-existing.
+- **BL-029 changed meaning.** The date range now filters edit time where it previously
+  filtered appointment start time. Saved parameter sets, scheduled exports and user habits
+  built around the old behaviour return a different row set for the same inputs. Shipped
+  without PM re-confirmation on Juliana's call — see Open questions.
 - **`delete+insert` needs `DELETE` on the target schema**, under whatever role the analytics
   connection uses — not merely `SELECT`/`INSERT`.
 - **On a non-persistent target the incremental buys nothing.** An existing but empty table
@@ -286,4 +313,5 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, and BL-030 gains the facility pushdown plus bound-side timezone conversion. AC-025 superseded; AC-031 to AC-033 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
