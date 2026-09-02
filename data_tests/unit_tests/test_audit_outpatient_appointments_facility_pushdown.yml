@@ -1,0 +1,149 @@
+unit_tests:
+  - name: test_audit_outpatient_appointments_facility_pushdown
+    model: audit-outpatient-appointments
+    description: >
+      AC-032 / BL-033: facilityId and is_sensitive are applied in the candidate filter as well
+      as at the end, resolved from the facility recorded on each event rather than the
+      appointment's current row. One appointment moves from fac_a to fac_b mid-history, so the
+      two disagree. With facilityId=fac_b only the fac_b event is returned, and it keeps
+      change_number 2 — the number it has in the unfiltered run — which is what shows the
+      pushdown narrowed candidacy per appointment without truncating that appointment's
+      history.
+      Note the cross-facility move this depends on is not a normal workflow: the
+      appointment form's Area field is hard-scoped to the logged-in facility, so this
+      state arrives via the API or a user at another facility. The test specifies
+      behaviour rather than describing a common case.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2026-09-01'
+        toDate: '2026-09-02'
+        facilityId: fac_b
+    given:
+      - input: ref('outpatient_appointments_change_events')
+        format: sql
+        rows: |
+          -- creation at fac_a (BL-023 excludes it from output, but it is the lag() baseline)
+          select
+            'chg_001'::text as id,
+            'appt_moved'::text as record_id,
+            '2026-09-01 08:00:00+00'::timestamptz as logged_at,
+            '2026-09-01 08:00:00+00'::timestamptz as record_updated_at,
+            'usr_001'::text as updated_by_user_id,
+            100::bigint as updated_at_sync_tick,
+            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_a","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
+          union all
+          -- change 1: still at fac_a, clinician swapped
+          select
+            'chg_002'::text,
+            'appt_moved'::text,
+            '2026-09-01 10:00:00+00'::timestamptz,
+            '2026-09-01 10:00:00+00'::timestamptz,
+            'usr_002'::text,
+            200::bigint,
+            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_002","location_group_id":"lg_a","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+          union all
+          -- change 2: moved to fac_b. Only this event's facility matches facilityId.
+          select
+            'chg_003'::text,
+            'appt_moved'::text,
+            '2026-09-02 11:00:00+00'::timestamptz,
+            '2026-09-02 11:00:00+00'::timestamptz,
+            'usr_002'::text,
+            300::bigint,
+            '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_002","location_group_id":"lg_b","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+          union all
+          -- a second appointment, wholly at fac_a, excluded by facilityId
+          select
+            'chg_004'::text,
+            'appt_other'::text,
+            '2026-09-01 09:00:00+00'::timestamptz,
+            '2026-09-01 09:00:00+00'::timestamptz,
+            'usr_001'::text,
+            400::bigint,
+            '{"start_time":"2026-10-02 09:00:00","end_time":"2026-10-02 09:30:00","patient_id":"pat_002","clinician_id":"cli_001","location_group_id":"lg_a","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+          union all
+          select
+            'chg_005'::text,
+            'appt_other'::text,
+            '2026-09-02 12:00:00+00'::timestamptz,
+            '2026-09-02 12:00:00+00'::timestamptz,
+            'usr_002'::text,
+            500::bigint,
+            '{"start_time":"2026-10-02 09:00:00","end_time":"2026-10-02 09:30:00","patient_id":"pat_002","clinician_id":"cli_002","location_group_id":"lg_a","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select 'appt_moved'::text as id, null::date as cancelled_at_date
+          union all
+          select 'appt_other'::text, null::date
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth
+          union all
+          select 'pat_002'::text, 'P002'::text, 'Jane'::text, 'Smith'::text, '1985-06-20'::date
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001'::text as id, 'Dr. Alice Wilson'::text as display_name
+          union all
+          select 'cli_002'::text, 'Dr. Bob Jones'::text
+          union all
+          select 'usr_001'::text, 'Alice Admin'::text
+          union all
+          select 'usr_002'::text, 'Bob Admin'::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_a'::text as id, 'Outpatients A'::text as name, 'fac_a'::text as facility_id
+          union all
+          select 'lg_b'::text, 'Outpatients B'::text, 'fac_b'::text
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_a'::text as id, 'Hospital A'::text as name, false as is_sensitive
+          union all
+          select 'fac_b'::text, 'Hospital B'::text, false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'apt_001'::text as id, 'Follow-up'::text as name
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'              as "Patient ID",
+          'John'              as "First name",
+          'Doe'               as "Last name",
+          '1990-05-15'        as "Date of birth",
+          2                   as "Change number",
+          '2026-10-01 09:00'  as "Appointment date and time",
+          'Follow-up'         as "Appointment type",
+          'Dr. Bob Jones'     as "Clinician",
+          'Outpatients B'     as "Area",
+          'No'                as "Priority appointment",
+          'No'                as "Repeating appointment",
+          'Alice Admin'       as "Appointment created by",
+          'Bob Admin'         as "Appointment modified by",
+          '2026-09-02 11:00'  as "Appointment modified date & time",
+          'No'                as "Appointment cancelled",
+          null::text          as "Previous appointment date & time",
+          null::text          as "Previous appointment type",
+          null::text          as "Previous clinician",
+          'Outpatients A'     as "Previous area",
+          null::text          as "Previous priority appointment"
