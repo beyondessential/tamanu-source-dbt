@@ -36,7 +36,15 @@
     {%- do predicates.append("e.encounter_type = '" ~ encounter_type ~ "'") -%}
 {%- endif -%}
 {%- if extra_predicates -%}
-    {%- do predicates.append('(' ~ extra_predicates ~ ')') -%}
+    {#- Both parens sit on their own line. A caller's predicate text may legally end on
+        a `--` comment, and a same-line `)` would then be commented out and the model
+        would fail to compile. -#}
+    {%- set wrapped_predicates %}
+(
+{{ extra_predicates }}
+)
+{%- endset -%}
+    {%- do predicates.append(wrapped_predicates) -%}
 {%- endif -%}
 
 select

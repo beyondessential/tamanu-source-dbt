@@ -23,16 +23,26 @@ unit_tests:
           select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id, 'clinic' as encounter_type, null::text as reason_for_encounter
           union all
           select 'enc_002', '2024-01-20 09:00:00'::timestamp, '2024-01-20 16:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text, 'clinic', null::text
+          union all
+          -- BL-001: sensitive facility, must not appear in the standard variant
+          select 'enc_003', '2024-01-18 09:00:00'::timestamp, '2024-01-18 17:00:00'::timestamp, 'pat_001', 'loc_002', 'dept_001', null::text, null::text, 'clinic', null::text
+          union all
+          -- BL-006: dangling location_id, dropped by the inner join to locations
+          select 'enc_004', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_missing', 'dept_001', null::text, null::text, 'clinic', null::text
 
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'fac_001' as facility_id
+          union all
+          select 'loc_002', 'fac_002'
 
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+          union all
+          select 'fac_002', 'Sensitive Clinic', true
 
       - input: ref('patients')
         format: sql

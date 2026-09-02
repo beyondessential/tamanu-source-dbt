@@ -15,6 +15,7 @@
     while encounter_invoice_audit filters on start_datetime and carries
     includeOpenEncounters.
 -#}
+(
 case
     when {{ parameter('facilityId') }} is null then true
     else f.id = {{ parameter('facilityId') }}
@@ -27,4 +28,5 @@ and case
     when {{ parameter('supervisingClinicianId') }} is null then true
     else e.clinician_id = {{ parameter('supervisingClinicianId') }}
 end
+)
 {% endmacro %}
