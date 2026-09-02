@@ -6,33 +6,30 @@
 -- BL-029: the date range bounds when the edit was made, not the appointment's scheduled
 -- time, so an administrator sees who edited appointments recently (MAUI-6183).
 --
--- BL-030: the date range is applied before the change-log window functions, which would
--- otherwise block predicate pushdown and force a full change-log scan on every run. The
--- candidate filter below uses no window functions so the predicate reaches the scan, and it
--- compares a bare logged_at against constant bounds, which leaves it BRIN-prunable --
--- logged_at is BRIN-only after Tamanu migration #10639. The final WHERE re-applies the same
--- filter, so correctness never depends on the early filter being exact. The facility
--- partition (BL-033) and facilityId are applied in the candidate filter too: an event
--- surviving the final WHERE satisfies the date and the facility predicate on its own row,
--- so its appointment is still a candidate.
+-- BL-030: the candidate filter runs before the change-log window functions, which would
+-- otherwise block predicate pushdown and force a full change-log scan on every run. Every
+-- predicate is re-applied in the final WHERE, so correctness never depends on the early
+-- filter being exact.
+--
+-- BL-039: the bound is converted rather than the column, leaving logged_at bare and
+-- BRIN-prunable -- it is BRIN-only after Tamanu migration #10639.
 --
 -- Business logic lives in outpatient_appointments_audit_core() alongside the dataset; this
 -- macro only filters and formats.
 
 {%- set from_bound = parameter('fromDate', default_value='2025-01-01', data_type='date') -%}
-{#- BL-029: cast before the interval arithmetic. Tamanu binds a datestring
-    ('2026-01-01 23:59:59') and parameter() emits a bare untyped placeholder at compile time,
-    so `unknown + interval` reaches interval parsing and errors -- same reason
-    audit_discharge_line_list casts. The cast also truncates the datestring to its date, so
-    `+ 1 day` lands on the following midnight. -#}
+{#- BL-029: cast to date before the interval arithmetic. parameter() compiles to an untyped
+    placeholder, so without the cast `:toDate + interval` reaches interval parsing and
+    errors. -#}
 {%- set to_bound = "(" ~ parameter('toDate', default_value='2025-01-31', data_type='date') | trim ~ ")::date" -%}
 
 {%- set candidate_filter -%}
 c.record_id in (
     select c2.record_id
     from {{ ref('outpatient_appointments_change_events') }} c2
-    -- BL-028: mirrors the core's inner joins, so this drops only events the core would
-    -- have dropped anyway
+    -- BL-033: resolves the facility from the event's own location_group_id, not the
+    -- appointment's current row. Mirrors the core's inner joins (BL-028), so this drops only
+    -- events the core would have dropped anyway.
     join {{ ref('location_groups') }} lg2
         on lg2.id = c2.record_data ->> 'location_group_id'
     join {{ ref('facilities') }} f2

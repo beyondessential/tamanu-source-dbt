@@ -28,7 +28,13 @@
 
 {%- macro from_user_selected_timezone(bound) -%}
 {# Maps a naive date/timestamp bound, expressed in the user-selected TZ, onto the absolute
-   timestamptz scale that a raw `logged_at` sits on. The counterpart to
+   timestamptz scale that a raw `logged_at` sits on.
+
+   Only valid against a timestamptz column -- comparing the result to a naive timestamp
+   resolves through the session TimeZone and is silently wrong. Most change-log bases in this
+   repo re-expose `logged_at` already converted to local time, so check before reusing this.
+
+   The counterpart to
    to_user_selected_timezone: that one converts the column so it can be displayed, this one
    converts the bound so a range predicate can leave the column bare and stay prunable.
    Outside compile there is no :timezone parameter, so the central TZ applies on both sides
