@@ -147,10 +147,11 @@ review obligation, not an automated one (DV-007).
   `max(updated_at_sync_tick)`. The comparison is `>=`, not `>`: a sync tick is shared by
   every row in that session, so a strict comparison would permanently skip rows landing on
   the boundary tick after the previous run read it.
-- **BL-033:** Facility scope is partitioned by `is_sensitive` on both report and dataset, and
-  the report additionally applies `facilityId`. Both are applied in the candidate filter as
-  well as at the end, resolved from the facility recorded on the event and never from the
-  appointment's current row, which can differ.
+- **BL-033:** Which rows appear is partitioned by `is_sensitive` on both report and dataset,
+  and the report additionally applies `facilityId`. Both are applied in the candidate filter
+  as well as at the end, resolved from the facility recorded on the event and never from the
+  appointment's current row, which can differ. The partition governs row admission only, not
+  every name carried on an admitted row — see DV-009.
 - **BL-034:** The incremental strategy is `delete+insert` on `unique_key='appointment_id'`,
   not append. `change_number` and `prev_*` come from window functions partitioned by
   `appointment_id`, so a new event invalidates that appointment's *later* rows — whose own
@@ -248,6 +249,14 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
   compiled report actually runs, and the equivalence between the candidate filter and the
   final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
   singular tests; verify the compiled form against a replica.
+- **DV-009:** `prev_location_group` escapes the BL-033 partition. It resolves through an
+  unfiltered `location_groups` left join, so an appointment moved out of a sensitive facility
+  carries that facility's area name into the **standard** report's "Previous area". Long
+  pre-dates this change and is not introduced by it, but AC-032 now pins the cross-facility
+  display in the non-sensitive case, so the pattern is asserted rather than incidental.
+  *Resolution:* decide whether the previous area should be suppressed when its facility falls
+  outside the report's partition — a behaviour change needing its own card, and a
+  confidentiality question rather than a modelling one.
 - **DV-008:** This change adds two upstream dependencies the dataset did not previously have
   — `outpatient_appointments_change_events` and `outpatient_appointments`. An analytics build
   must include them, or the dataset fails outright. *Resolution:* confirm the analytics
@@ -308,6 +317,7 @@ logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-02 | Maui team | BL-033 reworded to claim row admission only, and DV-009 records that `prev_location_group` escapes the partition. |
 | 2026-09-02 | Maui team | BL-039's candidate bounds are widened a day at each end. The final `WHERE` round-trips `modified_datetime` through the central zone, which is non-injective at its DST fall-back, so the unwidened filter silently dropped events logged in the repeated hour when `:timezone` differed from central (MAUI-6857). |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`: `parameter()` ignores `data_type` when compiling, so `<=` truncates to midnight outside compile only, and tests would stop agreeing with production. BL-030 split — bound-side conversion to BL-039, facility pushdown into BL-033. AC-025 retired; AC-031 to AC-034 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |

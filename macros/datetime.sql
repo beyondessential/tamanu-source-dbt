@@ -28,28 +28,22 @@
 
 {%- macro from_user_selected_timezone(bound) -%}
 {# Maps a naive date/timestamp bound, expressed in the user-selected TZ, onto the absolute
-   timestamptz scale that a raw `logged_at` sits on.
-
-   Only valid against a timestamptz column -- comparing the result to a naive timestamp
-   resolves through the session TimeZone and is silently wrong. Most change-log bases in this
-   repo re-expose `logged_at` already converted to local time, so check before reusing this.
-
-   A bound converted here is not interchangeable with a naive column put back through
-   `at time zone <central>`: that round trip is non-injective at the central zone's DST
-   fall-back, so the two can disagree by the DST offset. A range filter that must not lose
-   rows should widen the converted bound rather than assume the two agree.
-
-   The counterpart to
+   timestamptz scale that a raw `logged_at` sits on. The counterpart to
    to_user_selected_timezone: that one converts the column so it can be displayed, this one
    converts the bound so a range predicate can leave the column bare and stay prunable.
-   Outside compile there is no :timezone parameter, so the central TZ applies on both sides
-   and the two macros stay consistent -- which the BL-030 safety net depends on.
 
-   `timestamp at time zone` is not injective, so the pair is equivalent only in zones with no
-   DST transition at local midnight. Where one exists (America/Havana, America/Santiago) a
-   midnight bound is ambiguous and an event in the repeated hour can fall outside the
-   converted bound while satisfying the final WHERE -- the one direction the safety net
-   cannot recover. No Tamanu deployment zone transitions at midnight. #}
+   Two preconditions, both of which bite silently:
+
+   1. Only valid against a timestamptz column. Comparing the result to a naive timestamp
+      resolves through the session TimeZone GUC. Most change-log bases in this repo re-expose
+      `logged_at` already converted to local time, so check before reusing this.
+
+   2. A bound converted here is NOT interchangeable with a naive column put back through
+      `at time zone <central>`. That round trip is non-injective at the central zone's DST
+      fall-back, so the two can disagree by up to the DST offset, and the direction that
+      loses rows is the one a trailing re-filter cannot recover. A range filter that must not
+      drop rows has to widen the converted bound -- see BL-039 of
+      specs/reports/audit-outpatient-appointments.md, which widens by a day at each end. #}
 {%- if flags.WHICH == 'compile' -%}
 (({{ bound | trim }})::timestamp at time zone coalesce(nullif(:timezone, ''), '{{ var("timezone") }}'))
 {%- else -%}
