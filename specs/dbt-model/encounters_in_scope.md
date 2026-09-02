@@ -194,6 +194,20 @@ The third row is worth keeping: BL-006's outcome is asserted, but either inner j
 is sufficient to enforce it, so the two are redundant with each other rather than
 independently load-bearing.
 
+**Both halves of the partition are now asserted.** The standard-variant tests above pin
+`is_sensitive = false` (a sensitive facility's encounter must not appear).
+`test_encounter_invoice_audit_sensitive_partition` pins the inverse on
+`sensitive-audit-encounter-invoice`: given the same two facilities, the sensitive variant
+must return the sensitive facility's encounter and only that one. It is the **only unit
+test in the repo that targets a sensitive variant** — before it, replacing
+`f.is_sensitive = {{ is_sensitive }}` with a hardcoded `= false` passed every test in the
+project. Confirmed by mutation: that substitution now fails this test (and only this one).
+
+This matters because sensitive-facility deployments exist, so the `true` half of the
+partition is live behaviour, not a theoretical branch — and the database available for the
+row-level check has no sensitive facilities, so fixtures are the only place it can be
+pinned.
+
 ### Row-level verification against real data (2026-09-02)
 
 Both compiled variants were run pre- and post-adoption against a populated
