@@ -20,33 +20,17 @@ repeated block in the repo.
 
 ## Purpose
 
-Three macros carried their own copy of this join and its `is_sensitive` predicate:
-`encounter_invoice_audit_report`, `encounter_summary_report` and `admissions_dataset`.
-The copies are near-identical rather than byte-identical — `admissions_dataset` puts
-`is_sensitive` in the `where` clause with single-line joins, and `encounter_summary_report`
-carries an extra `patient_id != test_patient` predicate the base model already applies —
-which is itself the symptom. A miss in any one copy silently widens or narrows the
-facility partition for that surface alone, and nothing in CI would catch it.
+This macro is the single definition of the `encounters -> locations -> facilities` join
+and its `is_sensitive` predicate. Its callers span the dataset and report layers, so a
+divergence between copies would silently widen or narrow the facility partition for one
+surface alone, and nothing in CI would catch it.
 
 ### Naming
 
-The macro is `encounters_core`, per the convention's `<entity>_core(...)` form for
-mechanism 4. The **CTE at each call site keeps the name `encounters_in_scope`**, which it
-already had before the extraction.
-
-That split is deliberate. Naming both the same produced
-`with encounters_in_scope as ( {{ encounters_in_scope(...) }} )`, which reads as a
-tautology and hides which half is the macro. Renaming the *CTE* instead would touch 13
-sites across `encounter_invoice_audit` and `encounter_summary` and would change the
-compiled SQL, for no behavioural gain. Renaming only the macro touches one declaration
-and one call site and — because a Jinja identifier never reaches compiled output — is
-provably zero-risk: the compiled SQL is byte-identical either side of the rename, which
-is the proof rather than an argument for it.
-
-The two names also carry different jobs. `encounters_in_scope` says what the rows *are*
-at that point in the query; `encounters_core` says what the shared macro *is*. An earlier
-draft of this spec argued for naming the macro after the CTE; that was settled the other
-way during review of #1198, while there was still one adopted call site rather than three.
+The macro is `encounters_core`; the CTE at each call site is `encounters_in_scope`. The
+two names carry different jobs — the CTE says what the rows *are* at that point in the
+query, the macro says what the shared logic *is* — and naming both the same reads as a
+tautology that hides which half is the macro.
 
 Per the reuse decision rule in `.maui/knowledge/standards/dbt-conventions.md`, this is
 mechanism 4 (shared core macro) on the "there is no shared model and none is wanted"
@@ -183,85 +167,33 @@ maui-team#104 introduced.
 | ID | Criterion | Clause |
 |---|---|---|
 | AC-001 | With `is_sensitive=false`, no row resolves to a facility with `is_sensitive = true`, and vice versa. | BL-001 |
-| AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. | BL-002 |
+| AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. Structurally guaranteed by the `encounters` base model, and **not assertable by a unit test**: a stub replaces that model including its filter, so a fixture supplying the test patient would prove nothing about production behaviour. | BL-002 |
 | AC-003 | Adopting the macro at a call site produces a compiled-SQL diff that is shape-only plus the superset columns — no changed join keyword, predicate or column expression. | BL-003, BL-004 |
-| AC-004 | Compiling a **dataset** caller of this macro yields SQL containing no `:` bind placeholder. Grepping for `parameter(` is necessary but not sufficient — `to_user_selected_timezone()` reaches the same hazard through a helper, so the check is on the compiled output, not the source. | BL-005 |
+| AC-004 | Compiling a **dataset** caller of this macro yields SQL containing no `:` bind placeholder. Requires a dataset caller to exist; `admissions_dataset` is the first. Grepping for `parameter(` is necessary but not sufficient — `to_user_selected_timezone()` reaches the same hazard through a helper, so the check is on the compiled output, not the source. | BL-005 |
 | AC-005 | An encounter whose `location_id` does not resolve to a location produces no row. | BL-006 |
 
-AC-001, AC-003 and AC-005 are covered for the `encounter_invoice_audit` call site by
+AC-001, AC-003 and AC-005 are asserted at the `encounter_invoice_audit` call site by
 `test_encounter_invoice_audit_aggregation` and
 `test_encounter_invoice_audit_cancelled_invoice_products`, which stub `ref('encounters')`,
 `ref('locations')` and `ref('facilities')` directly and so exercise this macro
-end-to-end. AC-003 was verified for that adoption by a full-project compiled diff: 2 of
-2952 compiled models changed, both intended, and both token-identical apart from the
-superset columns and two redundant wrapping parens.
+end-to-end. AC-003 is checked per adoption by a compiled-SQL diff; the evidence for each
+adoption belongs on its PR.
 
-**AC-001 and AC-005 are asserted, not merely asserted-of.** The first version of these
-fixtures had a single facility with `is_sensitive = false`, which meant the
-`and f.is_sensitive` predicate could be deleted outright and both tests still passed —
-the spec claimed a coverage it did not have. The fixtures now carry a second, sensitive
-facility with an encounter on it, and an encounter whose `location_id` resolves to
-nothing. Both are inside the default date window and reuse existing patients, so either
-one surfacing would fail `expect`. Confirmed by mutation:
+Those fixtures carry a second, sensitive facility with an encounter on it, and an
+encounter whose `location_id` resolves to nothing. Both sit inside the default date window
+and reuse existing patients, so either surfacing fails `expect`. Without them the
+`and f.is_sensitive` predicate could be deleted outright and the tests still pass, which
+is what makes them assertions rather than decoration:
 
 | Mutation | Result |
 |---|---|
-| baseline | 20 passed |
-| drop `and f.is_sensitive = {{ is_sensitive }}` | **1 failed** |
-| `locations` inner join → `left join` | 20 passed — the inner join to `facilities` still drops the row via the null `facility_id` |
-| both joins → `left join` | **1 failed** |
+| drop `and f.is_sensitive = {{ is_sensitive }}` | fails |
+| `locations` inner join → `left join` | passes — the inner join to `facilities` still drops the row via the null `facility_id` |
+| both joins → `left join` | fails |
 
-The third row is worth keeping: BL-006's outcome is asserted, but either inner join alone
-is sufficient to enforce it, so the two are redundant with each other rather than
-independently load-bearing.
-
-**Both halves of the partition are now asserted.** The standard-variant tests above pin
-`is_sensitive = false` (a sensitive facility's encounter must not appear).
-`test_encounter_invoice_audit_sensitive_partition` pins the inverse on
-`sensitive-audit-encounter-invoice`: given the same two facilities, the sensitive variant
-must return the sensitive facility's encounter and only that one. It is the **only unit
-test in the repo that targets a sensitive variant** — before it, replacing
-`f.is_sensitive = {{ is_sensitive }}` with a hardcoded `= false` passed every test in the
-project. Confirmed by mutation: that substitution now fails this test (and only this one).
-
-This matters because sensitive-facility deployments exist, so the `true` half of the
-partition is live behaviour, not a theoretical branch — and the database available for the
-row-level check has no sensitive facilities, so fixtures are the only place it can be
-pinned.
-
-### Row-level verification against real data (2026-09-02)
-
-Both compiled variants were run pre- and post-adoption against a populated
-`reporting_release` database with the date range widened to `[2000-01-01, 2100-01-01]`
-and every optional filter null, and compared with `except all` in both directions:
-
-| Variant | Rows before | Rows after | Only in before | Only in after |
-|---|---|---|---|---|
-| `audit-encounter-invoice` | 687 | 687 | 0 | 0 |
-| `sensitive-audit-encounter-invoice` | 0 | 0 | 0 | 0 |
-
-**What that run did and did not establish.** The standard variant is a real result: 687
-rows compared, byte-identical, spanning 6 distinct `encounter_type` values and including
-the one open encounter (null `end_datetime`), so the BL-003 `includeOpenEncounters`
-branch was exercised.
-
-The sensitive comparison is **vacuous** — every facility in that database has
-`is_sensitive = false`, so both sides legitimately return zero rows. BL-001's
-`is_sensitive = true` half therefore has no real-data coverage here; it rests on the
-compiled-SQL equivalence and on
-`test_encounter_summary_by_start_date_excludes_sensitive_facilities`-style fixtures
-elsewhere. Three further conditions were not differentiated by this dataset:
-
-- only one facility is reached by any encounter, so the multi-facility partition and the
-  `facilityId` filter were not distinguished;
-- `ds__encounter_invoices` is empty, so all invoice columns were null on both sides —
-  immaterial here, since the extraction does not touch the financial CTEs;
-- no encounter has a null or dangling `location_id`, so BL-006's row-dropping inner join
-  was not observed in practice.
-
-None of these are regressions introduced by the extraction — they are gaps in the
-available data. A run against a database with sensitive facilities and multiple
-facilities in use would close them.
+The third row is the useful one: BL-006's outcome is asserted, but either inner join alone
+enforces it, so the two are redundant with each other rather than independently
+load-bearing.
 
 ## Callers
 
