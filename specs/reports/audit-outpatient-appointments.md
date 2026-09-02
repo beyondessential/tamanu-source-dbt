@@ -124,9 +124,11 @@ review obligation, not an automated one (DV-007).
   recently", which is what MAUI-6183 asked for: seeing which users create and edit
   appointments.
 
-  The whole of `toDate` is in scope (`< toDate + 1 day`), because the time of day an edit was
-  recorded matters — following `audit_discharge_line_list` rather than the house `<= toDate`
-  pattern, which under a 24-hour default would exclude nearly every edit being asked about.
+  The whole of `toDate` is in scope as `< toDate + 1 day`, following
+  `audit_discharge_line_list`, so the bound covers the full day whether Tamanu sends an
+  end-of-day datestring or a bare date. The house `<= toDate` form would also cover it for a
+  datestring, but `parameter()` ignores `data_type` when compiling, so that form truncates to
+  midnight outside compile and would make tests disagree with production.
 - **BL-030:** The report first finds `appointment_id`s having an event logged in
   `[fromDate, toDate + 1 day)` at a facility the parameters admit, via a plain filtered scan
   with no window functions, then reconstructs full history only for those —

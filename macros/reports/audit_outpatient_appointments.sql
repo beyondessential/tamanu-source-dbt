@@ -20,9 +20,11 @@
 -- macro only filters and formats.
 
 {%- set from_bound = parameter('fromDate', default_value='2025-01-01', data_type='date') -%}
-{#- BL-029: cast before the interval arithmetic. At compile time parameter() emits a bare
-    untyped placeholder, and `unknown + interval` does not resolve to date arithmetic --
-    same reason audit_discharge_line_list casts. -#}
+{#- BL-029: cast before the interval arithmetic. Tamanu binds a datestring
+    ('2026-01-01 23:59:59') and parameter() emits a bare untyped placeholder at compile time,
+    so `unknown + interval` reaches interval parsing and errors -- same reason
+    audit_discharge_line_list casts. The cast also truncates the datestring to its date, so
+    `+ 1 day` lands on the following midnight. -#}
 {%- set to_bound = "(" ~ parameter('toDate', default_value='2025-01-31', data_type='date') | trim ~ ")::date" -%}
 
 {%- set candidate_filter -%}
