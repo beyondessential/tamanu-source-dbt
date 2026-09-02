@@ -403,7 +403,6 @@ select
     eth.name as "{{ translate_label('patientEthnicity') }}",
     bt.name as "{{ translate_label('patientBillingType') }}",
     village.name as "{{ translate_label('patientVillage') }}",
-    eis.encounter_id as "{{ translate_label('encounterId') }}",
     to_char({{ to_user_selected_timezone('eis.start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
     to_char({{ to_user_selected_timezone('eis.end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
     case
