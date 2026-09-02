@@ -57,14 +57,14 @@ unit_tests:
       - input: ref('reference_data')
         format: sql
         rows: |
-          select null::text as id, null::text as name, null::text as code
-          where false
+          select 'div_001' as id, 'Central Division' as name, null::text as code
+          union all
+          select 'subdiv_001', 'Naitasiri', null::text
 
       - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select null::text as patient_id, null::text as ethnicity_id
-          where false
+          select 'pat_001' as patient_id, null::text as ethnicity_id, 'div_001' as division_id, 'subdiv_001' as subdivision_id
 
       - input: ref('triages')
         format: sql
@@ -192,6 +192,8 @@ unit_tests:
           'male'               as "Sex",
           null::text           as "Ethnicity",
           null::text           as "Billing type",
+          'Central Division'           as "Division",
+          'Naitasiri'           as "Sub-division",
           null::text           as "Village",
           '2024-03-15 10:00'   as "Encounter start date and time",
           null::text           as "Encounter end date and time",
