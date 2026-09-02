@@ -1,0 +1,103 @@
+unit_tests:
+  - name: test_ds__admissions_location_group_null_dedup
+    model: ds__admissions
+    description: >
+      Pins the location-group dedup (BL-006, specs/dbt-model/ds__admissions.md): the
+      creation row is kept unconditionally and only a change row is deduplicated, with
+      "is distinct from". The former flat "!= ... or prev is null" gated every row and
+      disagreed on two null cases.
+      enc_A moves from a grouped location into an ungrouped one: the transition is
+      emitted, where the old form dropped it because "null != lg_001" is null. enc_B is
+      ungrouped throughout: only its creation row is emitted, where the old form emitted
+      the subsequent ungrouped move as well -- so this row also pins the creation-row
+      bypass, which a flat dedup predicate would drop. enc_C is the control -- two
+      different locations sharing one group still collapse to a single entry, so the
+      change does not simply widen the predicate.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_A' as id, 'pat_001' as patient_id, '2024-01-15 10:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'loc_001' as location_id, null::text as patient_billing_type_id, 'admission' as encounter_type, null::text as reason_for_encounter, null::text as department_id, null::text as clinician_id
+          union all
+          select 'enc_B', 'pat_001', '2024-02-15 10:00:00'::timestamp, null::timestamp, 'loc_003', null::text, 'admission', null::text, null::text, null::text
+          union all
+          select 'enc_C', 'pat_001', '2024-03-15 10:00:00'::timestamp, null::timestamp, 'loc_001', null::text, 'admission', null::text, null::text, null::text
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'enc_A' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          union all
+          select 'enc_A', '2024-01-16 11:00:00'::timestamp, array['location'], 'cli_001', 'dept_001', 'loc_003', 'admission'
+          union all
+          select 'enc_B', '2024-02-15 10:00:00'::timestamp, null::text[], 'cli_001', 'dept_001', 'loc_003', 'admission'
+          union all
+          select 'enc_B', '2024-02-16 11:00:00'::timestamp, array['location'], 'cli_001', 'dept_001', 'loc_004', 'admission'
+          union all
+          select 'enc_C', '2024-03-15 10:00:00'::timestamp, null::text[], 'cli_001', 'dept_001', 'loc_001', 'admission'
+          union all
+          select 'enc_C', '2024-03-16 11:00:00'::timestamp, array['location'], 'cli_001', 'dept_001', 'loc_005', 'admission'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 101' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+          union all
+          select 'loc_003', 'Room 303', 'fac_001', null::text
+          union all
+          select 'loc_004', 'Room 404', 'fac_001', null::text
+          union all
+          select 'loc_005', 'Room 505', 'fac_001', 'lg_001'
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001' as id, 'Emergency Ward' as name
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Emergency' as name
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr. Alice Wilson' as display_name
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, 'vil_001' as village_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'vil_001' as id, 'Village A' as name, null::text as code
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::text as certainty, null::timestamp as datetime
+          where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 33 as age, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, null::text as billing_type_id, null::text as billing_type, 'cli_001' as admitting_clinician_id, 'Dr. Alice Wilson' as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active' as admission_status, null::timestamp as discharge_datetime, 'fac_001' as facility_id, 'Central Hospital' as facility, array['dept_001'] as department_ids, 'Emergency' as departments, '2024-01-15 10:00' as department_datetimes, array['lg_001', null::text] as location_group_ids, 'Emergency Ward' as location_groups, '2024-01-15 10:00; 2024-01-16 11:00' as location_group_datetimes, array['loc_001', 'loc_003'] as location_ids, 'Room 101, Room 303' as locations, '2024-01-15 10:00; 2024-01-16 11:00' as location_datetimes, null::text as primary_diagnoses, null::text as primary_diagnoses_codes, null::text as secondary_diagnoses, null::text as secondary_diagnoses_codes
+        union all
+        select 'pat_001', 'P001', 'John', 'Doe', '1990-05-15'::date, 33, 'Male', 'vil_001', 'Village A', null::text, null::text, 'cli_001', 'Dr. Alice Wilson', '2024-02-15 10:00:00'::timestamp, 'active', null::timestamp, 'fac_001', 'Central Hospital', array['dept_001'], 'Emergency', '2024-02-15 10:00', array[null::text], null::text, '2024-02-15 10:00', array['loc_003', 'loc_004'], 'Room 303, Room 404', '2024-02-15 10:00; 2024-02-16 11:00', null::text, null::text, null::text, null::text
+        union all
+        select 'pat_001', 'P001', 'John', 'Doe', '1990-05-15'::date, 33, 'Male', 'vil_001', 'Village A', null::text, null::text, 'cli_001', 'Dr. Alice Wilson', '2024-03-15 10:00:00'::timestamp, 'active', null::timestamp, 'fac_001', 'Central Hospital', array['dept_001'], 'Emergency', '2024-03-15 10:00', array['lg_001'], 'Emergency Ward', '2024-03-15 10:00', array['loc_001', 'loc_005'], 'Room 101, Room 505', '2024-03-15 10:00; 2024-03-16 11:00', null::text, null::text, null::text, null::text

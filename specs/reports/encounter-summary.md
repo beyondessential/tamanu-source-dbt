@@ -111,19 +111,17 @@ Date ranges and report-specific flags are excluded from it: they differ between 
 
 ## Open questions
 
-- **OQ-002** *(owner: Maui team; due: before the next behavioural change to
-  `ds__admissions`)* — this report's location-group dedup treats a null group as a real
-  state, so a transition into a null group is recorded as a change. `admissions_dataset`
-  uses `location_group_id != prev_location_group_id or prev_location_group_id is null`,
-  which drops that transition. Both include the creation row, so that is the only
-  divergence. Aligning them means changing `admissions_dataset`, which alters the
-  admissions line list rather than this report.
+None outstanding.
 
-Resolved: OQ-001 (the history actor is left-joined), OQ-003 (the unread columns and the
-redundant `users` join are gone), OQ-004 (the sensitive variant has a unit test).
+Resolved: OQ-001 (the history actor is left-joined), OQ-002 (`admissions_dataset` now
+uses this report's location-group dedup semantic — see BL-006 of
+`specs/dbt-model/ds__admissions.md`; the change is to that dataset, so it altered the
+admissions line list and not this report), OQ-003 (the unread columns and the redundant
+`users` join are gone), OQ-004 (the sensitive variant has a unit test).
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |
+| 2026-09-03 | OQ-002 resolved in `admissions_dataset`; no change to this report. |
