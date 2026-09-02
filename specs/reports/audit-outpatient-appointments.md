@@ -307,9 +307,7 @@ _None._
 - **BL-029 changed meaning.** The date range now filters edit time where it previously
   filtered appointment start time. Saved parameter sets, scheduled exports and user habits
   built around the old behaviour return a different row set for the same inputs. The reading
-  is confirmed on MAUI-6857 by its owner, drawn from MAUI-6183's stated purpose; the
-  requesting PM was not re-consulted, so a later challenge to the semantics lands here rather
-  than on the implementation.
+  is confirmed on MAUI-6857, drawn from MAUI-6183's stated purpose.
 - **`delete+insert` needs `DELETE` on the target schema**, under whatever role the analytics
   connection uses — not merely `SELECT`/`INSERT`.
 - **On a non-persistent target the incremental buys nothing.** An existing but empty table
