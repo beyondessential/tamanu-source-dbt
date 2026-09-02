@@ -1,24 +1,31 @@
 {% macro encounter_summary_core(date_field, is_sensitive=false) %}
 {#-
-    Encounter summary rows: everything the report needs, resolved but unformatted.
+    Encounter summary rows: the patient, the encounter's movement history and its
+    clinical aggregates, resolved and mostly unformatted.
 
     See specs/reports/encounter-summary.md for the BL clauses this macro implements.
 
-    Callers differ only in projection. This macro emits raw values -- timestamps stay
-    naive, durations stay as their component timestamps, aggregates stay as arrays or
-    text -- and each caller applies its own translate_label / to_char / timezone shift.
-    Keeping the resolution here is what lets a deployment repo extend the report by
-    joining extra columns instead of forking the whole body.
+    Callers differ only in projection: timestamps stay naive and aggregates stay as
+    arrays or text, and each caller applies its own translate_label / to_char / timezone
+    shift. Calling the core is what lets a deployment repo extend the report with its own
+    joins instead of maintaining a copy of the body.
 
-    encounter_id and patient_id are emitted first and deliberately: they are the join
-    keys an extending caller needs, and the formatted report output exposes neither.
+    BL-001: encounter_id and patient_id are the join keys an extending caller needs. The
+    formatted report output exposes neither, and its patient display_id is patient-grain.
 
-    The projection emits nothing that depends on `flags.WHICH` -- no to_char, no
-    to_user_selected_timezone. The parameter() filters in the scope CTE and the outer
-    where are report-layer, which is why this lives under macros/reports/.
+    BL-002: the projection applies no to_char and no to_user_selected_timezone. This
+    governs the select list only -- the CTEs below do use both, so the compiled core
+    carries nine :timezone placeholders.
 
-    `order by` is deliberately absent: a caller wraps this in a subquery, where ordering
-    is not guaranteed to survive, so the caller applies its own.
+    BL-003: no order by. A caller wraps this in a subquery, where ordering is not
+    guaranteed to survive.
+
+    BL-005: the parameter() filters here make this report-layer, hence macros/reports/.
+
+    BL-006: seven outputs are already formatted in the viewer's timezone, applied inside
+    the CTEs -- the three discharge_*_datetime columns, the three *_datetimes arrays, and
+    the dates embedded in the procedures and notes text. A caller needing another format
+    for those must change the CTEs; there is no raw column to select.
 -#}
 
 with encounters_in_scope as (
@@ -415,7 +422,7 @@ encounter_notes as (
 )
 
 select
-    -- identity
+    -- BL-001: join keys for an extending caller
     eis.encounter_id,
     eis.patient_id,
     -- patient
@@ -460,7 +467,7 @@ select
     ec.location_group_datetimes,
     ec.locations,
     ec.location_datetimes,
-    -- the id arrays the outer filters test; emitted so a caller can filter too
+    -- BL-004: the id arrays the outer filters test, built by the aggregation
     ec.department_ids,
     ec.location_group_ids,
     -- clinical aggregates
@@ -520,6 +527,9 @@ left join encounter_imaging_requests eir
     on eir.encounter_id = eis.encounter_id
 left join encounter_notes en
     on en.encounter_id = eis.encounter_id
+-- BL-005: report-layer parameter() filters stay in the core
+-- BL-003: no `order by` here -- a caller wraps this in a subquery, where ordering is
+-- not guaranteed to survive, so the caller applies its own
 where
     case
         when {{ parameter('departmentId') }} is null then true
