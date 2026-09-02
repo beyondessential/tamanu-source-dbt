@@ -11,7 +11,7 @@ unit_tests:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_001' as id, 'pat_001' as patient_id, '2024-01-15 10:00:00'::timestamp as start_datetime, '2024-01-20 09:00:00'::timestamp as end_datetime, 'loc_001' as location_id, 'dept_001' as department_id, 'cli_002' as clinician_id, 'bill_001' as patient_billing_type_id, null::text as reason_for_encounter
+          select 'enc_001' as id, 'pat_001' as patient_id, '2024-01-15 10:00:00'::timestamp as start_datetime, '2024-01-20 09:00:00'::timestamp as end_datetime, 'loc_001' as location_id, 'dept_001' as department_id, 'cli_002' as clinician_id, 'bill_001' as patient_billing_type_id, null::text as reason_for_encounter, 'clinic' as encounter_type
 
       - input: ref('patients')
         format: sql
