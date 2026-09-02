@@ -46,20 +46,32 @@ variant additionally requires a non-null `end_datetime`, so open encounters are 
 
 ## The core's output contract
 
-`encounter_summary_core()` emits **resolved but unformatted** values: naive timestamps,
-durations as their component timestamps, aggregates as arrays or text. Every caller
-applies its own `translate_label` / `to_char` / timezone shift.
+`encounter_summary_core()` emits **mostly raw** values: naive timestamps, aggregates as
+arrays or text. Every caller applies its own `translate_label` / `to_char` / timezone
+shift.
+
+**Two documented exceptions**, both inherited unchanged from the pre-extraction report.
+Seven outputs leave the core already `to_char`'d in the viewer's timezone, applied inside
+the CTEs rather than the projection: `discharge_department_datetime`,
+`discharge_location_datetime`, `discharge_location_group_datetime`; the
+`department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
+the dates embedded in the `procedures` and `notes` text. An extending caller wanting a
+different format for those has **no raw column to reach for** — that requires a separate
+change to the CTEs, not just a different projection.
 
 - **BL-001:** `encounter_id` and `patient_id` are emitted first and deliberately. They are
   the join keys an extending caller needs, and the *formatted* report output exposes
   neither — its only identifier is the patient `display_id`, which is patient-grain and so
   fans out across a patient's encounters. Without these, extending the report by joining
   encounter-scoped data is not possible.
-- **BL-002:** The projection emits nothing that depends on `flags.WHICH` — no `to_char`, no
-  `to_user_selected_timezone`. That helper renders a `:timezone` bind placeholder under
-  `dbt compile` and is a plain no-op otherwise, so emitting it unconditionally would both
-  carry a placeholder into any compiled artefact and hand a non-report caller columns
-  silently identical to the raw ones.
+- **BL-002:** The **projection** emits nothing that depends on `flags.WHICH` — no
+  `to_char`, no `to_user_selected_timezone` — so a caller choosing a different
+  presentation is not fighting one already applied to the columns it selects. This is a
+  statement about the select list only. The CTEs above it *do* use both, so the compiled
+  core carries `:timezone` (13 occurrences) regardless; the claim is not that the core is
+  placeholder-free. What the rule buys is that `to_user_selected_timezone` is a no-op
+  outside `dbt compile`, so applying it in the projection would hand a non-report caller
+  columns silently identical to the raw ones.
 - **BL-003:** `order by` is deliberately absent. A caller wraps the core in a subquery,
   where ordering is not guaranteed to survive, so each caller applies its own.
 - **BL-004:** `department_ids` and `location_group_ids` are emitted because the outer
@@ -111,33 +123,32 @@ currently do not appear will start appearing.
 |---|---|---|
 | AC-001 | Extracting the core changes no report output beyond the two added columns. | BL-002, BL-003 |
 | AC-002 | The core emits `encounter_id` and `patient_id`, so a caller can join encounter- and patient-grain data. | BL-001 |
-| AC-003 | Compiling the report yields no `:` bind placeholder from the core's projection. | BL-002 |
+| AC-003 | Compiling the report yields no `:` bind placeholder originating in the core's *projection*. The core as a whole does carry them, from its CTEs and its `parameter()` filters. | BL-002 |
 | AC-004 | `Division` and `Sub-division` appear in all four report models. | — |
 
 ### Verification (2026-09-02)
 
-Both compiled variants were run pre- and post-extraction against a populated
+Both variants were run pre- and post-extraction against the current
 `reporting_release` database, date range widened to `[2000-01-01, 2100-01-01]` and every
-optional filter null, and compared with `except all` in both directions. The two new
-columns were removed from the comparison by casting each row to `jsonb` and dropping those
-keys, so the check is on pre-existing output only.
+optional filter null, and compared with `except all` in both directions. `Division` and
+`Sub-division` were removed from the comparison by casting each row to `jsonb` and
+dropping those keys, since the before side does not have them.
 
 | Model | Rows before | Rows after | Only in before | Only in after |
 |---|---|---|---|---|
-| `encounter-summary-by-start-date` | 687 | 687 | 0 | 0 |
-| `encounter-summary-by-end-date` | 686 | 686 | 0 | 0 |
+| `encounter-summary-by-start-date` | 654 | 654 | 0 | 0 |
+| `encounter-summary-by-end-date` | 55 | 55 | 0 | 0 |
 | `sensitive-encounter-summary-by-start-date` | 0 | 0 | 0 | 0 |
 | `sensitive-encounter-summary-by-end-date` | 0 | 0 | 0 | 0 |
 
-AC-001 holds for the standard variants on 1373 real rows. **The sensitive comparison is
-vacuous** — every facility in that database has `is_sensitive = false`, so both sides
-legitimately return zero rows. The sensitive path rests on
+AC-001 holds for the standard variants. **The sensitive comparison is vacuous** — every
+facility in that database has `is_sensitive = false`, so both sides legitimately return
+zero rows. The sensitive path rests on
 `test_encounter_summary_by_start_date_excludes_sensitive_facilities` and on the extraction
 being structurally identical, not on real data.
 
-Also: 60/60 unit tests pass, and `sqlfluff lint` is clean on all four report models. The
-seven `encounter_summary` fixtures required the two new columns in both their
-`patient_additional_data` stub and their `expect` block.
+Also: 64/64 unit tests pass and 86 pytest. The seven `encounter_summary` fixtures required
+the two new columns in both their `patient_additional_data` stub and their `expect` block.
 
 ## Change log
 

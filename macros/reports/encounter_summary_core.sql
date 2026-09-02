@@ -4,18 +4,29 @@
 
     See specs/reports/encounter-summary.md for the BL clauses this macro implements.
 
-    Callers differ only in projection. This macro emits raw values -- timestamps stay
-    naive, durations stay as their component timestamps, aggregates stay as arrays or
-    text -- and each caller applies its own translate_label / to_char / timezone shift.
-    Keeping the resolution here is what lets a deployment repo extend the report by
-    joining extra columns instead of forking the whole body.
+    Callers differ only in projection. This macro emits mostly raw values -- timestamps
+    stay naive, aggregates stay as arrays or text -- and each caller applies its own
+    translate_label / to_char / timezone shift. Keeping the resolution here is what lets
+    a deployment repo extend the report by joining extra columns instead of forking the
+    whole body.
+
+    Two exceptions to "unformatted", both inherited unchanged from the pre-extraction
+    report. Seven outputs leave the core already to_char'd, from inside the CTEs rather
+    than the projection: discharge_department_datetime, discharge_location_datetime and
+    discharge_location_group_datetime; the department_datetimes, location_datetimes and
+    location_group_datetimes arrays; and the dates embedded in the procedures and notes
+    text. A caller wanting those in another format has no raw column to reach for --
+    that would need a separate change to the CTEs.
 
     encounter_id and patient_id are emitted first and deliberately: they are the join
     keys an extending caller needs, and the formatted report output exposes neither.
 
-    The projection emits nothing that depends on `flags.WHICH` -- no to_char, no
-    to_user_selected_timezone. The parameter() filters in the scope CTE and the outer
-    where are report-layer, which is why this lives under macros/reports/.
+    BL-002: the *projection* emits nothing that depends on `flags.WHICH` -- no to_char,
+    no to_user_selected_timezone -- so a caller choosing a different presentation is not
+    fighting one already applied to the columns it selects. This is a statement about the
+    select list only: the CTEs above do use both, so the compiled core carries :timezone
+    regardless. The parameter() filters in the scope CTE and the outer where are
+    report-layer, which is why this lives under macros/reports/.
 
     `order by` is deliberately absent: a caller wraps this in a subquery, where ordering
     is not guaranteed to survive, so the caller applies its own.
@@ -415,7 +426,8 @@ encounter_notes as (
 )
 
 select
-    -- identity
+    -- BL-001: the join keys an extending caller needs. The formatted report output
+    -- exposes neither, and its patient display_id is patient-grain.
     eis.encounter_id,
     eis.patient_id,
     -- patient
@@ -460,7 +472,9 @@ select
     ec.location_group_datetimes,
     ec.locations,
     ec.location_datetimes,
-    -- the id arrays the outer filters test; emitted so a caller can filter too
+    -- BL-004: the id arrays the outer filters test. Emitted because those filters
+    -- read arrays built by the aggregation, so a caller filtering the same way
+    -- needs them.
     ec.department_ids,
     ec.location_group_ids,
     -- clinical aggregates
@@ -520,6 +534,9 @@ left join encounter_imaging_requests eir
     on eir.encounter_id = eis.encounter_id
 left join encounter_notes en
     on en.encounter_id = eis.encounter_id
+-- BL-005: report-layer parameter() filters stay in the core
+-- BL-003: no `order by` here -- a caller wraps this in a subquery, where ordering is
+-- not guaranteed to survive, so the caller applies its own
 where
     case
         when {{ parameter('departmentId') }} is null then true
