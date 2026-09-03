@@ -61,6 +61,9 @@ with encounters_in_scope as (
 ),
 
 
+{#- Not shared with admissions_dataset's identically named CTE: they differ in drive
+    direction, history scope, join strictness, which actor they resolve and both
+    row_number() derivations. Enumerated in specs/dbt-model/ds__admissions.md. -#}
 encounter_history_consolidated as (
     select
         eh.encounter_id,

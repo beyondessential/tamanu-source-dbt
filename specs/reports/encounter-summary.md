@@ -99,6 +99,20 @@ encounter-scoped reports apply identically. It calls `parameter()`, so it is rep
 
 Date ranges and report-specific flags are excluded from it: they differ between callers.
 
+## Relationship to `ds__admissions`
+
+`admissions_dataset` opens with a CTE of the same name and shape as this core's
+`encounter_history_consolidated`. The two are **deliberately not merged**; the seven
+load-bearing differences are enumerated once, under *Relationship to
+`encounter_summary_core`* in `specs/dbt-model/ds__admissions.md`.
+
+The difference that shows up in output is grain. This core consolidates **every** history
+row, so it reports the encounter as a whole and its `start_datetime` is the encounter's
+own start. `ds__admissions` consolidates only `admission`-phase rows, so an encounter
+admitted from an outpatient presentation is dated from the **conversion** there and from
+the presentation here. Both are correct for the question each model answers; the two are
+not expected to agree and should not be reconciled.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
