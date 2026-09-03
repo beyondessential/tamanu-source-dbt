@@ -79,8 +79,7 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   all three. In `-by-area` and `-by-location` the counts of admissions, discharges,
   deaths and transfers are further filtered to episodes whose **start** date falls inside
   the month, so a long stay is counted as an admission once, in the month it began.
-  `-by-department` applies no such filter: its join already restricts to episodes
-  starting inside the month, so every episode it sees started there.
+  `-by-department` filters its counts the same way, for the same reason.
 - **BL-007:** `hospitalPatientDayCount` is patient-days inside the month: the episode's
   span clipped to the month boundaries, or 1 where the episode starts and ends on the
   same date. An open episode is clipped to `current_date`.
@@ -93,18 +92,22 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 - **BL-009:** `-by-department` carries **no** occupancy or capacity columns.
   `max_occupancy` is a property of a location, and a department does not own locations, so
   there is no capacity to divide by.
-- **BL-010:** `-by-department` writes its episode join as
-  `left join … where adh.facility_id notnull`. The `where` clause makes it an inner join;
-  the two spellings are equivalent here and the filtering behaviour is the inner-join one.
+- **BL-010:** All three join episodes to the month spine on overlap and clip the spine at
+  `current_date`, so a month later than today is never reported even when the requested
+  range extends into the future. `-by-department` additionally admits an episode into the
+  month it started, which matters only for the malformed episodes of DV-003.
 
-- **BL-011:** `hospitalAverageLengthOfStay` is not computed the same way across the three.
-  `-by-area` and `-by-location` average only episodes whose **end** date falls inside the
-  month, so a month's figure describes stays that finished in it and an open episode
-  contributes nothing until it closes. `-by-department` averages every episode joined to
-  the month with no end-date filter, so it describes stays that *started* in the month,
-  open ones included, and their `length_of_stay` is measured to the encounter end or left
-  open per BL-001. The two figures answer different questions and are not comparable
-  across the reports.
+- **BL-011:** `hospitalAverageLengthOfStay` averages the episodes whose **end** date falls
+  inside the month, in all three reports. A month's figure therefore describes the stays
+  that finished in it, an open episode contributes to no month until it closes, and a stay
+  spanning several months is averaged once, in the month it ended — never in the month it
+  began. The figure is comparable across the three.
+
+  A consequence: a month can hold a row with zero events and a populated average, because
+  a stay ended in it without any starting. `-by-area` and `-by-location` report such a
+  month regardless, since patient-days accrue while a stay is merely open. `-by-department`
+  has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
+  ended in the month, and a month an episode merely spans is suppressed as empty.
 
 ## Divergences
 
@@ -126,6 +129,14 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   unaffected. The same class of defect as an inner join to a nullable dimension elsewhere;
   it is a silent undercount rather than a visible gap.
 
+- **DV-003:** *(malformed episodes)* An episode can end before it starts, where an
+  encounter's `end_datetime` precedes a later history row — the intermediates compute
+  `end_datetime` as `coalesce(lead(start_datetime), encounters.end_datetime)` and do not
+  guard the ordering. Such an episode spans no month, so the overlap join in `-by-area`
+  and `-by-location` excludes it from **every** month and its admission, discharge and
+  death are reported nowhere. `-by-department` admits it into the month it started
+  (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
+
 ## Open questions
 
 - **OQ-001** *(owner: Maui team; due: before these reports are used by a deployment that
@@ -141,11 +152,21 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   `-by-area` output and needs a row-level diff. It is listed with OQ-001 because both are
   fixes to the same intermediate and are cheaper to ship together.
 
+- **OQ-003** *(owner: Maui team; due: with OQ-001)* — how should the malformed episodes of
+  DV-003 be treated? Dropping them everywhere makes the three consistent but loses real
+  admissions; keeping them everywhere means deciding which month a negative-duration stay
+  belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
+  own row-level diff. The underlying data is worth a look first: an encounter ending
+  before its own history is a source-side defect, not a reporting one.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
 |---|---|---|---|
 | AC-001 | An episode spanning several months appears in each month it overlaps. | BL-006 | `test_hospital_admissions_by_area_date_range_basic` |
+| AC-006 | A stay spanning months is averaged in the month it ended, not the month it began. | BL-011 | `test_hospital_admissions_by_department_length_of_stay` |
+| AC-007 | An open episode contributes to no month's average. | BL-011 | `test_hospital_admissions_by_department_length_of_stay` |
+| AC-008 | A `-by-department` month an episode merely spans is not reported. | BL-009 | `test_hospital_admissions_by_department_length_of_stay` |
 | AC-002 | A same-day stay counts as one day, not zero. | BL-005 | Structural — no test targets the floor |
 | AC-003 | A death is counted in both the death and discharge columns. | BL-004 | Structural — no test targets the overlap |
 | AC-004 | A dimension whose locations carry no `max_occupancy` renders `N/A`. | BL-008 | Structural |
@@ -155,4 +176,5 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. No code change. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
+| 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |

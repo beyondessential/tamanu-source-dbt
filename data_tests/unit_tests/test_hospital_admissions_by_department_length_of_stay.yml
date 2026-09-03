@@ -1,0 +1,71 @@
+unit_tests:
+  - name: test_hospital_admissions_by_department_length_of_stay
+    model: hospital-admissions-by-department-summary
+    description: >
+      Pins BL-011: average length of stay is averaged over the episodes that ENDED in the
+      month, matching -by-area and -by-location. ep_long starts in January and ends in
+      March, so its 45 days belong to March's average and not to January's, and March gets
+      a row even though nothing was admitted in it. ep_short starts and ends in January, so
+      January's average is its 2 days alone. ep_open never ends, so it contributes to no
+      month's average at all while still being counted as a February admission.
+
+      Also pins two behaviours that are deliberately unchanged. The event counts still
+      belong to the month an episode STARTED (BL-006), which is why ep_long's admission and
+      discharge are counted in January while its length of stay lands in March. And a month
+      an episode merely spans is suppressed (BL-009) — February holds a row only because
+      ep_open started in it, and there is no row for a department-month with nothing to
+      report.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see the -by-area test
+        yearmonth_format: YYYY-MM
+        fromDate: '2024-01-01'
+        toDate: '2024-03-31'
+    given:
+      - input: ref('int__admission_history_department')
+        format: sql
+        rows: |
+          select
+            'ep_short'::text          as encounter_id,
+            'dept_001'::text          as department_id,
+            'General Medicine'::text  as department,
+            'fac_001'::text           as facility_id,
+            'Central Hospital'::text  as facility,
+            '2024-01-10 09:00:00'::timestamp as start_datetime,
+            '2024-01-12 09:00:00'::timestamp as end_datetime,
+            2::integer                as length_of_stay,
+            true                      as admission,
+            true                      as discharge,
+            false                     as transfer_in,
+            false                     as transfer_out,
+            false                     as death
+          union all
+          select
+            'ep_long', 'dept_001', 'General Medicine', 'fac_001', 'Central Hospital',
+            '2024-01-20 09:00:00'::timestamp, '2024-03-05 09:00:00'::timestamp,
+            45, true, true, false, false, false
+          union all
+          select
+            'ep_open', 'dept_001', 'General Medicine', 'fac_001', 'Central Hospital',
+            '2024-02-15 09:00:00'::timestamp, null::timestamp,
+            30, true, false, false, false, false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '2024-01'          as "Month",
+          'Central Hospital' as "Facility",
+          'General Medicine' as "Department",
+          2::bigint          as "Number of admissions",
+          2::bigint          as "Number of discharges",
+          0::bigint          as "Number of deaths",
+          0::bigint          as "Number of transfers into department",
+          0::bigint          as "Number of transfers out of department",
+          2.0::numeric       as "Average length of stay"
+        union all
+        select '2024-02', 'Central Hospital', 'General Medicine',
+               1::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, null::numeric
+        union all
+        select '2024-03', 'Central Hospital', 'General Medicine',
+               0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 45.0::numeric
