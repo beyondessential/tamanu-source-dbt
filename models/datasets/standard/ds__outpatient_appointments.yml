@@ -12,6 +12,12 @@ models:
       pii: true
       classification: restricted
     columns:
+      - name: appointment_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
