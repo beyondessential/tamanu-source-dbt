@@ -21,7 +21,8 @@ with admission_encounters as (
 
 {#- Not shared with encounter_summary_core's identically named CTE -- see
     "Relationship to encounter_summary_core" in specs/dbt-model/ds__admissions.md. The
-    encounter_type predicate below is OQ-002 there, not a settled choice. -#}
+    two answer different questions: that one describes the whole encounter, this one its
+    admission phase. -#}
 encounter_history_consolidated as (
     select
         eh.encounter_id,
@@ -47,6 +48,12 @@ encounter_history_consolidated as (
     from admission_encounters ae
     left join {{ ref('encounter_history') }} eh
         on eh.encounter_id = ae.id
+        -- BL-002 (specs/dbt-model/ds__admissions.md): scopes this dataset to the
+        -- admission phase. A snapshot records post-edit state, so an encounter admitted
+        -- from an outpatient presentation carries earlier rows stamped 'outpatient' and
+        -- this drops them: an admission dates from conversion, not presentation. Decided,
+        -- not incidental -- removing this changes admission_datetime, age, the admitting
+        -- clinician and the first entry of every movement triple.
         and eh.encounter_type = 'admission'
         and (eh.change_type is null or eh.change_type && array['encounter_type', 'examiner', 'department', 'location'])
     left join {{ ref('users') }} u

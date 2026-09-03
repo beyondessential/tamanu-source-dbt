@@ -28,6 +28,14 @@ One row per `admission` encounter in the requested sensitivity partition. Every
 admission encounter appears, including one with no qualifying history rows (BL-002) and
 one with no diagnoses — the movement, clinician and diagnosis columns are then null.
 
+**The row describes the admission phase of the encounter, not the whole encounter**
+(BL-002). In OMOP-lite terms the population is chosen at `clinical__visit_occurrence`
+grain — which encounters are admissions — while every datetime, clinician and movement
+column is reported at `clinical__visit_detail` grain, over the segments whose
+`encounter_type` is `admission`. `encounter_summary` answers the whole-encounter question
+for the same encounter, so the two legitimately disagree; see *Relationship to
+`encounter_summary_core`*.
+
 ## Inputs
 
 `encounters_core()` for scope (see `specs/dbt-model/encounters_core.md`), then
@@ -68,6 +76,18 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
   in a later `where` is what lets the `lag()` and `row_number()` windows see only
   relevant rows; the left join is what keeps an admission with no such rows in the
   output.
+
+  The `encounter_type = 'admission'` half of that predicate is **the decision that this
+  dataset reports the admission phase**, and it is deliberate. A history snapshot records
+  the encounter's state *after* an edit, so an encounter admitted from an outpatient
+  presentation carries earlier rows stamped `outpatient`; this predicate discards them.
+  An admission therefore **dates from conversion, not from presentation** — the clinical
+  event the report is about is the admission, and a patient who waited in outpatients
+  before being admitted was not an inpatient for that time. The consequences are
+  consistent rather than incidental: `admission_datetime`, `age` (BL-008), the admitting
+  clinician (BL-003) and the first entry of each movement triple (BL-004, BL-005,
+  BL-006) all describe the moment of admission. Reversing the choice would mean removing
+  this predicate, and every one of those columns would change with it.
 - **BL-003:** The admitting clinician is the first clinician by history datetime,
   except on a **transfer** — an encounter carrying at least one history row whose
   `change_type` includes `encounter_type` — where it is the second clinician, when one
@@ -96,8 +116,8 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
   run time; it is not safe to remove while any unit test stubs that base, because a stub
   replaces the base model including its filters.
 - **BL-008:** `age` is completed years between `admission_datetime` (BL-003) and the
-  patient's date of birth, so it is the age at admission and does not drift. It is null
-  where `admission_datetime` is (BL-002).
+  patient's date of birth, so it is the age at admission — at conversion, per BL-002 —
+  and does not drift. It is null where `admission_datetime` is (BL-002).
 - **BL-009:** `admission_status` is `active` where the encounter has no `end_datetime`
   and `discharged` otherwise; `discharge_datetime` is the `end_datetime` itself.
 - **BL-010:** No output is timezone-shifted. A dataset must not carry the `:timezone`
@@ -119,7 +139,7 @@ divergences are enumerated here instead.
 | | Difference | `encounter_summary_core` | This dataset |
 |---|---|---|---|
 | D1 | Drive direction | history-driven, inner join to the scope | scope-driven, **left** join to history |
-| D2 | History scope | every row of the encounter | only rows whose snapshot `encounter_type` is `admission` |
+| D2 | History scope | every row of the encounter — whole-encounter grain | only `admission`-phase rows — phase grain, BL-002 |
 | D3 | Dimension joins | inner to `departments` and `locations` | left to both |
 | D4 | Which actor | `updated_by_id` (source `actor_id`) → `encountering_clinician` | `clinician_id` (source `examiner_id`) → `admitting_clinician` |
 | D5 | `row_number()` | `partition by encounter_id, change_type` → `change_sequence` | `partition by encounter_id, ('encounter_type' = any(change_type))` → `encounter_type_change_sequence` |
@@ -129,6 +149,11 @@ divergences are enumerated here instead.
 Three of these are worth expanding, because they are the ones a merge attempt would get
 wrong quietly:
 
+- **D2 is the deliberate one, and the others follow from it.** The two models answer
+  different questions about the same encounter: `encounter_summary` describes the
+  encounter as a whole, this dataset describes its admission phase. An encounter admitted
+  from an outpatient presentation therefore has two different — and both correct — start
+  datetimes across the two models. This is settled (BL-002), not drift to be reconciled.
 - **D1 and D3 are consequences of D2.** The `encounter_type` filter can eliminate every
   history row an encounter has, so the left join to history is what keeps the encounter
   in the output at all, and the left joins to the dimensions are what stop an all-null
@@ -172,18 +197,10 @@ partition, but it does not mean what its name suggests.
 
 ## Open questions
 
-- **OQ-002** *(owner: Maui team; due: before the next behavioural change to this
-  dataset)* — D2 above discards an encounter's pre-conversion history. Because a history
-  snapshot records the encounter's state *after* the edit, an encounter admitted from an
-  outpatient presentation carries earlier rows stamped `outpatient`, and the
-  `encounter_type = 'admission'` join predicate drops them. `admission_datetime` — and
-  so `age` (BL-008), the admitting clinician (BL-003) and the first entry of each
-  movement triple (BL-004, BL-005, BL-006) — is then taken from the conversion row
-  rather than from the encounter's actual start. `encounter_summary_core` reports the
-  true start for the same encounter. Whether the admission date should be the conversion
-  or the presentation is a product question; either way the two models should not
-  disagree. Resolving it changes report output, so it needs a row-level diff and
-  sign-off rather than riding inside a refactor.
+Resolved: **OQ-002** — an admission dates from conversion, not from presentation. Decided
+2026-09-04; recorded as part of BL-002, which is where the predicate that implements it
+lives.
+
 - **OQ-001** *(owner: Maui team; due: before the next behavioural change to this
   dataset)* — the three movement-history columns of a triple are built by separate
   aggregates over the same rows, but `string_agg` skips null names while `array_agg`
@@ -200,3 +217,4 @@ partition, but it does not mean what its name suggests.
 | Date | Change |
 |---|---|
 | 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), resolving OQ-002 of `specs/reports/encounter-summary.md`. Spec created. |
+| 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |
