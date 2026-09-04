@@ -157,6 +157,16 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   and `-by-location` excludes it from **every** month and its admission, discharge and
   death are reported nowhere. `-by-department` admits it into the month it started
   (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
+- **DV-005:** *(counts are keyed to the admission month)* BL-006 books every event to the
+  month the episode **started**. The shipped report notes describe two of them differently:
+  *"Number of discharges = Number of patients discharged … for specified month"* and
+  *"Number of deaths = Number of deceased patients … for specified month … when their death
+  was recorded"*. A patient admitted in January and discharged in March is therefore
+  counted as a March discharge by the notes and as a January discharge by the code. The
+  same notes define average length of stay over the patients *discharged* in the month,
+  which BL-011 now follows in all three reports — so the discharge and death counts are
+  the remaining columns keyed to a different month from the definition they ship with.
+  Pre-existing and unchanged here. Resolution is OQ-005.
 ## Open questions
 
 Resolved: **DV-004 / OQ-004** — the death condition compared `end_datetime::date` to the
@@ -176,6 +186,10 @@ interval containment.
   own row-level diff. The underlying data is worth a look first: an encounter ending
   before its own history is a source-side defect, not a reporting one.
 
+- **OQ-005** *(owner: Maui team; due: with OQ-002)* — should the discharge and death
+  counts move to the month of discharge or death, matching the notes shipped with the
+  reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
+  its own row-level diff, so it is not folded into the length-of-stay alignment.
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
