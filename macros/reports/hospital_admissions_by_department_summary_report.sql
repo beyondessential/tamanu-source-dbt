@@ -27,7 +27,7 @@ select
     count(*) filter (where adh.transfer_out and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount') }}",
     -- BL-011: averaged over the episodes that ENDED in the month, matching -by-area and
     -- -by-location so the three reports' length-of-stay figures are comparable
-    round(avg(adh.length_of_stay) filter (where {{ to_user_selected_timezone('adh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as "{{ translate_label('hospitalAverageLengthOfStay') }}"
+    coalesce(round(avg(adh.length_of_stay) filter (where {{ to_user_selected_timezone('adh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1), 0) as "{{ translate_label('hospitalAverageLengthOfStay') }}"
 from reporting_months rm
 join {{ ref(episodes) }} adh
     on (
@@ -40,8 +40,12 @@ join {{ ref(episodes) }} adh
     -- alone would drop it from every one. Kept in the month it started, preserving the
     -- event counts this report has always reported.
     or {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)
-where rm.month <= current_date
-    and case
+-- No `rm.month <= current_date` guard here, unlike -by-area and -by-location: those
+-- report a month an episode merely spans, so an open episode would run their spine to
+-- its end. The `having` below already restricts this report to months an episode started
+-- or ended in, and dropping future months would lose a future-dated admission entirely.
+where
+    case
         when {{ parameter('departmentId') }} is null then true
         else adh.department_id = {{ parameter('departmentId') }}
     end

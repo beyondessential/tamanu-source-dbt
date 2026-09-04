@@ -65,7 +65,7 @@ unit_tests:
           2.0::numeric       as "Average length of stay"
         union all
         select '2024-02', 'Central Hospital', 'General Medicine',
-               1::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, null::numeric
+               1::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::numeric
         union all
         select '2024-03', 'Central Hospital', 'General Medicine',
                0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 45.0::numeric

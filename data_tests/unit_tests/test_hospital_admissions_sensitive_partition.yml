@@ -94,3 +94,87 @@ unit_tests:
           false               as transfer_in,
           false               as transfer_out,
           false               as death
+
+  - name: test_int__admission_history_department_partition
+    model: int__admission_history_department
+    description: >
+      BL-012 on the department intermediate's standard variant. The department predicate is
+      a separate line of SQL from the location one, so it needs its own assertion: without
+      this, removing it would leave the suite green while a sensitive facility's named
+      death counts returned to the standard -by-department report.
+    overrides:
+      vars:
+        timezone: UTC
+    given: &dept_fixture
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_std'::text as id, 'enc_std'::text as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime,
+                 'dep_std'::text as department_id, null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_sen', 'enc_sen', '2024-01-10 09:00:00'::timestamp, 'dep_sen', null::text[], 'admission'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_std'::text as id, 'pat_001'::text as patient_id, '2024-01-12 09:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_sen', 'pat_001', '2024-01-12 09:00:00'::timestamp
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001'::text as id, null::date as date_of_death
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dep_std'::text as id, 'Std Dept'::text as name, 'fac_std'::text as facility_id
+          union all
+          select 'dep_sen', 'Sen Dept', 'fac_sen'
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std'::text as id, 'Standard Hospital'::text as name, false as is_sensitive
+          union all
+          select 'fac_sen', 'Sensitive Hospital', true
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_std'::text     as encounter_id,
+          'dep_std'::text     as department_id,
+          'Std Dept'::text    as department,
+          'fac_std'::text     as facility_id,
+          'Standard Hospital'::text as facility,
+          '2024-01-10 09:00:00'::timestamp as start_datetime,
+          '2024-01-12 09:00:00'::timestamp as end_datetime,
+          2                   as length_of_stay,
+          true                as admission,
+          true                as discharge,
+          false               as transfer_in,
+          false               as transfer_out,
+          false               as death
+
+  - name: test_int__sensitive_admission_history_department_partition
+    model: int__sensitive_admission_history_department
+    description: >
+      The sensitive half for the department intermediate, on the same fixture.
+    overrides:
+      vars:
+        timezone: UTC
+    given: *dept_fixture
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_sen'::text     as encounter_id,
+          'dep_sen'::text     as department_id,
+          'Sen Dept'::text    as department,
+          'fac_sen'::text     as facility_id,
+          'Sensitive Hospital'::text as facility,
+          '2024-01-10 09:00:00'::timestamp as start_datetime,
+          '2024-01-12 09:00:00'::timestamp as end_datetime,
+          2                   as length_of_stay,
+          true                as admission,
+          true                as discharge,
+          false               as transfer_in,
+          false               as transfer_out,
+          false               as death

@@ -93,10 +93,13 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 - **BL-009:** `-by-department` carries **no** occupancy or capacity columns.
   `max_occupancy` is a property of a location, and a department does not own locations, so
   there is no capacity to divide by.
-- **BL-010:** All three join episodes to the month spine on overlap and clip the spine at
-  `current_date`, so a month later than today is never reported even when the requested
-  range extends into the future. `-by-department` additionally admits an episode into the
-  month it started, which matters only for the malformed episodes of DV-003.
+- **BL-010:** All three join episodes to the month spine on overlap. `-by-area` and
+  `-by-location` additionally clip the spine at `current_date`, because they report a month
+  an episode merely spans and an open episode would otherwise run the spine to its end;
+  a future-dated admission is consequently absent from them. `-by-department` needs no such
+  clip — its `having` (BL-009) already restricts it to months an episode started or ended
+  in — and it admits an episode into the month it started, which matters only for the
+  malformed episodes of DV-003.
 
 - **BL-011:** `hospitalAverageLengthOfStay` averages the episodes whose **end** date falls
   inside the month, in all three reports. A month's figure therefore describes the stays
@@ -104,7 +107,9 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   spanning several months is averaged once, in the month it ended — never in the month it
   began. The figure is comparable across the three.
 
-  A consequence: a month can hold a row with zero events and a populated average, because
+  A month in which nothing was discharged renders `0` rather than blank, in all three, so
+  the column has one sentinel across the set. A consequence: a month can hold a row with
+  zero events and a populated average, because
   a stay ended in it without any starting. `-by-area` and `-by-location` report such a
   month regardless, since patient-days accrue while a stay is merely open. `-by-department`
   has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
@@ -140,6 +145,16 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   structurally zero there, in all three reports. Whether the condition is too strict, or
   deaths are recorded through a discharge disposition and `date_of_death` is set
   separately, is not established. Resolution is OQ-004.
+- **DV-005:** *(counts are keyed to the admission month)* BL-006 books every event to the
+  month the episode **started**. The shipped report notes describe two of them differently:
+  *"Number of discharges = Number of patients discharged … for specified month"* and
+  *"Number of deaths = Number of deceased patients … for specified month … when their death
+  was recorded"*. A patient admitted in January and discharged in March is therefore
+  counted as a March discharge by the notes and as a January discharge by the code. The
+  same notes define average length of stay over the patients *discharged* in the month,
+  which BL-011 now follows in all three reports — so the discharge and death counts are
+  the remaining columns keyed to a different month from the definition they ship with.
+  Pre-existing and unchanged here. Resolution is OQ-005.
 
 ## Open questions
 
@@ -160,6 +175,11 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   death is recorded in the application, not just in the warehouse. Until then the death
   column should be read as unverified rather than as zero deaths.
 
+- **OQ-005** *(owner: Maui team; due: with OQ-002)* — should the discharge and death
+  counts move to the month of discharge or death, matching the notes shipped with the
+  reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
+  its own row-level diff, so it is not folded into the length-of-stay alignment.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
@@ -172,12 +192,13 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-003 | A death is counted in both the death and discharge columns. | BL-004 | Structural — no test targets the overlap |
 | AC-004 | A dimension whose locations carry no `max_occupancy` renders `N/A`. | BL-008 | Structural |
 | AC-005 | No sensitive facility's episode appears in a standard report. | BL-012 | `test_int__admission_history_location_partition` |
-| AC-009 | A sensitive report carries the sensitive facilities and only those. | BL-012 | `test_int__sensitive_admission_history_location_partition` |
+| AC-009 | A sensitive report carries the sensitive facilities and only those. | BL-012 | `test_int__sensitive_admission_history_location_partition`, `..._department_partition` |
+| AC-010 | The department intermediate partitions on the same basis as the location one. | BL-012 | `test_int__admission_history_department_partition` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
-| 2026-09-04 | Facility sensitivity partitioned (BL-012), resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
+| 2026-09-04 | Facility sensitivity partitioned (BL-012), null-safe so no facility falls outside both variants, resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
 | 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |
