@@ -10,7 +10,7 @@ models:
 
       Empty by default. The test types that behave this way are deployment reference data, so a
       deployment that records point-of-care tests disables this model and defines its own of the
-      same name.
+      same name, one row per test type.
     config:
       tags:
         - reference
