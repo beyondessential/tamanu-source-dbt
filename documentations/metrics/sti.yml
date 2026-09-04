@@ -1,0 +1,193 @@
+# Sexually transmitted infection screening metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: sti_screened
+  kind: metric
+  name: STI screened
+  description: >-
+    Patients screened for a sexually transmitted infection in a calendar month. One row per patient
+    per infection per month.
+  numerator_description: >-
+    Patients with at least one countable screening test for the infection dated in the month,
+    including tests still awaiting a result
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    Follows the screening step of the STI care cascade described in the WHO global health sector
+    strategy on sexually transmitted infections, which frames STI programme performance as coverage
+    of screening, detection and treatment. WHO publishes the cascade as a programmatic framework
+    rather than as a single indicator with a fixed numerator, so the patient-per-infection-per-month
+    grain here is a BES composition over the WHO concept, not an implementation of a WHO indicator.
+    Counting an unresulted test as screened is deliberate: it measures service delivery rather than
+    laboratory throughput. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
+
+- metric_id: sti_screened_key_population
+  kind: metric
+  name: STI screened by key population
+  description: >-
+    Patients screened for a sexually transmitted infection in a calendar month, broken down by key
+    population. One row per patient per infection per month per key population the patient belongs to.
+  numerator_description: >-
+    As sti_screened, emitted once per key population the patient belongs to
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    Key population reporting follows the WHO global health sector strategy's emphasis on populations
+    at disproportionate risk. A patient in several key populations is counted in each, so rows are not
+    additive across the key_population dimension -- summing them double counts patients. Consumers
+    needing a population total read sti_screened instead.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - key_population
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
+
+- metric_id: sti_positive
+  kind: metric
+  name: STI positive
+  description: >-
+    Patients with a screening result indicating infection in a calendar month. One row per patient
+    per infection per month.
+  numerator_description: >-
+    Patients with at least one countable test in the month whose type and result indicate the infection
+  denominator_description: >-
+    Patients screened for the same infection in the same month (sti_screened)
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    The detection step of the WHO STI care cascade. Positivity is expressed as a count rather than a
+    rate so that consumers form the proportion over sti_screened at whatever grain they aggregate to;
+    a stored rate could not be safely summed across disaggregations. Which type and result combinations
+    indicate infection is bound per deployment, since lab catalogues and result vocabularies differ.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
+
+- metric_id: sti_positive_key_population
+  kind: metric
+  name: STI positive by key population
+  description: >-
+    Patients with a screening result indicating infection in a calendar month, broken down by key
+    population. One row per patient per infection per month per key population.
+  numerator_description: >-
+    As sti_positive, emitted once per key population the patient belongs to
+  denominator_description: >-
+    Patients screened for the same infection and key population in the same month
+    (sti_screened_key_population)
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    As sti_positive, disaggregated by key population. Rows are not additive across the key_population
+    dimension: a patient in several key populations appears in each.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - key_population
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
+
+- metric_id: sti_treated
+  kind: metric
+  name: STI treated
+  description: >-
+    Patients treated for a sexually transmitted infection they tested positive for in a calendar
+    month. One row per patient per infection per month.
+  numerator_description: >-
+    Patients positive for the infection in the month with a qualifying medication starting no earlier
+    than 28 days before their earliest positive test in that month
+  denominator_description: >-
+    Patients positive for the same infection in the same month (sti_positive)
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    The treatment step of the WHO STI care cascade. Treatment is an existence test rather than a count
+    of medications, since the cascade asks whether a positive patient was treated at all. The 28-day
+    window is a BES parameter carried over from the delivered Fiji extract, not a WHO figure, and is
+    under review (spec OQ-001). Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
+
+- metric_id: sti_treated_key_population
+  kind: metric
+  name: STI treated by key population
+  description: >-
+    Patients treated for a sexually transmitted infection they tested positive for in a calendar
+    month, broken down by key population. One row per patient per infection per month per key population.
+  numerator_description: >-
+    As sti_treated, emitted once per key population the patient belongs to
+  denominator_description: >-
+    Patients positive for the same infection and key population in the same month
+    (sti_positive_key_population)
+  data_source: tamanu
+  definition_source: WHO
+  definition_source_code: null
+  definition_rationale: >-
+    As sti_treated, disaggregated by key population. Rows are not additive across the key_population
+    dimension: a patient in several key populations appears in each.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - infection
+  - key_population
+  - sex
+  - age_group
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening.md
