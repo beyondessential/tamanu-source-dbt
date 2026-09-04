@@ -156,17 +156,13 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   and `-by-location` excludes it from **every** month and its admission, discharge and
   death are reported nowhere. `-by-department` admits it into the month it started
   (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
-- **DV-005:** *(counts are keyed to the admission month)* BL-006 books every event to the
-  month the episode **started**. The shipped report notes describe two of them differently:
-  *"Number of discharges = Number of patients discharged … for specified month"* and
-  *"Number of deaths = Number of deceased patients … for specified month … when their death
-  was recorded"*. A patient admitted in January and discharged in March is therefore
-  counted as a March discharge by the notes and as a January discharge by the code. The
-  same notes define average length of stay over the patients *discharged* in the month,
-  which BL-011 now follows in all three reports — so the discharge and death counts are
-  the remaining columns keyed to a different month from the definition they ship with.
-  Pre-existing and unchanged here. Resolution is OQ-005.
-
+- **DV-006:** *(transfer-out is keyed to the wrong month)* `transfer_out` is an
+  **end**-of-episode event — the patient left this area for another — but BL-006 counts it
+  in the month the episode *began*, unlike `discharge` and `death`. The notes shipped with
+  the reports describe it as *"patients moved from area to another area … for the specified
+  month"*, i.e. the month of the move. Sixty-eight episodes carry a `transfer_out` whose
+  start and end fall in different months, so those moves are attributed to the earlier one.
+  Resolution is OQ-006.
 ## Open questions
 
 - **OQ-002** *(owner: Maui team; due: before the next behavioural change to these
@@ -181,11 +177,10 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   own row-level diff. The underlying data is worth a look first: an encounter ending
   before its own history is a source-side defect, not a reporting one.
 
-- **OQ-005** *(owner: Maui team; due: with OQ-002)* — should the discharge and death
-  counts move to the month of discharge or death, matching the notes shipped with the
-  reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
-  its own row-level diff, so it is not folded into the length-of-stay alignment.
-
+- **OQ-006** *(owner: Maui team; due: with OQ-002)* — should `transfer_out` move to the
+  month of the move, as DV-006 describes and as `discharge` and `death` now do? It is the
+  last event column still keyed to the episode start, and 68 episodes would move. A
+  behaviour change to all six reports, so it needs its own row-level diff.
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
@@ -204,9 +199,10 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-012 | A patient discharged alive who died later the same day is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-013 | A death recorded at the exact instant the encounter ended is counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-014 | A death recorded before the admission began is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
+| AC-015 | An episode admitted in one month and discharged in another contributes its admission to the first and its discharge to the second. | BL-006 | `test_hospital_admissions_by_department_length_of_stay` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005. |

@@ -9,9 +9,11 @@ unit_tests:
       January's average is its 2 days alone. ep_open never ends, so it contributes to no
       month's average at all while still being counted as a February admission.
 
-      Also pins two behaviours that are deliberately unchanged. The event counts still
-      belong to the month an episode STARTED (BL-006), which is why ep_long's admission and
-      discharge are counted in January while its length of stay lands in March. And a month
+      Also pins how BL-006 splits an episode's events across months. ep_long is admitted
+      in January and discharged in March, so its admission counts in January and its
+      discharge in March — an admission is a start-of-episode event and a discharge an
+      end-of-episode one, matching the definitions shipped with these reports. Its length
+      of stay lands in March with the discharge. And a month
       an episode merely spans is suppressed (BL-009): the spine runs to April, which ep_open
       spans without starting or ending in it, so the overlap join reaches April but the
       `having` drops it. February is no witness for that — ep_open starts in it — which is
@@ -59,7 +61,7 @@ unit_tests:
           'Central Hospital' as "Facility",
           'General Medicine' as "Department",
           2::bigint          as "Number of admissions",
-          2::bigint          as "Number of discharges",
+          1::bigint          as "Number of discharges",
           0::bigint          as "Number of deaths",
           0::bigint          as "Number of transfers into department",
           0::bigint          as "Number of transfers out of department",
@@ -69,4 +71,4 @@ unit_tests:
                1::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::numeric
         union all
         select '2024-03', 'Central Hospital', 'General Medicine',
-               0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 45.0::numeric
+               0::bigint, 1::bigint, 0::bigint, 0::bigint, 0::bigint, 45.0::numeric

@@ -21,8 +21,12 @@ select
     -- BL-006 (specs/reports/hospital-admissions-summaries.md): episodes join on overlap,
     -- so each event count filters to the episodes that started inside the month
     count(*) filter (where adh.admission and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalAdmissionCount') }}",
-    count(*) filter (where adh.discharge and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalDischargeCount') }}",
-    count(*) filter (where adh.death and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalDeathCount') }}",
+        -- BL-006: a discharge and a death are events at the END of an episode, so they
+        -- belong to the month the episode ended, matching the definitions shipped with
+        -- these reports. Admissions and transfers-in are start-of-episode events and
+        -- stay on the start month.
+    count(*) filter (where adh.discharge and {{ to_user_selected_timezone('adh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalDischargeCount') }}",
+    count(*) filter (where adh.death and {{ to_user_selected_timezone('adh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalDeathCount') }}",
     count(*) filter (where adh.transfer_in and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalTransfersIntoDepartmentCount') }}",
     count(*) filter (where adh.transfer_out and {{ to_user_selected_timezone('adh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as "{{ translate_label('hospitalTransfersOutOfDepartmentCount') }}",
     -- BL-011: averaged over the episodes that ENDED in the month, matching -by-area and

@@ -33,8 +33,12 @@ location_summary as (
             end
         )::numeric as occupancy,
         count(*) filter (where alh.admission and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as admissions,
-        count(*) filter (where alh.discharge and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as discharges,
-        count(*) filter (where alh.death and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as deaths,
+        -- BL-006: a discharge and a death are events at the END of an episode, so they
+        -- belong to the month the episode ended, matching the definitions shipped with
+        -- these reports. Admissions and transfers-in are start-of-episode events and
+        -- stay on the start month.
+        count(*) filter (where alh.discharge and {{ to_user_selected_timezone('alh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as discharges,
+        count(*) filter (where alh.death and {{ to_user_selected_timezone('alh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as deaths,
         count(*) filter (where alh.transfer_in and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_ins,
         count(*) filter (where alh.transfer_out and {{ to_user_selected_timezone('alh.start_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)) as transfer_outs,
         round(avg(alh.length_of_stay) filter (where {{ to_user_selected_timezone('alh.end_datetime') }}::date between rm.month and (rm.month + '1 month'::interval - '1 day'::interval)), 1) as avg_length_of_stay
