@@ -97,6 +97,7 @@ are **not** emitted — see BL-003 and OQ-1.
   (BL-007), and birth anthropometry (BL-008) — sourced from `{{ ref('survey_response_answers') }}`,
   `{{ ref('survey_responses') }}`, `{{ ref('surveys') }}`, `{{ ref('program_data_elements') }}`,
   `{{ ref('lab_tests') }}`, `{{ ref('lab_requests') }}`, `{{ ref('lab_test_types') }}`,
+  `{{ ref('map__lab_test_result_encoding') }}`,
   `{{ ref('int__patient_birth_measurements') }}`, and `{{ ref('encounters') }}` only (D10) —
   never `public.*`. Soft-delete / test-patient filtering is inherited from the base models;
   the branch PKs (`survey_response_answers.id`, `lab_tests.id`, and the synthetic
@@ -130,14 +131,21 @@ are **not** emitted — see BL-003 and OQ-1.
   measurement/observation split is by **survey**, not value type: the Vitals survey feeds
   `clinical__measurement`; qualitative results from *other* surveys (social history,
   program-survey flags) feed `clinical__observation`.
-- **BL-007 (lab branch):** Every `lab_tests` row with a recorded (non-blank) `result` is
-  included, joined through `lab_requests` to its encounter and `lab_test_types` for the test
-  code/name/unit. Tests without a result (pending/incomplete) are excluded — a measurement
-  exists only once a result is recorded. Requests in a non-result status —
-  `deleted`, `sample-not-collected`, `entered-in-error` — are also excluded even if a stale
-  `result` value lingers, so voided work never surfaces as a measurement. Numeric results
+- **BL-007 (lab branch):** Every `lab_tests` row carrying a reading is included, joined through
+  `lab_requests` to its encounter and `lab_test_types` for the test code/name/unit. A reading is
+  a recorded (non-blank) `result`, or a result encoded in the test type (BL-009). A test with
+  neither is excluded — a measurement exists only once a reading exists. Numeric results
   populate `value_as_number`; qualitative results (e.g. "positive"/"negative") carry
   `value_source_value`.
+- **BL-009 (encoded results):** A point-of-care test is recorded by choosing a result-bearing
+  test type rather than by entering a result, so where `lab_tests.result` is blank and
+  `map__lab_test_result_encoding` covers the test type, the encoded result is the reading.
+- **BL-010 (source identifier):** `measurement_source_id` carries the source system's identifier
+  for the thing measured — the lab test type for a lab, the program data element for a vitals
+  answer, and nothing for birth anthropometry — alongside the code in `measurement_source_value`.
+- **BL-011 (withdrawn requests):** A request whose status is `cancelled`, `deleted`,
+  `entered-in-error`, `invalidated` or `sample-not-collected` yields no measurement, even where a
+  stale result lingers on it.
 - **BL-008 (birth-data branch):** Birth anthropometry (birth weight, birth length, APGAR at
   1/5/10 min, gestational age estimate) is unpivoted from the wide `patient_birth_data` by
   `int__patient_birth_measurements` — one row per recorded measure, blanks dropped. These are

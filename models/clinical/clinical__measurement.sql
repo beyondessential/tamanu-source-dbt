@@ -39,6 +39,10 @@ lab_test_types as (
     select * from {{ ref('lab_test_types') }}
 ),
 
+lab_result_encoding as (
+    select * from {{ ref('map__lab_test_result_encoding') }}
+),
+
 patient_birth_measurements as (
     select * from {{ ref('int__patient_birth_measurements') }}
 ),
@@ -71,6 +75,7 @@ vitals_measurements as (
         null::varchar           as unit_source_value,
         va.submitted_by_id::varchar as provider_id,
         va.encounter_id::varchar    as visit_occurrence_id,
+        va.data_element_id::varchar as measurement_source_id,  -- BL-010
         pde.code as measurement_source_value,
         pde.name as measurement_source_name
     from vitals_answers va
@@ -87,20 +92,28 @@ lab_measurements as (
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
         'lab'                 as measurement_type_source_value,
         case when trim(lt.result) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(lt.result)::numeric end as value_as_number,
-        trim(lt.result)       as value_source_value,
+        -- BL-009: a point-of-care type carries its reading in the type, so fall back to the
+        -- encoded result where no result was typed in
+        coalesce(nullif(trim(lt.result), ''), enc.encoded_result) as value_source_value,
         ltt.unit              as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
         lr.encounter_id::varchar    as visit_occurrence_id,
+        lt.lab_test_type_id::varchar as measurement_source_id,  -- BL-010
         ltt.code as measurement_source_value,
         ltt.name as measurement_source_name
     from lab_tests lt
     join lab_requests lr on lr.id = lt.lab_request_id
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
-    where lt.result is not null and trim(lt.result) != ''
+    -- BL-009: one row per type at most, so this cannot fan out
+    left join lab_result_encoding enc on enc.lab_test_type_id = lt.lab_test_type_id
+    -- BL-009: a reading exists where a result was recorded or the type encodes one
+    where coalesce(nullif(trim(lt.result), ''), enc.encoded_result) is not null
       -- drop requests that never produced a valid result even if a stale value lingers (BL-007).
       -- coalesce so a NULL status means "keep" rather than silently dropping the row
-      and coalesce(lr.status, '') not in ('deleted', 'sample-not-collected', 'entered-in-error')
+      and coalesce(lr.status, '') not in (
+          'cancelled', 'deleted', 'entered-in-error', 'invalidated', 'sample-not-collected'
+      )  -- BL-011
 ),
 
 -- birth anthropometry, unpivoted upstream by int__patient_birth_measurements (BL-008).
@@ -117,6 +130,7 @@ birth_measurements as (
         null::varchar           as unit_source_value,
         null::varchar           as provider_id,
         null::varchar           as visit_occurrence_id,
+        null::varchar               as measurement_source_id,  -- BL-010
         bm.measurement_source_value as measurement_source_value,
         bm.measurement_source_name  as measurement_source_name
     from patient_birth_measurements bm
@@ -134,6 +148,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from vitals_measurements
@@ -151,6 +166,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from lab_measurements
@@ -168,6 +184,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from birth_measurements

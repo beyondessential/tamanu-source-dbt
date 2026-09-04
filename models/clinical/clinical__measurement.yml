@@ -71,6 +71,12 @@ models:
               arguments:
                 to: ref('clinical__visit_occurrence')
                 field: visit_occurrence_id
+      - name: measurement_source_id
+        data_type: character varying(255)
+        description: >-
+          Identifier of the thing measured in the system it came from: the lab test type for a
+          lab result, the program data element for a vitals answer. Empty for birth anthropometry,
+          which has no reference-data record behind it.
       - name: measurement_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__measurement__measurement_source_value') }}"
