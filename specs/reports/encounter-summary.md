@@ -127,12 +127,6 @@ not expected to agree and should not be reconciled.
 
 None outstanding.
 
-Resolved: OQ-001 (the history actor is left-joined), OQ-002 (`admissions_dataset` now
-uses this report's location-group dedup semantic — see BL-006 of
-`specs/dbt-model/ds__admissions.md`; the change is to that dataset, so it altered the
-admissions line list and not this report), OQ-003 (the unread columns and the redundant
-`users` join are gone), OQ-004 (the sensitive variant has a unit test).
-
 ## Change log
 
 | Date | Change |
