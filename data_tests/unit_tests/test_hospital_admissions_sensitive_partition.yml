@@ -20,9 +20,11 @@ unit_tests:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_std'::text as id, 'pat_001'::text as patient_id, '2024-01-12 09:00:00'::timestamp as end_datetime
+          select 'enc_std'::text as id, 'pat_001'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-12 09:00:00'::timestamp as end_datetime
           union all
-          select 'enc_sen', 'pat_001', '2024-01-12 09:00:00'::timestamp
+          select 'enc_sen', 'pat_001', '2024-01-10 09:00:00'::timestamp, '2024-01-12 09:00:00'::timestamp
       - input: ref('patients')
         format: sql
         rows: |
@@ -116,9 +118,11 @@ unit_tests:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_std'::text as id, 'pat_001'::text as patient_id, '2024-01-12 09:00:00'::timestamp as end_datetime
+          select 'enc_std'::text as id, 'pat_001'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-12 09:00:00'::timestamp as end_datetime
           union all
-          select 'enc_sen', 'pat_001', '2024-01-12 09:00:00'::timestamp
+          select 'enc_sen', 'pat_001', '2024-01-10 09:00:00'::timestamp, '2024-01-12 09:00:00'::timestamp
       - input: ref('patients')
         format: sql
         rows: |

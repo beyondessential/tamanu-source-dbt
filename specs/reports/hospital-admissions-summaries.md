@@ -69,9 +69,14 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 - **BL-004:** Five event flags are derived per episode. `admission` and `transfer_in`
   restate BL-003. `transfer_out` is true where a later episode exists. `discharge` is
   true where no later episode exists **and** the encounter has an `end_datetime`. `death`
-  is true where no later episode exists and the encounter's end date equals the patient's
-  `date_of_death` — so a death is also counted as a discharge, and the two columns are
-  not disjoint.
+  is true where no later episode exists and the patient's `date_of_death` falls within the
+  encounter's `[start_datetime, end_datetime]`, inclusive — the same interval containment
+  `ds__deaths` uses to attribute a death to an encounter. A death is therefore also counted
+  as a discharge, and the two columns are not disjoint. Two consequences follow from using
+  an interval. A patient discharged alive who dies later the same day is **not** a death
+  here, which a date-level comparison would have counted. And a death during a still-open
+  encounter is not counted until that encounter is closed, since `between start and null`
+  is null — the same restriction `discharge` already carries.
 - **BL-005:** `length_of_stay` is the difference in whole days between the episode's
   start and end dates, **floored at 1** — a stay beginning and ending on the same date
   counts as one day, never zero.
@@ -152,25 +157,12 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   and `-by-location` excludes it from **every** month and its admission, discharge and
   death are reported nowhere. `-by-department` admits it into the month it started
   (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
-- **DV-004:** *(the death count may never fire)* `death` requires the encounter's end date
-  to equal the patient's `date_of_death` exactly (BL-004). On the Kiribati replica, 106
-  admission encounters belong to a patient carrying a `date_of_death` and all 106 have
-  ended, yet in **none** of them do the two dates match — so `hospitalDeathCount` is
-  structurally zero there, in all three reports. Whether the condition is too strict, or
-  deaths are recorded through a discharge disposition and `date_of_death` is set
-  separately, is not established. Resolution is OQ-004.
-- **DV-005:** *(counts are keyed to the admission month)* BL-006 books every event to the
-  month the episode **started**. The shipped report notes describe two of them differently:
-  *"Number of discharges = Number of patients discharged … for specified month"* and
-  *"Number of deaths = Number of deceased patients … for specified month … when their death
-  was recorded"*. A patient admitted in January and discharged in March is therefore
-  counted as a March discharge by the notes and as a January discharge by the code. The
-  same notes define average length of stay over the patients *discharged* in the month,
-  which BL-011 now follows in all three reports — so the discharge and death counts are
-  the remaining columns keyed to a different month from the definition they ship with.
-  Pre-existing and unchanged here. Resolution is OQ-005.
-
 ## Open questions
+
+Resolved: **DV-004 / OQ-004** — the death condition compared `end_datetime::date` to the
+`date_of_death` *timestamp*, so the date was promoted to midnight and the flag could only
+fire for a death recorded at exactly `00:00:00`. It never fired at all. BL-004 now uses
+interval containment.
 
 - **OQ-002** *(owner: Maui team; due: before the next behavioural change to these
   reports)* — should DV-002 be resolved by a left join, so an ungrouped location's episodes
@@ -183,16 +175,6 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
   own row-level diff. The underlying data is worth a look first: an encounter ending
   before its own history is a source-side defect, not a reporting one.
-
-- **OQ-004** *(owner: Maui team; due: before these reports are relied on for mortality
-  figures)* — is DV-004's death condition correct? Establishing it needs a look at how a
-  death is recorded in the application, not just in the warehouse. Until then the death
-  column should be read as unverified rather than as zero deaths.
-
-- **OQ-005** *(owner: Maui team; due: with OQ-002)* — should the discharge and death
-  counts move to the month of discharge or death, matching the notes shipped with the
-  reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
-  its own row-level diff, so it is not folded into the length-of-stay alignment.
 
 ## Acceptance criteria
 
@@ -208,11 +190,15 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-005 | No sensitive facility's episode appears in a standard report. | BL-012 | `test_int__admission_history_location_partition` |
 | AC-009 | A sensitive report carries the sensitive facilities and only those. | BL-012 | `test_int__sensitive_admission_history_location_partition`, `..._department_partition` |
 | AC-010 | The department intermediate partitions on the same basis as the location one. | BL-012 | `test_int__admission_history_department_partition` |
+| AC-011 | A patient who died during the admission is counted as a death. | BL-004 | `test_int__admission_history_department_death_flag` |
+| AC-012 | A patient discharged alive who died later the same day is not counted. | BL-004 | `test_int__admission_history_department_death_flag` |
+| AC-013 | A death recorded at the exact instant the encounter ended is counted. | BL-004 | `test_int__admission_history_department_death_flag` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
+| 2026-09-04 | Death condition corrected to interval containment (BL-004), resolving DV-004. The previous date-versus-timestamp comparison could never be true, so every death count in these reports was zero. |
 | 2026-09-04 | Facility sensitivity partitioned (BL-012), null-safe so no facility falls outside both variants, resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
 | 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |
