@@ -84,8 +84,11 @@ inner join, not kept with a NULL concept — see BL-003 and
   Each row opens one segment, keyed by its `encounter_history.id`. Each segment's
   `visit_detail_end_datetime` is the next segment's start —
   `lead(start) over (partition by visit_occurrence_id order by start_datetime, visit_detail_id)`
-  — falling back to the encounter `end_datetime` for the final (open) segment. Ordering
-  breaks ties on `visit_detail_id` for determinism. `visit_detail_start_date` /
+  — falling back to the encounter `end_datetime` for the final segment of a **closed**
+  encounter. An encounter that has not yet closed (`end_datetime` is NULL) has no fallback:
+  its final segment's `visit_detail_end_datetime` stays NULL, open-ended, rather than
+  defaulting to the segment's own start (AC-014). Ordering breaks ties on `visit_detail_id`
+  for determinism. `visit_detail_start_date` /
   `visit_detail_end_date` are the date components of the respective datetimes, mirroring
   `clinical__visit_occurrence`. **Zero-length segments are possible:** when two
   `encounter_history` events share a timestamp, a segment's `end` equals its `start`
@@ -155,13 +158,14 @@ inner join, not kept with a NULL concept — see BL-003 and
 | AC-004 | Every non-null `care_site_id` (location) exists in `ref__care_site.care_site_id` | BL-006 | dbt `relationships` |
 | AC-005 | Every non-null `visit_detail_concept_id` exists in `map__omop_visit_type.concept_id` | BL-003 | dbt `relationships` |
 | AC-006 | When `visit_detail_end_datetime` is non-null, it is `>= visit_detail_start_datetime` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
-| AC-007 | Segments of one encounter do not overlap: each ends where the next begins, the last at the encounter end | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
+| AC-007 | Segments of one encounter do not overlap: each ends where the next begins; the last ends at the encounter end if it has closed, or stays open-ended (NULL) if it has not | BL-002, BL-004 | dbt unit test (`test_clinical__visit_detail_segments_do_not_overlap`) |
 | AC-008 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-007 | dbt `relationships` |
 | AC-009 | Every `person_id` exists in `clinical__person.person_id` | BL-001 | dbt `relationships` |
 | AC-010 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-007 | dbt `relationships` |
 | AC-011 | Each visit's earliest segment starts no later than the visit's own `visit_start_datetime`, so the opening phase is always covered (assumes Tamanu records an initial `encounter_history` row at encounter creation) | BL-002, BL-005 | singular test (`data_test__clinical__visit_detail`) |
 | AC-012 | Every `encounter_type` value in `encounters` / `encounter_history` exists in `map__omop_visit_type.local_code` (flags schema drift before it silently excludes a segment here) | BL-003 | singular test (`data_test__map__omop_visit_type_coverage`) |
 | AC-013 | Every `encounters.id` has at least one corresponding row here (the direct completeness check for BL-003's inner join) | BL-003, BL-005 | singular test (`data_test__clinical__visit_detail`) |
+| AC-014 | The final segment of an encounter that has not closed (`end_datetime` is NULL) has a NULL `visit_detail_end_datetime` / `visit_detail_end_date`, not the segment's own start | BL-002 | dbt unit test (`test_clinical__visit_detail_open_encounter_stays_open`) |
 
 `test_clinical__visit_detail_synthesized_segment` additionally covers BL-005
 (history-less encounter → one whole-visit segment).

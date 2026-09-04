@@ -41,3 +41,40 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__outpatient_visit.md
+
+- metric_id: opd_diagnosis
+  kind: metric
+  name: OPD diagnoses
+  description: >-
+    Clinical diagnoses whose window -- the diagnosis's own time, clamped to the encounter's
+    own start and end -- overlaps a clinic, vaccination or imaging segment. One row per
+    diagnosis. A diagnosis spanning both an outpatient and an inpatient segment counts in
+    both.
+  numerator_description: >-
+    Recorded diagnoses whose window overlaps a clinical__visit_detail segment carrying OMOP
+    visit concept 9202 (Outpatient Visit), counted on the diagnosis date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded diagnoses scoped to the outpatient setting. No external body
+    registers a single diagnosis-count indicator scoped to outpatient care specifically --
+    AIHW's non-admitted reporting counts service events and occasions of service, not
+    diagnoses, and morbidity classification (ICD-10 chapter, block) is a deployment choice, so
+    this metric emits the diagnosis as recorded and leaves any grouping to the consumer, the
+    same approach metric__encounter_diagnosis takes. Pending alignment with the deploying
+    country's national HMIS definition.
+  unit: count
+  subject_grain: diagnosis
+  disaggregations:
+  - facility_id
+  - sex
+  - diagnosis
+  - diagnosis_code
+  - diagnosis_certainty
+  - is_primary
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__opd_diagnosis.md
