@@ -22,8 +22,8 @@ withdrawn_tests as (
     from lab_tests lt
     join lab_requests lr on lr.id = lt.lab_request_id
     where lr.status in (
-        'cancelled', 'deleted', 'entered-in-error', 'invalidated', 'rejected', 'sample-not-collected'
-    )
+            'cancelled', 'deleted', 'entered-in-error', 'invalidated', 'rejected', 'sample-not-collected'
+        )
 )
 
 select

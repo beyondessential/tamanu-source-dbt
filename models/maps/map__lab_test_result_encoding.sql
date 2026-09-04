@@ -11,7 +11,7 @@
 -- deployment's output changes until it opts in.
 
 select
-    null::text    as lab_test_type_id,
-    null::text    as encoded_result,
+    null::text as lab_test_type_id,
+    null::text as encoded_result,
     null::boolean as is_positive
 where false
