@@ -4,9 +4,10 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `hospital-admissions-by-area-summary`, `hospital-admissions-by-department-summary`, `hospital-admissions-by-location-summary` |
-| **Models** | `models/reports/sql/standard/hospital-admissions-by-{area,department,location}-summary.sql` — inline SQL, no report macro |
-| **Intermediates** | `int__admission_history_location`, `int__admission_history_department` (`models/intermediate/standard/`) |
+| **Name** | `hospital-admissions-by-{area,department,location}-summary` (+ sensitive twins) |
+| **Macros** | `hospital_admissions_by_{area,department,location}_summary_report(is_sensitive=false)` (`macros/reports/`) |
+| **Models** | `models/reports/sql/{standard,sensitive}/` — one thin macro call per variant |
+| **Intermediates** | `admission_history_{location,department}(is_sensitive=false)` (`macros/intermediate/`), materialised as `int__admission_history_*` and `int__sensitive_admission_history_*` |
 | **Type** | Tamanu reports (reporting schema) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
@@ -25,7 +26,7 @@ dimension.
 
 ## Grain
 
-One row per (reporting month × dimension), where the dimension is the location group for
+One row per (reporting month × dimension) **in the requested sensitivity partition**, where the dimension is the location group for
 `-by-area`, the department for `-by-department`, and the location for `-by-location`. A
 row exists only where at least one admission episode overlaps that month.
 
@@ -108,20 +109,16 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   month regardless, since patient-days accrue while a stay is merely open. `-by-department`
   has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
   ended in the month, and a month an episode merely spans is suppressed as empty.
+- **BL-012:** The facility scope is partitioned by `is_sensitive`, in the intermediates
+  rather than in the reports. The predicate is `f.is_sensitive = <argument>`, so the two
+  variants are disjoint and — for a non-null flag — exhaustive: each facility's episodes
+  reach exactly one of them. The reports carry no sensitivity logic beyond choosing which
+  intermediate to read, and a consumer wanting both figures runs both reports. The join to
+  `facilities` exists only to resolve the facility name; the predicate is what makes it a
+  partition.
 
 ## Divergences
 
-- **DV-001:** *(the standard/sensitive partition is not applied)* Both intermediates join
-  `facilities` with no `is_sensitive` predicate, and all three reports exist only in
-  `models/reports/sql/standard/` with no sensitive twin. A sensitive facility's name and
-  its admission, discharge, **death**, transfer, length-of-stay and bed-occupancy figures
-  therefore appear in a standard report. Everywhere else the partition is applied as
-  `f.is_sensitive = {{ is_sensitive }}` — exhaustive and disjoint, so each facility's data
-  reaches exactly one of the two variants. Here it reaches the standard one regardless.
-  The figures are aggregate rather than patient-level, which bounds the exposure but does
-  not remove it: a facility appears by name with a death count. In both intermediates the
-  `facilities` join exists only to resolve `f.name`, so nothing else depends on it.
-  Resolution is OQ-001.
 - **DV-002:** *(episodes silently dropped)* `int__admission_history_location` inner-joins
   `location_groups`, so an episode in a location with no `location_group_id` disappears
   from both `-by-area` and `-by-location`, taking its admission, discharge and death
@@ -136,28 +133,32 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   and `-by-location` excludes it from **every** month and its admission, discharge and
   death are reported nowhere. `-by-department` admits it into the month it started
   (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
+- **DV-004:** *(the death count may never fire)* `death` requires the encounter's end date
+  to equal the patient's `date_of_death` exactly (BL-004). On the Kiribati replica, 106
+  admission encounters belong to a patient carrying a `date_of_death` and all 106 have
+  ended, yet in **none** of them do the two dates match — so `hospitalDeathCount` is
+  structurally zero there, in all three reports. Whether the condition is too strict, or
+  deaths are recorded through a discharge disposition and `date_of_death` is set
+  separately, is not established. Resolution is OQ-004.
 
 ## Open questions
 
-- **OQ-001** *(owner: Maui team; due: before these reports are used by a deployment that
-  flags any facility sensitive)* — how should DV-001 be resolved? Three resolutions are
-  viable and they differ in what is lost: partition the intermediates and add sensitive
-  twins of all three reports; partition to standard-only and accept that sensitive
-  facilities have no bed-management reporting; or record the current behaviour as
-  deliberate on the grounds that aggregate counts are not identifying. The choice is a
-  governance one about aggregate disclosure rather than a technical one — all three are
-  straightforward to build — so it needs a decision before code.
-- **OQ-002** *(owner: Maui team; due: with OQ-001)* — should DV-002 be resolved by a left
-  join, so an ungrouped location's episodes are counted under a null area? That changes
-  `-by-area` output and needs a row-level diff. It is listed with OQ-001 because both are
-  fixes to the same intermediate and are cheaper to ship together.
+- **OQ-002** *(owner: Maui team; due: before the next behavioural change to these
+  reports)* — should DV-002 be resolved by a left join, so an ungrouped location's episodes
+  are counted under a null area? That changes `-by-area` output and needs a row-level diff.
+  It touches the same intermediate as OQ-003 and the two are cheaper to ship together.
 
-- **OQ-003** *(owner: Maui team; due: with OQ-001)* — how should the malformed episodes of
+- **OQ-003** *(owner: Maui team; due: with OQ-002)* — how should the malformed episodes of
   DV-003 be treated? Dropping them everywhere makes the three consistent but loses real
   admissions; keeping them everywhere means deciding which month a negative-duration stay
   belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
   own row-level diff. The underlying data is worth a look first: an encounter ending
   before its own history is a source-side defect, not a reporting one.
+
+- **OQ-004** *(owner: Maui team; due: before these reports are relied on for mortality
+  figures)* — is DV-004's death condition correct? Establishing it needs a look at how a
+  death is recorded in the application, not just in the warehouse. Until then the death
+  column should be read as unverified rather than as zero deaths.
 
 ## Acceptance criteria
 
@@ -170,11 +171,13 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-002 | A same-day stay counts as one day, not zero. | BL-005 | Structural — no test targets the floor |
 | AC-003 | A death is counted in both the death and discharge columns. | BL-004 | Structural — no test targets the overlap |
 | AC-004 | A dimension whose locations carry no `max_occupancy` renders `N/A`. | BL-008 | Structural |
-| AC-005 | No sensitive facility appears in these reports. | — | **Not satisfied.** See DV-001 |
+| AC-005 | No sensitive facility's episode appears in a standard report. | BL-012 | `test_int__admission_history_location_partition` |
+| AC-009 | A sensitive report carries the sensitive facilities and only those. | BL-012 | `test_int__sensitive_admission_history_location_partition` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
+| 2026-09-04 | Facility sensitivity partitioned (BL-012), resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
 | 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |
