@@ -6,9 +6,10 @@
 --
 -- Empty by default: the test types that behave this way are deployment reference data, not part
 -- of a standard Tamanu catalogue. A deployment that records point-of-care tests disables this
--- model and defines its own of the same name, unique on lab_test_type_id so the join in
--- clinical__measurement stays one-to-one. Empty here means the join is a no-op, so no
--- deployment's output changes until it opts in.
+-- model and defines its own of the same name, carrying the unique and not_null tests declared
+-- here. Disabling this model disables those tests too, and a duplicate lab_test_type_id fans
+-- out every lab measurement of that type in clinical__measurement. Empty here means the join
+-- is a no-op, so no deployment's output changes until it opts in.
 
 select
     null::text as lab_test_type_id,

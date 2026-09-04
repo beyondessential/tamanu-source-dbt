@@ -55,7 +55,7 @@ request's requesting clinician. FK to ref__provider.
 
 {% docs clinical__measurement__measurement_source_id %}
 The identifier of the thing measured in the system it came from: the lab test type for a lab
-result, the program data element for a vitals answer. Empty for birth anthropometry, which has
+result, the program data element for a vitals answer. NULL for birth anthropometry, which has
 no reference-data record behind it.
 {% enddocs %}
 

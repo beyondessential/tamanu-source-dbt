@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-04 |
-| **Last updated** | 2026-09-04 |
+| **Last updated** | 2026-09-05 |
 
 The OMOP-lite `MEASUREMENT` domain — one row per clinical measurement (numeric or
 categorical), unioning three standard sources: **vitals** (blood pressure, weight, glucose,
@@ -174,6 +174,8 @@ are **not** emitted — see BL-003 and OQ-1.
 | AC-007 | `measurement_datetime` is `not_null` | BL-004 | dbt `not_null` |
 | AC-008 | No lab measurement comes from a request in a withdrawn status | BL-011 | dbt singular |
 | AC-009 | Every lab measurement carries a non-blank reading | BL-007, BL-009 | dbt singular |
+| AC-010 | Where the typed result is blank and the test type is in the encoding map, the encoded result is the reading, and a typed result wins where both exist | BL-009 | dbt unit test |
+| AC-011 | A lab measurement's `measurement_source_id` is its `lab_test_type_id` | BL-010 | dbt unit test |
 
 ## Registry entry
 
