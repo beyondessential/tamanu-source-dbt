@@ -1,0 +1,72 @@
+name: dbt unit tests
+
+# dbt unit tests mock every input, so they need a database connection but no Tamanu data.
+# Running them against a throwaway Postgres service keeps them on every PR with no secrets
+# and no access to a real deployment.
+#
+# Data tests are deliberately NOT run here: they assert over real rows and need a live
+# database, which is a separate piece of work with its own credentials.
+#
+# Why this exists: checks.yml runs the Python script tests and the generated-macro drift
+# guard, but nothing was executing dbt's own unit tests. A fixture whose UNION arms had
+# mismatched column counts reached a release through seven green PRs before a deployment
+# hit it at runtime.
+
+on:
+  pull_request:
+
+jobs:
+  unit-tests:
+    name: dbt unit tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dbt
+          POSTGRES_PASSWORD: dbt
+          POSTGRES_DB: dbt
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # The reporting_release target's connection settings, pointed at the service
+      # container above rather than a deployment.
+      TAMANU_RL_DB_URL: localhost
+      TAMANU_RL_DB_PORT: '5432'
+      TAMANU_RL_DB_USER: dbt
+      TAMANU_RL_DB_PASSWORD: dbt
+      TAMANU_RL_DB_DATABASE: dbt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: uv pip install --system -e .
+
+      - name: Generate the translation macro
+        # Not committed, and the project will not parse without it.
+        run: python scripts/generate_translation_macro.py
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Run dbt unit tests
+        run: dbt test --select test_type:unit --profiles-dir config --target reporting_release
