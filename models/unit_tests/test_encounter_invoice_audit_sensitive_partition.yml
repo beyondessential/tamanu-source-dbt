@@ -75,7 +75,7 @@ unit_tests:
             null::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime,
             null::numeric as invoice_total, null::numeric as insurance_coverage,
             null::numeric as invoice_discount, null::numeric as patient_payment,
-            null::text as products_no_category
+            null::numeric as patient_subtotal, null::text as products_no_category
           where false
 
     expect:
