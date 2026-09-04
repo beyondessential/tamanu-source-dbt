@@ -7,6 +7,10 @@ models:
       encode. Point-of-care rapid tests are recorded by choosing a result-bearing test type
       rather than by entering a result, so the reading exists even where lab_tests.result is
       blank. Joined by clinical__measurement to recover those readings.
+
+      Empty by default. The test types that behave this way are deployment reference data, so a
+      deployment that records point-of-care tests disables this model and defines its own of the
+      same name.
     config:
       tags:
         - reference

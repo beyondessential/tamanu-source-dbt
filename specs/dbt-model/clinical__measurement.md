@@ -139,7 +139,9 @@ are **not** emitted — see BL-003 and OQ-1.
   `value_source_value`.
 - **BL-009 (encoded results):** A point-of-care test is recorded by choosing a result-bearing
   test type rather than by entering a result, so where `lab_tests.result` is blank and
-  `map__lab_test_result_encoding` covers the test type, the encoded result is the reading.
+  `map__lab_test_result_encoding` covers the test type, the encoded result is the reading. The
+  map is empty in this repo and is the extension point a deployment overrides to name its own
+  result-bearing test types, so the branch behaves identically everywhere until one does.
 - **BL-010 (source identifier):** `measurement_source_id` carries the source system's identifier
   for the thing measured — the lab test type for a lab, the program data element for a vitals
   answer, and nothing for birth anthropometry — alongside the code in `measurement_source_value`.

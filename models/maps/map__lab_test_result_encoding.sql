@@ -1,34 +1,16 @@
--- Lab test types that encode their own result -> the result they encode.
+-- Lab test types that carry their result in the type itself -> the result they encode.
 --
--- Point-of-care rapid tests are recorded by choosing a result-bearing test type rather than by
--- entering a result: the reactive and non-reactive readings are two distinct lab_test_types, and
--- lab_tests.result is often left blank because the type already carries the answer. Without this
--- map, clinical__measurement's non-blank-result rule (BL-007) discards those readings entirely.
+-- A point-of-care rapid test is recorded by choosing a result-bearing test type rather than by
+-- entering a result, so lab_tests.result is often blank while the reading sits in the type.
+-- clinical__measurement joins this map so those readings are not discarded (BL-009).
 --
--- Universal mapping: these test types ship with Tamanu, so it lives in tamanu-source-dbt.
--- View-over-values rather than a seed so it ships in the compiled production bundle. A deployment
--- whose catalogue carries additional result-bearing types overrides this model by name.
---
--- is_positive is the reading itself, not an interpretation of it: a reactive screening result is
--- recorded here as reactive, and what that means for a given indicator is the consumer's business.
+-- Empty by default: the test types that behave this way are deployment reference data, not part
+-- of a standard Tamanu catalogue. A deployment that records point-of-care tests disables this
+-- model and defines its own of the same name. Empty here means the join is a no-op, so no
+-- deployment's output changes until it opts in.
 
 select
-    lab_test_type_id,
-    encoded_result,
-    is_positive
-from (
-    values
-        -- SD Duo combined HIV / syphilis point-of-care test
-        ('labTestType-SDDuoHIVReactive',            'Reactive',     true),
-        ('labTestType-SDDuoHIVNonReactive',         'Non-reactive', false),
-        ('labTestType-SDDuoSyphilisReactive',       'Reactive',     true),
-        ('labTestType-SDDuoSyphilisNonReactive',    'Non-reactive', false),
-        -- HIV rapid diagnostic tests
-        ('labTestType-HIVRDTInstiPositive',              'Positive', true),
-        ('labTestType-HIVRDTInstiNegative',              'Negative', false),
-        ('labTestType-HIVRDTUniGoldPreliminaryPositive', 'Positive', true),
-        ('labTestType-HIVRDTUniGoldNegative',            'Negative', false),
-        -- Determine hepatitis B surface antigen
-        ('labTestType-DetermineHepatitisBSurfaceAntigenPositive', 'Positive', true),
-        ('labTestType-DetermineHepatitisBSurfaceAntigenNegative', 'Negative', false)
-) as t (lab_test_type_id, encoded_result, is_positive)
+    null::text    as lab_test_type_id,
+    null::text    as encoded_result,
+    null::boolean as is_positive
+where false
