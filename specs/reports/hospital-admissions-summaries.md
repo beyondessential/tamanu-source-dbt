@@ -74,7 +74,7 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   `ds__deaths` uses to attribute a death to an encounter. A death is therefore also counted
   as a discharge, and the two columns are not disjoint. Two consequences follow from using
   an interval. A patient discharged alive who dies later the same day is **not** a death
-  here, which a date-level comparison would have counted. And a death during a still-open
+  here. And a death during a still-open
   encounter is not counted until that encounter is closed, since `between start and null`
   is null — the same restriction `discharge` already carries.
 - **BL-005:** `length_of_stay` is the difference in whole days between the episode's
@@ -125,10 +125,9 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   exhaustive: each facility's episodes reach exactly one of them. The `coalesce` is what
   makes it exhaustive — `facilities.is_sensitive` carries no `not_null` test, and a bare
   `= true` / `= false` pair matches neither variant for a null, which would drop that
-  facility from all six reports rather than move it. A null reads as non-sensitive, which
-  is where such a facility's episodes appeared before the partition existed. This is
-  deliberately stricter than `encounters_core`'s bare `f.is_sensitive = <argument>`, so
-  the two are not to be "aligned" by dropping the `coalesce`. The reports carry no
+  facility from all six reports rather than move it. A null reads as non-sensitive. The `coalesce` is
+  required here and absent from `encounters_core`'s bare `f.is_sensitive = <argument>`;
+  removing it to match would place a null-flagged facility in neither variant. The reports carry no
   sensitivity logic beyond choosing which intermediate to read, and a consumer wanting
   both figures runs both reports. The join to `facilities` exists only to resolve the
   facility name; the predicate is what makes it a partition.
@@ -210,7 +209,4 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
-| 2026-09-04 | Death condition corrected to interval containment (BL-004), resolving DV-004 and OQ-004. The previous condition compared `end_datetime::date` to the `date_of_death` *timestamp*, so the date was promoted to midnight and the flag could only fire for a death recorded at exactly `00:00:00` — it never fired at all, and every death count in these reports was zero. Asserted on both intermediates (AC-011..AC-014) and, incidentally, AC-003's death/discharge overlap. |
-| 2026-09-04 | Facility sensitivity partitioned (BL-012), null-safe so no facility falls outside both variants, resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
-| 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. |
