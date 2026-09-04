@@ -14,6 +14,8 @@ from .file_utils import (
     write_file,
 )
 from .report_utils import (
+    create_report_config,
+    create_report_sql,
     generate_import_report_script,
     generate_project_reports,
     generate_reporting_schema_script,
