@@ -53,7 +53,10 @@ area_summary as (
     join {{ ref(episodes) }} alh
         on {{ to_user_selected_timezone('alh.start_datetime') }}::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
-    join area_capacity lg on lg.location_group_id = alh.location_group_id
+    -- BL-013: left join, because `null = null` is false -- an ungrouped episode would
+    -- otherwise survive the intermediate and be dropped here instead. Such a row has no
+    -- area capacity to divide by, so its bed occupancy reports N/A per BL-008.
+    left join area_capacity lg on lg.location_group_id = alh.location_group_id
     where rm.month <= current_date
     group by
         rm.month,

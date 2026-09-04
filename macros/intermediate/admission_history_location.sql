@@ -64,7 +64,10 @@ from admission_location_log ll
 join {{ ref('encounters') }} e on e.id = ll.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('locations') }} l on l.id = ll.location_id
-join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+-- BL-013 (specs/reports/hospital-admissions-summaries.md): left join. A location
+-- with no location_group is real and its episodes count; an inner join here dropped
+-- them from -by-area and -by-location entirely, deaths included.
+left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
 join {{ ref('facilities') }} f
     on f.id = l.facility_id
