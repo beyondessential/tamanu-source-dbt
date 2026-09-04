@@ -12,15 +12,16 @@ unit_tests:
       Also pins two behaviours that are deliberately unchanged. The event counts still
       belong to the month an episode STARTED (BL-006), which is why ep_long's admission and
       discharge are counted in January while its length of stay lands in March. And a month
-      an episode merely spans is suppressed (BL-009) — February holds a row only because
-      ep_open started in it, and there is no row for a department-month with nothing to
-      report.
+      an episode merely spans is suppressed (BL-009): the spine runs to April, which ep_open
+      spans without starting or ending in it, so the overlap join reaches April but the
+      `having` drops it. February is no witness for that — ep_open starts in it — which is
+      why the range extends a month past the last event.
     overrides:
       vars:
         timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see the -by-area test
         yearmonth_format: YYYY-MM
         fromDate: '2024-01-01'
-        toDate: '2024-03-31'
+        toDate: '2024-04-30'
     given:
       - input: ref('int__admission_history_department')
         format: sql

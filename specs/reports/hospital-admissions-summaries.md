@@ -115,12 +115,26 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
   ended in the month, and a month an episode merely spans is suppressed as empty.
 - **BL-012:** The facility scope is partitioned by `is_sensitive`, in the intermediates
-  rather than in the reports. The predicate is `f.is_sensitive = <argument>`, so the two
-  variants are disjoint and — for a non-null flag — exhaustive: each facility's episodes
-  reach exactly one of them. The reports carry no sensitivity logic beyond choosing which
-  intermediate to read, and a consumer wanting both figures runs both reports. The join to
-  `facilities` exists only to resolve the facility name; the predicate is what makes it a
-  partition.
+  rather than in the reports. The predicate is
+  `coalesce(f.is_sensitive, false) = <argument>`, so the two variants are disjoint and
+  exhaustive: each facility's episodes reach exactly one of them. The `coalesce` is what
+  makes it exhaustive — `facilities.is_sensitive` carries no `not_null` test, and a bare
+  `= true` / `= false` pair matches neither variant for a null, which would drop that
+  facility from all six reports rather than move it. A null reads as non-sensitive, which
+  is where such a facility's episodes appeared before the partition existed. This is
+  deliberately stricter than `encounters_core`'s bare `f.is_sensitive = <argument>`, so
+  the two are not to be "aligned" by dropping the `coalesce`. The reports carry no
+  sensitivity logic beyond choosing which intermediate to read, and a consumer wanting
+  both figures runs both reports. The join to `facilities` exists only to resolve the
+  facility name; the predicate is what makes it a partition.
+
+  The sensitive intermediates are tagged `restricted` (`dbt_project.yml`), which is what
+  keeps them out of the deployed `reporting` schema unless `has_sensitive_facility` is
+  set. Ephemeral materialisation alone does not: `generate_reporting_schema_script()`
+  emits a view for every non-report, non-internal model in the manifest, ephemeral
+  included, so an untagged sensitive intermediate would ship as an episode-grain view
+  readable by `tamanu_reporting` on every deployment — a wider exposure than the
+  aggregate one this clause closes.
 
 ## Divergences
 

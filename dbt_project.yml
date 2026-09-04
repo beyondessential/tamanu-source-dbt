@@ -69,6 +69,15 @@ models:
         +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
     intermediate:
       +materialized: ephemeral
+      # Ephemeral is not enough on its own: generate_reporting_schema_script()
+      # creates a `reporting` view for every non-report, non-internal model in the
+      # manifest, ephemeral included, so a sensitive intermediate would otherwise
+      # ship as an episode-grain view readable by `tamanu_reporting` on every
+      # deployment. `restricted` keeps it out unless has_sensitive_facility is set,
+      # the same mechanism datasets/sensitive and reports/sql/sensitive use below.
+      sensitive:
+        +tags:
+          - restricted
     ref:
       +docs:
         show: true
