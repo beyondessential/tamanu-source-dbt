@@ -1,0 +1,59 @@
+unit_tests:
+  - name: test_metric__system_usage_event_month_bucketing
+    model: metric__system_usage
+    description: >-
+      AC-009 (BL-002a). Month bucketing is driven by the clinical event datetime and
+      applies no timezone conversion: event datetimes are Tamanu date_time_string
+      (character(19)) local wall-clock values, already deployment-local.
+
+      The two events sit either side of a month boundary one minute apart --
+      2024-01-31 23:59 and 2024-02-01 00:00 -- so any timezone shift shows up
+      immediately as a row landing in the wrong month. Re-interpreting these through
+      to_user_selected_timezone (var('timezone'), default Australia/Sydney) is exactly
+      the change this test exists to catch.
+
+      The third event has a NULL datetime and must contribute no row at all (BL-002a).
+      Both real events share one provider that resolves in ref__provider, so
+      active_users is 1 in each month (BL-003), and every row carries variant_id NULL
+      (AC-008). facility_id and sex come out NULL because no visit or person rows are
+      given -- BL-006 keeps such events rather than dropping them.
+    given:
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select
+            'p1'::varchar as person_id,
+            'u1'::varchar as provider_id,
+            'v1'::varchar as visit_occurrence_id,
+            '2024-01-31 23:59:00'::timestamp as condition_start_datetime
+          union all
+          select 'p1'::varchar, 'u1'::varchar, 'v1'::varchar, '2024-02-01 00:00:00'::timestamp
+          union all
+          select 'p1'::varchar, 'u1'::varchar, 'v1'::varchar, null::timestamp
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'u1'::varchar as provider_id
+    expect:
+      format: sql
+      rows: |
+        select
+          'clinical_events'::text as metric_id,
+          null::text as variant_id,
+          null::uuid as subject_id,
+          '2024-01-01'::date as period_start,
+          '2024-01-31'::date as period_end,
+          'month'::text as period_granularity,
+          1::numeric as value_numeric,
+          null::boolean as value_boolean,
+          null::text as facility_id,
+          null::text as sex
+        union all
+        select 'clinical_events'::text, null::text, null::uuid, '2024-02-01'::date, '2024-02-29'::date,
+               'month'::text, 1::numeric, null::boolean, null::text, null::text
+        union all
+        select 'active_users'::text, null::text, null::uuid, '2024-01-01'::date, '2024-01-31'::date,
+               'month'::text, 1::numeric, null::boolean, null::text, null::text
+        union all
+        select 'active_users'::text, null::text, null::uuid, '2024-02-01'::date, '2024-02-29'::date,
+               'month'::text, 1::numeric, null::boolean, null::text, null::text
