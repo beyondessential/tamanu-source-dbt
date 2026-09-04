@@ -167,12 +167,8 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   which BL-011 now follows in all three reports — so the discharge and death counts are
   the remaining columns keyed to a different month from the definition they ship with.
   Pre-existing and unchanged here. Resolution is OQ-005.
-## Open questions
 
-Resolved: **DV-004 / OQ-004** — the death condition compared `end_datetime::date` to the
-`date_of_death` *timestamp*, so the date was promoted to midnight and the flag could only
-fire for a death recorded at exactly `00:00:00`. It never fired at all. BL-004 now uses
-interval containment.
+## Open questions
 
 - **OQ-002** *(owner: Maui team; due: before the next behavioural change to these
   reports)* — should DV-002 be resolved by a left join, so an ungrouped location's episodes
@@ -190,6 +186,7 @@ interval containment.
   counts move to the month of discharge or death, matching the notes shipped with the
   reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
   its own row-level diff, so it is not folded into the length-of-stay alignment.
+
 ## Acceptance criteria
 
 | ID | Criterion | Clause | Asserted by |
@@ -199,20 +196,21 @@ interval containment.
 | AC-007 | An open episode contributes to no month's average. | BL-011 | `test_hospital_admissions_by_department_length_of_stay` |
 | AC-008 | A `-by-department` month an episode merely spans is not reported. | BL-009 | `test_hospital_admissions_by_department_length_of_stay` |
 | AC-002 | A same-day stay counts as one day, not zero. | BL-005 | Structural — no test targets the floor |
-| AC-003 | A death is counted in both the death and discharge columns. | BL-004 | Structural — no test targets the overlap |
+| AC-003 | A death is counted in both the death and discharge columns. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-004 | A dimension whose locations carry no `max_occupancy` renders `N/A`. | BL-008 | Structural |
 | AC-005 | No sensitive facility's episode appears in a standard report. | BL-012 | `test_int__admission_history_location_partition` |
 | AC-009 | A sensitive report carries the sensitive facilities and only those. | BL-012 | `test_int__sensitive_admission_history_location_partition`, `..._department_partition` |
 | AC-010 | The department intermediate partitions on the same basis as the location one. | BL-012 | `test_int__admission_history_department_partition` |
-| AC-011 | A patient who died during the admission is counted as a death. | BL-004 | `test_int__admission_history_department_death_flag` |
-| AC-012 | A patient discharged alive who died later the same day is not counted. | BL-004 | `test_int__admission_history_department_death_flag` |
-| AC-013 | A death recorded at the exact instant the encounter ended is counted. | BL-004 | `test_int__admission_history_department_death_flag` |
+| AC-011 | A patient who died during the admission is counted as a death. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
+| AC-012 | A patient discharged alive who died later the same day is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
+| AC-013 | A death recorded at the exact instant the encounter ended is counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
+| AC-014 | A death recorded before the admission began is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. |
-| 2026-09-04 | Death condition corrected to interval containment (BL-004), resolving DV-004. The previous date-versus-timestamp comparison could never be true, so every death count in these reports was zero. |
+| 2026-09-04 | Death condition corrected to interval containment (BL-004), resolving DV-004 and OQ-004. The previous condition compared `end_datetime::date` to the `date_of_death` *timestamp*, so the date was promoted to midnight and the flag could only fire for a death recorded at exactly `00:00:00` — it never fired at all, and every death count in these reports was zero. Asserted on both intermediates (AC-011..AC-014) and, incidentally, AC-003's death/discharge overlap. |
 | 2026-09-04 | Facility sensitivity partitioned (BL-012), null-safe so no facility falls outside both variants, resolving DV-001: both intermediates take an `is_sensitive` argument and all three reports gained a sensitive twin. Standard output is unchanged. |
 | 2026-09-04 | `-by-department` average length of stay changed to the ended-in-month basis the other two use (BL-011), making the three comparable. Event counts unchanged. |

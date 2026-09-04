@@ -28,7 +28,7 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'pat_001'::text as id, null::date as date_of_death
+          select 'pat_001'::text as id, null::timestamp as date_of_death
       - input: ref('locations')
         format: sql
         rows: |
@@ -126,7 +126,7 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'pat_001'::text as id, null::date as date_of_death
+          select 'pat_001'::text as id, null::timestamp as date_of_death
       - input: ref('departments')
         format: sql
         rows: |
