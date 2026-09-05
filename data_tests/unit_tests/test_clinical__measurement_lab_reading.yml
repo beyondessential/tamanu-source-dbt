@@ -1,0 +1,112 @@
+unit_tests:
+  - name: test_clinical__measurement_lab_reading
+    model: clinical__measurement
+    description: >
+      The lab branch's reading resolution (BL-009, AC-010) and the withdrawn-request rule
+      (BL-011).
+      map__lab_test_result_encoding is empty in this repo, so only a mocked map exercises the
+      encoded-result path at all. lt1 recovers an encoded reading where the typed result is
+      blank; lt2 keeps the typed result where both exist; lt3 has neither and is dropped; lt4
+      and lt5 sit under a cancelled and a rejected request and are dropped even though their
+      type encodes a result; lt6 checks a numeric encoded reading reaching value_as_number, not
+      just value_source_value. measurement_source_id carries the test type id (BL-010, AC-011).
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'lr1' as id, 'published' as status, 'enc1' as encounter_id, 'usr1' as requested_by_id, '2024-03-01'::timestamp as requested_datetime, '2024-03-02'::timestamp as published_datetime
+          union all
+          select 'lr2', 'cancelled', 'enc1', 'usr1', '2024-03-01'::timestamp, '2024-03-02'::timestamp
+          union all
+          select 'lr3', 'rejected', 'enc1', 'usr1', '2024-03-01'::timestamp, '2024-03-02'::timestamp
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 'lt1' as id, 'lr1' as lab_request_id, 'ttPOC' as lab_test_type_id, '' as result, null::timestamp as completed_datetime
+          union all
+          select 'lt2', 'lr1', 'ttPOC', '  Non-reactive  ', '2024-03-03'::timestamp
+          union all
+          select 'lt3', 'lr1', 'ttPLAIN', '   ', '2024-03-03'::timestamp
+          union all
+          select 'lt4', 'lr2', 'ttPOC', '', null::timestamp
+          union all
+          select 'lt5', 'lr3', 'ttPOC', '', null::timestamp
+          union all
+          select 'lt6', 'lr1', 'ttNUM', '', '2024-03-04'::timestamp
+
+      - input: ref('map__lab_test_result_encoding')
+        format: sql
+        rows: |
+          select 'ttPOC'::text as lab_test_type_id, 'Reactive'::text as encoded_result, true as is_positive
+          union all
+          select 'ttNUM', '1', true
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ttPOC' as id, 'HIVRDT' as code, 'HIV rapid test (reactive)' as name, null::text as unit
+          union all
+          select 'ttNUM', 'CD4', 'CD4 count', 'cells/uL'
+          union all
+          select 'ttPLAIN', 'PLAIN', 'Plain test', null::text
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc1' as id, 'pat1' as patient_id
+
+      # the vitals and birth branches are out of scope here -- empty so the expectation is the
+      # lab branch alone
+      - input: ref('survey_response_answers')
+        format: sql
+        rows: |
+          select null::text as id, null::text as body, null::text as data_element_id, null::text as response_id where false
+
+      - input: ref('survey_responses')
+        format: sql
+        rows: |
+          select null::text as id, null::text as survey_id, null::text as encounter_id, null::text as submitted_by_id, null::timestamp as start_datetime where false
+
+      - input: ref('surveys')
+        format: sql
+        rows: |
+          select null::text as id, null::text as survey_type where false
+
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::text as name where false
+
+      - input: ref('int__patient_birth_measurements')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as measurement_source_value, null::text as measurement_source_name, null::text as value_source_value, null::timestamp as measurement_datetime where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'lt1'::varchar as measurement_id,
+          'pat1'::varchar as person_id,
+          '2024-03-02'::date as measurement_date,
+          '2024-03-02'::timestamp as measurement_datetime,
+          'lab'::text as measurement_type_source_value,
+          null::numeric as value_as_number,
+          'Reactive'::text as value_source_value,
+          null::text as unit_source_value,
+          'usr1'::varchar as provider_id,
+          'enc1'::varchar as visit_occurrence_id,
+          'ttPOC'::varchar as measurement_source_id,
+          'HIVRDT'::text as measurement_source_value,
+          'HIV rapid test (reactive)'::text as measurement_source_name
+        union all
+        select
+          'lt2', 'pat1', '2024-03-03'::date, '2024-03-03'::timestamp, 'lab',
+          null::numeric, 'Non-reactive', null::text, 'usr1', 'enc1',
+          'ttPOC', 'HIVRDT', 'HIV rapid test (reactive)'
+        union all
+        select
+          'lt6', 'pat1', '2024-03-04'::date, '2024-03-04'::timestamp, 'lab',
+          1::numeric, '1', 'cells/uL', 'usr1', 'enc1',
+          'ttNUM', 'CD4', 'CD4 count'
