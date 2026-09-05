@@ -102,13 +102,24 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
   Two edge cases lose an end-of-episode event rather than moving it. An episode whose end
   month is later than today is clipped out of `-by-area` and `-by-location` by BL-010's
-  spine guard, so its discharge is counted nowhere. And a malformed episode (DV-003) is
-  reachable in `-by-department` only through the started-in-month disjunct, so its end
-  month has no group and its discharge is likewise counted nowhere; in the other two it was
-  already absent from every month.
+  spine guard, so its discharge is counted nowhere. And a malformed episode inverted across
+  a month boundary (DV-003) is reachable in `-by-department` only through the
+  started-in-month disjunct, so its end month has no group and its discharge is likewise
+  counted nowhere; in the other two it is absent from every month. A malformed episode
+  inverted *inside* one month is not an edge case here — it overlaps that month normally and
+  keeps all its events (DV-003).
 - **BL-007:** `hospitalPatientDayCount` is patient-days inside the month: the episode's
-  span clipped to the month boundaries, or 1 where the episode starts and ends on the
-  same date. An open episode is clipped to `current_date`.
+  span clipped to the month boundaries, floored at **1** where the clipped end falls on or
+  before the start. An open episode is clipped to `current_date`. The floor follows the
+  AIHW definition — a patient day is *"a day, or part of a day, that a patient is
+  admitted"*, and a same-day admission is allocated one bed day — so one is the least an
+  episode can contribute, and it also absorbs a malformed episode (DV-003) rather than
+  letting it subtract days from the month. It is the floor BL-005 already applies to
+  `length_of_stay`.
+
+  A clipped contribution of **0** is not floored, and is correct: an episode ending on the
+  first of a month contributes nothing to that month because the preceding month's span
+  already counted the boundary day. Flooring it would count that day twice.
 - **BL-008:** `hospitalBedOccupancyPercent` is patient-days over capacity-days, where
   capacity is the sum of `locations.max_occupancy` over the location group for `-by-area`
   and the single location's `max_occupancy` for `-by-location`, and the day count is
@@ -169,19 +180,42 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   per BL-008. `-by-location` is unaffected beyond the null area label: it joins `locations`
   on a non-null key and reports the location's own `max_occupancy`.
 
+  This clause covers a **null** `location_group_id` only. A location whose
+  `location_group_id` is set but unresolvable also survives the outer join, and does so with
+  a non-null key and therefore a real capacity — recorded as DV-008.
+
 ## Divergences
 
 - **DV-003:** *(malformed episodes)* An episode can end before it starts, where an
   encounter's `end_datetime` precedes a later history row — the intermediates compute
   `end_datetime` as `coalesce(lead(start_datetime), encounters.end_datetime)` and do not
-  guard the ordering. Such an episode spans no month, so the overlap join in `-by-area`
-  and `-by-location` excludes it from **every** month and its admission, discharge and
-  death are reported nowhere. `-by-department` admits it into the month it started
-  (BL-010), so the three reports disagree on these episodes. That admission is no longer
-  the whole episode: since BL-006 counts end-of-episode events in the month the episode
-  ended, and the started-in-month disjunct is the only month such an episode is grouped
-  into, its discharge, death and transfer out are now counted nowhere in `-by-department`
-  either. Resolution is OQ-003.
+  guard the ordering. A negative-duration stay is a data-entry error at source, and the
+  reports do not compensate for one: an encounter that ended before its own history is not
+  something a reporting layer can repair without inventing a duration. The handling is
+  therefore accepted as it stands, and the divergence is recorded here rather than fixed,
+  on the basis that such records are corrected in Tamanu.
+
+  What that means in output turns on whether the inversion crosses a month boundary. Only
+  the second case below is the one the three reports disagree over.
+
+  *Inverted inside one month* — start 20 January, end 15 January. The overlap join is
+  satisfied for January in all three: the start is on or before the month's last day and
+  the end on or after its first. The episode is grouped into January everywhere, and every
+  one of its events — admission, transfer in, discharge, death, transfer out — is counted
+  there, exactly as a well-formed January stay would be. Patient-days would be the exception — the
+  clipped span runs negative for such an episode — but BL-007 floors it at one, so the
+  episode contributes a single patient day instead of subtracting from the month's total.
+  Length of stay is floored the same way by BL-005. An inversion inside one month is
+  therefore absorbed: it is counted as a same-day stay would be, in every column and every
+  report.
+
+  *Inverted across a month boundary* — start 5 February, end 15 January. Here the episode
+  spans no month, so the overlap join excludes it from **every** month of `-by-area` and
+  `-by-location` and its admission, discharge and death are reported nowhere.
+  `-by-department` groups it into the month it started (BL-010), so its admission and
+  transfer in are counted there, while its discharge, death and transfer out are counted
+  nowhere — those are end-of-episode events (BL-006) and the episode is grouped into no
+  month containing its end.
 
 - **DV-007:** *(the death month is the encounter's, not the death's)* BL-006 counts a death
   in the month the episode **ended**, because the intermediates expose no `date_of_death` —
@@ -193,15 +227,25 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   which is counted as a March death. Resolution is to carry `date_of_death` through the
   intermediates and filter the death count on it.
 
+- **DV-008:** *(an unresolvable location group is not the same null area as an ungrouped
+  location)* `bases/location_groups` filters `deleted_at is null` while `bases/locations`
+  still exposes `location_group_id`, so a location whose group has been soft-deleted in
+  Tamanu keeps a **non-null** `location_group_id` and a null `location_group`. BL-013's
+  outer join now keeps its episodes, but not in BL-013's null-area bucket: `area_capacity`
+  is keyed on `locations.location_group_id` and does not require the group row to exist, so
+  the key matches and the episode is reported with a real capacity and a computed bed
+  occupancy under an empty area label. A facility-month can therefore emit several rows that
+  all read as a blank area — one per soft-deleted group with its own percentage, plus the
+  genuinely ungrouped one reporting `N/A` — which a reader cannot tell apart. Before BL-013
+  these episodes were dropped entirely, so this is a new shape rather than a regression.
+  Folding the case into the null-area bucket (selecting `lg.id` rather than
+  `l.location_group_id` in the intermediate) would make BL-013 exact at the cost of the
+  capacity denominator; naming the bucket is the same product decision BL-013 declines to
+  take, so the case is recorded rather than resolved.
+
 ## Open questions
 
-- **OQ-003** *(owner: Maui team; due: before the next behavioural change to these
-  reports)* — how should the malformed episodes of DV-003 be treated? Dropping them
-  everywhere makes the three consistent but loses real admissions; keeping them everywhere
-  means deciding which month a negative-duration stay belongs to. Either is a behaviour
-  change to `-by-area` and `-by-location` and needs its own row-level diff. The underlying
-  data is worth a look first: an encounter ending before its own history is a source-side
-  defect, not a reporting one.
+None outstanding.
 
 ## Acceptance criteria
 
@@ -230,4 +274,4 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting, beyond BL-007's patient-day floor — which follows the AIHW definition and stops an inverted episode subtracting days from a month. |
