@@ -4,9 +4,10 @@ unit_tests:
     description: >
       The dataset is a thin projection over int__encounter_invoice_amounts and
       pins its output contract: the ten invoice-level columns pass through
-      unchanged, and insurer_payment and display_id are deliberately dropped.
-      Every value below is distinct so a reordering upstream fails here rather
-      than in a deployment build.
+      unchanged, patient_subtotal (BL-020) is derived from three of them, and
+      insurer_payment and display_id are deliberately dropped. Every value
+      below is distinct so a reordering upstream fails here rather than in a
+      deployment build.
     given:
       - input: ref('int__encounter_invoice_amounts')
         format: sql
@@ -38,4 +39,5 @@ unit_tests:
           22.00::numeric as insurance_coverage,
           33.00::numeric as invoice_discount,
           44.00::numeric as patient_payment,
+          -44.00::numeric as patient_subtotal,
           'Consultation' as products_no_category

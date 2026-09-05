@@ -15,5 +15,10 @@ select
     insurance_coverage,
     invoice_discount,
     patient_payment,
+    -- BL-020 (see specs/dbt-model/ds__encounter_invoices.md): patient
+    -- subtotal, resolved once here so a consumer that needs it (currently
+    -- encounter_invoice_audit_report and tamanu-dbt-fsm's
+    -- daily-cash-collection-summary) does not re-derive it
+    invoice_total - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal,
     products_no_category
 from {{ ref('int__encounter_invoice_amounts') }}

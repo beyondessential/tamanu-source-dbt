@@ -41,6 +41,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 | `insurance_coverage` | numeric | Total insurance coverage on insurable items |
 | `invoice_discount` | numeric | Invoice-level discount amount |
 | `patient_payment` | numeric | Net patient payment (payments less refunds) |
+| `patient_subtotal` | numeric | `invoice_total − insurance_coverage − invoice_discount`, before payments are netted off |
 | `products_no_category` | text | No-category products, ordered by item date |
 
 ## Business logic
@@ -57,6 +58,7 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 - **BL-013:** `insurer_payment` is the net insurer payment, computed the same way over payments carrying an `invoice_insurer_payments` row. Unlike a patient refund, an insurer payment reversal does **not** get its own `invoice_insurer_payments` row (Tamanu has no insurer-refund endpoint), so the reversal is netted by *excluding the reversed original*, not by a negative-reversal lookup. No `status` filter — `invoice_payments.amount` is the amount actually paid and the insurer status is derived from it, so rejected rows contribute 0 and partial rows their real value. Computed here in the shared ephemeral and consumed by `clinical__cost.paid_by_payer`; `ds__encounter_invoices` does not project it.
 - **BL-015:** `invoice_finalised_datetime` is the most recent `logged_at` from `logs.changes` where `status = 'finalised'` and the previous status was not `'finalised'`, presented in the deployment timezone (`var('timezone')`).
 - **BL-016:** `products_no_category` concatenates the item name — the finalised `product_name_final`, falling back to the live `invoice_products.name` for in-progress invoices — of the invoice's items whose product has no category, ordered by item `date`.
+- **BL-020:** `patient_subtotal` is `invoice_total − coalesce(insurance_coverage, 0) − coalesce(invoice_discount, 0)`, resolved in this dataset's own projection (not the shared `int__encounter_invoice_amounts` ephemeral, since it is not needed by `clinical__cost`) so a consumer needing it — `audit-encounter-invoice`'s BL-013, and `tamanu-dbt-fsm`'s `daily-cash-collection-summary` — reads one definition instead of re-deriving it. NULL when `invoice_total` is NULL (BL-009).
 
 ## Acceptance criteria
 
@@ -74,11 +76,16 @@ One row per invoice (every non-deleted invoice, any status). Facility-agnostic: 
 | AC-010 | `products_no_category` falls back to the live `invoice_products.name` when `product_name_final` is null (in-progress invoices). | BL-016 |
 | AC-011 | Combined per-item coverage above 100% is capped at the item's discounted total. | BL-010 |
 | AC-012 | A negatively discounted insurable item is included in coverage, capped at the (negative) discounted total. | BL-008, BL-010 |
+| AC-013 | `patient_subtotal = invoice_total - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0)`, NULL when `invoice_total` is NULL. | BL-020 |
 
-ACs are covered by the `test_int__encounter_invoice_amounts_*` unit tests.
+ACs are covered by the `test_int__encounter_invoice_amounts_*` unit tests, except
+AC-013 which is covered by `test_ds__encounter_invoices_projection` (the
+dataset's own thin-projection contract test), since `patient_subtotal` is
+derived in this dataset's projection rather than the shared ephemeral.
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
 | 2026-06-18 | Maui team | Initial spec — per-invoice invoice financials extracted from the encounter invoice audit report into a reusable dataset: price-list resolution, item pricing and discount, per-plan insurance coverage, invoice-level discount, payment netting, and finalisation, all mirroring the v2.54 application. |
+| 2026-09-04 | Maui team | Added `patient_subtotal` (BL-020), promoting `audit-encounter-invoice`'s own BL-013 formula into this dataset so `tamanu-dbt-fsm`'s new `daily-cash-collection-summary` report does not have to re-derive it independently; `encounter_invoice_audit_report` refactored to sum the column directly instead of re-deriving it from the aggregated components. |
