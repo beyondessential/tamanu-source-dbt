@@ -159,15 +159,17 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   included, so an untagged sensitive intermediate would ship as an episode-grain view
   readable by `tamanu_reporting` on every deployment — a wider exposure than the
   aggregate one this clause closes.
+- **BL-013:** A location with no `location_group_id` keeps its episodes. Both joins that
+  could drop it are outer: `location_groups` in the intermediate, and the area report's
+  `area_capacity`, where the join key is nullable and `null = null` is false — so an
+  ungrouped episode surviving the first would have been dropped by the second. Such an
+  episode is reported under a **null area**, and `-by-area` renders that as an empty label
+  rather than a synthesised one, because naming the bucket is a product decision rather
+  than a reporting one. It has no area capacity to divide by, so its bed occupancy is `N/A`
+  per BL-008. `-by-location` is unaffected beyond the null area label: it joins `locations`
+  on a non-null key and reports the location's own `max_occupancy`.
 
 ## Divergences
-
-- **DV-002:** *(episodes silently dropped)* `int__admission_history_location` inner-joins
-  `location_groups`, so an episode in a location with no `location_group_id` disappears
-  from both `-by-area` and `-by-location`, taking its admission, discharge and death
-  counts with it. `int__admission_history_department` has no equivalent join and is
-  unaffected. The same class of defect as an inner join to a nullable dimension elsewhere;
-  it is a silent undercount rather than a visible gap.
 
 - **DV-003:** *(malformed episodes)* An episode can end before it starts, where an
   encounter's `end_datetime` precedes a later history row — the intermediates compute
@@ -193,17 +195,13 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 ## Open questions
 
-- **OQ-002** *(owner: Maui team; due: before the next behavioural change to these
-  reports)* — should DV-002 be resolved by a left join, so an ungrouped location's episodes
-  are counted under a null area? That changes `-by-area` output and needs a row-level diff.
-  It touches the same intermediate as OQ-003 and the two are cheaper to ship together.
-
-- **OQ-003** *(owner: Maui team; due: with OQ-002)* — how should the malformed episodes of
-  DV-003 be treated? Dropping them everywhere makes the three consistent but loses real
-  admissions; keeping them everywhere means deciding which month a negative-duration stay
-  belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
-  own row-level diff. The underlying data is worth a look first: an encounter ending
-  before its own history is a source-side defect, not a reporting one.
+- **OQ-003** *(owner: Maui team; due: before the next behavioural change to these
+  reports)* — how should the malformed episodes of DV-003 be treated? Dropping them
+  everywhere makes the three consistent but loses real admissions; keeping them everywhere
+  means deciding which month a negative-duration stay belongs to. Either is a behaviour
+  change to `-by-area` and `-by-location` and needs its own row-level diff. The underlying
+  data is worth a look first: an encounter ending before its own history is a source-side
+  defect, not a reporting one.
 
 ## Acceptance criteria
 
@@ -225,9 +223,11 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-014 | A death recorded before the admission began is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-015 | An episode admitted in one month and discharged in another contributes its admission to the first and its discharge to the second. | BL-006 | `test_hospital_admissions_by_department_length_of_stay`, `test_hospital_admissions_by_area_event_months`, `..._by_location_event_months` |
 | AC-016 | A transfer crossing a month boundary is counted in the month of the move, as a transfer out for the dimension left and a transfer in for the one entered. | BL-006 | `test_hospital_admissions_by_department_event_months`, `..._by_area_event_months`, `..._by_location_event_months` |
+| AC-017 | An ungrouped location's episodes appear in the intermediate with a null area. | BL-013 | `test_int__admission_history_location_ungrouped` |
+| AC-018 | They also reach `-by-area`, as a null-area row reporting `N/A` occupancy. | BL-013 | `test_hospital_admissions_by_area_ungrouped` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. |
