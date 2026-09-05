@@ -174,14 +174,19 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 - **DV-003:** *(malformed episodes)* An episode can end before it starts, where an
   encounter's `end_datetime` precedes a later history row — the intermediates compute
   `end_datetime` as `coalesce(lead(start_datetime), encounters.end_datetime)` and do not
-  guard the ordering. Such an episode spans no month, so the overlap join in `-by-area`
-  and `-by-location` excludes it from **every** month and its admission, discharge and
-  death are reported nowhere. `-by-department` admits it into the month it started
-  (BL-010), so the three reports disagree on these episodes. That admission is no longer
-  the whole episode: since BL-006 counts end-of-episode events in the month the episode
-  ended, and the started-in-month disjunct is the only month such an episode is grouped
-  into, its discharge, death and transfer out are now counted nowhere in `-by-department`
-  either. Resolution is OQ-003.
+  guard the ordering. A negative-duration stay is a data-entry error at source, and the
+  reports do not compensate for one: an encounter that ended before its own history is not
+  something a reporting layer can repair without inventing a duration. The handling is
+  therefore accepted as it stands, and the divergence is recorded here rather than fixed,
+  on the basis that such records are corrected in Tamanu.
+
+  What that means in output, which is not consistent across the three: the episode spans
+  no month, so the overlap join excludes it from **every** month of `-by-area` and
+  `-by-location` and its admission, discharge and death are reported nowhere.
+  `-by-department` groups it into the month it started (BL-010), so its admission and
+  transfer in are counted there, while its discharge, death and transfer out are counted
+  nowhere — those are end-of-episode events (BL-006) and the episode is grouped into no
+  month containing its end.
 
 - **DV-007:** *(the death month is the encounter's, not the death's)* BL-006 counts a death
   in the month the episode **ended**, because the intermediates expose no `date_of_death` —
@@ -195,13 +200,7 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 ## Open questions
 
-- **OQ-003** *(owner: Maui team; due: before the next behavioural change to these
-  reports)* — how should the malformed episodes of DV-003 be treated? Dropping them
-  everywhere makes the three consistent but loses real admissions; keeping them everywhere
-  means deciding which month a negative-duration stay belongs to. Either is a behaviour
-  change to `-by-area` and `-by-location` and needs its own row-level diff. The underlying
-  data is worth a look first: an encounter ending before its own history is a source-side
-  defect, not a reporting one.
+None outstanding.
 
 ## Acceptance criteria
 
@@ -230,4 +229,4 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting. |
