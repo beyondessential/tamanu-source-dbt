@@ -48,8 +48,11 @@ invoice_data as (
         sum(ei.patient_payment) as patient_payment,
         -- BL-013: patient subtotal, summed from ds__encounter_invoices' own
         -- per-invoice patient_subtotal (its BL-020) rather than re-derived
-        -- from the aggregated components here
-        sum(ei.patient_subtotal) as patient_subtotal
+        -- from the aggregated components here. Coalesced for the same reason
+        -- invoice_total is above: a no-items invoice carries a null
+        -- patient_subtotal, so an encounter whose every non-cancelled invoice
+        -- has no items must still read 0 rather than blank.
+        coalesce(sum(ei.patient_subtotal), 0) as patient_subtotal
     from {{ ref('ds__encounter_invoices') }} ei
     join encounters_in_scope eis
         on eis.encounter_id = ei.encounter_id
