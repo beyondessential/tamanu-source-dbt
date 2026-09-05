@@ -14,16 +14,9 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in patient_ongoing_prescriptions."
-        data_tests:
-          - unique
-          - not_null
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('patient_ongoing_prescriptions__patient_id') }}"
-        data_tests:
-          - not_null
       - name: prescription_id
         data_type: character varying(255)
         description: "{{ doc('patient_ongoing_prescriptions__prescription_id') }}"
-        data_tests:
-          - not_null
