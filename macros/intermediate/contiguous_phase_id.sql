@@ -12,22 +12,22 @@
     movements or measuring length of stay per ward must collapse those first; this is that
     step, written once.
 
-    Usage -- group by the partition, the dimensions AND the phase id:
+    Usage -- select the id in one CTE, group by it in the next. It cannot go straight
+    into a `group by`: this is a window expression, and Postgres evaluates those after
+    grouping, so `group by {{ contiguous_phase_id(...) }}` is a syntax error.
 
-        select
-            encounter_id,
-            location_id,
-            min(visit_detail_start_datetime) as phase_start,
-            max(visit_detail_end_datetime)   as phase_end
-        from segments
-        group by
-            encounter_id,
-            location_id,
-            {{ contiguous_phase_id('encounter_id', ['location_id'], 'visit_detail_start_datetime') }}
+        numbered as (
+            select
+                s.*,
+                {{ contiguous_phase_id('s.encounter_id', ['s.location_id'], 's.start_datetime, s.id') }} as phase_id
+            from segments s
+        )
+        select encounter_id, location_id, min(start_datetime) as phase_start
+        from numbered
+        group by encounter_id, location_id, phase_id
 
-    Grouping by the phase id alone is wrong: the id is only unique within a dimension
-    value, so two different locations in one encounter can share one. The dimensions are
-    part of the key.
+    Group by the dimensions as well as the id: the id is only unique within a dimension
+    value, so two different locations in one encounter can share one.
 
     Implemented as the difference of two row numbers rather than a running sum over a
     lag, because Postgres will not nest window calls -- `sum(... lag() over ...) over ()`

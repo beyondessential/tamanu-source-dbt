@@ -1,0 +1,93 @@
+unit_tests:
+  - name: test_int__admission_history_location_phases
+    model: int__admission_history_location
+    description: >
+      Pins BL-014: consecutive rows that did not move the patient are one episode.
+
+      enc_stay has two history rows in Bed 1 — an arrival, then an encounter_type change
+      that converted the encounter to an admission without moving anyone. Both qualify for
+      the log, because it admits encounter_type changes as well as location changes, so
+      before the collapse this produced two episodes in the same bed and the first read as
+      a transfer OUT of a bed the patient never left.
+
+      It is now one episode, and it carries both events: the patient was transferred in and
+      was admitted, in that bed. Keeping only the opening row's type would have discarded
+      the admission, which is why both flags are aggregated over the run rather than taken
+      from the first row.
+
+      enc_move is the control — a genuine move from Bed 1 to Bed 2 still yields two
+      episodes, the first with transfer_out set.
+    overrides:
+      vars:
+        timezone: UTC
+    given:
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'h1'::text as id, 'enc_stay'::text as encounter_id,
+                 '2024-01-10 09:00:00'::timestamp as datetime, 'loc_1'::text as location_id,
+                 array['location'] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'h2', 'enc_stay', '2024-01-11 09:00:00'::timestamp, 'loc_1',
+                 array['encounter_type'], 'admission'
+          union all
+          select 'h3', 'enc_move', '2024-02-10 09:00:00'::timestamp, 'loc_1',
+                 array['location'], 'admission'
+          union all
+          select 'h4', 'enc_move', '2024-02-12 09:00:00'::timestamp, 'loc_2',
+                 array['location'], 'admission'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_stay'::text as id, 'pat_1'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-13 09:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_move', 'pat_1', '2024-02-10 09:00:00'::timestamp, '2024-02-14 09:00:00'::timestamp
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_1'::text as id, null::timestamp as date_of_death
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'Bed 1'::text as name, 'lg_1'::text as location_group_id,
+                 'fac_1'::text as facility_id
+          union all
+          select 'loc_2', 'Bed 2', 'lg_1', 'fac_1'
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_1'::text as id, 'Ward'::text as name
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_1'::text as id, 'Hospital'::text as name, false as is_sensitive
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_stay'::text  as encounter_id,
+          'lg_1'::text      as location_group_id,
+          'Ward'::text      as location_group,
+          'loc_1'::text     as location_id,
+          'Bed 1'::text     as location,
+          'fac_1'::text     as facility_id,
+          'Hospital'::text  as facility,
+          '2024-01-10 09:00:00'::timestamp as start_datetime,
+          '2024-01-13 09:00:00'::timestamp as end_datetime,
+          3                 as length_of_stay,
+          true              as admission,
+          true              as discharge,
+          true              as transfer_in,
+          false             as transfer_out,
+          false             as death
+        union all
+        select 'enc_move', 'lg_1', 'Ward', 'loc_1', 'Bed 1', 'fac_1', 'Hospital',
+               '2024-02-10 09:00:00'::timestamp, '2024-02-12 09:00:00'::timestamp,
+               2, false, false, true, true, false
+        union all
+        select 'enc_move', 'lg_1', 'Ward', 'loc_2', 'Bed 2', 'fac_1', 'Hospital',
+               '2024-02-12 09:00:00'::timestamp, '2024-02-14 09:00:00'::timestamp,
+               2, false, true, true, false, false
