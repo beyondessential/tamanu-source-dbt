@@ -81,7 +81,9 @@ area_summary as (
 select
     to_char(lg.month, '{{ var("yearmonth_format") }}') as "{{ translate_label('reportingMonth') }}",
     lg.facility as "{{ translate_label('facility') }}",
-    lg.location_group as "{{ translate_label('locationGroup') }}",
+    -- BL-013: an episode with no area is reported under a named bucket rather than a
+    -- blank cell, which is indistinguishable from a rendering fault
+    coalesce(lg.location_group, '(no area)') as "{{ translate_label('locationGroup') }}",
     coalesce(lg.admissions, 0) as "{{ translate_label('hospitalAdmissionCount') }}",
     coalesce(lg.discharges, 0) as "{{ translate_label('hospitalDischargeCount') }}",
     coalesce(lg.deaths, 0) as "{{ translate_label('hospitalDeathCount') }}",
