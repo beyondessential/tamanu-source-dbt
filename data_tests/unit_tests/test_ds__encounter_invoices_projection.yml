@@ -26,9 +26,11 @@ unit_tests:
             'Consultation'::text as products_no_category,
             'INV'::text as display_id
           union all
-          -- BL-020: a no-items invoice has a null invoice_total, so
-          -- patient_subtotal is null too even though coverage and discount
-          -- are present -- the NULL half of AC-013
+          -- BL-020: a null invoice_total propagates to a null patient_subtotal
+          -- even with coverage and discount set -- the NULL half of AC-013.
+          -- Distinct synthetic values, not a real no-items invoice: upstream,
+          -- a no-items invoice carries a null insurance_coverage (coverage
+          -- aggregates over items) and a 0.00 invoice_discount
           select
             '00000000-0000-0000-0000-000000000002'::text,
             'enc_002'::text,
