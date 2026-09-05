@@ -212,5 +212,5 @@ partition, but it does not mean what its name suggests.
 
 | Date | Change |
 |---|---|
-| 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), resolving OQ-002 of `specs/reports/encounter-summary.md`. Spec created. |
+| 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), matching `encounter_summary_core`. Spec created. |
 | 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |
