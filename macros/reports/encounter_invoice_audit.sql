@@ -45,26 +45,19 @@ invoice_data as (
         coalesce(sum(ei.invoice_total), 0) as invoice_total,
         sum(ei.insurance_coverage) as insurance_coverage,
         sum(ei.invoice_discount) as invoice_discount,
-        sum(ei.patient_payment) as patient_payment
+        sum(ei.patient_payment) as patient_payment,
+        -- BL-013: patient subtotal, summed from ds__encounter_invoices' own
+        -- per-invoice patient_subtotal (its BL-020) rather than re-derived
+        -- from the aggregated components here. Coalesced for the same reason
+        -- invoice_total is above: a no-items invoice carries a null
+        -- patient_subtotal, so an encounter whose every non-cancelled invoice
+        -- has no items must still read 0 rather than blank.
+        coalesce(sum(ei.patient_subtotal), 0) as patient_subtotal
     from {{ ref('ds__encounter_invoices') }} ei
     join encounters_in_scope eis
         on eis.encounter_id = ei.encounter_id
     where ei.status != 'cancelled'
     group by ei.encounter_id
-),
-
-encounter_financials as (
-    -- BL-013: patient subtotal, computed once and reused by the patient total
-    select
-        encounter_id,
-        invoice_finalised_datetime,
-        invoice_products_no_category,
-        invoice_total,
-        insurance_coverage,
-        invoice_discount,
-        patient_payment,
-        invoice_total - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal
-    from invoice_data
 )
 
 select
@@ -107,7 +100,7 @@ left join {{ ref('users') }} c
     on c.id = eis.clinician_id
 left join {{ ref('reference_data') }} bt
     on bt.id = eis.patient_billing_type_id
-left join encounter_financials invd
+left join invoice_data invd
     on invd.encounter_id = eis.encounter_id
 where
     case
