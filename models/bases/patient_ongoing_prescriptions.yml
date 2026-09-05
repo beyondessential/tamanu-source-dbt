@@ -8,7 +8,7 @@ models:
     meta:
       owner: bes-maui
       domain: clinical
-      pii: true
+      pii: false
       classification: restricted
     columns:
       - name: id
