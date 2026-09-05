@@ -111,8 +111,8 @@ sources:
                     field: id
           - name: change_type
             data_type: array
+            # Deliberately untested for null. The column is null on an encounter's
+            # creation snapshot -- Tamanu writes the initial row with no change type,
+            # and every consumer here treats a null as "the creation row" rather than
+            # as missing data. A not_null would fail on every encounter.
             description: "{{ doc('encounter_history__change_type') }}"
-            data_tests:
-              - not_null:
-                  config:
-                    where: change_type IS NOT NULL
