@@ -82,20 +82,20 @@ infection per reporting month per key population, for the `_key_population` IDs.
 
 - **BL-010:** `treatment_status` is `Not applicable` where `is_positive` is false.
 - **BL-011:** `treatment_status` is `Treated` where the patient holds a medication order dated from 28 days before their earliest positive result for that infection onward.
-- **BL-012:** An ongoing medication order counts toward BL-011 only where it is active at the earliest positive result and falls within the same 28-day lead.
+- **BL-012:** An ongoing medication order is subject to the same date bound as BL-011 and counts only where it starts no earlier than 28 days before the earliest positive result, so being currently active is not on its own sufficient.
 - **BL-013:** Antiretroviral therapy for HIV is not treatment for these infections.
 - **BL-014:** `treatment_status` is evaluated as at query time, so a past month's treated count rises when a patient is treated after that month.
 
 ### Key population
 
-- **BL-015:** Key population membership is a standing attribute of the patient, taken from their most recent recorded answer.
+- **BL-015:** Key population membership recorded as an answer is a standing attribute of the patient, taken from their most recent recorded answer, while a population defined by a patient attribute rather than an answer is evaluated for the reporting month.
 - **BL-016:** The `_key_population` IDs emit one row per patient per key population they belong to, so summing across populations counts a multiply-classified patient more than once.
 - **BL-017:** The base IDs carry `key_population` as NULL and are the only IDs whose unfiltered total is a patient count.
 
 ### Cross-cutting
 
-- **BL-018:** `age_years` is whole years at the earliest countable test in the month, emitted unbanded.
-- **BL-019:** `facility_id` is the Tamanu facility identifier, untranslated.
+- **BL-018:** `age_years` is whole years at the earliest countable test for that infection in the month, emitted unbanded.
+- **BL-019:** `facility_id` is the Tamanu facility identifier, untranslated, and the rule attributing a patient-month tested at more than one facility to a single facility is bound by the implementation.
 - **BL-020:** Test patients are excluded, inherited from the base models.
 - **BL-021:** A patient-month with no countable test produces no row.
 
@@ -132,6 +132,7 @@ infection per reporting month per key population, for the `_key_population` IDs.
 
 ## Open questions
 
-- **OQ-1:** Whether the reporting-month grain (BL-002) is the right default, or whether a test-event
-  grain should be offered alongside it for laboratory volume reporting. The month grain answers "how
-  many people were tested"; it cannot answer "how many tests were performed".
+| ID | Question | Owner | Due |
+|---|---|---|---|
+| OQ-001 | Whether the reporting-month grain (BL-002) is the right default, or whether a test-event grain should be offered alongside it for laboratory volume reporting. The month grain answers "how many people were tested"; it cannot answer "how many tests were performed". | `bes-maui` | TBD |
+| OQ-002 | Whether BL-011 should require the medication order to be relevant to the infection. As written any order in the window makes a positive patient `Treated`, with only antiretroviral therapy excluded (BL-013), so an unrelated prescription inflates the treated stage of the cascade. | `bes-maui` | TBD |
