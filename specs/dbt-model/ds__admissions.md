@@ -106,7 +106,11 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
   separable. **The creation row bypasses the dedup**, so an admission always contributes
   its admitting group, ungrouped or not. **`is distinct from`** is used rather than
   `!= ... or prev is null`, so a move **into** an ungrouped location counts as a change
-  and is kept, while a move between two ungrouped locations does not. Together these give
+  and is kept, while a move between two ungrouped locations does not. A kept row whose group is null is **named**
+  `(no area)` rather than skipped: `array_agg` keeps a null id while `string_agg` drops
+  a null name, so without it the id and datetime columns of the triple run longer than
+  the names, and a consumer reading them positionally pairs a ward with another move's
+  timestamp. Together these give
   `encounter_summary_core` the same row set for the same history; a flat dedup predicate
   gated on `is distinct from` alone would satisfy the second and silently break the
   first, dropping the creation row of an encounter that is ungrouped throughout.
@@ -197,20 +201,12 @@ partition, but it does not mean what its name suggests.
 
 ## Open questions
 
-- **OQ-001** *(owner: Maui team; due: before the next behavioural change to this
-  dataset)* — the three movement-history columns of a triple are built by separate
-  aggregates over the same rows, but `string_agg` skips null names while `array_agg`
-  keeps null ids, so a kept row with an ungrouped location leaves
-  `location_group_datetimes` and `location_group_ids` one element longer than
-  `location_groups`. A consumer reading the three positionally will misalign them. The
-  misalignment is independent of BL-006's dedup semantics — it arises from any kept row
-  whose group is null, whichever rows the dedup keeps. Fixing it means choosing between
-  emitting a placeholder name and excluding ungrouped rows outright, and either is a
-  further output change.
+None outstanding.
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), matching `encounter_summary_core`. Spec created. |
+| 2026-09-05 | An ungrouped move is named `(no area)` in `location_groups` (BL-006), so the three movement columns of a triple stay the same length. |
 | 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |

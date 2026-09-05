@@ -173,8 +173,10 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 - **BL-013:** A location with no `location_group_id` keeps its episodes. Both joins that
   could drop it are outer: `location_groups` in the intermediate, and the area report's
   `area_capacity`, where the join key is nullable and `null = null` is false — so an
-  ungrouped episode surviving the first would have been dropped by the second. Such an
-  episode is reported under a **null area**, and `-by-area` renders that as an empty label
+  ungrouped episode surviving the first would have been dropped by the second. The area is
+  resolved through the `location_groups` row rather than the foreign key on `locations`, so
+  a group that has been soft-deleted -- key still populated, row gone -- lands in the same
+  bucket as a location that never had one. Such an episode is reported under `(no area)`, and `-by-area` renders that as an empty label
   rather than a synthesised one, because naming the bucket is a product decision rather
   than a reporting one. It has no area capacity to divide by, so its bed occupancy is `N/A`
   per BL-008. `-by-location` is unaffected beyond the null area label: it joins `locations`
@@ -226,22 +228,6 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   deaths did. They diverge for a death on 28 February in an encounter closed on 2 March,
   which is counted as a March death. Resolution is to carry `date_of_death` through the
   intermediates and filter the death count on it.
-
-- **DV-008:** *(an unresolvable location group is not the same null area as an ungrouped
-  location)* `bases/location_groups` filters `deleted_at is null` while `bases/locations`
-  still exposes `location_group_id`, so a location whose group has been soft-deleted in
-  Tamanu keeps a **non-null** `location_group_id` and a null `location_group`. BL-013's
-  outer join now keeps its episodes, but not in BL-013's null-area bucket: `area_capacity`
-  is keyed on `locations.location_group_id` and does not require the group row to exist, so
-  the key matches and the episode is reported with a real capacity and a computed bed
-  occupancy under an empty area label. A facility-month can therefore emit several rows that
-  all read as a blank area — one per soft-deleted group with its own percentage, plus the
-  genuinely ungrouped one reporting `N/A` — which a reader cannot tell apart. Before BL-013
-  these episodes were dropped entirely, so this is a new shape rather than a regression.
-  Folding the case into the null-area bucket (selecting `lg.id` rather than
-  `l.location_group_id` in the intermediate) would make BL-013 exact at the cost of the
-  capacity denominator; naming the bucket is the same product decision BL-013 declines to
-  take, so the case is recorded rather than resolved.
 
 ## Open questions
 
