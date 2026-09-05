@@ -19,6 +19,11 @@ area_capacity as (
         l.location_group_id,
         sum(l.max_occupancy::numeric) as capacity
     from {{ ref('locations') }} l
+    -- BL-013: an ungrouped location contributes no area capacity. Without this guard the
+    -- CTE also builds a null-keyed group -- unreachable through the join below, but a trap:
+    -- matching it with `is not distinct from` would sum every facility's ungrouped
+    -- locations into one capacity and attribute it to each facility's null-area row.
+    where l.location_group_id notnull
     group by l.location_group_id
 ),
 

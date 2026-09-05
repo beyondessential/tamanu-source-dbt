@@ -196,11 +196,12 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 ## Open questions
 
 - **OQ-003** *(owner: Maui team; due: before the next behavioural change to these
-  reports)* — how should the malformed episodes of  DV-003 be treated? Dropping them everywhere makes the three consistent but loses real
-  admissions; keeping them everywhere means deciding which month a negative-duration stay
-  belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
-  own row-level diff. The underlying data is worth a look first: an encounter ending
-  before its own history is a source-side defect, not a reporting one.
+  reports)* — how should the malformed episodes of DV-003 be treated? Dropping them
+  everywhere makes the three consistent but loses real admissions; keeping them everywhere
+  means deciding which month a negative-duration stay belongs to. Either is a behaviour
+  change to `-by-area` and `-by-location` and needs its own row-level diff. The underlying
+  data is worth a look first: an encounter ending before its own history is a source-side
+  defect, not a reporting one.
 
 ## Acceptance criteria
 
