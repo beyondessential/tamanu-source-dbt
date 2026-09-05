@@ -70,9 +70,9 @@ unit_tests:
         format: sql
         rows: |
           -- enc_001: two finalised invoices that aggregate together
-          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as invoice_datetime, '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 0.00::numeric as invoice_discount, 25.00::numeric as patient_payment, null::text as products_no_category
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as invoice_datetime, '2024-01-15 14:00:00'::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 60.00::numeric as insurance_coverage, 0.00::numeric as invoice_discount, 25.00::numeric as patient_payment, 40.00::numeric as patient_subtotal, null::text as products_no_category
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'finalised', '2024-01-16 09:00:00'::timestamp, '2024-01-16 12:00:00'::timestamp, 50.00::numeric, 10.00::numeric, 5.00::numeric, 0.00::numeric, 'Extra Item'
+          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'finalised', '2024-01-16 09:00:00'::timestamp, '2024-01-16 12:00:00'::timestamp, 50.00::numeric, 10.00::numeric, 5.00::numeric, 0.00::numeric, 35.00::numeric, 'Extra Item'
 
     expect:
       format: sql
