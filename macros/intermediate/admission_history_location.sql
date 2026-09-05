@@ -34,7 +34,11 @@ with admission_location_log as (
 
 select
     ll.encounter_id,
-    l.location_group_id,
+    -- BL-013: the area is resolved through the location_groups row, not through the
+    -- foreign key on locations. A soft-deleted group leaves the key populated while the
+    -- row is gone; taking the id from here makes that behave as no group at all, so it
+    -- lands in the same bucket as a location that never had one.
+    lg.id as location_group_id,
     lg.name as location_group,
     ll.location_id,
     l.name as location,

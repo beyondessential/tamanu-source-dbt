@@ -18,6 +18,8 @@ unit_tests:
                  null::text[] as change_type, 'admission'::text as encounter_type
           union all
           select 'eh_ung', 'enc_ung', '2024-01-15 09:00:00'::timestamp, 'loc_ung', null::text[], 'admission'
+          union all
+          select 'eh_orphan', 'enc_orphan', '2024-01-20 09:00:00'::timestamp, 'loc_orphan', null::text[], 'admission'
       - input: ref('encounters')
         format: sql
         rows: |
@@ -26,6 +28,8 @@ unit_tests:
                  '2024-01-12 09:00:00'::timestamp as end_datetime
           union all
           select 'enc_ung', 'pat_001', '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp
+          union all
+          select 'enc_orphan', 'pat_001', '2024-01-20 09:00:00'::timestamp, '2024-01-22 09:00:00'::timestamp
       - input: ref('patients')
         format: sql
         rows: |
@@ -37,6 +41,11 @@ unit_tests:
                  'fac_001'::text as facility_id
           union all
           select 'loc_ung', 'Bed 2', null::text, 'fac_001'
+          union all
+          -- BL-013: lg_gone is soft-deleted, so it is absent from location_groups while
+          -- the key on locations still points at it. Must land in the same bucket as
+          -- loc_ung rather than keeping a group id nothing can resolve.
+          select 'loc_orphan', 'Bed 3', 'lg_gone', 'fac_001'
       - input: ref('location_groups')
         format: sql
         rows: |
@@ -68,6 +77,10 @@ unit_tests:
         union all
         select 'enc_ung', null::text, null::text, 'loc_ung', 'Bed 2', 'fac_001', 'Central Hospital',
                '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp,
+               2, true, true, false, false, false
+        union all
+        select 'enc_orphan', null::text, null::text, 'loc_orphan', 'Bed 3', 'fac_001', 'Central Hospital',
+               '2024-01-20 09:00:00'::timestamp, '2024-01-22 09:00:00'::timestamp,
                2, true, true, false, false, false
 
   - name: test_hospital_admissions_by_area_ungrouped
@@ -112,6 +125,10 @@ unit_tests:
           select 'enc_ung', null::text, null::text, 'loc_ung', 'Bed 2', 'fac_001', 'Central Hospital',
                  '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp,
                  2, true, true, false, false, false
+          union all
+          select 'enc_orphan', null::text, null::text, 'loc_orphan', 'Bed 3', 'fac_001', 'Central Hospital',
+                 '2024-01-20 09:00:00'::timestamp, '2024-01-22 09:00:00'::timestamp,
+                 2, true, true, false, false, false
       - input: ref('locations')
         format: sql
         rows: |
@@ -135,6 +152,6 @@ unit_tests:
           2::numeric         as "Number of patient days",
           '0.6%'             as "Bed occupancy (%)"
         union all
-        select '2024-01', 'Central Hospital', null::text,
-               1::bigint, 1::bigint, 0::bigint, 0::bigint, 0::bigint,
-               2.0::numeric, 2::numeric, 'N/A'
+        select '2024-01', 'Central Hospital', '(no area)',
+               2::bigint, 2::bigint, 0::bigint, 0::bigint, 0::bigint,
+               2.0::numeric, 4::numeric, 'N/A'

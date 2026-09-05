@@ -166,8 +166,12 @@ location_group_changes as (
             location_group_id
             order by datetime
         ) as location_group_ids,
+        -- BL-006: a null group is named rather than skipped. string_agg drops nulls
+        -- while array_agg keeps them, so without this the ids and datetimes arrays run
+        -- longer than the names and a consumer reading the three positionally pairs a
+        -- ward with another move's timestamp.
         string_agg(
-            location_group_name, ', '
+            coalesce(location_group_name, '(no area)'), ', '
             order by datetime
         ) as location_groups
     from encounter_history_consolidated
