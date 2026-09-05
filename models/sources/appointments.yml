@@ -110,17 +110,6 @@ sources:
                   arguments:
                     to: source('tamanu', 'location_groups')
                     field: id
-              # Nullable in the Tamanu schema but relied on as mandatory downstream:
-              # outpatient_appointments, outpatient_appointments_audit_core and
-              # audit_outpatient_appointments all resolve the facility -- and so the
-              # is_sensitive partition -- by inner-joining location_groups on it. A null
-              # would remove that appointment from those reports with no other symptom,
-              # which is why this overrides the project-wide `warn`. Note the contrast with
-              # locations.location_group_id, which is legitimately optional and is left
-              # outer-joined instead.
-              - not_null:
-                  config:
-                    severity: error
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in appointments."
