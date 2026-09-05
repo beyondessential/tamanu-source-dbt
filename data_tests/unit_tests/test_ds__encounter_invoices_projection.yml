@@ -25,6 +25,23 @@ unit_tests:
             55.00::numeric as insurer_payment,
             'Consultation'::text as products_no_category,
             'INV'::text as display_id
+          union all
+          -- BL-020: a no-items invoice has a null invoice_total, so
+          -- patient_subtotal is null too even though coverage and discount
+          -- are present -- the NULL half of AC-013
+          select
+            '00000000-0000-0000-0000-000000000002'::text,
+            'enc_002'::text,
+            'in_progress'::text,
+            '2024-02-14 09:00:00'::timestamp,
+            null::timestamp,
+            null::numeric,
+            66.00::numeric,
+            77.00::numeric,
+            88.00::numeric,
+            99.00::numeric,
+            null::text,
+            'INV2'::text
 
     expect:
       format: sql
@@ -41,3 +58,16 @@ unit_tests:
           44.00::numeric as patient_payment,
           -44.00::numeric as patient_subtotal,
           'Consultation' as products_no_category
+        union all
+        select
+          '00000000-0000-0000-0000-000000000002',
+          'enc_002',
+          'in_progress',
+          '2024-02-14 09:00:00'::timestamp,
+          null::timestamp,
+          null::numeric,
+          66.00::numeric,
+          77.00::numeric,
+          88.00::numeric,
+          null::numeric,
+          null::text
