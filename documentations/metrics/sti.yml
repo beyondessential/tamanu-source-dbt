@@ -1,4 +1,4 @@
-# STI screening metrics.
+# STI screening metrics (MAUI-6637).
 #
 # Part of the canonical registry of `metric__` indicators and `der__` derived elements:
 # every documentations/metrics/*.yml file is merged by metric_id.
@@ -30,7 +30,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   variant_of: null
@@ -59,7 +58,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   variant_of: null
@@ -88,7 +86,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   variant_of: null
@@ -117,7 +114,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   - key_population
@@ -147,7 +143,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   - key_population
@@ -177,7 +172,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - treatment_status
   - key_population

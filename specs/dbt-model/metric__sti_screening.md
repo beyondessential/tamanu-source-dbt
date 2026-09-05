@@ -13,12 +13,14 @@
 | **Repo** | `tamanu-source-dbt` (definition); implemented per deployment |
 | **Linear issue** | [MAUI-6637](https://linear.app/bes/issue/MAUI-6637) |
 | **Created** | 2026-09-02 |
-| **Last updated** | 2026-09-02 |
+| **Last updated** | 2026-09-05 |
 
 Registers six metric IDs in `documentations/metrics/sti.yml`: `sti_{syphilis,gonorrhoea,chlamydia}_test`
-and a `_key_population` counterpart for each. BL numbering is shared with the deployment
-implementation specs and with the `-- BL-0xx` code comments, so a comment resolves identically in
-either.
+and a `_key_population` counterpart for each. `BL` and `AC` numbering is shared with the deployment
+implementation specs and with the `-- BL-0xx` code comments, so an anchor resolves identically in
+either. The canonical block is `BL-000`–`BL-021` and `AC-001`–`AC-013`; a canonical clause added
+after a deployment spec has claimed the numbers above that block takes the next free number in the
+shared sequence rather than a suffixed variant.
 
 ## Purpose
 
@@ -35,8 +37,9 @@ cascade stages have to reconcile against one another for the same patients.
 
 ## Grain
 
-One row per patient per infection per reporting month, for the base IDs. One row per patient per
-infection per reporting month per key population, for the `_key_population` IDs.
+One row per patient per reporting month within each metric ID, the infection being fixed by the
+metric ID rather than carried as a column. The `_key_population` IDs add a further row per key
+population the patient belongs to.
 
 ## Output schema
 
@@ -44,7 +47,7 @@ infection per reporting month per key population, for the `_key_population` IDs.
 |---|---|---|
 | `metric_id` | text | One of the six registered IDs |
 | `variant_id` | text | NULL unless a deployment registers a definition variant |
-| `subject_id` | varchar | Patient, or patient and key population, per the ID |
+| `subject_id` | varchar | Patient, matching the registered `patient` subject grain. The `_key_population` IDs repeat a patient once per population, distinguished by `key_population` |
 | `period_start` | date | First day of the reporting month |
 | `period_end` | date | Last day of the reporting month |
 | `period_granularity` | text | `month` |
@@ -81,21 +84,22 @@ infection per reporting month per key population, for the `_key_population` IDs.
 ### Treatment
 
 - **BL-010:** `treatment_status` is `Not applicable` where `is_positive` is false.
-- **BL-011:** `treatment_status` is `Treated` where the patient holds a medication order dated from 28 days before their earliest positive result for that infection onward.
+- **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 28 days before their earliest positive result for that infection and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
+- **BL-054:** `treatment_status` is `Untreated` where `is_positive` is true and no such order exists, so the three values are exhaustive and the column is never NULL.
 - **BL-012:** An ongoing medication order is subject to the same date bound as BL-011 and counts only where it starts no earlier than 28 days before the earliest positive result, so being currently active is not on its own sufficient.
 - **BL-013:** Antiretroviral therapy for HIV is not treatment for these infections.
 - **BL-014:** `treatment_status` is evaluated as at query time, so a past month's treated count rises when a patient is treated after that month.
 
 ### Key population
 
-- **BL-015:** Key population membership recorded as an answer is a standing attribute of the patient, taken from their most recent recorded answer, while a population defined by a patient attribute rather than an answer is evaluated for the reporting month.
+- **BL-015:** Key population membership recorded as an answer is a standing attribute of the patient, taken from their most recent answer recorded on or before the end of the reporting month, while a population defined by a patient attribute rather than an answer is evaluated for the reporting month.
 - **BL-016:** The `_key_population` IDs emit one row per patient per key population they belong to, so summing across populations counts a multiply-classified patient more than once.
 - **BL-017:** The base IDs carry `key_population` as NULL and are the only IDs whose unfiltered total is a patient count.
 
 ### Cross-cutting
 
 - **BL-018:** `age_years` is whole years at the earliest countable test for that infection in the month, emitted unbanded.
-- **BL-019:** `facility_id` is the Tamanu facility identifier, untranslated, and the rule attributing a patient-month tested at more than one facility to a single facility is bound by the implementation.
+- **BL-019:** `facility_id` is the Tamanu facility identifier, untranslated, and the rule attributing a patient-month tested at more than one facility to a single facility is bound by the implementation, so a total grouped by facility attributes such a patient to one facility only.
 - **BL-020:** Test patients are excluded, inherited from the base models.
 - **BL-021:** A patient-month with no countable test produces no row.
 
@@ -116,6 +120,8 @@ infection per reporting month per key population, for the `_key_population` IDs.
 | AC-011 | A withdrawn or cancelled test is not counted | BL-005 | unit test |
 | AC-012 | A medication order more than 28 days before the earliest positive does not make a patient `Treated` | BL-011, BL-012 | unit test |
 | AC-013 | `age_years` derives from the test date, not the run date | BL-018 | unit test |
+| AC-036 | A medication order dated after the window's closing bound does not make a patient `Treated` | BL-011 | unit test |
+| AC-035 | `treatment_status` is always one of `Treated`, `Untreated` or `Not applicable`, and never NULL | BL-010, BL-054 | schema `accepted_values` + `not_null` |
 
 ## Registry entries
 
@@ -135,4 +141,10 @@ infection per reporting month per key population, for the `_key_population` IDs.
 | ID | Question | Owner | Due |
 |---|---|---|---|
 | OQ-001 | Whether the reporting-month grain (BL-002) is the right default, or whether a test-event grain should be offered alongside it for laboratory volume reporting. The month grain answers "how many people were tested"; it cannot answer "how many tests were performed". | `bes-maui` | TBD |
-| OQ-002 | Whether BL-011 should require the medication order to be relevant to the infection. As written any order in the window makes a positive patient `Treated`, with only antiretroviral therapy excluded (BL-013), so an unrelated prescription inflates the treated stage of the cascade. | `bes-maui` | TBD |
+
+## Change log
+
+| Date | Author | Change |
+|---|---|---|
+| 2026-09-02 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
+| 2026-09-05 | @beyondessential/maui | Require treatment to be indicated for the infection and bound the treatment window at both ends (BL-011) |
