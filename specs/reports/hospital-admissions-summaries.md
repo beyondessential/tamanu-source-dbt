@@ -82,10 +82,30 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   counts as one day, never zero.
 - **BL-006:** The reports generate a month spine from `fromDate` to `toDate` and join
   episodes that overlap each month, so an episode spanning three months contributes to
-  all three. In `-by-area` and `-by-location` the counts of admissions, discharges,
-  deaths and transfers are further filtered to episodes whose **start** date falls inside
-  the month, so a long stay is counted as an admission once, in the month it began.
-  `-by-department` filters its counts the same way, for the same reason.
+  all three. Each event count is then filtered to the month the event
+  itself falls in, which is not the same month for every column. `admission` and
+  `transfer_in` are **start**-of-episode events and are counted in the month the episode
+  began. `discharge`, `death` and `transfer_out` are **end**-of-episode events and are
+  counted in the month it ended — for `death` that is the encounter's end month standing
+  in for `date_of_death`, which the intermediates do not expose (DV-007). A stay admitted
+  in January and discharged in March therefore contributes an admission to January and a
+  discharge to March. This matches the
+  definitions shipped with the reports, which describe each event by the month it occurred.
+
+  An episode's end is the next episode's start, so a transfer is now one month's transfer
+  out for the department or area left and the same month's transfer in for the one
+  entered. The two columns are still **not** expected to total the same, and the gap is
+  structural rather than an attribution error: BL-003 types an episode beginning on an
+  `encounter_type` change as an `admission`, not a `transfer-in`, so the preceding episode
+  records a transfer out with no matching transfer in. Every transfer out is either
+  matched this way or falls into that group.
+
+  Two edge cases lose an end-of-episode event rather than moving it. An episode whose end
+  month is later than today is clipped out of `-by-area` and `-by-location` by BL-010's
+  spine guard, so its discharge is counted nowhere. And a malformed episode (DV-003) is
+  reachable in `-by-department` only through the started-in-month disjunct, so its end
+  month has no group and its discharge is likewise counted nowhere; in the other two it was
+  already absent from every month.
 - **BL-007:** `hospitalPatientDayCount` is patient-days inside the month: the episode's
   span clipped to the month boundaries, or 1 where the episode starts and ends on the
   same date. An open episode is clipped to `current_date`.
@@ -155,17 +175,21 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   guard the ordering. Such an episode spans no month, so the overlap join in `-by-area`
   and `-by-location` excludes it from **every** month and its admission, discharge and
   death are reported nowhere. `-by-department` admits it into the month it started
-  (BL-010), so the three reports disagree on these episodes. Resolution is OQ-003.
-- **DV-005:** *(counts are keyed to the admission month)* BL-006 books every event to the
-  month the episode **started**. The shipped report notes describe two of them differently:
-  *"Number of discharges = Number of patients discharged … for specified month"* and
-  *"Number of deaths = Number of deceased patients … for specified month … when their death
-  was recorded"*. A patient admitted in January and discharged in March is therefore
-  counted as a March discharge by the notes and as a January discharge by the code. The
-  same notes define average length of stay over the patients *discharged* in the month,
-  which BL-011 now follows in all three reports — so the discharge and death counts are
-  the remaining columns keyed to a different month from the definition they ship with.
-  Pre-existing and unchanged here. Resolution is OQ-005.
+  (BL-010), so the three reports disagree on these episodes. That admission is no longer
+  the whole episode: since BL-006 counts end-of-episode events in the month the episode
+  ended, and the started-in-month disjunct is the only month such an episode is grouped
+  into, its discharge, death and transfer out are now counted nowhere in `-by-department`
+  either. Resolution is OQ-003.
+
+- **DV-007:** *(the death month is the encounter's, not the death's)* BL-006 counts a death
+  in the month the episode **ended**, because the intermediates expose no `date_of_death` —
+  they carry only the flag. The shipped notes define the column by the month the death
+  *"was recorded"*. BL-004 requires the death to fall inside the encounter, so the episode's
+  end is never earlier than the death and the two agree wherever an encounter is closed in
+  the month the death occurred; on the data checked when BL-006 changed, all 20 flagged
+  deaths did. They diverge for a death on 28 February in an encounter closed on 2 March,
+  which is counted as a March death. Resolution is to carry `date_of_death` through the
+  intermediates and filter the death count on it.
 
 ## Open questions
 
@@ -180,11 +204,6 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   belongs to. Either is a behaviour change to `-by-area` and `-by-location` and needs its
   own row-level diff. The underlying data is worth a look first: an encounter ending
   before its own history is a source-side defect, not a reporting one.
-
-- **OQ-005** *(owner: Maui team; due: with OQ-002)* — should the discharge and death
-  counts move to the month of discharge or death, matching the notes shipped with the
-  reports and the basis BL-011 now uses? It is a behaviour change to all three and needs
-  its own row-level diff, so it is not folded into the length-of-stay alignment.
 
 ## Acceptance criteria
 
@@ -204,9 +223,11 @@ All three: `reportingMonth`, `facility`, the dimension name, then
 | AC-012 | A patient discharged alive who died later the same day is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-013 | A death recorded at the exact instant the encounter ended is counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
 | AC-014 | A death recorded before the admission began is not counted. | BL-004 | `test_int__admission_history_department_death_flag`, `..._location_death_flag` |
+| AC-015 | An episode admitted in one month and discharged in another contributes its admission to the first and its discharge to the second. | BL-006 | `test_hospital_admissions_by_department_length_of_stay`, `test_hospital_admissions_by_area_event_months`, `..._by_location_event_months` |
+| AC-016 | A transfer crossing a month boundary is counted in the month of the move, as a transfer out for the dimension left and a transfer in for the one entered. | BL-006 | `test_hospital_admissions_by_department_event_months`, `..._by_area_event_months`, `..._by_location_event_months` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. |
+| 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. |

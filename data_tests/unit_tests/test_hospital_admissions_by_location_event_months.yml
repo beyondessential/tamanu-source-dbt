@@ -1,0 +1,84 @@
+unit_tests:
+  - name: test_hospital_admissions_by_location_event_months
+    model: hospital-admissions-by-location-summary
+    description: >
+      Pins BL-006's split attribution in `-by-location`. The rule is the same as
+      `-by-area`'s but lives in a separate macro over a separate grain, so it needs its
+      own witness against a partial revert.
+
+      One encounter is admitted to Room 1 on 20 January, moved to Room 2 on 5 February and
+      discharged on 3 March. Room 1 is credited with the admission in JANUARY, because an
+      admission is a start-of-episode event, and with the transfer out in FEBRUARY, because
+      the move happens when the episode ends. Room 2 is credited with the transfer in in
+      FEBRUARY, where its episode begins, and with the discharge in MARCH, where it ends. Every event is therefore in a different month
+      from the one the start-month attribution would have used, so a revert of any one of
+      the three filters fails this test.
+
+      Both locations still report the patient-days they accrue in every month they span:
+      `-by-location` carries no `having` (BL-009 is `-by-department` only), so Room 2
+      appears in February with occupancy and no discharge.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see the -by-area date-range test
+        yearmonth_format: YYYY-MM
+        fromDate: '2024-01-01'
+        toDate: '2024-03-31'
+    given:
+      - input: ref('int__admission_history_location')
+        format: sql
+        rows: |
+          select
+            'enc_001'::text          as encounter_id,
+            'lg_emer'::text          as location_group_id,
+            'Emergency Ward'::text   as location_group,
+            'loc_001'::text          as location_id,
+            'Room 1'::text           as location,
+            'fac_001'::text          as facility_id,
+            'Central Hospital'::text as facility,
+            '2024-01-20 09:00:00'::timestamp as start_datetime,
+            '2024-02-05 14:00:00'::timestamp as end_datetime,
+            16::integer              as length_of_stay,
+            true                     as admission,
+            false                    as discharge,
+            false                    as transfer_in,
+            true                     as transfer_out,
+            false                    as death
+          union all
+          select
+            'enc_001', 'lg_surg', 'Surgical Ward', 'loc_002', 'Room 2',
+            'fac_001', 'Central Hospital',
+            '2024-02-05 14:00:00'::timestamp, '2024-03-03 11:00:00'::timestamp,
+            27, false, true, true, false, false
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001'::text as id, 'Room 1'::text as name, 'lg_emer'::text as location_group_id, 'fac_001'::text as facility_id, 10::integer as max_occupancy
+          union all
+          select 'loc_002', 'Room 2', 'lg_surg', 'fac_001', 10
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '2024-01'          as "Month",
+          'Central Hospital' as "Facility",
+          'Emergency Ward'   as "Area",
+          'Room 1'           as "Location",
+          1                  as "Number of admissions",
+          0                  as "Number of discharges",
+          0                  as "Number of deaths",
+          0                  as "Number of transfers into location",
+          0                  as "Number of transfers out of location",
+          0                  as "Average length of stay",
+          12                 as "Number of patient days",
+          '3.9%'             as "Bed occupancy (%)"
+        union all
+        select '2024-02', 'Central Hospital', 'Emergency Ward', 'Room 1',
+               0, 0, 0, 0, 1, 16.0, 4, '1.4%'
+        union all
+        select '2024-02', 'Central Hospital', 'Surgical Ward', 'Room 2',
+               0, 0, 0, 1, 0, 0, 25, '8.6%'
+        union all
+        select '2024-03', 'Central Hospital', 'Surgical Ward', 'Room 2',
+               0, 1, 0, 0, 0, 27.0, 2, '0.6%'
