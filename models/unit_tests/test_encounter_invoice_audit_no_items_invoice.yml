@@ -1,10 +1,15 @@
 unit_tests:
-  - name: test_encounter_invoice_audit_cancelled_products
+  - name: test_encounter_invoice_audit_no_items_invoice
     model: audit-encounter-invoice
     description: >
-      The report excludes cancelled invoices when aggregating per encounter:
-      their totals and products must not appear. Only the in_progress invoice's
-      $50 total and "Manual Fee" product surface.
+      An encounter whose only non-cancelled invoice has no items reads 0, not
+      blank, for invoice total, patient subtotal and patient total — matching
+      the application. ds__encounter_invoices leaves invoice_total (and so
+      patient_subtotal) NULL for a no-items invoice, so the report's per-encounter
+      aggregation has to coalesce the summed subtotal; without that the two money
+      columns render blank while invoice total still reads 0. The other audit
+      unit tests inject a non-null patient_subtotal, so this is the only case
+      that pins BL-013/BL-014 against that NULL.
     overrides:
       vars:
         timezone: Australia/Sydney
@@ -53,10 +58,10 @@ unit_tests:
       - input: ref('ds__encounter_invoices')
         format: sql
         rows: |
-          -- Cancelled invoice must be excluded; in_progress invoice surfaces
-          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 10.00::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, 10.00::numeric as patient_subtotal, 'Cancelled Fee' as products_no_category
-          union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp, null::timestamp, 50.00::numeric, null::numeric, 0.00::numeric, null::numeric, 50.00::numeric, 'Manual Fee'
+          -- A no-items invoice as ds__encounter_invoices emits it: invoice_total
+          -- null (left join to invoice_items_agg found nothing), so patient_subtotal
+          -- is null too, while invoice_discount is still 0.00 (never null).
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-10 09:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, null::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, null::numeric as patient_subtotal, null::text as products_no_category
 
     expect:
       format: sql
@@ -76,9 +81,9 @@ unit_tests:
           'Medicine' as "Discharging department",
           null::text as "Supervising clinician",
           null::text as "Invoice finalised date and time",
-          50.00::numeric as "Invoice total",
+          0.00::numeric as "Invoice total",
           null::numeric as "Insurance coverage",
-          50.00::numeric as "Patient subtotal",
+          0.00::numeric as "Patient subtotal",
           null::numeric as "Patient payment",
-          50.00::numeric as "Patient total",
-          'Manual Fee' as "Invoice products with no category"
+          0.00::numeric as "Patient total",
+          null::text as "Invoice products with no category"
