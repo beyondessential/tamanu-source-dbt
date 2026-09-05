@@ -86,9 +86,9 @@ population the patient belongs to.
 - **BL-010:** `treatment_status` is `Not applicable` where `is_positive` is false.
 - **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 28 days before their earliest positive result for that infection and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
 - **BL-054:** `treatment_status` is `Untreated` where `is_positive` is true and no such order exists, so the three values are exhaustive and the column is never NULL.
-- **BL-012:** An ongoing medication order is subject to the same date bound as BL-011 and counts only where it starts no earlier than 28 days before the earliest positive result, so being currently active is not on its own sufficient.
+- **BL-012:** An ongoing medication order is subject to the same window as BL-011 and counts only where it starts within that window, so being currently active is not on its own sufficient.
 - **BL-013:** Antiretroviral therapy for HIV is not treatment for these infections.
-- **BL-014:** `treatment_status` is evaluated as at query time, so a past month's treated count rises when a patient is treated after that month.
+- **BL-014:** `treatment_status` is evaluated as at query time, so a past month's treated count rises when a patient is treated after that month, up until the BL-011 window closes.
 
 ### Key population
 
@@ -148,3 +148,4 @@ population the patient belongs to.
 |---|---|---|
 | 2026-09-02 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
 | 2026-09-05 | @beyondessential/maui | Require treatment to be indicated for the infection and bound the treatment window at both ends (BL-011) |
+| 2026-09-05 | @beyondessential/maui | Reconcile BL-012 and BL-014 with the bounded treatment window |
