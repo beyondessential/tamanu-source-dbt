@@ -71,6 +71,9 @@ models:
               arguments:
                 to: ref('clinical__visit_occurrence')
                 field: visit_occurrence_id
+      - name: measurement_source_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__measurement_source_id') }}"
       - name: measurement_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__measurement__measurement_source_value') }}"
