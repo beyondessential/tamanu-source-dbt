@@ -136,12 +136,6 @@ population the patient belongs to.
 |---|---|---|
 | Fiji | `tamanu-dbt-fiji` | `specs/dbt-model/metric__sti_screening.md` (pending) |
 
-## Open questions
-
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | Whether the reporting-month grain (BL-002) is the right default, or whether a test-event grain should be offered alongside it for laboratory volume reporting. The month grain answers "how many people were tested"; it cannot answer "how many tests were performed". | `bes-maui` | TBD |
-
 ## Change log
 
 | Date | Author | Change |
@@ -149,3 +143,4 @@ population the patient belongs to.
 | 2026-09-02 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
 | 2026-09-05 | @beyondessential/maui | Require treatment to be indicated for the infection and bound the treatment window at both ends (BL-011) |
 | 2026-09-05 | @beyondessential/maui | Reconcile BL-012 and BL-014 with the bounded treatment window |
+| 2026-09-05 | @beyondessential/maui | Settle the reporting-month grain as the definition's only grain |
