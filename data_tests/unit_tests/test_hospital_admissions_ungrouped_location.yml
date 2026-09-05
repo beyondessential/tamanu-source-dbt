@@ -1,0 +1,140 @@
+unit_tests:
+  - name: test_int__admission_history_location_ungrouped
+    model: int__admission_history_location
+    description: >
+      Pins the first half of BL-013: a location with no `location_group_id` keeps its
+      episodes, with a null area rather than no row. The inner join this replaces dropped
+      such an episode from the intermediate outright, so its admission, discharge and death
+      reached neither -by-area nor -by-location.
+    overrides:
+      vars:
+        timezone: UTC
+    given:
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_grp'::text as id, 'enc_grp'::text as encounter_id,
+                 '2024-01-10 09:00:00'::timestamp as datetime, 'loc_grp'::text as location_id,
+                 null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_ung', 'enc_ung', '2024-01-15 09:00:00'::timestamp, 'loc_ung', null::text[], 'admission'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_grp'::text as id, 'pat_001'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-12 09:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_ung', 'pat_001', '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001'::text as id, null::timestamp as date_of_death
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_grp'::text as id, 'Bed 1'::text as name, 'lg_001'::text as location_group_id,
+                 'fac_001'::text as facility_id
+          union all
+          select 'loc_ung', 'Bed 2', null::text, 'fac_001'
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001'::text as id, 'Emergency Ward'::text as name
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001'::text as id, 'Central Hospital'::text as name, false as is_sensitive
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_grp'::text     as encounter_id,
+          'lg_001'::text      as location_group_id,
+          'Emergency Ward'::text as location_group,
+          'loc_grp'::text     as location_id,
+          'Bed 1'::text       as location,
+          'fac_001'::text     as facility_id,
+          'Central Hospital'::text as facility,
+          '2024-01-10 09:00:00'::timestamp as start_datetime,
+          '2024-01-12 09:00:00'::timestamp as end_datetime,
+          2                   as length_of_stay,
+          true                as admission,
+          true                as discharge,
+          false               as transfer_in,
+          false               as transfer_out,
+          false               as death
+        union all
+        select 'enc_ung', null::text, null::text, 'loc_ung', 'Bed 2', 'fac_001', 'Central Hospital',
+               '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp,
+               2, true, true, false, false, false
+
+  - name: test_hospital_admissions_by_area_ungrouped
+    model: hospital-admissions-by-area-summary
+    description: >
+      The second half of BL-013, in the report. Even once the intermediate keeps an
+      ungrouped episode, the area report joined its capacity table on
+      `location_group_id = location_group_id`, and `null = null` is false — so the episode
+      would have survived the intermediate only to be dropped here. It now appears as a row
+      with a null area, and its bed occupancy reports N/A because there is no area capacity
+      to divide by (BL-008).
+
+      The fixture stubs the intermediate, so it exercises the report's join and not the
+      intermediate's; the companion test above covers that one.
+    overrides:
+      vars:
+        timezone: UTC
+        yearmonth_format: YYYY-MM
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+    given:
+      - input: ref('int__admission_history_location')
+        format: sql
+        rows: |
+          select
+            'enc_grp'::text          as encounter_id,
+            'lg_001'::text           as location_group_id,
+            'Emergency Ward'::text   as location_group,
+            'loc_grp'::text          as location_id,
+            'Bed 1'::text            as location,
+            'fac_001'::text          as facility_id,
+            'Central Hospital'::text as facility,
+            '2024-01-10 09:00:00'::timestamp as start_datetime,
+            '2024-01-12 09:00:00'::timestamp as end_datetime,
+            2::integer               as length_of_stay,
+            true                     as admission,
+            true                     as discharge,
+            false                    as transfer_in,
+            false                    as transfer_out,
+            false                    as death
+          union all
+          select 'enc_ung', null::text, null::text, 'loc_ung', 'Bed 2', 'fac_001', 'Central Hospital',
+                 '2024-01-15 09:00:00'::timestamp, '2024-01-17 09:00:00'::timestamp,
+                 2, true, true, false, false, false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_grp'::text as id, 'lg_001'::text as location_group_id, 10::integer as max_occupancy
+          union all
+          select 'loc_ung', null::text, 5::integer
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '2024-01'          as "Month",
+          'Central Hospital' as "Facility",
+          'Emergency Ward'   as "Area",
+          1::bigint          as "Number of admissions",
+          1::bigint          as "Number of discharges",
+          0::bigint          as "Number of deaths",
+          0::bigint          as "Number of transfers into location",
+          0::bigint          as "Number of transfers out of location",
+          2.0::numeric       as "Average length of stay",
+          2::numeric         as "Number of patient days",
+          '0.6%'             as "Bed occupancy (%)"
+        union all
+        select '2024-01', 'Central Hospital', null::text,
+               1::bigint, 1::bigint, 0::bigint, 0::bigint, 0::bigint,
+               2.0::numeric, 2::numeric, 'N/A'

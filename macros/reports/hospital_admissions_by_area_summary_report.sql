@@ -19,6 +19,11 @@ area_capacity as (
         l.location_group_id,
         sum(l.max_occupancy::numeric) as capacity
     from {{ ref('locations') }} l
+    -- BL-013: an ungrouped location contributes no area capacity. Without this guard the
+    -- CTE also builds a null-keyed group -- unreachable through the join below, but a trap:
+    -- matching it with `is not distinct from` would sum every facility's ungrouped
+    -- locations into one capacity and attribute it to each facility's null-area row.
+    where l.location_group_id notnull
     group by l.location_group_id
 ),
 
@@ -53,7 +58,10 @@ area_summary as (
     join {{ ref(episodes) }} alh
         on {{ to_user_selected_timezone('alh.start_datetime') }}::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
-    join area_capacity lg on lg.location_group_id = alh.location_group_id
+    -- BL-013: left join, because `null = null` is false -- an ungrouped episode would
+    -- otherwise survive the intermediate and be dropped here instead. Such a row has no
+    -- area capacity to divide by, so its bed occupancy reports N/A per BL-008.
+    left join area_capacity lg on lg.location_group_id = alh.location_group_id
     where rm.month <= current_date
     group by
         rm.month,
