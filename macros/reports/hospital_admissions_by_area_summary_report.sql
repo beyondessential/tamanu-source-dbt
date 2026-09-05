@@ -36,7 +36,13 @@ area_summary as (
         alh.location_group,
         lg.capacity,
         sum(
-            case when {{ to_user_selected_timezone('alh.end_datetime') }}::date = {{ to_user_selected_timezone('alh.start_datetime') }}::date then 1 else
+            -- BL-007: floored at one patient day. AIHW defines a patient day as "a day,
+            -- or part of a day, that a patient is admitted", and allocates a same-day
+            -- admission one bed day, so one is the minimum an episode can contribute.
+            -- `<=` rather than `=` also covers a malformed episode (DV-003), whose
+            -- end precedes its start and which would otherwise subtract days from the
+            -- month's total. Matches the floor BL-005 already applies to length_of_stay.
+            case when {{ to_user_selected_timezone('alh.end_datetime') }}::date <= {{ to_user_selected_timezone('alh.start_datetime') }}::date then 1 else
                     (least(
                         coalesce({{ to_user_selected_timezone('alh.end_datetime') }}, current_date)::date,
                         (rm.month + '1 month'::interval)::date

@@ -1,0 +1,64 @@
+unit_tests:
+  - name: test_hospital_admissions_by_area_patient_day_floor
+    model: hospital-admissions-by-area-summary
+    description: >
+      Pins BL-007's floor. ep_inverted ends five days before it starts — a malformed
+      episode (DV-003), which is a data-entry error at source rather than something the
+      reports repair. Its clipped span is negative, so without the floor it would subtract
+      five days from the ward's patient-day total and drag bed occupancy negative with it.
+      Floored, it contributes one patient day, which is the least an admitted episode can
+      contribute: AIHW defines a patient day as "a day, or part of a day, that a patient is
+      admitted", and allocates a same-day admission one bed day.
+
+      ep_normal is the control, a well-formed two-day stay in the same ward and month. The
+      ward's total is therefore 3, not -3, and bed occupancy stays positive.
+    overrides:
+      vars:
+        timezone: UTC
+        yearmonth_format: YYYY-MM
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+    given:
+      - input: ref('int__admission_history_location')
+        format: sql
+        rows: |
+          select
+            'ep_normal'::text        as encounter_id,
+            'lg_001'::text           as location_group_id,
+            'Emergency Ward'::text   as location_group,
+            'loc_001'::text          as location_id,
+            'Bed 1'::text            as location,
+            'fac_001'::text          as facility_id,
+            'Central Hospital'::text as facility,
+            '2024-01-10 09:00:00'::timestamp as start_datetime,
+            '2024-01-12 09:00:00'::timestamp as end_datetime,
+            2::integer               as length_of_stay,
+            true                     as admission,
+            true                     as discharge,
+            false                    as transfer_in,
+            false                    as transfer_out,
+            false                    as death
+          union all
+          select 'ep_inverted', 'lg_001', 'Emergency Ward', 'loc_001', 'Bed 1', 'fac_001', 'Central Hospital',
+                 '2024-01-20 09:00:00'::timestamp, '2024-01-15 09:00:00'::timestamp,
+                 1, true, true, false, false, false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001'::text as id, 'lg_001'::text as location_group_id, 10::integer as max_occupancy
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '2024-01'          as "Month",
+          'Central Hospital' as "Facility",
+          'Emergency Ward'   as "Area",
+          2::bigint          as "Number of admissions",
+          2::bigint          as "Number of discharges",
+          0::bigint          as "Number of deaths",
+          0::bigint          as "Number of transfers into location",
+          0::bigint          as "Number of transfers out of location",
+          1.5::numeric       as "Average length of stay",
+          3::numeric         as "Number of patient days",
+          '1.0%'             as "Bed occupancy (%)"
