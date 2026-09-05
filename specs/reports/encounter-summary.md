@@ -63,6 +63,10 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   `department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
   the dates embedded in the `procedures` and `notes` text. A caller needing a different
   format for any of these has no raw column to select, and must change the CTEs.
+- **BL-007:** The history consolidation **left**-joins `users` on
+  `encounter_history.updated_by_id`, which is nullable at source unlike `department_id`,
+  `location_id` and `examiner_id`, so a history row with no actor is kept and its
+  clinician resolves to null.
 
 ## Output
 
@@ -122,20 +126,15 @@ not expected to agree and should not be reconciled.
 | AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
 | AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
 | AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_by_start_date_excludes_sensitive_facilities` |
+| AC-006 | An encounter whose every history row has a null actor still appears, with a null clinician. | BL-007 | `test_encounter_summary_null_actor_history` (enc_001) |
 
 ## Open questions
 
 None outstanding.
-
-Resolved: OQ-001 (the history actor is left-joined), OQ-002 (`admissions_dataset` now
-uses this report's location-group dedup semantic — see BL-006 of
-`specs/dbt-model/ds__admissions.md`; the change is to that dataset, so it altered the
-admissions line list and not this report), OQ-003 (the unread columns and the redundant
-`users` join are gone), OQ-004 (the sensitive variant has a unit test).
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |
-| 2026-09-03 | OQ-002 resolved in `admissions_dataset`; no change to this report. |
+| 2026-09-03 | `admissions_dataset` adopted this report's location-group dedup semantic; no change to this report. |
