@@ -18,9 +18,9 @@
 Registers six metric IDs in `documentations/metrics/sti.yml`: `sti_{syphilis,gonorrhoea,chlamydia}_test`
 and a `_key_population` counterpart for each. `BL` and `AC` numbering is shared with the deployment
 implementation specs and with the `-- BL-0xx` code comments, so an anchor resolves identically in
-either. The canonical block is `BL-000`–`BL-021` and `AC-001`–`AC-013`; a canonical clause added
-after a deployment spec has claimed the numbers above that block takes the next free number in the
-shared sequence rather than a suffixed variant.
+either. The canonical clauses are `BL-000`–`BL-021` and `BL-054`, and `AC-001`–`AC-013`, `AC-035`
+and `AC-036`; a canonical clause added after a deployment spec has claimed the numbers above that
+block takes the next free number in the shared sequence rather than a suffixed variant.
 
 ## Purpose
 
@@ -84,7 +84,7 @@ population the patient belongs to.
 ### Treatment
 
 - **BL-010:** `treatment_status` is `Not applicable` where `is_positive` is false.
-- **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 28 days before their earliest positive result for that infection and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
+- **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 28 days before their earliest positive result for that infection in the reporting month and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
 - **BL-054:** `treatment_status` is `Untreated` where `is_positive` is true and no such order exists, so the three values are exhaustive and the column is never NULL.
 - **BL-012:** An ongoing medication order is subject to the same window as BL-011 and counts only where it starts within that window, so being currently active is not on its own sufficient.
 - **BL-013:** Antiretroviral therapy for HIV is not treatment for these infections.
@@ -108,7 +108,7 @@ population the patient belongs to.
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | Every row's `metric_id` is one of the six registered IDs | BL-001 | schema `accepted_values` |
-| AC-002 | Each `metric_id` has one row per grain tuple | Grain | `dbt_utils.unique_combination_of_columns` |
+| AC-002 | `metric_id`, `subject_id`, `period_start` and `key_population` are unique together | Grain | `dbt_utils.unique_combination_of_columns` |
 | AC-003 | Every `metric_id` resolves against the metric registry | BL-001 | `relationships` to `metric_definitions` |
 | AC-004 | `value_numeric` is always 1 | BL-001 | schema `accepted_values` |
 | AC-005 | `treatment_status` is `Not applicable` wherever `is_positive` is false | BL-010 | singular test |
@@ -120,8 +120,8 @@ population the patient belongs to.
 | AC-011 | A withdrawn or cancelled test is not counted | BL-005 | unit test |
 | AC-012 | A medication order more than 28 days before the earliest positive does not make a patient `Treated` | BL-011, BL-012 | unit test |
 | AC-013 | `age_years` derives from the test date, not the run date | BL-018 | unit test |
-| AC-036 | A medication order dated after the window's closing bound does not make a patient `Treated` | BL-011 | unit test |
 | AC-035 | `treatment_status` is always one of `Treated`, `Untreated` or `Not applicable`, and never NULL | BL-010, BL-054 | schema `accepted_values` + `not_null` |
+| AC-036 | A medication order dated after the window's closing bound does not make a patient `Treated` | BL-011 | unit test |
 
 ## Registry entries
 
@@ -140,7 +140,4 @@ population the patient belongs to.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-02 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
-| 2026-09-05 | @beyondessential/maui | Require treatment to be indicated for the infection and bound the treatment window at both ends (BL-011) |
-| 2026-09-05 | @beyondessential/maui | Reconcile BL-012 and BL-014 with the bounded treatment window |
-| 2026-09-05 | @beyondessential/maui | Settle the reporting-month grain as the definition's only grain |
+| 2026-09-05 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
