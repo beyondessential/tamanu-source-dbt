@@ -205,18 +205,11 @@ load-bearing.
 
 ## Open questions
 
-- **OQ-001:** `admissions_dataset` currently applies no `patient_id != test_patient`
-  predicate and no date range, so its adoption should be a pure substitution. Confirm
-  against the compiled diff when PR-3 lands.
-- **OQ-002:** `encounter_summary_report` **will not** produce a shape-only diff, so AC-003
-  does not hold for it as written. Its line 23 applies
-  `e.patient_id != '{{ var("test_patient") }}'`, which BL-002 declines to re-apply. The
-  `encounters` base model already filters it, so dropping it is behaviour-neutral, but the
-  compiled diff for that adoption will show a **removed predicate**. PR-4 should carry a
-  row-count check against real data rather than resting on the compiled diff alone.
+None outstanding.
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-09-02 | Created. Extracted from `encounter_invoice_audit_report`; adopted there first. |
+| 2026-09-05 | Adoption in `admissions_dataset` and `encounter_summary_report` completed and verified; the two questions tracking that work are closed. |
