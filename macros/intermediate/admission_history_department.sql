@@ -48,7 +48,16 @@ select
     coalesce(lead(dl.department_id) over w isnull and e.end_datetime notnull, false) as discharge,
     coalesce(dl.type = 'transfer-in', false) as transfer_in,
     coalesce(lead(dl.department_id) over w notnull, false) as transfer_out,
-    coalesce(lead(dl.start_datetime) over w isnull and e.end_datetime::date = p.date_of_death, false) as death
+    -- BL-004 (specs/reports/hospital-admissions-summaries.md): the death is attributed
+    -- to the final episode, and the patient must have died *during* the encounter.
+    -- `date_of_death` is a timestamp, so comparing it to `end_datetime::date` promoted
+    -- the date to midnight and could only match a death recorded at exactly 00:00:00.
+    -- Interval containment is the idiom ds__deaths already uses for the same question.
+    coalesce(
+        lead(dl.start_datetime) over w isnull
+            and p.date_of_death between e.start_datetime and e.end_datetime,
+        false
+    ) as death
 from admission_department_log dl
 join {{ ref('encounters') }} e on e.id = dl.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id

@@ -1,0 +1,170 @@
+unit_tests:
+  - name: test_int__admission_history_department_death_flag
+    model: int__admission_history_department
+    description: >
+      Pins BL-004's death condition: the patient must have died between the encounter's
+      start and end, inclusive. Four patients cover the boundaries. pat_during died
+      mid-admission and is flagged. pat_at_end died at the exact instant the encounter
+      ended and is flagged, because the interval is inclusive. pat_same_day died on the
+      same calendar day as discharge but several hours after it, and is NOT flagged —
+      discharged alive, died elsewhere. pat_before carries a death recorded before the
+      admission even began, which happens in real data, and is not flagged either.
+
+      Both flagged rows also carry `discharge = true`, which is AC-003's overlap.
+
+      pat_same_day is the case that matters most. The previous condition compared
+      `end_datetime::date` to `date_of_death`, a date against a timestamp, so Postgres
+      promoted the date to midnight and the flag could only fire for a death recorded at
+      exactly 00:00:00 — it never fired at all. Repairing that by casting both sides to
+      date would have flagged pat_same_day, counting a patient who died at home as a
+      hospital death. Interval containment is the idiom ds__deaths already uses.
+    overrides:
+      vars:
+        timezone: UTC
+    given:
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_during'::text as id, 'enc_during'::text as encounter_id,
+                 '2024-01-10 08:00:00'::timestamp as datetime, 'dep_001'::text as department_id,
+                 null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_same_day', 'enc_same_day', '2024-02-01 08:00:00'::timestamp, 'dep_001', null::text[], 'admission'
+          union all
+          select 'eh_before', 'enc_before', '2024-03-10 08:00:00'::timestamp, 'dep_001', null::text[], 'admission'
+          union all
+          select 'eh_at_end', 'enc_at_end', '2024-04-01 08:00:00'::timestamp, 'dep_001', null::text[], 'admission'
+      - &death_flag_encounters
+        input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_during'::text as id, 'pat_during'::text as patient_id,
+                 '2024-01-10 08:00:00'::timestamp as start_datetime,
+                 '2024-01-15 10:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_same_day', 'pat_same_day', '2024-02-01 08:00:00'::timestamp, '2024-02-05 09:00:00'::timestamp
+          union all
+          select 'enc_before', 'pat_before', '2024-03-10 08:00:00'::timestamp, '2024-03-12 10:00:00'::timestamp
+          union all
+          select 'enc_at_end', 'pat_at_end', '2024-04-01 08:00:00'::timestamp, '2024-04-04 16:30:00'::timestamp
+      - &death_flag_patients
+        input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_during'::text as id, '2024-01-14 03:00:00'::timestamp as date_of_death
+          union all
+          select 'pat_same_day', '2024-02-05 20:00:00'::timestamp
+          union all
+          select 'pat_before', '2024-03-01 12:00:00'::timestamp
+          union all
+          select 'pat_at_end', '2024-04-04 16:30:00'::timestamp
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dep_001'::text as id, 'General Medicine'::text as name, 'fac_001'::text as facility_id
+      - &death_flag_facilities
+        input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001'::text as id, 'Central Hospital'::text as name, false as is_sensitive
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_during'::text  as encounter_id,
+          'dep_001'::text     as department_id,
+          'General Medicine'::text as department,
+          'fac_001'::text     as facility_id,
+          'Central Hospital'::text as facility,
+          '2024-01-10 08:00:00'::timestamp as start_datetime,
+          '2024-01-15 10:00:00'::timestamp as end_datetime,
+          5                   as length_of_stay,
+          true                as admission,
+          true                as discharge,
+          false               as transfer_in,
+          false               as transfer_out,
+          true                as death
+        union all
+        select 'enc_same_day', 'dep_001', 'General Medicine', 'fac_001', 'Central Hospital',
+               '2024-02-01 08:00:00'::timestamp, '2024-02-05 09:00:00'::timestamp,
+               4, true, true, false, false, false
+        union all
+        select 'enc_before', 'dep_001', 'General Medicine', 'fac_001', 'Central Hospital',
+               '2024-03-10 08:00:00'::timestamp, '2024-03-12 10:00:00'::timestamp,
+               2, true, true, false, false, false
+        union all
+        select 'enc_at_end', 'dep_001', 'General Medicine', 'fac_001', 'Central Hospital',
+               '2024-04-01 08:00:00'::timestamp, '2024-04-04 16:30:00'::timestamp,
+               3, true, true, false, false, true
+
+  - name: test_int__admission_history_location_death_flag
+    model: int__admission_history_location
+    description: >
+      BL-004's death condition on the location intermediate, over the same four boundary
+      patients as the department test. The death predicate is a separate line of SQL from
+      the department one, so it needs its own assertion: without this, reverting
+      `admission_history_location.sql` to the date-versus-timestamp comparison would leave
+      the suite green while `hospitalDeathCount` returned to a structural zero in
+      `-by-area`, `-by-location` and both of their sensitive twins — four of the six
+      reports, none of which read the department intermediate.
+    overrides:
+      vars:
+        timezone: UTC
+    given:
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_during'::text as id, 'enc_during'::text as encounter_id,
+                 '2024-01-10 08:00:00'::timestamp as datetime, 'loc_001'::text as location_id,
+                 null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_same_day', 'enc_same_day', '2024-02-01 08:00:00'::timestamp, 'loc_001', null::text[], 'admission'
+          union all
+          select 'eh_before', 'enc_before', '2024-03-10 08:00:00'::timestamp, 'loc_001', null::text[], 'admission'
+          union all
+          select 'eh_at_end', 'enc_at_end', '2024-04-01 08:00:00'::timestamp, 'loc_001', null::text[], 'admission'
+      - *death_flag_encounters
+      - *death_flag_patients
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001'::text as id, 'Ward A'::text as name,
+                 'lg_001'::text as location_group_id, 'fac_001'::text as facility_id
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001'::text as id, 'General Ward'::text as name
+      - *death_flag_facilities
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_during'::text  as encounter_id,
+          'lg_001'::text      as location_group_id,
+          'General Ward'::text as location_group,
+          'loc_001'::text     as location_id,
+          'Ward A'::text      as location,
+          'fac_001'::text     as facility_id,
+          'Central Hospital'::text as facility,
+          '2024-01-10 08:00:00'::timestamp as start_datetime,
+          '2024-01-15 10:00:00'::timestamp as end_datetime,
+          5                   as length_of_stay,
+          true                as admission,
+          true                as discharge,
+          false               as transfer_in,
+          false               as transfer_out,
+          true                as death
+        union all
+        select 'enc_same_day', 'lg_001', 'General Ward', 'loc_001', 'Ward A', 'fac_001', 'Central Hospital',
+               '2024-02-01 08:00:00'::timestamp, '2024-02-05 09:00:00'::timestamp,
+               4, true, true, false, false, false
+        union all
+        select 'enc_before', 'lg_001', 'General Ward', 'loc_001', 'Ward A', 'fac_001', 'Central Hospital',
+               '2024-03-10 08:00:00'::timestamp, '2024-03-12 10:00:00'::timestamp,
+               2, true, true, false, false, false
+        union all
+        select 'enc_at_end', 'lg_001', 'General Ward', 'loc_001', 'Ward A', 'fac_001', 'Central Hospital',
+               '2024-04-01 08:00:00'::timestamp, '2024-04-04 16:30:00'::timestamp,
+               3, true, true, false, false, true
