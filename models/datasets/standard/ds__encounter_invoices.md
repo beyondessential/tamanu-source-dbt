@@ -1,10 +1,10 @@
 {% docs ds__encounter_invoices %}
 Invoice financials resolved per invoice, mirroring Tamanu's in-app calculations
 (price-list selection, item discounts, insurance coverage, invoice-level
-discount, and net patient payments). One row per invoice, carrying a status so
-consumers can filter (for example, exclude cancelled) and aggregate per
-encounter. Facility-agnostic — any facility or sensitivity scoping is applied by
-the consumer.
+discount, net patient payments, and the resulting patient subtotal). One row
+per invoice, carrying a status so consumers can filter (for example, exclude
+cancelled) and aggregate per encounter. Facility-agnostic — any facility or
+sensitivity scoping is applied by the consumer.
 {% enddocs %}
 
 {% docs ds__encounter_invoices__invoice_datetime %}
@@ -35,6 +35,12 @@ subtotal (invoice total less insurance coverage), rounded to 2 decimal places.
 {% docs ds__encounter_invoices__patient_payment %}
 Net patient payment on the invoice: patient payments less refunds. Insurer
 payments are excluded.
+{% enddocs %}
+
+{% docs ds__encounter_invoices__patient_subtotal %}
+Invoice total less insurance coverage and invoice-level discount — the amount
+billed to the patient before payments are netted off. NULL when `invoice_total`
+is NULL (the invoice has no items).
 {% enddocs %}
 
 {% docs ds__encounter_invoices__products_no_category %}

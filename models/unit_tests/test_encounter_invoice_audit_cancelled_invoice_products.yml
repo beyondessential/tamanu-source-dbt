@@ -54,9 +54,9 @@ unit_tests:
         format: sql
         rows: |
           -- Cancelled invoice must be excluded; in_progress invoice surfaces
-          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 10.00::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, 'Cancelled Fee' as products_no_category
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'cancelled' as status, '2024-01-10 08:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 10.00::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, 10.00::numeric as patient_subtotal, 'Cancelled Fee' as products_no_category
           union all
-          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp, null::timestamp, 50.00::numeric, null::numeric, 0.00::numeric, null::numeric, 'Manual Fee'
+          select '00000000-0000-0000-0000-000000000002', 'enc_001', 'in_progress', '2024-01-10 09:00:00'::timestamp, null::timestamp, 50.00::numeric, null::numeric, 0.00::numeric, null::numeric, 50.00::numeric, 'Manual Fee'
 
     expect:
       format: sql
