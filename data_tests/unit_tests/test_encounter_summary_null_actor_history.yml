@@ -2,12 +2,11 @@ unit_tests:
   - name: test_encounter_summary_null_actor_history
     model: encounter-summary-by-start-date
     description: >
-      OQ-001. encounter_history.actor_id is nullable at source -- it carries no
+      BL-007. encounter_history.actor_id is nullable at source -- it carries no
       not_null test, unlike department_id, location_id and examiner_id. The history
-      consolidation therefore left-joins users on it. Under the previous inner join
-      the change was dropped, and because the report inner-joins encounter_changes,
-      an encounter whose every history row had a null actor vanished from the report
-      entirely.
+      consolidation therefore left-joins users on it: an inner join drops the change,
+      and because the report inner-joins encounter_changes, an encounter whose every
+      history row has a null actor would vanish from the report entirely.
 
       enc_001's only history row has a null updated_by_id, so this encounter is
       exactly that case: it must appear, with a null Clinician rather than being

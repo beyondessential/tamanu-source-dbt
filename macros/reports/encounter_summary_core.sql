@@ -89,10 +89,9 @@ encounter_history_consolidated as (
     from {{ ref('encounter_history') }} eh
     join encounters_in_scope eis
         on eis.encounter_id = eh.encounter_id
-    -- OQ-001: left join. encounter_history.actor_id is nullable at source, unlike
-    -- department_id / location_id / examiner_id, so an inner join here drops the
-    -- change -- and drops the encounter entirely where every one of its history
-    -- rows has a null actor.
+    -- BL-007 (specs/reports/encounter-summary.md): eh.updated_by_id is nullable at
+    -- source, unlike department_id / location_id / examiner_id, so the actor join is a
+    -- left join -- a history row with no actor is kept, with a null clinician name.
     left join {{ ref('users') }} actor
         on actor.id = eh.updated_by_id
     join {{ ref('departments') }} d
