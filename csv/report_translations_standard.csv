@@ -15,6 +15,9 @@ report.reporting.appointmentClinician,Clinician
 report.reporting.appointmentCreatedBy,Appointment created by
 report.reporting.appointmentDateTime,Appointment date and time
 report.reporting.appointmentEndDateTime,Appointment end date and time
+report.reporting.appointmentFollowUpBooked,Follow-up appointment booked
+report.reporting.appointmentFollowUpDateTime,Follow-up appointment date and time
+report.reporting.appointmentFollowUpLocationGroup,Follow-up appointment area
 report.reporting.appointmentIsCancelled,Appointment cancelled
 report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
@@ -332,6 +335,18 @@ report.reporting.surveyResult,Result
 report.reporting.surveySignatureSigned,Signed
 report.reporting.surveySignatureUnsigned,Unsigned
 report.reporting.surveySubmissionTime,Submission time
+report.reporting.taskCompletedDateTime,Task completed date and time
+report.reporting.taskDesignationNotesRecorded,Notes recorded by designation
+report.reporting.taskDesignations,Assigned to
+report.reporting.taskDueDateTime,Task due date and time
+report.reporting.taskHighPriority,High priority
+report.reporting.taskHoursToCompletion,Hours to completion
+report.reporting.taskName,Task
+report.reporting.taskNotCompletedReason,Reason not completed
+report.reporting.taskNote,Task note
+report.reporting.taskRequestedBy,Task requested by
+report.reporting.taskRequestedDateTime,Task requested date and time
+report.reporting.taskStatus,Task status
 report.reporting.triageActiveCareDateTime,Time of active care/admission
 report.reporting.triageArrivalMode,Arrival mode
 report.reporting.triageCategory,Triage category
