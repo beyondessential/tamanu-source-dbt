@@ -59,6 +59,13 @@ where trim(d) not in (
         -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
         -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
         'key_population',
+        -- sti_*_test's screening outcome: whether any countable test for that infection in
+        -- the reporting month indicated infection.
+        'is_positive',
+        -- sti_*_test's treatment stage -- Treated, Untreated, or Not applicable where the
+        -- patient did not test positive. The cascade's third stage, carried as a
+        -- disaggregation rather than as a metric_id per stage.
+        'treatment_status',
         -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
         -- metric per setting. It is the encounter's type as it now stands, not the phase the
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on

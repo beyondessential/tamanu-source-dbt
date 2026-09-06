@@ -53,6 +53,12 @@ The user associated with the measurement — the vitals survey submitter, or the
 request's requesting clinician. FK to ref__provider.
 {% enddocs %}
 
+{% docs clinical__measurement__measurement_source_id %}
+The identifier of the thing measured in the system it came from: the lab test type for a lab
+result, the program data element for a vitals answer. NULL for birth anthropometry, which has
+no reference-data record behind it.
+{% enddocs %}
+
 {% docs clinical__measurement__measurement_source_value %}
 The Tamanu measurement type's code — the vital's program-data-element code (e.g. systolic
 blood pressure) or the lab test type's code.

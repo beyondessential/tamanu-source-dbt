@@ -1,11 +1,11 @@
 -- clinical__measurement -- OMOP-lite MEASUREMENT domain. One row per clinical measurement,
--- unioning three standard sources: vitals via the Tamanu Vitals survey (BL-006), completed
--- lab-test results (BL-007), and birth anthropometry unpivoted from patient_birth_data
+-- unioning three standard sources: vitals via the Tamanu Vitals survey (BL-006), lab tests
+-- carrying a reading (BL-007), and birth anthropometry unpivoted from patient_birth_data
 -- (BL-008, via int__patient_birth_measurements). Numeric results populate value_as_number;
 -- categorical results keep value_source_value. FK graph wired from the encounter where one
 -- exists (BL-002); *_concept_id (LOINC) deferred to the future vocab__ layer (BL-003).
 -- Sources only from bases/ + intermediate (D10). Deployment-specific measurements are added
--- by per-deployment override (see spec). See spec for BL-001..BL-008.
+-- by per-deployment override (see spec). See spec for BL-001..BL-011.
 
 with survey_response_answers as (
     select * from {{ ref('survey_response_answers') }}
@@ -37,6 +37,10 @@ lab_requests as (
 
 lab_test_types as (
     select * from {{ ref('lab_test_types') }}
+),
+
+lab_result_encoding as (
+    select * from {{ ref('map__lab_test_result_encoding') }}
 ),
 
 patient_birth_measurements as (
@@ -71,6 +75,7 @@ vitals_measurements as (
         null::varchar           as unit_source_value,
         va.submitted_by_id::varchar as provider_id,
         va.encounter_id::varchar    as visit_occurrence_id,
+        va.data_element_id::varchar as measurement_source_id,  -- BL-010
         pde.code as measurement_source_value,
         pde.name as measurement_source_name
     from vitals_answers va
@@ -78,7 +83,21 @@ vitals_measurements as (
     left join program_data_elements pde on pde.id = va.data_element_id
 ),
 
--- lab branch: completed lab tests that have a result (BL-007)
+-- BL-009: the reading is the typed result, else the result the test type encodes. Resolved once
+-- here so the numeric cast, the emitted value and the has-a-reading filter all read the same thing
+lab_test_readings as (
+    select
+        lt.id,
+        lt.lab_request_id,
+        lt.lab_test_type_id,
+        lt.completed_datetime,
+        coalesce(nullif(trim(lt.result), ''), nullif(trim(enc.encoded_result), '')) as reading
+    from lab_tests lt
+    -- BL-009: one row per type at most, so this cannot fan out
+    left join lab_result_encoding enc on enc.lab_test_type_id = lt.lab_test_type_id
+),
+
+-- lab branch: lab tests carrying a reading, under a request that was not withdrawn (BL-007)
 lab_measurements as (
     select
         lt.id::varchar        as measurement_id,
@@ -86,21 +105,25 @@ lab_measurements as (
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)::date as measurement_date,
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
         'lab'                 as measurement_type_source_value,
-        case when trim(lt.result) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(lt.result)::numeric end as value_as_number,
-        trim(lt.result)       as value_source_value,
+        case when lt.reading ~ '^-?[0-9]+(\.[0-9]+)?$' then lt.reading::numeric end as value_as_number,
+        lt.reading            as value_source_value,
         ltt.unit              as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
         lr.encounter_id::varchar    as visit_occurrence_id,
+        lt.lab_test_type_id::varchar as measurement_source_id,  -- BL-010
         ltt.code as measurement_source_value,
         ltt.name as measurement_source_name
-    from lab_tests lt
+    from lab_test_readings lt
     join lab_requests lr on lr.id = lt.lab_request_id
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
-    where lt.result is not null and trim(lt.result) != ''
-      -- drop requests that never produced a valid result even if a stale value lingers (BL-007).
+    -- BL-009: a reading exists where a result was recorded or the type encodes one
+    where lt.reading is not null
+      -- drop requests that never produced a valid result even if a stale value lingers.
       -- coalesce so a NULL status means "keep" rather than silently dropping the row
-      and coalesce(lr.status, '') not in ('deleted', 'sample-not-collected', 'entered-in-error')
+      and coalesce(lr.status, '') not in (
+          'cancelled', 'deleted', 'entered-in-error', 'invalidated', 'rejected', 'sample-not-collected'
+      )  -- BL-011
 ),
 
 -- birth anthropometry, unpivoted upstream by int__patient_birth_measurements (BL-008).
@@ -117,6 +140,7 @@ birth_measurements as (
         null::varchar           as unit_source_value,
         null::varchar           as provider_id,
         null::varchar           as visit_occurrence_id,
+        null::varchar               as measurement_source_id,  -- BL-010
         bm.measurement_source_value as measurement_source_value,
         bm.measurement_source_name  as measurement_source_name
     from patient_birth_measurements bm
@@ -134,6 +158,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from vitals_measurements
@@ -151,6 +176,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from lab_measurements
@@ -168,6 +194,7 @@ select
     unit_source_value,
     provider_id,
     visit_occurrence_id,
+    measurement_source_id,
     measurement_source_value,
     measurement_source_name
 from birth_measurements
