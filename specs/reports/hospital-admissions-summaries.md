@@ -185,6 +185,18 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   This clause covers a **null** `location_group_id` only. A location whose
   `location_group_id` is set but unresolvable also survives the outer join, and does so with
   a non-null key and therefore a real capacity — recorded as DV-008.
+- **BL-014:** Consecutive episodes that did not move the patient are one episode. A row
+  enters an episode log when it changes the encounter type as well as when it changes the
+  location or department, so an encounter converted to an admission without being moved
+  would otherwise open a second episode in the same place and the first would read as a
+  transfer out of somewhere the patient never left. Episodes are collapsed on the
+  dimension with `contiguous_phase_id()`, which is also what a `clinical__visit_detail`
+  consumer needs and is shared with it.
+
+  The collapsed episode starts when the patient arrived and carries **every** event that
+  happened while they were there: `admission` and `transfer_in` are aggregated over the
+  run rather than taken from the opening row, because a patient transferred in and then
+  converted to an admission without moving did both, in that one place.
 
 ## Divergences
 
@@ -260,4 +272,5 @@ None outstanding.
 
 | Date | Change |
 |---|---|
+| 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. |
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting, beyond BL-007's patient-day floor — which follows the AIHW definition and stops an inverted episode subtracting days from a month. |
