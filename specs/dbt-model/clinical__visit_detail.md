@@ -27,8 +27,9 @@ question raised on [`clinical__visit_occurrence`](clinical__visit_occurrence.md)
 ## Purpose
 
 **What this artefact measures.** One row per encounter *segment* — a contiguous
-period during which the encounter's department, location, and encounter_type were
-stable. In Tamanu an ER-to-admission flow is a **single encounter** whose type and
+period during which the encounter's `encounter_history` snapshot was stable. The
+snapshot is department, location, encounter_type **and clinician**, so a handover to a
+different clinician in the same ward opens a new segment. In Tamanu an ER-to-admission flow is a **single encounter** whose type and
 placement change over time (recorded in `encounter_history`); `VISIT_DETAIL` unfolds
 those changes into one row per phase, each keyed to its parent `visit_occurrence_id`.
 
@@ -44,7 +45,17 @@ department or location within a single encounter.
 
 ## Grain
 
-**One row per:** encounter segment (a stable department/location/encounter_type phase).
+**One row per:** encounter segment — a phase over which the encounter's
+`encounter_history` snapshot was stable. The snapshot carries department, location,
+encounter_type and clinician, and a change to **any** of them opens a segment.
+
+A segment is therefore **not** a contiguous ward stay. A clinician handover within one
+ward ends a segment and starts another with the same `care_site_id` and `department_id`,
+which is correct for `VISIT_DETAIL` — `provider_id` is part of the row — but means a
+consumer counting ward movements or measuring length of stay per ward must first collapse
+consecutive segments on the dimensions it cares about. On a representative deployment
+around 5% of segments share their predecessor's department, location and type, and almost
+all of those are handovers.
 Parent `visit_occurrence_id` is many-to-one from segments, so `clinical__visit_detail`
 fans out relative to `clinical__visit_occurrence` — this is expected and is the whole
 point of the model. Segment boundaries come from `encounter_history` change events; an
