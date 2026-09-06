@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: map__lab_test_result_encoding
+    description: >-
+      Lab test types that carry their result in the type itself, mapped to the result they
+      encode. Point-of-care rapid tests are recorded by choosing a result-bearing test type
+      rather than by entering a result, so the reading exists even where lab_tests.result is
+      blank. Joined by clinical__measurement to recover those readings.
+
+      Empty by default. The test types that behave this way are deployment reference data, so a
+      deployment that records point-of-care tests disables this model and defines its own of the
+      same name, one row per test type, carrying the uniqueness and not-null tests declared here.
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: lab_test_type_id
+        data_type: text
+        description: Tamanu lab test type whose identity carries the result.
+        data_tests:
+          - not_null
+          - unique
+      - name: encoded_result
+        data_type: text
+        description: >-
+          The reading the test type encodes, worded as the test reports it (Reactive,
+          Non-reactive, Positive, Negative).
+        data_tests:
+          - not_null
+      - name: is_positive
+        data_type: boolean
+        description: >-
+          Whether the encoded reading indicates the target condition was detected. What a
+          detection means for a given indicator is the consumer's decision.
+        data_tests:
+          - not_null

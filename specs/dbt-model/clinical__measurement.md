@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-04 |
-| **Last updated** | 2026-07-09 |
+| **Last updated** | 2026-09-05 |
 
 The OMOP-lite `MEASUREMENT` domain — one row per clinical measurement (numeric or
 categorical), unioning three standard sources: **vitals** (blood pressure, weight, glucose,
@@ -63,7 +63,7 @@ those in. This is by design, not an omission; the standard model stays universal
 ## Grain
 
 **One row per:** recorded Vitals-survey answer (PK `survey_response_answers.id`),
-completed lab test with a result (PK `lab_tests.id`), or recorded birth measure (synthetic
+lab test carrying a reading (PK `lab_tests.id`), or recorded birth measure (synthetic
 PK `<patient_id>-birthdata-<measure>`), unioned. Only rows with a recorded (non-blank) value
 are kept (BL-006, BL-007, BL-008); numeric values populate `value_as_number`, categorical
 values carry `value_source_value` with `value_as_number` NULL. The three id spaces are
@@ -84,6 +84,7 @@ is preserved.
 | `unit_source_value` | text | Unit of measure. Labs: `lab_test_types.unit`. NULL for vitals (units implicit, not stored per answer) |
 | `provider_id` | uuid | Vitals: response submitter. Labs: requesting clinician. Birth: NULL (no user recorded). FK to `ref__provider.provider_id` |
 | `visit_occurrence_id` | uuid | The source's `encounter_id`; **NULL for birth measurements** (patient-level). FK to `clinical__visit_occurrence.visit_occurrence_id` |
+| `measurement_source_id` | uuid | The source system's identifier for the thing measured — `lab_tests.lab_test_type_id` (lab) or `survey_response_answers.data_element_id` (vital). NULL for birth anthropometry (no reference-data record) |
 | `measurement_source_value` | text | The measurement type's code — `program_data_elements.code` (vital) or `lab_test_types.code` (lab) |
 | `measurement_source_name` | text | The measurement type's name, denormalised for readability |
 
@@ -97,6 +98,7 @@ are **not** emitted — see BL-003 and OQ-1.
   (BL-007), and birth anthropometry (BL-008) — sourced from `{{ ref('survey_response_answers') }}`,
   `{{ ref('survey_responses') }}`, `{{ ref('surveys') }}`, `{{ ref('program_data_elements') }}`,
   `{{ ref('lab_tests') }}`, `{{ ref('lab_requests') }}`, `{{ ref('lab_test_types') }}`,
+  `{{ ref('map__lab_test_result_encoding') }}`,
   `{{ ref('int__patient_birth_measurements') }}`, and `{{ ref('encounters') }}` only (D10) —
   never `public.*`. Soft-delete / test-patient filtering is inherited from the base models;
   the branch PKs (`survey_response_answers.id`, `lab_tests.id`, and the synthetic
@@ -130,12 +132,10 @@ are **not** emitted — see BL-003 and OQ-1.
   measurement/observation split is by **survey**, not value type: the Vitals survey feeds
   `clinical__measurement`; qualitative results from *other* surveys (social history,
   program-survey flags) feed `clinical__observation`.
-- **BL-007 (lab branch):** Every `lab_tests` row with a recorded (non-blank) `result` is
-  included, joined through `lab_requests` to its encounter and `lab_test_types` for the test
-  code/name/unit. Tests without a result (pending/incomplete) are excluded — a measurement
-  exists only once a result is recorded. Requests in a non-result status —
-  `deleted`, `sample-not-collected`, `entered-in-error` — are also excluded even if a stale
-  `result` value lingers, so voided work never surfaces as a measurement. Numeric results
+- **BL-007 (lab branch):** Every `lab_tests` row carrying a reading is included, joined through
+  `lab_requests` to its encounter and `lab_test_types` for the test code/name/unit. A reading is
+  a recorded (non-blank) `result`, or a result encoded in the test type (BL-009). A test with
+  neither is excluded — a measurement exists only once a reading exists. Numeric results
   populate `value_as_number`; qualitative results (e.g. "positive"/"negative") carry
   `value_source_value`.
 - **BL-008 (birth-data branch):** Birth anthropometry (birth weight, birth length, APGAR at
@@ -147,6 +147,19 @@ are **not** emitted — see BL-003 and OQ-1.
   (`patients.date_of_birth` + `time_of_birth`, falling back to the registration date). The
   `measurement_id` is synthesised as `<patient_id>-birthdata-<measure>` (unique — one birth
   record per patient). Unpivot logic lives in the int model to keep this model a clean union.
+- **BL-009 (encoded results):** A point-of-care test is recorded by choosing a result-bearing
+  test type rather than by entering a result, so where `lab_tests.result` is blank and
+  `map__lab_test_result_encoding` covers the test type, the encoded result is the reading. The
+  map carries the reading as the test reports it (`encoded_result`) and whether that reading
+  indicates the target condition was detected (`is_positive`); it is empty in this repo and is
+  the extension point a deployment overrides — unique on `lab_test_type_id` — to name its own
+  result-bearing test types, so the branch behaves identically everywhere until one does.
+- **BL-010 (source identifier):** `measurement_source_id` carries the source system's identifier
+  for the thing measured — the lab test type for a lab, the program data element for a vitals
+  answer, and nothing for birth anthropometry — alongside the code in `measurement_source_value`.
+- **BL-011 (withdrawn requests):** A request whose status is `cancelled`, `deleted`,
+  `entered-in-error`, `invalidated`, `rejected` or `sample-not-collected` yields no measurement,
+  even where a stale result lingers on it.
 
 ## Acceptance criteria
 
@@ -159,6 +172,10 @@ are **not** emitted — see BL-003 and OQ-1.
 | AC-005 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-002 | dbt `relationships` |
 | AC-006 | `value_source_value` is `not_null` (every measurement has a recorded value; `value_as_number` is nullable for categorical results) | BL-006, BL-007 | dbt `not_null` |
 | AC-007 | `measurement_datetime` is `not_null` | BL-004 | dbt `not_null` |
+| AC-008 | No lab measurement comes from a request in a withdrawn status | BL-011 | dbt singular |
+| AC-009 | Every lab measurement carries a non-blank reading | BL-007, BL-009 | dbt singular |
+| AC-010 | Where the typed result is blank and the test type is in the encoding map, the encoded result is the reading, and a typed result wins where both exist | BL-009 | dbt unit test |
+| AC-011 | A lab measurement's `measurement_source_id` is its `lab_test_type_id` | BL-010 | dbt unit test |
 
 ## Registry entry
 
@@ -176,6 +193,7 @@ elements — only `metric__` / `derived__` artefacts get a `metric_definitions.c
 | `lab_tests` | `bases/` | Lab result value, completed datetime, test-type FK (lab branch) |
 | `lab_requests` | `bases/` | Lab encounter anchor, requester, request datetimes |
 | `lab_test_types` | `bases/` | Lab test code, name, and unit |
+| `map__lab_test_result_encoding` | `maps/` | Test types whose identity carries the result, for point-of-care readings with no typed result (BL-009) |
 | `int__patient_birth_measurements` | `intermediate/` | Unpivots `patient_birth_data` (+ `patients`) into tall birth measurements (birth branch) |
 | `encounters` | `bases/` | Person (`patient_id`) via the source `encounter_id` (vitals/labs) |
 | `clinical__person` | `clinical/` | `person_id` FK target (AC-003) |
