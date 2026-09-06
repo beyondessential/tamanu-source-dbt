@@ -1,0 +1,201 @@
+version: 2
+
+models:
+  - name: ds__task_followup
+    description: >
+      One row per designation-assigned task, carrying the task's outcome alongside the patient,
+      encounter, discharge and follow-up detail needed to chase up work that was not done. Backs
+      the task follow-up register report. Every encounter type is in scope -- Tamanu places no
+      encounter-type restriction on tasks, and the report narrows by type. Tasks assigned to no
+      designation, medication due tasks and deleted tasks are excluded.
+    config:
+      tags:
+        - dataset
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: task_id
+        data_type: uuid
+        description: "{{ doc('generic__id') }} of the task this row reports on."
+        data_tests:
+          - not_null
+          - unique:
+              name: ac_001_ds__task_followup_one_row_per_task
+      - name: encounter_id
+        data_type: text
+        description: "{{ doc('generic__id') }} of the encounter the task was raised during."
+        data_tests:
+          - not_null
+      - name: patient_id
+        data_type: text
+        description: "{{ doc('generic__id') }} of the patient the encounter belongs to."
+        data_tests:
+          - not_null
+      - name: display_id
+        data_type: text
+        description: "{{ doc('patients__display_id') }}"
+        data_tests:
+          - not_null
+      - name: first_name
+        data_type: text
+        description: "Patient's first name."
+      - name: last_name
+        data_type: text
+        description: "Patient's last name."
+      - name: sex
+        data_type: text
+        description: "Patient's sex."
+      - name: date_of_birth
+        data_type: date
+        description: "Patient's date of birth."
+      - name: age
+        data_type: double precision
+        description: "Patient's age in whole years at the start of the encounter."
+      - name: village_id
+        data_type: text
+        description: "{{ doc('generic__id') }} of the patient's village."
+      - name: village
+        data_type: text
+        description: "Name of the patient's village."
+      - name: facility_id
+        data_type: text
+        description: "{{ doc('generic__id') }} of the facility the encounter took place at."
+        data_tests:
+          - not_null
+      - name: facility
+        data_type: text
+        description: "Name of the facility the encounter took place at."
+      - name: location_group_id
+        data_type: text
+        description: "{{ doc('generic__id') }} of the area the patient currently occupies."
+      - name: location_group
+        data_type: text
+        description: "Area (ward) the patient currently occupies."
+      - name: encounter_type
+        data_type: text
+        description: "Type of encounter the task was raised during."
+        data_tests:
+          - not_null
+          - accepted_values:
+              name: ac_004_ds__task_followup_encounter_type_accepted_values
+              arguments:
+                values:
+                  - admission
+                  - clinic
+                  - imaging
+                  - emergency
+                  - observation
+                  - triage
+                  - surveyResponse
+                  - vaccination
+      - name: encounter_start_datetime
+        data_type: timestamp
+        description: "Date and time the encounter started."
+        data_tests:
+          - not_null
+      - name: encounter_end_datetime
+        data_type: timestamp
+        description: "Date and time the encounter ended. Blank while it is still open."
+      - name: length_of_stay_days
+        data_type: numeric
+        description: "Days between the encounter starting and ending, to one decimal place. Blank while it is still open."
+      - name: primary_diagnoses
+        data_type: text
+        description: "Primary diagnoses recorded against the encounter, oldest first."
+      - name: secondary_diagnoses
+        data_type: text
+        description: "Secondary diagnoses recorded against the encounter, oldest first."
+      - name: designation_ids
+        data_type: text[]
+        description: "Designations the task is assigned to, as reference data IDs."
+        data_tests:
+          - not_null
+      - name: designations
+        data_type: text
+        description: "Names of the designations the task is assigned to."
+        data_tests:
+          - not_null
+      - name: task_name
+        data_type: text
+        description: "The task as it was written when raised."
+        data_tests:
+          - not_null
+      - name: task_status
+        data_type: text
+        description: "Status of the task as Tamanu stores it."
+        data_tests:
+          - not_null
+          - accepted_values:
+              name: ac_002_ds__task_followup_task_status_accepted_values
+              arguments:
+                values:
+                  - todo
+                  - completed
+                  - non_completed
+      - name: task_outcome
+        data_type: text
+        description: >
+          The register's four-way outcome. Completed; Outstanding for a task still to do; Missed
+          for a repeating task the system marked not completed once it went more than two days
+          past due; Not completed for a task a clinician marked not completed.
+        data_tests:
+          - not_null
+          - accepted_values:
+              name: ac_003_ds__task_followup_task_outcome_accepted_values
+              arguments:
+                values:
+                  - Completed
+                  - Outstanding
+                  - Missed
+                  - Not completed
+      - name: not_completed_reason
+        data_type: text
+        description: "Reason the task was recorded as not completed."
+      - name: high_priority
+        data_type: text
+        description: "Whether the task was flagged high priority."
+      - name: requested_by
+        data_type: text
+        description: "Display name of the user who raised the task."
+      - name: task_requested_datetime
+        data_type: timestamp
+        description: "Date and time the task was raised."
+        data_tests:
+          - not_null
+      - name: task_due_datetime
+        data_type: timestamp
+        description: "Date and time the task fell due."
+        data_tests:
+          - not_null
+      - name: task_completed_datetime
+        data_type: timestamp
+        description: "Date and time the task was marked complete. Blank unless it was completed."
+      - name: hours_to_completion
+        data_type: numeric
+        description: "Hours between the task being raised and being marked complete, to one decimal place. Blank unless it was completed."
+      - name: task_note
+        data_type: text
+        description: "Note left against the task -- the completion note where there is one, otherwise the to-do note, otherwise the note it was raised with."
+      - name: designation_notes_recorded
+        data_type: text
+        description: "Whether anyone currently holding one of the task's designations authored a note on this encounter, or had one recorded on their behalf."
+        data_tests:
+          - not_null
+      - name: discharge_disposition
+        data_type: text
+        description: "Where the patient went on discharge."
+      - name: followup_appointment_booked
+        data_type: text
+        description: "Whether a non-cancelled outpatient appointment exists for the patient on or after the end of this encounter."
+        data_tests:
+          - not_null
+      - name: followup_appointment_datetime
+        data_type: timestamp
+        description: "Date and time of the earliest such appointment."
+      - name: followup_appointment_location_group
+        data_type: text
+        description: "Area the follow-up appointment is booked into."
