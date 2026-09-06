@@ -84,7 +84,7 @@ from (
 where
     -- BL-029: filters when the edit was made, not the appointment's scheduled time.
     -- Also the BL-030 safety net -- see header. The whole of toDate is in scope, because
-    -- the time of day an edit was recorded matters here, as in audit_discharge_line_list.
+    -- the time of day an edit was recorded matters here.
     {{ to_user_selected_timezone('modified_datetime') }}
         >= {{ from_bound }}
     and
