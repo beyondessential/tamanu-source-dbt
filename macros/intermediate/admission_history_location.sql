@@ -30,6 +30,45 @@ with admission_location_log as (
     from {{ ref('encounter_history') }} eh
     where (eh.change_type isnull or eh.change_type && array['location', 'encounter_type'])
         and eh.encounter_type = 'admission'
+),
+
+-- BL-014 (specs/reports/hospital-admissions-summaries.md): consecutive rows that did not
+-- move the patient are one episode. A row qualifies for the log above when it changes the
+-- encounter type as well as when it changes the location, so an encounter converted to an
+-- admission without being moved opened a second episode in the same location -- which then
+-- read as a transfer out of a location the patient never left.
+numbered as (
+    select
+        ll.id,
+        ll.encounter_id,
+        ll.location_id,
+        ll.start_datetime,
+        ll.type,
+        {{ contiguous_phase_id('ll.encounter_id', ['ll.location_id'], 'll.start_datetime, ll.id') }} as phase_id
+    from admission_location_log ll
+),
+
+-- the episode starts when the patient arrived and carries every event that happened
+-- while they were there. The two flags are NOT aggregated the same way, because the two
+-- events are not the same shape. A patient is moved into a location once, at the moment the
+-- episode opens, so `transfer_in` is the opening row's type. Conversion to an admission can
+-- happen at any point during the stay, so `admission` is true if any row in the run carried
+-- one: a patient transferred in and later converted without moving did both, and keeping
+-- only the opening row's type would discard the admission.
+--
+-- Aggregating `transfer_in` the same way would invent transfers. A history row that sets
+-- `location` to the one already held is typed `transfer-in` by the log above but moved
+-- nobody; absorbed into an encounter's FIRST episode it reads as a transfer into a location
+-- the patient arrived in directly, with no transfer out anywhere to match it.
+location_phases as (
+    select
+        encounter_id,
+        location_id,
+        min(start_datetime) as start_datetime,
+        bool_or(type = 'admission') as is_admission,
+        (array_agg(type order by start_datetime, id))[1] = 'transfer-in' as is_transfer_in
+    from numbered
+    group by encounter_id, location_id, phase_id
 )
 
 select
@@ -50,9 +89,9 @@ select
         when coalesce(lead(ll.start_datetime::date) over w, e.end_datetime::date) - ll.start_datetime::date < 1 then 1
         else coalesce(lead(ll.start_datetime::date) over w, e.end_datetime::date) - ll.start_datetime::date
     end as length_of_stay,
-    coalesce(ll.type = 'admission', false) as admission,
+    coalesce(ll.is_admission, false) as admission,
     coalesce(lead(ll.location_id) over w isnull and e.end_datetime notnull, false) as discharge,
-    coalesce(ll.type = 'transfer-in', false) as transfer_in,
+    coalesce(ll.is_transfer_in, false) as transfer_in,
     coalesce(lead(ll.location_id) over w notnull, false) as transfer_out,
     -- BL-004 (specs/reports/hospital-admissions-summaries.md): the death is attributed
     -- to the final episode, and the patient must have died *during* the encounter.
@@ -64,7 +103,7 @@ select
             and p.date_of_death between e.start_datetime and e.end_datetime,
         false
     ) as death
-from admission_location_log ll
+from location_phases ll
 join {{ ref('encounters') }} e on e.id = ll.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('locations') }} l on l.id = ll.location_id

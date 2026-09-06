@@ -12,35 +12,40 @@
     movements or measuring length of stay per ward must collapse those first; this is that
     step, written once.
 
-    Usage -- group by the partition, the dimensions AND the phase id:
+    Usage -- select the id in one CTE, group by it in the next. It cannot go straight
+    into a `group by`: this is a window expression, and Postgres evaluates those after
+    grouping, so `group by {{ contiguous_phase_id(...) }}` is a syntax error.
 
-        select
-            encounter_id,
-            location_id,
-            min(visit_detail_start_datetime) as phase_start,
-            max(visit_detail_end_datetime)   as phase_end
-        from segments
-        group by
-            encounter_id,
-            location_id,
-            {{ contiguous_phase_id('encounter_id', ['location_id'], 'visit_detail_start_datetime') }}
+        numbered as (
+            select
+                s.*,
+                {{ contiguous_phase_id('s.encounter_id', ['s.location_id'], 's.start_datetime, s.id') }} as phase_id
+            from segments s
+        )
+        select encounter_id, location_id, min(start_datetime) as phase_start
+        from numbered
+        group by encounter_id, location_id, phase_id
 
-    Grouping by the phase id alone is wrong: the id is only unique within a dimension
-    value, so two different locations in one encounter can share one. The dimensions are
-    part of the key.
+    Group by the dimensions as well as the id: the id is only unique within a dimension
+    value, so two different locations in one encounter can share one.
 
     Implemented as the difference of two row numbers rather than a running sum over a
     lag, because Postgres will not nest window calls -- `sum(... lag() over ...) over ()`
     is a syntax error, not a slow query.
 
-    BL-001: a recurring value opens a new phase. A patient moved A -> B -> A gets three
-    phases, not two, because the row-number difference shifts on the second visit to A.
+    Behaviour worth knowing before you call it. These are properties of this macro, not
+    spec clauses -- `BL-xxx` ids in this repo are per-spec-file and the callers' ids point
+    at specs/reports/hospital-admissions-summaries.md, so they are deliberately not used
+    here.
 
-    BL-002: nulls group. `partition by` treats two nulls as equal, so consecutive rows
-    with no location are one phase and a move into or out of one is a boundary. This is
-    the behaviour a `lag(...) is distinct from` form would give and a bare `!=` would not.
+    A recurring value opens a new phase. A patient moved A -> B -> A gets three phases,
+    not two, because the row-number difference shifts on the second visit to A.
 
-    BL-003: `order_by` must be the ordering the caller bounds phases by, and should be
+    Nulls group. `partition by` treats two nulls as equal, so consecutive rows with no
+    location are one phase and a move into or out of one is a boundary. This is the
+    behaviour a `lag(...) is distinct from` form would give and a bare `!=` would not.
+
+    `order_by` must be the ordering the caller bounds phases by, and should be
     deterministic. Rows tied on it fall into either phase arbitrarily.
 
     Arguments:
