@@ -49,16 +49,24 @@ numbered as (
 ),
 
 -- the episode starts when the patient arrived and carries every event that happened
--- while they were there. Both flags survive the merge rather than the opening row's type
--- alone: a patient transferred in and then converted to an admission without moving did
--- both, in this location, and keeping only the first row's type would discard the admission.
+-- while they were there. The two flags are NOT aggregated the same way, because the two
+-- events are not the same shape. A patient is moved into a location once, at the moment the
+-- episode opens, so `transfer_in` is the opening row's type. Conversion to an admission can
+-- happen at any point during the stay, so `admission` is true if any row in the run carried
+-- one: a patient transferred in and later converted without moving did both, and keeping
+-- only the opening row's type would discard the admission.
+--
+-- Aggregating `transfer_in` the same way would invent transfers. A history row that sets
+-- `location` to the one already held is typed `transfer-in` by the log above but moved
+-- nobody; absorbed into an encounter's FIRST episode it reads as a transfer into a location
+-- the patient arrived in directly, with no transfer out anywhere to match it.
 location_phases as (
     select
         encounter_id,
         location_id,
         min(start_datetime) as start_datetime,
-        bool_or(type = 'admission')   as is_admission,
-        bool_or(type = 'transfer-in') as is_transfer_in
+        bool_or(type = 'admission') as is_admission,
+        (array_agg(type order by start_datetime, id))[1] = 'transfer-in' as is_transfer_in
     from numbered
     group by encounter_id, location_id, phase_id
 )
