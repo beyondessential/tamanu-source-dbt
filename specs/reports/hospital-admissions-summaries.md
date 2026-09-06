@@ -106,10 +106,15 @@ All three: `reportingMonth`, `facility`, the dimension name, then
       transfer_in = transfer_out - (episodes after a boundary whose opening row is admission-typed)
 
   and transfer_in never appears on an encounter's first episode, which nothing precedes.
+  That last part rests on well-formed history: an encounter's first admission-typed row is
+  its creation row or an `encounter_type` change, both of which the log types `admission`.
+  A fixture that starts an encounter on a bare `location` / `department` change — as the
+  BL-014 unit tests do, to reach a mid-run shape in as few rows as possible — is not
+  well-formed in that sense and does not disprove the identity.
   BL-014 shrinks both sides — it removes boundaries that no move produced — but leaves the
-  identity intact. It is worth checking after any change to the spines: the first
-  formulation of BL-014 broke it, and no other measure of those reports moved enough to
-  notice.
+  identity intact. It is worth checking against production data after any change to the
+  spines: the first formulation of BL-014 broke it, and no other measure of those reports
+  moved enough to notice.
 
   Two edge cases lose an end-of-episode event rather than moving it. An episode whose end
   month is later than today is clipped out of `-by-area` and `-by-location` by BL-010's
@@ -201,8 +206,8 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   location or department, so an encounter converted to an admission without being moved
   would otherwise open a second episode in the same place and the first would read as a
   transfer out of somewhere the patient never left. Episodes are collapsed on the
-  dimension with `contiguous_phase_id()`, which is also what a `clinical__visit_detail`
-  consumer needs and is shared with it.
+  dimension with `contiguous_phase_id()`, written as a shared macro because it is also what
+  a `clinical__visit_detail` consumer needs — that model does not call it yet.
 
   The collapsed episode starts when the patient arrived, and the two flags it carries are
   derived differently, because the two events differ in shape. A patient is moved into a
@@ -211,6 +216,19 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   so `admission` is true where **any** row in the run carried one — a patient transferred
   in and later converted without moving did both, in that one place, and taking the opening
   row's type for it would discard the admission.
+
+  The collapse runs over the log, which BL-003 has already filtered to rows where the
+  encounter type is `admission`. Rows that took the encounter somewhere else are therefore
+  invisible to it, so an encounter re-typed away from `admission` and back **in the same
+  place** collapses into one episode and reports one admission where it previously reported
+  two. That is the intended reading of the shape it occurs in: the only instance in the data
+  checked is an admission corrected to `emergency` and back five seconds later, in one ward,
+  which is one admission and a correction rather than two. It is not the intended reading of
+  a genuine re-admission after a spell as an outpatient — that would need the intervening
+  rows to bound the episode, which the log does not carry. Recorded here rather than fixed:
+  such an encounter would also be mis-modelled by every other clause in this spec, and one
+  encounter that leaves and re-enters `admission` in the same place is not evidence the
+  reports should be restructured around it.
 
   Deriving `transfer_in` the same way would invent transfers. A history row that sets the
   dimension to the value already held is typed `transfer-in` by the log — it did not change
@@ -298,5 +316,5 @@ None outstanding.
 
 | Date | Change |
 |---|---|
-| 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. `transfer_in` is taken from the episode's opening row rather than aggregated over it, so a history row naming the location or department already held no longer reports a transfer nobody made; `admission` is still aggregated. BL-006's transfer identity restated as a checkable invariant. |
+| 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. `transfer_in` is taken from the episode's opening row rather than aggregated over it, so a history row naming the location or department already held no longer reports a transfer nobody made; `admission` is still aggregated. BL-006's transfer identity restated as a checkable invariant. BL-014 additionally records what the collapse does to an encounter re-typed away from `admission` and back in the same place. |
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting, beyond BL-007's patient-day floor — which follows the AIHW definition and stops an inverted episode subtracting days from a month. |

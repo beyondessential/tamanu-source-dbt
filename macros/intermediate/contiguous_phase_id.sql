@@ -33,14 +33,19 @@
     lag, because Postgres will not nest window calls -- `sum(... lag() over ...) over ()`
     is a syntax error, not a slow query.
 
-    BL-001: a recurring value opens a new phase. A patient moved A -> B -> A gets three
-    phases, not two, because the row-number difference shifts on the second visit to A.
+    Behaviour worth knowing before you call it. These are properties of this macro, not
+    spec clauses -- `BL-xxx` ids in this repo are per-spec-file and the callers' ids point
+    at specs/reports/hospital-admissions-summaries.md, so they are deliberately not used
+    here.
 
-    BL-002: nulls group. `partition by` treats two nulls as equal, so consecutive rows
-    with no location are one phase and a move into or out of one is a boundary. This is
-    the behaviour a `lag(...) is distinct from` form would give and a bare `!=` would not.
+    A recurring value opens a new phase. A patient moved A -> B -> A gets three phases,
+    not two, because the row-number difference shifts on the second visit to A.
 
-    BL-003: `order_by` must be the ordering the caller bounds phases by, and should be
+    Nulls group. `partition by` treats two nulls as equal, so consecutive rows with no
+    location are one phase and a move into or out of one is a boundary. This is the
+    behaviour a `lag(...) is distinct from` form would give and a bare `!=` would not.
+
+    `order_by` must be the ordering the caller bounds phases by, and should be
     deterministic. Rows tied on it fall into either phase arbitrarily.
 
     Arguments:

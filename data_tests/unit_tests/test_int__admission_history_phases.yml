@@ -25,6 +25,10 @@ unit_tests:
 
       enc_move is the control — a genuine move from Bed 1 to Bed 2 still yields two
       episodes, the first with transfer_out set.
+
+      enc_stay and enc_move both open on a bare `location` change rather than a creation
+      row, which reaches the mid-run shape in fewer rows but is not the well-formed
+      history BL-006's transfer identity is stated over. See the note under BL-006.
     overrides:
       vars:
         timezone: UTC
@@ -50,7 +54,8 @@ unit_tests:
           union all
           select 'h6', 'enc_restated', '2024-03-06 09:00:00'::timestamp, 'loc_1',
                  array['location'], 'admission'
-      - input: ref('encounters')
+      - &phases_encounters
+        input: ref('encounters')
         format: sql
         rows: |
           select 'enc_stay'::text as id, 'pat_1'::text as patient_id,
@@ -60,7 +65,8 @@ unit_tests:
           select 'enc_move', 'pat_1', '2024-02-10 09:00:00'::timestamp, '2024-02-14 09:00:00'::timestamp
           union all
           select 'enc_restated', 'pat_1', '2024-03-05 09:00:00'::timestamp, '2024-03-08 09:00:00'::timestamp
-      - input: ref('patients')
+      - &phases_patients
+        input: ref('patients')
         format: sql
         rows: |
           select 'pat_1'::text as id, null::timestamp as date_of_death
@@ -75,7 +81,8 @@ unit_tests:
         format: sql
         rows: |
           select 'lg_1'::text as id, 'Ward'::text as name
-      - input: ref('facilities')
+      - &phases_facilities
+        input: ref('facilities')
         format: sql
         rows: |
           select 'fac_1'::text as id, 'Hospital'::text as name, false as is_sensitive
@@ -109,5 +116,91 @@ unit_tests:
                2, false, true, true, false, false
         union all
         select 'enc_restated', 'lg_1', 'Ward', 'loc_1', 'Bed 1', 'fac_1', 'Hospital',
+               '2024-03-05 09:00:00'::timestamp, '2024-03-08 09:00:00'::timestamp,
+               3, true, true, false, false, false
+
+  - name: test_int__admission_history_department_phases
+    model: int__admission_history_department
+    description: >
+      The department spine's half of BL-014. It collapses on `department_id` where the
+      location spine collapses on `location_id`, and the two are independent — a patient
+      can change bed without changing department and the reverse — so the department
+      collapse needs its own fixture rather than riding on the location one. The
+      encounters, patients and facilities fixtures are shared with the location test
+      above; only the history and the dimension tables differ.
+
+      enc_stay is admitted to General Medicine and then converted in place, which qualifies
+      for the log without moving anyone. One episode, carrying both events.
+
+      enc_restated pins why `transfer_in` is the opening row's type and not a `bool_or`
+      over the run: it is created in General Medicine, so its first episode is an arrival,
+      then carries a later `department` change naming General Medicine again. That row is
+      typed `transfer-in` by the log because it left the encounter type alone, and
+      aggregating it would report a transfer into a department the patient was admitted to
+      directly, with no transfer out to match.
+
+      enc_move is the control — a real move to Surgery still yields two episodes.
+    overrides:
+      vars:
+        timezone: UTC
+    given:
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'h1'::text as id, 'enc_stay'::text as encounter_id,
+                 '2024-01-10 09:00:00'::timestamp as datetime, 'dep_1'::text as department_id,
+                 array['department'] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'h2', 'enc_stay', '2024-01-11 09:00:00'::timestamp, 'dep_1',
+                 array['encounter_type'], 'admission'
+          union all
+          select 'h3', 'enc_move', '2024-02-10 09:00:00'::timestamp, 'dep_1',
+                 array['department'], 'admission'
+          union all
+          select 'h4', 'enc_move', '2024-02-12 09:00:00'::timestamp, 'dep_2',
+                 array['department'], 'admission'
+          union all
+          select 'h5', 'enc_restated', '2024-03-05 09:00:00'::timestamp, 'dep_1',
+                 null::text[], 'admission'
+          union all
+          select 'h6', 'enc_restated', '2024-03-06 09:00:00'::timestamp, 'dep_1',
+                 array['department'], 'admission'
+      - *phases_encounters
+      - *phases_patients
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dep_1'::text as id, 'General Medicine'::text as name, 'fac_1'::text as facility_id
+          union all
+          select 'dep_2', 'Surgery', 'fac_1'
+      - *phases_facilities
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'enc_stay'::text          as encounter_id,
+          'dep_1'::text             as department_id,
+          'General Medicine'::text  as department,
+          'fac_1'::text             as facility_id,
+          'Hospital'::text          as facility,
+          '2024-01-10 09:00:00'::timestamp as start_datetime,
+          '2024-01-13 09:00:00'::timestamp as end_datetime,
+          3                 as length_of_stay,
+          true              as admission,
+          true              as discharge,
+          true              as transfer_in,
+          false             as transfer_out,
+          false             as death
+        union all
+        select 'enc_move', 'dep_1', 'General Medicine', 'fac_1', 'Hospital',
+               '2024-02-10 09:00:00'::timestamp, '2024-02-12 09:00:00'::timestamp,
+               2, false, false, true, true, false
+        union all
+        select 'enc_move', 'dep_2', 'Surgery', 'fac_1', 'Hospital',
+               '2024-02-12 09:00:00'::timestamp, '2024-02-14 09:00:00'::timestamp,
+               2, false, true, true, false, false
+        union all
+        select 'enc_restated', 'dep_1', 'General Medicine', 'fac_1', 'Hospital',
                '2024-03-05 09:00:00'::timestamp, '2024-03-08 09:00:00'::timestamp,
                3, true, true, false, false, false
