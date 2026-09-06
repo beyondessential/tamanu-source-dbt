@@ -177,15 +177,15 @@ report.reporting.invoiceProductInsurable,Insurable
 report.reporting.invoiceProductLabExternalCode,Lab external code
 report.reporting.invoiceProductName,Product name
 report.reporting.invoiceProductPriceListCharging,Price list charging
-report.reporting.invoiceProductVisibilityStatus,Visibility status
 report.reporting.invoiceProductsNoCategory,Invoice products with no category
+report.reporting.invoiceProductVisibilityStatus,Visibility status
 report.reporting.invoiceTotal,Invoice total
 report.reporting.labLaboratory,Laboratory
 report.reporting.labRequestCancellationReason,Reason for cancellation
 report.reporting.labRequestClinician,Requesting clinician
 report.reporting.labRequestCompletedDateTime,Completed date and time
-report.reporting.labRequestDateTime,Lab request date and time
 report.reporting.labRequestDates,Lab request dates
+report.reporting.labRequestDateTime,Lab request date and time
 report.reporting.labRequestDepartment,Requesting department
 report.reporting.labRequestId,Request ID
 report.reporting.labRequestNewCount,Total new requests
@@ -193,12 +193,12 @@ report.reporting.labRequestPendingCount,Total requests with a status of results 
 report.reporting.labRequestPriority,Priority
 report.reporting.labRequestPublishedCount,Total requests published
 report.reporting.labRequestPublishedDateTime,Lab request published date and time
+report.reporting.labRequests,Lab requests
 report.reporting.labRequestSampleCollectedBy,Sample collected by
 report.reporting.labRequestSampleCollectionDateTime,Sample collection date and time
 report.reporting.labRequestSampleSite,Site
 report.reporting.labRequestSpecimenType,Specimen type
 report.reporting.labRequestStatus,Status
-report.reporting.labRequests,Lab requests
 report.reporting.labTestCategory,Test category
 report.reporting.labTestCompletedDateTime,Lab test completed date and time
 report.reporting.labTestDate,Lab test date
@@ -219,8 +219,8 @@ report.reporting.logChangeDateTime,Date and time edited
 report.reporting.logChangeRecordCreatedDateTime,Date and time created
 report.reporting.medications,Medications
 report.reporting.noteEndDateTime,Notes end date and time
-report.reporting.noteStartDateTime,Notes start date and time
 report.reporting.notes,Notes
+report.reporting.noteStartDateTime,Notes start date and time
 report.reporting.patientAge,Age
 report.reporting.patientAllergies,Allergies
 report.reporting.patientBillingType,Billing type
@@ -260,9 +260,9 @@ report.reporting.patientRegisteredBy,Registered by
 report.reporting.patientRegistrationDate,Registration date
 report.reporting.patientRegistrationType,Registration type
 report.reporting.patientReligion,Religion
-report.reporting.patientSSN,Social security number
 report.reporting.patientSecondaryContactNumber,Secondary contact number
 report.reporting.patientSex,Sex
+report.reporting.patientSSN,Social security number
 report.reporting.patientStreetVillage,Street / Village
 report.reporting.patientSubDivision,Sub-division
 report.reporting.patientTitle,Title
@@ -283,7 +283,9 @@ report.reporting.paymentMethod,Method
 report.reporting.paymentReceiptNumber,Receipt number
 report.reporting.paymentReceivedBy,Tamanu user name
 report.reporting.prescriptionDate,Prescription date
+report.reporting.prescriptionDispensingUnit,Dispensing unit
 report.reporting.prescriptionDoseAmount,Dose amount
+report.reporting.prescriptionDosingUnit,Dosing unit
 report.reporting.prescriptionFrequency,Frequency
 report.reporting.prescriptionIsOngoing,Is ongoing
 report.reporting.prescriptionIsPRN,Is PRN
@@ -291,8 +293,6 @@ report.reporting.prescriptionIsVariableDose,Is variable dose
 report.reporting.prescriptionRepeats,Repeats
 report.reporting.prescriptionRoute,Route
 report.reporting.prescriptionSelectedForDischarge,Prescription selected for discharge
-report.reporting.prescriptionDosingUnit,Dosing unit
-report.reporting.prescriptionDispensingUnit,Dispensing unit
 report.reporting.prescriptionUnitConversion,Unit conversion
 report.reporting.procedure,Procedure
 report.reporting.procedureAnaesthetist,Procedure anaesthetist
@@ -306,10 +306,10 @@ report.reporting.procedureFacility,Procedure facility
 report.reporting.procedureIsCompleted,Procedure marked as completed
 report.reporting.procedureLocation,Procedure location
 report.reporting.procedureLocationGroup,Procedure area
+report.reporting.procedures,Procedures
 report.reporting.procedureStartDateTime,Procedure start (date and time)
 report.reporting.procedureTimeIn,Procedure time in
 report.reporting.procedureTimeOut,Procedure time out
-report.reporting.procedures,Procedures
 report.reporting.referralCompletedBy,Referring doctor
 report.reporting.referralDate,Referral date
 report.reporting.referralType,Referral name
@@ -377,8 +377,8 @@ report.reporting.vaccinationNotGivenClinician,"If not given, Supervising clinici
 report.reporting.vaccinationNotGivenDate,Date vaccine not given
 report.reporting.vaccinationNotGivenReason,"If not given, Reason not given"
 report.reporting.vaccinationRecordedBy,Recorded by
-report.reporting.vaccinationStatus,Vaccine status
 report.reporting.vaccinations,Vaccinations
+report.reporting.vaccinationStatus,Vaccine status
 report.reporting.vaccineBrand,"If category of Other, Vaccine brand"
 report.reporting.vaccineCategory,Vaccine category
 report.reporting.vaccineDisease,"If category of Other, Disease"
