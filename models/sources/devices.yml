@@ -46,9 +46,8 @@ sources:
             data_tests:
               - not_null
               - relationships:
-                  arguments:
-                    to: source('tamanu', 'users')
-                    field: id
+                  to: source('tamanu', 'users')
+                  field: id
           - name: name
             data_type: text
             description: "{{ doc('devices__name') }}"
