@@ -88,7 +88,7 @@ Standard and sensitive share one macro, so columns are identical by construction
 | `appointmentRepeatingEndDate` | text | The schedule's `until_date`, blank for a one-off |
 | `appointmentCreatedBy` | text | User who booked the appointment (BL-044) |
 
-The dataset emits 32 columns to the report's 19 — snake_case, unformatted, no translation
+The dataset emits 33 columns to the report's 19 — snake_case, unformatted, no translation
 keys. Beyond the same facts it carries `appointment_id`, `patient_id`, the raw `*_id`
 columns behind each resolved name, `facility_id`/`facility`, and the four raw schedule
 fields (`interval`, `frequency`, `days_of_week`, `nth_weekday`) the report collapses into
@@ -126,6 +126,13 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   to be a loose superset. Here the scope CTE *is* the filter, so each predicate must be
   exact — except BL-043, which is deliberately loose and paired with the exact bound it
   widens.
+
+  `appointmentStatus` keeps its `coalesce()` wrapper. It is the one multi-value parameter
+  here, and Tamanu binds it as an array that Sequelize expands to a comma-separated literal
+  list, so `:appointmentStatus is null` would compile to `'Confirmed','Arrived' is null` —
+  a syntax error the moment a second status is selected. The house form across
+  `admissions_line_list`, `audit_discharge_line_list` and `task_followup_register` exists
+  for exactly this, and the wrapper is not decorative.
 - **BL-043:** The date range is expressed twice. The exact predicate (BL-041) wraps the
   column in `to_user_selected_timezone()`, so no index on `appointments.start_time` is
   usable; a second pair of bounds compares the bare column against `(:bound)::date` widened
@@ -247,6 +254,15 @@ patients, patient_additional_data, users, reference_data ───────�
   model.
 - **DV-005:** `check_spec_anchors.py` is not run by CI (`.github/workflows/checks.yml` does
   not invoke it), so the anchors here are advisory. Shared with the audit report's DV-007.
+- **DV-006:** `appointments_in_scope` is referenced twice — by `appointment_creators` and by
+  the final `select` — so Postgres 12+ will not inline it and the CTE is an optimisation
+  fence. That is what the report wants, but it means the pushdown is available only to
+  callers that pass `appointment_filter`: a consumer filtering the published
+  `ds__outpatient_appointments` view from the outside still materialises the whole scope CTE.
+  Not a regression — the old shape fenced on the change-log window instead, and worse — but
+  the dataset view is not itself prunable. *Resolution:* if an analytics consumer needs it,
+  resolve the creator with `left join lateral (... order by ... limit 1)` so the CTE is
+  referenced once and inlinable; measure before changing the plan shape AC-045 was taken on.
 
 ## Risks
 
