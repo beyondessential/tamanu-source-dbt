@@ -53,7 +53,10 @@ with appointments_in_scope as (
         and f.is_sensitive = {{ is_sensitive }}
 {#- BL-042: `where` and each paren sit on their own line. A caller's predicate text may
     legally end on a `--` comment, and a same-line `)` would then be commented out and the
-    model would fail to compile. Same reasoning as encounters_core(). #}
+    model would fail to compile. Note that encounters_core() and
+    outpatient_appointments_change_log_events() both splice their predicate onto the `where`
+    line without parens -- this macro is deliberately stricter, because the report's filter
+    is comment-heavy and ends inside a `case ... end` block. #}
 {%- if appointment_filter %}
     where
     (
