@@ -2,47 +2,54 @@
 {#-
     Outpatient Appointments Line List.
 
-    Presentation only. Every row comes from outpatient_appointments_dataset(), which
-    resolves the appointment, its patient, its area/facility and its creator; this macro
-    builds the scope predicate and applies translate_label, to_char and the viewer's
-    timezone, and nothing else.
+    See specs/reports/outpatient-appointments-line-list.md for the BL clauses this macro
+    implements.
+
+    # BL-047: presentation only, and shared by both variants. Every row comes from
+    outpatient_appointments_dataset(), which resolves the appointment, its patient, its
+    area/facility and its creator; this macro builds the scope predicate and applies
+    translate_label, to_char and the viewer's timezone, and nothing else. The standard and
+    sensitive report models are one-line calls, so the two cannot drift.
 
     A deployment repo needing extra columns calls the dataset macro directly with its own
     appointment_filter and writes its own projection, rather than forking this body.
 
-    Every filter is pushed into the dataset's scope CTE rather than applied on the
+    # BL-042: every filter is pushed into the dataset's scope CTE rather than applied on the
     outside. That is what stops the creator lookup windowing the whole appointment change
-    history on every run -- see the appointment_creators comment in
-    macros/datasets/outpatient_appointments.sql -- and it is the same move BL-030 makes
-    in audit_outpatient_appointments. There is no outer where clause to act as a safety
-    net, so unlike BL-030 these predicates must be exact, not a superset.
+    history on every run (BL-044), and it is the same move BL-030 makes in
+    audit_outpatient_appointments. Unlike BL-030 there is no outer where clause acting as a
+    safety net, so these predicates must be exact rather than a superset -- with the one
+    deliberate exception in BL-043, which is paired with the exact bound it widens.
 -#}
 
 {%- set from_bound = parameter('fromDate', default_value='2025-01-01', data_type='date') -%}
 {%- set to_bound = parameter('toDate', default_value='2025-01-31', data_type='date') -%}
 
 {%- set appointment_filter -%}
-    {#- Bare-column bounds, widened a day at each end, so a btree index on
-        appointments.start_time can prune -- the exact predicate below wraps the column in
-        two `at time zone` conversions and can use no index at all. The widening covers
-        the :timezone round trip, which can move the value by up to the zone offset in
-        either direction; the exact predicate is what correctness rests on, so the
-        superset only has to be a superset.
-
-        `from_user_selected_timezone()` is not usable here: it is only valid against a
-        timestamptz column, and start_datetime is a naive timestamp (`a.start_time::timestamp`
-        in the base model).
-
-        The ::date cast keeps `:toDate + interval` out of interval parsing -- parameter()
-        compiles to an untyped placeholder, same trap as BL-029. -#}
+    -- BL-043: bare-column bounds, widened a day past each exact bound, so a btree index on
+    -- appointments.start_time can prune -- the exact predicate below wraps the column in
+    -- two `at time zone` conversions and can use no index at all. The widening covers the
+    -- :timezone round trip, which can move the value by up to the zone offset in either
+    -- direction; correctness rests on the exact predicate, so the superset only has to be
+    -- a superset.
+    --
+    -- from_user_selected_timezone() is not usable here: it is only valid against a
+    -- timestamptz column, and start_datetime is a naive timestamp
+    -- (`a.start_time::timestamp` in the base model).
+    --
+    -- The ::date cast keeps `:toDate + interval` out of interval parsing -- parameter()
+    -- compiles to an untyped placeholder, the same trap BL-029 documents.
     a.start_datetime >= ({{ from_bound }})::date - interval '1 day'
     and a.start_datetime < ({{ to_bound }})::date + interval '2 days'
-    -- Exact bounds. Tamanu binds fromDate as start-of-day and toDate as end-of-day
-    -- (getReportQueryReplacements in ../tamanu), so `<=` covers the whole of toDate.
+    -- BL-041: the range bounds the appointment's scheduled start time, not when it was
+    -- booked -- the opposite of the audit report's BL-029. Tamanu binds fromDate as
+    -- start-of-day and toDate as end-of-day (getReportQueryReplacements in ../tamanu), so
+    -- the house `<= toDate` form covers the whole of toDate.
     and {{ to_user_selected_timezone('a.start_datetime') }} >= {{ from_bound }}
     and {{ to_user_selected_timezone('a.start_datetime') }} <= {{ to_bound }}
-    -- Declared by the report config's FacilityField and previously never applied, so a
-    -- facility selection returned every facility's appointments.
+    -- BL-045: facilityId is declared by the report config's FacilityField. It went
+    -- unreferenced until this macro existed, so a facility selection returned every
+    -- facility's appointments.
     and case
         when {{ parameter('facilityId') }} is null then true
         else f.id = {{ parameter('facilityId') }}
@@ -82,6 +89,8 @@ select
     clinician as "{{ translate_label('appointmentClinician') }}",
     location_group as "{{ translate_label('appointmentLocationGroup') }}",
     priority as "{{ translate_label('appointmentPriority') }}",
+    -- BL-048: one column carries two kinds of value -- the recurrence description for a
+    -- scheduled appointment, the literal 'No' for a one-off.
     case
         when schedule_id notnull then {{ get_recurrence_description('interval', 'frequency', 'days_of_week', 'nth_weekday') }}
         else 'No'
