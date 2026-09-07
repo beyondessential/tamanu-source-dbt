@@ -1,0 +1,136 @@
+unit_tests:
+  - name: test_outpatient_appointments_line_list_creator_outside_window
+    model: outpatient-appointments-line-list
+    description: >
+      The creator survives a creation event logged long before the report window. The
+      dataset resolves it with `distinct on (record_id)` over the change events of the
+      appointments already in scope -- scoped by appointment, never by date -- so an
+      appointment booked months in advance still reports who booked it.
+
+      This is the regression guard for the rewrite away from
+      outpatient_appointments_change_logs. That model's row_number() / lag() sat between
+      the report's filters and the change-log scan, and window functions are an
+      optimisation fence, so the old path windowed every appointment's whole history on
+      every run. Getting the same answer here without them is what makes the swap safe.
+
+      The later modification event must not win: `Alice Admin` created the appointment in
+      January, `Bob Admin` edited it in September, and the report shows Alice.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2026-09-01'
+        toDate: '2026-09-30'
+    given:
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select
+            'appt_a'::text as id,
+            '2026-09-15 09:00:00'::timestamp as start_datetime,
+            '2026-09-15 09:30:00'::timestamp as end_datetime,
+            'pat_001'::text as patient_id,
+            'cli_001'::text as clinician_id,
+            'lg_a'::text as location_group_id,
+            'apt_001'::text as appointment_type_id,
+            'No'::text as priority,
+            'Confirmed'::text as status,
+            null::date as until_date,
+            null::integer as interval,
+            null::text[] as days_of_week,
+            null::text as frequency,
+            null::integer as nth_weekday,
+            null::uuid as schedule_id
+
+      - input: ref('outpatient_appointments_change_events')
+        format: sql
+        rows: |
+          -- creation, eight months before the report window
+          select
+            'chg_001'::text as id,
+            'appt_a'::text as record_id,
+            '2026-01-05 08:00:00+00'::timestamptz as logged_at,
+            '2026-01-05 08:00:00+00'::timestamptz as record_updated_at,
+            'usr_001'::text as updated_by_user_id,
+            100::bigint as updated_at_sync_tick,
+            '{}'::jsonb as record_data
+          union all
+          -- a later edit, inside the window. Must not be mistaken for the creation.
+          select
+            'chg_002'::text,
+            'appt_a'::text,
+            '2026-09-10 11:00:00+00'::timestamptz,
+            '2026-09-10 11:00:00+00'::timestamptz,
+            'usr_002'::text,
+            200::bigint,
+            '{}'::jsonb
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth,
+            'Male'::text as sex,
+            null::text as village_id
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001'::text as id, 'Dr. Alice Wilson'::text as display_name
+          union all
+          select 'usr_001'::text, 'Alice Admin'::text
+          union all
+          select 'usr_002'::text, 'Bob Admin'::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_a'::text as id, 'Outpatients A'::text as name, 'fac_a'::text as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_a'::text as id, 'Hospital A'::text as name, false as is_sensitive
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select
+            null::text as patient_id,
+            null::text as primary_contact_number,
+            null::text as secondary_contact_number,
+            null::text as patient_billing_type_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'apt_001'::text as id, 'Follow-up'::text as name
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'              as "Patient ID",
+          'John'              as "First name",
+          'Doe'               as "Last name",
+          '1990-05-15'        as "Date of birth",
+          36                  as "Age",
+          'Male'              as "Sex",
+          null::text          as "Contact number",
+          null::text          as "Village",
+          null::text          as "Billing type",
+          '2026-09-15 09:00'  as "Appointment date and time",
+          '2026-09-15 09:30'  as "Appointment end date and time",
+          'Follow-up'         as "Appointment type",
+          'Confirmed'         as "Appointment status",
+          'Dr. Alice Wilson'  as "Clinician",
+          'Outpatients A'     as "Area",
+          'No'                as "Priority appointment",
+          'No'                as "Repeating appointment",
+          null::text          as "Repeating appointment end date",
+          'Alice Admin'       as "Appointment created by"
