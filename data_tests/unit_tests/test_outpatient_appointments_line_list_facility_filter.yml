@@ -1,0 +1,156 @@
+unit_tests:
+  - name: test_outpatient_appointments_line_list_facility_filter
+    model: outpatient-appointments-line-list
+    description: >
+      facilityId is declared by the report config's FacilityField and is applied in the
+      dataset's scope CTE, alongside the date bounds and is_sensitive, so it narrows the
+      appointment scan rather than filtering the resolved rows afterwards. Two appointments
+      in the window sit in different facilities; with facilityId=fac_b only the fac_b one is
+      returned.
+
+      Before this filter existed a facility selection returned every facility's
+      appointments, so this test is the regression guard for that as well as for the
+      pushdown.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2026-09-01'
+        toDate: '2026-09-30'
+        facilityId: fac_b
+    given:
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select
+            'appt_a'::text as id,
+            '2026-09-15 09:00:00'::timestamp as start_datetime,
+            '2026-09-15 09:30:00'::timestamp as end_datetime,
+            'pat_001'::text as patient_id,
+            'cli_001'::text as clinician_id,
+            'lg_a'::text as location_group_id,
+            'apt_001'::text as appointment_type_id,
+            'No'::text as priority,
+            'Confirmed'::text as status,
+            null::date as until_date,
+            null::integer as interval,
+            null::text[] as days_of_week,
+            null::text as frequency,
+            null::integer as nth_weekday,
+            null::uuid as schedule_id
+          union all
+          select
+            'appt_b'::text,
+            '2026-09-16 14:00:00'::timestamp,
+            '2026-09-16 14:30:00'::timestamp,
+            'pat_002'::text,
+            'cli_002'::text,
+            'lg_b'::text,
+            'apt_001'::text,
+            'No'::text,
+            'Confirmed'::text,
+            null::date,
+            null::integer,
+            null::text[],
+            null::text,
+            null::integer,
+            null::uuid
+
+      - input: ref('outpatient_appointments_change_events')
+        format: sql
+        rows: |
+          select
+            'chg_001'::text as id,
+            'appt_a'::text as record_id,
+            '2026-08-01 08:00:00+00'::timestamptz as logged_at,
+            '2026-08-01 08:00:00+00'::timestamptz as record_updated_at,
+            'usr_001'::text as updated_by_user_id,
+            100::bigint as updated_at_sync_tick,
+            '{}'::jsonb as record_data
+          union all
+          select
+            'chg_002'::text,
+            'appt_b'::text,
+            '2026-08-02 08:00:00+00'::timestamptz,
+            '2026-08-02 08:00:00+00'::timestamptz,
+            'usr_002'::text,
+            200::bigint,
+            '{}'::jsonb
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth,
+            'Male'::text as sex,
+            null::text as village_id
+          union all
+          select 'pat_002'::text, 'P002'::text, 'Jane'::text, 'Smith'::text, '1985-06-20'::date, 'Female'::text, null::text
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001'::text as id, 'Dr. Alice Wilson'::text as display_name
+          union all
+          select 'cli_002'::text, 'Dr. Bob Jones'::text
+          union all
+          select 'usr_001'::text, 'Alice Admin'::text
+          union all
+          select 'usr_002'::text, 'Bob Admin'::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_a'::text as id, 'Outpatients A'::text as name, 'fac_a'::text as facility_id
+          union all
+          select 'lg_b'::text, 'Outpatients B'::text, 'fac_b'::text
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_a'::text as id, 'Hospital A'::text as name, false as is_sensitive
+          union all
+          select 'fac_b'::text, 'Hospital B'::text, false
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select
+            null::text as patient_id,
+            null::text as primary_contact_number,
+            null::text as secondary_contact_number,
+            null::text as patient_billing_type_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'apt_001'::text as id, 'Follow-up'::text as name
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P002'              as "Patient ID",
+          'Jane'              as "First name",
+          'Smith'             as "Last name",
+          '1985-06-20'        as "Date of birth",
+          41                  as "Age",
+          'Female'            as "Sex",
+          null::text          as "Contact number",
+          null::text          as "Village",
+          null::text          as "Billing type",
+          '2026-09-16 14:00'  as "Appointment date and time",
+          '2026-09-16 14:30'  as "Appointment end date and time",
+          'Follow-up'         as "Appointment type",
+          'Confirmed'         as "Appointment status",
+          'Dr. Bob Jones'     as "Clinician",
+          'Outpatients B'     as "Area",
+          'No'                as "Priority appointment",
+          'No'                as "Repeating appointment",
+          null::text          as "Repeating appointment end date",
+          'Bob Admin'         as "Appointment created by"
