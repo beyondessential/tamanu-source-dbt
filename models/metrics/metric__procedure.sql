@@ -10,10 +10,10 @@
 -- procedures -- or any other setting -- via a filter on this one metric, rather than needing a
 -- separate metric per setting.
 --
--- clinical__procedure_occurrence now also carries an imaging branch (OMOP has no dedicated
--- imaging domain, so it is classified under Procedure) -- restricted here to
--- procedure_type_source_value = 'procedure' so this metric's population is unchanged;
--- imaging is metric__opd_imaging_request's population, not this one's.
+-- clinical__procedure_occurrence carries both a procedure and an imaging branch,
+-- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
+-- population is the procedure branch only -- imaging is metric__opd_imaging_request's
+-- population, not this one's.
 --
 -- The registry carries the definition; this model is its implementation.
 
@@ -66,9 +66,7 @@ procedures as (
     -- uses for its facility join
     join locations loc
         on loc.id = po.location_id
-    -- exclude the imaging branch explicitly -- do not rely on the location join
-    -- above to do it implicitly (imaging_requests.location_id happens to be unpopulated in
-    -- practice today, but that is not a rule this model should depend on).
+    -- BL-001: procedure branch only -- imaging is metric__opd_imaging_request's population
     where po.procedure_type_source_value = 'procedure'
 )
 

@@ -20,7 +20,7 @@ models:
       classification: internal
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          name: ac_clinical__procedure_occurrence_grain
+          name: ac_001_clinical__procedure_occurrence_grain
           arguments:
             combination_of_columns:
               - procedure_occurrence_id
@@ -32,15 +32,15 @@ models:
         description: The Tamanu procedure id.
         data_tests:
           - not_null:
-              name: ac_clinical__procedure_occurrence_id_not_null
+              name: ac_001_clinical__procedure_occurrence_id_not_null
           - unique:
-              name: ac_clinical__procedure_occurrence_id_unique
+              name: ac_001_clinical__procedure_occurrence_id_unique
       - name: person_id
         data_type: character varying(255)
         description: The patient the row is recorded against, reached through the encounter.
         data_tests:
           - relationships:
-              name: ac_clinical__procedure_occurrence_person_id_in_clinical__person
+              name: ac_002_clinical__procedure_occurrence_person_id_in_clinical__person
               arguments:
                 to: ref('clinical__person')
                 field: person_id
@@ -51,7 +51,7 @@ models:
           request was raised -- not a completion date.
         data_tests:
           - not_null:
-              name: ac_clinical__procedure_occurrence_procedure_date_not_null
+              name: ac_005_clinical__procedure_occurrence_procedure_date_not_null
       - name: procedure_datetime
         data_type: timestamp
         description: >-
@@ -60,7 +60,7 @@ models:
           (procedure branch only -- the imaging branch always carries a time).
         data_tests:
           - not_null:
-              name: ac_clinical__procedure_occurrence_procedure_datetime_not_null
+              name: ac_005_clinical__procedure_occurrence_procedure_datetime_not_null
       - name: procedure_type_concept_id
         data_type: integer
         description: >-
@@ -75,9 +75,9 @@ models:
           table.
         data_tests:
           - not_null:
-              name: ac_clinical__procedure_occurrence_procedure_type_source_value_not_null
+              name: ac_006_clinical__procedure_occurrence_procedure_type_source_value_not_null
           - accepted_values:
-              name: ac_clinical__procedure_occurrence_procedure_type_source_value_values
+              name: ac_006_clinical__procedure_occurrence_procedure_type_source_value_values
               arguments:
                 values:
                   - procedure
@@ -89,7 +89,7 @@ models:
           imaging -- this branch carries no completion-side clinician.
         data_tests:
           - relationships:
-              name: ac_clinical__procedure_occurrence_provider_id_in_ref__provider
+              name: ac_004_clinical__procedure_occurrence_provider_id_in_ref__provider
               arguments:
                 to: ref('ref__provider')
                 field: provider_id
@@ -98,7 +98,7 @@ models:
         description: The encounter the procedure was recorded against.
         data_tests:
           - relationships:
-              name: ac_clinical__procedure_occurrence_visit_occurrence_id_in_clinical__visit_occurrence
+              name: ac_003_clinical__procedure_occurrence_visit_occurrence_id_in_clinical__visit_occurrence
               arguments:
                 to: ref('clinical__visit_occurrence')
                 field: visit_occurrence_id

@@ -14,7 +14,11 @@
     - imaging_type_column: SQL expression yielding a raw imaging_requests.imaging_type value.
 
     Returns: CASE expression producing the readable label, or the raw value unchanged where
-    it is not one of the fifteen recognised values (never NULL unless the input itself is).
+    it does not match one of the values mapped below (never NULL unless the input itself
+    is) -- kept generic rather than naming a count, so this docstring can't drift out of
+    sync with the CASE the way it previously did (it named "fifteen" while only mapping
+    fourteen; imaging_requests.imaging_type currently has fifteen accepted values, all
+    mapped below).
 #}
     case
         when {{ imaging_type_column }} = 'xRay' then 'X-Ray'
@@ -31,6 +35,7 @@
         when {{ imaging_type_column }} = 'colonoscopy' then 'Colonoscopy'
         when {{ imaging_type_column }} = 'vascularStudy' then 'Vascular Study'
         when {{ imaging_type_column }} = 'stressTest' then 'Stress Test'
+        when {{ imaging_type_column }} = 'orthopantomography' then 'Orthopantomography'
         else {{ imaging_type_column }}
     end
 {% endmacro %}

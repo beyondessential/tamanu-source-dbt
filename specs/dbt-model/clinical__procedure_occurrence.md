@@ -12,10 +12,9 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 
-The OMOP-lite `PROCEDURE_OCCURRENCE` domain. Originally one row per recorded procedure
-(`bases/procedures`); this change adds a second source, imaging requests
-(`bases/imaging_requests`), unioned in rather than given a separate model. OMOP has no
-dedicated domain for medical imaging: the CDM specification describes
+The OMOP-lite `PROCEDURE_OCCURRENCE` domain. One row per recorded procedure or imaging
+request, unioned from two sources: `bases/procedures` and `bases/imaging_requests`. OMOP has
+no dedicated domain for medical imaging: the CDM specification describes
 `PROCEDURE_OCCURRENCE` as covering "activities or processes ordered by, or carried out by, a
 healthcare provider on the patient with a diagnostic or therapeutic purpose," and by the
 Standardized Vocabulary's own domain assignment an imaging study is classified under
@@ -39,18 +38,14 @@ completion flag, a reference-data procedure type) and an imaging study as `imagi
 diagnostic or therapeutic purpose. Neither produces a discrete measured value on its own, so
 neither belongs in `MEASUREMENT`.
 
-**Why unioned rather than a separate `clinical__imaging_occurrence` model (BL-001).** OMOP
-itself draws no distinction between the two beyond what `procedure_type_source_value`
-already carries here -- both are "this act happened, here, at this time, done/ordered by
-this person," differing only in what a code/name pair means and where the source data
-lives. Inventing a second OMOP domain table for imaging would be inventing a distinction
-OMOP itself does not draw. Splitting them into two tables would also mean any future
-consumer wanting "all clinical procedure activity" would need to know to union two models
-itself; keeping them in one table with a discriminator does that once, here.
+**One table, two branches (BL-001).** Procedures and imaging requests share one model,
+distinguished only by `procedure_type_source_value`: both are "this act happened, here, at
+this time, done/ordered by this person," differing only in what a code/name pair means and
+where the source data lives. A consumer wanting all clinical procedure activity reads one
+model; a consumer wanting one branch filters on `procedure_type_source_value`.
 
-**Who reads it.** `metric__procedure` (general, all settings) and `metric__opd_procedure`
-(outpatient-scoped) already consume the procedure branch; `metric__opd_imaging_request` is
-the first consumer of the imaging branch.
+**Who reads it.** `metric__procedure` (general, all settings) consumes the procedure branch
+today; see § Consumers for the full list, including models still in development.
 
 ## Grain
 
@@ -74,7 +69,7 @@ unique across both branches without qualification.
 | `location_id` | varchar(255) | The row's own location, raw. Deprecated and effectively unpopulated for imaging -- superseded by `imaging_requests.location_group_id` (BL-004) |
 | `procedure_source_value` | text | Reference-data code (procedure branch), or raw Tamanu `imaging_type` (imaging branch) |
 | `procedure_source_name` | text | Reference-data name (procedure branch), or the modality's readable label (imaging branch) |
-| `is_completed` | boolean | The row's own completion flag or status, never NULL (BL-002) |
+| `is_completed` | boolean | The row's own completion flag or status, never NULL. For imaging, `false` covers `pending`/`in_progress`/`cancelled` alike -- not just "not yet done" (BL-002) |
 
 `procedure_concept_id`/`procedure_source_concept_id` (OMOP standard SNOMED/CPT) are **not**
 emitted -- deferred to the future `vocab__` layer, the same convention
@@ -83,27 +78,31 @@ emitted -- deferred to the future `vocab__` layer, the same convention
 ## Business logic
 
 - **BL-001 (one table, two branches, one discriminator):** the imaging branch is a
-  `union all`, not a new model -- see § Purpose for why. `procedure_type_source_value` is
-  the only new column the addition requires; every existing column keeps its meaning for
-  the procedure branch unchanged.
+  `union all`, not a new model -- see § Purpose. `procedure_type_source_value` is the only
+  new column the addition requires; every existing column keeps its meaning for the
+  procedure branch unchanged.
 
-  **Migration note for existing consumers.** Before this change, every row here was a
-  recorded procedure, so `metric__procedure` (and any other consumer added since) selected
-  from this model with no branch filter. That is no longer safe: `metric__procedure` was
-  updated in this same change to add `where procedure_type_source_value = 'procedure'`
-  explicitly, rather than rely on the accidental fact that `imaging_requests.location_id` is
-  usually NULL and so happened to be excluded by its own facility join anyway. Any other
-  consumer that reads this model without a branch filter needs the identical fix before it
-  is safe to build against a version of this model carrying the imaging branch --
-  concretely, `metric__opd_procedure` (`feature/maui-6862-omop-outpatients-opd-procedure-
-  dataset-and-visuals`, not yet merged as of this change) will need the same filter added
-  when it is rebased onto this.
-- **BL-002 (imaging carries no completion-side fact):** the imaging branch does not join
-  `imaging_results` at all. `procedure_datetime` is `imaging_requests.datetime` (the
-  request), and `is_completed` is `imaging_requests.status = 'completed'` -- the record's own
-  recorded status, not a fact derived from whether a result exists. A consumer needing the
-  completion timestamp, turnaround time, or the full pending/in-progress/cancelled lifecycle
-  reads `bases/imaging_requests`/`bases/imaging_results` directly, the same way
+  **Consumer contract.** This model has no default branch. Any consumer reading it must
+  filter on `procedure_type_source_value` to scope to one branch, or explicitly intend both
+  -- there is no implicit scoping to fall back on. `metric__procedure` does this with
+  `where procedure_type_source_value = 'procedure'`.
+- **BL-002 (imaging carries no completion-side fact, and only a two-way status):** the
+  imaging branch does not join `imaging_results` at all. `procedure_datetime` is
+  `imaging_requests.datetime` (the request), and `is_completed` is
+  `imaging_requests.status = 'completed'` -- the record's own recorded status, not a fact
+  derived from whether a result exists.
+
+  `status` values `'deleted'` and `'entered_in_error'` are excluded from this branch
+  entirely (not merely relabelled) -- `'entered_in_error'` in particular asserts the event
+  never happened, so it does not belong as a procedure occurrence, the same reasoning
+  `clinical__drug_exposure`'s vaccination branch excludes `RECORDED_IN_ERROR`.
+  `'cancelled'` is kept: a cancelled request was genuinely ordered, which is enough to
+  belong here even though it did not go on to happen. That leaves three status values in
+  this model -- `'pending'`, `'in_progress'`, `'cancelled'` -- all folding into
+  `is_completed = false`, indistinguishable from one another by this column alone. A
+  consumer needing to tell a still-open request apart from a cancelled one, or needing the
+  completion timestamp, turnaround time, or the full status lifecycle, reads
+  `bases/imaging_requests`/`bases/imaging_results` directly, the same way
   `metric__opd_imaging_request` does; this model does not carry those facts.
 - **BL-003 (provider is the point of origin, not completion):** the imaging branch's
   `provider_id` is `requested_by_id`, mirroring `procedure_datetime`'s own request-time
@@ -127,12 +126,12 @@ emitted -- deferred to the future `vocab__` layer, the same convention
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC | `procedure_occurrence_id` is `not_null` and `unique` | grain | dbt `not_null` + `unique` |
-| AC | Every `person_id` exists in `clinical__person.person_id` | -- | dbt `relationships` |
-| AC | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | -- | dbt `relationships` |
-| AC | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-003 | dbt `relationships` |
-| AC | `procedure_date`/`procedure_datetime` are `not_null` | -- | dbt `not_null` |
-| AC | `procedure_type_source_value` is `not_null` and one of `procedure`, `imaging request` | BL-001 | `not_null` + `accepted_values` |
+| AC-001 | `procedure_occurrence_id` is `not_null` and `unique` | grain | dbt `not_null` + `unique` |
+| AC-002 | Every `person_id` exists in `clinical__person.person_id` | -- | dbt `relationships` |
+| AC-003 | Every `visit_occurrence_id` exists in `clinical__visit_occurrence.visit_occurrence_id` | -- | dbt `relationships` |
+| AC-004 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-003 | dbt `relationships` |
+| AC-005 | `procedure_date`/`procedure_datetime` are `not_null` | -- | dbt `not_null` |
+| AC-006 | `procedure_type_source_value` is `not_null` and one of `procedure`, `imaging request` | BL-001 | `not_null` + `accepted_values` |
 
 ## Registry entry
 
@@ -158,6 +157,9 @@ only `metric__`/`derived__` artefacts get a `metric_definitions` row.
 | `metric__procedure` | General procedure metric, all settings (procedure branch) |
 | `metric__opd_procedure` | Outpatient-scoped procedure metric (procedure branch) |
 | `metric__opd_imaging_request` | Outpatient-scoped imaging request metric (imaging branch) |
+
+Any consumer here must filter `procedure_type_source_value` per the consumer contract in
+BL-001.
 
 ## Open questions
 
