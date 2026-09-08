@@ -12,7 +12,10 @@
 -- The registry carries the definition; this model is its implementation.
 
 with procedure_occurrence as (
+    -- BL-008: procedure branch only, per clinical__procedure_occurrence's own consumer
+    -- contract (its BL-001) -- imaging is metric__opd_imaging_request's population
     select * from {{ ref('clinical__procedure_occurrence') }}
+    where procedure_type_source_value = 'procedure'
 ),
 
 visit_detail as (

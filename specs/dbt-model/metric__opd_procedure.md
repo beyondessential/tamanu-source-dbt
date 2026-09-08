@@ -142,6 +142,12 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   procedure date, emitted raw and unbanded, the same reasoning `metric__outpatient_visit`
   BL-004 and `metric__procedure` use. A measure, not a dimension: absent from the registry's
   disaggregations.
+- **BL-008 (procedure branch only):** `clinical__procedure_occurrence` also carries an
+  imaging branch, distinguished by `procedure_type_source_value` (its own spec, BL-001,
+  which requires every consumer to filter explicitly). This model filters to
+  `procedure_type_source_value = 'procedure'` before any other join, the same filter
+  `metric__procedure` applies -- imaging is `metric__opd_imaging_request`'s population, not
+  this one's.
 
 ## Acceptance criteria
 
@@ -179,7 +185,7 @@ registration -- no vocabulary change was needed for this metric.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `clinical__procedure_occurrence` | `clinical/` | Procedure date, type, completion, location, person and visit FKs (BL-002, BL-004, BL-006) |
+| `clinical__procedure_occurrence` | `clinical/` | Procedure date, type, completion, location, person and visit FKs (BL-002, BL-004, BL-006). Filtered to the procedure branch (BL-008) |
 | `clinical__visit_detail` | `clinical/` | Outpatient scope: the segment active at the procedure's own timestamp (BL-003) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
 | `locations` | `bases/` | Facility id of the procedure's own location (BL-004) |
