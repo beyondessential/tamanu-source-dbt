@@ -109,6 +109,7 @@ report.reporting.dischargeIsAutomatic,Automatic discharge
 report.reporting.dischargeLaterEditCount,Edits after recording
 report.reporting.dischargeLocation,Discharging location
 report.reporting.dischargeLocationGroup,Discharging area
+report.reporting.dischargeMedications,Discharge medications
 report.reporting.dischargeRecordedBy,Discharge recorded by
 report.reporting.dischargeRecordedDateTime,Discharge recorded date and time
 report.reporting.dischargeRecordingDelayDays,Days between discharge and recording

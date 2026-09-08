@@ -1,11 +1,11 @@
 unit_tests:
-  - name: test_enc_summary_discharge_datetime_with_changes
+  - name: test_encounter_summary_discharge_medications_filter
     model: encounter-summary-by-end-date
     description: >
-      When an encounter has actual department and location changes in encounter_history,
-      the discharge assigned time columns should reflect the time of the last change for
-      each dimension, not the encounter start time. This tests the primary path where
-      max(datetime) filter is used instead of the fallback to start time.
+      The Discharge medications column carries only the prescriptions flagged
+      is_selected_for_discharge, while Medications carries every prescription on the
+      encounter. A prescription with the flag false, and one with it null, are both
+      absent from Discharge medications. Both columns order by prescription datetime.
     overrides:
       vars:
         timezone: Australia/Sydney
@@ -24,8 +24,8 @@ unit_tests:
             '2024-01-15 10:00:00'::timestamp as start_datetime,
             '2024-01-15 14:00:00'::timestamp as end_datetime,
             'pat_001' as patient_id,
-            'loc_002' as location_id,
-            'dept_002' as department_id,
+            'loc_001' as location_id,
+            'dept_001' as department_id,
             null::text as clinician_id,
             null::text as patient_billing_type_id,
             null::text as reason_for_encounter,
@@ -34,11 +34,15 @@ unit_tests:
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'user_001' as updated_by_id, 'user_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'clinic' as encounter_type
-          union all
-          select 'enc_001', '2024-01-15 11:30:00'::timestamp, array['department']::text[], 'user_001', 'user_001', 'dept_002', 'loc_001', 'clinic'
-          union all
-          select 'enc_001', '2024-01-15 12:00:00'::timestamp, array['location']::text[], 'user_001', 'user_001', 'dept_002', 'loc_002', 'clinic'
+          select
+            'enc_001' as encounter_id,
+            '2024-01-15 10:00:00'::timestamp as datetime,
+            null::text[] as change_type,
+            'user_001' as updated_by_id,
+            'user_001' as clinician_id,
+            'dept_001' as department_id,
+            'loc_001' as location_id,
+            'clinic' as encounter_type
 
       - input: ref('users')
         format: sql
@@ -49,13 +53,11 @@ unit_tests:
         format: sql
         rows: |
           select 'loc_001' as id, 'Ward A' as name, 'fac_001' as facility_id, null::text as location_group_id
-          union all
-          select 'loc_002', 'Ward B', 'fac_001', 'lg_001'
 
       - input: ref('location_groups')
         format: sql
         rows: |
-          select 'lg_001' as id, 'ICU' as name
+          select null::text as id, null::text as name where false
 
       - input: ref('facilities')
         format: sql
@@ -65,9 +67,7 @@ unit_tests:
       - input: ref('departments')
         format: sql
         rows: |
-          select 'dept_001' as id, 'General Medicine' as name
-          union all
-          select 'dept_002', 'Cardiology'
+          select 'dept_001' as id, 'Medicine' as name
 
       - input: ref('patients')
         format: sql
@@ -89,7 +89,11 @@ unit_tests:
       - input: ref('reference_data')
         format: sql
         rows: |
-          select null::text as id, null::text as name, null::text as code where false
+          select 'med_amox' as id, 'Amoxicillin' as name, 'AMOX' as code
+          union all
+          select 'med_para', 'Paracetamol', 'PARA'
+          union all
+          select 'med_ibu', 'Ibuprofen', 'IBU'
 
       - input: ref('triages')
         format: sql
@@ -109,12 +113,20 @@ unit_tests:
       - input: ref('encounter_prescriptions')
         format: sql
         rows: |
-          select null::text as encounter_id, null::text as prescription_id, null::bool as is_selected_for_discharge where false
+          select 'enc_001' as encounter_id, 'presc_001' as prescription_id, true as is_selected_for_discharge
+          union all
+          select 'enc_001', 'presc_002', false
+          union all
+          select 'enc_001', 'presc_003', null::bool
 
       - input: ref('prescriptions')
         format: sql
         rows: |
-          select null::text as id, null::text as medication_id, null::bool as is_discontinued, null::text as discontinuing_reason, null::timestamp as datetime where false
+          select 'presc_001' as id, 'med_amox' as medication_id, false as is_discontinued, null::text as discontinuing_reason, '2024-01-15 10:30:00'::timestamp as datetime
+          union all
+          select 'presc_002', 'med_para', false, null::text, '2024-01-15 10:45:00'::timestamp
+          union all
+          select 'presc_003', 'med_ibu', true, 'Adverse reaction', '2024-01-15 11:00:00'::timestamp
 
       - input: ref('vaccine_administrations')
         format: sql
@@ -199,23 +211,29 @@ unit_tests:
           null::text as "Time seen following triage/Waiting time (hh:mm:ss)",
           'Dr. Smith' as "Clinician",
           null::text as "Supervising clinician",
-          'Cardiology' as "Discharging department",
-          '2024-01-15 11:30:00' as "Time assigned to Discharging department",
-          'ICU' as "Discharging area",
-          '2024-01-15 12:00:00' as "Time assigned to Discharging area",
-          'Ward B' as "Discharging location",
-          '2024-01-15 12:00:00' as "Time assigned to Discharging location",
-          'General Medicine, Cardiology' as "Department history",
-          '2024-01-15 10:00:00, 2024-01-15 11:30:00' as "Department history date and times",
-          'ICU' as "Area history",
-          '2024-01-15 10:00:00, 2024-01-15 12:00:00' as "Area history date and times",
-          'Ward A, Ward B' as "Location history",
-          '2024-01-15 10:00:00, 2024-01-15 12:00:00' as "Location history date and times",
+          'Medicine' as "Discharging department",
+          '2024-01-15 10:00:00' as "Time assigned to Discharging department",
+          null::text as "Discharging area",
+          '2024-01-15 10:00:00' as "Time assigned to Discharging area",
+          'Ward A' as "Discharging location",
+          '2024-01-15 10:00:00' as "Time assigned to Discharging location",
+          'Medicine' as "Department history",
+          '2024-01-15 10:00:00' as "Department history date and times",
+          null::text as "Area history",
+          '2024-01-15 10:00:00' as "Area history date and times",
+          'Ward A' as "Location history",
+          '2024-01-15 10:00:00' as "Location history date and times",
           null::text as "Reason for encounter",
           null::text as "Diagnoses",
           null::text as "Diagnosis codes",
-          null::text as "Medications",
-          null::text as "Discharge medications",
+          'Name: Amoxicillin, Discontinued: false, Discontinuing reason: '
+          || E'\n' ||
+          'Name: Paracetamol, Discontinued: false, Discontinuing reason: '
+          || E'\n' ||
+          'Name: Ibuprofen, Discontinued: true, Discontinuing reason: Adverse reaction'
+          as "Medications",
+          'Name: Amoxicillin, Discontinued: false, Discontinuing reason: '
+          as "Discharge medications",
           null::text as "Vaccinations",
           null::text as "Procedures",
           null::text as "Lab requests",

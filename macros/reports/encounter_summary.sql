@@ -69,6 +69,7 @@ select
     diagnoses as "{{ translate_label('diagnoses') }}",
     diagnosis_codes as "{{ translate_label('diagnosesCodes') }}",
     medications as "{{ translate_label('medications') }}",
+    discharge_medications as "{{ translate_label('dischargeMedications') }}",
     vaccinations as "{{ translate_label('vaccinations') }}",
     procedures as "{{ translate_label('procedures') }}",
     lab_requests as "{{ translate_label('labRequests') }}",

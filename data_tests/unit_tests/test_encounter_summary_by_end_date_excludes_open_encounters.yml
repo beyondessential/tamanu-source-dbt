@@ -85,7 +85,7 @@ unit_tests:
       - input: ref('encounter_prescriptions')
         format: sql
         rows: |
-          select null::text as encounter_id, null::text as prescription_id
+          select null::text as encounter_id, null::text as prescription_id, null::bool as is_selected_for_discharge
           where false
 
       - input: ref('prescriptions')
@@ -222,6 +222,7 @@ unit_tests:
           null::text           as "Diagnoses",
           null::text           as "Diagnosis codes",
           null::text           as "Medications",
+          null::text           as "Discharge medications",
           null::text           as "Vaccinations",
           null::text           as "Procedures",
           null::text           as "Lab requests",

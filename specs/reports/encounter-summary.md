@@ -85,8 +85,16 @@ Clinicians: `encountering_clinician`, `supervising_clinician`.
 Movement history: `departments`, `location_groups`, `locations` and their matching
 `*_datetimes` arrays (BL-006), plus `department_ids` and `location_group_ids` (BL-004).
 
-Clinical aggregates: `diagnoses`, `diagnosis_codes`, `medications`, `vaccinations`,
-`procedures`, `lab_requests`, `imaging_requests`, `notes`.
+Clinical aggregates: `diagnoses`, `diagnosis_codes`, `medications`,
+`discharge_medications`, `vaccinations`, `procedures`, `lab_requests`,
+`imaging_requests`, `notes`.
+
+`medications` and `discharge_medications` share one line format, resolved once in the
+`encounter_prescription_lines` CTE. `discharge_medications` is the same aggregate under
+`filter (where is_selected_for_discharge)`, so it carries only the prescriptions flagged
+for discharge on the encounter. The flag is nullable at source and the filter reads null
+as not selected, so an encounter with nothing flagged gets a null cell rather than an
+empty string.
 
 The projection is a superset of what any single caller needs, so each caller keeps its
 own downstream column names.
@@ -108,6 +116,7 @@ Date ranges and report-specific flags are excluded from it: they differ between 
 | AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
 | AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
 | AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_by_start_date_excludes_sensitive_facilities` |
+| AC-006 | `discharge_medications` carries only prescriptions with `is_selected_for_discharge` true; false and null are both excluded, while `medications` keeps all three. | — | `test_encounter_summary_discharge_medications_filter` |
 
 ## Open questions
 
@@ -126,4 +135,5 @@ redundant `users` join are gone), OQ-004 (the sensitive variant has a unit test)
 
 | Date | Change |
 |---|---|
+| 2026-09-08 | Added `discharge_medications` (Discharge medications) to the core and to all four report variants. |
 | 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |

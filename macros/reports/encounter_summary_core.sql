@@ -209,18 +209,16 @@ encounter_diagnoses as (
     group by ed.encounter_id
 ),
 
-encounter_prescriptions as (
+encounter_prescription_lines as (
     select
         ep.encounter_id,
-        string_agg(
-            concat(
-                'Name: ', m.name,
-                ', Discontinued: ', case when p.is_discontinued then 'true' else 'false' end,
-                ', Discontinuing reason: ', p.discontinuing_reason
-            ),
-            '' || E'\n' || ''
-            order by p.datetime
-        ) as medications
+        ep.is_selected_for_discharge,
+        p.datetime,
+        concat(
+            'Name: ', m.name,
+            ', Discontinued: ', case when p.is_discontinued then 'true' else 'false' end,
+            ', Discontinuing reason: ', p.discontinuing_reason
+        ) as prescription_line
     from {{ ref('encounter_prescriptions') }} ep
     join encounters_in_scope eis
         on eis.encounter_id = ep.encounter_id
@@ -228,7 +226,27 @@ encounter_prescriptions as (
         on p.id = ep.prescription_id
     join {{ ref('reference_data') }} m
         on m.id = p.medication_id
-    group by ep.encounter_id
+),
+
+encounter_prescriptions as (
+    select
+        encounter_id,
+        string_agg(
+            prescription_line,
+            '' || E'\n' || ''
+            order by datetime
+        ) as medications,
+        -- Discharge medications: the subset of the encounter's prescriptions flagged as
+        -- selected for discharge. is_selected_for_discharge is nullable at source, and
+        -- the filter reads null as not selected, so an encounter with no flagged
+        -- prescription gets a null cell rather than an empty string.
+        string_agg(
+            prescription_line,
+            '' || E'\n' || ''
+            order by datetime
+        ) filter (where is_selected_for_discharge) as discharge_medications
+    from encounter_prescription_lines
+    group by encounter_id
 ),
 
 encounter_vaccinations as (
@@ -460,6 +478,7 @@ select
     ed.diagnoses,
     ed.diagnosis_codes,
     ep.medications,
+    ep.discharge_medications,
     ev.vaccinations,
     epr.procedures,
     elr.lab_requests,
