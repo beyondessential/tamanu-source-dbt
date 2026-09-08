@@ -19,7 +19,7 @@ Registers six metric IDs in `documentations/metrics/hiv_testing.yml`: `hiv_scree
 `hiv_screening_test_event`, `hiv_screening_test_key_population`, and the same three names with
 `confirmatory` in place of `screening`. `BL` and `AC` numbering is shared with the deployment
 implementation specs and with the `-- BL-0xx` code comments, so an anchor resolves identically in
-either. The canonical block is `BL-000`–`BL-022` and `AC-001`–`AC-014`; a canonical clause added
+either. The canonical block is `BL-000`–`BL-022` and `AC-001`–`AC-018`; a canonical clause added
 after a deployment spec has claimed the numbers above that block takes the next free number in the
 shared sequence rather than a suffixed variant.
 
@@ -129,6 +129,10 @@ month per key population the patient belongs to.
 | AC-012 | `key_population` is NULL on every client-month base row and every test-event row, and non-NULL on every `_key_population` row | BL-015, BL-016 | singular test |
 | AC-013 | A test-event ID's `period_granularity` is always `day`; a client-month ID's is always `month` | BL-002, BL-003 | schema `accepted_values` |
 | AC-014 | A test for a patient with no programme registry or attendance record at that facility is still counted | BL-021 | unit test |
+| AC-015 | A client-month screening ID's `is_positive` is true where any screening test that month was reactive, and false where none was | BL-010 | unit test |
+| AC-016 | A client-month confirmatory ID's `is_positive` is true where any confirmatory test that month was positive, and false where none was | BL-011 | unit test |
+| AC-017 | A test-event ID's `is_positive` reflects only that test's own result, unaffected by another test for the same patient in the same period | BL-012 | unit test |
+| AC-018 | An inconclusive or normal result does not set `is_positive` true | BL-013 | unit test |
 
 ## Registry entries
 
@@ -153,3 +157,4 @@ month per key population the patient belongs to.
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-08 | @beyondessential/maui | Initial draft: canonical definition of the six HIV screening and confirmatory testing metric IDs (MAUI-6637) |
+| 2026-09-08 | @beyondessential/maui | Drop age_years from the registered disaggregations (unbanded age invites small-cell grouping, per the sti_screening precedent) and add AC-015 to AC-018 covering is_positive semantics (BL-010 to BL-013) |

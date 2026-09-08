@@ -32,7 +32,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   variant_of: null
   owner: bes-maui
@@ -61,7 +60,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   variant_of: null
   owner: bes-maui
@@ -90,7 +88,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - key_population
   variant_of: null
@@ -118,7 +115,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   variant_of: null
   owner: bes-maui
@@ -144,7 +140,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   variant_of: null
   owner: bes-maui
@@ -173,7 +168,6 @@ metrics:
   disaggregations:
   - facility_id
   - sex
-  - age_years
   - is_positive
   - key_population
   variant_of: null
