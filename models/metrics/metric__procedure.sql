@@ -10,6 +10,11 @@
 -- procedures -- or any other setting -- via a filter on this one metric, rather than needing a
 -- separate metric per setting.
 --
+-- clinical__procedure_occurrence carries both a procedure and an imaging branch,
+-- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
+-- population is the procedure branch only -- imaging is metric__opd_imaging_request's
+-- population, not this one's.
+--
 -- The registry carries the definition; this model is its implementation.
 
 with procedure_occurrence as (
@@ -61,6 +66,8 @@ procedures as (
     -- uses for its facility join
     join locations loc
         on loc.id = po.location_id
+    -- BL-001: procedure branch only -- imaging is metric__opd_imaging_request's population
+    where po.procedure_type_source_value = 'procedure'
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
