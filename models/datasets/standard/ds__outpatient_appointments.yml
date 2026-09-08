@@ -12,6 +12,12 @@ models:
       pii: true
       classification: restricted
     columns:
+      - name: appointment_id
+        data_type: character varying(255)
+        description: "{{ doc('appointments__id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('encounters__patient_id') }}"
@@ -75,6 +81,12 @@ models:
       - name: location_group
         data_type: character varying(255)
         description: "{{ doc('generic__location_group') }} where the appointment will take place."
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in facilities (for filtering), resolved through the appointment's area."
+      - name: facility
+        data_type: character varying(255)
+        description: "{{ doc('facilities__name') }}"
       - name: priority
         data_type: boolean
         description: "{{ doc('appointments__is_high_priority') }}"

@@ -1,0 +1,75 @@
+unit_tests:
+  - name: test_ds__encounter_invoices_projection
+    model: ds__encounter_invoices
+    description: >
+      The dataset is a thin projection over int__encounter_invoice_amounts and
+      pins its output contract: the ten invoice-level columns pass through
+      unchanged, patient_subtotal (BL-020) is derived from three of them, and
+      insurer_payment and display_id are deliberately dropped. Every value
+      below is distinct so a reordering upstream fails here rather than in a
+      deployment build.
+    given:
+      - input: ref('int__encounter_invoice_amounts')
+        format: sql
+        rows: |
+          select
+            '00000000-0000-0000-0000-000000000001'::text as invoice_id,
+            'enc_001'::text as encounter_id,
+            'finalised'::text as status,
+            '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+            '2024-01-15 03:00:00'::timestamp as invoice_finalised_datetime,
+            11.00::numeric as invoice_total,
+            22.00::numeric as insurance_coverage,
+            33.00::numeric as invoice_discount,
+            44.00::numeric as patient_payment,
+            55.00::numeric as insurer_payment,
+            'Consultation'::text as products_no_category,
+            'INV'::text as display_id
+          union all
+          -- BL-020: a null invoice_total propagates to a null patient_subtotal
+          -- even with coverage and discount set -- the NULL half of AC-013.
+          -- Distinct synthetic values, not a real no-items invoice: upstream,
+          -- a no-items invoice carries a null insurance_coverage (coverage
+          -- aggregates over items) and a 0.00 invoice_discount
+          select
+            '00000000-0000-0000-0000-000000000002'::text,
+            'enc_002'::text,
+            'in_progress'::text,
+            '2024-02-14 09:00:00'::timestamp,
+            null::timestamp,
+            null::numeric,
+            66.00::numeric,
+            77.00::numeric,
+            88.00::numeric,
+            99.00::numeric,
+            null::text,
+            'INV2'::text
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'finalised' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          '2024-01-15 03:00:00'::timestamp as invoice_finalised_datetime,
+          11.00::numeric as invoice_total,
+          22.00::numeric as insurance_coverage,
+          33.00::numeric as invoice_discount,
+          44.00::numeric as patient_payment,
+          -44.00::numeric as patient_subtotal,
+          'Consultation' as products_no_category
+        union all
+        select
+          '00000000-0000-0000-0000-000000000002',
+          'enc_002',
+          'in_progress',
+          '2024-02-14 09:00:00'::timestamp,
+          null::timestamp,
+          null::numeric,
+          66.00::numeric,
+          77.00::numeric,
+          88.00::numeric,
+          null::numeric,
+          null::text

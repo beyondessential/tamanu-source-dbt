@@ -17,7 +17,6 @@ with discharge_records as (
         d.encounter_id,
         d.discharged_by_id,
         d.disposition_id,
-        d.created_datetime,
         -- BL-004: system-generated discharges are flagged, not filtered out
         coalesce(d.note like 'Automatically discharged%', false) as is_auto_discharge
     from {{ ref('discharges') }} d
@@ -119,9 +118,9 @@ discharge_audit as (
         ed.end_datetime as discharge_datetime_entered,
         cls.later_edit_count,
         cls.recorded_by_user_id,
-        -- BL-002: fall back to the discharge record's own creation time where the
-        -- change log does not reach back far enough
-        coalesce(cls.recorded_datetime, dr.created_datetime) as discharge_recorded_datetime
+        -- BL-002: null where the change log has no entry for the discharge at all,
+        -- which is every discharge predating the change log trigger
+        cls.recorded_datetime as discharge_recorded_datetime
     from discharge_records dr
     join encounter_details ed on ed.encounter_id = dr.encounter_id
     left join change_log_summary cls on cls.discharge_id = dr.discharge_id

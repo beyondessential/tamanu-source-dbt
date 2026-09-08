@@ -86,9 +86,6 @@ models:
 
       - name: discharge_recorded_datetime
         description: "{{ doc('ds__discharge_audit__discharge_recorded_datetime') }}"
-        data_tests:
-          - not_null:
-              name: ac_003_ds__sensitive_discharge_audit_recorded_datetime_not_null
 
       - name: days_between_discharge_and_recording
         description: "{{ doc('ds__discharge_audit__days_between_discharge_and_recording') }}"

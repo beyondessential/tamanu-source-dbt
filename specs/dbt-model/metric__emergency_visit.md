@@ -10,10 +10,10 @@
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Repo** | `tamanu-source-dbt` (branch line `2.54`) |
+| **Repo** | `tamanu-source-dbt` (`main`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-19 |
+| **Last updated** | 2026-08-31 |
 
 Canonical definition for `ed_visit`: one row per ED attendance, spanning arrival in the ED
 to discharge from hospital at minute resolution.
@@ -137,6 +137,11 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   never return from `admission` to an ED phase, so any encounter with an ED segment has one
   first. An encounter that starts elsewhere and passes through an ED phase later is
   intra-hospital movement, out of scope.
+
+  The `clinical__visit_detail` CTE is declared `not materialized`. It is referenced three times,
+  so Postgres would otherwise materialise it and plan the rest of the model against an opaque
+  scan with no statistics — every row estimate collapses to 1 and the joins below turn into
+  nested loops that never finish on a deployment-sized encounter history.
 - **BL-004 (sex + age):** `sex` is `clinical__person.gender_source_value`; `age_years` is age in
   whole years at arrival, unbanded (BL-019). The join to `clinical__person` is **inner**, so an
   attendance whose patient `bases/patients` excludes as soft-deleted or merged away is excluded
@@ -205,9 +210,11 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   a placeholder, since they are measures rather than disaggregations exposed as a Tupaia array
   filter (unlike `triage_score`, which is).
 
-  Tamanu permits a second `is_primary` row, so the CTE ranks by
-  `(condition_start_datetime, condition_occurrence_id)` and joins on rank 1 — without it a second
-  principal diagnosis would duplicate the attendance and fail AC-001.
+  Tamanu permits a second `is_primary` row, so the CTE takes `distinct on (visit_occurrence_id)`
+  ordered by `(condition_start_datetime asc, condition_occurrence_id asc)` — without it a second
+  principal diagnosis would duplicate the attendance and fail AC-001. That form also makes the
+  grain provable to the planner, which drops the join for a consumer selecting no diagnosis
+  column.
 - **BL-014 (waiting time):** `waiting_time__minutes` is the wait to active care —
   `triages.closed_datetime - triages.triage_datetime`, the same rule as `ds__emergency_triage`
   BL-005 — expressed in minutes.
@@ -342,3 +349,9 @@ them from configuration alone.
 | `ds__encounters_emergency` | Report-layer emergency dataset at triage grain, with PII |
 | `der__cohort_ncd_6m` | Per-subject derived artefact — the reference for `subject_id` semantics |
 | MAUI-6694 | Queen of Sheba Hospital, Ghana — Hospital Administration → Emergency |
+
+## Change log
+
+| Date | Author | Change |
+|---|---|---|
+| 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |

@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-12 |
-| **Last updated** | 2026-07-12 |
+| **Last updated** | 2026-08-17 |
 
 The OMOP-lite `OBSERVATION` domain — one row per clinical fact that is neither a measurement
 nor a drug exposure, unioning three standard sources: **program/referral-survey answers**
@@ -49,8 +49,9 @@ responses, refusal/not-done facts, assessments, social history.
   anchored to the triage's encounter and clinician.
 
 **Who reads it.** `derived__cohort_*` and `metric__` indicators that need qualitative facts —
-program-form flags (smoking status, risk factors), refusal reporting (vaccine hesitancy), and
-emergency-department triage acuity line-lists.
+program-form flags (smoking status, risk factors), emergency-department triage acuity
+line-lists, and `metric__immunisation_refusal`, which filters to the `'vaccination not
+given'` branch for its refusal count.
 
 **Standard model, deployment extension.** `tamanu-source-dbt` is the *standard* model: the
 survey branch captures *all* program/referral answers generically, with no deployment-specific

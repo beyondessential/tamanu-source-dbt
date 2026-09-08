@@ -169,3 +169,17 @@ and `--no-db-check` only when preparing a release from an already-built bundle.
 Publishing the release is what triggers `publish-artifacts.yml`, which uploads the bundle
 to S3 and registers it with the meta-server. Never upload bundles by hand. If a release
 publishes nothing, check that `compiled/v<version>/` was committed before the tag was cut.
+
+## Licence
+
+Copyright (C) 2026 BES International Limited.
+
+This project is licensed under the GNU General Public License, Version 3.0
+([LICENSE](LICENSE)) or <https://www.gnu.org/licenses/gpl-3.0-standalone.html>, or any
+later version of that licence, at your option.
+
+`models/sources/` and `models/logs/` are not authored here. They are copied verbatim from
+`database/model/public` and `database/model/logs` in
+[beyondessential/tamanu](https://github.com/beyondessential/tamanu) by
+`scripts/refresh_tamanu_source.py`, and re-synced on every Tamanu upgrade. Those files fall
+under Tamanu's default GPL 3.0-or-later terms. Edit them upstream, not here.

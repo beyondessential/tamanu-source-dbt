@@ -85,7 +85,7 @@ Facility, Department, Patient billing type, Supervising clinician, Include in-pr
 
 **Report Description**
 
-This report shows an audit log of all modifications and cancellations to outpatient appointments. Each row represents a change event, showing both the current appointment details and the previous values before the change. The report is designed to track which Tamanu users are creating and editing appointments. Status-only changes (e.g., Confirmed to Arrived) are excluded unless the status change is to Cancelled. If an appointment is changed multiple times, each modification will appear as a separate line.
+This report shows an audit log of all modifications and cancellations to outpatient appointments. Each row represents a change event, showing both the current appointment details and the previous values before the change. The report is designed to track which Tamanu users are creating and editing appointments. Status-only changes (e.g., Confirmed to Arrived) are excluded unless the status change is to Cancelled. If an appointment is changed multiple times, each modification will appear as a separate line. The date range filters when a change was recorded, not when the appointment is scheduled.
 
 **Filters**
 

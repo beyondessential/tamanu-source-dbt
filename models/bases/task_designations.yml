@@ -1,0 +1,23 @@
+version: 2
+models:
+  - name: task_designations
+    description: "{{ doc('table__task_designations') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      tier: silver
+      pii: false
+      classification: internal
+    columns:
+      - name: id
+        data_type: uuid
+        description: "{{ doc('generic__id') }} in task_designations."
+      - name: task_id
+        data_type: uuid
+        description: "{{ doc('task_designations__task_id') }}"
+      - name: designation_id
+        data_type: character varying
+        description: "{{ doc('task_designations__designation_id') }}"

@@ -1,0 +1,75 @@
+# Immunisation dashboard metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: immunisation_dose
+  kind: metric
+  name: Immunisation doses
+  description: >-
+    Vaccine doses given, by antigen. One row per dose administered.
+  numerator_description: >-
+    Vaccine administrations with status GIVEN, counted on the date given
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_UNICEF_WUENIC
+  definition_source_code: null
+  definition_rationale: >-
+    WHO/UNICEF's administrative coverage method (WUENIC) is the closest standard anchor:
+    doses administered per antigen, disaggregated by age cohort, forming the numerator of
+    a coverage ratio. No population/catchment-size source exists in Tamanu or this dbt
+    project, so this metric is numerator-only -- a coverage percentage is computed
+    downstream against an externally supplied population estimate, the same convention
+    every other metric__ model uses for leaving aggregation/rate-forming to the consumer.
+  unit: count
+  subject_grain: dose
+  disaggregations:
+  - facility_id
+  - sex
+  - disease
+  - age_group__who_epi_schedule
+  - dose_label
+  - patient_location_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: null
+
+- metric_id: immunisation_refusal
+  kind: metric
+  name: Immunisation refusals
+  description: >-
+    Vaccination attempts recorded as not given, by antigen and reason. One row per attempt.
+  numerator_description: >-
+    Vaccine administrations with status NOT_GIVEN, counted on the date recorded
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    No external standard defines a refusal-rate indicator the way WUENIC defines a coverage
+    numerator, so this is a BES-original composition: a sibling of immunisation_dose, sharing
+    its disaggregation shape (antigen, dose position, facility, sex, age cohort, patient
+    village) plus the not-given reason, so the two can be read side by side or combined into a
+    dropout view downstream. Kept as its own metric_id, not a status disaggregation on
+    immunisation_dose, since a refused attempt is not a dose and mixing the two into one
+    value_numeric would give that numerator two different meanings.
+  unit: count
+  subject_grain: attempt
+  disaggregations:
+  - facility_id
+  - sex
+  - disease
+  - age_group__who_epi_schedule
+  - dose_label
+  - patient_location_id
+  - reason
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: null

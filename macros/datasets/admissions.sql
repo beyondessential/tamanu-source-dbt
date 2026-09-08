@@ -1,22 +1,28 @@
 {% macro admissions_dataset(is_sensitive=false) %}
 
+{#- The facility scope and the is_sensitive partition come from encounters_core();
+    see specs/dbt-model/encounters_core.md. Aliased back to this dataset's existing
+    column names so nothing downstream changes. localise_timestamps is deliberately
+    left off -- BL-005: a dataset must not carry the :timezone placeholder. -#}
 with admission_encounters as (
     select
-        e.id,
-        e.patient_id,
-        e.start_datetime,
-        e.end_datetime,
-        e.location_id,
-        e.patient_billing_type_id,
-        f.id as facility_id,
-        f.name as facility_name
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} l on l.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = l.facility_id
-    where e.encounter_type = 'admission'
-        and f.is_sensitive = {{ is_sensitive }}
+        encounter_id as id,
+        patient_id,
+        start_datetime,
+        end_datetime,
+        location_id,
+        patient_billing_type_id,
+        facility_id,
+        facility as facility_name
+    from (
+        {{ encounters_core(is_sensitive=is_sensitive, encounter_type='admission') }}
+    ) eis
 ),
 
+{#- Not shared with encounter_summary_core's identically named CTE -- see
+    "Relationship to encounter_summary_core" in specs/dbt-model/ds__admissions.md. The
+    two answer different questions: that one describes the whole encounter, this one its
+    admission phase. -#}
 encounter_history_consolidated as (
     select
         eh.encounter_id,
@@ -42,6 +48,12 @@ encounter_history_consolidated as (
     from admission_encounters ae
     left join {{ ref('encounter_history') }} eh
         on eh.encounter_id = ae.id
+        -- BL-002 (specs/dbt-model/ds__admissions.md): scopes this dataset to the
+        -- admission phase. A snapshot records post-edit state, so an encounter admitted
+        -- from an outpatient presentation carries earlier rows stamped 'outpatient' and
+        -- this drops them: an admission dates from conversion, not presentation. Decided,
+        -- not incidental -- removing this changes admission_datetime, age, the admitting
+        -- clinician and the first entry of every movement triple.
         and eh.encounter_type = 'admission'
         and (eh.change_type is null or eh.change_type && array['encounter_type', 'examiner', 'department', 'location'])
     left join {{ ref('users') }} u
@@ -154,13 +166,26 @@ location_group_changes as (
             location_group_id
             order by datetime
         ) as location_group_ids,
+        -- BL-006: a null group is named rather than skipped. string_agg drops nulls
+        -- while array_agg keeps them, so without this the ids and datetimes arrays run
+        -- longer than the names and a consumer reading the three positionally pairs a
+        -- ward with another move's timestamp.
         string_agg(
-            location_group_name, ', '
+            coalesce(location_group_name, '(no area)'), ', '
             order by datetime
         ) as location_groups
     from encounter_history_consolidated
-    where (change_type is null or change_type && array['encounter_type', 'location'])
-        and (location_group_id != prev_location_group_id or prev_location_group_id is null)
+    -- BL-006 (specs/dbt-model/ds__admissions.md): the creation row is always kept and
+    -- only a *change* row is deduplicated, using `is distinct from` -- the same shape
+    -- encounter_summary_core uses. The former flat
+    -- `!= ... or prev_location_group_id is null` gated every row including the creation
+    -- row, and disagreed on two null cases: a move into an ungrouped location was
+    -- dropped, and every ungrouped move was kept.
+    where change_type is null
+        or (
+            change_type && array['encounter_type', 'location']
+            and location_group_id is distinct from prev_location_group_id
+        )
     group by encounter_id
 ),
 
