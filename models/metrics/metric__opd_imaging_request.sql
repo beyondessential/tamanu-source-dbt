@@ -6,7 +6,8 @@
 -- aggregates at whatever grain it needs. See specs/dbt-model/metric__opd_imaging_request.md
 -- BL-003 for why this is clinic-only rather than the full OMOP 9202 clinic/imaging/vaccination
 -- definition metric__outpatient_visit and metric__opd_procedure both use, and BL-004 for why
--- the as-of join is evaluated at request time rather than completion time.
+-- the as-of join is evaluated at request time rather than completion time, and for the
+-- first-segment clamp applied when a request predates every segment.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
 -- directly -- the same clinical layer metric__procedure and metric__opd_procedure build on.
@@ -93,6 +94,14 @@ imaging_areas as (
 -- metric__opd_procedure uses, anchored on requested_date rather than a completion event so a
 -- still-open or cancelled request (no completion timestamp) still resolves to a segment.
 -- Also carries care_site_id -- the segment's own location, used for facility (BL-005).
+--
+-- BL-004: clamped to the first segment when the request predates every segment (Juliana,
+-- MAUI-6806/MAUI-6862) -- a request genuinely belongs to its own encounter, so a segment
+-- recorded starting after the request (a data-timing artifact, not a real ordering issue)
+-- should not exclude it. No join condition on the timestamp: every encounter has >= 1
+-- segment (clinical__visit_detail BL-005), so the join itself can never drop a row -- the
+-- order by picks the correct as-of segment where one qualifies, and falls back to the
+-- earliest segment otherwise.
 active_segment_at_request as (
     select distinct on (po.procedure_occurrence_id)
         po.procedure_occurrence_id as imaging_request_id,
@@ -102,8 +111,14 @@ active_segment_at_request as (
     from procedure_occurrence po
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
-        and vd.visit_detail_start_datetime <= po.procedure_datetime
-    order by po.procedure_occurrence_id, vd.visit_detail_start_datetime desc, vd.visit_detail_id desc
+    order by
+        po.procedure_occurrence_id,
+        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
+        case when vd.visit_detail_start_datetime <= po.procedure_datetime
+             then vd.visit_detail_start_datetime end desc,
+        case when vd.visit_detail_start_datetime > po.procedure_datetime
+             then vd.visit_detail_start_datetime end asc,
+        vd.visit_detail_id desc
 ),
 
 requests as (

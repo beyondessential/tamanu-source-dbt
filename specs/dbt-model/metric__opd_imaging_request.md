@@ -173,6 +173,21 @@ as of this spec.
   answer -- request time is available for every request, completed or not, so that is what
   the segment lookup uses.
 
+  **Clamped to the first segment when the request predates every segment (decision,
+  Juliana).** Confirmed against a real replica: a request can be timestamped before its own
+  encounter's earliest recorded segment even starts -- a data-timing artifact (the segment's
+  own start time recorded late), not a real ordering issue; the request still genuinely
+  belongs to that encounter. Every encounter has at least one `clinical__visit_detail`
+  segment (its own BL-005), so the join to `visit_detail` carries no timestamp condition --
+  the `order by` picks the latest segment that had already started where one qualifies, and
+  falls back to the earliest segment otherwise, so a request is never dropped purely because
+  a segment's own recorded start time is unreliable. Contrast `metric__opd_diagnosis`, which
+  clamps for an unrelated reason -- it treats a diagnosis as belonging to the whole
+  encounter, not a specific moment, and has no time-of-day component to begin with. Here,
+  the request has a real, specific timestamp; the clamp exists because the segment boundary
+  it is compared against is sometimes wrong, not because the request's own timing is
+  ambiguous.
+
 - **BL-005 (facility attribution -- the clinic segment's own location, not the request's
   `location_group_id`):** `facility_id` is resolved through `bases/locations` on the
   `clinical__visit_detail` segment active at the request's own time -- the same segment
@@ -254,7 +269,7 @@ as of this spec.
 | AC | `imaging_type_code` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_area` is `not_null` | BL-007 | `not_null` |
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
-| AC | The as-of join: tie-break on `visit_detail_id`, `clinic`-only scoping, and a pending/cancelled request (no completion event) still resolves via `requested_date` | BL-003, BL-004 | dbt unit test `test_metric__opd_imaging_request_segment_attribution` |
+| AC | The as-of join: tie-break on `visit_detail_id`, `clinic`-only scoping, a pending/cancelled request (no completion event) still resolves via `requested_date`, and a request predating every segment clamps to the first segment | BL-003, BL-004 | dbt unit test `test_metric__opd_imaging_request_segment_attribution` |
 
 Test names are unnumbered (`ac_metric__opd_imaging_request_<column>_<check>`), matching
 `metric__opd_procedure.yml`'s convention.

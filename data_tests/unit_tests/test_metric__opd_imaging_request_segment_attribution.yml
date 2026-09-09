@@ -17,7 +17,10 @@ unit_tests:
       procedure row in practice. r6 is is_completed = false but already has a matching
       imaging_results row (a stray/preliminary result against a still-open request) -- proves
       period_end is gated on is_completed (BL-002) rather than on whether a result row merely
-      exists.
+      exists. r7 sits on an encounter whose only segment ('clinic') starts after r7's own
+      requested_datetime (a data-timing artifact) -- proves the clamp: r7 is still included
+      and attributed to that first/only segment, rather than dropped for predating it
+      (BL-004).
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql
@@ -31,6 +34,8 @@ unit_tests:
           select 'r5', 'p1', '2026-01-01'::date, '2026-01-01 11:00:00'::timestamp, 32817, 'procedure', 'u1', 'e1', null::varchar, 'appendectomy', 'Appendectomy', true
           union all
           select 'r6', 'p1', '2026-01-03'::date, '2026-01-03 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', null::varchar, 'ultrasound', 'Ultrasound', false
+          union all
+          select 'r7', 'p1', '2026-01-04'::date, '2026-01-04 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e7', null::varchar, 'mri', 'MRI', false
 
       - input: ref('imaging_results')
         format: sql
@@ -63,6 +68,8 @@ unit_tests:
           select 'vd2b', 'e1', 'p1', 9202, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', 'vd2a'
           union all
           select 'vd3', 'e3', 'p1', 9203, '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', null::varchar
+          union all
+          select 'vd7', 'e7', 'p1', 9202, '2026-01-04'::date, '2026-01-04 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
 
       - input: ref('clinical__person')
         format: sql
@@ -82,3 +89,5 @@ unit_tests:
         select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30
         union all
         select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30
+        union all
+        select 'opd_imaging_request', null::text, 'r7', '2026-01-04 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30
