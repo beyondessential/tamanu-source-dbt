@@ -1,0 +1,48 @@
+unit_tests:
+  - name: test_metric__opd_procedure_segment_clamp
+    model: metric__opd_procedure
+    description: >
+      BL-003. proc1 sits on an encounter whose segment ('clinic', concept 9202) starts
+      before the procedure's own time -- the ordinary as-of case, included via the segment
+      it genuinely falls within. proc2 sits on an encounter whose only segment ('clinic',
+      concept 9202) starts after the procedure's own time (a data-timing artifact, not a
+      real ordering issue) -- must still be included, clamped to that first/only segment
+      rather than dropped for predating it (decision, Juliana). proc3 is the same clamp
+      shape, but its only segment is 'admission' (concept 9201, not 9202) -- the clamp
+      still resolves a segment, but the outpatient-scope filter correctly excludes it: the
+      clamp fixes a missing-segment problem, not an out-of-scope one.
+    given:
+      - input: ref('clinical__procedure_occurrence')
+        format: sql
+        rows: |
+          select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'loc1' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
+          union all
+          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'loc1', 'code2', 'Procedure Two', true
+          union all
+          select 'proc3', 'p1', '2026-02-03'::date, '2026-02-03 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e12', 'loc1', 'code3', 'Procedure Three', true
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd10a' as visit_detail_id, 'e10' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-02-01'::date as visit_detail_start_date, '2026-02-01 08:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd11a', 'e11', 'p1', 9202, '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
+          union all
+          select 'vd12a', 'e12', 'p1', 9201, '2026-02-03'::date, '2026-02-03 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+    expect:
+      format: sql
+      rows: |
+        select 'opd_procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years
+        union all
+        select 'opd_procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'Procedure Two', 'code2', true, 30
