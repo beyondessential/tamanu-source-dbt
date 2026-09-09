@@ -79,7 +79,8 @@ segments as (
 ),
 
 -- close each segment at the next segment's start, falling back to the encounter end for
--- the final (open) segment; chain segments within an encounter (BL-002, BL-004)
+-- the final segment of a closed encounter -- an encounter still open has no end to fall
+-- back to, so its final segment stays open-ended (NULL) (BL-002, BL-004)
 bounded as (
     select
         s.visit_detail_id,
@@ -88,10 +89,14 @@ bounded as (
         s.visit_detail_start_datetime,
         coalesce(
             lead(s.visit_detail_start_datetime) over w,
-            -- final (open) segment closes at the encounter end; greatest() guards the case
-            -- where a history row's datetime is later than e.end_datetime, which would
-            -- otherwise give the last segment end < start and fail ac_006 (BL-002)
-            greatest(e.end_datetime, s.visit_detail_start_datetime)
+            -- final segment of a closed encounter: greatest() guards the case where a
+            -- history row's datetime is later than e.end_datetime, which would otherwise
+            -- give the last segment end < start and fail ac_006 (BL-002). An encounter
+            -- still open (e.end_datetime null) has no fallback -- coalesce leaves this NULL
+            case
+                when e.end_datetime is not null
+                    then greatest(e.end_datetime, s.visit_detail_start_datetime)
+            end
         ) as visit_detail_end_datetime,
         s.department_id,
         s.location_id,
