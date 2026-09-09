@@ -116,11 +116,15 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   is a deprecated column in Tamanu, superseded by `location_group_id`: the application ships
   a dedicated one-time command (`migrateImagingRequestsToLocationGroups`) that backfills
   `location_group_id` from any pre-existing `location_id` value, and the current imaging
-  request UI has no field that writes `location_id` at all. A consumer resolving facility
-  for imaging should read `location_group_id` (via `location_groups.facility_id`, which the
-  application enforces as mandatory) from `bases/imaging_requests` directly, not this
-  column -- `metric__opd_imaging_request` does exactly that, not falling back to the visit
-  segment.
+  request UI has no field that writes `location_id` at all. `location_group_id` itself
+  turned out not to be a safe fallback either -- confirmed against a real replica, it was
+  NULL for every real clinic-scoped imaging request. `metric__opd_imaging_request` resolves
+  facility a third way instead: via the `clinical__visit_detail` segment active at the
+  request's own time, using that segment's own location -- the same segment it already
+  computes for its own outpatient-scope filter, so no join beyond `bases/locations` is
+  needed. AC-007 protects `location_id` itself (this column) with a `warn`-severity
+  `relationships` check, so a populated-but-invalid value is visible without requiring the
+  column be filled.
 
 ## Acceptance criteria
 
@@ -132,6 +136,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
 | AC-004 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-003 | dbt `relationships` |
 | AC-005 | `procedure_date`/`procedure_datetime` are `not_null` | -- | dbt `not_null` |
 | AC-006 | `procedure_type_source_value` is `not_null` and one of `procedure`, `imaging request` | BL-001 | `not_null` + `accepted_values` |
+| AC-007 | Every non-null `location_id` exists in `locations.id` | BL-004 | dbt `relationships` (`warn`) |
 
 ## Registry entry
 
@@ -165,13 +170,12 @@ BL-001.
 
 - **OQ-1:** `procedure_concept_id` (standard SNOMED/CPT) awaits the `vocab__` layer to map
   the retained source values, for both branches.
-- **OQ-2:** `imaging_requests.location_id` is deprecated (BL-004); this model does not carry
-  `location_group_id`, the field that superseded it, since OMOP's `PROCEDURE_OCCURRENCE` has
-  no location-group concept and the procedure branch would only ever have it NULL. Worth
-  revisiting if a second consumer also needs facility resolved for imaging and duplicating
-  the `location_groups` join becomes a real cost -- for now each consumer (just
-  `metric__opd_imaging_request`) reads `location_group_id` from `bases/imaging_requests`
-  itself.
+- **OQ-2:** `imaging_requests.location_id` is deprecated (BL-004), and its would-be successor
+  `location_group_id` turned out to be unreliable too (BL-004) -- `metric__opd_imaging_request`
+  resolves facility a third way, via the active `clinical__visit_detail` segment's own
+  location, entirely outside this model. Worth revisiting if a second consumer needs the
+  same resolution and duplicating that segment-join becomes a real cost -- for now each
+  consumer computes it itself.
 
 ## Change log
 
