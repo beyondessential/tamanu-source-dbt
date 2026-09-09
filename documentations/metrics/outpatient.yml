@@ -46,8 +46,7 @@ metrics:
   name: OPD imaging requests
   description: >-
     Diagnostic imaging requests raised while the patient was in a clinic encounter. One row
-    per request, from the moment it is raised to the moment it is marked complete or
-    cancelled.
+    per request, from the moment it is raised to the moment it is marked complete.
   numerator_description: >-
     Imaging requests whose active segment at the request's own requested_date carries
     encounter_type 'clinic', restricted to status pending, in progress, completed, or
