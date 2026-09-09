@@ -107,3 +107,49 @@ unit_tests:
           'clinZ' as provider_id,
           'clinic' as visit_detail_source_value,
           null::varchar as preceding_visit_detail_id
+
+  - name: test_clinical__visit_detail_open_encounter_stays_open
+    model: clinical__visit_detail
+    description: >-
+      An encounter with no end_datetime yet (not discharged) has no encounter end to fall
+      back to for its final segment, which stays open-ended -- NULL end date and datetime,
+      not the segment's own start (BL-002).
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            'e3' as id,
+            '2024-05-01 09:00:00'::timestamp as start_datetime,
+            null::timestamp as end_datetime,
+            'p3' as patient_id,
+            'depD' as department_id,
+            'locD' as location_id,
+            'clinW' as clinician_id,
+            'clinic' as encounter_type
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select
+            null::varchar as id, null::varchar as encounter_id, null::timestamp as datetime,
+            null::varchar as department_id, null::varchar as location_id,
+            null::varchar as clinician_id, null::varchar as encounter_type
+          where false
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'clinic' as local_code, 9202 as concept_id
+    expect:
+      format: sql
+      rows: |
+        select
+          'e3' as visit_detail_id, 'e3' as visit_occurrence_id, 'p3' as person_id,
+          9202 as visit_detail_concept_id,
+          '2024-05-01'::date as visit_detail_start_date,
+          '2024-05-01 09:00:00'::timestamp as visit_detail_start_datetime,
+          null::date as visit_detail_end_date,
+          null::timestamp as visit_detail_end_datetime,
+          'locD' as care_site_id, 'depD' as department_id,
+          'clinW' as provider_id,
+          'clinic' as visit_detail_source_value,
+          null::varchar as preceding_visit_detail_id
