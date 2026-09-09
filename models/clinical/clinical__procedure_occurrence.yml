@@ -110,6 +110,17 @@ models:
           branches; not reliably populated for imaging in practice. Resolving a facility is a
           consumer-layer concern, the same convention clinical__visit_occurrence's care_site_id
           uses.
+        data_tests:
+          # relationships only checks populated values, so this doesn't require the column
+          # be filled -- it catches a populated value that isn't a real location, the same
+          # protection clinical__visit_occurrence.care_site_id has against ref__care_site.
+          - relationships:
+              name: ac_007_clinical__procedure_occurrence_location_id_in_locations
+              arguments:
+                to: ref('locations')
+                field: id
+              config:
+                severity: warn
       - name: procedure_source_value
         data_type: character varying(255)
         description: >-
