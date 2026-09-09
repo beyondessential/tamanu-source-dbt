@@ -1,0 +1,143 @@
+version: 2
+
+models:
+  - name: metric__opd_procedure
+    description: >-
+      D5 metric view for the opd_procedure indicator registered in documentations/metrics/*.yml:
+      opd_procedure. One row per recorded procedure whose active clinical__visit_detail segment
+      at the procedure's own time carries OMOP concept 9202 (see spec BL-003) -- per-procedure
+      (subject) grain, so a consumer aggregates at whatever grain it needs.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
+    # metric__procedure and metric__outpatient_visit use.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-procedure rows, but the subject is a procedure id with no patient identifier, name
+      # or birth date alongside it -- no patient is identifiable through a row, the same
+      # reasoning metric__procedure uses.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per procedure. A duplicate would double-count it in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_metric__opd_procedure_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # A procedure is point-in-time, so period_end is hardcoded NULL. Asserted as the null
+      # invariant itself rather than as an end-after-start comparison, so a change that ever
+      # populates it flags for a deliberate revisit instead of passing on an empty row set.
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_metric__opd_procedure_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'opd_procedure'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_metric_id_not_null
+          - accepted_values:
+              name: ac_metric__opd_procedure_metric_id_values
+              arguments:
+                values:
+                  - opd_procedure
+          - relationships:
+              name: ac_metric__opd_procedure_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu procedure id.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The date the procedure was performed.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: >-
+          NULL -- a procedure is point-in-time and the model emits no resolution date for it.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_period_granularity_not_null
+          - accepted_values:
+              name: ac_metric__opd_procedure_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one procedure per row. Sum it to count procedures over any grouping.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_value_numeric_not_null
+          - accepted_values:
+              name: ac_metric__opd_procedure_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu facility id the procedure was performed at, resolved from the procedure's
+          own location.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: procedure
+        data_type: text
+        description: >-
+          The procedure as recorded, ungrouped -- the label to rank and trend by. Never NULL;
+          falls back to procedure_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_procedure_not_null
+      - name: procedure_code
+        data_type: text
+        description: >-
+          The procedure type's reference-data code, alongside the name so a card can scope to
+          one procedure by code, which survives a reference-data rename where the name does
+          not. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_procedure_code_not_null
+      - name: is_completed
+        data_type: boolean
+        description: Whether the procedure was marked completed. Never NULL -- coalesced to false.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_procedure_is_completed_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at the procedure. Not banded -- an age classification is a
+          presentation choice a deployment may set differently, so the consumer's data table
+          bands it. A measure, not a dimension: absent from the registry's disaggregations.
