@@ -1,0 +1,46 @@
+unit_tests:
+  - name: test_metric__opd_diagnosis_facility_attribution
+    model: metric__opd_diagnosis
+    description: >
+      BL-004. The encounter has two qualifying outpatient segments at different
+      facilities (clinic at loc6a, an inpatient stay in between, then clinic again at
+      loc6b). c6's window (dated the day the encounter opens) overlaps both -- the
+      earliest-starting one wins the facility attribution, not the later one.
+    given:
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select 'c6' as condition_occurrence_id, 'p1' as person_id, '2026-01-01'::date as condition_start_date, '2026-01-01 00:00:00'::timestamp as condition_start_datetime, null::date as condition_end_date, null::timestamp as condition_end_datetime, 'encounter diagnosis' as condition_type_source_value, 'confirmed' as condition_status_source_value, true as is_primary, 'prov1' as provider_id, 'v6' as visit_occurrence_id, 'A06' as condition_source_value, 'Two segment diagnosis' as condition_source_name
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'v6' as visit_occurrence_id, 'p1' as person_id, 262 as visit_concept_id, '2026-01-01'::date as visit_start_date, '2026-01-01 09:00:00'::timestamp as visit_start_datetime, '2026-01-10'::date as visit_end_date, '2026-01-10 00:00:00'::timestamp as visit_end_datetime, 32817 as visit_type_concept_id, 'prov1' as provider_id, 'loc6a' as care_site_id, 'admission' as visit_source_value
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd6a' as visit_detail_id, 'v6' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-01-01'::date as visit_detail_start_date, '2026-01-01 09:00:00'::timestamp as visit_detail_start_datetime, '2026-01-03'::date as visit_detail_end_date, '2026-01-03 00:00:00'::timestamp as visit_detail_end_datetime, 'loc6a' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd6b', 'v6', 'p1', 9201, '2026-01-03'::date, '2026-01-03 00:00:00'::timestamp, '2026-01-05'::date, '2026-01-05 00:00:00'::timestamp, 'loc6mid', null::varchar, 'prov1', 'admission', 'vd6a'
+          union all
+          select 'vd6c', 'v6', 'p1', 9202, '2026-01-05'::date, '2026-01-05 00:00:00'::timestamp, '2026-01-10'::date, '2026-01-10 00:00:00'::timestamp, 'loc6b', null::varchar, 'prov1', 'clinic', 'vd6b'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc6a' as id, 'L6A' as code, 'Location 6A' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac6a' as facility_id, 'current' as visibility_status
+          union all
+          select 'loc6mid', 'L6M', 'Location 6 mid', null::int, null::varchar, 'fac6mid', 'current'
+          union all
+          select 'loc6b', 'L6B', 'Location 6B', null::int, null::varchar, 'fac6b', 'current'
+
+    expect:
+      format: sql
+      rows: |
+        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c6' as subject_id, '2026-01-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac6a' as facility_id, 'female' as sex, 'A06' as diagnosis_code, 'Two segment diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years
