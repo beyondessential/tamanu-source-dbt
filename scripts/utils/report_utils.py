@@ -178,6 +178,124 @@ fs.readdir(folderPath, async (err, files) => {
     cprint(f"Script created successfully at: {output_path}", "success")
 
 
+class ReportingSchemaDependencyError(Exception):
+    """A model cannot be ordered into the reporting schema build script."""
+
+
+def _describe_excluded_dependency(manifest, dep):
+    """Say why a dependency is absent from the reporting schema.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        dep (str): Unique ID of the dependency.
+
+    Returns:
+        str: A phrase naming the resource kind or the tag that keeps it out.
+    """
+    if dep.startswith("seed"):
+        return (
+            "a seed, and the reporting schema is dropped and rebuilt from views alone, so "
+            "seed rows never reach a deployment -- hold them in a map__ model instead"
+        )
+    if dep.startswith("snapshot"):
+        return "a snapshot, which the reporting schema does not create"
+
+    tags = manifest["nodes"].get(dep, {}).get("tags", [])
+    if "restricted" in tags:
+        return 'tagged "restricted", which is excluded while has_sensitive_facility is false'
+    for tag in ("reports", "internal"):
+        if tag in tags:
+            return f'tagged "{tag}", which is excluded from the reporting schema'
+    return "not a model the reporting schema creates"
+
+
+def _describe_stall(manifest, remaining, selectable):
+    """Explain why the ordering stopped with models still unplaced.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        remaining (list): Unique IDs of the models still unordered.
+        selectable (set): Unique IDs of every model the reporting schema will create.
+
+    Returns:
+        str: A multi-line explanation naming each blocking model and dependency.
+    """
+    def name(node):
+        return manifest["nodes"][node]["name"]
+
+    blocked = {}
+    for node in remaining:
+        excluded = sorted(
+            dep
+            for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+            if not dep.startswith("source") and dep not in selectable
+        )
+        if excluded:
+            blocked[node] = excluded
+
+    if not blocked:
+        return "Circular dependency between reporting schema models: " + ", ".join(
+            sorted(name(node) for node in remaining)
+        )
+
+    lines = ["Models the reporting schema cannot create:"]
+    for node in sorted(blocked, key=name):
+        for dep in blocked[node]:
+            lines.append(
+                f"  {name(node)} depends on {dep}, which is "
+                f"{_describe_excluded_dependency(manifest, dep)}"
+            )
+
+    waiting = sorted(set(remaining) - set(blocked), key=name)
+    if waiting:
+        lines.append("Blocked behind them: " + ", ".join(name(node) for node in waiting))
+    return "\n".join(lines)
+
+
+def order_models_for_schema(manifest, nodes):
+    """Order models so each view is created after the views it selects from.
+
+    Sources are left out of the ordering: they resolve to tables the deployment already
+    has, under their own schema.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        nodes (list): Unique IDs of the models the reporting schema will create.
+
+    Returns:
+        list: `nodes` in creation order.
+
+    Raises:
+        ReportingSchemaDependencyError: A model depends on something the reporting schema
+            never creates, or the models form a cycle.
+    """
+    selectable = set(nodes)
+    processed = set()
+    ordered = []
+
+    while len(processed) < len(nodes):
+        current = [
+            node
+            for node in nodes
+            if node not in processed
+            and all(
+                dep.startswith("source") or dep in processed
+                for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+            )
+        ]
+        if not current:
+            remaining = [node for node in nodes if node not in processed]
+            raise ReportingSchemaDependencyError(
+                _describe_stall(manifest, remaining, selectable)
+            )
+
+        for node in current:
+            processed.add(node)
+            ordered.append(node)
+
+    return ordered
+
+
 def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
@@ -189,9 +307,6 @@ def generate_reporting_schema_script():
     deployable reporting schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset
     views) are excluded when has_sensitive_facility is false. has_sensitive_facility is read
     from dbt_project.yml via get_dbt_project_vars(), not from the dbt runtime context.
-
-    Args:
-        target (str): The target tag to filter models for generating views.
 
     Returns:
         None: Writes the SQL schema build script to the views directory.
@@ -218,29 +333,7 @@ def generate_reporting_schema_script():
         cprint(f"No models found", "error")
         return
 
-    processed = set()
-    ordered = []
-
-    # Assumes no non-restricted model lists a restricted model in depends_on.nodes.
-    # Restricted nodes filtered above are never added to `processed`, so any such
-    # cross-tier dependency would stall this loop and exit with the error below.
-    while len(processed) < len(nodes):
-        current = [
-            node
-            for node in nodes
-            if node not in processed
-            and all(
-                dep.startswith("source") or dep in processed
-                for dep in manifest["nodes"][node]["depends_on"]["nodes"]
-            )
-        ]
-        if not current:
-            cprint("Error: Circular dependency or missing dependency.", "error")
-            exit(1)
-
-        for node in current:
-            processed.add(node)
-            ordered.append(node)
+    ordered = order_models_for_schema(manifest, nodes)
 
     scripts = [
         f"drop schema if exists {SCHEMA} cascade;",

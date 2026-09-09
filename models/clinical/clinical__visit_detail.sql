@@ -1,6 +1,9 @@
 -- clinical__visit_detail -- OMOP-lite VISIT_DETAIL domain. One row per encounter segment
--- (BL-001): a contiguous department/location/encounter_type phase within a single
--- encounter. Segments walk the unified encounter_history timeline (BL-002); encounters
+-- (BL-001): a phase within a single encounter over which the whole encounter_history
+-- snapshot -- department, location, encounter_type AND clinician -- was stable. A
+-- clinician handover in the same ward opens a new segment, so a segment is not a
+-- contiguous ward stay; a consumer wanting that must collapse on the dimensions it
+-- cares about. Segments walk the unified encounter_history timeline (BL-002); encounters
 -- with no history at all get one synthesized whole-visit segment (BL-005). Per-segment
 -- visit concept from map__omop_visit_type (BL-003, inner join -- see BL-003 for the
 -- consequence of an unmapped encounter_type); segments chained via

@@ -78,3 +78,41 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__opd_diagnosis.md
+
+- metric_id: opd_imaging_request
+  kind: metric
+  name: OPD imaging requests
+  description: >-
+    Diagnostic imaging requests raised while the patient was in a clinic encounter. One row
+    per request, from the moment it is raised to the moment it is marked complete.
+  numerator_description: >-
+    Imaging requests whose active segment at the request's own requested_date carries
+    encounter_type 'clinic', restricted to status pending, in progress, completed, or
+    cancelled -- excluding deleted and entered-in-error records
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of imaging requests scoped to the outpatient clinic setting. No external body
+    registers this indicator -- AIHW's diagnostic imaging reporting explicitly names request
+    completion, cancellation, turnaround time and body-area breakdown as gaps it cannot
+    report. Scoped to clinic only, not the full OMOP concept 9202 metric__outpatient_visit
+    and metric__opd_procedure use (which also covers imaging and vaccination encounter
+    types) -- a deliberate narrower decision (MAUI-6806), since an imaging-typed encounter
+    and an imaging request are independent Tamanu concepts that happen to share a name, and
+    folding them together would mix two different questions into one metric. Pending
+    alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: imaging_request
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - imaging_type
+  - imaging_type_code
+  - imaging_area
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__opd_imaging_request.md

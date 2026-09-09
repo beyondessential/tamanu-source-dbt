@@ -59,6 +59,13 @@ where trim(d) not in (
         -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
         -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
         'key_population',
+        -- sti_*_test's screening outcome: whether any countable test for that infection in
+        -- the reporting month indicated infection.
+        'is_positive',
+        -- sti_*_test's treatment stage -- Treated, Untreated, or Not applicable where the
+        -- patient did not test positive. The cascade's third stage, carried as a
+        -- disaggregation rather than as a metric_id per stage.
+        'treatment_status',
         -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
         -- metric per setting. It is the encounter's type as it now stands, not the phase the
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
@@ -86,5 +93,25 @@ where trim(d) not in (
         'procedure',
         'procedure_code',
         -- procedure's completion flag
-        'is_completed'
+        'is_completed',
+        -- immunisation_dose's antigen
+        'disease',
+        -- immunisation_dose's EPI-style age cohort, banded in months
+        'age_group__who_epi_schedule',
+        -- immunisation_dose's schedule dose position (e.g. 'Dose 1', 'Dose 2')
+        'dose_label',
+        -- immunisation_dose's patient home village, distinct from facility_id
+        'patient_location_id',
+        -- immunisation_refusal's reason a dose was not given
+        'reason',
+        -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
+        -- therapeutic-class reference mapping exists yet, the same reasoning
+        -- diagnosis/diagnosis_code and procedure/procedure_code use.
+        'drug_source_value',
+        'drug_source_name',
+        -- opd_imaging_request's modality, as readable label and as raw Tamanu code
+        'imaging_type',
+        'imaging_type_code',
+        -- opd_imaging_request's aggregated body area/study area
+        'imaging_area'
     )

@@ -81,7 +81,7 @@ a deleted or merged patient are out of scope.
 | `location` | text | Location recorded on the encounter |
 | `encounterStartDateTime` | text | Encounter start, formatted in the viewer's timezone |
 | `dischargeDateTime` | text | Discharge date and time entered on the discharge form, clamped up to the encounter start where it precedes it (BL-011) |
-| `dischargeRecordedDateTime` | text | When the discharge was recorded in Tamanu, or the earliest known change where change log coverage is partial (BL-002) |
+| `dischargeRecordedDateTime` | text | When the discharge was recorded in Tamanu, or the earliest known change where change log coverage is partial. Blank where the change log has no entry for the discharge (BL-002) |
 | `dischargeRecordingDelayDays` | integer | Whole days between the two |
 | `dischargeDisposition` | text | Discharge disposition label |
 | `dischargeClinician` | text | Clinician named on the discharge form |
@@ -99,9 +99,10 @@ a deleted or merged patient are out of scope.
   deleted and whose patient is neither deleted, merged, nor the test patient. The `discharges`
   base model deduplicates to one row per encounter, keeping the earliest by `created_at`.
 - **BL-002:** `discharge_recorded_datetime` is the `logged_at` of the earliest
-  `logs.changes` entry for the discharge record, falling back to the discharge record's
-  `created_at` where the discharge has no change log entry at all. The earliest entry is
-  treated as the insert. Where coverage is partial — the discharge was created before change
+  `logs.changes` entry for the discharge record. The earliest entry is treated as the
+  insert. Where the discharge has no change log entry at all the column is null; there is
+  no fallback, and `days_between_discharge_and_recording` is null with it. Where coverage
+  is partial — the discharge was created before change
   logging was enabled but edited after — entries do exist, so the fallback does not fire and
   the earliest entry is an edit rather than the insert. Those rows report the earliest known
   change, which is later than the true recording time, and nothing on the row marks them as
@@ -149,7 +150,7 @@ a deleted or merged patient are out of scope.
 |---|---|---|---|
 | AC-001 | No rows for soft-deleted discharges or encounters, and none for deleted, merged or test patients | BL-001 | `logical__ds__discharge_audit` |
 | AC-002 | Exactly one row per `encounter_id` | BL-001 | `unique` on `encounter_id`, `logical__ds__discharge_audit` |
-| AC-003 | `discharge_recorded_datetime` is never null, and falls back to the discharge record's creation time where the change log has no entry | BL-002 | `not_null`, `test_ds__discharge_audit_changelog_fallback` |
+| AC-003 | `discharge_recorded_datetime` is populated for every discharge the change log covers, and null only where the change log has no entry for it | BL-002 | `logical__ds__discharge_audit`, `test_ds__discharge_audit_no_changelog_coverage` |
 | AC-004 | A discharge whose entered date precedes its recorded date by several days returns the expected positive `days_between_discharge_and_recording` | BL-002, BL-003 | `test_ds__discharge_audit_recording_delay` |
 | AC-005 | A UTC change log timestamp near local midnight lands on the correct local date | BL-003 | `test_discharges_change_logs_timezone` |
 | AC-006 | Auto-discharged rows are flagged, not dropped, and carry no recording user when the session had no audit user | BL-004, BL-005 | `test_ds__discharge_audit_recording_delay` |
@@ -168,11 +169,12 @@ a warning rather than failing the run. The unit tests are unaffected and do fail
   Kiribati replica snapshot before shipping. If it is slow, apply the narrower-window
   parallel intermediate pattern.
 - **Change log coverage.** Anything discharged before the change log trigger was installed
-  has no change log entry. BL-002's fallback covers the timestamp, but the recording user
-  and edit count are blank for those rows, and the report notes say so.
+  has no change log entry, so the recorded date and time, the recording delay, the recording
+  user and the edit count are all blank for those rows. The report notes say so. Filtering
+  the report by recorded date excludes them entirely.
 - **Partial change log coverage.** A discharge created before change logging was enabled, but
-  edited after it was enabled, does have change log entries, so BL-002's fallback never fires
-  and the earliest entry it finds is an edit. `discharge_recorded_datetime` is then later
+  edited after it was enabled, does have change log entries, so the row is populated and the
+  earliest entry found is an edit rather than the insert. `discharge_recorded_datetime` is then later
   than the true recording time, `dischargeRecordingDelayDays` is overstated, and
   `later_edit_count` is understated by the edits that predate logging — a discharge edited
   exactly once after logging began reports zero later edits. These rows are
@@ -195,3 +197,4 @@ _None._
 | 2026-08-21 | Maui team | Added primary and secondary diagnosis columns to the dataset and report, aggregating the encounter's diagnoses to one row (BL-010). |
 | 2026-08-21 | Maui team | Dropped the appended code from the diagnosis name columns (BL-012); the code already has its own column. `admissions.sql` unchanged, so the two datasets differ on this for now. |
 | 2026-08-21 | Maui team | Brought the spec back in line with the code where it had drifted: partial change log coverage (BL-002 and Risks), the `end_date` clamp inherited from the encounters base (BL-011), earliest-wins dedup in BL-001, the null-location blind spot shared by the dataset and AC-001's test, and the `warn` severity the acceptance tests run at. Documentation only, no code change. |
+| 2026-08-31 | Maui team | Removed `created_datetime` from the `discharges` base model and with it BL-002's fallback: `discharge_recorded_datetime` now comes from the change log alone and is null where the change log has no entry. AC-003 re-aimed at the invariant that still holds, its `not_null` tests dropped, `test_ds__discharge_audit_changelog_fallback` renamed to `test_ds__discharge_audit_no_changelog_coverage`, and the report notes updated. Consumers needing the clinician-entered discharge date join the encounters base for it, as `ds__discharge_audit` already does. |

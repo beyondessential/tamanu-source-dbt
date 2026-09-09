@@ -167,7 +167,7 @@ Resolved during implementation — none outstanding.
 
 | ID | Divergence | Resolution |
 |---|---|---|
-| DV-001 | The per-item arithmetic lived inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not shared | **Resolved:** extracted into the `invoice_item_amounts()` macro, embedded by both `int__encounter_invoice_item_amounts` and `int__encounter_invoice_amounts`. Behaviour-preserving (AC-008): the existing `test_int__encounter_invoice_amounts_*` unit tests are unchanged (only the two new `source_record_*` columns added to their `invoice_items` mocks) and green. |
+| DV-001 | The per-item arithmetic lived inline in `int__encounter_invoice_amounts` (`item_*` CTEs), not shared | **Resolved:** extracted into the `invoice_item_amounts()` macro, embedded by both `int__encounter_invoice_item_amounts` and `int__encounter_invoice_amounts`. Behaviour-preserving (AC-008): the `test_int__encounter_invoice_amounts_*` unit tests exercise the extracted arithmetic and pass, changed by the extraction itself only by the two `source_record_*` columns added to their `invoice_items` mocks. That evidence was established on `2.57`, where the extraction landed. On `main` it holds only from #1163: until then `main` kept the pre-extraction `test_ds__encounter_invoices_*` copies, which name the projection as the model under test and cannot compile, so AC-008 was unverified here in the interval. See the 2026-08-31 change-log entry. |
 
 ## Change log
 
@@ -175,3 +175,4 @@ Resolved during implementation — none outstanding.
 |---|---|---|
 | 2026-07-26 | Maui team | Initial draft — item-grain billing detail spun off from `clinical__cost` OQ-001. Item detail is a Tamanu (non-OMOP) construct, so it lives in `ds__`/`int__`; per-item arithmetic shared via the `invoice_item_amounts()` macro; payments intentionally stay invoice-grained. |
 | 2026-07-26 | Maui team | Implemented: `invoice_item_amounts()` macro, `int__encounter_invoice_item_amounts`, `ds__encounter_invoice_items` (+ yml/docs), reconciliation singular tests and an item-grain unit test; OQ-002 resolved (signed adjustment). AC tests run green against the 2.57 replica; status → `implemented`. |
+| 2026-08-31 | Maui team | DV-001's AC-008 evidence corrected. The retargeted `test_int__encounter_invoice_amounts_*` tests were verified on 2.57 but never reached `main`, which kept the pre-extraction `test_ds__encounter_invoices_*` copies — those name the projection as the model under test and cannot compile, so AC-008 was unverified on `main` from the extraction until the tests were carried across. |

@@ -52,6 +52,9 @@ models:
       - name: patient_payment
         data_type: numeric
         description: "{{ doc('ds__encounter_invoices__patient_payment') }}"
+      - name: patient_subtotal
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__patient_subtotal') }}"
       - name: products_no_category
         data_type: text
         description: "{{ doc('ds__encounter_invoices__products_no_category') }}"

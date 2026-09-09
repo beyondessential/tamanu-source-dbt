@@ -39,11 +39,13 @@ having count(*) != count(distinct encounter_id)
 
 union all
 
--- AC-003: the recorded date and time is always populated
+-- AC-003: the recorded date and time is populated for every discharge the change log
+-- covers, and null only where the change log has no entry for it at all
 select
-    'ac_003_discharge_audit_recorded_datetime_not_null' as failed_ac,
+    'ac_003_discharge_audit_recorded_datetime_covered' as failed_ac,
     0 as expected_value,
     count(*) as actual_value
-from {{ ref('ds__discharge_audit') }}
-where discharge_recorded_datetime is null
+from {{ ref('ds__discharge_audit') }} da
+join {{ ref('discharges_change_logs') }} cl on cl.discharge_id = da.discharge_id
+where da.discharge_recorded_datetime is null
 having count(*) > 0

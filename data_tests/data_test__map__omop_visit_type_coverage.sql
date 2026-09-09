@@ -1,3 +1,10 @@
+{{ config(severity='error') }}
+
+-- Overrides dbt_project.yml's project-wide `data_tests: +severity: warn`. This test is a
+-- schema-drift alarm, and the drift it catches is silent: the two models below inner-join
+-- the map, so an unmapped encounter_type removes those encounters from the OMOP layer
+-- while the build still reports success. A warning does not stop that, so this one errors.
+
 -- Coverage test: every encounter_type actually recorded in encounters or encounter_history
 -- must have a matching row in map__omop_visit_type.local_code. This is the earliest point a
 -- schema-drift gap (a new Tamanu encounter_type not yet added to the map) can be caught --

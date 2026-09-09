@@ -24,12 +24,6 @@ The [discharging clinician](#!/source/source.tamanu.tamanu.users).
 The discharge disposition or classification of the discharge ([Reference Data](#!/source/source.tamanu.tamanu.reference_data)).
 {% enddocs %}
 
-{% docs discharges__created_datetime %}
-When the discharge was recorded in Tamanu, in the deployment's local time.
-
-This is when a user completed the discharge form, which can be days or weeks after the discharge date and time entered on that form.
-{% enddocs %}
-
 {% docs discharges__facility_name %}
 Name of the discharging facility.
 {% enddocs %}

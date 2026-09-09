@@ -33,10 +33,11 @@ select
 from {{ ref(dataset) }}
 where
     -- BL-007: the date range filters on when the discharge was recorded, not on the
-    -- discharge date entered on the form
+    -- discharge date entered on the form. getReportQueryReplacements binds :fromDate to the
+    -- start of its day and :toDate to the end of its, so a plain range covers the whole of
+    -- toDate and a discharge recorded at any time on it
     {{ to_user_selected_timezone('discharge_recorded_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    -- the whole of toDate is in scope, because the recorded time of day matters here
-    and {{ to_user_selected_timezone('discharge_recorded_datetime') }} < ({{ parameter('toDate', default_value='2024-01-31', data_type='date') }})::date + interval '1 day'
+    and {{ to_user_selected_timezone('discharge_recorded_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
     end

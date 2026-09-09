@@ -9,7 +9,7 @@ The clinical discharge date and time entered on the discharge form. This is the 
 {% docs ds__discharge_audit__discharge_recorded_datetime %}
 When the discharge was recorded in Tamanu, which is when a user completed the discharge form.
 
-For discharges predating the change log this falls back to the discharge record's creation time.
+Taken from the discharge change log, so this is blank for discharges predating the change log.
 {% enddocs %}
 
 {% docs ds__discharge_audit__days_between_discharge_and_recording %}
