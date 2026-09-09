@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: metric__opd_diagnosis
+    description: >-
+      D5 metric view for the opd_diagnosis indicator registered in documentations/metrics/*.yml:
+      opd_diagnosis. One row per recorded diagnosis whose window (from the diagnosis's own
+      time to the encounter's end) overlaps an OMOP concept 9202 clinical__visit_detail
+      segment (see spec BL-003) -- per-diagnosis (subject) grain, so a consumer aggregates at
+      whatever grain it needs.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
+    # metric__encounter_diagnosis uses.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier, name
+      # or birth date alongside it -- no patient is identifiable through a row, the same
+      # reasoning metric__encounter_diagnosis uses.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per diagnosis. A duplicate would double-count it in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__opd_diagnosis_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # A diagnosis is point-in-time, so period_end is hardcoded NULL. Asserted as the null
+      # invariant itself rather than as an end-after-start comparison, so a change that ever
+      # populates it flags for a deliberate revisit instead of passing on an empty row set.
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_009_metric__opd_diagnosis_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'opd_diagnosis'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__opd_diagnosis_metric_id_not_null
+          - accepted_values:
+              name: ac_004_metric__opd_diagnosis_metric_id_values
+              arguments:
+                values:
+                  - opd_diagnosis
+          - relationships:
+              name: ac_003_metric__opd_diagnosis_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu diagnosis (condition_occurrence) id.
+        data_tests:
+          - not_null:
+              name: ac_008_metric__opd_diagnosis_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The date the diagnosis was recorded.
+        data_tests:
+          - not_null:
+              name: ac_005_metric__opd_diagnosis_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: >-
+          NULL -- a diagnosis is point-in-time and the model emits no resolution date for it.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_010_metric__opd_diagnosis_period_granularity_not_null
+          - accepted_values:
+              name: ac_010_metric__opd_diagnosis_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one diagnosis per row. Sum it to count diagnoses over any grouping.
+        data_tests:
+          - not_null:
+              name: ac_006_metric__opd_diagnosis_value_numeric_not_null
+          - accepted_values:
+              name: ac_006_metric__opd_diagnosis_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} the diagnosis is attributed to, resolved from the earliest qualifying outpatient segment (BL-004)."
+        data_tests:
+          - not_null:
+              name: ac_007_metric__opd_diagnosis_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: diagnosis_code
+        data_type: text
+        description: >-
+          The diagnosis's reference-data code, as recorded. Never NULL -- falls back to
+          'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_012_metric__opd_diagnosis_diagnosis_code_not_null
+      - name: diagnosis
+        data_type: text
+        description: >-
+          The diagnosis's reference-data name, alongside the code so a card can scope to one
+          diagnosis by code, which survives a reference-data rename where the name does not.
+          Never NULL -- falls back to diagnosis_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_011_metric__opd_diagnosis_diagnosis_not_null
+      - name: diagnosis_certainty
+        data_type: text
+        description: >-
+          The diagnosis's certainty as recorded (confirmed, suspected, and the rest of the
+          deployment's list) -- 'disproven' and 'error' are already excluded upstream. Never
+          NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_013_metric__opd_diagnosis_diagnosis_certainty_not_null
+      - name: is_primary
+        data_type: boolean
+        description: >-
+          Whether this is the encounter's principal diagnosis. NULL where the encounter did
+          not rank its diagnoses -- an array filter set to the principal diagnosis correctly
+          drops an unranked row, since it is not a principal one.
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at the diagnosis. Not banded -- an age classification is a
+          presentation choice a deployment may set differently, so the consumer's data table
+          bands it. A measure, not a dimension: absent from the registry's disaggregations.
