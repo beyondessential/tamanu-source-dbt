@@ -108,5 +108,10 @@ where trim(d) not in (
         -- therapeutic-class reference mapping exists yet, the same reasoning
         -- diagnosis/diagnosis_code and procedure/procedure_code use.
         'drug_source_value',
-        'drug_source_name'
+        'drug_source_name',
+        -- opd_imaging_request's modality, as readable label and as raw Tamanu code
+        'imaging_type',
+        'imaging_type_code',
+        -- opd_imaging_request's aggregated body area/study area
+        'imaging_area'
     )
