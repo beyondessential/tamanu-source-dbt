@@ -124,6 +124,18 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   triage/emergency and is later redirected to clinic is therefore not counted by `opd_visit`
   at all, but a procedure performed during that later clinic segment does count here --
   read this note before treating a mismatch between the two metrics' counts as a bug.
+
+  **Clamped to the first segment when the procedure predates every segment (decision,
+  Juliana).** A procedure can be timestamped before its own encounter's earliest recorded
+  segment even starts -- a data-timing artifact (the segment's own start time recorded
+  late), not a real ordering issue; the procedure still genuinely belongs to that encounter.
+  Every encounter has at least one `clinical__visit_detail` segment (its own BL-005), so the
+  join to `visit_detail` carries no timestamp condition -- the `order by` picks the latest
+  segment that had already started where one qualifies, and falls back to the earliest
+  segment otherwise, so a procedure is never dropped purely because a segment's own recorded
+  start time is unreliable. The clamp resolves *which* segment a procedure is compared
+  against; it does not change the 9202 scope check itself -- a procedure clamped onto a
+  non-9202 segment (e.g. the only segment is `admission`) is still excluded.
 - **BL-004 (facility attribution):** `facility_id` is resolved through `bases/locations` on
   the procedure's own `location_id` -- not the encounter's `care_site_id` -- the same
   convention `metric__procedure` and `clinical__procedure_occurrence` use, since a procedure
@@ -166,6 +178,7 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
 | AC-011 | `procedure` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_procedure_not_null`) |
 | AC-012 | `procedure_code` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_procedure_code_not_null`) |
 | AC-013 | `is_completed` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_is_completed_not_null`) |
+| AC-014 | A procedure predating every segment of its encounter clamps to the first segment, rather than being dropped | BL-003 | dbt unit test `test_metric__opd_procedure_segment_clamp` |
 
 Test names are unnumbered (`ac_metric__opd_procedure_<column>_<check>`), matching
 `metric__procedure.yml`'s own convention rather than the newer `ac_NNN_...` scheme -- this

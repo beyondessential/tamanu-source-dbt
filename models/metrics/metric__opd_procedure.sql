@@ -7,7 +7,8 @@
 --
 -- "Outpatient" is OMOP concept 9202, the same definition metric__outpatient_visit uses -- it
 -- covers clinic, imaging and vaccination encounters (models/maps/map__omop_visit_type.sql).
--- BL-003 details the segment this is evaluated against.
+-- BL-003 details the segment this is evaluated against, and the first-segment clamp applied
+-- when a procedure predates every segment.
 --
 -- The registry carries the definition; this model is its implementation.
 
@@ -35,6 +36,14 @@ locations as (
 -- procedure_datetime; tie-broken on visit_detail_id, the same tiebreak
 -- clinical__visit_detail's own segment-ordering window uses for its zero-length-segment case
 -- (BL-002).
+--
+-- BL-003: clamped to the first segment when the procedure predates every segment (Juliana,
+-- MAUI-6862/MAUI-6806) -- a procedure genuinely belongs to its own encounter, so a segment
+-- recorded starting after it (a data-timing artifact, not a real ordering issue) should not
+-- exclude it. No join condition on the timestamp: every encounter has >= 1 segment
+-- (clinical__visit_detail BL-005), so the join itself can never drop a row -- the order by
+-- picks the correct as-of segment where one qualifies, and falls back to the earliest
+-- segment otherwise.
 procedure_segment as (
     select distinct on (po.procedure_occurrence_id)
         po.procedure_occurrence_id,
@@ -42,8 +51,14 @@ procedure_segment as (
     from procedure_occurrence po
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
-        and vd.visit_detail_start_datetime <= po.procedure_datetime
-    order by po.procedure_occurrence_id, vd.visit_detail_start_datetime desc, vd.visit_detail_id desc
+    order by
+        po.procedure_occurrence_id,
+        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
+        case when vd.visit_detail_start_datetime <= po.procedure_datetime
+             then vd.visit_detail_start_datetime end desc,
+        case when vd.visit_detail_start_datetime > po.procedure_datetime
+             then vd.visit_detail_start_datetime end asc,
+        vd.visit_detail_id desc
 ),
 
 procedures as (
