@@ -4,3 +4,7 @@
 
 # Shell scripts must always use LF, even in a Windows working copy, or bash breaks
 *.sh text eol=lf
+
+# Compiled dbt bundle artifacts are committed intentionally (version-bump commits)
+# but shouldn't clutter local diffs or PR reviews.
+compiled/** -diff linguist-generated=true
