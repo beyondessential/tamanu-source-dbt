@@ -141,4 +141,4 @@ population the patient belongs to.
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-05 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
-| 2026-09-10 | @beyondessential/maui | Open the treatment window 14 days before the earliest positive, not 28 (BL-011, AC-012), per Fiji's confirmed guideline |
+| 2026-09-10 | @beyondessential/maui | Open the treatment window 14 days before the earliest positive, not 28 (BL-011, AC-012) |
