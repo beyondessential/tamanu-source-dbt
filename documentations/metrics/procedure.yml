@@ -39,3 +39,44 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: null
+
+- metric_id: ipd_procedure
+  kind: metric
+  name: IPD procedures
+  description: >-
+    Clinical procedures performed while the encounter's active segment -- the segment in
+    effect at the procedure's own time, not the encounter's first or current one -- is an
+    inpatient admission phase. One row per procedure. The IPD counterpart to opd_procedure,
+    scoping the same procedure population to the inpatient setting instead of the outpatient
+    one.
+  numerator_description: >-
+    Recorded procedures whose active segment at the time of the procedure carries OMOP
+    visit concept 9201 (Inpatient Visit), counted on the date performed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded procedures scoped to the inpatient setting. No external body
+    registers a single procedure-count indicator -- procedure classifications (e.g.
+    ICD-10-PCS, CPT) code what a procedure is, not how a deployment should count procedure
+    activity, and deployments differ in what they code procedures with. This metric emits
+    the procedure as recorded and leaves any grouping to the consumer, the same approach
+    metric__procedure and metric__opd_procedure take. Attribution is by the segment active
+    when the procedure happened, matching the OMOP CDM's own
+    PROCEDURE_OCCURRENCE.visit_detail_id convention and the same segment-as-of rule
+    metric__opd_procedure already applies, evaluated against the complementary OMOP concept
+    (9201, Inpatient Visit, mapping only from Tamanu's admission encounter_type) instead of
+    9202. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: procedure
+  disaggregations:
+  - facility_id
+  - sex
+  - procedure
+  - procedure_code
+  - is_completed
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ipd_procedure.md
