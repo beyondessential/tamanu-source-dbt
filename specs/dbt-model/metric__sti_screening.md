@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (definition); implemented per deployment |
 | **Linear issue** | [MAUI-6637](https://linear.app/bes/issue/MAUI-6637) |
 | **Created** | 2026-09-02 |
-| **Last updated** | 2026-09-05 |
+| **Last updated** | 2026-09-10 |
 
 Registers six metric IDs in `documentations/metrics/sti.yml`: `sti_{syphilis,gonorrhoea,chlamydia}_test`
 and a `_key_population` counterpart for each. `BL` and `AC` numbering is shared with the deployment
@@ -84,7 +84,7 @@ population the patient belongs to.
 ### Treatment
 
 - **BL-010:** `treatment_status` is `Not applicable` where `is_positive` is false.
-- **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 28 days before their earliest positive result for that infection in the reporting month and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
+- **BL-011:** `treatment_status` is `Treated` where the patient holds an order for a medication indicated for that infection, dated within a window that opens 14 days before their earliest positive result for that infection in the reporting month and closes a bounded interval after it, with the medication set and the closing interval bound by the implementation.
 - **BL-054:** `treatment_status` is `Untreated` where `is_positive` is true and no such order exists, so the three values are exhaustive and the column is never NULL.
 - **BL-012:** An ongoing medication order is subject to the same window as BL-011 and counts only where it starts within that window, so being currently active is not on its own sufficient.
 - **BL-013:** Antiretroviral therapy for HIV is not treatment for these infections.
@@ -118,7 +118,7 @@ population the patient belongs to.
 | AC-009 | A specimen screening two infections yields one row per infection | BL-003 | unit test |
 | AC-010 | A test at a sensitive facility is counted | BL-006 | unit test |
 | AC-011 | A withdrawn or cancelled test is not counted | BL-005 | unit test |
-| AC-012 | A medication order more than 28 days before the earliest positive does not make a patient `Treated` | BL-011, BL-012 | unit test |
+| AC-012 | A medication order more than 14 days before the earliest positive does not make a patient `Treated` | BL-011, BL-012 | unit test |
 | AC-013 | `age_years` derives from the test date, not the run date | BL-018 | unit test |
 | AC-035 | `treatment_status` is always one of `Treated`, `Untreated` or `Not applicable`, and never NULL | BL-010, BL-054 | schema `accepted_values` + `not_null` |
 | AC-036 | A medication order dated after the window's closing bound does not make a patient `Treated` | BL-011 | unit test |
@@ -141,3 +141,4 @@ population the patient belongs to.
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-05 | @beyondessential/maui | Initial draft: canonical definition of the six STI screening metric IDs (MAUI-6637) |
+| 2026-09-10 | @beyondessential/maui | Open the treatment window 14 days before the earliest positive, not 28 (BL-011, AC-012) |
