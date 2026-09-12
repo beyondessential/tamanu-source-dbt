@@ -56,6 +56,11 @@ where date_of_death >= {{ parameter('fromDate', default_value='2024-01-01', data
         else facility_id = {{ parameter('facilityId') }}
     end
     and case
+        when {{ parameter('locationGroupId') }} is null
+            then true
+        else location_group_id = {{ parameter('locationGroupId') }}
+    end
+    and case
         when {{ parameter('antecedentCause') }} is null
             then true
         else antecedent_cause_1_id = {{ parameter('antecedentCause') }}

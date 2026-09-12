@@ -12,10 +12,21 @@
     ],
     "parameters": [
       {
-        "parameterField": "ParameterAutocompleteField",
+        "parameterField": "FacilityField",
         "label": "Facility",
         "name": "facilityId",
-        "suggesterEndpoint": "facility"
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
       },
       {
         "parameterField": "DiagnosisField",
