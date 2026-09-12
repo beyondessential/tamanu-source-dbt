@@ -33,6 +33,7 @@ metrics:
   - facility_id
   - sex
   - is_positive
+  - is_repeat_test
   variant_of: null
   owner: bes-maui
   status: draft
@@ -61,6 +62,7 @@ metrics:
   - facility_id
   - sex
   - is_positive
+  - is_repeat_test
   variant_of: null
   owner: bes-maui
   status: draft
@@ -89,6 +91,7 @@ metrics:
   - facility_id
   - sex
   - is_positive
+  - is_repeat_test
   - key_population
   variant_of: null
   owner: bes-maui

@@ -13,13 +13,13 @@
 | **Repo** | `tamanu-source-dbt` (definition); implemented per deployment |
 | **Linear issue** | [MAUI-6637](https://linear.app/bes/issue/MAUI-6637) |
 | **Created** | 2026-09-08 |
-| **Last updated** | 2026-09-08 |
+| **Last updated** | 2026-09-12 |
 
 Registers six metric IDs in `documentations/metrics/hiv_testing.yml`: `hiv_screening_test`,
 `hiv_screening_test_event`, `hiv_screening_test_key_population`, and the same three names with
 `confirmatory` in place of `screening`. `BL` and `AC` numbering is shared with the deployment
 implementation specs and with the `-- BL-0xx` code comments, so an anchor resolves identically in
-either. The canonical block is `BL-000`–`BL-022` and `AC-001`–`AC-018`; a canonical clause added
+either. The canonical block is `BL-000`–`BL-025` and `AC-001`–`AC-021`; a canonical clause added
 after a deployment spec has claimed the numbers above that block takes the next free number in the
 shared sequence rather than a suffixed variant.
 
@@ -69,6 +69,7 @@ month per key population the patient belongs to.
 | `sex` | text | From `clinical__person` |
 | `age_years` | integer | Whole years at the test (client-month IDs: the earliest countable test in the month), unbanded |
 | `is_positive` | boolean | Screening IDs: whether the test/month's screen was reactive. Confirmatory IDs: whether the test/month's confirmatory result was positive |
+| `is_repeat_test` | boolean | Screening IDs: whether the patient has an earlier countable screening test. NULL on confirmatory IDs |
 | `key_population` | text | NULL except on the `_key_population` IDs |
 
 ## Business logic
@@ -95,6 +96,12 @@ month per key population the patient belongs to.
 - **BL-011:** On a client-month confirmatory ID, `is_positive` is true where at least one countable confirmatory test in the month was positive.
 - **BL-012:** On a test-event ID, `is_positive` is the result of that test alone, not aggregated with any other test.
 - **BL-013:** A result that does not indicate reactivity or positivity is negative, including an inconclusive or normal result.
+
+### Retesting
+
+- **BL-023:** On a screening test-event ID, `is_repeat_test` is true where the patient has an earlier countable screening test than this one.
+- **BL-024:** On a screening client-month ID, `is_repeat_test` is true where the patient had a countable screening test in an earlier reporting month.
+- **BL-025:** Confirmatory IDs carry `is_repeat_test` as NULL.
 
 ### Key population
 
@@ -133,6 +140,9 @@ month per key population the patient belongs to.
 | AC-016 | A client-month confirmatory ID's `is_positive` is true where any confirmatory test that month was positive, and false where none was | BL-011 | unit test |
 | AC-017 | A test-event ID's `is_positive` reflects only that test's own result, unaffected by another test for the same patient in the same period | BL-012 | unit test |
 | AC-018 | An inconclusive or normal result does not set `is_positive` true | BL-013 | unit test |
+| AC-019 | A screening test-event ID's `is_repeat_test` is true only for a patient's second or later countable screening test | BL-023 | unit test |
+| AC-020 | A screening client-month ID's `is_repeat_test` is true only where an earlier reporting month has a countable screening test for that patient | BL-024 | unit test |
+| AC-021 | `is_repeat_test` is NULL on every confirmatory-ID row and not NULL on every screening-ID row | BL-025 | singular test |
 
 ## Registry entries
 
@@ -146,15 +156,10 @@ month per key population the patient belongs to.
 |---|---|---|
 | Fiji | `tamanu-dbt-fiji` | `specs/dbt-model/metric__hiv_testing.md` (pending) |
 
-## Open questions
-
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | Whether `hiv_screening_test` and `hiv_confirmatory_test` should each additionally emit a `retested` flag or similar, to carry forward Fiji's existing Indicator 4 (retesting) concept, or whether retesting is better served as its own metric reading the same test-event ID. | `bes-maui` | TBD |
-
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-08 | @beyondessential/maui | Initial draft: canonical definition of the six HIV screening and confirmatory testing metric IDs (MAUI-6637) |
 | 2026-09-08 | @beyondessential/maui | Drop age_years from the registered disaggregations (unbanded age invites small-cell grouping, per the sti_screening precedent) and add AC-015 to AC-018 covering is_positive semantics (BL-010 to BL-013) |
+| 2026-09-12 | @beyondessential/maui | Add is_repeat_test to the screening IDs (BL-023 to BL-025, AC-019 to AC-021), resolving OQ-001 |
