@@ -1,0 +1,38 @@
+version: 2
+
+seeds:
+  - name: cohort_definitions
+    description: >-
+      Allocation registry for cohort_definition_id. A cohort's integer id is assigned here and
+      nowhere else, so two deployments cannot pick the same number for different cohorts.
+
+      Disabled in dbt_project.yml: it materialises nowhere and is never read at run time. The
+      compiled reporting bundle ships views only, so a seed cannot reach a deployment through it,
+      and a derived__cohort_* model carries its id as a literal matching its row here instead.
+
+      It carries no schema tests for the same reason. An enabled seed puts its tests into every
+      consuming deployment's graph, where they fail with "relation cohort_definitions does not
+      exist" because a deployment never runs `dbt seed`. Uniqueness is enforced by
+      scripts/tests/test_cohort_definitions.py, which runs in CI here.
+
+      The integer is transitional. derived-elements-conventions.md drops it once cohort
+      definitions consolidate into the metric registry, which already carries the same cohorts
+      under kind: cohort.
+
+      Cohorts registered before this seed existed (the MSF NCD pair in msf_ncd.yml) are not
+      back-filled. Their ids should be allocated when those models next carry the column, and
+      will take the next free numbers rather than any implied by their registration order.
+    columns:
+      - name: cohort_definition_id
+        description: Unique integer, sequential, never reused.
+      - name: cohort_name
+        description: >-
+          Machine-readable name, matching the cohort_id the derived__cohort_* model emits.
+      - name: description
+        description: What membership of the cohort means.
+      - name: omop_concept_id
+        description: >-
+          Domain concept for the cohort, SNOMED preferred. Empty where no concept has been
+          verified against an OMOP vocabulary.
+      - name: vocabulary_id
+        description: The vocabulary omop_concept_id is drawn from.
