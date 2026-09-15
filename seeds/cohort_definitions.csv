@@ -1,0 +1,2 @@
+cohort_definition_id,cohort_name,description,omop_concept_id,vocabulary_id
+1,cohort_hiv,Patients on an HIV programme registry from registration until deactivation or death,,
