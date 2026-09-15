@@ -12,6 +12,25 @@ This project includes AI rules for AI assistants located in the `ai/` directory.
 
 To use these AI rules with Cline or Cursor, you need to create a symbolic link to the `ai/` directory to make the rules accessible to your AI assistant.
 
+## Local development
+
+Python and dbt dependencies are managed with [uv](https://docs.astral.sh/uv/) from
+`pyproject.toml`. Run project commands through `uv run` — it syncs the virtualenv
+automatically — and pass `--env-file .env` to load the database credentials and
+`DBT_PROFILES_DIR`:
+
+```bash
+cp .env.example .env                    # then fill in real values
+uv run --env-file .env dbt deps         # one-time: install dbt packages (from hub.getdbt.com)
+uv run --env-file .env dbt build        # build + test
+uv run --env-file .env sqlfluff lint models
+```
+
+`.env` (copied from `.env.example`) provides the DB connection vars plus
+`DBT_PROFILES_DIR=config`, so dbt finds `config/profiles.yml` without a `--profiles-dir`
+flag. Run `dbt deps` once before building or linting. There is no session-start hook or
+manual `venv` activation — `uv run` handles the environment.
+
 ## SQL linting
 
 We use SQLFluff and the configuration file is located in the root folder and is named `.sqlfluff`.
@@ -63,6 +82,16 @@ The generated assets are saved in the `compiled/` folder. The documentation is v
 - Import script: `compiled/reports/importReports.js`
 - Versioned documentation: `compiled/v{VERSION}/reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
 
+## Sensitive Facility Reporting
+
+Set `has_sensitive_facility: true` in the `vars` block of `dbt_project.yml` to include models
+tagged `restricted` (sensitive-facility dataset views) when generating reports and the reporting
+schema script. When `false` (the default), those models are silently excluded from both
+`generate_project_reports()` and `generate_reporting_schema_script()`.
+
+The flag is read at script run-time from `dbt_project.yml` via `get_dbt_project_vars()`, not
+from the dbt runtime context, so it must be set in the file before running the build scripts.
+
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:
 ```
@@ -81,6 +110,18 @@ To generate a report list:
 python list_tamanu_reports.py
 ```
 
+## Importing reports to a deployment
+
+To import the compiled report definitions (and optionally a reporting schema) into a
+central server running on Kubernetes, use the scripts in
+[scripts/import-reports/](scripts/import-reports/). There is a PowerShell version for
+Windows (`import-reports-k8s.ps1`) and an equivalent Bash version for macOS/Linux
+(`import-reports-k8s.sh`). They switch the kubectl context first and **default to the
+demo cluster** (configurable via `--context` / `-Context`), and default to a read-only
+plan, only writing when re-run with `-Apply` / `--apply`. See
+[scripts/import-reports/README.md](scripts/import-reports/README.md) for prerequisites,
+options, and examples.
+
 ## Versioning
 
 We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number will mirror Tamanu's release
@@ -88,7 +129,57 @@ We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number
 
 ## Creating a release
 
-1. Click on "Releases"
-2. Click "Draft a new release"
-3. You can select a branch to make the release from, but usually you'd release from `main`.
-4. Give your release a "tag". This is the version number of the release.
+A release is a version bump **and** a compiled bundle, in one PR, followed by a tag.
+Both halves matter: publishing is driven by the tag, but it uploads the bundle committed
+under `compiled/v<version>/`. Tagging a version with no bundle behind it publishes
+nothing — the upload fails on a path that does not exist, or is skipped silently.
+
+Releases are usually cut from the maintenance branch for the version (`2.60`, `2.59`, …),
+not from `main`. `main` carries the next in-development version.
+
+### The short way
+
+From the version branch you are releasing:
+
+```bash
+uv run --env-file .env python scripts/prepare_release.py
+```
+
+This works out the next patch version, cuts a `release/vX.Y.Z` branch, stamps
+`dbt_project.yml` and `pyproject.toml`, builds the reporting assets, diffs the result
+against the last released bundle, and drafts the commit message and PR body under
+`target/`. It stops before committing — add `--commit` to have the commit made — and
+never pushes or opens the PR.
+
+Before building anything it checks that dbt resolves to the release database matching the
+version being released. Building against the wrong database — a stale `.env` still
+pointing at another version, or a deployment replica — produces artefacts that look
+completely valid and are wrong for the branch. Use `--dry-run` to see what it would do,
+and `--no-db-check` only when preparing a release from an already-built bundle.
+
+### The steps it performs
+
+1. Bump the version in `dbt_project.yml` and `pyproject.toml`
+2. Build the bundle (see [Build Reporting Assets](#build-reporting-assets)); commit the
+   three aggregate artefacts under `compiled/v<version>/`. The per-report JSONs are
+   gitignored build output
+3. Open a PR against the version branch and merge it (merge commit, not squash)
+4. Then draft a GitHub release: choose the version branch, tag it `vX.Y.Z`, and publish
+
+Publishing the release is what triggers `publish-artifacts.yml`, which uploads the bundle
+to S3 and registers it with the meta-server. Never upload bundles by hand. If a release
+publishes nothing, check that `compiled/v<version>/` was committed before the tag was cut.
+
+## Licence
+
+Copyright (C) 2026 BES International Limited.
+
+This project is licensed under the GNU General Public License, Version 3.0
+([LICENSE](LICENSE)) or <https://www.gnu.org/licenses/gpl-3.0-standalone.html>, or any
+later version of that licence, at your option.
+
+`models/sources/` and `models/logs/` are not authored here. They are copied verbatim from
+`database/model/public` and `database/model/logs` in
+[beyondessential/tamanu](https://github.com/beyondessential/tamanu) by
+`scripts/refresh_tamanu_source.py`, and re-synced on every Tamanu upgrade. Those files fall
+under Tamanu's default GPL 3.0-or-later terms. Edit them upstream, not here.

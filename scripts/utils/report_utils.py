@@ -12,7 +12,7 @@ from .file_utils import ensure_directory_exists, read_file, write_file
 from .system_utils import cprint, execute_command
 
 SCHEMA = "reporting"
-ROLE = "reporting"
+ROLE = "tamanu_reporting"
 BASE_DIR = os.getcwd()
 PROJECT_NAME = get_project_name()
 DEPLOYMENT = get_deployment_name()
@@ -52,6 +52,9 @@ def compile_report(database, sql_file, config_file, output_file):
 def generate_project_reports(language):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
+    Nodes tagged "restricted" (i.e. sensitive-facility dataset views) are excluded when
+    has_sensitive_facility is false. has_sensitive_facility is read from dbt_project.yml via get_dbt_project_vars(),
+    not from the dbt runtime context.
 
     Args:
         language (str): The language to use for report generation.
@@ -62,11 +65,18 @@ def generate_project_reports(language):
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
 
+    project_vars = get_dbt_project_vars()
+    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+
     nodes = [
         key
         for key in manifest["nodes"]
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
+        and (
+            has_sensitive_facility
+            or "restricted" not in manifest["nodes"][key].get("tags", [])
+        )
     ]
 
     if not nodes:
@@ -116,7 +126,12 @@ const path = require("path");
 const { exec } = require("child_process");
 
 const folderPath = path.resolve(".");
-const baseCommand = "node ./dist/app.bundle.js importReport";
+// Build-less images (Tamanu 2.60+) run the CLI from TS source via tsx and ship no dist/
+// bundle; older images ship the bundled ./dist/app.bundle.js. Pick whichever is present.
+const distBundle = "./dist/app.bundle.js";
+const baseCommand = fs.existsSync(distBundle)
+  ? `node ${distBundle} importReport`
+  : "node --import tsx app importReport";
 
 fs.readdir(folderPath, async (err, files) => {
   if (err) {
@@ -163,34 +178,98 @@ fs.readdir(folderPath, async (err, files) => {
     cprint(f"Script created successfully at: {output_path}", "success")
 
 
-def generate_reporting_schema_script():
-    """
-    Generates a SQL script to create views in the reporting schema.
+class ReportingSchemaDependencyError(Exception):
+    """A model cannot be ordered into the reporting schema build script."""
 
-    The script is generated based on the model nodes that do not have the "reports" tag and
-    are compiled in the project. Dependencies between models are resolved before generating
-    the views in the schema.
+
+def _describe_excluded_dependency(manifest, dep):
+    """Say why a dependency is absent from the reporting schema.
 
     Args:
-        target (str): The target tag to filter models for generating views.
+        manifest (dict): The parsed dbt manifest.
+        dep (str): Unique ID of the dependency.
 
     Returns:
-        None: Writes the SQL schema build script to the views directory.
+        str: A phrase naming the resource kind or the tag that keeps it out.
     """
-    manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
-    manifest = read_file(manifest_path, "json")
+    if dep.startswith("seed"):
+        return (
+            "a seed, and the reporting schema is dropped and rebuilt from views alone, so "
+            "seed rows never reach a deployment -- hold them in a map__ model instead"
+        )
+    if dep.startswith("snapshot"):
+        return "a snapshot, which the reporting schema does not create"
 
-    nodes = [
-        key
-        for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" not in manifest["nodes"][key].get("tags", [])
-    ]
+    tags = manifest["nodes"].get(dep, {}).get("tags", [])
+    if "restricted" in tags:
+        return 'tagged "restricted", which is excluded while has_sensitive_facility is false'
+    for tag in ("reports", "internal"):
+        if tag in tags:
+            return f'tagged "{tag}", which is excluded from the reporting schema'
+    return "not a model the reporting schema creates"
 
-    if not nodes:
-        cprint(f"No models found", "error")
-        return
 
+def _describe_stall(manifest, remaining, selectable):
+    """Explain why the ordering stopped with models still unplaced.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        remaining (list): Unique IDs of the models still unordered.
+        selectable (set): Unique IDs of every model the reporting schema will create.
+
+    Returns:
+        str: A multi-line explanation naming each blocking model and dependency.
+    """
+    def name(node):
+        return manifest["nodes"][node]["name"]
+
+    blocked = {}
+    for node in remaining:
+        excluded = sorted(
+            dep
+            for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+            if not dep.startswith("source") and dep not in selectable
+        )
+        if excluded:
+            blocked[node] = excluded
+
+    if not blocked:
+        return "Circular dependency between reporting schema models: " + ", ".join(
+            sorted(name(node) for node in remaining)
+        )
+
+    lines = ["Models the reporting schema cannot create:"]
+    for node in sorted(blocked, key=name):
+        for dep in blocked[node]:
+            lines.append(
+                f"  {name(node)} depends on {dep}, which is "
+                f"{_describe_excluded_dependency(manifest, dep)}"
+            )
+
+    waiting = sorted(set(remaining) - set(blocked), key=name)
+    if waiting:
+        lines.append("Blocked behind them: " + ", ".join(name(node) for node in waiting))
+    return "\n".join(lines)
+
+
+def order_models_for_schema(manifest, nodes):
+    """Order models so each view is created after the views it selects from.
+
+    Sources are left out of the ordering: they resolve to tables the deployment already
+    has, under their own schema.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        nodes (list): Unique IDs of the models the reporting schema will create.
+
+    Returns:
+        list: `nodes` in creation order.
+
+    Raises:
+        ReportingSchemaDependencyError: A model depends on something the reporting schema
+            never creates, or the models form a cycle.
+    """
+    selectable = set(nodes)
     processed = set()
     ordered = []
 
@@ -205,12 +284,56 @@ def generate_reporting_schema_script():
             )
         ]
         if not current:
-            cprint("Error: Circular dependency or missing dependency.", "error")
-            exit(1)
+            remaining = [node for node in nodes if node not in processed]
+            raise ReportingSchemaDependencyError(
+                _describe_stall(manifest, remaining, selectable)
+            )
 
         for node in current:
             processed.add(node)
             ordered.append(node)
+
+    return ordered
+
+
+def generate_reporting_schema_script():
+    """
+    Generates a SQL script to create views in the reporting schema.
+
+    The script is generated based on the model nodes that do not have the "reports" or
+    "internal" tag and are compiled in the project. Dependencies between models are resolved
+    before generating the views in the schema. Nodes tagged "internal" (e.g. the
+    metric_definitions registry) are dbt-package-internal and never materialised into the
+    deployable reporting schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset
+    views) are excluded when has_sensitive_facility is false. has_sensitive_facility is read
+    from dbt_project.yml via get_dbt_project_vars(), not from the dbt runtime context.
+
+    Returns:
+        None: Writes the SQL schema build script to the views directory.
+    """
+    manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
+    manifest = read_file(manifest_path, "json")
+
+    project_vars = get_dbt_project_vars()
+    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+
+    nodes = [
+        key
+        for key in manifest["nodes"]
+        if key.startswith("model")
+        and "reports" not in manifest["nodes"][key].get("tags", [])
+        and "internal" not in manifest["nodes"][key].get("tags", [])
+        and (
+            has_sensitive_facility
+            or "restricted" not in manifest["nodes"][key].get("tags", [])
+        )
+    ]
+
+    if not nodes:
+        cprint(f"No models found", "error")
+        return
+
+    ordered = order_models_for_schema(manifest, nodes)
 
     scripts = [
         f"drop schema if exists {SCHEMA} cascade;",

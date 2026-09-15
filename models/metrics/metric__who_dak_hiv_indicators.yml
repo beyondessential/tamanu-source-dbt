@@ -1,0 +1,194 @@
+version: 2
+
+models:
+  - name: metric__who_dak_hiv_indicators
+    description: "{{ doc('metric__who_dak_hiv_indicators') }}"
+    config:
+      tags:
+        - clinical
+    # BL-016: no data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
+    # adds a file there rather than forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # BL-014: a row is patient-identifiable -- subject_id is the patient id on every
+      # client-grained indicator -- and HIV status is the sensitive fact itself. Same
+      # classification as metric__program_registry_enrolment, and for the same reason.
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-001 (BL-007): one row per indicator per subject per month. A duplicate would count
+      # a client twice in a month, which is exactly what Annex C's "COUNT of clients" forbids
+      # -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__who_dak_hiv_indicators_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+              - period_start
+          config:
+            severity: error
+      # AC-002 (BL-005): the reporting month is closed and one month long, so the end is
+      # always after the start.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_002_metric__who_dak_hiv_indicators_period_end_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+      # AC-003 (BL-005): period_start is the first of the month and period_end the last, so a
+      # consumer summing by month cannot straddle two.
+      - dbt_utils.expression_is_true:
+          name: ac_003_metric__who_dak_hiv_indicators_period_is_whole_month
+          arguments:
+            expression: >-
+              period_start = date_trunc('month', period_start)::date
+              and period_end = (date_trunc('month', period_start) + interval '1 month' - interval '1 day')::date
+      # AC-004 (BL-009): every qualifying event falls inside the period it is counted in.
+      - dbt_utils.expression_is_true:
+          name: ac_004_metric__who_dak_hiv_indicators_event_within_period
+          arguments:
+            expression: "period_start <= period_end"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('who_dak_hiv__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__who_dak_hiv_indicators_metric_id_not_null
+          - accepted_values:
+              name: ac_005_metric__who_dak_hiv_indicators_metric_id_values
+              arguments:
+                values:
+                  - who_dak_hiv_hts_test
+                  - who_dak_hiv_hts_test_positive
+                  - who_dak_hiv_hts_client_tested
+                  - who_dak_hiv_hts_client_positive
+                  - who_dak_hiv_art_initiated
+                  - who_dak_hiv_art_cd4_at_initiation
+                  - who_dak_hiv_art_late_initiation
+                  - who_dak_hiv_art_routine_viral_load
+                  - who_dak_hiv_art_viral_suppression
+                  - who_dak_hiv_dsd_eligible
+                  - who_dak_hiv_dsd_enrolled
+                  - who_dak_hiv_art_on_art
+                  - who_dak_hiv_art_toxicity
+                  - who_dak_hiv_dsd_retention_eligible
+                  - who_dak_hiv_dsd_retained
+                  - who_dak_hiv_art_on_art_key_population
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_006_metric__who_dak_hiv_indicators_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('who_dak_hiv__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('who_dak_hiv__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_007_metric__who_dak_hiv_indicators_subject_id_not_null
+      - name: subject_grain
+        data_type: text
+        description: "{{ doc('metric__who_dak_hiv_indicators__subject_grain') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__who_dak_hiv_indicators_subject_grain_not_null
+          - accepted_values:
+              name: ac_008_metric__who_dak_hiv_indicators_subject_grain_values
+              arguments:
+                values: ['patient', 'test']
+      - name: period_start
+        data_type: date
+        description: "{{ doc('metric__who_dak_hiv_indicators__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_009_metric__who_dak_hiv_indicators_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: "{{ doc('metric__who_dak_hiv_indicators__period_end') }}"
+        data_tests:
+          - not_null:
+              name: ac_009_metric__who_dak_hiv_indicators_period_end_not_null
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('who_dak_hiv__period_granularity') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_010_metric__who_dak_hiv_indicators_period_granularity_is_month
+              arguments:
+                values: ['month']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__who_dak_hiv_indicators__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_011_metric__who_dak_hiv_indicators_value_numeric_not_null
+          # BL-005: one subject per row, so the count contribution is always 1. A value other
+          # than 1 would mean the model had silently re-aggregated.
+          - accepted_values:
+              name: ac_011_metric__who_dak_hiv_indicators_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('who_dak_hiv__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__who_dak_hiv_indicators__facility_id') }}"
+        # BL-013: nullable. A submission on an encounter with no location has no facility, and
+        # dropping the client would understate a national count to protect a facility one.
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('metric__who_dak_hiv_indicators__age_years') }}"
+        # BL-015: a measure, not a dimension -- Annex C disaggregates by age but not by any one
+        # banding, so the data table bands it.
+      - name: months_on_dsd
+        data_type: integer
+        description: "{{ doc('metric__who_dak_hiv_indicators__months_on_dsd') }}"
+        data_tests:
+          # AC-016 (BL-025): DSD.4 reports retention at twelve months and beyond, so a row of
+          # either DSD.4 metric carries a duration and no other row does. Both halves matter:
+          # a NULL here would silently drop a client from every cohort a consumer selects.
+          - dbt_utils.expression_is_true:
+              name: ac_016_metric__who_dak_hiv_indicators_months_on_dsd_present
+              arguments:
+                expression: ">= 12"
+              config:
+                where: "metric_id in ('who_dak_hiv_dsd_retention_eligible', 'who_dak_hiv_dsd_retained')"
+          - dbt_utils.expression_is_true:
+              name: ac_016a_metric__who_dak_hiv_indicators_months_on_dsd_absent
+              arguments:
+                expression: "is null"
+              config:
+                where: "metric_id not in ('who_dak_hiv_dsd_retention_eligible', 'who_dak_hiv_dsd_retained')"
+      - name: key_population
+        data_type: text
+        description: "{{ doc('metric__who_dak_hiv_indicators__key_population') }}"
+        data_tests:
+          # AC-017 (BL-022): the key-population metric counts client-population pairs, so its
+          # rows carry a population and no other metric's do -- if they did, a plain count of
+          # people would double a client in two populations.
+          - dbt_utils.expression_is_true:
+              name: ac_017_metric__who_dak_hiv_indicators_key_population_present
+              arguments:
+                expression: "is not null"
+              config:
+                where: "metric_id = 'who_dak_hiv_art_on_art_key_population'"
+          - dbt_utils.expression_is_true:
+              name: ac_017a_metric__who_dak_hiv_indicators_key_population_absent
+              arguments:
+                expression: "is null"
+              config:
+                where: "metric_id != 'who_dak_hiv_art_on_art_key_population'"

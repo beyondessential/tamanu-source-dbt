@@ -1,9 +1,15 @@
 name: tamanu_source_dbt
-version: 2.52.1
+version: 2.64.0
 config-version: 2
 profile: tamanu_source_dbt
 
 vars:
+  has_sensitive_facility: false
+  # reference_data id of the deployment's home country. Used by the
+  # upcoming-vaccinations report's "Exclude overseas patients" parameter
+  # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
+  # Overridden per deployment (e.g. Samoa sets country-Samoa).
+  home_country_id: country-Australia
   language: default
   timezone: Australia/Sydney
   date_format: YYYY-MM-DD
@@ -12,6 +18,17 @@ vars:
   datetime_without_seconds_format: YYYY-MM-DD HH24:MI
   yearmonth_format: YYYY-MM
   translation_prefix: report.reporting
+  # Target waiting time in minutes by triage category, used by the emergency triage
+  # line list's "Target time met" column. Australasian Triage Scale intervals, except that
+  # Category 1 allows 2 minutes rather than literal 'immediate' -- a zero target marks every
+  # measurable wait a miss, which tells an emergency department nothing. A deployment whose
+  # policy differs overrides the whole map in its own dbt_project.yml.
+  triage_target_minutes:
+    "1": 2
+    "2": 10
+    "3": 30
+    "4": 60
+    "5": 120
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
     - default
@@ -21,7 +38,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - data-tests
+  - data_tests
 seed-paths:
   - seeds
 macro-paths:
@@ -40,8 +57,72 @@ models:
       +materialized: view
       +tags:
         - base
+      # Tupaia data tables resolve location_group_name via a two-hop join through
+      # these two models (metric__outpatient_visit emits location_id only, per its
+      # BL-006/BL-007), so they need to sit in `public_tupaia` alongside the metrics
+      # on the analytics replica, same reasoning and same mechanism as the metrics:
+      # block below. Every other base model stays untouched -- this is scoped to just
+      # the two models Tupaia actually joins on.
+      locations:
+        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
+      location_groups:
+        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
     intermediate:
       +materialized: ephemeral
+      # Ephemeral is not enough on its own: generate_reporting_schema_script()
+      # creates a `reporting` view for every non-report, non-internal model in the
+      # manifest, ephemeral included, so a sensitive intermediate would otherwise
+      # ship as an episode-grain view readable by `tamanu_reporting` on every
+      # deployment. `restricted` keeps it out unless has_sensitive_facility is set,
+      # the same mechanism datasets/sensitive and reports/sql/sensitive use below.
+      sensitive:
+        +tags:
+          - restricted
+    ref:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
+    maps:
+      +docs:
+        show: true
+      +materialized: view
+      +tags:
+        - reference
+      # MSF OCA DHIS2 shared mappings -- disabled here (MSF-instance-specific
+      # UIDs). An MSF OCA deployment repo re-enables msf_oca via +enabled: true
+      # in its own dbt_project.yml.
+      msf_oca:
+        +enabled: false
+        +materialized: view
+        +tags:
+          - msf-oca-dhis2
+    clinical:
+      +docs:
+        show: true
+      +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      +tags:
+        - clinical
+    metrics:
+      +docs:
+        show: true
+      # BL-008 (metric__emergency_care): env-aware per dbt-conventions / D5 -- a table on
+      # the analytics replica so dashboard
+      # queries do not re-aggregate the full history on every read, a view everywhere else
+      # (the reporting bundle must stay production-safe). The test names the target that
+      # earns the heavier materialisation, so an unrecognised target falls through to view
+      # rather than materialising a table by default.
+      +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      # Tupaia reads the metrics from `public_tupaia`, so that is where they build on the
+      # analytics replica. Absolute, not a suffix -- see macros/generate_schema_name.sql,
+      # without which dbt resolves this to `analytics_public_tupaia`. Empty on every other
+      # target, which leaves them in the target's own schema: metric views ship in the
+      # compiled reporting bundle, and production Tamanu must not gain a `public_tupaia`
+      # schema of metric tables.
+      +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
+      +tags:
+        - metrics
     datasets:
       +docs:
         show: true
@@ -52,6 +133,11 @@ models:
         +tags:
           - restricted
     reports:
+      # Reports are the in-product (reporting-schema) surface. Don't build them
+      # on an analytics target -- that build feeds Tupaia from the `analytics`
+      # schema (D9) and reports would be dead weight / need report-only vars.
+      # Report/clone/prod targets (not starting with `analytics`) keep them.
+      +enabled: "{{ not target.name.startswith('analytics') }}"
       +docs:
         show: false
       +tags:
@@ -60,6 +146,20 @@ models:
         sensitive:
           +tags:
             - restricted
+
+seeds:
+  tamanu_source_dbt:
+    # cohort_definitions allocates cohort_definition_id and is never read at run time: a
+    # derived__cohort_* model carries its id as a literal, because the compiled reporting bundle
+    # ships views only and a seed cannot reach a deployment through it.
+    #
+    # Disabled so it materialises nowhere. Left enabled it puts a seed node, and any schema tests
+    # on it, into every consuming deployment's graph, where `dbt test` fails with
+    # "relation cohort_definitions does not exist" because a deployment never runs `dbt seed`.
+    # Uniqueness is enforced by scripts/tests/test_cohort_definitions.py instead, which runs in
+    # CI here and costs a deployment nothing.
+    cohort_definitions:
+      +enabled: false
 
 data_tests:
   +severity: warn

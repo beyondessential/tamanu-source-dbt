@@ -11,6 +11,7 @@ sources:
             - reference
           meta:
             triggers:
+              - delete_reference_data_from_sync_lookup
               - notify_reference_data_changed
               - record_reference_data_changelog
               - set_reference_data_updated_at
@@ -58,6 +59,9 @@ sources:
             description: "{{ doc('generic__updated_at_sync_tick') }} in reference_data."
             data_tests:
               - not_null
+          - name: available_facilities
+            data_type: jsonb
+            description: "{{ doc('reference_data__available_facilities') }}"
           - name: system_required
             data_type: boolean
             description: "{{ doc('reference_data__system_required') }}"

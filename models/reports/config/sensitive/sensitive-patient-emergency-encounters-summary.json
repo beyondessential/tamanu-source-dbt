@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Sensitive patient emergency encounters summary",
-  "notes": "This report generates a summary showing the number of triage (emergency room encounter) records per patient at sensitive facilities within a specified date range. The report defaults to the past 30 days and can be filtered by patient display ID. Patients are listed alphabetically by last name.",
   "status": "published",
+  "notes": "This report generates a summary showing the number of triage (emergency room encounter) records per patient at sensitive facilities within a specified date range. The report defaults to the past 30 days and can be filtered by patient display ID. Patients are listed alphabetically by last name.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "30days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "PatientField",

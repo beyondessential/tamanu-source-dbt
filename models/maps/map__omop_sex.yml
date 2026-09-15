@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: map__omop_sex
+    description: >-
+      Tamanu sex codes mapped to OMOP standardised Gender concept IDs (SNOMED-backed,
+      vocabulary 'Gender'). Universal across deployments. Joined by clinical__ and
+      derived__ models to populate gender concept-ID shadow columns.
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: local_code
+        data_type: text
+        description: Tamanu sex value, lower-cased (male, female, other).
+        data_tests:
+          - not_null
+          - unique
+      - name: local_name
+        data_type: text
+        description: Human-readable Tamanu sex label.
+        data_tests:
+          - not_null
+      - name: concept_id
+        data_type: integer
+        description: >-
+          OMOP standard concept ID for gender (8507 = Male, 8532 = Female,
+          0 = no matching concept).
+        data_tests:
+          - not_null
+          - unique
+      - name: concept_name
+        data_type: text
+        description: OMOP concept name for the gender concept.
+        data_tests:
+          - not_null
+      - name: vocabulary_id
+        data_type: text
+        description: OMOP vocabulary the concept belongs to.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Gender"]

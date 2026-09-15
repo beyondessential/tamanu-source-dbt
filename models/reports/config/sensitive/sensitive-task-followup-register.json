@@ -1,0 +1,106 @@
+{
+  "query": "replace this",
+  "name": "Sensitive task follow-up register",
+  "notes": "This report lists tasks at sensitive facilities assigned to a designation, so the staff holding that designation can review what was done and follow up what was not. Each row is one task. Leave 'Designation' blank to see every designation's tasks, or set it to (for example) Physiotherapist for that designation's register alone.\nTamanu places no encounter-type restriction on tasks, so a task raised during an emergency, clinic or triage encounter is included alongside inpatient admissions. Use 'Encounter type' to narrow the register -- select 'Hospital admission' on its own for an inpatient-only view. Leaving it blank returns every type, so a missed task is never hidden by the encounter it was raised under.\nTasks are selected by when they fell due, so a task that came due within the date range appears whether or not the encounter started in it.\nTask status maps Tamanu's three stored statuses onto four outcomes: 'Completed'; 'Outstanding' for a task still to do; 'Missed' for a repeating task the system marked not completed because it went more than two days past due; and 'Not completed' for a task a clinician marked not completed, with their reason shown alongside.\nOnly tasks assigned to at least one designation are included -- an unassigned task belongs to nobody to follow up. Medication due tasks are excluded, as they exist only to drive the ward dashboard. Deleted tasks are excluded.\n'Length of stay' is the span between the encounter starting and ending, so it reads as a length of stay for an admission and as the encounter's duration for a shorter encounter type.\n'Notes recorded by designation' is Yes when someone currently holding one of the task's designations authored a note on that encounter, or a note was recorded on their behalf. It reflects designations as they stand now, not as they stood when the note was written.",
+  "status": "published",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Designation",
+        "name": "designationId",
+        "suggesterEndpoint": "designation"
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Encounter type",
+        "name": "encounterType",
+        "options": [
+          {
+            "label": "Hospital admission",
+            "value": "admission"
+          },
+          {
+            "label": "Clinic",
+            "value": "clinic"
+          },
+          {
+            "label": "Emergency short stay",
+            "value": "emergency"
+          },
+          {
+            "label": "Active ED care",
+            "value": "observation"
+          },
+          {
+            "label": "Triage",
+            "value": "triage"
+          },
+          {
+            "label": "Imaging",
+            "value": "imaging"
+          },
+          {
+            "label": "Vaccination record",
+            "value": "vaccination"
+          },
+          {
+            "label": "Form response",
+            "value": "surveyResponse"
+          }
+        ]
+      },
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Area",
+        "name": "locationGroupId",
+        "suggesterEndpoint": "locationGroup",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "PatientField",
+        "label": "Patient",
+        "name": "patientId"
+      },
+      {
+        "parameterField": "ParameterMultiselectField",
+        "label": "Task status",
+        "name": "taskStatus",
+        "options": [
+          {
+            "label": "Completed",
+            "value": "Completed"
+          },
+          {
+            "label": "Outstanding",
+            "value": "Outstanding"
+          },
+          {
+            "label": "Missed",
+            "value": "Missed"
+          },
+          {
+            "label": "Not completed",
+            "value": "Not completed"
+          }
+        ]
+      }
+    ]
+  }
+}

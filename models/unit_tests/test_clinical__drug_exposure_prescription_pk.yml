@@ -1,0 +1,93 @@
+unit_tests:
+  - name: test_clinical__drug_exposure_prescription_pk
+    model: clinical__drug_exposure
+    description: >-
+      BL-006 regression guard: drug_exposure_id is encounter_prescriptions.id, NOT
+      prescriptions.id. A single prescription (presc_1) linked to two encounters via
+      two encounter_prescriptions rows (ep_1 -> enc_1/pat_1, ep_2 -> enc_2/pat_2) must
+      yield two exposure rows with distinct drug_exposure_id (ep_1, ep_2) rather than
+      colliding on one prescriptions.id (which would break grain and AC-002 unique).
+      All other branches (vaccination, dispense) are empty. This case does not occur
+      in current replica data, so AC-002's unique test alone can't catch a regression.
+    given:
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select
+            'presc_1' as id,
+            '2024-02-01 09:00:00'::timestamp as start_datetime,
+            '2024-01-15 08:00:00'::timestamp as datetime,
+            '2024-02-10 09:00:00'::timestamp as end_datetime,
+            30::numeric as quantity,
+            2 as repeats,
+            'oral' as route,
+            false as is_discontinued,
+            null::text as discontinuing_reason,
+            'user_1' as prescriber_id,
+            'drug_1' as medication_id
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep_1' as id, 'presc_1' as prescription_id, 'enc_1' as encounter_id
+          union all
+          select 'ep_2', 'presc_1', 'enc_2'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id
+          union all
+          select 'enc_2', 'pat_2'
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'drug_1' as id, 'DRUG001' as code, 'Amoxicillin' as name
+      - input: ref('vaccine_administrations')
+        format: sql
+        rows: |
+          select
+            null::text as id, null::timestamp as datetime, null::text as injection_site,
+            null::text as recorded_by_id, null::text as given_by, null::text as encounter_id,
+            null::text as scheduled_vaccine_id, null::text as status, null::text as vaccine_name
+          where false
+      - input: ref('vaccine_schedules')
+        format: sql
+        rows: |
+          select null::text as id, null::text as vaccine_id where false
+      - input: ref('medication_dispenses')
+        format: sql
+        rows: |
+          select
+            null::text as id, null::timestamp as dispensed_at, null::numeric as quantity,
+            null::text as dispensed_by_user_id, null::text as pharmacy_order_prescription_id
+          where false
+      - input: ref('pharmacy_order_prescriptions')
+        format: sql
+        rows: |
+          select null::text as id, null::text as pharmacy_order_id, null::text as prescription_id where false
+      - input: ref('pharmacy_orders')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id where false
+    expect:
+      format: sql
+      rows: |
+        select
+          'ep_1' as drug_exposure_id,
+          'pat_1' as person_id,
+          '2024-02-01'::date as drug_exposure_start_date,
+          '2024-02-01 09:00:00'::timestamp as drug_exposure_start_datetime,
+          '2024-02-10 09:00:00'::timestamp as drug_exposure_end_datetime,
+          'prescription' as drug_exposure_type_source_value,
+          30::numeric as quantity,
+          2 as refills,
+          'oral' as route_source_value,
+          null::varchar as stop_reason,
+          'user_1' as provider_id,
+          'enc_1' as visit_occurrence_id,
+          'DRUG001' as drug_source_value,
+          'Amoxicillin' as drug_source_name
+        union all
+        select
+          'ep_2', 'pat_2', '2024-02-01'::date, '2024-02-01 09:00:00'::timestamp,
+          '2024-02-10 09:00:00'::timestamp, 'prescription', 30::numeric, 2, 'oral',
+          null::varchar, 'user_1', 'enc_2', 'DRUG001', 'Amoxicillin'

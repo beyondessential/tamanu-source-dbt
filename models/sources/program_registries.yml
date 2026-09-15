@@ -11,6 +11,7 @@ sources:
             - reference
           meta:
             triggers:
+              - delete_program_registries_from_sync_lookup
               - notify_program_registries_changed
               - record_program_registries_changelog
               - set_program_registries_updated_at
@@ -62,6 +63,16 @@ sources:
           - name: program_id
             data_type: character varying(255)
             description: "{{ doc('program_registries__program_id') }}"
+            data_tests:
+              - not_null
+          - name: loss_to_follow_up_enabled
+            data_type: boolean
+            description: "{{ doc('program_registries__loss_to_follow_up_enabled') }}"
+            data_tests:
+              - not_null
+          - name: loss_to_follow_up_threshold_days
+            data_type: integer
+            description: "{{ doc('program_registries__loss_to_follow_up_threshold_days') }}"
             data_tests:
               - not_null
           - name: updated_at_sync_tick

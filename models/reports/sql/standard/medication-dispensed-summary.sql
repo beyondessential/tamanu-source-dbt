@@ -1,7 +1,7 @@
 select
-    md.medication as "{{ translate_label('prescriptionMedication') }}",
-    md.medication_code as "{{ translate_label('prescriptionMedicationCode') }}",
-    sum(md.quantity) as "{{ translate_label('prescriptionQuantity') }}"
+    md.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
+    md.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
+    sum(md.quantity) as "{{ translate_label('encounterPrescriptionQuantity') }}"
 from {{ ref('ds__medication_dispenses') }} md
 where
     case
@@ -14,15 +14,9 @@ where
         else md.medication_id = {{ parameter('medicationId') }}
     end
     and
-    case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }} is null then true
-        else {{ to_user_selected_timezone('md.dispensed_at') }}
-            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
-    end
+    {{ to_user_selected_timezone('md.dispensed_at') }}
+    >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }} is null then true
-        else {{ to_user_selected_timezone('md.dispensed_at') }}
-            <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
-    end
+    {{ to_user_selected_timezone('md.dispensed_at') }}
+    <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
 group by md.medication_id, md.medication, md.medication_code

@@ -43,11 +43,12 @@ This dbt project transforms Tamanu healthcare system data into optimised dataset
 - Used for standardised reports on Tamanu facility servers
 
 ### Analytics Schema (Tupaia Integration)
-**Command**: `dbt run --target analytics_release --select tag:base`
-- Privacy-compliant deployment excluding direct identifiers
-- Automatically filters columns tagged with `direct_identifier`
+**Command**: `dbt run --target analytics --select tag:base +tag:metrics`
+- Builds the base layer plus the metrics Tupaia reads from `public_tupaia`; the
+  leading `+` pulls in the clinical and intermediate models each metric depends on
 - Preserves all transformations and business logic
 - Optimised for aggregated analysis and population health insights
+- Masking of direct identifiers is applied to the replica, not by dbt
 
 ## Data Classification System
 
@@ -62,7 +63,7 @@ This dbt project transforms Tamanu healthcare system data into optimised dataset
 
 ### Privacy Classification Tags
 - **`direct_identifier`** - Identifiers that can uniquely identify an individual on their own (e.g., full name, email, passport ID)
-  - These identifiers are excluded from analytics deployments
+  - Classification metadata only; masking of these identifiers is applied to the replica, not by dbt
 - **`quasi_identifier`** - Identifiers that are not uniquely identifying alone but can identify an individual when combined (e.g., sex, location)
   - These identifiers should be aggregated or generalised for data analysis
 

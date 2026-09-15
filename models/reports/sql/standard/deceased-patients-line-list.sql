@@ -38,16 +38,14 @@ select
     death_within_day_of_birth as "{{ translate_label('deathWithinDayOfBirth') }}",
     hours_survived_since_birth as "{{ translate_label('deathHoursSurvivedSinceBirth') }}"
 from {{ ref('ds__deaths') }}
+-- BL-001: treat the "all time" sentinel (1970-01-01) as unbounded so migrated
+-- records with an unknown date of death (placeholder 1900-01-01) are not excluded
 where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null
+        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}::date <= '1970-01-01'::date
             then true
         else date_of_death >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     end
-    and case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null
-            then true
-        else date_of_death <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    and date_of_death <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case
         when {{ parameter('causeOfDeath') }} is null
             then true

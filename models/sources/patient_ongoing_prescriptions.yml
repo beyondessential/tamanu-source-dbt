@@ -10,13 +10,14 @@ sources:
           tags: []
           meta:
             triggers:
+              - delete_patient_ongoing_prescriptions_from_sync_lookup
               - notify_patient_ongoing_prescriptions_changed
               - record_patient_ongoing_prescriptions_changelog
               - set_patient_ongoing_prescriptions_updated_at
               - set_patient_ongoing_prescriptions_updated_at_sync_tick
         columns:
           - name: id
-            data_type: uuid
+            data_type: text
             description: "{{ doc('generic__id') }} in patient_ongoing_prescriptions."
             data_tests:
               - unique

@@ -1,0 +1,1281 @@
+# MSF Kule chronic-care OPD consultation metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: anaemia_followup
+  kind: metric
+  name: MSF Kule OPD — Anaemia — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Anaemia, weekly by sex
+    and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Anaemia.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: asthma_or_copd_followup
+  kind: metric
+  name: MSF Kule OPD — Asthma or COPD — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Asthma or COPD, weekly
+    by sex and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Asthma or COPD.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: diabetes_i_followup
+  kind: metric
+  name: MSF Kule OPD — Diabetes type I — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Diabetes type I, weekly
+    by sex and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Diabetes type I.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: diabetes_ii_followup
+  kind: metric
+  name: MSF Kule OPD — Diabetes type II — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Diabetes type II, weekly
+    by sex and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Diabetes type II.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: epilepsy_followup
+  kind: metric
+  name: MSF Kule OPD — Epilepsy — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Epilepsy, weekly by sex
+    and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Epilepsy.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: hiv_followup
+  kind: metric
+  name: MSF Kule OPD — HIV and HIV-related illnesses — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for HIV and HIV-related illnesses,
+    weekly by sex and age band.
+  numerator_description: >-
+    Clinic consultations in the HIV area (one per patient per day); consultations after the first.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: hiv_new
+  kind: metric
+  name: MSF Kule OPD — HIV and HIV-related illnesses — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for HIV and HIV-related
+    illnesses, weekly by sex and age band.
+  numerator_description: >-
+    Clinic consultations in the HIV area (one per patient per day); the patient's first such consultation.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: hypertension_followup
+  kind: metric
+  name: MSF Kule OPD — Hypertension — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Hypertension, weekly
+    by sex and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Hypertension.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: other_chronic_followup
+  kind: metric
+  name: MSF Kule OPD — Other chronic diseases — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Other chronic diseases,
+    weekly by sex and age band.
+  numerator_description: >-
+    NCD-area follow-up consultations whose visit-form primary diagnosis (kulencdvisit002) maps to
+    Other chronic diseases.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_adjustment_followup
+  kind: metric
+  name: MSF Kule OPD — Adjustment disorder — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Adjustment disorder,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Adjustment disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_adjustment_new
+  kind: metric
+  name: MSF Kule OPD — Adjustment disorder — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Adjustment disorder,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Adjustment disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_anxiety_followup
+  kind: metric
+  name: MSF Kule OPD — Anxiety and fear-related disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Anxiety and fear-related
+    disorders, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Anxiety and fear-related disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_anxiety_new
+  kind: metric
+  name: MSF Kule OPD — Anxiety and fear-related disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Anxiety and fear-related
+    disorders, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Anxiety and fear-related disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_bipolar_followup
+  kind: metric
+  name: MSF Kule OPD — Bipolar disorder (incl. mania) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Bipolar disorder (incl.
+    mania), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Bipolar disorder (incl. mania).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_bipolar_new
+  kind: metric
+  name: MSF Kule OPD — Bipolar disorder (incl. mania) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Bipolar disorder (incl.
+    mania), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Bipolar disorder (incl. mania).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_childhood_behavioural_followup
+  kind: metric
+  name: >-
+    MSF Kule OPD — Childhood behavioural disorder (incl. ADHD, conduct disorder) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Childhood behavioural
+    disorder (incl. ADHD, conduct disorder), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Childhood behavioural disorder (incl. ADHD, conduct disorder).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_childhood_behavioural_new
+  kind: metric
+  name: >-
+    MSF Kule OPD — Childhood behavioural disorder (incl. ADHD, conduct disorder) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Childhood behavioural
+    disorder (incl. ADHD, conduct disorder), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Childhood behavioural disorder (incl. ADHD, conduct disorder).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_childhood_emotional_followup
+  kind: metric
+  name: MSF Kule OPD — Childhood emotional disorder — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Childhood emotional disorder,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Childhood emotional disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_childhood_emotional_new
+  kind: metric
+  name: MSF Kule OPD — Childhood emotional disorder — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Childhood emotional
+    disorder, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Childhood emotional disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_depressive_followup
+  kind: metric
+  name: MSF Kule OPD — Depressive disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Depressive disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Depressive disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_depressive_new
+  kind: metric
+  name: MSF Kule OPD — Depressive disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Depressive disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Depressive disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_dissociative_followup
+  kind: metric
+  name: >-
+    MSF Kule OPD — Dissociative disorders (incl. psychogenic seizures) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Dissociative disorders
+    (incl. psychogenic seizures), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Dissociative disorders (incl. psychogenic seizures).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_dissociative_new
+  kind: metric
+  name: MSF Kule OPD — Dissociative disorders (incl. psychogenic seizures) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Dissociative disorders
+    (incl. psychogenic seizures), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Dissociative disorders (incl. psychogenic seizures).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_elimination_followup
+  kind: metric
+  name: MSF Kule OPD — Elimination disorders (enuresis/encopresis) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Elimination disorders
+    (enuresis/encopresis), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Elimination disorders (enuresis/encopresis).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_elimination_new
+  kind: metric
+  name: MSF Kule OPD — Elimination disorders (enuresis/encopresis) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Elimination disorders
+    (enuresis/encopresis), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Elimination disorders (enuresis/encopresis).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_epilepsy_seizures_followup
+  kind: metric
+  name: MSF Kule OPD — Epilepsy / seizures — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Epilepsy / seizures,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Epilepsy / seizures.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_epilepsy_seizures_new
+  kind: metric
+  name: MSF Kule OPD — Epilepsy / seizures — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Epilepsy / seizures,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Epilepsy / seizures.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_mups_followup
+  kind: metric
+  name: MSF Kule OPD — Medically unexplained physical symptoms (MUPS) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Medically unexplained
+    physical symptoms (MUPS), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Medically unexplained physical symptoms (MUPS).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_mups_new
+  kind: metric
+  name: MSF Kule OPD — Medically unexplained physical symptoms (MUPS) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Medically unexplained
+    physical symptoms (MUPS), weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Medically unexplained physical symptoms (MUPS).
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_neurocognitive_followup
+  kind: metric
+  name: MSF Kule OPD — Neurocognitive disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Neurocognitive disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Neurocognitive disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_neurocognitive_new
+  kind: metric
+  name: MSF Kule OPD — Neurocognitive disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Neurocognitive disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Neurocognitive disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_neurodevelopmental_followup
+  kind: metric
+  name: MSF Kule OPD — Neurodevelopmental disorder — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Neurodevelopmental disorder,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Neurodevelopmental disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_neurodevelopmental_new
+  kind: metric
+  name: MSF Kule OPD — Neurodevelopmental disorder — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Neurodevelopmental
+    disorder, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Neurodevelopmental disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_ocd_followup
+  kind: metric
+  name: MSF Kule OPD — Obsessive-compulsive and related disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Obsessive-compulsive
+    and related disorders, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Obsessive-compulsive and related disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_ocd_new
+  kind: metric
+  name: MSF Kule OPD — Obsessive-compulsive and related disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Obsessive-compulsive
+    and related disorders, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Obsessive-compulsive and related disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_other_psych_followup
+  kind: metric
+  name: MSF Kule OPD — Other psychiatric disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Other psychiatric disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Other psychiatric disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_other_psych_new
+  kind: metric
+  name: MSF Kule OPD — Other psychiatric disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Other psychiatric disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Other psychiatric disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_postpartum_nonpsychotic_followup
+  kind: metric
+  name: MSF Kule OPD — Post-partum symptoms without psychotic features — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Post-partum symptoms
+    without psychotic features, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-partum symptoms without psychotic features.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_postpartum_nonpsychotic_new
+  kind: metric
+  name: MSF Kule OPD — Post-partum symptoms without psychotic features — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Post-partum symptoms
+    without psychotic features, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-partum symptoms without psychotic features.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_postpartum_psychosis_followup
+  kind: metric
+  name: MSF Kule OPD — Post-partum psychosis — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Post-partum psychosis,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-partum psychosis.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_postpartum_psychosis_new
+  kind: metric
+  name: MSF Kule OPD — Post-partum psychosis — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Post-partum psychosis,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-partum psychosis.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_prolonged_grief_followup
+  kind: metric
+  name: MSF Kule OPD — Prolonged grief / loss — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Prolonged grief / loss,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Prolonged grief / loss.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_prolonged_grief_new
+  kind: metric
+  name: MSF Kule OPD — Prolonged grief / loss — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Prolonged grief / loss,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Prolonged grief / loss.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_psychosis_acute_followup
+  kind: metric
+  name: MSF Kule OPD — Psychosis, acute — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Psychosis, acute, weekly
+    by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Psychosis, acute.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_psychosis_acute_new
+  kind: metric
+  name: MSF Kule OPD — Psychosis, acute — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Psychosis, acute, weekly
+    by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Psychosis, acute.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_psychosis_chronic_followup
+  kind: metric
+  name: MSF Kule OPD — Psychosis, chronic — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Psychosis, chronic, weekly
+    by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Psychosis, chronic.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_psychosis_chronic_new
+  kind: metric
+  name: MSF Kule OPD — Psychosis, chronic — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Psychosis, chronic,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Psychosis, chronic.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_ptsd_followup
+  kind: metric
+  name: MSF Kule OPD — Post-traumatic stress disorder — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Post-traumatic stress
+    disorder, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-traumatic stress disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_ptsd_new
+  kind: metric
+  name: MSF Kule OPD — Post-traumatic stress disorder — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Post-traumatic stress
+    disorder, weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Post-traumatic stress disorder.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_substance_use_followup
+  kind: metric
+  name: MSF Kule OPD — Substance use disorders — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Substance use disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (subsequent in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Substance use disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: psych_substance_use_new
+  kind: metric
+  name: MSF Kule OPD — Substance use disorders — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Substance use disorders,
+    weekly by sex and age band.
+  numerator_description: >-
+    Psychiatry-area consultations (first in the area) whose baseline primary diagnosis (psychbaseline040)
+    maps to Substance use disorders.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: tb_followup
+  kind: metric
+  name: MSF Kule OPD — Tuberculosis (pulmonary and extra-pulmonary) — follow-up consultations
+  description: >-
+    MSF Kule chronic-care OPD report: follow-up outpatient consultations for Tuberculosis (pulmonary
+    and extra-pulmonary), weekly by sex and age band.
+  numerator_description: >-
+    Clinic consultations in the TB area (one per patient per day); consultations after the first.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md
+- metric_id: tb_new
+  kind: metric
+  name: MSF Kule OPD — Tuberculosis (pulmonary and extra-pulmonary) — new consultations
+  description: >-
+    MSF Kule chronic-care OPD report: new (first) outpatient consultations for Tuberculosis (pulmonary
+    and extra-pulmonary), weekly by sex and age band.
+  numerator_description: >-
+    Clinic consultations in the TB area (one per patient per day); the patient's first such consultation.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Kule chronic-care OPD consultations report operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - age_group
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__opd_indicators.md

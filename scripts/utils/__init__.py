@@ -1,4 +1,3 @@
-from .analytics_utils import generate_analytics_metadata
 from .dbt_utils import (
     get_dbt_project_config,
     get_deployment_name,

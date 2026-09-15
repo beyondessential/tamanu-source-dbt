@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Sensitive outpatient appointments line list",
-  "notes": "This report generates a list of all patients with a scheduled appointment at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment",
   "status": "published",
+  "notes": "This report generates a list of all patients with a scheduled appointment at sensitive facilities for the selected parameters. Patients are listed in chronological order by date and time of scheduled appointment",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "next30days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "FacilityField",

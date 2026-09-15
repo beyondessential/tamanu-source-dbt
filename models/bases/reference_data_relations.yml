@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: reference_data_relations
+    description: '{{ doc("table__reference_data_relations") }}'
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: admin
+      pii: false
+      classification: internal
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in reference_data_relations."
+      - name: reference_data_id
+        data_type: character varying(255)
+        description: "{{ doc('reference_data_relations__reference_data_id') }}"
+      - name: reference_data_parent_id
+        data_type: character varying(255)
+        description: "{{ doc('reference_data_relations__reference_data_parent_id') }}"
+      - name: type
+        data_type: character varying(255)
+        description: "{{ doc('reference_data_relations__type') }}"

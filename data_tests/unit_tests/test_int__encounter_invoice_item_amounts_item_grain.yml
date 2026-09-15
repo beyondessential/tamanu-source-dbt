@@ -1,0 +1,102 @@
+unit_tests:
+  - name: test_int__encounter_invoice_item_amounts_item_grain
+    model: int__encounter_invoice_item_amounts
+    description: >
+      Per-item output: a $100 unit price at quantity 2 with a $20 flat item discount gives
+      discounted_total = 200 - 20 = 180 and a signed item_adjustment of 180 - 200 = -20
+      (negative for a discount, mirroring getItemAdjustmentAmount). The polymorphic
+      source_record_type / source_record_id pass through unchanged, and with no insurance
+      plan linked the per-item insurance_coverage is null.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Procedure X' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity, 'Procedure' as source_record_type, 'proc_1' as source_record_id
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Procedures' as category, false as insurable, null::text as name
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select 'item_001'::text as invoice_item_id, 20.00::numeric as amount, 'amount' as type, '00000000-0000-0000-0000-0000000000d1'::uuid as id
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'item_001' as invoice_item_id,
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'prod_001' as product_id,
+          '2024-01-14'::date as date,
+          'Procedure X' as product_name,
+          'Procedures' as category,
+          2::integer as quantity,
+          100.00::numeric as unit_price,
+          180.00::numeric as discounted_total,
+          -20.00::numeric as item_adjustment,
+          null::numeric as insurance_coverage,
+          'Procedure' as source_record_type,
+          'proc_1' as source_record_id

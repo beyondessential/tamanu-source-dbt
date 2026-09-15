@@ -10,6 +10,7 @@ sources:
           tags: []
           meta:
             triggers:
+              - delete_invoice_price_list_items_from_sync_lookup
               - notify_invoice_price_list_items_changed
               - record_invoice_price_list_items_changelog
               - set_invoice_price_list_items_updated_at
@@ -64,5 +65,10 @@ sources:
           - name: is_hidden
             data_type: boolean
             description: "{{ doc('invoice_price_list_items__is_hidden') }}"
+            data_tests:
+              - not_null
+          - name: is_fixed_price
+            data_type: boolean
+            description: "{{ doc('invoice_price_list_items__is_fixed_price') }}"
             data_tests:
               - not_null

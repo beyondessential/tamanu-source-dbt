@@ -6,6 +6,19 @@ from .system_utils import cprint, execute_command_with_output
 BASE_DIR = Path.cwd()
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
 
+# Base columns emitted by the get_survey macro. A survey data element whose
+# normalised code matches one of these is aliased to "<code>_answer" in the
+# model SQL to avoid a duplicate-column collision; keep this in sync with the
+# `reserved` list in macros/surveys.sql.
+RESERVED_COLUMNS = {
+    "encounter_id",
+    "response_id",
+    "patient_id",
+    "start_datetime",
+    "end_datetime",
+    "result_text",
+}
+
 
 def get_surveys_from_deployment():
     """
@@ -42,9 +55,11 @@ def get_survey_columns_from_deployment(survey_id):
         survey_id (str): The survey identifier
 
     Returns:
-        list: List of tuples containing (code, name) for each survey column
+        list | None: List of tuples containing (id, code, name) for each survey
+            question when the dbt call succeeds -- empty when the survey
+            genuinely has no questions. None when the dbt call itself failed;
+            callers must not treat that the same as "no questions" (see #896).
     """
-    columns = []
     cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
 
     try:
@@ -53,8 +68,9 @@ def get_survey_columns_from_deployment(survey_id):
         if not result or result.returncode != 0:
             if result:
                 cprint(f"Error running dbt command: {result.stderr}", "error")
-            return columns
+            return None
 
+        columns = []
         for line in (result.stdout + result.stderr).split("\n"):
             if "COLUMN_DATA:" in line:
                 parts = line.split("COLUMN_DATA:")[1].split("|")
@@ -65,21 +81,22 @@ def get_survey_columns_from_deployment(survey_id):
 
     except Exception as e:
         cprint(f"Error getting survey columns from dbt: {e}", "error")
-        return columns
+        return None
 
 
-def generate_survey_doc(survey_id, survey_name):
+def generate_survey_doc(survey_id, survey_name, columns):
     """
     Create a YML documentation file and MD documentation file for a survey.
     Args:
         survey_id (str): The survey identifier
-        survey_code (str): The survey code
         survey_name (str): The survey name
+        columns (list): List of (id, code, name) tuples for the survey's questions,
+            from get_survey_columns_from_deployment. Callers must skip generation
+            entirely for a survey with no questions -- see generate_survey_models.main().
     Returns:
         str: Path to the created documentation file
     """
     ensure_directory_exists(str(SURVEYS_DIR))
-    columns = get_survey_columns_from_deployment(survey_id)
 
     survey_id = survey_id.replace("-", "_")
 
@@ -98,6 +115,8 @@ models:
         description: '{{{{ doc("encounters__patient_id") }}}}'
       - name: start_datetime
         description: '{{{{ doc("survey_responses__start_time") }}}}'
+      - name: end_datetime
+        description: '{{{{ doc("survey_responses__end_time") }}}}'
       - name: result_text
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
@@ -107,8 +126,10 @@ models:
         doc_id = id.replace("-", "_")
         prefixed_doc_id = f"{survey_id}__{doc_id}"
         
+        column_name = f"{code}_answer" if code in RESERVED_COLUMNS else code
+
         doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")
-        yml_parts.append(f"""\n      - name: {code}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")  
+        yml_parts.append(f"""\n      - name: {column_name}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")
 
     # Assuming 'doc' was initialized as an empty string  
     doc = "\n\n".join(doc_parts)  
@@ -142,3 +163,30 @@ def create_survey_model(survey_id):
     write_file(str(path), content)
     cprint(f"Created model: {path}", "success")
     return str(path)
+
+
+def remove_survey_files(survey_id):
+    """
+    Remove any previously generated model/doc files for a survey.
+
+    Model generation is not idempotent against its own output directory (it
+    only ever writes, never clears): if a survey had questions on a previous
+    run and has since been emptied, skipping generation for it leaves the
+    stale .sql/.yml/.md from that earlier run in place, still pointing at
+    get_survey() for a survey that no longer has anything to select. Call
+    this when skipping a survey to remove that leftover.
+
+    Args:
+        survey_id (str): The survey identifier
+
+    Returns:
+        list[str]: Paths of any files that were removed
+    """
+    normalised_id = survey_id.replace("-", "_")
+    removed = []
+    for suffix in ("sql", "yml", "md"):
+        path = SURVEYS_DIR / f"{normalised_id}.{suffix}"
+        if path.exists():
+            path.unlink()
+            removed.append(str(path))
+    return removed

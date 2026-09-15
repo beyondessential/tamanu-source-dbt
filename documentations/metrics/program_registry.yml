@@ -1,0 +1,54 @@
+# Program registry metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: program_registry_enrolment
+  kind: metric
+  name: Program registry enrolments
+  description: >-
+    Patient enrolments in a Tamanu program registry. One row per enrolment, spanning registration to
+    the end of the registration, disaggregated by registry and by the patient's clinical status within
+    it.
+  numerator_description: >-
+    Patient program registrations, excluding those recorded in error, counted at the registration
+    datetime. The row is a span, so a consumer may instead count enrolments open during a period --
+    period_start before its end and period_end null or after its start -- which is a different number
+    over the same rows. An enrolment closed before Tamanu 2.33.0 carries no recorded end and so reads
+    as open, which makes registration_status the column answering whether a patient exited and
+    period_end the column answering when a dated exit happened
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A program registry is Tamanu's own construct for following a patient through a long-running care
+    programme, so the enrolment is defined by the deployment's registry configuration rather than by an
+    external standard. The measure is registry-agnostic on purpose: the same definition serves an HIV
+    cascade, a TB register and an NCD register, because the programme-specific part is the clinical
+    status list, which is a disaggregation rather than a definition. Cascade positions and retention
+    are both derived by the consumer -- position by grouping on clinical_status_code, retention from
+    the enrolment boundaries -- so a programme does not need its own metric to be reportable. Where a
+    standards body defines a programme indicator over the same population (WHO HIV treatment coverage,
+    an MSF standard indicator), that indicator is registered separately and this metric is not a
+    substitute for it.
+  unit: count
+  subject_grain: episode
+  disaggregations:
+  - registry_code
+  - clinical_status_code
+  - registration_status
+  - currently_at_type
+  - currently_at_id
+  - episode_end_source
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__program_registry_enrolment.md

@@ -1,19 +1,15 @@
 name: Build Reporting Assets
 
-# Triggered automatically when a release is published, or manually for a specific tag.
+# Manually triggered for a specific tag.
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
 # branch doesn't exist yet), connects to the release database in k8s, runs
-# build_reporting_assets.py, attaches compiled assets to the GitHub release, then
-# publishes them to S3.
+# build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
 #
 # Requires:
 #   vars.TS_OAUTH_CLIENT_ID, vars.TS_TAGS, vars.TS_K8S_OPERATOR_HOSTNAME — Tailscale access
 #   GITHUB_TOKEN with contents:write (granted automatically by GHA)
-#   secrets.META_CERT, secrets.META_KEY, vars.META_URL — passed via secrets: inherit to publish-artifacts
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -33,7 +29,7 @@ jobs:
       - name: Determine version and branch
         id: version
         env:
-          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${TAG#v}"
@@ -54,7 +50,7 @@ jobs:
           echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ steps.version.outputs.ref }}
 
@@ -71,12 +67,12 @@ jobs:
           tailscale configure kubeconfig ${{ vars.TS_K8S_OPERATOR_HOSTNAME }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -90,11 +86,39 @@ jobs:
           pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
           echo "::add-mask::$pgpass"
 
-          kubectl port-forward -n "$NS" service/central-db-rw 5432:5432 &
+          primary=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=central-db,role=primary -o jsonpath='{.items[0].metadata.name}')
+          if [ -z "$primary" ]; then
+            echo "::error::No primary pod found for central-db in namespace $NS"
+            exit 1
+          fi
+          # Pinned to the primary pod (not service/central-db-rw) so reads are guaranteed
+          # to hit the writeable instance; trade-off is no failover during the build.
+          echo "Port-forwarding to primary pod: $primary"
+          kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 >/tmp/pf.log 2>&1 &
           pf_pid=$!
           function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
           trap cleanup EXIT
-          sleep 5
+
+          for i in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+              echo "Port-forward ready"
+              break
+            fi
+            if ! kill -0 "$pf_pid" 2>/dev/null; then
+              echo "::error::Port-forward process died"
+              echo "--- kubectl port-forward output ---"
+              cat /tmp/pf.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
+            echo "::error::Port-forward not ready after 30s"
+            echo "--- kubectl port-forward output ---"
+            cat /tmp/pf.log
+            exit 1
+          fi
 
           TAMANU_RL_DB_URL=127.0.0.1 \
           TAMANU_RL_DB_PORT=5432 \
@@ -110,13 +134,3 @@ jobs:
           gh release upload "${{ steps.version.outputs.tag }}" \
             compiled/v${{ steps.version.outputs.version }}/* \
             --clobber
-
-  publish:
-    name: Publish artifacts to S3
-    needs: build
-    if: github.event_name == 'release'
-    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
-    secrets: inherit
-    permissions:
-      id-token: write
-      contents: read

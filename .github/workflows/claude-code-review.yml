@@ -1,19 +1,133 @@
 name: Claude Code Review
 
+# Inlined rather than calling beyondessential/maui-team's reusable workflow: this repo is
+# public and maui-team is private, and GitHub does not let a public repo call a reusable
+# workflow in a private repo (the call fails at resolution with "workflow was not found").
+# The steps below mirror that reusable workflow. Keep in sync with
+# .maui/.github/workflows/claude-code-review.yml when it changes.
+
+# Review runs on demand only: comment `/review` on a pull request to trigger it.
+# There is deliberately no `pull_request` trigger — to restore automatic review,
+# add one back under `on:` and prepend `github.event_name == 'pull_request' ||`
+# to the job's `if:` condition.
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
 jobs:
   claude-review:
     if: >-
-      github.event_name == 'pull_request' ||
-        (github.event_name == 'issue_comment' &&
+      github.event_name == 'issue_comment' &&
         github.event.issue.pull_request != null &&
         contains(github.event.comment.body, '/review') &&
         github.event.comment.author_association != 'NONE' &&
-        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
-    uses: beyondessential/maui-team/.github/workflows/claude-code-review.yml@main
-    secrets: inherit
+        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      # write (not read) so the .maui submodule bump below can be pushed back
+      # to the PR branch.
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+
+    steps:
+      # .maui is a private submodule (maui-team); mint a short-lived read token scoped to
+      # maui-team so the submodule can be fetched (REVIEW.md lives at .maui/REVIEW.md).
+      - name: Mint maui-team read token
+        id: maui-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.MAUI_APP_ID }}
+          private-key: ${{ secrets.MAUI_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: maui-team
+
+      - name: Authenticate git for the private maui-team submodule
+        env:
+          MAUI_TOKEN: ${{ steps.maui-token.outputs.token }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${MAUI_TOKEN}@github.com/beyondessential/maui-team".insteadOf \
+            "https://github.com/beyondessential/maui-team"
+
+      - name: Resolve PR head SHA
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          PR_SHA=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER" --jq '.head.sha')
+          echo "sha=$PR_SHA" >> "$GITHUB_OUTPUT"
+
+      # submodules: false so checkout's GITHUB_TOKEN auth is not applied to the maui-team
+      # fetch; .maui is initialised explicitly below using the App-token URL rewrite above.
+      - name: Checkout PR
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+          fetch-depth: 0
+          submodules: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Initialise .maui submodule
+        run: git submodule update --init .maui
+
+      # Keep .maui current so reviews and the release bundle check run against
+      # the latest maui-team content rather than a pin that silently ages. The
+      # bump lands as a visible commit on the PR branch, so it stays reviewable
+      # - unlike tracking @main, where upstream changes arrive unseen.
+      # Skipped for fork PRs: they get no secrets and cannot be pushed to.
+      - name: Update .maui submodule
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        id: update-submodule
+        run: |
+          git submodule update --remote .maui
+          if git diff --quiet HEAD -- .maui; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo ".maui is already up to date"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push submodule update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          steps.update-submodule.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .maui
+          git commit -m "chore: update .maui submodule"
+          git push origin "HEAD:${{ github.head_ref }}"
+
+      - name: Resolve review reference file
+        id: review
+        run: |
+          if [ -f REVIEW.md ]; then
+            echo "path=REVIEW.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=.maui/REVIEW.md" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: "/review"
+          # PRs opened by automation (e.g. release/version-bump workflows) are authored by
+          # github-actions[bot]; allow that bot so the run is not rejected.
+          allowed_bots: "github-actions[bot]"
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
+            --append-system-prompt "Read ${{ steps.review.outputs.path }} and follow all instructions in it."

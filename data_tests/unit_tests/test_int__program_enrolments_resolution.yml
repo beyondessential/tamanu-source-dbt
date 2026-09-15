@@ -1,0 +1,105 @@
+unit_tests:
+  - name: test_int__program_enrolments_currently_at_by_registry
+    model: int__program_enrolments
+    description: >
+      BL-007, BL-026. Currently-at resolves from the column the registry is configured for and
+      ignores the other even when populated, because only the configured one is maintained. Two
+      enrolments, one registry tracking by facility and one by village, each carrying both
+      facility_id and village_id.
+    given:
+      - input: ref('patient_program_registrations')
+        format: sql
+        rows: |
+          select 'pat_001;preg_fac' as id, '2024-01-10 09:00:00'::timestamp as datetime, 'active' as registration_status, 'pat_001' as patient_id, 'preg_fac' as program_registry_id, null::text as clinical_status_id, 'usr_001' as registered_by_id, 'fac_001' as registering_facility_id, 'fac_001' as facility_id, 'vil_001' as village_id, null::text as deactivated_by_id, null::timestamp as deactivated_datetime
+          union all
+          select 'pat_001;preg_vil', '2024-01-11 09:00:00'::timestamp, 'active', 'pat_001', 'preg_vil', null::text, 'usr_001', 'fac_001', 'fac_001', 'vil_001', null::text, null::timestamp
+
+      - input: ref('program_registries')
+        format: sql
+        rows: |
+          select 'preg_fac' as id, 'HIV' as code, 'HIV Program' as name, 'facility' as currently_at_type, 'prog_001' as program_id
+          union all
+          select 'preg_vil', 'TB', 'TB Program', 'village', 'prog_002'
+
+      - input: ref('program_registry_clinical_statuses')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::text as name
+          where false
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'vil_001' as id, 'Tarawa' as name
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_fac' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_fac' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, null::text as clinical_status_id, null::text as clinical_status_code, null::text as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+        union all
+        select 'pat_001;preg_vil', 'pat_001', '2024-01-11 09:00:00'::timestamp, 'active', null::timestamp, null::text, 'preg_vil', 'TB', 'TB Program', 'prog_002', null::text, null::text, null::text, 'village', 'vil_001', 'Tarawa', 'fac_001', 'usr_001'
+
+  - name: test_int__program_enrolments_excludes_merged_patients
+    model: int__program_enrolments
+    description: >
+      BL-001, BL-026, AC-010. A registration id embeds its patient id, so a patient merge cannot
+      repoint it the way it repoints an encounter -- the enrolment strands on a record
+      bases/patients drops (visibility_status = 'merged'). Modelling it would give downstream an
+      enrolment whose person clinical__person does not carry. Recorded-in-error rows are kept
+      here; only clinical__episode drops those.
+    given:
+      - input: ref('patient_program_registrations')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as id, '2024-01-10 09:00:00'::timestamp as datetime, 'active' as registration_status, 'pat_001' as patient_id, 'preg_001' as program_registry_id, null::text as clinical_status_id, 'usr_001' as registered_by_id, 'fac_001' as registering_facility_id, 'fac_001' as facility_id, null::text as village_id, null::text as deactivated_by_id, null::timestamp as deactivated_datetime
+          union all
+          select 'pat_002;preg_001', '2024-02-11 09:00:00'::timestamp, 'recordedInError', 'pat_002', 'preg_001', null::text, 'usr_001', 'fac_001', 'fac_001', null::text, null::text, null::timestamp
+          union all
+          select 'pat_003;preg_001', '2024-03-12 09:00:00'::timestamp, 'active', 'pat_003', 'preg_001', null::text, 'usr_001', 'fac_001', 'fac_001', null::text, null::text, null::timestamp
+
+      - input: ref('program_registries')
+        format: sql
+        rows: |
+          select 'preg_001' as id, 'HIV' as code, 'HIV Program' as name, 'facility' as currently_at_type, 'prog_001' as program_id
+
+      - input: ref('program_registry_clinical_statuses')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::text as name
+          where false
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      # pat_003 is absent, standing for a record merged away
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id
+          union all
+          select 'pat_002'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, null::text as clinical_status_id, null::text as clinical_status_code, null::text as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+        union all
+        select 'pat_002;preg_001', 'pat_002', '2024-02-11 09:00:00'::timestamp, 'recordedInError', null::timestamp, null::text, 'preg_001', 'HIV', 'HIV Program', 'prog_001', null::text, null::text, null::text, 'facility', 'fac_001', 'Central Hospital', 'fac_001', 'usr_001'

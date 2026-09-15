@@ -1,0 +1,128 @@
+unit_tests:
+  - name: test_audit_outpatient_appointments_filters_on_edit_time
+    model: audit-outpatient-appointments
+    description: >
+      AC-033 / BL-029: the date range bounds when the edit was made, not the appointment's
+      scheduled time. appt_far is scheduled 2026-12-01 (outside the range) but was edited
+      2026-09-02 (inside it), so it appears; appt_near is scheduled 2026-09-02 (inside the
+      range) but was last edited 2026-06-15 (outside it), so it does not. Under the previous
+      appointment_start_datetime filter the two outcomes were reversed, which is what makes
+      this the regression guard for the BL-029 change.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2026-09-01'
+        toDate: '2026-09-02'
+    given:
+      - input: ref('outpatient_appointments_change_events')
+        format: sql
+        rows: |
+          -- appt_far: created outside the range, edited inside it
+          select
+            'chg_001'::text as id,
+            'appt_far'::text as record_id,
+            '2026-08-01 10:00:00+00'::timestamptz as logged_at,
+            '2026-08-01 10:00:00+00'::timestamptz as record_updated_at,
+            'usr_001'::text as updated_by_user_id,
+            100::bigint as updated_at_sync_tick,
+            '{"start_time":"2026-12-01 09:00:00","end_time":"2026-12-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_001","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
+          union all
+          select
+            'chg_002'::text,
+            'appt_far'::text,
+            '2026-09-02 09:00:00+00'::timestamptz,
+            '2026-09-02 09:00:00+00'::timestamptz,
+            'usr_002'::text,
+            200::bigint,
+            '{"start_time":"2026-12-01 09:00:00","end_time":"2026-12-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_002","location_group_id":"lg_001","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+          union all
+          -- appt_near: scheduled inside the range, but last edited well before it
+          select
+            'chg_003'::text,
+            'appt_near'::text,
+            '2026-06-01 10:00:00+00'::timestamptz,
+            '2026-06-01 10:00:00+00'::timestamptz,
+            'usr_001'::text,
+            300::bigint,
+            '{"start_time":"2026-09-02 08:00:00","end_time":"2026-09-02 08:30:00","patient_id":"pat_002","clinician_id":"cli_001","location_group_id":"lg_001","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+          union all
+          select
+            'chg_004'::text,
+            'appt_near'::text,
+            '2026-06-15 11:00:00+00'::timestamptz,
+            '2026-06-15 11:00:00+00'::timestamptz,
+            'usr_002'::text,
+            400::bigint,
+            '{"start_time":"2026-09-02 08:00:00","end_time":"2026-09-02 08:30:00","patient_id":"pat_002","clinician_id":"cli_002","location_group_id":"lg_001","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
+
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select 'appt_far'::text as id, null::date as cancelled_at_date
+          union all
+          select 'appt_near'::text, null::date
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_001'::text as id,
+            'P001'::text as display_id,
+            'John'::text as first_name,
+            'Doe'::text as last_name,
+            '1990-05-15'::date as date_of_birth
+          union all
+          select 'pat_002'::text, 'P002'::text, 'Jane'::text, 'Smith'::text, '1985-06-20'::date
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001'::text as id, 'Dr. Alice Wilson'::text as display_name
+          union all
+          select 'cli_002'::text, 'Dr. Bob Jones'::text
+          union all
+          select 'usr_001'::text, 'Alice Admin'::text
+          union all
+          select 'usr_002'::text, 'Bob Admin'::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001'::text as id, 'Outpatients'::text as name, 'fac_001'::text as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001'::text as id, 'Central Hospital'::text as name, false as is_sensitive
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'apt_001'::text as id, 'Follow-up'::text as name
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'              as "Patient ID",
+          'John'              as "First name",
+          'Doe'               as "Last name",
+          '1990-05-15'        as "Date of birth",
+          1                   as "Change number",
+          '2026-12-01 09:00'  as "Appointment date and time",
+          'Follow-up'         as "Appointment type",
+          'Dr. Bob Jones'     as "Clinician",
+          'Outpatients'       as "Area",
+          'No'                as "Priority appointment",
+          'No'                as "Repeating appointment",
+          'Alice Admin'       as "Appointment created by",
+          'Bob Admin'         as "Appointment modified by",
+          '2026-09-02 09:00'  as "Appointment modified date & time",
+          'No'                as "Appointment cancelled",
+          null::text          as "Previous appointment date & time",
+          null::text          as "Previous appointment type",
+          'Dr. Alice Wilson'  as "Previous clinician",
+          null::text          as "Previous area",
+          null::text          as "Previous priority appointment"

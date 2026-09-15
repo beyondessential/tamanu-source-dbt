@@ -1,0 +1,197 @@
+# Maternity and newborn metrics (MAUI-6838).
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+#
+# birth / low_birth_weight / preterm_birth / low_apgar_5min are implemented in this repo
+# (models/metrics/metric__birth.sql), deployment-neutral -- patient_birth_data is present on
+# every deployment. antenatal_contact and antenatal_booking are defined here but implemented
+# in deployment repos, because Tamanu holds no portable antenatal base -- see their specs.
+
+metrics:
+- metric_id: birth
+  kind: metric
+  name: Births
+  description: >-
+    Live births registered in Tamanu. One row per newborn.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_CORE_100
+  definition_source_code: null
+  definition_rationale: >-
+    Population and disaggregation vocabulary (delivery type, attendant, place) aligned to the
+    WHO Global Reference List of 100 Core Health Indicators' skilled-birth-attendance family
+    (SDG 3.1.2) and the AIHW National Perinatal Data Collection. Neither publishes a routine
+    facility-activity count BES can implement directly, so the aggregation here is a BES
+    composition over the population each defines. Pending alignment with the deploying
+    country's national HMIS definition.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - birth_delivery_type
+  - attendant_at_birth
+  - registered_birth_place
+  - birth_type
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__birth.md
+- metric_id: low_birth_weight
+  kind: metric
+  name: Low birth weight
+  description: >-
+    Births weighing less than 2.5 kg. Numerator only -- rate is formed downstream against
+    the birth metric_id.
+  numerator_description: >-
+    Births with birth_weight recorded and less than 2.5 kg
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_CORE_100
+  definition_source_code: null
+  definition_rationale: >-
+    Low birth weight prevalence is a WHO Global Reference List of 100 Core Health Indicators
+    entry; the threshold follows the WHO/UNICEF joint low-birthweight estimates -- born
+    weighing less than 2,500 g. Numerator only -- Tamanu holds no population denominator for
+    a rate, and a rate is never stored per D5 "Rate scale". A consumer computing
+    low_birth_weight / birth assumes weight is recorded uniformly across births; see the
+    spec's consumer guidance.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - birth_delivery_type
+  - attendant_at_birth
+  - registered_birth_place
+  - birth_type
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__birth.md
+- metric_id: preterm_birth
+  kind: metric
+  name: Preterm birth
+  description: >-
+    Births before 37 completed weeks of gestation. Numerator only -- rate is formed
+    downstream against the birth metric_id.
+  numerator_description: >-
+    Births with gestational_age_estimate recorded and less than 37 completed weeks
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Threshold follows the WHO preterm birth definition -- born before 37 completed weeks of
+    gestation -- but preterm birth rate is not itself an entry in the WHO 100 Core Health
+    Indicators list, so the count is a BES composition over the WHO threshold rather than an
+    implementation of a registered indicator. Numerator only, same reasoning as
+    low_birth_weight.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - birth_delivery_type
+  - attendant_at_birth
+  - registered_birth_place
+  - birth_type
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__birth.md
+- metric_id: low_apgar_5min
+  kind: metric
+  name: Low Apgar score at 5 minutes
+  description: >-
+    Births with an Apgar score below 7 at 5 minutes. Numerator only -- rate is formed
+    downstream against the birth metric_id.
+  numerator_description: >-
+    Births with apgar_score_five_minutes recorded and less than 7
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Threshold follows WHO Newborn Health guidance's low Apgar score at 5 minutes, a marker of
+    neonatal distress. No METeOR-style registered code exists for it, unlike the AIHW-anchored
+    ed_visit concepts, and it is not a WHO 100 Core Health Indicators entry -- a BES
+    composition over a clinical convention, not an implementation of a named indicator.
+    Numerator only, same reasoning as low_birth_weight.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - birth_delivery_type
+  - attendant_at_birth
+  - registered_birth_place
+  - birth_type
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__birth.md
+- metric_id: antenatal_contact
+  kind: metric
+  name: Antenatal contacts
+  description: >-
+    Antenatal care contacts -- a scheduled or opportunistic visit during pregnancy at which a
+    health worker assesses the mother and fetus. Registered centrally; implemented only where
+    a deployment captures a genuine per-visit antenatal chart.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_CORE_100
+  definition_source_code: null
+  definition_rationale: >-
+    Antenatal care coverage is a WHO Global Reference List of 100 Core Health Indicators
+    entry; the contact concept follows WHO recommendations on antenatal care for a positive
+    pregnancy experience (2016) -- the ANC contact schedule, minimum eight contacts. This
+    metric counts raw contacts; it does not compute ANC4+/ANC8+ coverage status, a downstream
+    aggregation. Coverage against a population denominator is not materialised, the same
+    numerator-only pattern as immunisation_dose (MAUI-6808) -- Tamanu holds no
+    expected-pregnancies denominator.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  # draft until an implementation lands and its spec is approved -- the definition is
+  # registered here first so a deployment's relationships test has a target to point at.
+  status: draft
+  spec_path: specs/dbt-model/metric__antenatal_contact.md
+- metric_id: antenatal_booking
+  kind: metric
+  name: Antenatal bookings
+  description: >-
+    A pregnancy's first antenatal registration/booking assessment (the WHO ANC1 concept).
+    Registered centrally; implemented only where a deployment captures a booking assessment
+    without a per-visit contact log -- see the spec's "Why a separate metric, not a variant
+    of antenatal_contact".
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_CORE_100
+  definition_source_code: null
+  definition_rationale: >-
+    Antenatal care coverage (first visit) is a WHO Global Reference List of 100 Core Health
+    Indicators entry, following WHO recommendations on antenatal care for a positive
+    pregnancy experience (2016) -- the first antenatal contact/booking visit, counted here as
+    booking assessments rather than a population-based coverage percentage.
+  unit: count
+  subject_grain: episode
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  # draft until an implementation lands and its spec is approved -- same reasoning as
+  # antenatal_contact above.
+  status: draft
+  spec_path: specs/dbt-model/metric__antenatal_booking.md

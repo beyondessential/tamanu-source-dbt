@@ -1,0 +1,83 @@
+version: 2
+
+models:
+  - name: clinical__observation
+    description: "{{ doc('clinical__observation') }}"
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: true
+      classification: restricted
+    columns:
+      - name: observation_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__observation_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_clinical__observation_observation_id_not_null
+          - unique:
+              name: ac_002_clinical__observation_observation_id_unique
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('encounters__patient_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_003_clinical__observation_person_id_in_clinical__person
+              arguments:
+                to: ref('clinical__person')
+                field: person_id
+      - name: observation_date
+        data_type: date
+        description: "{{ doc('clinical__observation__observation_date') }}"
+      - name: observation_datetime
+        data_type: timestamp
+        description: "{{ doc('clinical__observation__observation_datetime') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_clinical__observation_observation_datetime_not_null
+      - name: observation_type_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__observation_type_source_value') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_007_clinical__observation_observation_type_source_value_accepted
+              arguments:
+                values:
+                  - program survey
+                  - referral survey
+                  - vaccination not given
+                  - triage
+      - name: value_as_number
+        data_type: numeric
+        description: "{{ doc('clinical__observation__value_as_number') }}"
+      - name: value_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__value_source_value') }}"
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__provider_id') }}"
+        data_tests:
+          - dbt_utils.relationships_where:
+              name: ac_005_clinical__observation_provider_id_in_ref__provider
+              arguments:
+                to: ref('ref__provider')
+                field: provider_id
+                from_condition: "observation_type_source_value != 'vaccination not given'"
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__visit_occurrence_id') }}"
+        data_tests:
+          - relationships:
+              name: ac_004_clinical__observation_visit_occurrence_id_in_clinical__visit_occurrence
+              arguments:
+                to: ref('clinical__visit_occurrence')
+                field: visit_occurrence_id
+      - name: observation_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__observation_source_value') }}"
+      - name: observation_source_name
+        data_type: character varying(255)
+        description: "{{ doc('clinical__observation__observation_source_name') }}"

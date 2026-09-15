@@ -1,6 +1,7 @@
-# Deployment repos that receive patch propagation from tamanu-source-dbt.
-# When a new patch release is published, a PR will be opened in each repo
-# that is pinned to the same major.minor version.
+# Canonical list of deployment repos that pin a tamanu-source-dbt version.
+# Reference only — nothing reads this to open PRs automatically. Used for
+# manual per-release version bumps (see the release conventions) and by the
+# macro-change-impact runbook to scope which repos a change reaches.
 # Format: org/repo
 repos:
   - beyondessential/tamanu-dbt-aspen

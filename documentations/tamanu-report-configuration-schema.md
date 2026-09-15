@@ -15,15 +15,47 @@ Every report configuration file must be a valid JSON object with the following s
 #### Required Properties
 
 - **`query`** (string): The SQL query or placeholder for the report. Must be at least 1 character long.
+- **`name`** (string): Display name of the report as shown in the Tamanu reporting interface. Every report must define a `name` at the **root level**. The JSON schema enforces this as a required root-level property (`minLength: 1`). A legacy `name` under `queryOptions` is still permitted but deprecated.
 - **`status`** (enum): Publication status of the report. Must be either `"draft"` or `"published"`.
-- **`dbSchema`** (enum): Database schema to use for the report. Must be either `"raw"` or `"reporting"`.
+- **`dbSchema`** (enum): Database schema to use for the report. Must be `"reporting"`.
 - **`queryOptions`** (object): Configuration options for the report query (see detailed structure below).
 
 #### Optional Properties
 
 - **`notes`** (string): Detailed description and notes about the report's purpose and functionality.
 - **`reportDefinitionId`** (string): Unique identifier for the report definition.
-- **`dhis2DataSet`** (string): DHIS2 dataset identifier.
+- **`dhis2DataSet`** (string): DHIS2 dataset identifier. Must be a valid DHIS2 UID — 11 characters matching the pattern `^[a-zA-Z][a-zA-Z0-9]{10}$` (a letter followed by 10 alphanumerics).
+
+### Recommended Field Ordering
+
+For consistency across all report configuration files, define properties in the following order. This applies to both `standard` and `sensitive` reports.
+
+**Root level:**
+
+1. `query`
+2. `name`
+3. `status`
+4. `notes`
+5. `dbSchema`
+6. `reportDefinitionId` *(if present)*
+7. `dhis2DataSet` *(if present)*
+8. `queryOptions`
+
+**Within `queryOptions`:**
+
+1. `defaultDateRange`
+2. `dateRangeLabel` *(if present)*
+3. `dataSources`
+4. `parameters`
+
+**Within each parameter object:**
+
+1. `parameterField`
+2. `label`
+3. `name`
+4. Type-specific properties (e.g. `suggesterEndpoint`, `suggesterOptions`, `options`, `filterBySelectedFacility`)
+
+Use 2-space indentation throughout.
 
 ### Query Options Structure
 
@@ -53,12 +85,12 @@ For a report generated on **2025-07-01 12:00:00**, the default date ranges would
 - **`"7days"`**: From 2025-06-24 00:00:00 to 2025-07-01 12:00:00
 - **`"30days"`**: From 2025-06-01 00:00:00 to 2025-07-01 12:00:00
 - **`"18years"`**: From 2007-07-01 00:00:00 to 2025-07-01 12:00:00
-- **`"next30days"`**: From 2025-07-02 00:00:00 to 2025-07-31 23:59:59
+- **`"next30days"`**: From 2025-07-02 00:00:00 to 2025-08-01 23:59:59
 
 #### Optional Properties
 
 - **`dateRangeLabel`** (string): Custom label for the date range input field
-- **`name`** (string): Display name of the report
+- **`name`** (string): *(legacy)* Display name nested under `queryOptions`. New and existing reports should define the display name as a **root-level** `name` property instead (see [Required Properties](#required-properties)). This nested field is retained only for backwards compatibility and should not be used.
 
 ## Parameter Types
 
@@ -107,25 +139,27 @@ Provides autocomplete functionality using predefined API endpoints.
     - `filterByFacility` (boolean): Filter suggestions by facility
 
 **Available Suggester Endpoints:**
-- `additionalInvoiceProduct`, `allergy`, `angiogramImagingArea`, `appointmentType`, `arrivalMode`
-- `bookableLocationGroup`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `condition`
-- `contactRelationship`, `country`, `ctScanImagingArea`, `department`, `designation`
-- `diagnosis`, `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
-- `ecgImagingArea`, `echocardiogramImagingArea`, `endoscopyImagingArea`, `ethnicity`
-- `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscoptyImagingArea`
-- `holterMonitorImagingArea`, `imagingType`, `insurer`, `invoiceProducts`, `labSampleSite`
-- `labTestCategory`, `labTestLaboratory`, `labTestMethod`, `labTestPanel`, `labTestPriority`
-- `labTestType`, `location`, `locationGroup`, `mammogramDiagImagingArea`, `mamogramImagingArea`
-- `mamogramScreenImagingArea`, `manufacturer`, `medicalArea`, `mriImagingArea`
-- `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `nursingZone`
-- `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
-- `patientLabTestCategories`, `patientLabTestPanelTypes`, `patientType`, `paymentMethod`
+- `allergy`, `angiogramImagingArea`, `appointmentType`, `arrivalMode`, `bookableLocationGroup`
+- `bookingType`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `contactRelationship`
+- `country`, `ctScanImagingArea`, `department`, `designation`, `diagnosis`
+- `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
+- `ecgImagingArea`, `echocardiogramImagingArea`, `encounter`, `encounterFee`, `endoscopyImagingArea`
+- `ethnicity`, `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscopyImagingArea`
+- `holterMonitorImagingArea`, `imagingType`, `insurer`, `invoiceInsurancePlan`, `invoicePriceList`
+- `invoiceProduct`, `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`
+- `labTestPanel`, `labTestPriority`, `labTestType`, `location`, `locationGroup`
+- `mammogramDiagImagingArea`, `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`
+- `medicationDispenseModifyReason`, `medicationNotGivenReason`, `medicationPresetLabel`, `medicationSet`, `medicationTemplate`
+- `mriImagingArea`, `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `noteType`
+- `nursingZone`, `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
+- `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`, `paymentMethod`, `pharmacyEncounterFee`
 - `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`, `programRegistryClinicalStatus`
-- `programRegistryCondition`, `reaction`, `referralSource`, `religion`, `secondaryIdType`
-- `sensitiveLabTestCategory`, `settlement`, `specimenTest`, `stressTestImagingArea`
-- `subdivision`, `survey`, `taskDeletionReason`, `taskNotCompletedReason`, `taskSet`
-- `taskTemplate`, `template`, `triageReason`, `ultrasoundImagingArea`, `vaccine`
-- `vaccineCircumstance`, `vaccineNotGivenReason`, `vascularStudyImagingArea`, `village`, `xRayImagingArea`
+- `programRegistryCondition`, `reaction`, `referenceData`, `referralSource`, `religion`
+- `reportDefinition`, `role`, `secondaryIdType`, `sensitiveLabTestCategory`, `settlement`
+- `specimenType`, `stressTestImagingArea`, `subdivision`, `survey`, `taskDeletionReason`
+- `taskNotCompletedReason`, `taskSet`, `taskTemplate`, `template`, `timeZone`
+- `triageReason`, `ultrasoundImagingArea`, `vaccineCircumstance`, `vaccineNotGivenReason`, `vascularStudyImagingArea`
+- `village`, `xRayImagingArea`
 
 ### 3. ParameterMultiselectField
 
@@ -230,13 +264,13 @@ Here's a comprehensive example of a valid report configuration:
 ```json
 {
   "query": "SELECT p.display_id, p.first_name, p.last_name, e.start_date FROM patients p JOIN encounters e ON p.id = e.patient_id WHERE e.start_date >= :startDate AND e.start_date <= :endDate AND (:facilityId IS NULL OR e.location_id IN (SELECT id FROM locations WHERE facility_id = :facilityId)) AND (:departmentId IS NULL OR e.department_id = :departmentId)",
+  "name": "Patient Encounters Report",
   "status": "published",
   "notes": "Patient encounter report showing all encounters within the selected date range, with optional filtering by facility and department. Useful for tracking patient flow and departmental activity.",
   "dbSchema": "reporting",
   "reportDefinitionId": "patient-encounters-detailed",
   "dhis2DataSet": "abcdefghijk",
   "queryOptions": {
-    "name": "Patient Encounters Report",
     "defaultDateRange": "30days",
     "dateRangeLabel": "Encounter date range",
     "dataSources": ["thisFacility", "allFacilities"],

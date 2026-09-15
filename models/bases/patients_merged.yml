@@ -8,7 +8,6 @@ models:
   meta:
     owner: bes-maui
     domain: clinical
-    tier: silver
     pii: true
     classification: restricted
   columns:

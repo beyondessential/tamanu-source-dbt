@@ -1,0 +1,166 @@
+version: 2
+
+models:
+  - name: metric__opd_imaging_request
+    description: >-
+      D5 metric view for the opd_imaging_request indicator registered in
+      documentations/metrics/outpatient.yml: opd_imaging_request (MAUI-6806). One row per
+      imaging request whose active clinical__visit_detail segment at the request's own
+      requested_date carries visit_detail_source_value = 'clinic' (see spec BL-003, BL-004)
+      -- per-request (subject) grain, so a consumer aggregates at whatever grain it needs.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, the same
+    # convention metric__outpatient_visit and metric__opd_procedure use.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-request rows carrying sex/age alongside a request id -- no patient name or exact
+      # birth date, the same pair metric__opd_procedure carries while staying internal.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per request. A duplicate would double-count a request in any consumer that
+      # sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_metric__opd_imaging_request_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # period_end, where present, is at or after period_start.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_metric__opd_imaging_request_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
+      # period_end is only ever populated for a completed request -- a stray imaging_results
+      # row against a still-open or cancelled request must not surface as a completion event
+      # (BL-002).
+      - dbt_utils.expression_is_true:
+          name: ac_metric__opd_imaging_request_period_end_requires_is_completed
+          arguments:
+            expression: "is_completed or period_end is null"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'opd_imaging_request'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_metric_id_not_null
+          - accepted_values:
+              name: ac_metric__opd_imaging_request_metric_id_values
+              arguments:
+                values:
+                  - opd_imaging_request
+          - relationships:
+              name: ac_metric__opd_imaging_request_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu imaging request id.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: When the request was raised.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: >-
+          When the request was marked complete. NULL while pending, in progress, or
+          cancelled -- only a completed request has a completion event to report.
+      - name: period_granularity
+        data_type: text
+        description: >-
+          Constant 'minute' -- period_start/period_end carry a time component, unlike OPD
+          visit's date-only fields.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_period_granularity_not_null
+          - accepted_values:
+              name: ac_metric__opd_imaging_request_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one request per row. Sum it to count requests over any grouping.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_value_numeric_not_null
+          - accepted_values:
+              name: ac_metric__opd_imaging_request_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu facility id the request is attributed to, resolved from the patient's
+          location at the time the request was raised.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: is_completed
+        data_type: boolean
+        description: >-
+          Whether the request has been marked completed. Never NULL. Cancelled and
+          still-open requests are both false -- indistinguishable from each other by this
+          column alone.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_is_completed_not_null
+      - name: imaging_type
+        data_type: text
+        description: >-
+          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
+          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_imaging_type_not_null
+      - name: imaging_type_code
+        data_type: text
+        description: >-
+          Tamanu's raw imaging modality value (e.g. xRay, ctScan, mri), alongside the label
+          so a card can scope to one modality by code, which survives a label change where
+          the readable name does not. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_imaging_type_code_not_null
+      - name: imaging_area
+        data_type: text
+        description: >-
+          Comma-joined body area/study area the request targets, or 'Not recorded'. Never
+          NULL. A request naming several areas stays one row.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_imaging_area_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at the request date. Not banded -- an age classification is a
+          presentation choice a deployment may set differently, so the consumer's data
+          table bands it. A measure, not a dimension: absent from the registry's
+          disaggregations.

@@ -25,13 +25,7 @@ select
     religion as "{{ translate_label('patientReligion') }}",
     patient_billing_type as "{{ translate_label('patientBillingType') }}"
 from {{ ref("ds__patients") }}
-where case
-        when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else date_of_birth >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
+where date_of_birth >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
-    case
-        when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else date_of_birth <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    date_of_birth <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
 order by date_of_birth, last_name, first_name

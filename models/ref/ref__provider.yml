@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: ref__provider
+    description: "{{ doc('ref__provider') }}"
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: provider_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__provider__provider_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__provider_provider_id_not_null
+          - unique:
+              name: ac_002_ref__provider_provider_id_unique
+      - name: provider_name
+        data_type: character varying(255)
+        description: "{{ doc('ref__provider__provider_name') }}"
+      - name: provider_source_value
+        data_type: character varying(255)
+        description: "{{ doc('ref__provider__provider_source_value') }}"
+      - name: role
+        data_type: character varying(255)
+        description: "{{ doc('ref__provider__role') }}"

@@ -22,6 +22,10 @@ A comma separated list of dates and times
 Full list of diagnoses
 {% enddocs %}
 
+{% docs generic__diagnosis_codes %}
+Semicolon-separated list of diagnosis codes
+{% enddocs %}
+
 {% docs generic__medications %}
 Full list of medications
 {% enddocs %}

@@ -27,7 +27,21 @@ def gh_api(path: str, method: str = "GET", data: dict = None):
     if data is not None:
         cmd += ["--input", "-"]
 
-    result = subprocess.run(cmd, capture_output=True, text=True, input=input_json, check=False)
+    # Explicit encoding/errors: without it, text=True decodes captured output
+    # using the host's preferred locale encoding (cp1252 on Windows), not
+    # UTF-8 -- gh always emits UTF-8, so decoding under the wrong locale can
+    # raise UnicodeDecodeError (or worse, hang, per the same subprocess
+    # reader-thread issue fixed in scripts/utils/system_utils.py). This
+    # script is documented for local/Windows invocation, not just CI.
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        input=input_json,
+        check=False,
+        encoding="utf-8",
+        errors="replace",
+    )
 
     if result.returncode != 0:
         if "404" in result.stderr or "Not Found" in result.stderr:
@@ -40,7 +54,9 @@ def gh_api(path: str, method: str = "GET", data: dict = None):
 def gh_api_paginate(path: str) -> list:
     """Fetch all pages of a GitHub API list endpoint."""
     cmd = ["gh", "api", "--paginate", "--jq", ".[]", path]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, check=False, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"gh api --paginate {path} failed:\n{result.stderr.strip()}")
     # --jq '.[]' outputs one JSON object per line across all pages
@@ -171,7 +187,7 @@ def main():
         "sha": sha,
     })
 
-    print(f"✅ Created branch '{branch_name}' at {latest_tag} ({sha})")
+    print(f"Created branch '{branch_name}' at {latest_tag} ({sha})")
 
 
 if __name__ == "__main__":

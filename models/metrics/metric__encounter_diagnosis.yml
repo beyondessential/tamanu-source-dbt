@@ -1,0 +1,149 @@
+version: 2
+
+models:
+  - name: metric__encounter_diagnosis
+    description: "{{ doc('metric__encounter_diagnosis') }}"
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment
+    # that bands a value or groups a diagnosis differently adds a file there rather than
+    # forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier,
+      # name or birth date alongside it -- no patient is identifiable through a row, so this
+      # stays unrestricted and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+    data_tests:
+      # AC-001: one row per diagnosis. A duplicate would double-count it in any consumer
+      # that sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__encounter_diagnosis_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-009 (BL-002): a diagnosis is point-in-time, so period_end is hardcoded NULL.
+      # Asserted as the null invariant itself rather than as an end-after-start comparison,
+      # so a change that ever populates it flags for a deliberate revisit instead of passing
+      # on an empty row set.
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_009_metric__encounter_diagnosis_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__encounter_diagnosis__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__encounter_diagnosis_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__encounter_diagnosis_metric_id_values
+              arguments:
+                values:
+                  - encounter_diagnosis
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_003_metric__encounter_diagnosis_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__encounter_diagnosis__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__encounter_diagnosis__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_008_metric__encounter_diagnosis_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: "{{ doc('metric__encounter_diagnosis__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__encounter_diagnosis_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: "{{ doc('metric__encounter_diagnosis__period_end') }}"
+        # BL-002: always NULL, asserted at model level by AC-009.
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__encounter_diagnosis__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__encounter_diagnosis_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__encounter_diagnosis_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__encounter_diagnosis__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__encounter_diagnosis_value_numeric_not_null
+          # BL-004: one diagnosis per row, so the count contribution is always 1. A value
+          # other than 1 would mean the model had silently re-aggregated.
+          - accepted_values:
+              name: ac_006_metric__encounter_diagnosis_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('metric__encounter_diagnosis__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} the diagnosis is attributed to."
+        data_tests:
+          - not_null:
+              name: ac_007_metric__encounter_diagnosis_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: "{{ doc('metric__encounter_diagnosis__encounter_type') }}"
+        data_tests:
+          - not_null:
+              name: ac_011_metric__encounter_diagnosis_encounter_type_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      # BL-007: the three recorded-diagnosis columns are coalesced in the model so none is
+      # ever NULL -- Tupaia exposes them as array filters, and an array filter drops a NULL
+      # row. AC-010 is what stops that regressing.
+      - name: diagnosis_code
+        data_type: character varying(255)
+        description: "{{ doc('metric__encounter_diagnosis__diagnosis_code') }}"
+        data_tests:
+          - not_null:
+              name: ac_010_metric__encounter_diagnosis_diagnosis_code_not_null
+      - name: diagnosis
+        data_type: character varying(255)
+        description: "{{ doc('metric__encounter_diagnosis__diagnosis') }}"
+        data_tests:
+          - not_null:
+              name: ac_010a_metric__encounter_diagnosis_diagnosis_not_null
+      - name: diagnosis_certainty
+        data_type: character varying(255)
+        description: "{{ doc('metric__encounter_diagnosis__diagnosis_certainty') }}"
+        data_tests:
+          - not_null:
+              name: ac_010b_metric__encounter_diagnosis_diagnosis_certainty_not_null
+      - name: is_primary
+        data_type: boolean
+        description: "{{ doc('metric__encounter_diagnosis__is_primary') }}"
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('metric__encounter_diagnosis__age_years') }}"
+        # BL-008: a measure, not a dimension -- the age classification is the consumer's, so
+        # this is absent from the registry's disaggregations and is banded by the data table.

@@ -1,12 +1,15 @@
 {
   "query": "replace this",
   "name": "Lab tests line list",
-  "notes": "This report generates a list of all patients that have had a lab test created. Patients are listed in chronological order based on the lab request date and time.",
   "status": "published",
+  "notes": "This report generates a list of all patients that have had a lab test created. Patients are listed in chronological order based on the lab request date and time.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",
-    "dataSources": ["thisFacility", "allFacilities"],
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
     "parameters": [
       {
         "parameterField": "ParameterSelectField",

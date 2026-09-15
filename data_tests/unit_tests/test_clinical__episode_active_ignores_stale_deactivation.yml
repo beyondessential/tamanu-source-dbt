@@ -1,0 +1,25 @@
+unit_tests:
+  - name: test_clinical__episode_active_ignores_stale_deactivation
+    model: clinical__episode
+    description: >
+      BL-005, AC-007. An active registration is open whatever else the record carries. A
+      reactivation leaves the deactivation stamp behind on the row, so deactivated_datetime and
+      deactivated_by_id are populated while the patient is enrolled; neither may close the
+      episode. Both are still emitted, so the stamp remains visible.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, '2024-05-01 08:00:00'::timestamp as deactivated_datetime, 'usr_002' as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, 'stat_001' as clinical_status_id, 'ON_ART' as clinical_status_code, 'On ART' as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+
+      - input: ref('int__registration_status_history')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as episode_id, '2024-05-01 08:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'change log' as history_source
+          union all
+          select 'pat_001;preg_001', '2024-09-01 08:00:00'::timestamp, 'active', 'change log'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, null::int as episode_concept_id, null::int as episode_object_concept_id, '2024-01-10'::date as episode_start_date, '2024-01-10 09:00:00'::timestamp as episode_start_datetime, null::date as episode_end_date, null::timestamp as episode_end_datetime, null::text as episode_end_source, 'program registry' as episode_type_source_value, 'HIV' as episode_source_value, 'HIV Program' as episode_source_name, 'preg_001' as program_registry_id, 'prog_001' as program_id, null::text as episode_parent_id, null::int as episode_number, 'active' as registration_status, 'stat_001' as clinical_status_id, 'ON_ART' as clinical_status_source_value, 'On ART' as clinical_status_source_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as care_site_id, 'usr_001' as provider_id, '2024-05-01 08:00:00'::timestamp as deactivated_datetime, 'usr_002' as deactivated_by_provider_id

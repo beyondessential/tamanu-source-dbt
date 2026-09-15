@@ -25,11 +25,67 @@ Facility, Patient billing type, Admitting clinician, Area, Department, Admission
 
 ---
 
-### Audit outpatient appointments line list *(sensitive version available)*
+### Audit discharge line list *(sensitive version available)*
 
 **Report Description**
 
-This report shows an audit log of all modifications and cancellations to outpatient appointments. Each row represents a change event, showing both the current appointment details and the previous values before the change. The report is designed to track which Tamanu users are creating and editing appointments. Status-only changes (e.g., Confirmed to Arrived) are excluded unless the status change is to Cancelled. If an appointment is changed multiple times, each modification will appear as a separate line.
+This report lists patients whose discharge was recorded in Tamanu within the selected date range.
+
+The date range filters on when the discharge was recorded, that is when a user completed the discharge form, and NOT on the discharge date and time entered on that form. Both are shown side by side, along with the number of days between them, so that a backlog of discharges recorded late can be monitored.
+
+The below information is included for each discharge:
+- Discharge date and time as entered on the discharge form.
+- Discharge recorded date and time, being when the discharge was actually recorded in Tamanu.
+- Days between discharge and recording. Zero means the discharge was recorded on the day it happened.
+- Discharging clinician named on the form, and the user who completed the form. These are often different people.
+- Whether the discharge was automatic. Tamanu discharges some encounters automatically, for example outpatient encounters left open overnight, and encounters closed on registering a patient death. Use the discharge type filter to include or exclude these.
+- Number of times the discharge was edited after it was first recorded.
+- Primary and secondary diagnoses recorded against the encounter, with their diagnosis codes in separate columns.
+
+Discharges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.
+
+**Filters**
+
+Facility, Department, Encounter type, Discharge type
+
+**Default date range**: 30days
+
+
+---
+
+### Audit encounter invoice *(sensitive version available)*
+
+**Report Description**
+
+Audit report for reviewing invoices against encounters. The date range filters on encounter start date, so each row represents an encounter that started within the range. Use the 'Include in-progress encounters' filter (defaults to Yes) to include non-discharged encounters; included rows appear with an empty encounter end date. Test patients and sensitive facilities are excluded.
+
+Columns included:
+- Patient identification (ID, name, date of birth, age, sex, billing type).
+- Encounter start and end dates and times with length of stay.
+- Facility and discharging department.
+- Supervising clinician.
+- Invoice finalised date and time.
+- Invoice total - sum of price x quantity for all items on non-cancelled invoices.
+- Insurance coverage - calculated from insurance plan coverage percentages applied to insurable items on non-cancelled invoices. Uses finalised coverage values where available and falls back to current plan values for in-progress invoices.
+- Patient subtotal - invoice total minus insurance coverage minus invoice-level discount.
+- Patient payment - net patient payments (payments minus refunds) against non-cancelled invoices.
+- Patient total - patient subtotal minus patient payment (outstanding balance).
+- Invoice products with no category - items on non-cancelled invoices that have no product category assigned, which typically indicates manually added fees (e.g. encounter fees added outside the product catalogue) or products with a broken category reference.
+
+**Filters**
+
+Facility, Department, Patient billing type, Supervising clinician, Include in-progress encounters (default Yes)
+
+**Default date range**: 7days
+
+
+---
+
+### Audit outpatient appointments *(sensitive version available)*
+
+**Report Description**
+
+This report shows an audit log of all modifications and cancellations to outpatient appointments. Each row represents a change event, showing both the current appointment details and the previous values before the change. The report is designed to track which Tamanu users are creating and editing appointments. Status-only changes (e.g., Confirmed to Arrived) are excluded unless the status change is to Cancelled. If an appointment is changed multiple times, each modification will appear as a separate line. The date range filters when a change was recorded, not when the appointment is scheduled.
 
 **Filters**
 
@@ -40,7 +96,7 @@ Facility
 
 ---
 
-### Audit patient details edits line list
+### Audit patient details edit
 
 **Report Description**
 
@@ -56,7 +112,7 @@ Patient, User
 
 ---
 
-### Audit patient views line list
+### Audit patient views
 
 **Report Description**
 
@@ -83,7 +139,32 @@ The report includes all details documented in the patient death record.
 
 Facility, Cause of death, Due to (or as a consequence of), Other contributing condition, Manner of death
 
-**Default date range**: 7days
+**Default date range**: allTime
+
+
+---
+
+### Emergency triage line list *(sensitive version available)*
+
+**Report Description**
+
+This report generates a list of emergency department presentations triaged within the selected date range, one row per triage record, in order of triage time.
+
+For each presentation the report includes the triage category and arrival mode, the chief and secondary complaint, any diagnoses and medications recorded during the encounter, and the times of triage and of the start of active care.
+
+'Waiting time triage to active care' is the interval between triage and the time the triage record was closed, shown as total hours, minutes and seconds (hh:mm:ss). A stay longer than a day appears as, for example, 29:28:00.
+
+'Target time met' compares that waiting time against the target for the patient's triage category. Targets default to Australasian Triage Scale intervals, with a 2-minute allowance for Category 1 rather than literal 'immediate' (Category 2 within 10 minutes, Category 3 within 30, Category 4 within 60, Category 5 within 120), and are configured per deployment. The column is blank while a patient is still waiting.
+
+'Discharged from ED or admitted' shows 'Admitted' where the encounter went on to an inpatient admission, and 'Discharged' where the encounter has ended. It is blank while the encounter is still open. A death in the department is not reported as a separate outcome -- the discharge disposition column carries it.
+
+'Total length of stay' runs from triage to the end of the encounter, so for an admitted patient it spans the whole inpatient episode.
+
+**Filters**
+
+Facility, Triage category
+
+**Default date range**: 30days
 
 
 ---
@@ -101,6 +182,21 @@ This report generates a list of all active encounters with their associated diet
 Facility, Area
 
 **Default date range**: allTime
+
+
+---
+
+### Encounter prescription discharge summary *(sensitive version available)*
+
+**Report Description**
+
+This report shows the total quantity of medication selected for discharge for a given drug within a specified date range, based on what clinicians recorded at discharge rather than pharmacy dispensing records. For deployments that record dispensing via the pharmacy dispensing module instead, use the 'Medication dispensed summary' report.
+
+**Filters**
+
+Facility, Drug
+
+**Default date range**: 30days
 
 
 ---
@@ -304,7 +400,7 @@ Village, Doctor/Nurse
 
 **Report Description**
 
-This report provides a summary of all invoice products, including their insurable status, category, and pricing across all price lists and insurance plans.
+This report provides a summary of all invoice products, including their insurable status, category, pricing and charging type across all price lists, and insurance coverage across all insurance plans.
 
 **Default date range**: allTime
 
@@ -571,11 +667,11 @@ This report generates a list of all patients that have been registered, includin
 
 **Report Description**
 
-This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range.
+This report generates upcoming vaccination schedules for patients up to 18 years old by default or for patients born within the user-selected date range. Set the 'Exclude overseas patients' filter to Yes to drop patients whose recorded country of residence is set to an overseas country.
 
 **Filters**
 
-Category, Vaccine, Vaccine status, Village
+Category, Vaccine, Vaccine status, Village, Exclude overseas patients (default No)
 
 **Default date range**: 18years
 
@@ -604,7 +700,32 @@ This report generates usage quality metrics on patient registrations. The report
 
 ---
 
-### User audit report *(sensitive version available)*
+### User access audit report
+
+**Report Description**
+
+This report generates a comprehensive list of all active users in the system for auditing purposes. The report includes user identification, contact information, roles, designations, and associated permissions.
+
+The following details are included for each user:
+- User name: The display name of the user
+- User ID: The unique identifier for the user
+- Email address: The user's email address
+- Role: The role assigned to the user
+- Designations: All designations assigned to the user (comma-separated if multiple)
+- Role permissions: All permissions associated with the user's role, displayed in verb:noun format (e.g., read:Patient, write:Encounter)
+
+This report is designed to support government auditing requirements by providing a complete overview of user access levels and permissions.
+
+**Filters**
+
+Role
+
+**Default date range**: allTime
+
+
+---
+
+### User audit line list *(sensitive version available)*
 
 **Report Description**
 

@@ -1,0 +1,179 @@
+# HIV screening and confirmatory testing metrics (MAUI-6637).
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: hiv_screening_test
+  kind: metric
+  name: HIV screening, by client-month
+  description: >-
+    Clients screened for HIV. One row per patient per reporting month, true where any screening test
+    that month was reactive.
+  numerator_description: >-
+    Distinct patients with at least one countable HIV screening test dated in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Shaped on the test-event/client-month split WHO SMART Guidelines HIV reports HTS.2 and HTS.3
+    against, without claiming either registered indicator: this metric's screening test catalogue and
+    upstream forms are deployment-specific, not the DAK's own data elements, so its numbers are not
+    comparable to a DAK-conformant HTS.2/HTS.3 count. A coverage rate against a facility's attendance
+    is a downstream concern for whichever report or dataset joins this metric to attendance data --
+    the metric itself counts tests, not the population eligible for one.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  - is_repeat_test
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md
+- metric_id: hiv_screening_test_event
+  kind: metric
+  name: HIV screening, by test
+  description: >-
+    hiv_screening_test at test grain: one row per countable HIV screening test, so a patient tested
+    twice in a month contributes twice. Answers "how many screening tests were performed", which the
+    client-month grain cannot.
+  numerator_description: >-
+    COUNT of countable HIV screening tests dated in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from hiv_screening_test rather than as a row-count of it, because the two
+    grains are not interchangeable: summing the client-month grain answers "how many people", summing
+    this one answers "how many tests" -- conflating them under one metric_id would make an unfiltered
+    total ambiguous between the two questions.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  - is_repeat_test
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md
+- metric_id: hiv_screening_test_key_population
+  kind: metric
+  name: HIV screening, by client-month and key population
+  description: >-
+    hiv_screening_test disaggregated by key population: one row per patient per reporting month per
+    key population they are recorded as belonging to.
+  numerator_description: >-
+    COUNT of patient-population pairs where the patient has at least one countable HIV screening test
+    dated in the reporting month. A patient belonging to two key populations contributes to both, so
+    summing across populations double-counts that patient -- group by key_population, do not total it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from hiv_screening_test rather than added to it as a column, because one
+    patient can hold several key populations and a column would make the base metric's own total
+    wrong.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  - is_repeat_test
+  - key_population
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md
+- metric_id: hiv_confirmatory_test
+  kind: metric
+  name: HIV confirmatory testing, by client-month
+  description: >-
+    Clients confirmatory-tested for HIV following a reactive screen. One row per patient per reporting
+    month, true where any confirmatory test that month was positive.
+  numerator_description: >-
+    Distinct patients with at least one countable HIV confirmatory test dated in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Shaped on the same test-event/client-month split as hiv_screening_test, for the confirmatory stage
+    of the cascade. See hiv_screening_test's rationale for why this is not claimed as a DAK-conformant
+    HTS.2/HTS.3 count.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md
+- metric_id: hiv_confirmatory_test_event
+  kind: metric
+  name: HIV confirmatory testing, by test
+  description: >-
+    hiv_confirmatory_test at test grain: one row per countable HIV confirmatory test, so a patient
+    tested twice in a month contributes twice.
+  numerator_description: >-
+    COUNT of countable HIV confirmatory tests dated in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from hiv_confirmatory_test for the same reason as hiv_screening_test_event:
+    the two grains answer different questions and conflating them makes an unfiltered total ambiguous.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md
+- metric_id: hiv_confirmatory_test_key_population
+  kind: metric
+  name: HIV confirmatory testing, by client-month and key population
+  description: >-
+    hiv_confirmatory_test disaggregated by key population: one row per patient per reporting month per
+    key population they are recorded as belonging to.
+  numerator_description: >-
+    COUNT of patient-population pairs where the patient has at least one countable HIV confirmatory
+    test dated in the reporting month. A patient belonging to two key populations contributes to both,
+    so summing across populations double-counts that patient -- group by key_population, do not total
+    it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from hiv_confirmatory_test rather than added to it as a column, for the same
+    reason as hiv_screening_test_key_population.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - is_positive
+  - key_population
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_testing.md

@@ -9,7 +9,9 @@ sources:
         config:
           tags: []
           meta:
-            triggers: []
+            triggers:
+              - notify_signers_changed
+              - set_signers_updated_at
         columns:
           - name: id
             data_type: character varying(255)

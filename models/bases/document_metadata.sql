@@ -7,4 +7,3 @@ select
     encounter_id
 from {{ source('tamanu', 'document_metadata') }}
 where deleted_at is null
-

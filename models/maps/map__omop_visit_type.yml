@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: map__omop_visit_type
+    description: >-
+      Tamanu encounter_type codes mapped to OMOP standardised Visit concept IDs
+      (vocabulary 'Visit'). Universal across deployments. Joined by
+      clinical__visit_occurrence to populate visit_concept_id shadow columns.
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: local_code
+        data_type: text
+        description: Tamanu encounter_type value (e.g. admission, clinic, emergency).
+        data_tests:
+          - not_null
+          - unique
+      - name: local_name
+        data_type: text
+        description: Human-readable Tamanu encounter type label.
+        data_tests:
+          - not_null
+      - name: concept_id
+        data_type: integer
+        description: >-
+          OMOP standard concept ID for the visit type (9201 = Inpatient Visit,
+          9202 = Outpatient Visit, 9203 = Emergency Room Visit, 0 = no matching concept).
+        data_tests:
+          - not_null
+      - name: concept_name
+        data_type: text
+        description: OMOP concept name for the visit concept.
+        data_tests:
+          - not_null
+      - name: vocabulary_id
+        data_type: text
+        description: OMOP vocabulary the concept belongs to.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Visit"]

@@ -1,0 +1,41 @@
+# Clinical procedures, across any encounter setting.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: procedure
+  kind: metric
+  name: Procedures
+  description: >-
+    Clinical procedures performed on a patient, in any encounter setting. One row per procedure.
+  numerator_description: >-
+    Recorded procedures, counted on the date performed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded procedures, which no external body registers as a single indicator --
+    procedure classifications (e.g. ICD-10-PCS, CPT) code what a procedure is, not how a
+    deployment should count procedure activity, and deployments differ in what they code
+    procedures with. This metric emits the procedure as recorded and leaves any grouping to the
+    consumer, the same approach encounter_diagnosis takes for diagnoses. Pending alignment with
+    the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: procedure
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - sex
+  - procedure
+  - procedure_code
+  - is_completed
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: null

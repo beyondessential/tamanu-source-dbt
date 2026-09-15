@@ -9,26 +9,24 @@ select
     village as "{{ translate_label('patientVillage') }}",
     facility as "{{ translate_label('facility') }}",
     is_selected_for_discharge as "{{ translate_label('prescriptionSelectedForDischarge') }}",
-    medication_code as "{{ translate_label('prescriptionMedicationCode') }}",
-    medication as "{{ translate_label('prescriptionMedication') }}",
+    medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
+    medication as "{{ translate_label('encounterPrescriptionMedication') }}",
     route as "{{ translate_label('prescriptionRoute') }}",
-    quantity as "{{ translate_label('prescriptionQuantity') }}",
+    quantity as "{{ translate_label('encounterPrescriptionQuantity') }}",
     repeats as "{{ translate_label('prescriptionRepeats') }}",
     is_ongoing as "{{ translate_label('prescriptionIsOngoing') }}",
     is_prn as "{{ translate_label('prescriptionIsPRN') }}",
     is_variable_dose as "{{ translate_label('prescriptionIsVariableDose') }}",
     dose_amount as "{{ translate_label('prescriptionDoseAmount') }}",
-    units as "{{ translate_label('prescriptionUnits') }}",
+    dosing_unit as "{{ translate_label('prescriptionDosingUnit') }}",
+    dispensing_unit as "{{ translate_label('prescriptionDispensingUnit') }}",
+    unit_conversion as "{{ translate_label('prescriptionUnitConversion') }}",
     frequency as "{{ translate_label('prescriptionFrequency') }}"
 from {{ ref('ds__sensitive_encounter_prescriptions') }}
 where
-    case when {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    end
-    and case when {{ parameter('toDate', default_value='2024-01-31', data_type='date') }} is null then true
-        else {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
-    end
+    {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+    and {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and case when {{ parameter('facilityId') }} is null then true
-        else {{ parameter('facilityId') }} = facility_id
+        else facility_id = {{ parameter('facilityId') }}
     end
 order by datetime desc

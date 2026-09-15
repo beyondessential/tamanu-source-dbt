@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -23,7 +24,20 @@ def cprint(message, msg_type="info"):
         "success": GREEN,
     }
     color = colors.get(msg_type.lower(), WHITE)
-    print(f"{color}{message}{RESET}")
+    try:
+        print(f"{color}{message}{RESET}")
+    except UnicodeEncodeError:
+        # Windows consoles on a non-UTF-8 codepage (e.g. cp1252) can't encode
+        # some characters (emoji, smart quotes) straight to stdout. Fall back
+        # to a readable escaped form rather than crashing the script.
+        # backslashreplace keeps the codepoint visible (e.g. ✅) so
+        # different emoji stay distinguishable in the log; errors="replace"
+        # would collapse every one of them to the same "?" glyph.
+        # getattr guards sys.stdout itself being None (e.g. pythonw.exe, a
+        # detached process), not just .encoding being unset.
+        encoding = getattr(sys.stdout, "encoding", None) or "ascii"
+        safe_message = message.encode(encoding, errors="backslashreplace").decode(encoding)
+        print(f"{color}{safe_message}{RESET}")
 
 
 def execute_command(command):
@@ -50,8 +64,37 @@ def execute_command_with_output(command, cwd=None):
         subprocess.CompletedProcess: The result object containing stdout, stderr, and return code
     """
     try:
+        # PYTHONUTF8/PYTHONIOENCODING force the *child* process (dbt, itself
+        # a Python process spawned via shell=True) to write UTF-8 rather than
+        # the host's console codepage (cp1252 on Windows). Without this, dbt
+        # encodes survey question text containing a non-cp1252 character
+        # (smart quotes, etc.) using cp1252 before we ever see it, handing us
+        # a byte sequence that isn't valid UTF-8 -- our own decode below then
+        # has no choice but to substitute a replacement character, silently
+        # corrupting content it could have gotten right if the child had
+        # written UTF-8 in the first place.
+        child_env = os.environ.copy()
+        child_env["PYTHONUTF8"] = "1"
+        child_env["PYTHONIOENCODING"] = "utf-8"
+
+        # encoding/errors on our own end: without it, `text=True` decodes
+        # captured output using the host's preferred locale encoding instead
+        # of UTF-8. A byte sequence the target encoding can't decode then
+        # raises UnicodeDecodeError inside a subprocess reader thread --
+        # non-deterministically either crashing the read (leaving
+        # stdout/stderr as None, which callers combine with `+` and get a
+        # TypeError) or hanging. UTF-8 decodes correctly once the child
+        # writes UTF-8 (see above); errors="replace" is a last-resort
+        # backstop against any residual invalid bytes, never raising.
         return subprocess.run(
-            command, cwd=cwd, capture_output=True, text=True, shell=True
+            command,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            shell=True,
+            encoding="utf-8",
+            errors="replace",
+            env=child_env,
         )
     except Exception as e:
         cprint(f"Error while running command: {e}", "error")

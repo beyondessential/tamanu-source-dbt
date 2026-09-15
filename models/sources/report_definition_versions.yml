@@ -11,6 +11,7 @@ sources:
             - administration
           meta:
             triggers:
+              - delete_report_definition_versions_from_sync_lookup
               - notify_report_definition_versions_changed
               - record_report_definition_versions_changelog
               - set_report_definition_versions_updated_at
@@ -72,6 +73,9 @@ sources:
                   arguments:
                     to: source('tamanu', 'users')
                     field: id
+          - name: advanced_config
+            data_type: jsonb
+            description: "{{ doc('report_definition_versions__advanced_config') }}"
           - name: updated_at_sync_tick
             data_type: bigint
             description: "{{ doc('generic__updated_at_sync_tick') }} in report_definition_versions."

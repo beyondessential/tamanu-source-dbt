@@ -1,0 +1,75 @@
+# MSF mental health session metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: active_psychiatric_care
+  kind: metric
+  name: Active psychiatric care
+  description: >-
+    Patients whose psychiatry-registry registration was active as of the end of the reporting month.
+  numerator_description: >-
+    Distinct patients whose psychiatry-registry registration_status was active as of month end (reconstructed
+    from the registration's change-log history -- not a live status snapshot)
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Mental Health Sessions (Psychiatry and mhGAP) program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__mental_health_sessions.md
+- metric_id: medication_side_effects
+  kind: metric
+  name: Patients with medication side effects
+  description: >-
+    Distinct patients with a documented medication side effect on a Psychiatry Follow Up form in the
+    reporting month.
+  numerator_description: >-
+    Distinct patients with a non-empty answer to any of the three side-effect questions (extra-pyramidal/metabolic/other)
+    on a Psychiatry Follow Up form in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Mental Health Sessions (Psychiatry and mhGAP) program operational definition
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__mental_health_sessions.md
+- metric_id: psychiatric_care_sessions
+  kind: metric
+  name: Psychiatric care sessions
+  description: >-
+    Distinct encounters in the reporting month with at least one Psychiatry Baseline/Follow Up/Closure
+    form submitted (a session is an encounter).
+  numerator_description: >-
+    Distinct encounters with at least one of the three psychiatry forms submitted in the reporting
+    month -- multiple forms on one encounter count as one session
+  denominator_description: null
+  data_source: tamanu
+  definition_source: MSF
+  definition_source_code: null
+  definition_rationale: MSF Mental Health Sessions (Psychiatry and mhGAP) program operational definition
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__mental_health_sessions.md

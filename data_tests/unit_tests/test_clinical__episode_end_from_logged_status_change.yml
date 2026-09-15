@@ -1,0 +1,28 @@
+unit_tests:
+  - name: test_clinical__episode_end_from_logged_status_change
+    model: clinical__episode
+    description: >
+      BL-004, AC-005. An inactive registration with no deactivation datetime takes its end from
+      the change log: the earliest logged entry in which it became inactive, with
+      episode_end_source recording that the status change closed it rather than a deactivation.
+      A later second transition to inactive does not move the end, so a registration reactivated
+      and closed again reports its first close.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_code, 'Lost to follow up' as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+
+      - input: ref('int__registration_status_history')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, 'active' as registration_status, 'change log' as history_source
+          union all
+          select 'pat_001;preg_001', '2024-06-01 10:00:00'::timestamp, 'inactive', 'change log'
+          union all
+          select 'pat_001;preg_001', '2024-08-01 11:00:00'::timestamp, 'inactive', 'change log'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, null::int as episode_concept_id, null::int as episode_object_concept_id, '2024-01-10'::date as episode_start_date, '2024-01-10 09:00:00'::timestamp as episode_start_datetime, '2024-06-01'::date as episode_end_date, '2024-06-01 10:00:00'::timestamp as episode_end_datetime, 'status change' as episode_end_source, 'program registry' as episode_type_source_value, 'HIV' as episode_source_value, 'HIV Program' as episode_source_name, 'preg_001' as program_registry_id, 'prog_001' as program_id, null::text as episode_parent_id, null::int as episode_number, 'inactive' as registration_status, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_source_value, 'Lost to follow up' as clinical_status_source_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as care_site_id, 'usr_001' as provider_id, null::timestamp as deactivated_datetime, null::text as deactivated_by_provider_id

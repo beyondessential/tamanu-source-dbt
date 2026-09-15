@@ -1,0 +1,93 @@
+unit_tests:
+  - name: test_metric__opd_imaging_request_segment_attribution
+    model: metric__opd_imaging_request
+    description: >
+      BL-003/BL-004. r1 sits on an encounter with two segments starting at the same instant
+      -- an earlier 'admission' segment and a duplicate-instant 'triage'/'clinic' pair (the
+      tie-break case): the as-of join must pick the 'clinic' row (visit_detail_id 'vd2b'
+      sorts after 'vd2a') over the earlier 'admission' segment, so r1 (requested after the
+      tie) is included. r3 sits on a 'triage'-only encounter and is excluded entirely -- no
+      segment is 'clinic'. r4 is still 'pending' (is_completed false, no imaging_results row
+      at all), and must still resolve a segment and be included, because the as-of join is
+      evaluated at requested_date, not at a completion event that does not exist yet.
+      Facility is resolved via the clinic segment's own care_site_id ('loc1'), not a
+      request-level location_group_id (BL-005). r5 is a
+      procedure_type_source_value = 'procedure' row on the same clinic-scoped encounter --
+      proves the branch filter (BL-010) excludes it rather than merely never encountering a
+      procedure row in practice. r6 is is_completed = false but already has a matching
+      imaging_results row (a stray/preliminary result against a still-open request) -- proves
+      period_end is gated on is_completed (BL-002) rather than on whether a result row merely
+      exists. r7 sits on an encounter whose only segment ('clinic') starts after r7's own
+      requested_datetime (a data-timing artifact) -- proves the clamp: r7 is still included
+      and attributed to that first/only segment, rather than dropped for predating it
+      (BL-004).
+    given:
+      - input: ref('clinical__procedure_occurrence')
+        format: sql
+        rows: |
+          select 'r1' as procedure_occurrence_id, 'p1' as person_id, '2026-01-01'::date as procedure_date, '2026-01-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'imaging request' as procedure_type_source_value, 'u1' as provider_id, 'e1' as visit_occurrence_id, null::varchar as location_id, 'ctScan' as procedure_source_value, 'CT Scan' as procedure_source_name, true as is_completed
+          union all
+          select 'r3', 'p1', '2026-01-01'::date, '2026-01-01 10:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e3', null::varchar, 'xRay', 'X-Ray', true
+          union all
+          select 'r4', 'p1', '2026-01-02'::date, '2026-01-02 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', null::varchar, 'mri', 'MRI', false
+          union all
+          select 'r5', 'p1', '2026-01-01'::date, '2026-01-01 11:00:00'::timestamp, 32817, 'procedure', 'u1', 'e1', null::varchar, 'appendectomy', 'Appendectomy', true
+          union all
+          select 'r6', 'p1', '2026-01-03'::date, '2026-01-03 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', null::varchar, 'ultrasound', 'Ultrasound', false
+          union all
+          select 'r7', 'p1', '2026-01-04'::date, '2026-01-04 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e7', null::varchar, 'mri', 'MRI', false
+
+      - input: ref('imaging_results')
+        format: sql
+        rows: |
+          select 'res1' as id, '2026-01-01 12:00:00'::timestamp as datetime, 'r1' as imaging_request_id
+          union all
+          select 'res3', '2026-01-01 11:00:00'::timestamp, 'r3'
+          union all
+          select 'res6', '2026-01-03 10:00:00'::timestamp, 'r6'
+
+      - input: ref('imaging_request_areas')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as imaging_request_id, null::varchar as area_id limit 0"
+
+      - input: ref('reference_data')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as name limit 0"
+
+      - input: ref('notes')
+        format: sql
+        rows: "select null::varchar as record_id, null::varchar as record_type, null::varchar as note_type, null::varchar as content, null::timestamp as datetime limit 0"
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9201 as visit_detail_concept_id, '2026-01-01'::date as visit_detail_start_date, '2026-01-01 08:00:00'::timestamp as visit_detail_start_datetime, '2026-01-01'::date as visit_detail_end_date, '2026-01-01 09:00:00'::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'admission' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd2a', 'e1', 'p1', 9203, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', 'vd1a'
+          union all
+          select 'vd2b', 'e1', 'p1', 9202, '2026-01-01'::date, '2026-01-01 09:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', 'vd2a'
+          union all
+          select 'vd3', 'e3', 'p1', 9203, '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', null::varchar
+          union all
+          select 'vd7', 'e7', 'p1', 9202, '2026-01-04'::date, '2026-01-04 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+    expect:
+      format: sql
+      rows: |
+        select 'opd_imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years
+        union all
+        select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30
+        union all
+        select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30
+        union all
+        select 'opd_imaging_request', null::text, 'r7', '2026-01-04 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30

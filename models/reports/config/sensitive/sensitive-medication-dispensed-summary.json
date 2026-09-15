@@ -1,8 +1,8 @@
 {
   "query": "replace this",
   "name": "Sensitive medication dispensed summary",
-  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on dispense records.",
   "status": "published",
+  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range for dispense records from sensitive facilities, based on dispense records.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "30days",
