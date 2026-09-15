@@ -1,0 +1,36 @@
+# HIV programme registry cohort (MAUI-6861).
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: cohort_hiv
+  kind: cohort
+  name: HIV programme registry cohort
+  description: >-
+    Patients on an HIV programme registry, with the dates they entered and left it. Entry is the
+    earliest intake form the deployment binds to the registry where the patient completed one,
+    otherwise the registration itself. Exit is the registration's deactivation, otherwise death,
+    and is null while the patient is still in the cohort.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Membership is registry enrolment rather than a clinical criterion, so the cohort is the same
+    construct wherever a deployment runs an HIV register. What varies is the binding: which intake
+    form dates entry, and which clinical statuses record death, are deployment reference data. The
+    definition is therefore canonical and the implementation is not -- the model is built in the
+    deployment repo, the same split metric__sti_screening uses.
+  unit: null
+  subject_grain: patient
+  disaggregations: []
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/derived__cohort_hiv.md

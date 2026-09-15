@@ -1,0 +1,42 @@
+version: 2
+
+seeds:
+  - name: cohort_definitions
+    description: >-
+      Allocation registry for cohort_definition_id. A cohort's integer id is assigned here and
+      nowhere else, so two deployments cannot pick the same number for different cohorts.
+
+      This seed allocates ids, it is not a runtime dependency. The compiled reporting bundle ships
+      views only, so a seed cannot reach a deployment through it -- a derived__cohort_* model in a
+      deployment repo carries its id as a literal matching the row below rather than joining here.
+
+      The integer is transitional. derived-elements-conventions.md drops it once cohort definitions
+      consolidate into the metric registry, which already carries the same cohorts under kind:
+      cohort.
+
+      Cohorts registered before this seed existed (the MSF NCD pair in msf_ncd.yml) are not
+      back-filled here. Their ids should be allocated when those models next carry the column, and
+      will take the next free numbers rather than any implied by their registration order.
+    config:
+      tags:
+        - internal
+    columns:
+      - name: cohort_definition_id
+        description: Unique integer, sequential, never reused.
+        data_tests:
+          - unique
+          - not_null
+      - name: cohort_name
+        description: >-
+          Machine-readable name, matching the cohort_id the derived__cohort_* model emits.
+        data_tests:
+          - unique
+          - not_null
+      - name: description
+        description: What membership of the cohort means.
+      - name: omop_concept_id
+        description: >-
+          Domain concept for the cohort, SNOMED preferred. Empty where no concept has been
+          verified against an OMOP vocabulary.
+      - name: vocabulary_id
+        description: The vocabulary omop_concept_id is drawn from.
