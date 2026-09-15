@@ -138,5 +138,19 @@ models:
           +tags:
             - restricted
 
+seeds:
+  tamanu_source_dbt:
+    # cohort_definitions allocates cohort_definition_id and is never read at run time: a
+    # derived__cohort_* model carries its id as a literal, because the compiled reporting bundle
+    # ships views only and a seed cannot reach a deployment through it.
+    #
+    # Disabled so it materialises nowhere. Left enabled it puts a seed node, and any schema tests
+    # on it, into every consuming deployment's graph, where `dbt test` fails with
+    # "relation cohort_definitions does not exist" because a deployment never runs `dbt seed`.
+    # Uniqueness is enforced by scripts/tests/test_cohort_definitions.py instead, which runs in
+    # CI here and costs a deployment nothing.
+    cohort_definitions:
+      +enabled: false
+
 data_tests:
   +severity: warn
