@@ -25,7 +25,13 @@ def get_surveys_from_deployment():
     """
     Get all surveys from the database using dbt using the get_surveys_list macro.
     Returns:
-        list: List of tuples containing (id, code, name) for each survey
+        list: List of tuples containing (id, code, name) for each survey. Empty
+            where the deployment genuinely has no surveys.
+    Raises:
+        RuntimeError: Where the dbt call itself failed. A deployment with no
+            surveys and one whose database could not be read look alike from
+            here, and the second silently builds a schema missing every survey
+            view (see #896 for the same distinction on survey columns).
     """
     surveys = []
     cmd = f"dbt run-operation get_surveys_list --profiles-dir config{get_dbt_target_arg()}"
@@ -34,7 +40,7 @@ def get_surveys_from_deployment():
         if not result or result.returncode != 0:
             if result:
                 cprint(f"Error running dbt command {cmd}:\n {result.stderr}", "error")
-            return surveys
+            raise RuntimeError("Failed to list the deployment's surveys -- see error logged above")
 
         for line in (result.stdout + result.stderr).split("\n"):
             if "SURVEY_DATA:" in line:
@@ -44,9 +50,11 @@ def get_surveys_from_deployment():
 
         return surveys
 
+    except RuntimeError:
+        raise
     except Exception as e:
         cprint(f"Error getting surveys from dbt: {e}", "error")
-        return surveys
+        raise RuntimeError(f"Failed to list the deployment's surveys: {e}") from e
 
 
 def get_survey_columns_from_deployment(survey_id):
