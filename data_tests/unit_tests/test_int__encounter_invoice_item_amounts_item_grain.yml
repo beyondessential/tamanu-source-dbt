@@ -1,5 +1,7 @@
 unit_tests:
   - name: test_int__encounter_invoice_item_amounts_item_grain
+    config:
+      tags: [requires_warehouse_schema]
     model: int__encounter_invoice_item_amounts
     description: >
       Per-item output: a $100 unit price at quantity 2 with a $20 flat item discount gives

@@ -59,6 +59,8 @@ models:
         description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
 unit_tests:
   - name: test_patient_program_registrations_change_logs
+    config:
+      tags: [requires_warehouse_schema]
     model: patient_program_registrations_change_logs
     description: Test basic functionality of patient_program_registrations_change_logs model
     overrides:

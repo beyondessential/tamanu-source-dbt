@@ -2,6 +2,8 @@ version: 2
 
 unit_tests:
   - name: test_user_access_audit_aggregates_designations_and_permissions
+    config:
+      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that the user access audit dataset correctly:
@@ -67,6 +69,8 @@ unit_tests:
         user_003,U003,Charlie Nurse,charlie@example.com,role_003,Nurse,Surgeon,read:Patient,current
 
   - name: test_user_access_audit_handles_users_without_designations
+    config:
+      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that users without any designations are still included in the
@@ -107,6 +111,8 @@ unit_tests:
         user_001,U001,No Designation User,nodesig@example.com,role_001,Administrator,,read:Patient,current
 
   - name: test_user_access_audit_handles_roles_without_permissions
+    config:
+      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that users with roles that have no permissions are still included

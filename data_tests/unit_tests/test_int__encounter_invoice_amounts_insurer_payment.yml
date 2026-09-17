@@ -1,5 +1,7 @@
 unit_tests:
   - name: test_int__encounter_invoice_amounts_insurer_payment
+    config:
+      tags: [requires_warehouse_schema]
     model: int__encounter_invoice_amounts
     description: >
       insurer_payment sums insurer payments and nets refunds by EXCLUDING the reversed

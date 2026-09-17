@@ -2,6 +2,8 @@ version: 2
 
 unit_tests:
   - name: test_invoices_change_logs_window_functions
+    config:
+      tags: [requires_warehouse_schema]
     model: invoices_change_logs
     description: >
       Verifies that previous_status (LAG) and change_sequence (ROW_NUMBER) are
