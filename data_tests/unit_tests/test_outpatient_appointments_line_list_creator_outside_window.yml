@@ -28,6 +28,7 @@ unit_tests:
         rows: |
           select
             'appt_a'::text as id,
+            null::timestamp as created_datetime,
             '2026-09-15 09:00:00'::timestamp as start_datetime,
             '2026-09-15 09:30:00'::timestamp as end_datetime,
             'pat_001'::text as patient_id,
