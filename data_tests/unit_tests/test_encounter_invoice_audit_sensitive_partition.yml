@@ -83,7 +83,7 @@ unit_tests:
       rows: |
         -- enc_sen only. enc_std is at a non-sensitive facility and is filtered out.
         select
-          'P001' as "Patient ID",
+          'P001' as "{{ var('patient_display_id_label', 'Patient ID') }}",
           'John' as "First name",
           'Doe' as "Last name",
           '1990-01-01' as "Date of birth",
