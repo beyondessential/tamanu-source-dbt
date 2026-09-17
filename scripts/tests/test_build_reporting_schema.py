@@ -93,3 +93,30 @@ def test_a_delivery_that_never_lands_fails_the_build(monkeypatch):
         build_reporting_schema.deliver(b"create schema reporting;")
 
     assert len(sent) == build_reporting_schema.CALLBACK_ATTEMPTS
+
+
+# ---------------------------------------------------------------------------
+# main -- what it refuses to deliver
+# ---------------------------------------------------------------------------
+
+
+def test_a_delivery_without_a_version_is_refused(monkeypatch):
+    # Falling back to the checkout's version would register the schema against
+    # a version it was not built from.
+    monkeypatch.delenv("TAMANU_VERSION", raising=False)
+    monkeypatch.setattr(build_reporting_schema, "build", lambda: "unreached.sql")
+
+    with pytest.raises(RuntimeError, match="TAMANU_VERSION"):
+        build_reporting_schema.main()
+
+
+def test_a_local_run_without_a_version_still_builds(monkeypatch, tmp_path):
+    # No callback, so nothing is registered and the checkout's version is the
+    # answer, which is what a local build has always used.
+    monkeypatch.delenv("TAMANU_VERSION", raising=False)
+    monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "")
+    built = tmp_path / "schema.sql"
+    built.write_text("create schema reporting;", encoding="utf-8")
+    monkeypatch.setattr(build_reporting_schema, "build", lambda: str(built))
+
+    build_reporting_schema.main()
