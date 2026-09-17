@@ -10,6 +10,7 @@ with appointment_creators as (
 
 select
     a.id as appointment_id,
+    a.created_datetime,
     p.id as patient_id,
     p.display_id,
     p.first_name,
