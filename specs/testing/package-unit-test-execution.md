@@ -8,7 +8,7 @@
 | **Type** | testing architecture (no model of its own) |
 | **Layer** | cross-repo — `tamanu-source-dbt` CI and every `tamanu-dbt-*` deployment |
 | **Materialisation** | n/a |
-| **Status** | `review` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-17 |
