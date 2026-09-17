@@ -40,7 +40,7 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
+          select '00000000-0000-0000-0000-000000000001'::uuid as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
 
       - input: ref('invoices_change_logs')
         format: sql
@@ -50,7 +50,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001'::uuid as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
 
       - input: ref('invoice_products')
         format: sql
@@ -113,7 +113,7 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select null::uuid as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::uuid as id where false
 
       - input: ref('invoice_discounts')
         format: sql
@@ -134,7 +134,7 @@ unit_tests:
       format: sql
       rows: |
         select
-          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          '00000000-0000-0000-0000-000000000001'::uuid as invoice_id,
           'enc_001' as encounter_id,
           'finalised' as status,
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,

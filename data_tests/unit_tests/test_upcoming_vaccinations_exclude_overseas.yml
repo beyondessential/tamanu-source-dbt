@@ -68,7 +68,7 @@ unit_tests:
       format: sql
       rows: |
         select
-          'P-NULL'      as "{{ var('patient_display_id_label', 'Patient ID') }}",
+          'P-NULL'      as "Patient ID",
           'Ben'         as "First name",
           'Bravo'       as "Last name",
           '2021-01-01'  as "Date of birth",
