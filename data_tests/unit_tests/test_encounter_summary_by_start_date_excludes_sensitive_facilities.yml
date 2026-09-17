@@ -190,7 +190,7 @@ unit_tests:
       format: sql
       rows: |
         select
-          'P001'               as "{{ var('patient_display_id_label', 'Patient ID') }}",
+          'P001'               as "Patient ID",
           'Jane'               as "First name",
           'Doe'                as "Last name",
           '1992-08-05'         as "Date of birth",
