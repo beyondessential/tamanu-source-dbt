@@ -283,7 +283,7 @@ report.reporting.paymentDate,Payment date
 report.reporting.paymentMethod,Method
 report.reporting.paymentReceiptNumber,Receipt number
 report.reporting.paymentReceivedBy,Tamanu user name
-report.reporting.plannedLocationId,Planned location ID
+report.reporting.plannedLocation,Planned location
 report.reporting.plannedLocationStartDateTime,Planned location start date and time
 report.reporting.prescriptionDate,Prescription date
 report.reporting.prescriptionDoseAmount,Dose amount

@@ -64,6 +64,9 @@ models:
       - name: planned_location_id
         data_type: character varying(255)
         description: "{{ doc('encounters__planned_location_id') }}"
+      - name: planned_location
+        data_type: character varying(255)
+        description: "{{ doc('generic__location') }} the encounter is planned to transfer to."
       - name: planned_location_start_datetime
         data_type: timestamp
         description: "{{ doc('encounters__planned_location_start_time') }}"

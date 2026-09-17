@@ -227,6 +227,7 @@ patient_data as (
         ae.end_datetime,
         ae.location_id,
         ae.planned_location_id,
+        planned_location.name as planned_location_name,
         ae.planned_location_start_datetime,
         ae.facility_id,
         ae.facility_name
@@ -237,6 +238,8 @@ patient_data as (
         on village.id = p.village_id
     left join {{ ref('reference_data') }} bt
         on bt.id = ae.patient_billing_type_id
+    left join {{ ref('locations') }} planned_location
+        on planned_location.id = ae.planned_location_id
 )
 
 select
@@ -260,6 +263,7 @@ select
     end as admission_status,
     pd.end_datetime as discharge_datetime,
     pd.planned_location_id,
+    pd.planned_location_name as planned_location,
     pd.planned_location_start_datetime,
     pd.facility_id,
     pd.facility_name as facility,
