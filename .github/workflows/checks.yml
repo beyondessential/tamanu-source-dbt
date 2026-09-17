@@ -9,10 +9,18 @@ name: Checks
 # to main automatically by publish-artifacts.yml's list-reports job on every
 # release cut from main, so it can't drift for long.
 #
-# dbt-unit-tests runs the dbt unit tests against an ephemeral Postgres. A report
-# model's column names are its translated labels, so these tests are meaningful
-# only against this repo's standard translations and are excluded from deployment
-# runs -- see specs/testing/package-unit-test-execution.md.
+# dbt-unit-tests runs the dbt unit tests against an ephemeral Postgres. They mock
+# every input, so they need a database connection but no Tamanu data -- no secrets,
+# no live database, no access to a deployment. Data tests are deliberately not run
+# here: they assert over real rows and need a live database with credentials (#427).
+#
+# Why it exists: nothing was executing dbt's own unit tests, and a fixture whose
+# UNION arms had mismatched column counts reached a release through seven green PRs
+# before a deployment hit it at runtime (#850).
+#
+# A report model's column names are its translated labels, so these tests hold only
+# against this repo's standard translations and are excluded from deployment runs --
+# see specs/testing/package-unit-test-execution.md.
 
 on:
   pull_request:
@@ -69,7 +77,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -87,14 +95,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Install dependencies
-        # boto3 + pandas + pyyaml cover the generator import chain; dbt runs the tests.
-        run: pip install dbt-core dbt-postgres boto3 pandas pyyaml
+        # pyproject.toml is the one place this project's dependencies are declared.
+        run: uv pip install --system -e .
 
       - name: Generate the translation macro
         # macros/default_translations.sql is gitignored in this repo, so it has to be
@@ -105,4 +118,4 @@ jobs:
         run: dbt deps
 
       - name: Run dbt unit tests
-        run: dbt test --select "unit_test:*" --profiles-dir config
+        run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
