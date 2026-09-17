@@ -77,11 +77,12 @@ live value and `default` is the fallback.
 - **BL-001:** The package's unit tests execute in `tamanu-source-dbt` CI on every pull request.
 - **BL-002:** That CI job resolves translations from `csv/report_translations_standard.csv` alone.
 - **BL-003:** That CI job runs against an ephemeral Postgres created for the job.
-- **BL-008:** A unit test that cannot run against an empty database carries `tags: [requires_warehouse_schema]`, and the CI job excludes that tag.
 - **BL-004:** A deployment repo excludes the `tamanu_source_dbt` package from its unit test selection, via `--exclude package:tamanu_source_dbt`.
 - **BL-005:** A deployment repo's `dbt test` run continues to select that deployment's own unit tests and every data test.
 - **BL-006:** No unit test fixture names a translated column through a dbt variable.
 - **BL-007:** A deployment that localises a label changes only its own translation CSV.
+- **BL-008:** A unit test fixture uses `format: sql`, and states every column it supplies with an explicit type.
+- **BL-009:** A unit test fixture supplies every column its model reads, including columns read only by an `order by`.
 
 ## Acceptance criteria
 
@@ -92,6 +93,7 @@ live value and `default` is the fallback.
 | AC-003 | A deployment holding its own unit tests still selects them under that same command | BL-005 | manual verification |
 | AC-004 | `patient_display_id_label` appears nowhere in `tamanu-source-dbt` or any deployment repo | BL-006 | grep |
 | AC-005 | A deliberately broken fixture fails the package CI job | BL-001 | negative control, run once |
+| AC-006 | No fixture under the repo's unit test paths uses `format: csv` | BL-008 | grep |
 
 ## Rollout
 
@@ -121,7 +123,6 @@ Ordered — each step depends on the one before.
 | DV-003 | `.github/workflows/checks.yml` runs pytest and the generated-macro drift guard only, so no dbt unit test runs in CI | Add the job in step 1 |
 | DV-004 | Deployment repos select the package's unit tests, which fail wherever the deployment localises an asserted column | Add the exclusion in step 2 |
 | DV-005 | `report_translations_msf_ethiopia.csv` leaves `default` blank for `patientSubDivision`, `patientVillage` and `prescriptionRoute`, so a fallback to `default` renders `as ""`, which Postgres rejects as a zero-length delimited identifier | Out of scope — raise separately |
-| DV-006 | Eight unit tests do not name every column of every input, so dbt introspects the real relation for the rest and they cannot run against an empty database. They carry `tags: [requires_warehouse_schema]` and the CI job excludes that tag | Make each fixture self-describing and drop its tag |
 
 ## Change log
 

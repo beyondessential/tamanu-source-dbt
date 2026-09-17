@@ -2,8 +2,6 @@ version: 2
 
 unit_tests:
   - name: test_user_access_audit_aggregates_designations_and_permissions
-    config:
-      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that the user access audit dataset correctly:
@@ -14,139 +12,186 @@ unit_tests:
       5. Exposes the user role id for parameter filtering (BL-011)
     given:
       - input: ref('users')
-        format: csv
+        format: sql
         rows: |
-          id,display_id,display_name,email,phone_number,role,visibility_status
-          user_001,U001,Alice Admin,alice@example.com,555-0001,role_001,current
-          user_002,U002,Bob Doctor,bob@example.com,555-0002,role_002,current
-          user_003,U003,Charlie Nurse,charlie@example.com,555-0003,role_003,current
-          user_005,U005,Inactive User,inactive@example.com,555-0005,role_002,historical
+          select
+            'user_001'::text as id,
+            'U001'::text as display_id,
+            'Alice Admin'::text as display_name,
+            'alice@example.com'::text as email,
+            'role_001'::text as role,
+            'current'::text as visibility_status
+          union all
+          select 'user_002'::text, 'U002'::text, 'Bob Doctor'::text, 'bob@example.com'::text, 'role_002'::text, 'current'::text
+          union all
+          select 'user_003'::text, 'U003'::text, 'Charlie Nurse'::text, 'charlie@example.com'::text, 'role_003'::text, 'current'::text
+          union all
+          select 'user_005'::text, 'U005'::text, 'Inactive User'::text, 'inactive@example.com'::text, 'role_002'::text, 'historical'::text
 
       - input: ref('roles')
-        format: csv
+        format: sql
         rows: |
-          id,name
-          role_001,Administrator
-          role_002,Clinician
-          role_003,Nurse
+          select 'role_001'::text as id, 'Administrator'::text as name
+          union all
+          select 'role_002'::text, 'Clinician'::text
+          union all
+          select 'role_003'::text, 'Nurse'::text
 
       - input: ref('user_designations')
-        format: csv
+        format: sql
         rows: |
-          id,user_id,designation_id
-          00000000-0000-0000-0000-000000000001,user_001,desg_001
-          00000000-0000-0000-0000-000000000002,user_002,desg_002
-          00000000-0000-0000-0000-000000000003,user_002,desg_003
-          00000000-0000-0000-0000-000000000004,user_003,desg_001
+          select 'user_001'::text as user_id, 'desg_001'::text as designation_id
+          union all
+          select 'user_002'::text, 'desg_002'::text
+          union all
+          select 'user_002'::text, 'desg_003'::text
+          union all
+          select 'user_003'::text, 'desg_001'::text
 
       - input: ref('reference_data')
-        format: csv
+        format: sql
         rows: |
-          id,code,name,type,visibility_status,available_facilities
-          desg_001,SURG,Surgeon,designation,current,[]
-          desg_002,GP,General Practitioner,designation,current,[]
-          desg_003,EMER,Emergency Medicine,designation,current,[]
-          desg_004,CARD,Cardiologist,designation,current,[]
+          select 'desg_001'::text as id, 'Surgeon'::text as name
+          union all
+          select 'desg_002'::text, 'General Practitioner'::text
+          union all
+          select 'desg_003'::text, 'Emergency Medicine'::text
+          union all
+          select 'desg_004'::text, 'Cardiologist'::text
 
       - input: ref('permissions')
-        format: csv
+        format: sql
         rows: |
-          id,role_id,verb,noun,object_id
-          perm_001,role_001,read,Patient,
-          perm_002,role_001,write,Patient,
-          perm_003,role_001,read,Encounter,
-          perm_004,role_001,write,Encounter,
-          perm_005,role_002,read,Patient,
-          perm_006,role_002,write,Encounter,
-          perm_007,role_003,read,Patient,
+          select 'role_001'::text as role_id, 'read'::text as verb, 'Patient'::text as noun
+          union all
+          select 'role_001'::text, 'write'::text, 'Patient'::text
+          union all
+          select 'role_001'::text, 'read'::text, 'Encounter'::text
+          union all
+          select 'role_001'::text, 'write'::text, 'Encounter'::text
+          union all
+          select 'role_002'::text, 'read'::text, 'Patient'::text
+          union all
+          select 'role_002'::text, 'write'::text, 'Encounter'::text
+          union all
+          select 'role_003'::text, 'read'::text, 'Patient'::text
 
     expect:
-      format: csv
+      format: sql
       rows: |
-        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
-        user_001,U001,Alice Admin,alice@example.com,role_001,Administrator,Surgeon,"read:Encounter, read:Patient, write:Encounter, write:Patient",current
-        user_002,U002,Bob Doctor,bob@example.com,role_002,Clinician,"Emergency Medicine, General Practitioner","read:Patient, write:Encounter",current
-        user_003,U003,Charlie Nurse,charlie@example.com,role_003,Nurse,Surgeon,read:Patient,current
+        select
+          'user_001'::text as user_id,
+          'U001'::text as user_display_id,
+          'Alice Admin'::text as user_name,
+          'alice@example.com'::text as user_email,
+          'role_001'::text as user_role_id,
+          'Administrator'::text as user_role,
+          'Surgeon'::text as user_designations,
+          'read:Encounter, read:Patient, write:Encounter, write:Patient'::text as role_permissions,
+          'current'::text as visibility_status
+        union all
+        select 'user_002'::text, 'U002'::text, 'Bob Doctor'::text, 'bob@example.com'::text, 'role_002'::text, 'Clinician'::text, 'Emergency Medicine, General Practitioner'::text, 'read:Patient, write:Encounter'::text, 'current'::text
+        union all
+        select 'user_003'::text, 'U003'::text, 'Charlie Nurse'::text, 'charlie@example.com'::text, 'role_003'::text, 'Nurse'::text, 'Surgeon'::text, 'read:Patient'::text, 'current'::text
 
   - name: test_user_access_audit_handles_users_without_designations
-    config:
-      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that users without any designations are still included in the
       report with NULL designation field, and that the LEFT JOIN works correctly.
     given:
       - input: ref('users')
-        format: csv
+        format: sql
         rows: |
-          id,display_id,display_name,email,phone_number,role,visibility_status
-          user_001,U001,No Designation User,nodesig@example.com,555-0001,role_001,current
+          select
+            'user_001'::text as id,
+            'U001'::text as display_id,
+            'No Designation User'::text as display_name,
+            'nodesig@example.com'::text as email,
+            'role_001'::text as role,
+            'current'::text as visibility_status
 
       - input: ref('roles')
-        format: csv
+        format: sql
         rows: |
-          id,name
-          role_001,Administrator
+          select 'role_001'::text as id, 'Administrator'::text as name
 
       - input: ref('user_designations')
-        format: csv
+        format: sql
         rows: |
-          id,user_id,designation_id
+          select null::text as user_id, null::text as designation_id where false
 
       - input: ref('reference_data')
-        format: csv
+        format: sql
         rows: |
-          id,code,name,type,visibility_status,available_facilities
+          select null::text as id, null::text as name where false
 
       - input: ref('permissions')
-        format: csv
+        format: sql
         rows: |
-          id,role_id,verb,noun,object_id
-          perm_001,role_001,read,Patient,
+          select 'role_001'::text as role_id, 'read'::text as verb, 'Patient'::text as noun
 
     expect:
-      format: csv
+      format: sql
       rows: |
-        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
-        user_001,U001,No Designation User,nodesig@example.com,role_001,Administrator,,read:Patient,current
+        select
+          'user_001'::text as user_id,
+          'U001'::text as user_display_id,
+          'No Designation User'::text as user_name,
+          'nodesig@example.com'::text as user_email,
+          'role_001'::text as user_role_id,
+          'Administrator'::text as user_role,
+          null::text as user_designations,
+          'read:Patient'::text as role_permissions,
+          'current'::text as visibility_status
 
   - name: test_user_access_audit_handles_roles_without_permissions
-    config:
-      tags: [requires_warehouse_schema]
     model: ds__user_access_audit
     description: >
       Verifies that users with roles that have no permissions are still included
       with NULL permissions field, demonstrating the LEFT JOIN behavior.
     given:
       - input: ref('users')
-        format: csv
+        format: sql
         rows: |
-          id,display_id,display_name,email,phone_number,role,visibility_status
-          user_001,U001,No Perms User,noperms@example.com,555-0001,role_001,current
+          select
+            'user_001'::text as id,
+            'U001'::text as display_id,
+            'No Perms User'::text as display_name,
+            'noperms@example.com'::text as email,
+            'role_001'::text as role,
+            'current'::text as visibility_status
 
       - input: ref('roles')
-        format: csv
+        format: sql
         rows: |
-          id,name
-          role_001,Guest
+          select 'role_001'::text as id, 'Guest'::text as name
 
       - input: ref('user_designations')
-        format: csv
+        format: sql
         rows: |
-          id,user_id,designation_id
+          select null::text as user_id, null::text as designation_id where false
 
       - input: ref('reference_data')
-        format: csv
+        format: sql
         rows: |
-          id,code,name,type,visibility_status,available_facilities
+          select null::text as id, null::text as name where false
 
       - input: ref('permissions')
-        format: csv
+        format: sql
         rows: |
-          id,role_id,verb,noun,object_id
+          select null::text as role_id, null::text as verb, null::text as noun where false
 
     expect:
-      format: csv
+      format: sql
       rows: |
-        user_id,user_display_id,user_name,user_email,user_role_id,user_role,user_designations,role_permissions,visibility_status
-        user_001,U001,No Perms User,noperms@example.com,role_001,Guest,,,current
+        select
+          'user_001'::text as user_id,
+          'U001'::text as user_display_id,
+          'No Perms User'::text as user_name,
+          'noperms@example.com'::text as user_email,
+          'role_001'::text as user_role_id,
+          'Guest'::text as user_role,
+          null::text as user_designations,
+          null::text as role_permissions,
+          'current'::text as visibility_status

@@ -105,11 +105,4 @@ jobs:
         run: dbt deps
 
       - name: Run dbt unit tests
-        # requires_warehouse_schema marks a fixture that does not name every column of
-        # every input, so dbt introspects the real relation for the rest and fails
-        # against an empty database. Removing a tag once its fixture is self-describing
-        # brings that test back into this job.
-        run: |
-          dbt test --profiles-dir config \
-            --select "unit_test:*" \
-            --exclude "tag:requires_warehouse_schema"
+        run: dbt test --select "unit_test:*" --profiles-dir config
