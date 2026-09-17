@@ -47,7 +47,11 @@ def build():
         cprint("Generating survey models...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'generate_survey_models.py'}")
 
-    execute_command(f"dbt compile --profiles-dir config{get_dbt_target_arg()}")
+    # `run` rather than `compile`: two models pivot a table into columns and
+    # read it with `run_query` while they compile, so what they read has to
+    # exist. The replica is restored for this build and discarded after it, so
+    # materialising into it costs nothing that outlives the build.
+    execute_command(f"dbt run --profiles-dir config{get_dbt_target_arg()}")
 
     generate_reporting_schema_script()
 
