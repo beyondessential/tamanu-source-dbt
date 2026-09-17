@@ -70,7 +70,7 @@ unit_tests:
       rows: |
         -- enc_002 sorts first (later start_datetime), no invoices
         select
-          'P002' as "Patient ID",
+          'P002' as "{{ var('patient_display_id_label', 'Patient ID') }}",
           'Jane' as "First name",
           'Smith' as "Last name",
           '1985-06-15' as "Date of birth",
