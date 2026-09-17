@@ -1,0 +1,77 @@
+name: Build Schema Image
+
+# Builds the image pgro runs to produce a deployment's reporting schema, from a
+# tamanu-dbt-* deployment repo:
+#
+#   jobs:
+#     image:
+#       uses: beyondessential/tamanu-source-dbt/.github/workflows/build-schema-image.yml@main
+#       permissions:
+#         contents: read
+#         packages: write
+#
+# The build context is the calling repo. The Containerfile comes from this one at
+# the revision packages.yml pins. Pushed to ghcr.io/<calling repo>:<sha> and :latest.
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Revision of tamanu-source-dbt to take the Containerfile from. Defaults to the pin in packages.yml.
+        type: string
+        required: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout the deployment
+        uses: actions/checkout@v5
+        with:
+          path: deployment
+
+      - name: Read the pinned package revision
+        id: pin
+        # Via env, not interpolation: the input would otherwise run as shell.
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: |
+          if [ -n "$SOURCE_REF" ]; then
+            echo "ref=$SOURCE_REF" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ref=$(sed -n 's/^[[:space:]]*revision:[[:space:]]*//p' deployment/packages.yml | head -1 | tr -d "\"'" | xargs)
+          if [ -z "$ref" ]; then
+            echo "packages.yml names no revision to build from" >&2
+            exit 1
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # Outside the build context, so the image does not carry a second copy of this repo.
+      - name: Checkout the package
+        uses: actions/checkout@v5
+        with:
+          repository: beyondessential/tamanu-source-dbt
+          ref: ${{ steps.pin.outputs.ref }}
+          path: package
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: deployment
+          file: package/Containerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
