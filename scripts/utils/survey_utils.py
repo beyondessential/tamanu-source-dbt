@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .dbt_utils import get_dbt_target_arg
 from .file_utils import ensure_directory_exists, write_file
 from .system_utils import cprint, execute_command_with_output
 
@@ -27,7 +28,7 @@ def get_surveys_from_deployment():
         list: List of tuples containing (id, code, name) for each survey
     """
     surveys = []
-    cmd = f"dbt run-operation get_surveys_list --profiles-dir config"
+    cmd = f"dbt run-operation get_surveys_list --profiles-dir config{get_dbt_target_arg()}"
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
         if not result or result.returncode != 0:
@@ -60,7 +61,7 @@ def get_survey_columns_from_deployment(survey_id):
             genuinely has no questions. None when the dbt call itself failed;
             callers must not treat that the same as "no questions" (see #896).
     """
-    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
+    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config{get_dbt_target_arg()}'
 
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
