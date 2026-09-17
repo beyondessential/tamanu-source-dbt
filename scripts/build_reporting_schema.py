@@ -5,10 +5,13 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import yaml
+
 from utils import (
     cprint,
     execute_command,
     generate_reporting_schema_script,
+    get_dbt_project_config,
     get_dbt_target_arg,
     get_deployment_name,
     get_deployment_version,
@@ -26,10 +29,51 @@ SCRIPTS_DIR = (
 VERSION = get_deployment_version()
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
+PROFILES_PATH = Path("config") / "profiles.yml"
+TARGET = os.environ.get("TAMANU_DBT_TARGET", "").strip() or "replica"
+
 CALLBACK_URL = os.environ.get("SCHEMA_CALLBACK_URL", "").strip()
 CALLBACK_ATTEMPTS = 5
 CALLBACK_BACKOFF_SECONDS = 2
 CALLBACK_TIMEOUT_SECONDS = 60
+
+
+def write_profile():
+    """Write the profile the build connects through, over the deployment's own.
+
+    Each deployment repo names its targets and the env vars behind them for
+    itself, so there is no set of credentials pgro can supply that every one of
+    them reads.
+    """
+    config = get_dbt_project_config()
+    profile = config.get("profile") or config.get("name")
+
+    PROFILES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PROFILES_PATH.write_text(
+        yaml.safe_dump(
+            {
+                profile: {
+                    "target": TARGET,
+                    "outputs": {
+                        TARGET: {
+                            "type": "postgres",
+                            "threads": 1,
+                            "host": "{{ env_var('TAMANU_DL_DB_URL') }}",
+                            "port": 5432,
+                            "user": "{{ env_var('TAMANU_DL_DB_USER') }}",
+                            "password": "{{ env_var('TAMANU_DL_DB_PASSWORD') }}",
+                            "dbname": "{{ env_var('TAMANU_DL_DB_DATABASE') }}",
+                            "schema": "reporting",
+                        }
+                    },
+                }
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    cprint(f"Connecting as {profile}.{TARGET}", "info")
 
 
 def build():
@@ -90,6 +134,10 @@ def main():
     # The checkout's dbt_project.yml version trails the replica's, so a delivery must name its own.
     if CALLBACK_URL and not os.environ.get("TAMANU_VERSION", "").strip():
         raise RuntimeError("TAMANU_VERSION names the version to build for, and is unset")
+
+    # Only where pgro supplies the credentials: a local run keeps its own profile.
+    if os.environ.get("TAMANU_DL_DB_URL", "").strip():
+        write_profile()
 
     cprint(f"\nBuilding reporting schema v{VERSION} ({DEPLOYMENT})", "info")
 
