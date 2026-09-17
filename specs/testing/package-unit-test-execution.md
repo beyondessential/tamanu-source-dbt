@@ -79,10 +79,10 @@ live value and `default` is the fallback.
 - **BL-003:** That CI job runs against an ephemeral Postgres created for the job.
 - **BL-004:** A deployment repo excludes the `tamanu_source_dbt` package from its unit test selection, via `--exclude package:tamanu_source_dbt`.
 - **BL-005:** A deployment repo's `dbt test` run continues to select that deployment's own unit tests and every data test.
-- **BL-006:** No unit test fixture names a translated column through a dbt variable.
+- **BL-006:** A unit test fixture names the package-standard label literally.
 - **BL-007:** A deployment that localises a label changes only its own translation CSV.
 - **BL-008:** A unit test fixture uses `format: sql`, and states every column it supplies with an explicit type.
-- **BL-009:** A unit test fixture supplies every column its model reads, including columns read only by an `order by`.
+- **BL-009:** A unit test fixture supplies every column its model reads.
 
 ## Acceptance criteria
 
@@ -91,7 +91,7 @@ live value and `default` is the fallback.
 | AC-001 | `dbt test --select "unit_test:*"` reports zero failures in package CI | BL-001, BL-002, BL-003 | CI job |
 | AC-002 | `dbt test --select "unit_test:*"` in `tamanu-dbt-samoa`, `tamanu-dbt-fsm` and `tamanu-dbt-msf-kule` selects no `tamanu_source_dbt` unit test | BL-004 | manual verification per repo |
 | AC-003 | A deployment holding its own unit tests still selects them under that same command | BL-005 | manual verification |
-| AC-004 | `patient_display_id_label` appears nowhere in `tamanu-source-dbt` or any deployment repo | BL-006 | grep |
+| AC-004 | No fixture under the repo's unit test paths renders a column alias from a dbt variable | BL-006 | grep |
 | AC-005 | A deliberately broken fixture fails the package CI job | BL-001 | negative control, run once |
 | AC-006 | No fixture under the repo's unit test paths uses `format: csv` | BL-008 | grep |
 
@@ -99,13 +99,9 @@ live value and `default` is the fallback.
 
 Ordered — each step depends on the one before.
 
-1. Add the package CI job (BL-001 to BL-003).
-2. Exclude package unit tests in each deployment repo (BL-004, BL-005), by adding
-   `--exclude package:tamanu_source_dbt` to the repo's documented pre-commit `dbt test`
-   command in its `AGENT.md`.
-3. Revert the `patient_display_id_label` parameterisation and replace the `AGENT.md`
-   guidance that prescribes it (BL-006, BL-007). Both live on all seven version branches,
-   so this step is itself a forward-port.
+1. DV-003.
+2. DV-004.
+3. DV-001 and DV-002, across all seven version branches.
 
 ## Open questions
 
