@@ -53,7 +53,8 @@ Patient: `patient_id`, `display_id`, `first_name`, `last_name`, `date_of_birth`,
 `sex`, `village_id`, `village`, `billing_type_id`, `billing_type`.
 
 Admission: `admitting_clinician_id`, `admitting_clinician`, `admission_datetime`,
-`admission_status`, `discharge_datetime`, `facility_id`, `facility`.
+`admission_status`, `discharge_datetime`, `planned_location_id`, `planned_location`,
+`planned_location_start_datetime`, `facility_id`, `facility`.
 
 Movement history, as three parallel triples — an id array, a comma-joined name string
 and a semicolon-joined datetime string: `department_ids` / `departments` /
@@ -207,6 +208,7 @@ None outstanding.
 
 | Date | Change |
 |---|---|
+| 2026-09-17 | Added the planned-transfer columns `planned_location_id`, `planned_location` and `planned_location_start_datetime` (MAUI-6905). The id and datetime are passthroughs from `encounters_core()`, the name is resolved against `locations`. |
 | 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), matching `encounter_summary_core`. Spec created. |
 | 2026-09-05 | An ungrouped move is named `(no area)` in `location_groups` (BL-006), so the three movement columns of a triple stay the same length. |
 | 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |
