@@ -56,7 +56,7 @@ dataset models, the report's predicate text for the report.
 
 | Reference | Why |
 |---|---|
-| `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040) |
+| `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040), and the appointment's own id and creation timestamp |
 | `ref('location_groups')`, `ref('facilities')` | Area and facility names, and the sensitivity partition (BL-045) |
 | `ref('outpatient_appointments_change_events')` | The creation event, for `created_by` (BL-044) |
 | `ref('patients')`, `ref('patient_additional_data')` | Demographics and contact number |
