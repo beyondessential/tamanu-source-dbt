@@ -37,26 +37,17 @@ and continue to run everywhere.
 
 ## Constraints
 
-These are properties of dbt and of the report layer, not choices this spec makes. They
-bound the available solutions.
-
-- A dbt unit test targets a model. It cannot target a macro.
+- A dbt unit test targets a model, never a macro.
 - A unit test fixture renders without the macro namespace: `translate_label()` and
-  `get_translations()` raise `is undefined` inside a `given` or `expect` block.
-  `var()` renders.
-- A unit test `expect` block must supply every column the model outputs. dbt projects the
+  `get_translations()` are undefined inside a `given` or `expect` block. `var()` renders.
+- A unit test `expect` block supplies every column the model outputs. dbt projects the
   model's full output column list onto both sides of its comparison, so a fixture naming a
   subset fails with `column "<name>" does not exist`.
 - `parameter()` emits a `:name` bind placeholder under `dbt compile`, and the compiled
-  report bundle depends on those placeholders reaching the final report query. A view
-  cannot carry a bind placeholder, so a parameterised predicate cannot move out of the
-  report model into a separately materialised one.
-
-The last constraint is why extracting an untranslated intermediate does not make report
-logic testable without translation. `encounter_summary_core` already separates the
-untranslated body from the presentation layer, and the `encounter-summary-*` unit tests
-still assert translated columns, because the core is a macro inlined into one compiled
-query rather than a model of its own.
+  report bundle carries those placeholders into the final report query. A view cannot
+  carry a bind placeholder.
+- A report model's parameterised predicates and its translated column aliases sit in the
+  same compiled query.
 
 ## Current localisation
 
@@ -105,7 +96,7 @@ live value and `default` is the fallback.
 
 Ordered — each step depends on the one before.
 
-1. Add the package CI job (BL-001 to BL-003). Until this lands the tests have no home.
+1. Add the package CI job (BL-001 to BL-003).
 2. Exclude package unit tests in each deployment repo (BL-004, BL-005), by adding
    `--exclude package:tamanu_source_dbt` to the repo's documented pre-commit `dbt test`
    command in its `AGENT.md`.
@@ -134,4 +125,4 @@ Ordered — each step depends on the one before.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-17 | Maui team | Initial draft |
+| 2026-09-17 | Maui team | Initial draft. PR #1354 carries why an untranslated intermediate does not make report logic testable without translation. |
