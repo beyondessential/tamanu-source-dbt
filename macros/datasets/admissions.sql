@@ -249,6 +249,8 @@ patient_data as (
         ae.start_datetime,
         ae.end_datetime,
         ae.location_id,
+        -- BL-011 (specs/dbt-model/ds__admissions.md): planned_location_id/start_datetime
+        -- are a passthrough from encounters_core(); planned_location_name is resolved here
         ae.planned_location_id,
         planned_location.name as planned_location_name,
         ae.planned_location_start_datetime,
