@@ -1,0 +1,95 @@
+import urllib.error
+import urllib.request
+
+import pytest
+
+import build_reporting_schema as build_reporting_schema
+
+
+class _Answer:
+    """Stands in for the response urlopen is used as a context manager for."""
+
+    def __init__(self, status):
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def _urlopen(answers, sent):
+    """An urlopen that answers from `answers` and records what it was sent."""
+
+    def fake(request):
+        sent.append(request)
+        answer = answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return _Answer(answer)
+
+    return fake
+
+
+@pytest.fixture(autouse=True)
+def _callback(monkeypatch):
+    monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "http://operator/results/token")
+    monkeypatch.setattr(build_reporting_schema.time, "sleep", lambda _: None)
+
+
+# ---------------------------------------------------------------------------
+# deliver -- the POST is the only way a schema leaves the container, so what it
+# does with each answer is the whole of the contract
+# ---------------------------------------------------------------------------
+
+
+def test_a_schema_is_delivered_as_sql(monkeypatch):
+    sent = []
+    monkeypatch.setattr(urllib.request, "urlopen", _urlopen([204], sent))
+
+    build_reporting_schema.deliver(b"create schema reporting;")
+
+    assert len(sent) == 1
+    assert sent[0].data == b"create schema reporting;"
+    assert sent[0].get_header("Content-type") == "application/sql"
+
+
+def test_a_refused_delivery_is_not_sent_again(monkeypatch):
+    # 403 is the build's token being wrong, and sending it again answers the
+    # same. Retrying would spend the build's deadline on a settled answer.
+    sent = []
+    refused = urllib.error.HTTPError("http://operator", 403, "Forbidden", {}, None)
+    monkeypatch.setattr(urllib.request, "urlopen", _urlopen([refused], sent))
+
+    with pytest.raises(RuntimeError, match="403"):
+        build_reporting_schema.deliver(b"create schema reporting;")
+
+    assert len(sent) == 1
+
+
+def test_a_schema_the_operator_cannot_take_yet_is_sent_again(monkeypatch):
+    sent = []
+    later = urllib.error.HTTPError("http://operator", 503, "Unavailable", {}, None)
+    monkeypatch.setattr(urllib.request, "urlopen", _urlopen([later, 204], sent))
+
+    build_reporting_schema.deliver(b"create schema reporting;")
+
+    assert len(sent) == 2
+
+
+def test_a_delivery_that_never_lands_fails_the_build(monkeypatch):
+    # The schema exists nowhere else: a build that cannot hand it over has not
+    # built anything, whatever it did to get there.
+    sent = []
+    unreachable = urllib.error.URLError("connection refused")
+    monkeypatch.setattr(
+        urllib.request,
+        "urlopen",
+        _urlopen([unreachable] * build_reporting_schema.CALLBACK_ATTEMPTS, sent),
+    )
+
+    with pytest.raises(RuntimeError, match="every attempt"):
+        build_reporting_schema.deliver(b"create schema reporting;")
+
+    assert len(sent) == build_reporting_schema.CALLBACK_ATTEMPTS
