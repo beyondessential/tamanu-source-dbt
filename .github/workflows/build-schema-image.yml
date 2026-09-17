@@ -1,7 +1,7 @@
 name: Build Schema Image
 
-# Builds the container image pgro runs to produce a deployment's reporting
-# schema. Callable as a reusable workflow from any tamanu-dbt-* deployment repo:
+# Builds the image pgro runs to produce a deployment's reporting schema, from a
+# tamanu-dbt-* deployment repo:
 #
 #   jobs:
 #     image:
@@ -10,13 +10,8 @@ name: Build Schema Image
 #         contents: read
 #         packages: write
 #
-# The image carries the calling deployment's models and config, so the build
-# context is that repo. The Containerfile and the build scripts come from this
-# one, at the revision the deployment's packages.yml pins, so what builds the
-# image and what runs inside it are the same release.
-#
-# Published as ghcr.io/<calling repo>, tagged with the commit and `latest`. A
-# group's declaration in Canopy names one of those in its builder_image.
+# The build context is the calling repo. The Containerfile comes from this one at
+# the revision packages.yml pins. Pushed to ghcr.io/<calling repo>:<sha> and :latest.
 
 on:
   workflow_call:
@@ -41,8 +36,7 @@ jobs:
 
       - name: Read the pinned package revision
         id: pin
-        # Through the environment rather than interpolated into the script: an
-        # input written into a shell line is run by it.
+        # Via env, not interpolation: the input would otherwise run as shell.
         env:
           SOURCE_REF: ${{ inputs.source_ref }}
         run: |
@@ -57,9 +51,7 @@ jobs:
           fi
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
-      # Beside the build context rather than inside it: the Containerfile copies
-      # the whole context, and a copy of this repo in the image would sit next
-      # to the vendored package as a second one for a reader to confuse it with.
+      # Outside the build context, so the image does not carry a second copy of this repo.
       - name: Checkout the package
         uses: actions/checkout@v5
         with:

@@ -3,7 +3,7 @@ import urllib.request
 
 import pytest
 
-import build_reporting_schema as build_reporting_schema
+import build_reporting_schema
 
 
 class _Answer:
@@ -22,7 +22,7 @@ class _Answer:
 def _urlopen(answers, sent):
     """An urlopen that answers from `answers` and records what it was sent."""
 
-    def fake(request):
+    def fake(request, timeout=None):
         sent.append(request)
         answer = answers.pop(0)
         if isinstance(answer, Exception):
@@ -38,10 +38,7 @@ def _callback(monkeypatch):
     monkeypatch.setattr(build_reporting_schema.time, "sleep", lambda _: None)
 
 
-# ---------------------------------------------------------------------------
-# deliver -- the POST is the only way a schema leaves the container, so what it
-# does with each answer is the whole of the contract
-# ---------------------------------------------------------------------------
+# deliver
 
 
 def test_a_schema_is_delivered_as_sql(monkeypatch):
@@ -56,8 +53,6 @@ def test_a_schema_is_delivered_as_sql(monkeypatch):
 
 
 def test_a_refused_delivery_is_not_sent_again(monkeypatch):
-    # 403 is the build's token being wrong, and sending it again answers the
-    # same. Retrying would spend the build's deadline on a settled answer.
     sent = []
     refused = urllib.error.HTTPError("http://operator", 403, "Forbidden", {}, None)
     monkeypatch.setattr(urllib.request, "urlopen", _urlopen([refused], sent))
@@ -79,8 +74,6 @@ def test_a_schema_the_operator_cannot_take_yet_is_sent_again(monkeypatch):
 
 
 def test_a_delivery_that_never_lands_fails_the_build(monkeypatch):
-    # The schema exists nowhere else: a build that cannot hand it over has not
-    # built anything, whatever it did to get there.
     sent = []
     unreachable = urllib.error.URLError("connection refused")
     monkeypatch.setattr(
@@ -95,14 +88,10 @@ def test_a_delivery_that_never_lands_fails_the_build(monkeypatch):
     assert len(sent) == build_reporting_schema.CALLBACK_ATTEMPTS
 
 
-# ---------------------------------------------------------------------------
-# main -- what it refuses to deliver
-# ---------------------------------------------------------------------------
+# main
 
 
 def test_a_delivery_without_a_version_is_refused(monkeypatch):
-    # Falling back to the checkout's version would register the schema against
-    # a version it was not built from.
     monkeypatch.delenv("TAMANU_VERSION", raising=False)
     monkeypatch.setattr(build_reporting_schema, "build", lambda: "unreached.sql")
 
@@ -111,8 +100,6 @@ def test_a_delivery_without_a_version_is_refused(monkeypatch):
 
 
 def test_a_local_run_without_a_version_still_builds(monkeypatch, tmp_path):
-    # No callback, so nothing is registered and the checkout's version is the
-    # answer, which is what a local build has always used.
     monkeypatch.delenv("TAMANU_VERSION", raising=False)
     monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "")
     built = tmp_path / "schema.sql"

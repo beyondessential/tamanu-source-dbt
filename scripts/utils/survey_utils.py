@@ -28,10 +28,8 @@ def get_surveys_from_deployment():
         list: List of tuples containing (id, code, name) for each survey. Empty
             where the deployment genuinely has no surveys.
     Raises:
-        RuntimeError: Where the dbt call itself failed. A deployment with no
-            surveys and one whose database could not be read look alike from
-            here, and the second silently builds a schema missing every survey
-            view (see #896 for the same distinction on survey columns).
+        RuntimeError: Where the dbt call itself failed, so a database that could
+            not be read is not mistaken for a deployment with no surveys.
     """
     surveys = []
     cmd = f"dbt run-operation get_surveys_list --profiles-dir config{get_dbt_target_arg()}"

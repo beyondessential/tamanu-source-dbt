@@ -50,10 +50,7 @@ def test_generate_survey_doc_writes_files_when_columns_present(monkeypatch, tmp_
     assert "name: q1" in yml
 
 
-# ---------------------------------------------------------------------------
-# get_surveys_from_deployment -- a deployment with no surveys and one whose
-# database could not be read are not the same answer
-# ---------------------------------------------------------------------------
+# get_surveys_from_deployment
 
 
 class _Result:
@@ -73,8 +70,6 @@ def test_a_deployment_with_no_surveys_lists_none(monkeypatch):
 
 
 def test_a_failed_listing_is_not_an_empty_one(monkeypatch):
-    # Silently listing none builds a schema missing every survey view, and
-    # canopy registers that as a good build.
     monkeypatch.setattr(
         "utils.survey_utils.execute_command_with_output",
         lambda cmd, cwd=None: _Result(2, stderr="could not connect"),
