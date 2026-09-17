@@ -109,7 +109,9 @@ Ordered — each step depends on the one before.
 2. Exclude package unit tests in each deployment repo (BL-004, BL-005), by adding
    `--exclude package:tamanu_source_dbt` to the repo's documented pre-commit `dbt test`
    command in its `AGENT.md`.
-3. Revert the `patient_display_id_label` parameterisation (BL-006, BL-007).
+3. Revert the `patient_display_id_label` parameterisation and replace the `AGENT.md`
+   guidance that prescribes it (BL-006, BL-007). Both live on all seven version branches,
+   so this step is itself a forward-port.
 
 ## Open questions
 
@@ -122,8 +124,8 @@ Ordered — each step depends on the one before.
 
 | ID | Divergence | Resolution |
 |---|---|---|
-| DV-001 | `data_tests/unit_tests/` fixtures name the patient identifier column through `var('patient_display_id_label', 'Patient ID')` | Restore the literal standard label |
-| DV-002 | Six open draft PRs forward-port that parameterisation to 2.57, 2.60, 2.61, 2.62, 2.63 and `main` | Close unmerged |
+| DV-001 | `data_tests/unit_tests/` fixtures name the patient identifier column through `var('patient_display_id_label', 'Patient ID')`, on `2.54`, `2.57`, `2.60`, `2.61`, `2.62`, `2.63` and `main` | Restore the literal standard label on all seven branches |
+| DV-002 | `AGENT.md` § Translation system prescribes that parameterisation as the pattern for any fixture asserting a translated column, on the same seven branches, and names Nauru's `MRID` as a `default` override when it is an `en` column value | Replace with the constraint alone, pointing at this spec, on all seven branches |
 | DV-003 | `.github/workflows/checks.yml` runs pytest and the generated-macro drift guard only, so no dbt unit test runs in CI | Add the job in step 1 |
 | DV-004 | Deployment repos select the package's unit tests, which fail wherever the deployment localises an asserted column | Add the exclusion in step 2 |
 | DV-005 | `report_translations_msf_ethiopia.csv` leaves `default` blank for `patientSubDivision`, `patientVillage` and `prescriptionRoute`, so a fallback to `default` renders `as ""`, which Postgres rejects as a zero-length delimited identifier | Out of scope — raise separately |
