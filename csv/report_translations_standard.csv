@@ -13,11 +13,13 @@ report.reporting.admissionStatus,Admission status
 report.reporting.admittingClinician,Admitting clinician
 report.reporting.appointmentClinician,Clinician
 report.reporting.appointmentCreatedBy,Appointment created by
+report.reporting.appointmentCreatedDateTime,Appointment created date and time
 report.reporting.appointmentDateTime,Appointment date and time
 report.reporting.appointmentEndDateTime,Appointment end date and time
 report.reporting.appointmentFollowUpBooked,Follow-up appointment booked
 report.reporting.appointmentFollowUpDateTime,Follow-up appointment date and time
 report.reporting.appointmentFollowUpLocationGroup,Follow-up appointment area
+report.reporting.appointmentId,Appointment ID
 report.reporting.appointmentIsCancelled,Appointment cancelled
 report.reporting.appointmentIsRepeating,Repeating appointment
 report.reporting.appointmentLocationGroup,Area
@@ -281,6 +283,8 @@ report.reporting.paymentDate,Payment date
 report.reporting.paymentMethod,Method
 report.reporting.paymentReceiptNumber,Receipt number
 report.reporting.paymentReceivedBy,Tamanu user name
+report.reporting.plannedLocationId,Planned location ID
+report.reporting.plannedLocationStartDateTime,Planned location start date and time
 report.reporting.prescriptionDate,Prescription date
 report.reporting.prescriptionDoseAmount,Dose amount
 report.reporting.prescriptionFrequency,Frequency

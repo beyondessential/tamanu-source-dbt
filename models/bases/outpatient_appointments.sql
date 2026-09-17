@@ -1,5 +1,6 @@
 select
     a.id,
+    a.created_at,
     a.start_time::timestamp as start_datetime,
     a.end_time::timestamp as end_datetime,
     a.patient_id,

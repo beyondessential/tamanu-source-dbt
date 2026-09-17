@@ -11,6 +11,8 @@ with admission_encounters as (
         start_datetime,
         end_datetime,
         location_id,
+        planned_location_id,
+        planned_location_start_datetime,
         patient_billing_type_id,
         facility_id,
         facility as facility_name
@@ -224,6 +226,8 @@ patient_data as (
         ae.start_datetime,
         ae.end_datetime,
         ae.location_id,
+        ae.planned_location_id,
+        ae.planned_location_start_datetime,
         ae.facility_id,
         ae.facility_name
     from admission_encounters ae
@@ -255,6 +259,8 @@ select
         else 'discharged'
     end as admission_status,
     pd.end_datetime as discharge_datetime,
+    pd.planned_location_id,
+    pd.planned_location_start_datetime,
     pd.facility_id,
     pd.facility_name as facility,
     dc.department_ids,
