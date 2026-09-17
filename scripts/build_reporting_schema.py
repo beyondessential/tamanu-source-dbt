@@ -101,9 +101,9 @@ def deliver(sql):
 def main():
     """Build a reporting schema for one version and deployment, and hand it back.
 
-    Narrower than build_reporting_assets: no docs, no report configs, and no
-    `dbt run`, since what this builds is read out of the compiled manifest and
-    the database it reads is not this build's to write to.
+    Narrower than build_reporting_assets: no docs, no translations checked and
+    no report configs validated. What it does share is materialising the models,
+    which two of them need in order to compile at all.
     """
     # A deployment repo's dbt_project.yml version trails the versions it runs,
     # so a delivery that fell back to it would register a schema against the
