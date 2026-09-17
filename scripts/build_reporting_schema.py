@@ -101,6 +101,12 @@ def main():
     `dbt run`, since what this builds is read out of the compiled manifest and
     the database it reads is not this build's to write to.
     """
+    # A deployment repo's dbt_project.yml version trails the versions it runs,
+    # so a delivery that fell back to it would register a schema against the
+    # wrong version, built from a database at another one.
+    if CALLBACK_URL and not os.environ.get("TAMANU_VERSION", "").strip():
+        raise RuntimeError("TAMANU_VERSION names the version to build for, and is unset")
+
     cprint(f"\nBuilding reporting schema v{VERSION} ({DEPLOYMENT})", "info")
 
     schema_file = build()
