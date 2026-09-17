@@ -26,10 +26,10 @@ unit_tests:
         format: sql
         rows: |
           -- at the SENSITIVE facility: the only row this variant should return
-          select 'enc_sen' as id, '2024-01-18 09:00:00'::timestamp as start_datetime, '2024-01-18 17:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_002' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id, 'clinic' as encounter_type, null::text as reason_for_encounter
+          select 'enc_sen' as id, '2024-01-18 09:00:00'::timestamp as start_datetime, '2024-01-18 17:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_002' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id, 'clinic' as encounter_type, null::text as reason_for_encounter, null::text as planned_location_id, null::timestamp as planned_location_start_datetime
           union all
           -- at the NON-sensitive facility: must not appear in the sensitive variant
-          select 'enc_std', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text, 'clinic', null::text
+          select 'enc_std', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text, 'clinic', null::text, null::text, null::timestamp
 
       - input: ref('locations')
         format: sql
