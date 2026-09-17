@@ -28,7 +28,7 @@ unit_tests:
         rows: |
           select
             'appt_a'::text as id,
-            null::timestamp as created_datetime,
+            '2026-01-05 08:00:00'::timestamp as created_datetime,
             '2026-09-15 09:00:00'::timestamp as start_datetime,
             '2026-09-15 09:30:00'::timestamp as end_datetime,
             'pat_001'::text as patient_id,
@@ -116,6 +116,7 @@ unit_tests:
       format: sql
       rows: |
         select
+          'appt_a'            as "Appointment ID",
           'P001'              as "Patient ID",
           'John'              as "First name",
           'Doe'               as "Last name",
@@ -134,4 +135,5 @@ unit_tests:
           'No'                as "Priority appointment",
           'No'                as "Repeating appointment",
           null::text          as "Repeating appointment end date",
-          'Alice Admin'       as "Appointment created by"
+          'Alice Admin'       as "Appointment created by",
+          '2026-01-05 08:00'  as "Appointment created date and time"
