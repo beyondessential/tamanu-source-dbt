@@ -77,6 +77,8 @@
 {%- endset -%}
 
 select
+    -- BL-049: appointment_id and created_datetime are passed straight through, no derivation
+    appointment_id as "{{ translate_label('appointmentId') }}",
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
@@ -100,7 +102,8 @@ select
         else 'No'
     end as "{{ translate_label('appointmentIsRepeating') }}",
     to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}",
-    created_by as "{{ translate_label('appointmentCreatedBy') }}"
+    created_by as "{{ translate_label('appointmentCreatedBy') }}",
+    to_char({{ to_user_selected_timezone('created_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentCreatedDateTime') }}"
 from (
     {{ outpatient_appointments_dataset(
         is_sensitive=is_sensitive,

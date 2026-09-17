@@ -68,6 +68,8 @@ select
     {{ to_user_selected_timezone('e.end_datetime') }} as end_datetime_local,
     {%- endif %}
     e.location_id,
+    e.planned_location_id,
+    e.planned_location_start_datetime,
     e.department_id,
     e.clinician_id,
     e.patient_billing_type_id,
