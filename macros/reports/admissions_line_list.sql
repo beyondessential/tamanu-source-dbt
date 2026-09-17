@@ -15,6 +15,8 @@ select
     to_char({{ to_user_selected_timezone('admission_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('admissionDateTime') }}",
     admission_status as "{{ translate_label('admissionStatus') }}",
     to_char({{ to_user_selected_timezone('discharge_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('dischargeDateTime') }}",
+    planned_location as "{{ translate_label('plannedLocation') }}",
+    to_char({{ to_user_selected_timezone('planned_location_start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('plannedLocationStartDateTime') }}",
     facility as "{{ translate_label('facility') }}",
     departments as "{{ translate_label('encounterDepartmentHistory') }}",
     department_datetimes as "{{ translate_label('encounterDepartmentHistoryDateTimes') }}",
