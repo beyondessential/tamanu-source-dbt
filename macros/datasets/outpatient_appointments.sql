@@ -10,6 +10,7 @@ with appointment_creators as (
 
 select
     a.id as appointment_id,
+    a.created_datetime,
     p.id as patient_id,
     p.display_id,
     p.first_name,
@@ -39,8 +40,7 @@ select
     a.frequency,
     a.nth_weekday,
     ac.created_by_user_id,
-    creator.display_name as created_by,
-    a.created_datetime
+    creator.display_name as created_by
 from {{ ref('outpatient_appointments') }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
