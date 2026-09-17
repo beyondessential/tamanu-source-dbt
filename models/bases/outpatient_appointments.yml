@@ -14,6 +14,9 @@ models:
       - name: id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in appointments."
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in appointments."
       - name: start_datetime
         data_type: timestamp
         description: "{{ doc('appointments__start_time') }}"
