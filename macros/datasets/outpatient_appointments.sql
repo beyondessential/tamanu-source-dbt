@@ -27,6 +27,7 @@ with appointments_in_scope as (
     -- defines -- not one row per change event, which is the audit report's grain.
     select
         a.id as appointment_id,
+        a.created_datetime,
         a.patient_id,
         a.start_datetime,
         a.end_datetime,
@@ -90,6 +91,7 @@ appointment_creators as (
 
 select
     a.appointment_id,
+    a.created_datetime,
     p.id as patient_id,
     p.display_id,
     p.first_name,
