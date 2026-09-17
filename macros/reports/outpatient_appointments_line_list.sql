@@ -77,6 +77,7 @@
 {%- endset -%}
 
 select
+    -- BL-049: appointment_id and created_datetime are passed straight through, no derivation
     appointment_id as "{{ translate_label('appointmentId') }}",
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
