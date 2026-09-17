@@ -41,9 +41,13 @@ jobs:
 
       - name: Read the pinned package revision
         id: pin
+        # Through the environment rather than interpolated into the script: an
+        # input written into a shell line is run by it.
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
         run: |
-          if [ -n "${{ inputs.source_ref }}" ]; then
-            echo "ref=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
+          if [ -n "$SOURCE_REF" ]; then
+            echo "ref=$SOURCE_REF" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           ref=$(sed -n 's/^[[:space:]]*revision:[[:space:]]*//p' deployment/packages.yml | head -1 | tr -d "\"'" | xargs)
