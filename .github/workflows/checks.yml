@@ -8,6 +8,11 @@ name: Checks
 # list_tamanu_reports.md is NOT guarded here -- it's regenerated and committed
 # to main automatically by publish-artifacts.yml's list-reports job on every
 # release cut from main, so it can't drift for long.
+#
+# dbt-unit-tests runs the dbt unit tests against an ephemeral Postgres. A report
+# model's column names are its translated labels, so these tests are meaningful
+# only against this repo's standard translations and are excluded from deployment
+# runs -- see specs/testing/package-unit-test-execution.md.
 
 on:
   pull_request:
@@ -49,3 +54,55 @@ jobs:
             exit 1
           fi
           echo "Generated macros are in sync."
+
+  dbt-unit-tests:
+    name: dbt unit tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tamanu_source_dbt_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # config/profiles.yml resolves its connection from these; the default target
+      # is reporting_release.
+      TAMANU_RL_DB_URL: localhost
+      TAMANU_RL_DB_PORT: '5432'
+      TAMANU_RL_DB_USER: postgres
+      TAMANU_RL_DB_PASSWORD: postgres
+      TAMANU_RL_DB_DATABASE: tamanu_source_dbt_ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        # boto3 + pandas + pyyaml cover the generator import chain; dbt runs the tests.
+        run: pip install dbt-core dbt-postgres boto3 pandas pyyaml
+
+      - name: Generate the translation macro
+        # macros/default_translations.sql is gitignored in this repo, so it has to be
+        # generated before anything calling translate_label() can parse.
+        run: python scripts/generate_translation_macro.py
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Run dbt unit tests
+        run: dbt test --select "unit_test:*" --profiles-dir config
