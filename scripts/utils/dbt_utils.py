@@ -108,6 +108,18 @@ def get_deployment_version():
         exit(1)
 
 
+def get_dbt_target_arg() -> str:
+    """
+    The --target flag for dbt calls, where TAMANU_DBT_TARGET names a target.
+
+    Returns:
+        str: " --target <name>", or "" where none is named, so a call lands on
+            the profile's own default target as it otherwise would.
+    """
+    target = os.environ.get("TAMANU_DBT_TARGET", "").strip()
+    return f" --target {target}" if target else ""
+
+
 def get_dbt_project_vars(param_name: str = None) -> dict | str:
     """
     Read and parse the dbt_project.yml file to get variable values.
