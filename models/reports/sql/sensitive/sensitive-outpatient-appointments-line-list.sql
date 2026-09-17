@@ -22,7 +22,7 @@ select
     end as "{{ translate_label('appointmentIsRepeating') }}",
     to_char(until_date, '{{ var("date_format") }}') as "{{ translate_label('appointmentRepeatingEndDate') }}",
     created_by as "{{ translate_label('appointmentCreatedBy') }}",
-    to_char({{ to_user_selected_timezone('created_at') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentCreatedDateTime') }}"
+    to_char({{ to_user_selected_timezone('created_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentCreatedDateTime') }}"
 from {{ ref('ds__sensitive_outpatient_appointments') }}
 where {{ to_user_selected_timezone('appointment_start_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     and {{ to_user_selected_timezone('appointment_start_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
