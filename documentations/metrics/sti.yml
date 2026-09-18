@@ -179,3 +179,142 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__sti_screening.md
+- metric_id: sti_service_attendance
+  kind: metric
+  name: STI service attendance
+  description: >-
+    Patients attending STI services. One row per patient per reporting month, however many times they
+    attended within it.
+  numerator_description: >-
+    Distinct patients with at least one attendance at an STI service in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered so a screening coverage rate can be formed from two metric ids rather than stored: the
+    tested stage of the cascade over the population attending. This is the same numerator-only pattern
+    low_birth_weight and birth use, and it keeps the rate out of the warehouse where D5 wants it. Which
+    services count as STI services is a deployment binding -- the set of clinics a deployment runs them
+    from is not a property of the definition.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_service_attendance.md
+- metric_id: sti_service_attendance_key_population
+  kind: metric
+  name: STI service attendance, by key population
+  description: >-
+    sti_service_attendance disaggregated by key population: one row per patient per reporting month per
+    key population they are recorded as belonging to.
+  numerator_description: >-
+    COUNT of patient-population pairs where the patient attended an STI service in the reporting month. A
+    patient belonging to two key populations contributes to both, so summing across populations
+    double-counts that patient -- group by key_population, do not total it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from sti_service_attendance for the same reason the test metrics are, and it is
+    this id rather than the base one that a key-population coverage rate divides by: the numerator
+    sti_<infection>_test_key_population is itself per population, so both sides have to be.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - key_population
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_service_attendance.md
+- metric_id: sti_uds_case
+  kind: metric
+  name: Urethral discharge syndrome cases
+  description: >-
+    Patients with a reported case of urethral discharge syndrome. One row per patient per reporting period, so a patient
+    reported more than once within a period counts once.
+  numerator_description: >-
+    Distinct patients with a reported case of urethral discharge syndrome in the reporting period, whether notified on a
+    clinical form or confirmed by laboratory result
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered per condition rather than as one case metric with a condition column, for the same reason
+    the test metrics are: a patient can be reported for more than one condition in a period, so a column
+    would make an unfiltered total count them repeatedly. The reporting period is not fixed here -- a
+    programme deduplicating monthly and one deduplicating annually are counting the same thing over
+    different windows, so the model carries period_granularity and the definition does not constrain it.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_reported_cases.md
+- metric_id: sti_gonorrhoea_case
+  kind: metric
+  name: Gonorrhoea cases
+  description: >-
+    Patients with a reported case of gonorrhoea. One row per patient per reporting period, so a patient
+    reported more than once within a period counts once.
+  numerator_description: >-
+    Distinct patients with a reported case of gonorrhoea in the reporting period, whether notified on a
+    clinical form or confirmed by laboratory result
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered per condition rather than as one case metric with a condition column, for the same reason
+    the test metrics are: a patient can be reported for more than one condition in a period, so a column
+    would make an unfiltered total count them repeatedly. The reporting period is not fixed here -- a
+    programme deduplicating monthly and one deduplicating annually are counting the same thing over
+    different windows, so the model carries period_granularity and the definition does not constrain it.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_reported_cases.md
+- metric_id: sti_syphilis_case
+  kind: metric
+  name: Syphilis cases
+  description: >-
+    Patients with a reported case of syphilis. One row per patient per reporting period, so a patient
+    reported more than once within a period counts once.
+  numerator_description: >-
+    Distinct patients with a reported case of syphilis in the reporting period, whether notified on a
+    clinical form or confirmed by laboratory result
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered per condition rather than as one case metric with a condition column, for the same reason
+    the test metrics are: a patient can be reported for more than one condition in a period, so a column
+    would make an unfiltered total count them repeatedly. The reporting period is not fixed here -- a
+    programme deduplicating monthly and one deduplicating annually are counting the same thing over
+    different windows, so the model carries period_granularity and the definition does not constrain it.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_reported_cases.md
