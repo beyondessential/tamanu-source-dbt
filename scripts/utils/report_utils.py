@@ -330,8 +330,7 @@ def generate_reporting_schema_script():
     ]
 
     if not nodes:
-        cprint(f"No models found", "error")
-        return
+        raise RuntimeError("No models found: the manifest carries nothing to build a schema from")
 
     ordered = order_models_for_schema(manifest, nodes)
 
