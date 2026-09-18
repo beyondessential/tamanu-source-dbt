@@ -179,62 +179,115 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__sti_screening.md
-- metric_id: sti_service_attendance
+- metric_id: sti_syphilis_screening_coverage
   kind: metric
-  name: STI service attendance
+  name: Syphilis screening coverage
   description: >-
-    Patients attending STI services. One row per patient per reporting month, however many times they
-    attended within it.
+    Key population patients attending STI services and whether each was tested for syphilis. One
+    row per patient per reporting month per key population they belong to, carrying tested, so a
+    coverage rate is the tested rows over all of them.
   numerator_description: >-
-    Distinct patients with at least one attendance at an STI service in the reporting month
-  denominator_description: null
+    COUNT of patient-population attendances in the reporting month where the patient was tested for
+    syphilis
+  denominator_description: >-
+    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
+    populations contributes to both, so summing across populations double-counts them -- group by
+    key_population, do not total it
   data_source: tamanu
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    Registered so a screening coverage rate can be formed from two metric ids rather than stored: the
-    tested stage of the cascade over the population attending. This is the same numerator-only pattern
-    low_birth_weight and birth use, and it keeps the rate out of the warehouse where D5 wants it. Which
-    services count as STI services is a deployment binding -- the set of clinics a deployment runs them
-    from is not a property of the definition.
-  unit: count
-  subject_grain: patient
-  disaggregations:
-  - facility_id
-  - sex
-  variant_of: null
-  owner: bes-maui
-  status: draft
-  spec_path: specs/dbt-model/metric__sti_service_attendance.md
-- metric_id: sti_service_attendance_key_population
-  kind: metric
-  name: STI service attendance, by key population
-  description: >-
-    sti_service_attendance disaggregated by key population: one row per patient per reporting month per
-    key population they are recorded as belonging to.
-  numerator_description: >-
-    COUNT of patient-population pairs where the patient attended an STI service in the reporting month. A
-    patient belonging to two key populations contributes to both, so summing across populations
-    double-counts that patient -- group by key_population, do not total it
-  denominator_description: null
-  data_source: tamanu
-  definition_source: BES
-  definition_source_code: null
-  definition_rationale: >-
-    Registered separately from sti_service_attendance for the same reason the test metrics are, and it is
-    this id rather than the base one that a key-population coverage rate divides by: the numerator
-    sti_<infection>_test_key_population is itself per population, so both sides have to be.
+    Registered as one metric carrying tested rather than as an attendance denominator divided by the
+    sti_syphilis_test_key_population numerator. Those are two independently scoped populations:
+    the testing metrics apply no facility filter, so a patient tested away from an STI service is in
+    the numerator and not in the denominator, and the rate can exceed 100%. Holding both sides in one
+    row makes containment structural rather than a promise, and matches the indicator's own wording
+    -- the share of those attending who were tested, where a tested non-attendee is out of scope.
+    The rate is still not stored: value_numeric is 1 per row and the consumer divides.
   unit: count
   subject_grain: patient
   disaggregations:
   - facility_id
   - sex
   - key_population
+  - tested
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: specs/dbt-model/metric__sti_service_attendance.md
-- metric_id: sti_uds_case
+  spec_path: specs/dbt-model/metric__sti_screening_coverage.md
+- metric_id: sti_gonorrhoea_screening_coverage
+  kind: metric
+  name: Gonorrhoea screening coverage
+  description: >-
+    Key population patients attending STI services and whether each was tested for gonorrhoea. One
+    row per patient per reporting month per key population they belong to, carrying tested, so a
+    coverage rate is the tested rows over all of them.
+  numerator_description: >-
+    COUNT of patient-population attendances in the reporting month where the patient was tested for
+    gonorrhoea
+  denominator_description: >-
+    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
+    populations contributes to both, so summing across populations double-counts them -- group by
+    key_population, do not total it
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered as one metric carrying tested rather than as an attendance denominator divided by the
+    sti_gonorrhoea_test_key_population numerator. Those are two independently scoped populations:
+    the testing metrics apply no facility filter, so a patient tested away from an STI service is in
+    the numerator and not in the denominator, and the rate can exceed 100%. Holding both sides in one
+    row makes containment structural rather than a promise, and matches the indicator's own wording
+    -- the share of those attending who were tested, where a tested non-attendee is out of scope.
+    The rate is still not stored: value_numeric is 1 per row and the consumer divides.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - key_population
+  - tested
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening_coverage.md
+- metric_id: sti_chlamydia_screening_coverage
+  kind: metric
+  name: Chlamydia screening coverage
+  description: >-
+    Key population patients attending STI services and whether each was tested for chlamydia. One
+    row per patient per reporting month per key population they belong to, carrying tested, so a
+    coverage rate is the tested rows over all of them.
+  numerator_description: >-
+    COUNT of patient-population attendances in the reporting month where the patient was tested for
+    chlamydia
+  denominator_description: >-
+    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
+    populations contributes to both, so summing across populations double-counts them -- group by
+    key_population, do not total it
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered as one metric carrying tested rather than as an attendance denominator divided by the
+    sti_chlamydia_test_key_population numerator. Those are two independently scoped populations:
+    the testing metrics apply no facility filter, so a patient tested away from an STI service is in
+    the numerator and not in the denominator, and the rate can exceed 100%. Holding both sides in one
+    row makes containment structural rather than a promise, and matches the indicator's own wording
+    -- the share of those attending who were tested, where a tested non-attendee is out of scope.
+    The rate is still not stored: value_numeric is 1 per row and the consumer divides.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - key_population
+  - tested
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__sti_screening_coverage.md
+- metric_id: sti_urethral_discharge_syndrome_case
   kind: metric
   name: Urethral discharge syndrome cases
   description: >-
