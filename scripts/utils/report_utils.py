@@ -21,6 +21,69 @@ DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
+def create_report_config(name):
+    """
+    Creates a report configuration dictionary.
+
+    Args:
+        project (str): The project name
+        name (str): The filename for the report
+
+    Returns:
+        dict: The report configuration dictionary
+    """
+    config = {
+        "query": "replace this",
+        "name": name,
+        "notes": f"This report generates {name}. Please update this description with specific details about what the report includes and its purpose.",
+        "status": "published",
+        "dbSchema": "reporting",
+        "queryOptions": {
+            "defaultDateRange": "30days",
+            "dataSources": ["thisFacility", "allFacilities"],
+            "parameters": [],
+        },
+    }
+    return config
+
+
+def create_report_sql():
+    """
+    Creates a SQL template for a new report.
+
+    Args:
+        project (str): The project name
+        name (str): The filename for the report
+
+    Returns:
+        str: The SQL template content
+    """
+    sql_content = f"""-- TODO: Replace this
+select
+    -- TODO: Add columns here with the following format:
+    -- 'column_name' as "{{{{ translate_label('columnLabel','Column Display Name') }}}}"
+from {{{{ ref('dataset_name') }}}}
+-- TODO: Replace 'dataset_name' with the actual dataset reference
+where case
+        -- TODO: Replace 'date_column' with the actual date column name
+        when {{{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}}} is null then true
+        else date_column >= {{{{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}}}
+    end
+    and case
+        -- TODO: Replace 'date_column' with the actual date column name
+        when {{{{ parameter('toDate', default_value='2024-12-31', data_type='date') }}}} is null then true
+        else date_column <= {{{{ parameter('toDate', default_value='2024-12-31', data_type='date') }}}}
+    end
+    -- TODO: Add other filtering conditions here
+    -- Example facility filtering:
+    -- and case
+    --     when {{{{ parameter('facilityId', default_value='null', data_type='text') }}}} is null then true
+    --     else facility_id::text = {{{{ parameter('facilityId', default_value='null', data_type='text') }}}}
+    -- end
+"""
+    return sql_content
+
+
 def compile_report(database, sql_file, config_file, output_file):
     """
     Compiles a report by processing the SQL and config files and generating a JSON output.
