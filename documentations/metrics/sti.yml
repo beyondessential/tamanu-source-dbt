@@ -187,11 +187,15 @@ metrics:
     row per patient per reporting month per key population they belong to, carrying tested, so a
     coverage rate is the tested rows over all of them.
   numerator_description: >-
-    COUNT of patient-population attendances in the reporting month where the patient was tested for
-    syphilis
+    COUNT of patient-population pairs attending an STI service in the reporting month where the patient
+    was tested for syphilis
   denominator_description: >-
-    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
-    populations contributes to both, so summing across populations double-counts them -- group by
+    COUNT of patient-population pairs attending an STI service in the reporting month, a patient counted
+    once for the month however many times they attended. Which attendance counts is bound by the
+    deployment, including whether the patient must be enrolled in the programme the service runs, so the
+    denominator may be the enrolled cohort attending rather than everyone through the door. The binding
+    narrows the tested rows with it, so it cannot push the rate above 100%. A patient belonging to two
+    key populations contributes to both, so summing across populations double-counts them -- group by
     key_population, do not total it
   data_source: tamanu
   definition_source: BES
@@ -223,11 +227,15 @@ metrics:
     row per patient per reporting month per key population they belong to, carrying tested, so a
     coverage rate is the tested rows over all of them.
   numerator_description: >-
-    COUNT of patient-population attendances in the reporting month where the patient was tested for
-    gonorrhoea
+    COUNT of patient-population pairs attending an STI service in the reporting month where the patient
+    was tested for gonorrhoea
   denominator_description: >-
-    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
-    populations contributes to both, so summing across populations double-counts them -- group by
+    COUNT of patient-population pairs attending an STI service in the reporting month, a patient counted
+    once for the month however many times they attended. Which attendance counts is bound by the
+    deployment, including whether the patient must be enrolled in the programme the service runs, so the
+    denominator may be the enrolled cohort attending rather than everyone through the door. The binding
+    narrows the tested rows with it, so it cannot push the rate above 100%. A patient belonging to two
+    key populations contributes to both, so summing across populations double-counts them -- group by
     key_population, do not total it
   data_source: tamanu
   definition_source: BES
@@ -259,11 +267,15 @@ metrics:
     row per patient per reporting month per key population they belong to, carrying tested, so a
     coverage rate is the tested rows over all of them.
   numerator_description: >-
-    COUNT of patient-population attendances in the reporting month where the patient was tested for
-    chlamydia
+    COUNT of patient-population pairs attending an STI service in the reporting month where the patient
+    was tested for chlamydia
   denominator_description: >-
-    COUNT of patient-population attendances in the reporting month. A patient belonging to two key
-    populations contributes to both, so summing across populations double-counts them -- group by
+    COUNT of patient-population pairs attending an STI service in the reporting month, a patient counted
+    once for the month however many times they attended. Which attendance counts is bound by the
+    deployment, including whether the patient must be enrolled in the programme the service runs, so the
+    denominator may be the enrolled cohort attending rather than everyone through the door. The binding
+    narrows the tested rows with it, so it cannot push the rate above 100%. A patient belonging to two
+    key populations contributes to both, so summing across populations double-counts them -- group by
     key_population, do not total it
   data_source: tamanu
   definition_source: BES
@@ -294,8 +306,12 @@ metrics:
     Patients with a reported case of urethral discharge syndrome. One row per patient per reporting period, so a patient
     reported more than once within a period counts once.
   numerator_description: >-
-    Distinct patients with a reported case of urethral discharge syndrome in the reporting period, whether notified on a
-    clinical form or confirmed by laboratory result
+    Distinct patients with a reported case of urethral discharge syndrome in the reporting period, notified on a clinical
+    form. A syndrome has no confirmatory laboratory test, so unlike the infection case metrics this one has no laboratory
+    route. Where a programme counts the condition over a narrower population than it occurs in, the
+    metric is bound to that population and every row satisfies the restriction, so the disaggregation
+    carrying it
+    reads as the scope rather than as a breakdown of everyone
   denominator_description: null
   data_source: tamanu
   definition_source: BES
@@ -323,7 +339,10 @@ metrics:
     reported more than once within a period counts once.
   numerator_description: >-
     Distinct patients with a reported case of gonorrhoea in the reporting period, whether notified on a
-    clinical form or confirmed by laboratory result
+    clinical form or confirmed by laboratory result. Where a programme counts the condition over a
+    narrower population than it occurs in, the metric is bound to that population and every row
+    satisfies the restriction, so the disaggregation carrying it
+    reads as the scope rather than as a breakdown of everyone
   denominator_description: null
   data_source: tamanu
   definition_source: BES
@@ -351,7 +370,10 @@ metrics:
     reported more than once within a period counts once.
   numerator_description: >-
     Distinct patients with a reported case of syphilis in the reporting period, whether notified on a
-    clinical form or confirmed by laboratory result
+    clinical form or confirmed by laboratory result. Where a programme counts the condition over a
+    narrower population than it occurs in, the metric is bound to that population and every row
+    satisfies the restriction, so the disaggregation carrying it
+    reads as the scope rather than as a breakdown of everyone
   denominator_description: null
   data_source: tamanu
   definition_source: BES
