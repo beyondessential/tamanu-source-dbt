@@ -63,6 +63,33 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   `department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
   the dates embedded in the `procedures` and `notes` text. A caller needing a different
   format for any of these has no raw column to select, and must change the CTEs.
+- **BL-008:** The date range is filtered **twice**. The exact predicate compares the
+  column after `to_user_selected_timezone()`; a second, wider predicate compares
+  `encounters.start_date_iso` / `end_date_iso`, the stored `character(19)` columns, with
+  the bounds widened two days at each end. The first decides the result, the second
+  decides how much of the table is read. Neither is redundant: without the exact one the
+  range is wrong, without the wide one nothing prunes.
+
+  The exact predicate cannot prune, and the reason is structural rather than a missing
+  index. Under `dbt compile` it expands to two `at time zone` conversions whose target
+  zone is the `:timezone` bind, so no index — not even an expression index — can match
+  it, and the planner has no statistics for the expression either. The bad row estimate
+  that follows is the more expensive half: the scope CTE is materialised (it is
+  referenced ten times, so Postgres 12+ never inlines it) and every clinical aggregate
+  CTE downstream inherits the estimate as a hash join over a full table scan.
+
+  **Two days, not one.** `audit-outpatient-appointments` BL-039 widens its timestamptz
+  bound by a day. That is not enough here: `to_user_selected_timezone()` can move a value
+  by up to 26 hours where the deployment's central zone and the viewer's are far apart
+  (Pacific/Kiritimati at UTC+14 read from UTC-11), and the direction it fails in drops
+  rows silently. Measured at one day, that zone pair loses rows; at two, none.
+
+  **The by-end-date variant needs a disjunction.** `end_datetime` is `end_date` except
+  where an encounter records an end before its own start, where the base model reports the
+  start instead. So `end_datetime <= to` implies `end_date <= to` outright, but the lower
+  bound has to admit either column, or every end-before-start encounter silently vanishes
+  from the report. Both arms are bounded at both ends; leaving the `start_date` arm open
+  above is still correct but turns it into an open-ended index scan.
 
 ## Output
 
@@ -108,6 +135,9 @@ Date ranges and report-specific flags are excluded from it: they differ between 
 | AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
 | AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
 | AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_by_start_date_excludes_sensitive_facilities` |
+| AC-007 | Adding the candidate bounds changes no row, for any date field, window or viewer timezone. | BL-008 | 96 scenarios (6 windows × 8 timezones × 2 date fields, including both DST transitions and the UTC+14/UTC-11 pair) compared by `except` both directions on a 300k-row fixture; zero divergences. Recorded on the PR — the compile-only branch is unreachable from dbt, so no unit test can assert it. |
+| AC-008 | An encounter whose recorded end precedes its own start is still returned by the by-end-date report. | BL-008 | `test_enc_summary_end_before_start` — verified to fail when the `start_date` arm of the disjunction is removed |
+| AC-009 | The candidate bounds are served by `encounters_start_date` / `encounters_end_date`. | BL-008 | `EXPLAIN (ANALYZE, BUFFERS)` on a populated fixture: by-start-date seq scan → index scan, 3703 → 28 buffers; by-end-date seq scan → BitmapOr of two bounded index scans, 3703 → 44 buffers; identical row counts. Not unit-testable — needs a populated replica. Re-measure on prod before closing MAUI-6917. |
 
 ## Open questions
 
@@ -127,3 +157,4 @@ redundant `users` join are gone), OQ-004 (the sensitive variant has a unit test)
 | Date | Change |
 |---|---|
 | 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |
+| 2026-09-18 | BL-008: date range filtered against the stored ISO-9075 columns as well as the converted ones, so the scan prunes (MAUI-6917). `models/bases/encounters.sql` grows `start_date_iso` / `end_date_iso` to carry them. Output unchanged. Numbered BL-008 / AC-007..009, skipping BL-007 and AC-006, which `main` already uses for the history-actor left join — this branch and `main` have to stay mergeable. |

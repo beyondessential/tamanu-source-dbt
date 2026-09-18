@@ -10,18 +10,28 @@ unit_tests:
         format: sql
         rows: |
           select
-            'enc_001' as id,
-            '2024-01-15 10:00:00'::timestamp as start_datetime,
-            '2024-01-15 14:00:00'::timestamp as end_datetime,
-            'pat_001' as patient_id,
-            'loc_001' as location_id,
-            'dept_001' as department_id,
-            null::text as clinician_id,
-            null::text as patient_billing_type_id,
-            null::text as reason_for_encounter,
-            'clinic' as encounter_type,
-            null::text as planned_location_id,
-            null::timestamp as planned_location_start_datetime
+            -- BL-008: the report filters on the stored ISO-9075 columns as well as the
+            -- converted timestamps, so the fixture derives them from the timestamps it
+            -- already declares. Deriving rather than restating them is what keeps the two
+            -- representations of an instant from drifting apart as the fixture is edited.
+            f.*,
+            to_char(f.start_datetime, 'YYYY-MM-DD HH24:MI:SS') as start_date_iso,
+            to_char(f.end_datetime, 'YYYY-MM-DD HH24:MI:SS') as end_date_iso
+          from (
+            select
+              'enc_001' as id,
+              '2024-01-15 10:00:00'::timestamp as start_datetime,
+              '2024-01-15 14:00:00'::timestamp as end_datetime,
+              'pat_001' as patient_id,
+              'loc_001' as location_id,
+              'dept_001' as department_id,
+              null::text as clinician_id,
+              null::text as patient_billing_type_id,
+              null::text as reason_for_encounter,
+              'clinic' as encounter_type,
+              null::text as planned_location_id,
+              null::timestamp as planned_location_start_datetime
+          ) f
 
       - input: ref('encounter_history')
         format: sql

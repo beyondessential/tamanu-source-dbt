@@ -26,6 +26,11 @@
     the CTEs -- the three discharge_*_datetime columns, the three *_datetimes arrays, and
     the dates embedded in the procedures and notes text. A caller needing another format
     for those must change the CTEs; there is no raw column to select.
+
+    BL-008: the date range is filtered twice -- once exactly, on the timezone-converted
+    column, and once on the stored character(19) column with the bounds widened two days
+    either side. The second is what lets the scan prune; the first is what makes the
+    result exact. See the note above the filter itself.
 -#}
 
 {#- The facility scope and the is_sensitive partition come from encounters_core();
@@ -34,11 +39,76 @@
 
     localise_timestamps is left off: this core is presentation-neutral (BL-002), so the
     timezone shift belongs to whichever caller formats the output. -#}
+{#- BL-008 pairs each date_field with the stored column behind it, so date_field is now a
+    closed set rather than any column name that happens to exist. A new value would
+    otherwise fall through to the start_datetime branch and prune on the wrong column --
+    which returns a wrong, plausible-looking row set rather than failing. Fail here
+    instead, at compile, where it is one line to read. -#}
+{%- if date_field not in ['start_datetime', 'end_datetime'] -%}
+    {{ exceptions.raise_compiler_error(
+        "encounter_summary_core: date_field must be 'start_datetime' or 'end_datetime', got '"
+        ~ date_field ~ "'. Adding one means pairing it with its stored *_iso column in the "
+        ~ "candidate filter below -- see BL-008 of specs/reports/encounter-summary.md.") }}
+{%- endif -%}
+
+{%- set from_bound = parameter('fromDate', default_value='2024-01-01', data_type='date') -%}
+{%- set to_bound = parameter('toDate', default_value='2024-01-31', data_type='date') -%}
+
+{#- BL-008: the candidate bounds, compared against the stored character(19) columns.
+
+    The exact predicates below compare the date column *after* to_user_selected_timezone(),
+    which under `dbt compile` expands to two `at time zone` conversions whose target zone is
+    the `:timezone` bind. No index can serve that -- not even an expression index, since the
+    zone is only known at run time -- and the planner has no statistics for the expression
+    either, so it estimates the scope CTE badly and every aggregate CTE downstream inherits
+    the mistake as a hash join over a full table scan. These bounds restore both: they hit
+    encounters_start_date / encounters_end_date, and they give the planner a real selectivity.
+
+    Widened by two days at each end. The exact predicate compares the converted value, which
+    can sit up to 26 hours away from the stored one (a deployment on Pacific/Kiritimati at
+    UTC+14 read by a user on UTC-11). One day, the widening audit-outpatient-appointments
+    BL-039 uses for its timestamptz bound, does not cover that, and the direction it fails in
+    silently drops rows. The exact predicates still run unchanged, so a candidate set that is
+    too wide costs a little work and changes no output; one that is too narrow loses rows.
+
+    The format string is deliberately NOT var("datetime_format"): this is the physical shape
+    of a Tamanu source column, not a presentation choice, and a deployment that localises its
+    datetime format must not move it. The ::character(19) cast keeps the comparison on bpchar
+    operators, which is what the btree indexes are built with -- comparing against `text`
+    instead would coerce the column and put the index back out of reach. -#}
+{%- set candidate_from -%}
+to_char(({{ from_bound }})::timestamp - interval '2 days', 'YYYY-MM-DD HH24:MI:SS')::character(19)
+{%- endset -%}
+{%- set candidate_to -%}
+to_char(({{ to_bound }})::timestamp + interval '2 days', 'YYYY-MM-DD HH24:MI:SS')::character(19)
+{%- endset -%}
+
 {%- set scope_filter -%}
-    {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-    and {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+    {{ to_user_selected_timezone('e.' ~ date_field) }} >= {{ from_bound }}
+    and {{ to_user_selected_timezone('e.' ~ date_field) }} <= {{ to_bound }}
     {%- if date_field == 'end_datetime' %}
     and e.end_datetime is not null
+    {# BL-008. end_datetime is end_date, except where an encounter records an end before its
+       own start, where the base model substitutes start_date. So it is always one of those
+       two columns, and never below end_date: `end_datetime <= to` implies `end_date <= to`
+       outright, while the rest of the window has to admit either column or it would drop
+       exactly those end-before-start rows.
+
+       Both disjuncts are bounded at both ends. Leaving the start_date one open above still
+       gives the right answer -- the exact predicates trim it -- but it turns that side into
+       an open-ended index scan over everything since the lower bound, which on a populated
+       replica costs an order of magnitude more buffers than the bounded form. #}
+    and e.end_date_iso <= {{ candidate_to }}
+    and (
+        e.end_date_iso >= {{ candidate_from }}
+        or (
+            e.start_date_iso >= {{ candidate_from }}
+            and e.start_date_iso <= {{ candidate_to }}
+        )
+    )
+    {%- else %}
+    and e.start_date_iso >= {{ candidate_from }}
+    and e.start_date_iso <= {{ candidate_to }}
     {%- endif %}
     and {{ encounter_scope_common_filters() }}
 {%- endset -%}
