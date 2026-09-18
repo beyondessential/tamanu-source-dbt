@@ -160,3 +160,18 @@ def test_the_script_stamps_the_version_on_the_schema(monkeypatch, tmp_path):
 
     script = (out / "reporting-schema-v2.60.2-kamaka.sql").read_text(encoding="utf-8")
     assert "comment on schema reporting is '2.60.2';" in script
+
+
+def test_a_manifest_with_nothing_to_build_fails(monkeypatch, tmp_path):
+    import json
+
+    import utils.report_utils as report_utils
+
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "manifest.json").write_text(json.dumps({"nodes": {}}), encoding="utf-8")
+    monkeypatch.setattr(report_utils, "BASE_DIR", str(tmp_path))
+    monkeypatch.setattr(report_utils, "get_dbt_project_vars", lambda: {})
+
+    with pytest.raises(RuntimeError, match="No models found"):
+        report_utils.generate_reporting_schema_script()

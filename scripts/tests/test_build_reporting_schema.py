@@ -2,8 +2,13 @@ import urllib.error
 import urllib.request
 
 import pytest
+import yaml
 
 import build_reporting_schema
+
+
+def _refuse():
+    raise AssertionError("the checkout's own profile was overwritten")
 
 
 class _Answer:
@@ -102,6 +107,48 @@ def test_a_delivery_without_a_version_is_refused(monkeypatch):
 def test_a_local_run_without_a_version_still_builds(monkeypatch, tmp_path):
     monkeypatch.delenv("TAMANU_VERSION", raising=False)
     monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "")
+    built = tmp_path / "schema.sql"
+    built.write_text("create schema reporting;", encoding="utf-8")
+    monkeypatch.setattr(build_reporting_schema, "build", lambda: str(built))
+
+    build_reporting_schema.main()
+
+
+# write_profile
+
+
+def test_the_profile_is_written_under_the_project_s_profile_name(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        build_reporting_schema, "get_dbt_project_config", lambda: {"profile": "tamanu_dbt_kamaka"}
+    )
+    monkeypatch.setattr(build_reporting_schema, "PROFILES_PATH", tmp_path / "config" / "profiles.yml")
+    monkeypatch.setattr(build_reporting_schema, "TARGET", "replica")
+
+    build_reporting_schema.write_profile()
+
+    written = yaml.safe_load((tmp_path / "config" / "profiles.yml").read_text(encoding="utf-8"))
+    target = written["tamanu_dbt_kamaka"]["outputs"]["replica"]
+    assert written["tamanu_dbt_kamaka"]["target"] == "replica"
+    assert target["host"] == "{{ env_var('TAMANU_DL_DB_URL') }}"
+    assert target["schema"] == "reporting"
+
+
+def test_a_project_naming_no_profile_falls_back_to_its_name(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        build_reporting_schema, "get_dbt_project_config", lambda: {"name": "tamanu_dbt_kamaka"}
+    )
+    monkeypatch.setattr(build_reporting_schema, "PROFILES_PATH", tmp_path / "config" / "profiles.yml")
+
+    build_reporting_schema.write_profile()
+
+    written = yaml.safe_load((tmp_path / "config" / "profiles.yml").read_text(encoding="utf-8"))
+    assert "tamanu_dbt_kamaka" in written
+
+
+def test_a_local_run_keeps_the_checkout_s_profile(monkeypatch, tmp_path):
+    monkeypatch.delenv("TAMANU_DL_DB_URL", raising=False)
+    monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "")
+    monkeypatch.setattr(build_reporting_schema, "write_profile", _refuse)
     built = tmp_path / "schema.sql"
     built.write_text("create schema reporting;", encoding="utf-8")
     monkeypatch.setattr(build_reporting_schema, "build", lambda: str(built))
