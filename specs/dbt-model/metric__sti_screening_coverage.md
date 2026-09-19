@@ -62,7 +62,7 @@ the infection being fixed by the metric ID rather than carried as a column.
 - **BL-003:** A patient is counted whether or not they were tested, so the denominator is not conditioned on the outcome it measures.
 - **BL-004:** Key population membership recorded as an answer is a standing attribute of the patient, taken from their most recent answer recorded on or before the end of the reporting month, while a population defined by a patient attribute rather than an answer is evaluated for the reporting month.
 - **BL-005:** A patient belonging to more than one key population contributes a row to each, so summing across populations double-counts them.
-- **BL-006:** `tested` is true where the patient has a countable test for this infection dated in the reporting month and recorded against the same key population as the row, so a row is marked tested only by a test the row's own population accounts for.
+- **BL-006:** `tested` is true where the patient has a countable test for this infection dated in the reporting month. The population a row counts the patient in is settled by BL-004 on the attending side alone, so the mark says the patient was tested and does not additionally require the test to have been recorded against that population.
 - **BL-007:** The numerator and the denominator are the same rows, filtered by `tested`, so the numerator is contained in the denominator by construction rather than by agreement between two metrics. This is why coverage is registered as one metric and not as a testing metric divided by an attendance metric: the testing metrics apply no facility filter, so a patient tested away from an STI service would sit in such a numerator and not in its denominator, and the rate could exceed 100%.
 - **BL-008:** A patient tested but not attending is out of scope entirely, which is what the indicator asks for — the share *of those attending* who were tested.
 - **BL-009:** Every row carries `metric_id` set to its registered identifier, `value_numeric` 1, `period_granularity` of `month`, and a `period_start` on the first day of the reporting month.
@@ -87,7 +87,7 @@ the infection being fixed by the metric ID rather than carried as a column.
 | AC-007 | Every emitted `metric_id` is registered | BL-009 | `relationships` to `metric_definitions` |
 | AC-008 | `value_numeric` is always 1 | BL-009, BL-010 | schema `accepted_values` |
 | AC-009 | `tested` is never null | BL-006 | schema `not_null` |
-| AC-010 | A patient present in both this metric and the testing metric for the same month is classified into the same attribute-derived population by both | BL-004 | singular test |
+| AC-010 | A tested attendee is marked tested whatever population the testing metric classified them into | BL-006 | unit test |
 | AC-011 | `key_population` is never null | BL-011 | schema `not_null` |
 | AC-012 | A patient attending two facilities in a month yields one row per key population, attributed to one facility | BL-012 | unit test |
 | AC-013 | `age_years` derives from the attendance date, not the run date | BL-013 | unit test |
@@ -105,3 +105,4 @@ the infection being fixed by the metric ID rather than carried as a column.
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-18 | @beyondessential/maui | Initial definition: STI screening coverage, numerator and denominator in one metric so containment is structural (MAUI-6889) |
+| 2026-09-19 | @beyondessential/maui | BL-006 no longer requires the test to be recorded against the row's own key population. Requiring it made the mark depend on two independently derived classifications agreeing, and an implementation deriving an age-based population from a different date on each side dropped tested patients from the numerator while keeping them in the denominator (MAUI-6889) |
