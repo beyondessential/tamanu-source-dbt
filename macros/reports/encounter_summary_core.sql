@@ -61,8 +61,15 @@
     the `:timezone` bind. No index can serve that -- not even an expression index, since the
     zone is only known at run time -- and the planner has no statistics for the expression
     either, so it estimates the scope CTE badly and every aggregate CTE downstream inherits
-    the mistake as a hash join over a full table scan. These bounds restore both: they hit
-    encounters_start_date / encounters_end_date, and they give the planner a real selectivity.
+    the mistake as a hash join over a full table scan.
+
+    These bounds fix the scan -- they reach encounters_start_date / encounters_end_date
+    instead of reading the table. They do NOT fix the estimate, and an earlier version of
+    this comment claimed they did. The exact predicates are still here and still
+    unestimable, so the scope CTE is still costed at a fraction of its true size: measured
+    on a populated fixture, 3 rows against 183, and 6 against 783. Everything downstream
+    still plans against that wrong number, which is why BL-009 had to make the notes join
+    index-reachable outright rather than wait for a better estimate to arrive.
 
     Widened by two days at each end. The exact predicate compares the converted value, which
     can sit up to 26 hours away from the stored one (a deployment on Pacific/Kiritimati at
@@ -371,6 +378,23 @@ encounter_lab_requests as (
 ),
 
 notes_raw as (
+    {# BL-009: one branch per record_type, rather than a single pass over notes joined on
+       coalesce(ir.encounter_id, n.record_id). That coalesce is an expression, so it could
+       use no index on notes.record_id at all, and notes is the largest clinical table on a
+       hospital deployment -- it was the one aggregate CTE left reading in full after BL-008
+       made the encounters scan cheap. Every other one already joins encounters_in_scope on
+       a bare encounter_id.
+
+       Split, each branch drives from encounters_in_scope into notes_record_id_idx, a hash
+       index and so equality-only, which is all either branch asks of it. No new index is
+       needed, hence no Tamanu migration.
+
+       This leans on BL-008 rather than standing beside it: a nested loop is only worth
+       planning because the encounters side is now an index scan. Note the scope estimate
+       is still wrong and still low, which biases the planner toward that nested loop --
+       the right bias for the 7-day default this report ships with. The union is what keeps
+       the other option open: a scope set large enough to favour a hash join can still get
+       one, which a plan hint would have prevented. #}
     select
         n.id,
         n.datetime,
@@ -380,12 +404,35 @@ notes_raw as (
         n.record_id,
         n.updated_note_id
     from {{ ref('notes') }} n
-    left join {{ ref('imaging_requests') }} ir
-        on n.record_type = 'ImagingRequest'
-        and ir.id = n.record_id
     join encounters_in_scope eis
-        on eis.encounter_id = coalesce(ir.encounter_id, n.record_id)
-    where n.record_type in ('Encounter', 'ImagingRequest')
+        on eis.encounter_id = n.record_id
+    where n.record_type = 'Encounter'
+
+    union all
+
+    {# An imaging request's notes reach the encounter through imaging_requests, on
+       imaging_requests_encounter_id.
+
+       Inner join, where the coalesce carried a fallback arm: a note whose record_id
+       resolved to no imaging_request was compared against encounter_id directly. The arm is
+       reachable -- ref('imaging_requests') drops requests belonging to the test patient or
+       to a deleted encounter, and their notes took it -- but for it to have returned a row,
+       an imaging request id would have to equal an encounter id. AC-011 settles that against
+       real ids rather than reasoning about it. #}
+    select
+        n.id,
+        n.datetime,
+        n.content,
+        n.note_type,
+        n.record_type,
+        n.record_id,
+        n.updated_note_id
+    from {{ ref('notes') }} n
+    join {{ ref('imaging_requests') }} ir
+        on ir.id = n.record_id
+    join encounters_in_scope eis
+        on eis.encounter_id = ir.encounter_id
+    where n.record_type = 'ImagingRequest'
 ),
 
 encounter_notes_deduped as (
@@ -431,12 +478,17 @@ imaging_request_areas as (
             string_agg(case
                 when n.note_type = 'areaToBeImaged' then n.content
             end, ', '
-            order by n.datetime)
+            order by n.datetime, n.id)
         ) as areas_to_be_imaged,
+        {# BL-010: `, n.id` breaks datetime ties. Two notes recorded in the same second
+           otherwise order arbitrarily, so the aggregated string depends on the physical
+           order rows arrive in -- which BL-009 changes. Pre-existing, and only visible on
+           ties, but a report column that reshuffles on a plan change is not something to
+           leave in place while deliberately changing the plan. #}
         string_agg(case
             when n.note_type = 'other' then n.content
         end, ','
-        order by n.datetime) as notes
+        order by n.datetime, n.id) as notes
     from {{ ref('imaging_requests') }} ir
     join encounters_in_scope eis
         on eis.encounter_id = ir.encounter_id
@@ -471,7 +523,7 @@ encounter_notes as (
             ', Note date: ', to_char({{ to_user_selected_timezone('n.datetime') }}, '{{ var("datetime_format") }}')
         ),
         E'\n'
-        order by n.datetime) as notes
+        order by n.datetime, n.id) as notes
     from encounter_notes_deduped n
     where n.row_number = 1
     group by n.record_id
