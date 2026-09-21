@@ -7,10 +7,16 @@ unit_tests:
       it genuinely falls within. proc2 sits on an encounter whose only segment ('admission',
       concept 9201) starts after the procedure's own time (a data-timing artifact, not a
       real ordering issue) -- must still be included, clamped to that first/only segment
-      rather than dropped for predating it (decision, Juliana). proc3 is the same clamp
+      rather than dropped for predating it (product decision). proc3 is the same clamp
       shape, but its only segment is 'clinic' (concept 9202, not 9201) -- the clamp still
       resolves a segment, but the inpatient-scope filter correctly excludes it: the clamp
-      fixes a missing-segment problem, not an out-of-scope one.
+      fixes a missing-segment problem, not an out-of-scope one. proc4 sits on an encounter
+      with two 'admission' segments that both start before the procedure's own time, at
+      different facilities -- this exercises the genuine as-of tie-break (pick the latest
+      segment at-or-before the procedure, not the earliest or any arbitrary one) rather than
+      the first-segment clamp: the expected facility is the later segment's, so a regression
+      that reversed the tie-break's asc/desc ordering would resolve the earlier segment's
+      facility instead and this row would catch it.
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql
@@ -20,6 +26,8 @@ unit_tests:
           select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'loc1', 'code2', 'Procedure Two', true
           union all
           select 'proc3', 'p1', '2026-02-03'::date, '2026-02-03 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e12', 'loc1', 'code3', 'Procedure Three', true
+          union all
+          select 'proc4', 'p1', '2026-02-04'::date, '2026-02-04 14:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'loc1', 'code4', 'Procedure Four', true
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -29,6 +37,10 @@ unit_tests:
           select 'vd11a', 'e11', 'p1', 9201, '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
           union all
           select 'vd12a', 'e12', 'p1', 9202, '2026-02-03'::date, '2026-02-03 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
+          union all
+          select 'vd13a', 'e13', 'p1', 9201, '2026-02-04'::date, '2026-02-04 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
+          union all
+          select 'vd13b', 'e13', 'p1', 9201, '2026-02-04'::date, '2026-02-04 12:00:00'::timestamp, null::date, null::timestamp, 'loc2', null::varchar, 'prov1', 'admission', 'vd13a'
 
       - input: ref('clinical__person')
         format: sql
@@ -39,6 +51,8 @@ unit_tests:
         format: sql
         rows: |
           select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'loc2', 'LOC2', 'Location 2', null::int, null::varchar, 'fac2', 'current'
 
     expect:
       format: sql
@@ -46,3 +60,5 @@ unit_tests:
         select 'ipd_procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years
         union all
         select 'ipd_procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'Procedure Two', 'code2', true, 30
+        union all
+        select 'ipd_procedure', null::text, 'proc4', '2026-02-04'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'female', 'Procedure Four', 'code4', true, 30

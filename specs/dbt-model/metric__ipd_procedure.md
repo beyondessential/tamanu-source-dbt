@@ -24,13 +24,6 @@ Procedure activity performed in the inpatient setting, one row per procedure.
 |---|---|---|
 | `ipd_procedure` | count | Procedures during an inpatient admission (always 1 per row) |
 
-**Why a separate metric, not a filter (BL-001).** `metric__procedure` already emits
-`encounter_type` precisely so a consumer scopes to one setting via a filter on that one
-metric (its own header comment). `metric__ipd_procedure` was built as a dedicated metric
-instead, mirroring the decision (MAUI-6862) already made for `metric__opd_procedure` -- kept
-apart from every other setting rather than mixed with it, matching how `opd_visit` and
-`ed_visit` are separate metrics rather than one metric filtered by setting.
-
 **Clinical context.** A procedure is point-in-time, unlike a visit or a stay -- there is no
 admission/departure pair to split, so one metric covers it, the same shape `metric__procedure`
 and `metric__opd_procedure` already use.
@@ -124,8 +117,8 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   emergency/triage/observation phase -- so segment-level filtering on 9201 alone is already
   correct and complete; no special-casing of 262 is needed or applied.
 
-  **Clamped to the first segment when the procedure predates every segment (decision,
-  Juliana -- mirrors `metric__opd_procedure` BL-003).** A procedure can be timestamped before
+  **Clamped to the first segment when the procedure predates every segment (product
+  decision -- mirrors `metric__opd_procedure` BL-003).** A procedure can be timestamped before
   its own encounter's earliest recorded segment even starts -- a data-timing artifact (the
   segment's own start time recorded late), not a real ordering issue; the procedure still
   genuinely belongs to that encounter. Every encounter has at least one

@@ -10,7 +10,7 @@
 -- BL-003 details the segment this is evaluated against, and the first-segment clamp applied
 -- when a procedure predates every segment.
 --
--- The registry carries the definition; this model is its implementation.
+-- The registry carries the definition and this model is its implementation.
 
 with procedure_occurrence as (
     -- BL-008: procedure branch only, per clinical__procedure_occurrence's own consumer
@@ -33,12 +33,12 @@ locations as (
 
 -- BL-003: the segment active at the procedure's own timestamp, not the encounter's first or
 -- current segment. distinct on picks the latest segment that had already started by
--- procedure_datetime; tie-broken on visit_detail_id, the same tiebreak
+-- procedure_datetime, tie-broken on visit_detail_id, the same tiebreak
 -- clinical__visit_detail's own segment-ordering window uses for its zero-length-segment case
 -- (BL-002).
 --
--- BL-003: clamped to the first segment when the procedure predates every segment (Juliana,
--- MAUI-6862/MAUI-6806) -- a procedure genuinely belongs to its own encounter, so a segment
+-- BL-003: clamped to the first segment when the procedure predates every segment (product
+-- decision, MAUI-6862/MAUI-6806) -- a procedure genuinely belongs to its own encounter, so a segment
 -- recorded starting after it (a data-timing artifact, not a real ordering issue) should not
 -- exclude it. No join condition on the timestamp: every encounter has >= 1 segment
 -- (clinical__visit_detail BL-005), so the join itself can never drop a row -- the order by
@@ -74,7 +74,7 @@ procedures as (
             po.procedure_source_name, po.procedure_source_value, 'Not recorded'
         ) as procedure,
         po.is_completed,
-        -- age in whole years at the procedure; the NULL rule lives in the macro
+        -- age in whole years at the procedure, and the NULL rule lives in the macro
         {{ age_years('po.procedure_date', 'pr') }} as age_years
     from procedure_occurrence po
     join procedure_segment ps
