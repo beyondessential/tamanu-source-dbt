@@ -56,7 +56,7 @@ dataset models, the report's predicate text for the report.
 
 | Reference | Why |
 |---|---|
-| `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040) |
+| `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040), and the appointment's own id and creation timestamp |
 | `ref('location_groups')`, `ref('facilities')` | Area and facility names, and the sensitivity partition (BL-045) |
 | `ref('outpatient_appointments_change_events')` | The creation event, for `created_by` (BL-044) |
 | `ref('patients')`, `ref('patient_additional_data')` | Demographics and contact number |
@@ -73,6 +73,7 @@ Standard and sensitive share one macro, so columns are identical by construction
 
 | Column (translation key) | Type | Description |
 |---|---|---|
+| `appointmentId` | text | The appointment's identifier |
 | `patientDisplayId`, `patientFirstName`, `patientLastName` | text | Patient identity |
 | `patientDateOfBirth` | text | Formatted date of birth |
 | `patientAge` | integer | Age at the appointment's scheduled start, not today |
@@ -87,9 +88,10 @@ Standard and sensitive share one macro, so columns are identical by construction
 | `appointmentIsRepeating` | text | Recurrence description, or the literal `No` (BL-048) |
 | `appointmentRepeatingEndDate` | text | The schedule's `until_date`, blank for a one-off |
 | `appointmentCreatedBy` | text | User who booked the appointment (BL-044) |
+| `appointmentCreatedDateTime` | text | When the appointment was booked, in the viewer's timezone — distinct from its scheduled start |
 
-The dataset emits 33 columns to the report's 19 — snake_case, unformatted, no translation
-keys. Beyond the same facts it carries `appointment_id`, `patient_id`, the raw `*_id`
+The dataset emits 34 columns to the report's 21 — snake_case, unformatted, no translation
+keys. Beyond the same facts it carries `patient_id`, the raw `*_id`
 columns behind each resolved name, `facility_id`/`facility`, and the four raw schedule
 fields (`interval`, `frequency`, `days_of_week`, `nth_weekday`) the report collapses into
 one description.
@@ -292,4 +294,5 @@ patients, patient_additional_data, users, reference_data ───────�
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-17 | Maui team | Added `appointmentId` as the first column and `appointmentCreatedDateTime` as the last (MAUI-6905). `created_datetime` is new in `bases/outpatient_appointments`, where `created_at` is converted from `timestamptz` to deployment-local wall clock, and is passed through the dataset's scope CTE. |
 | 2026-09-07 | Maui team | Initial spec, written alongside the performance rework: filter pushdown into the dataset's scope CTE (BL-042, BL-046), the window-free creator lookup (BL-044), the bare-column index-prunable bounds (BL-043), the shared report macro replacing two copies of the body (BL-047), and `facilityId` applied for the first time (BL-045). BL-041 records why this report keeps the house `<= toDate` form where the audit reports cast and add a day. |

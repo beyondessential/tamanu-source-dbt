@@ -62,6 +62,9 @@ where trim(d) not in (
         -- sti_*_test's screening outcome: whether any countable test for that infection in
         -- the reporting month indicated infection.
         'is_positive',
+        -- hiv_screening_test's retesting flag: whether the patient has an earlier countable
+        -- screening test. NULL on the confirmatory IDs.
+        'is_repeat_test',
         -- sti_*_test's treatment stage -- Treated, Untreated, or Not applicable where the
         -- patient did not test positive. The cascade's third stage, carried as a
         -- disaggregation rather than as a metric_id per stage.

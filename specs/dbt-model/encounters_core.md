@@ -74,6 +74,8 @@ both joins are on primary keys.
 | `start_datetime_local` | `start_datetime` in the viewer's selected timezone |
 | `end_datetime_local` | `end_datetime` in the viewer's selected timezone |
 | `location_id` | |
+| `planned_location_id` | The location a planned transfer will move the encounter to |
+| `planned_location_start_datetime` | When that planned transfer takes effect |
 | `department_id` | |
 | `clinician_id` | `e.examiner_id`, renamed by the base model |
 | `patient_billing_type_id` | |
@@ -213,3 +215,4 @@ None outstanding.
 |---|---|
 | 2026-09-02 | Created. Extracted from `encounter_invoice_audit_report`; adopted there first. |
 | 2026-09-05 | Adoption in `admissions_dataset` and `encounter_summary_report` completed and verified; the two questions tracking that work are closed. |
+| 2026-09-17 | Added `planned_location_id` / `planned_location_start_datetime` to the output superset (MAUI-6905), for the admissions line list report's planned-transfer columns. Passthrough only — no new business logic. |

@@ -44,3 +44,40 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__encounter_diagnosis.md
+
+- metric_id: ipd_diagnosis
+  kind: metric
+  name: IPD diagnoses
+  description: >-
+    Clinical diagnoses whose window -- the diagnosis's own time, clamped to the encounter's
+    own start and end -- overlaps an inpatient-admission segment. One row per diagnosis. A
+    diagnosis spanning both an inpatient and an outpatient segment counts in both.
+  numerator_description: >-
+    Recorded diagnoses whose window overlaps a clinical__visit_detail segment carrying OMOP
+    visit concept 9201 (Inpatient Visit), counted on the diagnosis date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded diagnoses scoped to the inpatient (admission) setting -- the IPD
+    counterpart to opd_diagnosis, scoping metric__encounter_diagnosis's population to
+    diagnoses whose window overlaps an inpatient-admission segment rather than an outpatient
+    one. No external body registers a single diagnosis-count indicator scoped to inpatient
+    care specifically, and morbidity classification (ICD-10 chapter, block) is a deployment
+    choice, so this metric emits the diagnosis as recorded and leaves any grouping to the
+    consumer, the same approach metric__encounter_diagnosis and metric__opd_diagnosis take.
+    Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: diagnosis
+  disaggregations:
+  - facility_id
+  - sex
+  - diagnosis
+  - diagnosis_code
+  - diagnosis_certainty
+  - is_primary
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ipd_diagnosis.md

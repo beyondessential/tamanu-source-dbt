@@ -330,14 +330,17 @@ def generate_reporting_schema_script():
     ]
 
     if not nodes:
-        cprint(f"No models found", "error")
-        return
+        raise RuntimeError("No models found: the manifest carries nothing to build a schema from")
 
     ordered = order_models_for_schema(manifest, nodes)
 
     scripts = [
         f"drop schema if exists {SCHEMA} cascade;",
         f"create schema {SCHEMA};",
+        # The version the schema was built for, on the schema itself. It is how
+        # a server says which schema it is running, and the schema is dropped
+        # and recreated whole, so the stamp cannot outlive what it describes.
+        f"comment on schema {SCHEMA} is '{VERSION}';",
         f"grant usage on schema {SCHEMA} to {ROLE};",
         f"alter default privileges in schema {SCHEMA} grant select on tables to {ROLE};",
     ]
