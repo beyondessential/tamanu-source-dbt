@@ -21,6 +21,12 @@ models:
       - name: end_datetime
         data_type: timestamp
         description: "{{ doc('encounters__end_date') }}"
+      - name: start_date_iso
+        data_type: character(19)
+        description: "{{ doc('encounters__start_date_iso') }}"
+      - name: end_date_iso
+        data_type: character(19)
+        description: "{{ doc('encounters__end_date_iso') }}"
       - name: encounter_type
         data_type: character varying(31)
         description: "{{ doc('encounters__encounter_type') }}"
