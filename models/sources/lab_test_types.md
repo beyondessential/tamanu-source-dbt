@@ -60,6 +60,8 @@ External code for the test (such as for LIMS).
 
 {% docs lab_test_types__is_sensitive %}
 Used to indicate if the lab test type is sensitive and should be hidden accordingly.
+Note: the lab requests and lab tests line list reports no longer consult this flag --
+they partition standard vs. sensitive by the encounter's facility only.
 {% enddocs %}
 
 {% docs lab_test_types__available_facilities %}
