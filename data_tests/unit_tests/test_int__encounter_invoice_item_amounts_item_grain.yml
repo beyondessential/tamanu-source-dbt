@@ -36,12 +36,12 @@ unit_tests:
       - input: ref('invoices')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
+          select '00000000-0000-0000-0000-000000000001'::text as id, 'enc_001' as encounter_id, 'finalised' as status, '2024-01-14 09:00:00'::timestamp as datetime
 
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Procedure X' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity, 'Procedure' as source_record_type, 'proc_1' as source_record_id
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'Procedure X' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 2::integer as quantity, 'Procedure' as source_record_type, 'proc_1' as source_record_id
 
       - input: ref('invoice_products')
         format: sql
@@ -51,7 +51,7 @@ unit_tests:
       - input: ref('invoice_item_discounts')
         format: sql
         rows: |
-          select 'item_001'::text as invoice_item_id, 20.00::numeric as amount, 'amount' as type, '00000000-0000-0000-0000-0000000000d1'::uuid as id
+          select 'item_001'::text as invoice_item_id, 20.00::numeric as amount, 'amount' as type, '00000000-0000-0000-0000-0000000000d1'::text as id
 
       - input: ref('invoice_price_lists')
         format: sql
@@ -66,7 +66,7 @@ unit_tests:
       - input: ref('invoices_invoice_insurance_plans')
         format: sql
         rows: |
-          select null::text as id, null::uuid as invoice_id, null::text as invoice_insurance_plan_id where false
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
 
       - input: ref('invoice_insurance_plans')
         format: sql
@@ -88,7 +88,7 @@ unit_tests:
       rows: |
         select
           'item_001' as invoice_item_id,
-          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          '00000000-0000-0000-0000-000000000001'::text as invoice_id,
           'prod_001' as product_id,
           '2024-01-14'::date as date,
           'Procedure X' as product_name,

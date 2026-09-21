@@ -11,6 +11,8 @@ with admission_encounters as (
         start_datetime,
         end_datetime,
         location_id,
+        planned_location_id,
+        planned_location_start_datetime,
         patient_billing_type_id,
         facility_id,
         facility as facility_name
@@ -247,6 +249,11 @@ patient_data as (
         ae.start_datetime,
         ae.end_datetime,
         ae.location_id,
+        -- BL-011 (specs/dbt-model/ds__admissions.md): planned_location_id/start_datetime
+        -- are a passthrough from encounters_core(); planned_location_name is resolved here
+        ae.planned_location_id,
+        planned_location.name as planned_location_name,
+        ae.planned_location_start_datetime,
         ae.facility_id,
         ae.facility_name
     from admission_encounters ae
@@ -256,6 +263,8 @@ patient_data as (
         on village.id = p.village_id
     left join {{ ref('reference_data') }} bt
         on bt.id = ae.patient_billing_type_id
+    left join {{ ref('locations') }} planned_location
+        on planned_location.id = ae.planned_location_id
 )
 
 select
@@ -278,6 +287,9 @@ select
         else 'discharged'
     end as admission_status,
     pd.end_datetime as discharge_datetime,
+    pd.planned_location_id,
+    pd.planned_location_name as planned_location,
+    pd.planned_location_start_datetime,
     pd.facility_id,
     pd.facility_name as facility,
     dc.department_ids,

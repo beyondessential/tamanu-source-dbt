@@ -53,7 +53,8 @@ Patient: `patient_id`, `display_id`, `first_name`, `last_name`, `date_of_birth`,
 `sex`, `village_id`, `village`, `billing_type_id`, `billing_type`.
 
 Admission: `admitting_clinician_id`, `admitting_clinician`, `admission_datetime`,
-`admission_status`, `discharge_datetime`, `facility_id`, `facility`.
+`admission_status`, `discharge_datetime`, `planned_location_id`, `planned_location`,
+`planned_location_start_datetime`, `facility_id`, `facility`.
 
 Movement history, as three parallel triples — an id array, a comma-joined name string
 and a semicolon-joined datetime string: `department_ids` / `departments` /
@@ -128,6 +129,10 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
   bind placeholder, because datasets build on analytics where `parameter()` and
   `to_user_selected_timezone()` do not resolve to a viewer's choice. The datetime strings
   use `var('datetime_without_seconds_format')` only.
+- **BL-011:** `planned_location_id` and `planned_location_start_datetime` describe the
+  encounter's pending transfer and are passed through from `encounters_core()` unchanged.
+  `planned_location` is that location's name, resolved by a left join to `locations`, so
+  an encounter with no planned transfer keeps its row with all three columns null.
 
 ## Relationship to `encounter_summary_core`
 
@@ -198,6 +203,7 @@ partition, but it does not mean what its name suggests.
 | AC-004 | Only `admission` encounters appear. | BL-001 | `test_ds__admissions_filters_admission_encounters_only` |
 | AC-005 | With `is_sensitive = false` no sensitive facility's admission appears, and vice versa. | BL-001 | `test_ds__admissions_sensitive_facilities` |
 | AC-006 | `age` is the age at admission. | BL-008 | `test_ds__admissions_age_calculation` |
+| AC-007 | An encounter with a planned transfer emits the planned location's id, resolved name and start datetime. | BL-011 | `test_ds__admissions_basic_functionality` (enc_001) |
 
 ## Open questions
 
@@ -210,3 +216,4 @@ None outstanding.
 | 2026-09-03 | Location-group dedup aligned to `is distinct from` (BL-006), matching `encounter_summary_core`. Spec created. |
 | 2026-09-05 | An ungrouped move is named `(no area)` in `location_groups` (BL-006), so the three movement columns of a triple stay the same length. |
 | 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |
+| 2026-09-17 | Added the planned-transfer columns `planned_location_id`, `planned_location` and `planned_location_start_datetime` (BL-011, MAUI-6905), for the admissions line list report. |
