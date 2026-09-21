@@ -30,19 +30,6 @@ Diagnostic imaging requests raised in any Tamanu encounter setting, one row per 
 |---|---|---|
 | `imaging_request` | count | Imaging requests raised in any encounter setting (always 1 per row) |
 
-**Why a separate metric from the OPD/IPD-scoped ones, not just their union.** Following
-`metric__procedure`'s precedent: a general, unscoped metric carries `encounter_type` as a
-disaggregation so a consumer filters to one setting (or none) from a single view, rather
-than a metric restricting inclusion to a fixed set of settings. `metric__opd_imaging_request`
-and `metric__ipd_imaging_request` remain independently useful because they are
-**segment-precise** (the segment active at the request's own time, not the encounter's
-current or first type) and, for the OPD one, narrower than a full OMOP concept
-(`clinic` only, not 9202) -- neither property this metric reproduces. A consumer wanting
-"all imaging requests, tagged with the whole encounter's own type" reads this metric; a
-consumer wanting "imaging requests scoped precisely to a clinic/admission segment" reads
-the matching scoped sibling. See `metric__opd_imaging_request`'s own BL-003 for why the two
-kinds of scoping (encounter-grain vs segment-grain) are not interchangeable.
-
 **Not segment-precise, by design.** `encounter_type` here is
 `clinical__visit_occurrence.visit_source_value` -- the encounter's own whole-visit type --
 not the `clinical__visit_detail` segment active at the request's own timestamp. A request

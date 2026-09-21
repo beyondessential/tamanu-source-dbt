@@ -17,7 +17,7 @@
 -- does not re-filter status. Facility and completion still need bases/-level detail the
 -- clinical model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
 --
--- The registry carries the definition; this model is its implementation.
+-- The registry carries the definition and this model is its implementation.
 
 with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
@@ -180,8 +180,8 @@ select
     sex,
     -- BL-010: the clinical model's own completion flag -- cancelled and still-open requests
     -- are both false, indistinguishable from each other by this column alone (out of scope
-    -- for the current visual; see bases/imaging_requests.status for the full lifecycle if
-    -- that distinction is needed later).
+    -- for the current visual, and see bases/imaging_requests.status for the full lifecycle
+    -- if that distinction is needed later).
     is_completed,
     -- BL-007: raw Tamanu modality value, never NULL.
     coalesce(imaging_type_code_raw, 'Not recorded') as imaging_type_code,

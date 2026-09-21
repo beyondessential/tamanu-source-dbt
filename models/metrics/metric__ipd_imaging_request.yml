@@ -133,14 +133,6 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__ipd_imaging_request_is_completed_not_null
-      - name: imaging_type
-        data_type: text
-        description: >-
-          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
-          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
-        data_tests:
-          - not_null:
-              name: ac_metric__ipd_imaging_request_imaging_type_not_null
       - name: imaging_type_code
         data_type: text
         description: >-
@@ -150,6 +142,14 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__ipd_imaging_request_imaging_type_code_not_null
+      - name: imaging_type
+        data_type: text
+        description: >-
+          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
+          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__ipd_imaging_request_imaging_type_not_null
       - name: imaging_area
         data_type: text
         description: >-

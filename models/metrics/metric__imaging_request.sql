@@ -27,9 +27,11 @@
 -- metric. This model instead resolves facility_id from the encounter's own care_site_id via
 -- clinical__visit_occurrence -- the same table already joined for encounter_type -- rather
 -- than introducing the as-of segment join the OPD/IPD-scoped siblings use, since this
--- metric is deliberately encounter-grain, not segment-grain.
+-- metric is deliberately encounter-grain, not segment-grain. This is the same fallback
+-- metric__encounter_diagnosis already established for condition_occurrence, whose own
+-- domain table carries no reliable location either -- not a workaround invented fresh here.
 --
--- The registry carries the definition; this model is its implementation.
+-- The registry carries the definition and this model is its implementation.
 
 with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}

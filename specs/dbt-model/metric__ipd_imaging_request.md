@@ -27,15 +27,7 @@ Diagnostic imaging requests raised during inpatient admission care, one row per 
 |---|---|---|
 | `ipd_imaging_request` | count | Imaging requests raised during an admission encounter (always 1 per row) |
 
-**Why a separate metric, not a filter.** Same reasoning as `metric__opd_imaging_request`
-BL-001: kept apart from every other setting as its own metric, following
-`metric__opd_procedure`'s precedent (MAUI-6862), rather than mixed with them behind an
-`encounter_type` filter on the general `metric__imaging_request`. A consumer wanting the
-filter-based answer instead reads `metric__imaging_request` and filters to
-`encounter_type = 'admission'` -- encounter-grain, not segment-grain; see BL-003 for why the
-two need not agree.
-
-**Why `admission` only is already the full OMOP 9201 definition (contrast the OPD
+**`admission` only is already the full OMOP 9201 definition (contrast the OPD
 sibling's BL-003).** `metric__opd_imaging_request` scopes to `clinic` specifically because
 the full OMOP concept 9202 also admits `imaging` and `vaccination` encounter types --
 narrower than 9202 by decision. No such narrowing question arises here:
