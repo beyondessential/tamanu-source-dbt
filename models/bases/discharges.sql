@@ -1,19 +1,11 @@
-{#- One row per encounter, the earliest discharge recorded against it.
+{#- One row per encounter: the earliest discharge recorded against it.
 
-    Deduped with `not exists` rather than `distinct on (d.encounter_id)`, which is what
-    this used to be. The row returned is the same; the reason for the change is that
-    PostgreSQL cannot push a qualifier through DISTINCT ON. A caller asking for one
-    encounter's discharge therefore had to build and sort this entire table first --
-    on a deployment with 850k discharges that is a 59MB external merge sort to serve a
-    few hundred rows, and it showed up as 39% of the encounter summary's runtime
-    (MAUI-6917). A plain `where` is pushdown-safe, so the caller's encounter_id filter
-    reaches the index scan on discharges instead. Measured at that scale, a scoped left
-    join went from 1582ms to 7ms with identical output.
+    Deduped with `not exists` rather than `distinct on (d.encounter_id)`. DISTINCT ON is a
+    pushdown barrier, so a caller filtering by encounter_id had to build and sort this whole
+    table first; a plain `where` lets that filter reach the index on discharges.
 
-    `(created_at, id)` rather than `created_at` alone: DISTINCT ON with
-    `order by encounter_id, created_at` picked arbitrarily between two discharges
-    recorded in the same instant, so the row could change between runs. This picks the
-    same one every time. -#}
+    `(created_at, id)` rather than created_at alone, so a tie resolves to the same row every
+    run. -#}
 select
     d.id,
     d.note,
