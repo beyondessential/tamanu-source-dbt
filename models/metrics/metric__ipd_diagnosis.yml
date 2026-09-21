@@ -104,7 +104,7 @@ models:
         description: NULL -- unused by this metric.
       - name: facility_id
         data_type: character varying(255)
-        description: "{{ doc('generic__facility_id') }} the diagnosis is attributed to, resolved from the earliest qualifying inpatient segment (BL-004)."
+        description: "{{ doc('generic__facility_id') }} the diagnosis is attributed to, resolved from the earliest qualifying inpatient segment."
         data_tests:
           - not_null:
               name: ac_007_metric__ipd_diagnosis_facility_id_not_null
