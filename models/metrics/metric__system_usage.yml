@@ -1,0 +1,119 @@
+version: 2
+models:
+  - name: metric__system_usage
+    description: >
+      D5 wide-format metric view for two generic Tamanu platform-usage
+      indicators (MAUI-6780), period-counted per month: clinical_events
+      (OMOP-lite canonical) with a clinical_events_legacy parity variant, and
+      active_users (active authors). Shared across all deployments; consumers
+      roll facility up to country and use `sex` for the GEDSI cut. See
+      specs/dbt-model/metric__system_usage.md for business logic (BL-001..008).
+    meta:
+      # Tupaia Data Table contract (D9). This model is shared, so the
+      # deployment-specific bits -- the replica externalDatabaseConnectionCode,
+      # the data table code prefix, and the permission group(s) -- are supplied
+      # per deployment at generation time (data-lake data_tables generator:
+      # --source-schema analytics --external-connection <code> --code-prefix <dep>
+      # --permission-groups "<group>"). data_table_permission_groups is left
+      # empty here precisely because it must not default to a shared value.
+      create_data_table: true
+      data_table_permission_groups: []
+    tests:
+      # AC-004: grain. Duplicate rows would double-count in Tupaia Data Tables.
+      # AC-008 (BL-002c): the legacy-parity series is its own metric_id
+      # (clinical_events_legacy), never a variant_id value -- so a consumer
+      # selecting metric_id = 'clinical_events' can never double-count. variant_id
+      # is reserved for future same-metric_id variants and must stay NULL today.
+      - dbt_utils.expression_is_true:
+          name: ac_008_metric__system_usage_variant_id_always_null
+          arguments:
+            expression: "variant_id is null"
+          config:
+            severity: error
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_004_metric__system_usage_grain_unique
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - variant_id
+              - period_start
+              - facility_id
+              - sex
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        description: >
+          clinical_events or active_users. Joins to the canonical
+          metric_definitions registry (documentations/metrics/system_usage.yml).
+        tests:
+          - not_null
+          - accepted_values:
+              name: ac_001_metric__system_usage_metric_id_accepted
+              arguments:
+                values:
+                  - clinical_events
+                  - clinical_events_legacy
+                  - active_users
+          - relationships:
+              name: ac_006_metric__system_usage_metric_id_in_metric_definitions
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+        meta:
+          data_table_filter: array   # pick clinical_events / clinical_events_legacy / active_users
+      - name: variant_id
+        description: >
+          Always NULL. The legacy-parity series is modelled as its own
+          metric_id (clinical_events_legacy, variant_of clinical_events in the
+          registry), not a variant_id value -- so selecting metric_id =
+          'clinical_events' never double-counts. Reserved for future
+          same-metric_id variants, per the D5 contract.
+      - name: subject_id
+        description: NULL — pre-aggregated counts, not per-subject rows.
+      - name: period_start
+        description: First day of the reporting month (inclusive).
+        tests:
+          - not_null
+        meta:
+          data_table_filter: date   # startDate / endDate window
+      - name: period_end
+        description: Last day of the reporting month (inclusive).
+        tests:
+          - not_null
+      - name: period_granularity
+        description: Constant 'month'.
+        tests:
+          - not_null
+          - accepted_values:
+              name: ac_002_metric__system_usage_period_granularity_month
+              arguments:
+                values: ['month']
+      - name: value_numeric
+        description: >
+          Period count for the month. Zero-value slices are not emitted
+          (BL-005), so this is always > 0.
+        tests:
+          - not_null
+        meta:
+          data_table_metric: sum   # the one aggregated measure
+      - name: value_boolean
+        description: NULL — not used by these indicators.
+      - name: facility_id
+        description: >
+          For clinical_events / clinical_events_legacy: the Tamanu facility the
+          event is attributed to (BL-006); may be NULL where the source event has
+          no resolvable facility. For active_users: always NULL, meaning the whole
+          deployment -- active_users is a national distinct-user count and is NOT
+          decomposable to facility (BL-003/BL-006). Do not sum across facilities.
+        meta:
+          data_table_filter: array   # facilityIds
+      - name: sex
+        description: >
+          Patient sex for clinical_events / clinical_events_legacy rows; NULL for
+          active_users (BL-007).
+        meta:
+          data_table_filter: array
+          data_table_filter_parameter: sexes
