@@ -80,7 +80,11 @@ def write_file(file_path, data, file_type="text"):
         else:
             raise ValueError(f"Unsupported file_type: {file_type}")
 
-        with open(file_path, "w", encoding="utf-8") as f:
+        # newline="" writes the newline character verbatim. Without it Python
+        # translates it to os.linesep, which on Windows emits CRLF -- and a generated
+        # model doc written that way carries literal carriage returns into dbt's
+        # manifest descriptions, and from there into the compiled reporting bundle.
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
             f.write(content)
     except Exception as e:
         cprint(f"Error writing file {file_path}: {e}", "error")

@@ -106,10 +106,14 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   (`models/maps/map__omop_visit_type.sql`), that `metric__outpatient_visit` uses for
   `opd_visit` (decision: MAUI-6862, split OPD/IPD by time rather than by encounter grain).
 
-  The active segment is found with an as-of join -- the latest `clinical__visit_detail` row
-  for the encounter whose `visit_detail_start_datetime` is at or before the procedure's
-  timestamp -- rather than the encounter's first segment (`opd_visit`'s own grain) or its
-  current/final segment. This is also the standard OMOP answer: the CDM spec's own
+  This model does **not** derive that segment itself. It reads
+  `clinical__procedure_occurrence.visit_detail_id` -- resolved once there for every procedure
+  and imaging request (its BL-005) -- and filters the joined segment's concept. The as-of
+  rule (the latest segment whose `visit_detail_start_datetime` is at or before the
+  procedure's timestamp, rather than the encounter's first segment or its current one) and
+  the first-segment clamp are defined and tested in that model, not here: a change to how a
+  procedure is matched to its segment belongs there, and reaches this metric and every
+  sibling through the FK. This is also the standard OMOP answer: the CDM spec's own
   `PROCEDURE_OCCURRENCE.visit_detail_id` field description gives the identical case ("if
   the Person was in the ICU at the time of the Procedure ... the VISIT_DETAIL record would
   reflect the ICU stay during the hospital visit") as the reason `PROCEDURE_OCCURRENCE`
@@ -125,17 +129,18 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   at all, but a procedure performed during that later clinic segment does count here --
   read this note before treating a mismatch between the two metrics' counts as a bug.
 
-  **Clamped to the first segment when the procedure predates every segment (decision,
-  Juliana).** A procedure can be timestamped before its own encounter's earliest recorded
-  segment even starts -- a data-timing artifact (the segment's own start time recorded
-  late), not a real ordering issue; the procedure still genuinely belongs to that encounter.
-  Every encounter has at least one `clinical__visit_detail` segment (its own BL-005), so the
-  join to `visit_detail` carries no timestamp condition -- the `order by` picks the latest
-  segment that had already started where one qualifies, and falls back to the earliest
-  segment otherwise, so a procedure is never dropped purely because a segment's own recorded
-  start time is unreliable. The clamp resolves *which* segment a procedure is compared
-  against; it does not change the 9202 scope check itself -- a procedure clamped onto a
-  non-9202 segment (e.g. the only segment is `admission`) is still excluded.
+  **The clamp does not widen this scope check.** `clinical__procedure_occurrence` clamps a
+  procedure timestamped before its encounter's earliest segment onto that earliest segment,
+  so it resolves rather than going unattributed (that model's BL-005). The clamp decides
+  *which* segment the procedure is attributed to; it does not change the 9202 test applied
+  here -- a procedure clamped onto a non-9202 segment (e.g. the encounter's only segment is
+  `admission`) is still excluded.
+
+  **A procedure whose segment did not resolve is excluded.** `visit_detail_id` is nullable:
+  `clinical__visit_detail` emits no segment for an encounter whose `encounter_type` is
+  absent from `map__omop_visit_type` (its own BL-003). The join here is inner, so such a
+  procedure is dropped rather than surfaced without a setting -- the same outcome the
+  previous in-model derivation produced for that case.
 - **BL-004 (facility attribution):** `facility_id` is resolved through `bases/locations` on
   the procedure's own `location_id` -- not the encounter's `care_site_id` -- the same
   convention `metric__procedure` and `clinical__procedure_occurrence` use, since a procedure
@@ -178,7 +183,8 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
 | AC-011 | `procedure` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_procedure_not_null`) |
 | AC-012 | `procedure_code` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_procedure_code_not_null`) |
 | AC-013 | `is_completed` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_is_completed_not_null`) |
-| AC-014 | A procedure predating every segment of its encounter clamps to the first segment, rather than being dropped | BL-003 | dbt unit test `test_metric__opd_procedure_segment_clamp` |
+| AC-014 | The outpatient-scope filter over the resolved segment: a 9202 segment is included, a non-9202 one excluded, and a procedure whose segment did not resolve (NULL FK) is dropped | BL-003 | dbt unit test `test_metric__opd_procedure_segment_scope` |
+| AC-015 | The as-of match and first-segment clamp feeding that filter | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
 
 Test names are unnumbered (`ac_metric__opd_procedure_<column>_<check>`), matching
 `metric__procedure.yml`'s own convention rather than the newer `ac_NNN_...` scheme -- this

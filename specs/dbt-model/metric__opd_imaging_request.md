@@ -155,16 +155,18 @@ as of this spec.
   in later (OQ-001). `vaccination` is excluded for the same reason, though it is expected to
   contribute ~0 rows in practice.
 
-  **The mechanism -- an as-of join, not the encounter's current type.** The active segment
-  is found the same way `metric__opd_procedure` BL-003 finds one for a procedure: the latest
-  `clinical__visit_detail` row for the request's encounter whose `visit_detail_start_datetime`
-  is at or before the request's own timestamp, tied-broken on `visit_detail_id` descending on
-  a same-instant tie. This is segment-grain, not encounter-grain -- an imaging request raised
-  while a patient's encounter is still coded `clinic`, before a later admission or ED
-  transfer, is scoped correctly regardless of what the encounter becomes afterward.
+  **The mechanism -- a resolved segment FK, not the encounter's current type.** This model
+  does not derive the segment itself: it reads
+  `clinical__procedure_occurrence.visit_detail_id`, resolved once there for every procedure
+  and imaging request (its BL-005), and filters the joined segment's source value. The as-of
+  rule (the latest segment whose `visit_detail_start_datetime` is at or before the request's
+  own timestamp) and the first-segment clamp are defined and tested in that model, not here.
+  This is segment-grain, not encounter-grain -- an imaging request raised while a patient's
+  encounter is still coded `clinic`, before a later admission or ED transfer, is scoped
+  correctly regardless of what the encounter becomes afterward.
 
 - **BL-004 (request time, not completion time -- departure from `opd_procedure`'s literal
-  pattern):** the as-of join is evaluated at `requested_date`, not at the completion
+  pattern):** the as-of match is evaluated at `requested_date`, not at the completion
   timestamp `opd_procedure` uses (`procedure_datetime` -- procedures only have one
   timestamp). Imaging has two, and only one is always populated: a `pending`, `in_progress`,
   or `cancelled` request has no completion event at all. Anchoring on completion time would
@@ -173,20 +175,14 @@ as of this spec.
   answer -- request time is available for every request, completed or not, so that is what
   the segment lookup uses.
 
-  **Clamped to the first segment when the request predates every segment (decision,
-  Juliana).** Confirmed against a real replica: a request can be timestamped before its own
-  encounter's earliest recorded segment even starts -- a data-timing artifact (the segment's
-  own start time recorded late), not a real ordering issue; the request still genuinely
-  belongs to that encounter. Every encounter has at least one `clinical__visit_detail`
-  segment (its own BL-005), so the join to `visit_detail` carries no timestamp condition --
-  the `order by` picks the latest segment that had already started where one qualifies, and
-  falls back to the earliest segment otherwise, so a request is never dropped purely because
-  a segment's own recorded start time is unreliable. Contrast `metric__opd_diagnosis`, which
-  clamps for an unrelated reason -- it treats a diagnosis as belonging to the whole
-  encounter, not a specific moment, and has no time-of-day component to begin with. Here,
-  the request has a real, specific timestamp; the clamp exists because the segment boundary
-  it is compared against is sometimes wrong, not because the request's own timing is
-  ambiguous.
+  **The clamp does not widen this scope check.** `clinical__procedure_occurrence` clamps a
+  request timestamped before its encounter's earliest segment onto that earliest segment, so
+  it resolves rather than going unattributed (that model's BL-005) -- confirmed against a
+  real replica as a genuine data-timing artifact, not a real ordering issue. The clamp
+  decides *which* segment the request is attributed to; it does not change the `clinic` test
+  applied here, and a request whose segment did not resolve at all (NULL FK, where the
+  encounter's type is absent from `map__omop_visit_type`) is dropped by this model's inner
+  join rather than surfaced without a setting.
 
 - **BL-005 (facility attribution -- the clinic segment's own location, not the request's
   `location_group_id`):** `facility_id` is resolved through `bases/locations` on the
@@ -269,7 +265,8 @@ as of this spec.
 | AC | `imaging_type_code` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_area` is `not_null` | BL-007 | `not_null` |
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
-| AC | The as-of join: tie-break on `visit_detail_id`, `clinic`-only scoping, a pending/cancelled request (no completion event) still resolves via `requested_date`, and a request predating every segment clamps to the first segment | BL-003, BL-004 | dbt unit test `test_metric__opd_imaging_request_segment_attribution` |
+| AC | `clinic`-only scoping over the resolved segment, the branch filter, a pending request with no result still included with a NULL `period_end`, `period_end` gated on `is_completed` rather than on a result existing, and a request whose segment did not resolve (NULL FK) dropped | BL-002, BL-003, BL-010 | dbt unit test `test_metric__opd_imaging_request_scope_and_completion` |
+| AC | The as-of match and first-segment clamp feeding that scoping | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
 
 Test names are unnumbered (`ac_metric__opd_imaging_request_<column>_<check>`), matching
 `metric__opd_procedure.yml`'s convention.
