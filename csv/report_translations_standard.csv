@@ -9,6 +9,7 @@ encounter.property.type.triage,Triage
 encounter.property.type.vaccination,Vaccination record
 report.reporting.admissionDate,Admission date
 report.reporting.admissionDateTime,Admission date and time
+report.reporting.admissionLocation,Admission location
 report.reporting.admissionStatus,Admission status
 report.reporting.admittingClinician,Admitting clinician
 report.reporting.appointmentClinician,Clinician
@@ -231,6 +232,7 @@ report.reporting.patientBloodType,Blood type
 report.reporting.patientCategory,Patient category
 report.reporting.patientConditions,Patient conditions
 report.reporting.patientContactNumber,Contact number
+report.reporting.patientCountry,Country
 report.reporting.patientCountryOfBirth,Country of birth
 report.reporting.patientCulturalName,Cultural name
 report.reporting.patientDateOfBirth,Date of birth
