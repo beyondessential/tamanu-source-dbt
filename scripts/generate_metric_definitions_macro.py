@@ -176,7 +176,9 @@ def generate_metric_definitions_macro():
         if os.path.exists(package_macro):
             os.remove(package_macro)
 
-    with open(macro_path, "w", encoding="utf-8") as f:
+    # newline="": see write_file in utils/file_utils.py. This macro is committed, so
+    # a CRLF rewrite would also show up as drift in the checks workflow.
+    with open(macro_path, "w", encoding="utf-8", newline="") as f:
         f.write(macro_content)
 
     print(f"Generated {macro_path}")
