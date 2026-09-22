@@ -146,7 +146,10 @@ def print_bases_models_summary(models: List[Dict[str, Any]]) -> None:
 def save_bases_models_to_yaml(models: List[Dict[str, Any]], output_path: str) -> None:
     """Save the extracted bases models to a YAML file."""
     ensure_directory_exists(os.path.dirname(output_path))
-    with open(output_path, "w", encoding="utf-8") as f:
+    # newline="": see write_file in file_utils.py -- without it Python translates the
+    # newlines yaml.dump emits to os.linesep, so on Windows this analytics metadata
+    # comes out CRLF and every release diff churns against a Linux-built one.
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
         yaml.dump(models, f, default_flow_style=False, allow_unicode=True, indent=2)
 
 
