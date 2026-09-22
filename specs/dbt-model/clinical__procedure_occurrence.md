@@ -66,6 +66,7 @@ unique across both branches without qualification.
 | `procedure_type_source_value` | text | `'procedure'` or `'imaging request'` -- the branch discriminator (BL-001) |
 | `provider_id` | varchar(255) | Who performed it (procedure branch), or who requested it -- not who completed it -- (imaging branch, BL-003). FK to `ref__provider.provider_id` |
 | `visit_occurrence_id` | varchar(255) | The encounter. FK to `clinical__visit_occurrence.visit_occurrence_id` |
+| `visit_detail_id` | varchar(255) | The encounter segment the event happened in, as-of its own timestamp (BL-005). Nullable, per the CDM. FK to `clinical__visit_detail.visit_detail_id` |
 | `location_id` | varchar(255) | The row's own location, raw. Deprecated and effectively unpopulated for imaging -- superseded by `imaging_requests.location_group_id` (BL-004) |
 | `procedure_source_value` | text | Reference-data code (procedure branch), or raw Tamanu `imaging_type` (imaging branch) |
 | `procedure_source_name` | text | Reference-data name (procedure branch), or the modality's readable label (imaging branch) |
@@ -126,6 +127,41 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   `relationships` check, so a populated-but-invalid value is visible without requiring the
   column be filled.
 
+- **BL-005 (the segment the event happened in):** `visit_detail_id` names the
+  `clinical__visit_detail` segment active at the event's own `procedure_datetime`. The CDM
+  carries both this and `visit_occurrence_id` on `PROCEDURE_OCCURRENCE`, and its own field
+  description gives precisely this case: *"if the Person was in the ICU at the time of the
+  Procedure the VISIT_OCCURRENCE record would reflect the overall hospital stay and the
+  VISIT_DETAIL record would reflect the ICU stay during the hospital visit."* Deriving it
+  from dates is sanctioned there too -- the CDM's ETL note for `visit_occurrence_id` ("if a
+  PROCEDURE_DATE occurs within the start and end date of a Visit it is a valid ETL choice to
+  choose the VISIT_OCCURRENCE_ID from the Visit that subsumes it") is extended to this
+  column by "same rules apply."
+
+  Resolved here rather than per consumer. Both branches use the same rule because both are
+  point-in-time events, so exactly one segment holds each -- unlike
+  `clinical__condition_occurrence`, where a diagnosis stays valid for the remainder of the
+  encounter and therefore has no single segment to name.
+
+  **The rule.** The latest segment whose `visit_detail_start_datetime` is at or before
+  `procedure_datetime`. Where the event predates every segment of its encounter -- a
+  data-timing artifact rather than a real ordering, since the event genuinely belongs to
+  that encounter -- it is clamped to the earliest segment instead, so it resolves rather
+  than going unattributed. The join carries no timestamp condition; the ordering picks the
+  as-of segment where one qualifies and falls back to the earliest otherwise.
+
+  **Tie-breaks are split by branch.** Among segments sharing a start datetime (a zero-length
+  segment, which `clinical__visit_detail` BL-002 documents as possible), the as-of branch
+  takes the last and the clamp branch the first, matching the
+  `(visit_detail_start_datetime, visit_detail_id)` order `clinical__visit_detail` chains its
+  own segments by. A single shared direction would be correct for only one of the two.
+
+  **Nullable.** The join is a left join: `clinical__visit_detail` excludes an encounter whose
+  `encounter_type` is absent from `map__omop_visit_type` (its own BL-003), so the segment can
+  genuinely fail to resolve. The CDM makes `visit_detail_id` optional for this reason, so such
+  an event is emitted with a NULL FK rather than dropped. AC-008 is a `relationships` check,
+  which only validates populated values.
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -137,6 +173,8 @@ emitted -- deferred to the future `vocab__` layer, the same convention
 | AC-005 | `procedure_date`/`procedure_datetime` are `not_null` | -- | dbt `not_null` |
 | AC-006 | `procedure_type_source_value` is `not_null` and one of `procedure`, `imaging request` | BL-001 | `not_null` + `accepted_values` |
 | AC-007 | Every non-null `location_id` exists in `locations.id` | BL-004 | dbt `relationships` (`warn`) |
+| AC-008 | Every non-null `visit_detail_id` exists in `clinical__visit_detail.visit_detail_id` | BL-005 | dbt `relationships` |
+| AC-009 | The as-of match, the first-segment clamp, a NULL FK where no segment resolves, and the imaging branch resolving by the same rule | BL-005 | unit test (`test_clinical__procedure_occurrence_visit_detail_resolution`) |
 
 ## Registry entry
 
@@ -153,6 +191,7 @@ only `metric__`/`derived__` artefacts get a `metric_definitions` row.
 | `reference_data` | `bases/` | Procedure type code/name (procedure branch only -- imaging has no reference-data lookup) |
 | `clinical__person` | `clinical/` | `person_id` FK target |
 | `clinical__visit_occurrence` | `clinical/` | `visit_occurrence_id` FK target |
+| `clinical__visit_detail` | `clinical/` | Segment resolution and `visit_detail_id` FK target (BL-005) |
 | `ref__provider` | `ref/` | `provider_id` FK target |
 
 ## Consumers

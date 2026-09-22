@@ -5,10 +5,14 @@
 -- aggregates at whatever grain it needs -- any subset of the disaggregations, and any time
 -- grain from day upwards.
 --
--- Mirrors metric__encounter_diagnosis's setting-scoping pattern: encounter_type is the
--- encounter's own type (admission, clinic, emergency, ...), so a consumer scopes to inpatient
--- procedures -- or any other setting -- via a filter on this one metric, rather than needing a
--- separate metric per setting.
+-- encounter_type is the setting the procedure itself happened in -- read off the
+-- clinical__visit_detail segment clinical__procedure_occurrence resolves as its
+-- visit_detail_id (that model's BL-005), not the encounter's own whole-visit type. A
+-- procedure performed during the triage phase of an encounter later admitted is an
+-- emergency procedure, not an inpatient one. A consumer scopes to any single setting via a
+-- filter on this one metric rather than needing a separate metric per setting, and because
+-- the scoped siblings (metric__opd_procedure, metric__ipd_procedure) read the same segment,
+-- filtering this metric to one setting agrees with the matching sibling by construction.
 --
 -- clinical__procedure_occurrence carries both a procedure and an imaging branch,
 -- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
@@ -21,8 +25,8 @@ with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
 ),
 
-visit_occurrence as (
-    select * from {{ ref('clinical__visit_occurrence') }}
+visit_detail as (
+    select * from {{ ref('clinical__visit_detail') }}
 ),
 
 person as (
@@ -38,10 +42,11 @@ procedures as (
         po.procedure_occurrence_id,
         po.procedure_date,
         loc.facility_id,
-        -- the encounter's own type -- lets a consumer scope to inpatient, emergency or
-        -- outpatient procedures without a separate metric per setting, the same convention
-        -- metric__encounter_diagnosis.encounter_type uses
-        vo.visit_source_value as encounter_type,
+        -- the segment the procedure happened in, not the encounter's whole-visit type --
+        -- lets a consumer scope to inpatient, emergency or outpatient procedures without a
+        -- separate metric per setting, and agrees with the scoped siblings, which filter
+        -- the same column
+        vd.visit_detail_source_value as encounter_type,
         pr.gender_source_value as sex,
         -- the procedure as recorded, coalesced so the column is never NULL -- Tupaia exposes
         -- these as array filters, and an array filter drops a NULL row
@@ -53,12 +58,14 @@ procedures as (
         -- age in whole years at the procedure; the NULL rule lives in the macro
         {{ age_years('po.procedure_date', 'pr') }} as age_years
     from procedure_occurrence po
-    -- inner join: resolves for every procedure whose encounter type is covered by
-    -- map__omop_visit_type, which clinical__visit_occurrence inner-joins -- an uncovered type
-    -- would drop the procedure rather than surface it, the same tradeoff
-    -- metric__encounter_diagnosis makes
-    join visit_occurrence vo
-        on vo.visit_occurrence_id = po.visit_occurrence_id
+    -- inner join on the segment FK clinical__procedure_occurrence already resolved -- no
+    -- as-of derivation here, so this metric and its scoped siblings cannot disagree about
+    -- which segment a procedure belongs to. A procedure whose segment did not resolve
+    -- (NULL FK, where the encounter's type is absent from map__omop_visit_type) is dropped
+    -- rather than surfaced with no setting, the same tradeoff the previous join to
+    -- clinical__visit_occurrence made
+    join visit_detail vd
+        on vd.visit_detail_id = po.visit_detail_id
     join person pr
         on pr.person_id = po.person_id
     -- inner join: a procedure's location resolving to nothing is an anomaly, excluded rather
