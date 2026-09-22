@@ -13,9 +13,18 @@ where trim(d) not in (
         -- First metric__ disaggregation finer than facility.
         'location_id',
         'dhis_ncd_category',
-        -- ed_visit's admission outcome, carried as a disaggregation on
-        -- metric__emergency_visit's per-encounter rows rather than as its own metric_id.
+        -- ed_visit's and opd_visit's admission outcome, carried as a disaggregation on
+        -- per-encounter rows rather than as its own metric_id.
         'is_admitted',
+        -- opd_visit's clinician: who saw the patient in the outpatient department, and
+        -- separately who admitted them. Tamanu user ids, untranslated -- a consumer labels
+        -- them through map__clinician.
+        'clinician_id',
+        'admission_clinician_id',
+        -- opd_visit's system-discharge flag: the discharge was written by Tamanu's
+        -- outpatient discharger rather than by a clinician, so the encounter end is the
+        -- sweep's clock and any duration taken from it is an artefact.
+        'is_auto_discharge',
         -- ed_visit's triage acuity category
         'triage_score',
         -- ed_visit's arrival hour

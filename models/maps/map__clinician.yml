@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: map__clinician
+    description: >-
+      Tamanu user id mapped to the clinician's display name. Joined by a consumer's data
+      table to label a clinician id a metric emits (metric__outpatient_visit's clinician_id
+      and admission_clinician_id), so the metric can keep emitting Tamanu ids untranslated.
+      Projects only the id and the display name -- bases/users also carries staff email and
+      phone number, which this deliberately does not expose.
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+      # A staff display name, not a patient identifier, and no patient row joins to it here.
+      pii: false
+      classification: internal
+    columns:
+      - name: clinician_id
+        data_type: character varying(255)
+        description: Tamanu `users.id` of the clinician.
+        data_tests:
+          - not_null
+          - unique
+      - name: clinician_name
+        data_type: character varying(255)
+        description: >-
+          The clinician's display name as Tamanu holds it. Not unique -- two users may share
+          a display name -- so a consumer grouping by it groups those two together.
