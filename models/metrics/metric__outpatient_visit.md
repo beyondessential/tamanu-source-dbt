@@ -116,6 +116,11 @@ and summing one across facility, sex or age band is meaningless.
 
 False, never NULL, where the visit was not admitted -- the data tables expose this as an
 array filter, and Tupaia's array filter drops NULL rows.
+
+Read a trend of this with the deployment's adoption date in mind. On FSM the transition is
+recorded only from May 2026 -- every earlier month is exactly zero against thousands of
+clinic encounters -- so a series spanning that boundary shows workflow take-up, not a change
+in who gets admitted. See BL-009 in the spec.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__admission_clinician_id %}

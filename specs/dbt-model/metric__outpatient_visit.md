@@ -27,8 +27,8 @@ Outpatient department activity at a Tamanu facility, one row per visit.
 **Clinical context.** An outpatient visit is usually a self-contained event, and one
 metric covers it -- there is no equivalent to `metric__emergency_visit`/`metric__emergency_stay`'s
 split, because the outpatient episode and the encounter are the same span for all but a
-fraction of visits. A small minority do end in admission (0.09% of FSM's 430k clinic
-encounters), so the episode is bounded explicitly rather than assumed to run to the
+minority of visits. Some do end in admission -- 2-3% of FSM's monthly clinic encounters as
+at September 2026 -- so the episode is bounded explicitly rather than assumed to run to the
 encounter end (BL-011), and the outcome is carried as a disaggregation rather than as a
 second metric (BL-009).
 
@@ -179,6 +179,18 @@ This model therefore carries no `data_table_*` meta.
   BL-006 makes.
 
   `false`, never NULL (AC-011).
+
+  **Adoption, not epidemiology.** On FSM the transition is recorded only from May 2026: every
+  month to April 2026 has exactly zero admissions against 4,300-5,600 clinic encounters, then
+  0.56%, 1.18%, 1.13%, 2.06% and 3.07% (September, partial). A rate trended across that
+  boundary reads as a clinical change and is not one -- it is the clinic-to-admission workflow
+  being taken up in Tamanu. Across all history the rate is 0.086% (371 of 430,372), which is
+  the same artefact seen from the other end: ~425k migrated and pre-adoption encounters that
+  never carried the transition, diluting a live signal to near zero.
+
+  Neither number is the metric misbehaving, and neither is a reason to change it: the model
+  reports what was recorded. It is a reason for a consumer not to quote a lifetime rate, and
+  for anyone reading a trend to know where the series actually begins.
 - **BL-010 (admitting clinician):** `admission_clinician_id` is the `provider_id` of the
   **earliest** segment at concept 9201, taken with `distinct on` so the join cannot fan out
   an encounter with several inpatient segments.
