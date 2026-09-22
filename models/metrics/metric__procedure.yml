@@ -115,9 +115,13 @@ models:
       - name: encounter_type
         data_type: character varying(255)
         description: >-
-          The setting the procedure's encounter was recorded in -- admission, clinic, emergency
-          and the rest of the deployment's encounter types. Filtering to one gives that
-          setting's procedures from the same metric.
+          The setting the procedure itself was performed in -- admission, clinic, emergency
+          and the rest of the deployment's encounter types. This is the phase the encounter
+          was in at the time of the procedure, not what the encounter became afterwards: a
+          procedure performed during triage on an encounter later admitted reads as triage.
+          Filtering to one setting gives that setting's procedures from the same metric, and
+          agrees with the matching scoped metric (metric__opd_procedure,
+          metric__ipd_procedure), which filter this same phase.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_type_not_null

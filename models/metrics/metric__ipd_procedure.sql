@@ -31,36 +31,6 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
--- BL-003: the segment active at the procedure's own timestamp, not the encounter's first or
--- current segment. distinct on picks the latest segment that had already started by
--- procedure_datetime, tie-broken on visit_detail_id, the same tiebreak
--- clinical__visit_detail's own segment-ordering window uses for its zero-length-segment case
--- (BL-002).
---
--- BL-003: clamped to the first segment when the procedure predates every segment (product
--- decision, MAUI-6862/MAUI-6806) -- a procedure genuinely belongs to its own encounter, so a segment
--- recorded starting after it (a data-timing artifact, not a real ordering issue) should not
--- exclude it. No join condition on the timestamp: every encounter has >= 1 segment
--- (clinical__visit_detail BL-005), so the join itself can never drop a row -- the order by
--- picks the correct as-of segment where one qualifies, and falls back to the earliest
--- segment otherwise.
-procedure_segment as (
-    select distinct on (po.procedure_occurrence_id)
-        po.procedure_occurrence_id,
-        vd.visit_detail_concept_id
-    from procedure_occurrence po
-    join visit_detail vd
-        on vd.visit_occurrence_id = po.visit_occurrence_id
-    order by
-        po.procedure_occurrence_id,
-        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
-        case when vd.visit_detail_start_datetime <= po.procedure_datetime
-             then vd.visit_detail_start_datetime end desc,
-        case when vd.visit_detail_start_datetime > po.procedure_datetime
-             then vd.visit_detail_start_datetime end asc,
-        vd.visit_detail_id desc
-),
-
 procedures as (
     select
         po.procedure_occurrence_id,
@@ -77,15 +47,21 @@ procedures as (
         -- age in whole years at the procedure, and the NULL rule lives in the macro
         {{ age_years('po.procedure_date', 'pr') }} as age_years
     from procedure_occurrence po
-    join procedure_segment ps
-        on ps.procedure_occurrence_id = po.procedure_occurrence_id
+    -- BL-003: the segment the procedure happened in, resolved once by
+    -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
+    -- match against the procedure's own timestamp, with the first-segment clamp for a
+    -- procedure timestamped before any segment began. A procedure whose segment did not
+    -- resolve carries a NULL FK and is dropped by this inner join, which is also what the
+    -- previous in-model derivation did for an encounter with no mapped segment.
+    join visit_detail vd
+        on vd.visit_detail_id = po.visit_detail_id
     join person pr
         on pr.person_id = po.person_id
     -- inner join: a procedure's location resolving to nothing is an anomaly, excluded rather
     -- than attributed to a NULL facility -- the same convention metric__procedure uses
     join locations loc
         on loc.id = po.location_id
-    where ps.visit_detail_concept_id = 9201
+    where vd.visit_detail_concept_id = 9201
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
