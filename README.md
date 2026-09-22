@@ -99,6 +99,15 @@ python scripts/generate_survey_models.py
 ```
 This will generate models and documentation for all surveys in the Tamanu database.
 
+## Generate report boilerplate
+Execute the following command to generate boilerplate SQL and JSON files:
+```bash
+python scripts/report_generator.py [OPTIONS]
+```
+### Command-Line Arguments
+- `--project` / `-p`: Project name (defaults to "generic")
+- `--name` / `-n`: Report name (defaults to timestamped name like "report-20241205_143022")
+
 ## Script to list Tamanu reports
 
 This script generates a list of all reports in the repository and outputs the result in a Markdown file.
