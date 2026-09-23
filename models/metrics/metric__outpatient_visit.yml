@@ -183,3 +183,9 @@ models:
               arguments:
                 min_value: 0
                 row_condition: "opd_time__minutes is not null"
+      - name: department
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__department') }}"
+        data_tests:
+          - not_null:
+              name: ac_017_metric__outpatient_visit_department_not_null
