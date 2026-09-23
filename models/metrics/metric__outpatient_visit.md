@@ -163,14 +163,6 @@ False, never NULL, covering both a clinician-recorded discharge and an encounter
 discharge record at all.
 {% enddocs %}
 
-{% docs metric__outpatient_visit__opd_time__seconds %}
-Time in the outpatient department in whole seconds -- intake to the end of the outpatient
-episode. The basis for `opd_time__minutes`; emitted alongside it so a consumer needing
-another scale is not re-deriving one from a rounded number.
-
-NULL while the encounter is open and nothing has ended the outpatient episode.
-{% enddocs %}
-
 {% docs metric__outpatient_visit__opd_time__minutes %}
 Time in the outpatient department in minutes, to two decimal places -- from the intake
 segment to the end of the outpatient episode.

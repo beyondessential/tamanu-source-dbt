@@ -228,7 +228,6 @@ select
     admission_clinician_name,
     -- BL-012
     is_auto_discharge,
-    opd_time__seconds,
     -- BL-011: time in the outpatient department as minutes, to two decimal places --
     -- 0.6-second resolution, finer than any reporting need, and a fixed scale so the value
     -- is stable to compare. Unbanded, for the same reason as age: a mean, a median or a

@@ -170,9 +170,11 @@ models:
           # with no discharge at all -- same reasoning as is_admitted.
           - not_null:
               name: ac_012_metric__outpatient_visit_is_auto_discharge_not_null
-      - name: opd_time__seconds
-        data_type: bigint
-        description: "{{ doc('metric__outpatient_visit__opd_time__seconds') }}"
+      - name: opd_time__minutes
+        data_type: numeric
+        description: "{{ doc('metric__outpatient_visit__opd_time__minutes') }}"
+        # BL-011: a measure, not a dimension -- unbanded and unaveraged, for the same reason
+        # as age_years.
         data_tests:
           # BL-011: the outpatient episode cannot end before it starts. `min_value: 0` with
           # no max: a long-running episode is a real, if unusual, encounter.
@@ -180,10 +182,4 @@ models:
               name: ac_013_metric__outpatient_visit_opd_time_non_negative
               arguments:
                 min_value: 0
-                row_condition: "opd_time__seconds is not null"
-      - name: opd_time__minutes
-        data_type: numeric
-        description: "{{ doc('metric__outpatient_visit__opd_time__minutes') }}"
-        # BL-011: a measure, not a dimension -- unbanded and unaveraged, for the same reason
-        # as age_years. Covered by AC-013 through opd_time__seconds, which it is derived
-        # from.
+                row_condition: "opd_time__minutes is not null"

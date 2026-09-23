@@ -58,7 +58,7 @@ visit`, and is unique because only the intake segment is counted (BL-003) -- so
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and three measure attributes.
+D5 wide format, plus seven disaggregation columns and two measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -80,8 +80,7 @@ D5 wide format, plus seven disaggregation columns and three measure attributes.
 | `admission_clinician_id` | varchar(255) | Admission segment's clinician, as the Tamanu user id (BL-010). NULL where not admitted |
 | `admission_clinician_name` | varchar(255) | That clinician's display name, from `ref__provider` (BL-010). NULL where not admitted |
 | `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
-| `opd_time__seconds` | bigint | Time in the outpatient department, whole seconds (BL-011). NULL while open |
-| `opd_time__minutes` | numeric | The same duration in minutes, 2 dp (BL-011). A measure, not a dimension |
+| `opd_time__minutes` | numeric | Time in the outpatient department, minutes to 2 dp (BL-011). A measure, not a dimension. NULL while open |
 
 ## Data tables
 
@@ -218,11 +217,12 @@ This model therefore carries no `data_table_*` meta.
 
   NULL for a visit that was never admitted, and for an admission segment recorded with no
   clinician.
-- **BL-011 (time in the outpatient department):** `opd_time__seconds` is the intake segment's
-  `visit_detail_start_datetime` to the end of the outpatient episode;
-  `opd_time__minutes` is that value in minutes to two decimal places, on the same basis as
-  `metric__emergency_visit`'s durations -- 0.6-second resolution, finer than any reporting
-  need, and a fixed scale so the value is stable to compare.
+- **BL-011 (time in the outpatient department):** `opd_time__minutes` is the intake segment's
+  `visit_detail_start_datetime` to the end of the outpatient episode, in minutes to two decimal
+  places -- 0.6-second resolution, finer than any reporting need, and a fixed scale so the
+  value is stable to compare, on the same basis as `metric__emergency_visit`'s durations. The
+  elapsed seconds are computed internally and not emitted, the same division every other
+  metric makes: only the minute-scaled column is part of the contract.
 
   "After intake" is the row comparison `(visit_detail_start_datetime, visit_detail_id)`, not
   the datetime alone, and `admission_segments` is ordered against the intake on the same key.
@@ -265,7 +265,7 @@ This model therefore carries no `data_table_*` meta.
   those end between 23:50 and 23:59; their mean duration is 777 minutes against a median of 16
   for the rest.
 
-  Where the episode ended at a segment instead, `opd_time__seconds` stops there and never reads
+  Where the episode ended at a segment instead, `opd_time__minutes` stops there and never reads
   `visit_end_datetime`, so the duration is a genuine measurement however the encounter was later
   discharged. The flag describes the discharge note, not the duration's provenance, and the two
   coincide in 4 of FSM's 22,239 outpatient visits. A consumer excluding on the flag alone is
@@ -303,7 +303,7 @@ This model therefore carries no `data_table_*` meta.
 | AC-010 | `location_id` is `not_null` | BL-006 | `not_null` |
 | AC-011 | `is_admitted` is `not_null` | BL-009 | `not_null` |
 | AC-012 | `is_auto_discharge` is `not_null` | BL-012 | `not_null` |
-| AC-013 | `opd_time__seconds`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
+| AC-013 | `opd_time__minutes`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 
 ## Registry entry
@@ -312,8 +312,8 @@ One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: 
 `spec_path` pointing here, with `disaggregations:
 facility_id,location_id,sex,clinician_id,is_admitted,admission_clinician_id,is_auto_discharge`.
 
-`age_years`, `opd_time__seconds` and `opd_time__minutes` are absent: they are measures, not
-dimensions (BL-004, BL-011).
+`age_years` and `opd_time__minutes` are absent: they are measures, not dimensions
+(BL-004, BL-011).
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`,
 which keeps the registry and the model from drifting.
