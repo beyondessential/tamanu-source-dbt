@@ -84,20 +84,21 @@ models:
       +materialized: view
       +tags:
         - reference
+      # Tupaia data tables label metric__outpatient_visit's clinician_id and
+      # admission_clinician_id through the OMOP PROVIDER wrapper, so it needs to
+      # sit in `public_tupaia` alongside the metrics on the analytics replica --
+      # same reasoning and same mechanism as the bases: block above and the
+      # metrics: block below. It projects provider_id/provider_name/role over
+      # bases/users and deliberately omits email and phone_number, which is what
+      # makes it safe to expose where the users view itself would not be.
+      ref__provider:
+        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
     maps:
       +docs:
         show: true
       +materialized: view
       +tags:
         - reference
-      # Tupaia data tables label metric__outpatient_visit's clinician_id and
-      # admission_clinician_id through this map, so it needs to sit in
-      # `public_tupaia` alongside the metrics on the analytics replica -- same
-      # reasoning and same mechanism as the bases: block above and the metrics:
-      # block below. Scoped to this one map: the others are joined inside dbt,
-      # not by a consumer, so they have no reason to be readable there.
-      map__clinician:
-        +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
       # MSF OCA DHIS2 shared mappings -- disabled here (MSF-instance-specific
       # UIDs). An MSF OCA deployment repo re-enables msf_oca via +enabled: true
       # in its own dbt_project.yml.

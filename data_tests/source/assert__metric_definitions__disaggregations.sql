@@ -18,7 +18,7 @@ where trim(d) not in (
         'is_admitted',
         -- opd_visit's clinician: who saw the patient in the outpatient department, and
         -- separately who admitted them. Tamanu user ids, untranslated -- a consumer labels
-        -- them through map__clinician.
+        -- them through ref__provider.
         'clinician_id',
         'admission_clinician_id',
         -- opd_visit's system-discharge flag: the discharge was written by Tamanu's

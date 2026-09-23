@@ -96,9 +96,9 @@ Tamanu `users.id` of the clinician recorded on the outpatient intake segment -- 
 patient in the outpatient department.
 
 The Tamanu id, untranslated. Resolving it to a name is a consumer-layer concern, the same
-division `facility_id` and `location_id` follow: a consumer joins `map__clinician` at its
-data table. Keeping the name out of the metric is also what stops a staff directory becoming
-part of the metric contract.
+division `facility_id` and `location_id` follow: a consumer joins `ref__provider` at its data
+table, on `provider_id`. Keeping the name out of the metric is also what stops a staff
+directory becoming part of the metric contract.
 
 Nullable -- an intake segment recorded with no clinician keeps the visit and leaves this
 NULL, rather than dropping it. A consumer exposing it as an array filter labels the NULL,

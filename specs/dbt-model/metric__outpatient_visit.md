@@ -151,11 +151,12 @@ This model therefore carries no `data_table_*` meta.
   untranslated. Consumer-specific identifiers -- a Tupaia entity code, an area/clinic
   grouping, a clinician's display name -- are resolved in the consumer layer, not here.
 
-  For a clinician the consumer joins `maps/map__clinician`, which projects
-  `(clinician_id, clinician_name)` from `bases/users` and nothing else. The narrower relation
-  exists because a consumer reads its maps from the same schema as the metric: routing
-  `bases/users` to `public_tupaia` would expose staff email and phone number to every
-  consumer that can read a metric, which resolving a name does not require.
+  For a clinician the consumer joins `ref/ref__provider` on `provider_id` -- the OMOP PROVIDER
+  wrapper that `clinical__visit_detail.provider_id` already points at. It projects
+  `provider_id`, `provider_name`, `provider_source_value` and `role` over `bases/users` and
+  deliberately omits email and phone number, which is what makes it safe to route to
+  `public_tupaia` where the `users` view itself would not be -- a consumer reads its lookups
+  from the same schema as the metric.
 - **BL-008 (attending clinician):** `clinician_id` is the intake segment's `provider_id` --
   the clinician recorded against the patient in the outpatient department.
 
@@ -345,8 +346,8 @@ which keeps the registry and the model from drifting.
    to the encounter end** -- where the episode ended at a segment the duration is genuine, and
    `is_auto_discharge` alone does not distinguish the two (BL-011, BL-012).
 8. **Label a clinician itself.** `clinician_id` and `admission_clinician_id` are Tamanu user
-   ids -- a consumer joins `map__clinician` for the display name, and labels the NULL, since
-   a visit may carry no clinician.
+   ids -- a consumer joins `ref__provider` on `provider_id` for `provider_name`, and labels
+   the NULL, since a visit may carry no clinician.
 
 ## Related
 
@@ -356,5 +357,5 @@ which keeps the registry and the model from drifting.
 | `int__emergency_visits` | BL-018 resolves departure from the ED by care site and explicitly not by encounter type; BL-011 here resolves it the opposite way, for the reason given there |
 | `metric__inpatient_admission` | Counts the admission itself, anchored on the 9201 segment BL-009/BL-010 read here. An OPD visit ending in admission appears in both, as a visit there and an admission here |
 | `macros/datasets/discharge_audit.sql` | BL-004 defines the system-discharge predicate BL-012 reuses verbatim |
-| `map__clinician` | Resolves the clinician ids this model emits, in the consumer layer (BL-007) |
+| `ref__provider` | OMOP PROVIDER wrapper over `bases/users`; resolves the clinician ids this model emits, in the consumer layer (BL-007) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
