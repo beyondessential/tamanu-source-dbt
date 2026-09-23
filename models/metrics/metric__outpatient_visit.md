@@ -141,11 +141,19 @@ clinician. The Tamanu id, untranslated, for the same reason as `clinician_id`.
 Whether the encounter's discharge was system-generated rather than recorded by a clinician
 -- true where the discharge note begins `Automatically discharged`.
 
-This matters because such a discharge carries the sweep's clock, not the time the patient
-actually left: Tamanu's outpatient discharger closes encounters left open at the end of the
-day, so an auto-discharged visit's `opd_time__minutes` is an artefact of when the job ran.
-A consumer forming a mean duration excludes these; a consumer counting visits keeps them,
-which is why they are flagged rather than filtered out.
+It matters to the duration, but only for the visits whose episode ran all the way to the
+encounter end. Tamanu's outpatient discharger closes encounters left open at the end of the
+day, so for those the end datetime is the sweep's clock rather than when the patient left,
+and `opd_time__minutes` is an artefact of when the job ran.
+
+A visit whose episode ended at a segment -- an admission, or any other change of concept --
+is **not** affected: its duration stops at that segment and never reads the encounter end, so
+it is a genuine measurement even when the encounter was auto-discharged much later. Excluding
+those on the strength of this flag alone discards real data. The two conditions overlap in 4
+of FSM's 22,239 outpatient visits, so a consumer that excludes on the flag alone is
+conservative rather than wrong -- but it is excluding on the wrong thing.
+
+Flagged rather than filtered out, so a consumer counting visits keeps them either way.
 
 The same rule as `macros/datasets/discharge_audit.sql` BL-004, deliberately, so the repo
 holds one definition of a system discharge. It does not catch a discharge a deployment's own
@@ -180,8 +188,11 @@ forms what it needs -- the same division `age_years` follows. A weighted mean is
 instead would return a mean per group, and a report combining groups would be averaging
 averages.
 
-Read it with `is_auto_discharge`: an auto-discharged visit has a duration, but it is the
-discharge sweep's clock rather than the patient's. NULL while the encounter is open, which
-is not a duration of zero -- those visits leave a mean's denominator as well as its
-numerator.
+Read it with `is_auto_discharge`, but only where the episode ran to the encounter end: that
+is the case where the duration is the discharge sweep's clock rather than the patient's. Where
+the episode ended at a segment the duration never reads the encounter end and is genuine,
+whatever the discharge note says.
+
+NULL while the encounter is open and nothing has ended the episode, which is not a duration of
+zero -- those visits leave a mean's denominator as well as its numerator.
 {% enddocs %}

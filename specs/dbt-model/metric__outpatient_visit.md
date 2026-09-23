@@ -243,11 +243,19 @@ This model therefore carries no `data_table_*` meta.
 - **BL-012 (system-generated discharges are flagged, not filtered):** `is_auto_discharge` is
   true where the encounter's discharge note begins `Automatically discharged`.
 
-  It matters to BL-011: Tamanu's outpatient discharger closes encounters left open at the end
-  of the day, so such an encounter's end datetime is the sweep's clock rather than when the
-  patient left, and its duration is an artefact. On FSM, 3,590 discharges carry
-  `Automatically discharged by outpatient discharger` and 3,534 of those end between 23:50
-  and 23:59; their mean duration is 777 minutes against a median of 16 for the rest.
+  It matters to BL-011 **only where the episode ran to the encounter end**. Tamanu's outpatient
+  discharger closes encounters left open at the end of the day, so for those the end datetime
+  is the sweep's clock rather than when the patient left and the duration is an artefact. On
+  FSM, 3,590 discharges carry `Automatically discharged by outpatient discharger` and 3,534 of
+  those end between 23:50 and 23:59; their mean duration is 777 minutes against a median of 16
+  for the rest.
+
+  Where the episode ended at a segment instead, `opd_time__seconds` stops there and never reads
+  `visit_end_datetime`, so the duration is a genuine measurement however the encounter was later
+  discharged. The flag describes the discharge note, not the duration's provenance, and the two
+  coincide in 4 of FSM's 22,239 outpatient visits. A consumer excluding on the flag alone is
+  conservative rather than wrong, but it is excluding on the wrong condition and drops those
+  real durations.
 
   Flagged rather than filtered out, so a consumer forming a mean excludes them while a
   consumer counting visits keeps them -- the same treatment, and the same predicate, as
@@ -332,9 +340,10 @@ which keeps the registry and the model from drifting.
    the card groups to.
 7. **Form its own mean, and exclude what should not be in it.** `opd_time__minutes` is a
    duration per visit. A weighted mean is `sum(opd_time__minutes)` over the count of the
-   visits that have one; a visit still open has no duration, and an auto-discharged visit's
-   duration is the discharge sweep's clock, so both leave the denominator as well as the
-   numerator (BL-011, BL-012).
+   visits that have one. A visit still open has no duration, so it leaves the denominator as
+   well as the numerator. An auto-discharged visit leaves it too **only where the episode ran
+   to the encounter end** -- where the episode ended at a segment the duration is genuine, and
+   `is_auto_discharge` alone does not distinguish the two (BL-011, BL-012).
 8. **Label a clinician itself.** `clinician_id` and `admission_clinician_id` are Tamanu user
    ids -- a consumer joins `map__clinician` for the display name, and labels the NULL, since
    a visit may carry no clinician.
