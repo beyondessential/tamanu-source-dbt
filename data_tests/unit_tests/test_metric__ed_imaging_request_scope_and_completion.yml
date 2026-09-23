@@ -1,0 +1,109 @@
+unit_tests:
+  - name: test_metric__ed_imaging_request_scope_and_completion
+    model: metric__ed_imaging_request
+    description: >
+      BL-002, BL-003, BL-010. What this metric decides for itself, now that
+      clinical__procedure_occurrence resolves the segment (its BL-005). r1's segment is
+      'emergency' (concept 9203) and it is included, with period_end from its earliest result
+      and facility from that segment's own care_site_id rather than a request-level location
+      (BL-005). r3's segment is 'clinic' (9202), so the emergency scope excludes it (BL-003).
+      r4 is still pending with no imaging_results row at all and must still be included with a
+      NULL period_end -- scope does not depend on a completion event that does not exist yet.
+      r5 is a procedure_type_source_value = 'procedure' row on the same emergency segment,
+      proving the branch filter excludes it rather than merely never encountering one (BL-010).
+      r6 is is_completed = false but does have a matching result (a stray/preliminary result on
+      a still-open request), proving period_end is gated on is_completed rather than on a
+      result merely existing (BL-002). r7 carries a NULL visit_detail_id, which
+      clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
+      dropped rather than surfaced without a setting.
+
+      r8 is the case this metric exists for (BL-001): a request raised in an observation phase
+      on an encounter later retyped as an admission. Its as-of segment is still 9203, so it is
+      counted here -- where a filter on the encounter's current type would have dropped it.
+      BL-003: observation as well as emergency proves the scope is the concept and not one
+      source value. BL-011: its segment carries a department, so the name resolves rather than
+      falling back.
+
+      The as-of match and the first-segment clamp are not this model's behaviour and are
+      covered once, upstream, by
+      test_clinical__procedure_occurrence_visit_detail_resolution.
+    given:
+      - input: ref('clinical__procedure_occurrence')
+        format: sql
+        rows: |
+          select 'r1' as procedure_occurrence_id, 'p1' as person_id, '2026-01-01'::date as procedure_date, '2026-01-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'imaging request' as procedure_type_source_value, 'u1' as provider_id, 'e1' as visit_occurrence_id, 'vd2b' as visit_detail_id, null::varchar as location_id, 'ctScan' as procedure_source_value, 'CT Scan' as procedure_source_name, true as is_completed
+          union all
+          select 'r3', 'p1', '2026-01-01'::date, '2026-01-01 10:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e3', 'vd3', null::varchar, 'xRay', 'X-Ray', true
+          union all
+          select 'r4', 'p1', '2026-01-02'::date, '2026-01-02 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', 'vd2b', null::varchar, 'mri', 'MRI', false
+          union all
+          select 'r5', 'p1', '2026-01-01'::date, '2026-01-01 11:00:00'::timestamp, 32817, 'procedure', 'u1', 'e1', 'vd2b', null::varchar, 'appendectomy', 'Appendectomy', true
+          union all
+          select 'r6', 'p1', '2026-01-03'::date, '2026-01-03 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', 'vd2b', null::varchar, 'ultrasound', 'Ultrasound', false
+          union all
+          select 'r7', 'p1', '2026-01-04'::date, '2026-01-04 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e7', null::varchar, null::varchar, 'mri', 'MRI', false
+          union all
+          -- BL-001: raised in the ED on an encounter later retyped as an admission
+          select 'r8', 'p1', '2026-01-05'::date, '2026-01-05 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e8', 'vd8a', null::varchar, 'xRay', 'X-Ray', true
+
+      - input: ref('imaging_results')
+        format: sql
+        rows: |
+          select 'res1' as id, '2026-01-01 12:00:00'::timestamp as datetime, 'r1' as imaging_request_id
+          union all
+          select 'res3', '2026-01-01 11:00:00'::timestamp, 'r3'
+          union all
+          select 'res6', '2026-01-03 10:00:00'::timestamp, 'r6'
+          union all
+          select 'res8', '2026-01-05 11:30:00'::timestamp, 'r8'
+
+      - input: ref('imaging_request_areas')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as imaging_request_id, null::varchar as area_id limit 0"
+
+      - input: ref('reference_data')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as name limit 0"
+
+      - input: ref('notes')
+        format: sql
+        rows: "select null::varchar as record_id, null::varchar as record_type, null::varchar as note_type, null::varchar as content, null::timestamp as datetime limit 0"
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd2b' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9203 as visit_detail_concept_id, '2026-01-01'::date as visit_detail_start_date, '2026-01-01 09:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'emergency' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd3', 'e3', 'p1', 9202, '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
+          union all
+          -- BL-003: an observation phase is emergency care too, and carries 9203
+          select 'vd8a', 'e8', 'p1', 9203, '2026-01-05'::date, '2026-01-05 07:00:00'::timestamp, null::date, null::timestamp, 'loc1', 'dept_ed', 'prov1', 'observation', null::varchar
+          union all
+          -- the later admission phase of the same encounter, which the request is not in
+          select 'vd8b', 'e8', 'p1', 9201, '2026-01-05'::date, '2026-01-05 15:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', 'vd8a'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_ed' as id, 'ED' as code, 'Emergency' as name, 'fac1' as facility_id, 'current' as visibility_status
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
+        union all
+        select 'ed_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
+        union all
+        select 'ed_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
+        union all
+        select 'ed_imaging_request', null::text, 'r8', '2026-01-05 09:00:00'::timestamp, '2026-01-05 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Emergency'
