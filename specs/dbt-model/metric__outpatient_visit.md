@@ -24,9 +24,12 @@ Outpatient department activity at a Tamanu facility, one row per visit.
 |---|---|---|
 | `opd_visit` | count | Outpatient visits (always 1 per row) |
 
-**Clinical context.** An outpatient visit is a self-contained event -- unlike an ED
-attendance, it carries no admission/departure distinction, so there is no equivalent to
-`metric__emergency_visit`/`metric__emergency_stay`'s split. One metric covers it.
+**Clinical context.** An outpatient visit is usually a self-contained event, and one
+metric covers it -- there is no equivalent to `metric__emergency_visit`/`metric__emergency_stay`'s
+split, because the outpatient episode and the encounter are the same span for all but a
+minority of visits. Some do end in admission, so the episode is bounded explicitly rather
+than assumed to run to the encounter end (BL-011), and the outcome is carried as a
+disaggregation rather than as a second metric (BL-009).
 
 **Who reads it.** The Tupaia "Hospital Administration" dashboard for Queen of Sheba
 Hospital, via a data table over this view.
@@ -54,7 +57,7 @@ visit`, and is unique because only the intake segment is counted (BL-003) -- so
 
 ## Output schema
 
-D5 wide format, plus three disaggregation columns and one measure attribute.
+D5 wide format, plus seven disaggregation columns and two measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -70,6 +73,13 @@ D5 wide format, plus three disaggregation columns and one measure attribute.
 | `location_id` | varchar(255) | Intake segment's location, one level finer than facility (BL-006). `not_null` (AC-010) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `age_years` | integer | Age in whole years at the visit, unbanded (BL-004). A measure, not a dimension |
+| `clinician_id` | varchar(255) | Intake segment's clinician, as the Tamanu user id (BL-008). Nullable |
+| `clinician_name` | varchar(255) | That clinician's display name, from `ref__provider` (BL-008). Nullable |
+| `is_admitted` | boolean | Whether the encounter went on to an inpatient admission (BL-009). `not_null` (AC-011) |
+| `admission_clinician_id` | varchar(255) | Admission segment's clinician, as the Tamanu user id (BL-010). NULL where not admitted |
+| `admission_clinician_name` | varchar(255) | That clinician's display name, from `ref__provider` (BL-010). NULL where not admitted |
+| `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
+| `opd_time__minutes` | numeric | Time in the outpatient department, minutes to 2 dp (BL-011). A measure, not a dimension. NULL while open |
 
 ## Data tables
 
@@ -97,9 +107,11 @@ This model therefore carries no `data_table_*` meta.
   granularity.
 
   `period_end` is nullable -- NULL means the encounter is still open -- so AC-004 covers
-  `period_start` only and AC-009 asserts ordering where `period_end` is present. Tamanu
-  tracks dates only for outpatient encounters, not timestamps, so `period_end - period_start`
-  gives whole days, not a precise duration the way ED's minute-resolution pair does.
+  `period_start` only and AC-009 asserts ordering where `period_end` is present. Both are
+  dates, so `period_end - period_start` gives whole days, not a precise duration the way
+  ED's minute-resolution pair does. The underlying encounter *does* carry timestamps --
+  `opd_time__minutes` is taken from them (BL-011) -- so the day grain here is a choice about
+  what the reporting period is, not a limit of the source.
 
   Every visit is emitted as it happens; the model reads no clock, and a consumer needing
   whole periods applies its own date filter. A period with no visit emits no row.
@@ -134,9 +146,138 @@ This model therefore carries no `data_table_*` meta.
   consumer can join to `bases/location_groups` (or a similar area lookup) at the data table
   layer if it wants clinic-level detail, without this model resolving that join itself (see
   § Data tables). First `metric__` disaggregation finer than facility.
-- **BL-007 (facility and location identity stay Tamanu's):** the model emits `facility_id`
-  and `location_id` as Tamanu ids, untranslated. Consumer-specific identifiers -- a Tupaia
-  entity code, an area/clinic grouping -- are resolved in the consumer layer, not here.
+- **BL-007 (facility and location identity stay Tamanu's; the clinician is labelled here):**
+  `facility_id` and `location_id` are emitted as Tamanu ids, untranslated -- a Tupaia entity
+  code or an area/clinic grouping is a consumer-specific identifier and is crosswalked in the
+  consumer layer.
+
+  The clinician columns deliberately do **not** follow that. The model emits the id *and* the
+  display name, joined from `ref/ref__provider` -- the OMOP PROVIDER wrapper that
+  `clinical__visit_detail.provider_id` already points at, which projects `provider_id`,
+  `provider_name`, `provider_source_value` and `role` over `bases/users` and omits email and
+  phone number.
+
+  Two patterns exist in this repo and the clinician follows the first: reference data
+  describing the event carries its label next to its code (`diagnosis`/`diagnosis_code`,
+  `procedure`/`procedure_code`, `drug_source_name`, `imaging_type`), while an *identity* --
+  facility, location -- is emitted as an id for the consumer to crosswalk. A facility id has to
+  stay an id because each consumer maps it to a different thing; a clinician's display name is
+  the same everywhere, so resolving it once here saves every consumer the same join, and saves
+  a deployment having to grant a second relation whose absence fails at query time on a card
+  that looks correctly configured.
+
+  The name is staff-attributable but not patient-identifying: a row says a named clinician saw
+  someone, never who. The id is kept alongside as the stable key, since a display name can be
+  edited and is not unique.
+- **BL-008 (attending clinician):** `clinician_id` is the intake segment's `provider_id` --
+  the clinician recorded against the patient in the outpatient department.
+
+  Nullable, with no `not_null` test: an intake segment recorded with no clinician keeps the
+  visit rather than dropping it from the metric, the same treatment `sex` gets. A consumer
+  exposing it as an array filter has to label the NULL, since Tupaia's array filter drops
+  NULL rows.
+- **BL-009 (admission outcome):** `is_admitted` is true where the encounter carries any
+  segment at `visit_detail_concept_id = 9201` (Inpatient Visit) -- the patient was seen in
+  clinic and the encounter's type was later changed to admission.
+
+  Read off the segment timeline rather than off `encounters.encounter_type`, which Tamanu
+  updates in place and which therefore says only what the encounter is *now*; and rather
+  than off `clinical__visit_occurrence.visit_concept_id`, whose 262 only marks an
+  ED-then-admitted episode and so would miss every clinic-then-admitted one.
+
+  A disaggregation, not a metric: the model emits no rate, because a proportion is not
+  additive and summing one across facility, sex or age band is meaningless. The admitted
+  share is `sum(value_numeric) filter (where is_admitted) / sum(value_numeric)`, formed at
+  whatever grain the consumer groups to -- the same division `metric__emergency_visit`
+  BL-006 makes.
+
+  `false`, never NULL (AC-011).
+
+  **Adoption, not epidemiology.** A deployment records this transition only once the
+  clinic-to-admission workflow is in use, and the rate climbs from zero as it is taken up. A
+  trend crossing that boundary reads as a clinical change and is not one, and a lifetime rate
+  is the same artefact from the other end -- migrated and pre-adoption encounters that never
+  carried the transition dilute a live signal towards zero.
+
+  Neither is the metric misbehaving: it reports what was recorded. It is a reason for a
+  consumer to find where its own series begins before trending or quoting a rate.
+- **BL-010 (admitting clinician):** `admission_clinician_id` is the `provider_id` of the
+  **earliest** segment at concept 9201, taken with `distinct on` so the join cannot fan out
+  an encounter with several inpatient segments.
+
+  Deliberately separate from `clinician_id`: the clinician who saw the patient in clinic and
+  the one recorded at the point of admission are different people in general, so both are
+  emitted and the consumer picks the attribution its question calls for. "Admissions by
+  clinician" over this column counts who admitted; the same card over `clinician_id`
+  filtered to `is_admitted` counts whose clinic patients ended up admitted.
+
+  NULL for a visit that was never admitted, and for an admission segment recorded with no
+  clinician.
+- **BL-011 (time in the outpatient department):** `opd_time__minutes` is the intake segment's
+  `visit_detail_start_datetime` to the end of the outpatient episode, in minutes to two decimal
+  places -- 0.6-second resolution, finer than any reporting need, and a fixed scale so the
+  value is stable to compare, on the same basis as `metric__emergency_visit`'s durations. The
+  elapsed seconds are computed internally and not emitted, the same division every other
+  metric makes: only the minute-scaled column is part of the contract.
+
+  "After intake" is the row comparison `(visit_detail_start_datetime, visit_detail_id)`, not
+  the datetime alone, and `admission_segments` is ordered against the intake on the same key.
+  `encounter_history.date` has second resolution, so one user action -- or a migration --
+  can write the intake and the segment that ends it at the same timestamp. Compared on
+  datetime alone that segment reads as simultaneous rather than later, no exit is found, and
+  the duration falls through to the encounter end: for an admitted patient, the hospital
+  discharge days later instead of a zero-length outpatient episode. `is_admitted` would still
+  be true, the grain holds and AC-013 passes, so nothing else catches it -- it only inflates
+  a mean. The pair is exactly the key `clinical__visit_detail` orders its own window by, which
+  is what keeps intake, exit and admission agreeing on what "first" means. Covered by AC-014.
+
+  The episode ends at the **first segment after intake carrying a concept other than 9202**,
+  falling back to `clinical__visit_occurrence.visit_end_datetime` for a visit that never
+  left outpatient care. A later 9202 segment is a clinician handover or a move between
+  clinic rooms -- `clinical__visit_detail` opens a new segment for either -- and does not
+  end the episode, so only a change of concept counts. This is the opposite resolution to
+  `int__emergency_visits` BL-018, which takes a change of *care site* and explicitly not a
+  change of type: there, a type change to admission while the patient is physically still
+  in the ED is the boarding case a four-hour measure exists to expose. Outpatient care has
+  no boarding equivalent -- once the encounter becomes an admission the outpatient episode
+  is over -- so the two measures resolve departure differently, on purpose.
+
+  NULL while the encounter is open and nothing has ended the episode. That is not a duration
+  of zero, so a consumer forming a mean drops those visits from the denominator as well as
+  the numerator.
+
+  Not banded and not averaged here. A mean, a median or a band set are all presentation
+  choices a deployment may set differently, so the metric emits the number per visit and the
+  consumer forms what it needs -- the same division BL-004 makes for `age_years`. Averaging
+  in the data table would return a mean per group, and a report combining groups would be
+  averaging averages: a quiet facility would weigh the same as a busy one.
+- **BL-012 (system-generated discharges are flagged, not filtered):** `is_auto_discharge` is
+  true where the encounter's discharge note begins `Automatically discharged`.
+
+  It matters to BL-011 **only where the episode ran to the encounter end**. Tamanu's outpatient
+  discharger closes encounters left open at the end of the day, so for those the end datetime
+  is the sweep's clock rather than when the patient left and the duration is an artefact --
+  materially longer than a real visit, since it runs to the end of the day.
+
+  Where the episode ended at a segment instead, `opd_time__minutes` stops there and never reads
+  `visit_end_datetime`, so the duration is a genuine measurement however the encounter was later
+  discharged. The flag describes the discharge note, not the duration's provenance. The two
+  coincide rarely, so a consumer excluding on the flag alone is conservative rather than wrong,
+  but it is excluding on the wrong condition and drops those real durations.
+
+  Flagged rather than filtered out, so a consumer forming a mean excludes them while a
+  consumer counting visits keeps them -- the same treatment, and the same predicate, as
+  `macros/datasets/discharge_audit.sql` BL-004, so the repo holds one definition of a system
+  discharge.
+
+  **Known gap.** The predicate does not catch a discharge a deployment's own data migration
+  fabricated under a different note -- an imported encounter closed a fixed interval after it
+  started, whose duration is equally artificial, is not flagged. Left narrow on purpose:
+  widening it would fork the definition away from BL-004 for a handful of rows. Revisit if a
+  deployment's migration artefacts become material.
+
+  `false`, never NULL (AC-012), covering both a clinician-recorded discharge and an encounter
+  with no discharge record at all.
 
 ## Acceptance criteria
 
@@ -152,11 +293,19 @@ This model therefore carries no `data_table_*` meta.
 | AC-008 | `subject_id` is `not_null` | grain | `not_null` |
 | AC-009 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-010 | `location_id` is `not_null` | BL-006 | `not_null` |
+| AC-011 | `is_admitted` is `not_null` | BL-009 | `not_null` |
+| AC-012 | `is_auto_discharge` is `not_null` | BL-012 | `not_null` |
+| AC-013 | `opd_time__minutes`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
+| AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 
 ## Registry entry
 
 One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
-`spec_path` pointing here, with `disaggregations: facility_id,location_id,sex`.
+`spec_path` pointing here, with `disaggregations:
+facility_id,location_id,sex,clinician_id,is_admitted,admission_clinician_id,is_auto_discharge`.
+
+`age_years` and `opd_time__minutes` are absent: they are measures, not dimensions
+(BL-004, BL-011).
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`,
 which keeps the registry and the model from drifting.
@@ -169,6 +318,8 @@ which keeps the registry and the model from drifting.
 | `clinical__visit_occurrence` | `clinical/` | Encounter end date (BL-002) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
 | `locations` | `bases/` | Facility and location id of the intake segment's location (BL-006) |
+| `ref__provider` | `ref/` | Attending and admitting clinician display names (BL-008, BL-010) |
+| `discharges` | `bases/` | Discharge note, for the system-discharge flag (BL-012) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
@@ -192,10 +343,27 @@ which keeps the registry and the model from drifting.
    area reference at the data table.
 5. **Handle a NULL `period_end`.** A duration visual filters those rows out; a count visual
    keeps them.
+6. **Form its own rate.** `is_admitted` is a flag per visit, not a percentage -- the admitted
+   share is the summed-numerator-over-summed-denominator quotient, taken once at the grain
+   the card groups to.
+7. **Form its own mean, and exclude what should not be in it.** `opd_time__minutes` is a
+   duration per visit. A weighted mean is `sum(opd_time__minutes)` over the count of the
+   visits that have one. A visit still open has no duration, so it leaves the denominator as
+   well as the numerator. An auto-discharged visit leaves it too **only where the episode ran
+   to the encounter end** -- where the episode ended at a segment the duration is genuine, and
+   `is_auto_discharge` alone does not distinguish the two (BL-011, BL-012).
+8. **Label the NULL clinician.** `clinician_name` and `admission_clinician_name` arrive
+   resolved, so no join is needed -- but both are nullable (no clinician recorded, or a
+   deleted user), and Tupaia's array filter drops NULL rows, so a consumer exposing either as
+   a filter gives the NULL an explicit label.
 
 ## Related
 
 | Artefact | Relationship |
 |---|---|
 | `metric__emergency_visit` | Same registry pattern, same conventions (including BL-019's "banding is the consumer's") -- the reference this model was built from |
+| `int__emergency_visits` | BL-018 resolves departure from the ED by care site and explicitly not by encounter type; BL-011 here resolves it the opposite way, for the reason given there |
+| `metric__inpatient_admission` | Counts the admission itself, anchored on the 9201 segment BL-009/BL-010 read here. An OPD visit ending in admission appears in both, as a visit there and an admission here |
+| `macros/datasets/discharge_audit.sql` | BL-004 defines the system-discharge predicate BL-012 reuses verbatim |
+| `ref__provider` | OMOP PROVIDER wrapper over `bases/users`; supplies the clinician display names this model emits (BL-007, BL-008, BL-010) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
