@@ -15,10 +15,9 @@
 
 Canonical definition for `imaging_request`: one row per imaging request, in any encounter
 setting. The direct imaging-request counterpart to `metric__procedure` -- modelled on its
-setting-scoping pattern (`encounter_type` is the encounter's own whole-visit type, a
-disaggregation rather than a restriction), the way `metric__opd_imaging_request` was
-modelled on `metric__opd_procedure`'s as-of-segment pattern. This is the first
-all-settings imaging metric in the repo; the two segment-precise siblings,
+setting-scoping pattern, where `encounter_type` is a disaggregation rather than a
+restriction. This is the first all-settings imaging metric in the repo; the two scoped
+siblings,
 `metric__opd_imaging_request` (`clinic` only) and `metric__ipd_imaging_request`
 (`admission` only), already existed or were built alongside this one.
 
@@ -30,14 +29,13 @@ Diagnostic imaging requests raised in any Tamanu encounter setting, one row per 
 |---|---|---|
 | `imaging_request` | count | Imaging requests raised in any encounter setting (always 1 per row) |
 
-**Not segment-precise, by design.** `encounter_type` here is
-`clinical__visit_occurrence.visit_source_value` -- the encounter's own whole-visit type --
-not the `clinical__visit_detail` segment active at the request's own timestamp. A request
-raised early in an encounter that is later reclassified (e.g. triage escalating to
-admission) is tagged with the encounter's final type, not the type in effect at the moment
-of the request. This mirrors exactly how `metric__procedure.encounter_type` already
-behaves; a consumer wanting the segment-precise answer for the two settings that matter
-today reads `metric__opd_imaging_request`/`metric__ipd_imaging_request` instead.
+**Attributed to the setting the request was raised in.** `encounter_type` is the
+`clinical__visit_detail` segment active at the request's own timestamp, read off the
+`visit_detail_id` that `clinical__procedure_occurrence` resolves (its BL-005) -- not the
+encounter's whole-visit type. A request raised during triage on an encounter later admitted
+reads as `triage`, not `admission`. Because the scoped siblings
+(`metric__opd_imaging_request`, `metric__ipd_imaging_request`) filter that same segment,
+filtering this metric to one setting agrees with the matching sibling by construction.
 
 **Answers the same three standing questions about imaging as the OPD sibling, but
 unscoped:**
@@ -92,8 +90,8 @@ disaggregation (`encounter_type`) than `metric__opd_imaging_request`/
 | `period_granularity` | text | Constant `'minute'` |
 | `value_numeric` | numeric | Always `1`. Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
-| `facility_id` | varchar(255) | The encounter's own location's facility (BL-005). `not_null` |
-| `encounter_type` | varchar(255) | The encounter's own whole-visit type (BL-003). `not_null` |
+| `facility_id` | varchar(255) | The resolved segment's own location's facility (BL-005). `not_null` |
+| `encounter_type` | varchar(255) | The setting the request was raised in -- the resolved segment's own type (BL-003). `not_null` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | `clinical__procedure_occurrence`'s completion flag. Never NULL. Does not distinguish `cancelled` from `pending`/`in_progress` |
 | `imaging_type` | text | Readable modality label, falling back to `imaging_type_code` then `'Not recorded'` (BL-007). Never NULL |
@@ -128,40 +126,48 @@ yet built as of this spec.
   Rows whose Tamanu status is `deleted` or `entered_in_error` are excluded upstream, in
   `clinical__procedure_occurrence`'s own BL-002, not re-filtered here (BL-010).
 
-- **BL-003 (encounter-grain scoping, not segment-grain -- `encounter_type` is the whole
-  visit's own type):** unlike `metric__opd_imaging_request`/`metric__ipd_imaging_request`,
-  this metric applies no as-of `clinical__visit_detail` segment join at all.
-  `encounter_type` is read straight from `clinical__visit_occurrence.visit_source_value` --
-  the encounter's own type, joined directly on `visit_occurrence_id` -- the identical
-  pattern `metric__procedure.encounter_type` already uses. This is a deliberate
-  simplification, not an oversight: this metric's purpose is "how much imaging activity
-  happens, disaggregated by what kind of visit it happened on," a question the encounter's
-  own type answers perfectly well; segment-precise attribution is what the OPD/IPD-scoped
-  siblings exist for. The inner join to `clinical__visit_occurrence` means a request whose
-  encounter type is not covered by `map__omop_visit_type` is dropped rather than surfaced
-  with a NULL `encounter_type` -- the same tradeoff `metric__procedure` accepts.
+- **BL-003 (the setting the request was raised in):** `encounter_type` is the
+  `clinical__visit_detail` segment active at the request's own timestamp, reached through
+  the `visit_detail_id` that `clinical__procedure_occurrence` resolves once for every
+  procedure and imaging request (its BL-005). This model does not derive the segment itself:
+  the as-of rule and the first-segment clamp live there, so this metric and the scoped
+  siblings cannot disagree about which segment a request belongs to, and a fix to that rule
+  reaches all three through the FK.
 
-- **BL-004 (n/a -- no as-of join to clamp):** `metric__opd_imaging_request`'s BL-004 (the
-  first-segment clamp for a request predating its encounter's earliest segment) does not
-  apply here -- there is no segment join to clamp, by BL-003.
+  A request raised during triage on an encounter later admitted therefore reads as `triage`,
+  not `admission` -- what was true when the request was raised, rather than what the
+  encounter became. The inner join means a request whose segment did not resolve (a NULL FK,
+  where the encounter's `encounter_type` is absent from `map__omop_visit_type`) is dropped
+  rather than surfaced with a NULL `encounter_type` -- the same tradeoff `metric__procedure`
+  accepts.
 
-- **BL-005 (facility attribution -- the encounter's own location, not the request's own
-  `location_id`):** `facility_id` is resolved through `bases/locations` on
-  `clinical__visit_occurrence.care_site_id` (`encounters.location_id`), joined on the same
-  `visit_occurrence_id` used for `encounter_type` (BL-003). **Not**
+- **BL-004 (the clamp is upstream, and does not widen this metric):**
+  `clinical__procedure_occurrence` clamps a request raised before its encounter's earliest
+  segment onto that earliest segment, so it resolves rather than going unattributed (that
+  model's BL-005). This metric applies no scope restriction, so the clamp only ever affects
+  which `encounter_type`/`facility_id` such a request is attributed to, never whether it is
+  counted.
+
+- **BL-005 (facility attribution -- the segment's own location, not the request's own
+  `location_id`):** `facility_id` is resolved through `bases/locations` on the resolved
+  segment's `care_site_id`, the same source the scoped siblings use. **Not**
   `clinical__procedure_occurrence.location_id` the way `metric__procedure` resolves facility
-  for the procedure branch -- for the imaging branch specifically, that column is
-  `imaging_requests.location_id`, which the clinical model's own header comment documents as
+  for the procedure branch -- for the imaging branch that column is
+  `imaging_requests.location_id`, which the clinical model's own header documents as
   "deprecated in Tamanu and effectively unpopulated." Joining it the way `metric__procedure`
   does would silently exclude nearly every row via the inner join to `locations` -- the same
   class of real zero-row bug `metric__opd_imaging_request`'s own BL-005 found and fixed
   (there, against `location_group_id`) before this metric was built, so it is avoided here
   from the outset rather than discovered against a replica a second time.
 
-  The join to `locations` is still **inner**: an encounter whose own `care_site_id` doesn't
-  resolve to a facility is excluded rather than attributed to a NULL one -- the same
-  "excluded rather than guessed" convention `metric__procedure` and
-  `metric__opd_imaging_request` both use for their own location joins.
+  Because it comes from the segment rather than the encounter, `facility_id` is where the
+  patient was when the request was raised, not wherever the encounter later ended up -- a
+  patient transferred mid-encounter keeps each request attributed to the facility it was
+  raised at.
+
+  The join to `locations` is still **inner**: a segment whose `care_site_id` doesn't resolve
+  to a facility is excluded rather than attributed to a NULL one -- the same "excluded rather
+  than guessed" convention `metric__procedure` and `metric__opd_imaging_request` both use.
 
 - **BL-006 (materialisation is env-aware):** `table` when `target.name` starts with
   `analytics`, `view` otherwise, set on the shared `metrics:` block in `dbt_project.yml` --
@@ -250,9 +256,9 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
    `metric__opd_imaging_request`.
 4. **Filter `encounter_type` itself, if a single setting is wanted.** This metric does not
    pre-scope to any setting -- a consumer wanting "outpatient clinic imaging requests" can
-   either filter this metric to `encounter_type = 'clinic'` (encounter-grain) or read
-   `metric__opd_imaging_request` instead (segment-grain); the two are not guaranteed to
-   agree for an encounter whose type changed mid-visit.
+   either filter this metric to `encounter_type = 'clinic'` or read
+   `metric__opd_imaging_request` instead. Both read the same resolved segment, so the two
+   agree by construction.
 5. **Compute turnaround time itself, if needed.** Not emitted; both `period_start` and
    `period_end` remain on the model.
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
@@ -262,9 +268,9 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 
 | Artefact | Relationship |
 |---|---|
-| `metric__procedure` | The reference pattern this model is built from: encounter-grain `encounter_type` disaggregation, no as-of segment join, no restriction on which encounters are included |
-| `metric__opd_imaging_request` | Segment-precise, `clinic`-only sibling; shares this model's imaging-domain joins (completions, areas) but not its encounter-grain `encounter_type`/facility resolution |
-| `metric__ipd_imaging_request` | Segment-precise, `admission`-only sibling; same relationship to this model as the OPD sibling |
+| `metric__procedure` | The reference pattern this model is built from: `encounter_type` as a disaggregation rather than a restriction, read off the same resolved segment FK |
+| `metric__opd_imaging_request` | The `clinic`-only sibling; shares this model's imaging-domain joins (completions, areas) and reads the same resolved segment, differing only in restricting to one setting |
+| `metric__ipd_imaging_request` | The `admission`-only sibling; same relationship to this model as the OPD sibling |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
 ## Open questions

@@ -1,15 +1,19 @@
 -- metric__ipd_imaging_request -- D5 metric view for the IPD-scoped imaging request
 -- indicator, registered in documentations/metrics/imaging.yml: ipd_imaging_request
--- (MAUI-6806). The inpatient counterpart to metric__opd_imaging_request, built with the
--- exact same as-of segment-matching pattern, scoped to admission instead of clinic.
+-- (MAUI-6806). The inpatient counterpart to metric__opd_imaging_request, scoped to
+-- admission instead of clinic.
 --
 -- Per-request (subject) grain: one row per imaging request raised while the patient's active
 -- clinical__visit_detail segment was an admission encounter, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. See specs/dbt-model/metric__ipd_imaging_request.md
 -- BL-003 for why this is admission-only (and why that is, unlike the OPD sibling's
--- clinic-vs-9202 narrowing, equivalent to the full OMOP 9201 definition), and BL-004 for why
--- the as-of join is evaluated at request time rather than completion time, and for the
--- first-segment clamp applied when a request predates every segment.
+-- clinic-vs-9202 narrowing, equivalent to the full OMOP 9201 definition).
+--
+-- The segment itself is not derived here: clinical__procedure_occurrence resolves it once
+-- for every procedure and imaging request as visit_detail_id (its BL-005), including the
+-- as-of match at request time rather than completion time -- which is what lets a still-open
+-- or cancelled request resolve at all -- and the first-segment clamp for a request raised
+-- before any segment began. This model reads that FK and filters the segment's concept.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
 -- directly -- the same clinical layer metric__procedure and metric__opd_imaging_request build
@@ -90,41 +94,6 @@ imaging_areas as (
     group by po.procedure_occurrence_id, n.imaging_area
 ),
 
--- BL-003, BL-004: the visit_detail segment active at the moment each request was raised --
--- the latest segment whose start is at or before requested_date, tie-broken on
--- visit_detail_id descending on a same-instant tie. The same as-of pattern
--- metric__opd_imaging_request uses, anchored on requested_date rather than a completion event
--- so a still-open or cancelled request (no completion timestamp) still resolves to a segment.
--- Also carries care_site_id -- the segment's own location, used for facility (BL-005).
---
--- BL-004: clamped to the first segment when the request predates every segment (same
--- rationale as metric__opd_imaging_request, MAUI-6806/MAUI-6862) -- a request genuinely
--- belongs to its own encounter, so a segment recorded starting after the request (a
--- data-timing artifact, not a real ordering issue) should not exclude it. No join condition
--- on the timestamp: every encounter has >= 1 segment (clinical__visit_detail BL-005), so the
--- join itself can never drop a row -- the order by picks the correct as-of segment where one
--- qualifies, and falls back to the earliest segment otherwise.
-active_segment_at_request as (
-    select distinct on (po.procedure_occurrence_id)
-        po.procedure_occurrence_id as imaging_request_id,
-        vd.person_id,
-        vd.visit_detail_source_value,
-        vd.care_site_id
-    from procedure_occurrence po
-    join visit_detail vd
-        on vd.visit_occurrence_id = po.visit_occurrence_id
-    order by
-        po.procedure_occurrence_id asc,
-        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
-        case when vd.visit_detail_start_datetime <= po.procedure_datetime
-                then vd.visit_detail_start_datetime
-        end desc,
-        case when vd.visit_detail_start_datetime > po.procedure_datetime
-                then vd.visit_detail_start_datetime
-        end asc,
-        vd.visit_detail_id desc
-),
-
 requests as (
     select
         po.procedure_occurrence_id as imaging_request_id,
@@ -143,24 +112,34 @@ requests as (
         po.procedure_source_name as imaging_type_raw,
         areas.imaging_area as imaging_area_raw
     from procedure_occurrence po
-    join active_segment_at_request seg
-        on seg.imaging_request_id = po.procedure_occurrence_id
+    -- BL-003, BL-004: the segment the request was raised in, resolved once by
+    -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
+    -- match against the request's own requested_date, with the first-segment clamp for a
+    -- request raised before any segment began. Anchoring on the request rather than a
+    -- completion event is what lets a still-open or cancelled request resolve at all. A
+    -- request whose segment did not resolve carries a NULL FK and is dropped by this inner
+    -- join rather than surfaced without a setting.
+    join visit_detail vd
+        on vd.visit_detail_id = po.visit_detail_id
     join person pr
-        on pr.person_id = seg.person_id
+        on pr.person_id = vd.person_id
     -- inner join: the segment's own location, not the request's location_group_id (BL-005) --
     -- excluded rather than attributed to a NULL facility, the same "excluded rather than
     -- guessed" convention metric__opd_imaging_request uses for its own location join.
     join locations loc
-        on loc.id = seg.care_site_id
+        on loc.id = vd.care_site_id
     left join completions c
         on c.imaging_request_id = po.procedure_occurrence_id
     left join imaging_areas areas
         on areas.imaging_request_id = po.procedure_occurrence_id
-    -- BL-003: admission only -- the single Tamanu encounter_type that maps to OMOP concept
-    -- 9201 (map__omop_visit_type), so this is equivalent to filtering on
-    -- visit_detail_concept_id = 9201 -- unlike the OPD sibling, where clinic-only is
-    -- narrower than the full 9202 concept (which also covers imaging and vaccination).
-    where seg.visit_detail_source_value = 'admission'
+    -- BL-003: the full OMOP 9201 concept -- unlike the OPD sibling, where clinic-only is
+    -- narrower than the full 9202 concept (which also covers imaging and vaccination),
+    -- 'admission' is the single Tamanu encounter_type that maps to 9201
+    -- (map__omop_visit_type), so scoping on the concept id directly (rather than the
+    -- source value) is both equivalent today and the form that stays correct if a
+    -- deployment-specific code is ever added to the map -- the same predicate shape
+    -- metric__ipd_procedure and metric__ipd_diagnosis both use.
+    where vd.visit_detail_concept_id = 9201
 )
 
 -- D5 wide format: value_boolean is unused by this metric.

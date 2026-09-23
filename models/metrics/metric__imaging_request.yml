@@ -6,11 +6,12 @@ models:
       D5 metric view for the imaging_request indicator registered in
       documentations/metrics/imaging.yml: imaging_request. One row per imaging request, in
       any encounter setting -- per-request (subject) grain, so a consumer aggregates at
-      whatever grain it needs. encounter_type is the encounter's own whole-visit type
-      (admission, clinic, emergency, ...), so a consumer scopes to one setting via a filter
-      on this one metric rather than needing a separate metric per setting -- the same
-      convention metric__procedure uses. See metric__opd_imaging_request and
-      metric__ipd_imaging_request for the clinic-only and admission-only siblings.
+      whatever grain it needs. encounter_type is the setting the request was raised in, read
+      off the segment clinical__procedure_occurrence resolves (its BL-005), so a consumer
+      scopes to one setting via a filter on this one metric rather than needing a separate
+      metric per setting -- the same convention metric__procedure uses. See
+      metric__opd_imaging_request and metric__ipd_imaging_request for the clinic-only and
+      admission-only siblings, which filter that same segment.
     config:
       tags:
         - clinical
@@ -117,22 +118,24 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: >-
-          The Tamanu facility id the request is attributed to, resolved from the
-          encounter's own location (not the request's own location_id, which is
-          deprecated in Tamanu and effectively unpopulated -- see the model's header
-          comment).
+          The Tamanu facility id the request is attributed to, resolved from the segment
+          the request was raised in (not the request's own location_id, which is deprecated
+          in Tamanu and effectively unpopulated -- see the model's header comment). Because
+          it comes from that segment, it is where the patient was at the time, not wherever
+          the encounter later ended up.
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_facility_id_not_null
       - name: encounter_type
         data_type: character varying(255)
         description: >-
-          The setting the request's encounter was recorded in -- admission, clinic,
-          emergency and the rest of the deployment's encounter types. Filtering to one
-          gives that setting's imaging requests from the same metric. Not segment-precise
-          (contrast metric__opd_imaging_request/metric__ipd_imaging_request, which scope by
-          the segment active at the request's own time) -- this is the encounter's own
-          type, the same convention metric__procedure.encounter_type uses.
+          The setting the request was raised in -- admission, clinic, emergency and the rest
+          of the deployment's encounter types. This is the phase the encounter was in at the
+          time of the request, not what the encounter became afterwards: a request raised
+          during triage on an encounter later admitted reads as triage. Filtering to one
+          setting gives that setting's imaging requests from the same metric, and agrees with
+          the matching scoped metric (metric__opd_imaging_request,
+          metric__ipd_imaging_request), which filter this same segment.
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_encounter_type_not_null

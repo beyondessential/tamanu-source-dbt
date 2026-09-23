@@ -15,9 +15,10 @@
 
 Canonical definition for `ipd_imaging_request`: one row per imaging request raised while the
 patient was in an **admission** encounter. The inpatient counterpart to
-`metric__opd_imaging_request`, built with the exact same as-of-segment pattern -- same
-mechanism, same clause numbering, only the scoped encounter type differs (`admission`
-instead of `clinic`).
+`metric__opd_imaging_request` -- same mechanism, same clause numbering, only the scoped
+encounter type differs (`admission` instead of `clinic`). Both read the segment
+`clinical__procedure_occurrence` resolves as `visit_detail_id` (its BL-005) rather than
+deriving one themselves.
 
 ## Purpose
 
@@ -35,10 +36,10 @@ narrower than 9202 by decision. No such narrowing question arises here:
 9201 (`Inpatient Visit`) -- concept 262 (`admission_from_emergency`) is a
 `clinical__visit_occurrence`-level reclassification of an admission encounter that had a
 prior ER phase, not a distinct segment-level `encounter_type` (see BL-003). So
-`visit_detail_source_value = 'admission'` and `visit_detail_concept_id = 9201` select
-exactly the same rows, and this metric already is the full 9201 definition -- there is no
-"narrower than the full concept" tradeoff to record here the way there is for the OPD
-sibling.
+`visit_detail_source_value = 'admission'` and `visit_detail_concept_id = 9201` (the form
+this model actually filters on) select exactly the same rows, and this metric already is
+the full 9201 definition -- there is no "narrower than the full concept" tradeoff to record
+here the way there is for the OPD sibling.
 
 **Answers the same three standing questions about inpatient imaging as the OPD sibling:**
 
@@ -121,15 +122,17 @@ therefore carries no `data_table_*` meta. Not yet built as of this spec.
   `deleted` or `entered_in_error` are excluded upstream, in
   `clinical__procedure_occurrence`'s own BL-002, not re-filtered here (BL-010).
 
-- **BL-003 (inpatient scope: `admission`, equivalent to the full OMOP 9201 -- contrast the
-  OPD sibling's narrower-than-9202 scope):** a request is included when the
+- **BL-003 (inpatient scope: OMOP concept 9201, equivalent to Tamanu `admission` -- contrast
+  the OPD sibling's narrower-than-9202 scope):** a request is included when the
   `clinical__visit_detail` segment active at its own `requested_date` has
-  `visit_detail_source_value = 'admission'`. Equivalently, `visit_detail_concept_id = 9201`
-  -- `map__omop_visit_type` maps exactly one local code, `admission`, to 9201 -- so, unlike
-  the OPD sibling, there is no narrower-than-the-concept decision being made here: this
-  metric already **is** the full 9201 definition. The string form is used (matching the OPD
-  sibling's own style), for readability and consistency, not because the two forms would
-  select different rows.
+  `visit_detail_concept_id = 9201` -- the same concept-id predicate `metric__ipd_procedure`
+  and `metric__ipd_diagnosis` both use, rather than a source-value string. `admission` is
+  the only Tamanu `encounter_type` `map__omop_visit_type` maps to 9201, so the two forms
+  select identical rows today; the concept-id form is used because it is what the intended
+  definition -- "the full 9201 concept" -- actually says, and it keeps selecting correctly
+  if a deployment-specific inpatient code is ever added to the map without this model
+  needing an update. Unlike the OPD sibling, there is no narrower-than-the-concept decision
+  being made here: this metric already **is** the full 9201 definition.
 
   **Concept 262 (`admission_from_emergency`) does not need special-casing.** 262 is applied
   only by `clinical__visit_occurrence`, at the whole-encounter grain, when an admission
@@ -139,26 +142,25 @@ therefore carries no `data_table_*` meta. Not yet built as of this spec.
   that model joins `map__omop_visit_type` on `local_code` directly, with no equivalent
   262-promotion logic (confirmed against `clinical__visit_detail.sql`). An `admission`
   segment's concept is always 9201, whatever the encounter as a whole resolves to. Filtering
-  on `visit_detail_source_value = 'admission'` (or, equivalently, `visit_detail_concept_id
-  = 9201`) at the segment level is therefore already correct and complete -- no additional
-  262 branch is needed or possible at this grain.
+  on `visit_detail_concept_id = 9201` at the segment level is therefore already correct and
+  complete -- no additional 262 branch is needed or possible at this grain.
 
-  **The mechanism -- an as-of join, not the encounter's current type.** Identical to
-  `metric__opd_imaging_request` BL-003: the latest `clinical__visit_detail` row for the
-  request's encounter whose `visit_detail_start_datetime` is at or before the request's own
-  timestamp, tie-broken on `visit_detail_id` descending on a same-instant tie. Segment-grain,
-  not encounter-grain -- an imaging request raised while a patient's encounter segment is
-  still coded `admission`, before or after some other segment, is scoped correctly regardless
-  of what the encounter's segments are at other times.
+  **The mechanism -- a resolved segment FK, not the encounter's current type.** This model
+  does not derive the segment itself: it reads
+  `clinical__procedure_occurrence.visit_detail_id`, resolved once there for every procedure
+  and imaging request (its BL-005), and filters that segment's concept. Segment-grain, not
+  encounter-grain -- an imaging request raised while the patient's active segment is
+  `admission` is scoped correctly regardless of what the encounter's other segments are.
 
-- **BL-004 (request time, not completion time; first-segment clamp):** identical to
-  `metric__opd_imaging_request` BL-004. The as-of join is evaluated at `requested_date`, not
-  a completion timestamp, so a `pending`/`in_progress`/`cancelled` request (no completion
-  event) still resolves to a segment. Clamped to the first segment when the request predates
-  every segment -- a data-timing artifact (the segment's own recorded start is late), not a
-  real ordering issue; the request still genuinely belongs to that encounter. Every
-  encounter has at least one segment (`clinical__visit_detail` BL-005), so the join carries
-  no timestamp condition and can never drop a row.
+- **BL-004 (request time, not completion time; first-segment clamp -- both upstream):**
+  `clinical__procedure_occurrence` BL-005 matches at the request's own `requested_date`
+  rather than a completion timestamp, so a `pending`/`in_progress`/`cancelled` request (no
+  completion event) still resolves to a segment, and clamps to the earliest segment where a
+  request predates them all -- a data-timing artifact rather than a real ordering issue,
+  since the request genuinely belongs to that encounter. Neither behaviour is implemented
+  here. The clamp decides *which* segment a request is attributed to; it does not widen the
+  9201 test applied by BL-003, and a request whose segment did not resolve at all (NULL FK)
+  is dropped by this model's inner join rather than surfaced without a setting.
 
 - **BL-005 (facility attribution -- the admission segment's own location, not the request's
   `location_group_id`):** identical mechanism to `metric__opd_imaging_request` BL-005.
@@ -215,7 +217,8 @@ therefore carries no `data_table_*` meta. Not yet built as of this spec.
 | AC | `imaging_type_code` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_area` is `not_null` | BL-007 | `not_null` |
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
-| AC | The as-of join: tie-break on `visit_detail_id`, `admission`-only scoping, a pending/cancelled request (no completion event) still resolves via `requested_date`, and a request predating every segment clamps to the first segment | BL-003, BL-004 | Covered by the same as-of-join mechanism `metric__opd_imaging_request`'s own dbt unit test exercises; no separate unit test added for this metric, since the mechanism is unchanged and only the scoped `encounter_type` literal differs |
+| AC | `admission`-only scoping over the resolved segment, and a request whose segment did not resolve (NULL FK) dropped | BL-003 | Same shape as `metric__opd_imaging_request`'s own scope test; no separate unit test added for this metric, since only the scoped concept differs |
+| AC | The as-of match at `requested_date` and the first-segment clamp feeding that scoping | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
 
 Test names are unnumbered (`ac_metric__ipd_imaging_request_<column>_<check>`), matching
 `metric__opd_imaging_request.yml`'s convention.
@@ -262,12 +265,10 @@ All disaggregations are already admitted to the allowlist in
    answers "did it finish," not "is it still active."
 4. **Compute turnaround time itself, if needed.** Not emitted as of this change -- both
    `period_start` and `period_end` remain on the model.
-5. **Read BL-003 before reconciling against `metric__imaging_request`.** Both are
-   segment/encounter-grain OMOP-scoped decisions, but this metric's segment-precise
-   `admission` scope and `metric__imaging_request`'s encounter-grain `encounter_type`
-   filter need not agree for an encounter whose segments span more than one type. A
-   mismatch is expected, not a bug -- same caveat `metric__opd_imaging_request` gives
-   against `opd_visit`/`opd_procedure`.
+5. **Reconciling against `metric__imaging_request` is now exact.** Both read the same
+   resolved segment, so filtering that metric to `encounter_type = 'admission'` returns this
+   metric's population. (This was not true while that metric scoped by the encounter's own
+   whole-visit type.)
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
    here.
 
