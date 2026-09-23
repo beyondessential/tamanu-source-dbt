@@ -8,10 +8,15 @@ An outpatient visit is an encounter whose first history segment carries OMOP vis
 segment, so each visit counts once.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, location, sex -- and over any time grain from day upwards. Nothing is
+facility, location, sex, clinician, admission outcome, admitting clinician, and whether the
+discharge was system-generated -- and over any time grain from day upwards. Nothing is
 pre-aggregated, so no dimension has to be collapsed to get a total.
 
-See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-007.
+Two measures ride alongside the count and are not summed as if they were one: age_years,
+and opd_time__minutes, the time in the outpatient department. Both are emitted per visit and
+unbanded, so a consumer forms whatever mean, median or band set it needs.
+
+See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-012.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__metric_id %}
@@ -84,4 +89,129 @@ one column per classification.
 A measure, not a dimension: continuous, so it is absent from the registry's disaggregations
 and no data table exposes it as a filter. The bands the standard data tables apply are in
 tupaia-data-product.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__clinician_id %}
+Tamanu `users.id` of the clinician recorded on the outpatient intake segment -- who saw the
+patient in the outpatient department.
+
+The Tamanu id, untranslated. Resolving it to a name is a consumer-layer concern, the same
+division `facility_id` and `location_id` follow: a consumer joins `ref__provider` at its data
+table, on `provider_id`. Keeping the name out of the metric is also what stops a staff
+directory becoming part of the metric contract.
+
+Nullable -- an intake segment recorded with no clinician keeps the visit and leaves this
+NULL, rather than dropping it. A consumer exposing it as an array filter labels the NULL,
+since Tupaia's array filter drops NULL rows.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__is_admitted %}
+Whether the encounter that began as this outpatient visit went on to an inpatient admission
+-- true where it later carries a segment at OMOP visit concept 9201 (Inpatient Visit).
+
+A disaggregation, not a separate metric: the admitted share is
+`sum(value_numeric) filter (where is_admitted) / sum(value_numeric)`, formed at whatever
+grain the consumer groups to. The model emits no rate, because a proportion is not additive
+and summing one across facility, sex or age band is meaningless.
+
+False, never NULL, where the visit was not admitted -- the data tables expose this as an
+array filter, and Tupaia's array filter drops NULL rows.
+
+Read a trend of this with the deployment's adoption date in mind: the rate climbs from zero
+as the clinic-to-admission workflow is taken up, so a series spanning that boundary shows
+take-up rather than a change in who gets admitted. See BL-009 in the spec.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__admission_clinician_id %}
+Tamanu `users.id` of the clinician recorded on the admission segment -- who admitted the
+patient.
+
+Deliberately not `clinician_id`: the clinician who saw the patient in clinic and the one
+recorded at the point of admission are different people in general, so both are kept and a
+consumer picks the attribution its question calls for. "Admissions by clinician" over this
+column counts who admitted; the same card over `clinician_id` filtered to `is_admitted`
+counts whose clinic patients ended up admitted.
+
+NULL for a visit that was never admitted, and for an admission segment recorded with no
+clinician. The Tamanu id, untranslated, for the same reason as `clinician_id`.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__is_auto_discharge %}
+Whether the encounter's discharge was system-generated rather than recorded by a clinician
+-- true where the discharge note begins `Automatically discharged`.
+
+It matters to the duration, but only for the visits whose episode ran all the way to the
+encounter end. Tamanu's outpatient discharger closes encounters left open at the end of the
+day, so for those the end datetime is the sweep's clock rather than when the patient left,
+and `opd_time__minutes` is an artefact of when the job ran.
+
+A visit whose episode ended at a segment -- an admission, or any other change of concept --
+is **not** affected: its duration stops there and never reads the encounter end, so it is a
+genuine measurement even when the encounter was auto-discharged later. Excluding those on the
+strength of this flag alone discards real data.
+
+Flagged rather than filtered out, so a consumer counting visits keeps them either way.
+
+The same rule as `macros/datasets/discharge_audit.sql` BL-004, deliberately, so the repo
+holds one definition of a system discharge. It does not catch a discharge a deployment's own
+data migration fabricated under a different note -- see BL-012 in the spec.
+
+False, never NULL, covering both a clinician-recorded discharge and an encounter with no
+discharge record at all.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__opd_time__minutes %}
+Time in the outpatient department in minutes, to two decimal places -- from the intake
+segment to the end of the outpatient episode.
+
+The episode ends at the first segment carrying a concept other than 9202, falling back to
+the encounter end for a visit that never left outpatient care. A later 9202 segment is a
+clinician handover or a move between clinic rooms, not a departure, so it does not end it.
+This is the minute-resolution duration; `period_end - period_start` is whole days, since
+both are dates.
+
+Not banded and not averaged. A mean, a median or a band set are all presentation choices a
+deployment may set differently, so the metric emits the number per visit and the consumer
+forms what it needs -- the same division `age_years` follows. A weighted mean is
+`sum(opd_time__minutes) / count of the visits that have one`; forming it in the data table
+instead would return a mean per group, and a report combining groups would be averaging
+averages.
+
+Read it with `is_auto_discharge`, but only where the episode ran to the encounter end: that
+is the case where the duration is the discharge sweep's clock rather than the patient's. Where
+the episode ended at a segment the duration never reads the encounter end and is genuine,
+whatever the discharge note says.
+
+NULL while the encounter is open and nothing has ended the episode, which is not a duration of
+zero -- those visits leave a mean's denominator as well as its numerator.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__clinician_name %}
+Display name of the clinician recorded on the outpatient intake segment, from `ref__provider`
+-- the OMOP PROVIDER wrapper over `bases/users`.
+
+Emitted alongside `clinician_id` rather than left to the consumer, the same pairing
+`metric__opd_procedure` makes for `procedure`/`procedure_code`: the id is the stable key, the
+name is what a chart axis needs, and resolving it here saves every consumer the same join and
+the grant that goes with it.
+
+It is staff-attributable but not patient-identifying: a row says a named clinician saw
+someone, never who.
+
+'Not recorded' where the intake segment carries no clinician, and where the user record has
+since been deleted. Never NULL: the data tables expose this as an array filter and Tupaia's
+array filter drops NULL rows, which would silently disappear the visit from a card that groups
+by clinician. `clinician_id` keeps the NULL, since it is a key rather than a label.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__admission_clinician_name %}
+Display name of the clinician recorded on the admission segment -- who admitted the patient --
+from `ref__provider`.
+
+'Not recorded' for a visit that was never admitted, for an admission segment with no
+clinician, and where the user record has since been deleted -- never NULL, for the same reason
+as `clinician_name`. That covers the overwhelming majority of visits, so a card ranking this
+scopes itself to `is_admitted`. Read it with `admission_clinician_id`, which is the stable key
+and does keep the NULL; see that column for why the admitting and attending clinicians are kept
+separate.
 {% enddocs %}
