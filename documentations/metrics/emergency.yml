@@ -76,3 +76,43 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__emergency_visit.md
+
+- metric_id: ed_procedure
+  kind: metric
+  name: ED procedures
+  description: >-
+    Clinical procedures performed while the encounter's active segment -- the segment in
+    effect at the procedure's own time, not the encounter's first or current one -- is an
+    emergency, triage or observation phase. One row per procedure.
+  numerator_description: >-
+    Recorded procedures whose active segment at the time of the procedure carries OMOP
+    visit concept 9203 (Emergency Room Visit), counted on the date performed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded procedures scoped to the emergency setting, the emergency-side
+    counterpart of opd_procedure. No external body registers a single procedure-count
+    indicator -- procedure classifications (e.g. ICD-10-PCS, CPT) code what a procedure is,
+    not how a deployment should count procedure activity, and deployments differ in what
+    they code procedures with. This metric emits the procedure as recorded and leaves any
+    grouping to the consumer, the same approach metric__opd_procedure takes. Attribution is
+    by the segment active when the procedure happened, matching the OMOP CDM's own
+    PROCEDURE_OCCURRENCE.visit_detail_id convention -- so a procedure performed in the
+    emergency department is counted here even where the encounter was later retyped as an
+    admission, which an encounter-type filter would miss. Pending alignment with the
+    deploying country's national HMIS definition.
+  unit: count
+  subject_grain: procedure
+  disaggregations:
+  - facility_id
+  - sex
+  - procedure
+  - procedure_code
+  - is_completed
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ed_procedure.md

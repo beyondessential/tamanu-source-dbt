@@ -1,0 +1,67 @@
+unit_tests:
+  - name: test_metric__ed_procedure_segment_scope
+    model: metric__ed_procedure
+    description: >
+      BL-002. What this metric decides for itself, now that clinical__procedure_occurrence
+      resolves the segment (its BL-005): the emergency-scope filter over the already-resolved
+      visit_detail_id. proc1's segment is 'emergency' (concept 9203) and is included; proc2's
+      is 'clinic' (9202) and is excluded; proc3's FK is NULL, which
+      clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
+      dropped rather than surfaced without a setting.
+
+      proc4 is the case this metric exists for (BL-001): an encounter that began in the ED and
+      was later retyped as an admission. The procedure's own as-of segment is still the 9203
+      phase, so it is counted here -- where a filter on the encounter's current type would
+      have dropped it, and with it the sickest attendances a procedure card is most asked
+      about. BL-005: its segment carries a department, so the name resolves rather than
+      falling back.
+
+      The as-of match and the first-segment clamp are not this model's behaviour and are
+      covered once, upstream, by test_clinical__procedure_occurrence_visit_detail_resolution.
+    given:
+      - input: ref('clinical__procedure_occurrence')
+        format: sql
+        rows: |
+          select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'vd10a' as visit_detail_id, 'loc1' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
+          union all
+          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'vd11a', 'loc1', 'code2', 'Procedure Two', true
+          union all
+          select 'proc3', 'p1', '2026-02-03'::date, '2026-02-03 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e12', null::varchar, 'loc1', 'code3', 'Procedure Three', true
+          union all
+          -- BL-001: performed in the ED on an encounter later retyped as an admission
+          select 'proc4', 'p1', '2026-02-04'::date, '2026-02-04 09:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13a', 'loc1', 'code4', 'Procedure Four', false
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd10a' as visit_detail_id, 'e10' as visit_occurrence_id, 'p1' as person_id, 9203 as visit_detail_concept_id, '2026-02-01'::date as visit_detail_start_date, '2026-02-01 08:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'emergency' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd11a', 'e11', 'p1', 9202, '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'clinic', null::varchar
+          union all
+          -- the ED phase the procedure happened in
+          select 'vd13a', 'e13', 'p1', 9203, '2026-02-04'::date, '2026-02-04 07:00:00'::timestamp, null::date, null::timestamp, 'loc1', 'dept_ed', 'prov1', 'emergency', null::varchar
+          union all
+          -- the later admission phase of the same encounter, which the procedure is not in
+          select 'vd13b', 'e13', 'p1', 9201, '2026-02-04'::date, '2026-02-04 14:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', 'vd13a'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_ed' as id, 'ED' as code, 'Emergency' as name, 'fac1' as facility_id, 'current' as visibility_status
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
+        union all
+        select 'ed_procedure', null::text, 'proc4', '2026-02-04'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'Procedure Four', 'code4', false, 30, 'Emergency'
