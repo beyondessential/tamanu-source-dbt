@@ -37,6 +37,12 @@ metrics:
   - facility_id
   - location_id
   - sex
+  - clinician_id
+  - clinician_name
+  - is_admitted
+  - admission_clinician_id
+  - admission_clinician_name
+  - is_auto_discharge
   variant_of: null
   owner: bes-maui
   status: approved
