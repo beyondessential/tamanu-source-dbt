@@ -27,10 +27,9 @@ Outpatient department activity at a Tamanu facility, one row per visit.
 **Clinical context.** An outpatient visit is usually a self-contained event, and one
 metric covers it -- there is no equivalent to `metric__emergency_visit`/`metric__emergency_stay`'s
 split, because the outpatient episode and the encounter are the same span for all but a
-minority of visits. Some do end in admission -- 2-3% of FSM's monthly clinic encounters as
-at September 2026 -- so the episode is bounded explicitly rather than assumed to run to the
-encounter end (BL-011), and the outcome is carried as a disaggregation rather than as a
-second metric (BL-009).
+minority of visits. Some do end in admission, so the episode is bounded explicitly rather
+than assumed to run to the encounter end (BL-011), and the outcome is carried as a
+disaggregation rather than as a second metric (BL-009).
 
 **Who reads it.** The Tupaia "Hospital Administration" dashboard for Queen of Sheba
 Hospital, via a data table over this view.
@@ -194,17 +193,14 @@ This model therefore carries no `data_table_*` meta.
 
   `false`, never NULL (AC-011).
 
-  **Adoption, not epidemiology.** On FSM the transition is recorded only from May 2026: every
-  month to April 2026 has exactly zero admissions against 4,300-5,600 clinic encounters, then
-  0.56%, 1.18%, 1.13%, 2.06% and 3.07% (September, partial). A rate trended across that
-  boundary reads as a clinical change and is not one -- it is the clinic-to-admission workflow
-  being taken up in Tamanu. Across all history the rate is 0.086% (371 of 430,372), which is
-  the same artefact seen from the other end: ~425k migrated and pre-adoption encounters that
-  never carried the transition, diluting a live signal to near zero.
+  **Adoption, not epidemiology.** A deployment records this transition only once the
+  clinic-to-admission workflow is in use, and the rate climbs from zero as it is taken up. A
+  trend crossing that boundary reads as a clinical change and is not one, and a lifetime rate
+  is the same artefact from the other end -- migrated and pre-adoption encounters that never
+  carried the transition dilute a live signal towards zero.
 
-  Neither number is the metric misbehaving, and neither is a reason to change it: the model
-  reports what was recorded. It is a reason for a consumer not to quote a lifetime rate, and
-  for anyone reading a trend to know where the series actually begins.
+  Neither is the metric misbehaving: it reports what was recorded. It is a reason for a
+  consumer to find where its own series begins before trending or quoting a rate.
 - **BL-010 (admitting clinician):** `admission_clinician_id` is the `provider_id` of the
   **earliest** segment at concept 9201, taken with `distinct on` so the join cannot fan out
   an encounter with several inpatient segments.
@@ -260,17 +256,14 @@ This model therefore carries no `data_table_*` meta.
 
   It matters to BL-011 **only where the episode ran to the encounter end**. Tamanu's outpatient
   discharger closes encounters left open at the end of the day, so for those the end datetime
-  is the sweep's clock rather than when the patient left and the duration is an artefact. On
-  FSM, 3,590 discharges carry `Automatically discharged by outpatient discharger` and 3,534 of
-  those end between 23:50 and 23:59; their mean duration is 777 minutes against a median of 16
-  for the rest.
+  is the sweep's clock rather than when the patient left and the duration is an artefact --
+  materially longer than a real visit, since it runs to the end of the day.
 
   Where the episode ended at a segment instead, `opd_time__minutes` stops there and never reads
   `visit_end_datetime`, so the duration is a genuine measurement however the encounter was later
-  discharged. The flag describes the discharge note, not the duration's provenance, and the two
-  coincide in 4 of FSM's 22,239 outpatient visits. A consumer excluding on the flag alone is
-  conservative rather than wrong, but it is excluding on the wrong condition and drops those
-  real durations.
+  discharged. The flag describes the discharge note, not the duration's provenance. The two
+  coincide rarely, so a consumer excluding on the flag alone is conservative rather than wrong,
+  but it is excluding on the wrong condition and drops those real durations.
 
   Flagged rather than filtered out, so a consumer forming a mean excludes them while a
   consumer counting visits keeps them -- the same treatment, and the same predicate, as
@@ -278,10 +271,9 @@ This model therefore carries no `data_table_*` meta.
   discharge.
 
   **Known gap.** The predicate does not catch a discharge a deployment's own data migration
-  fabricated under a different note. FSM's carries
-  `Auto-closed at 48h, historical import with no recorded discharge` on 76 encounters, whose
-  48-hour duration is equally artificial and is not flagged. Left narrow on purpose: widening
-  it would fork the definition away from BL-004 for 0.018% of the population. Revisit if a
+  fabricated under a different note -- an imported encounter closed a fixed interval after it
+  started, whose duration is equally artificial, is not flagged. Left narrow on purpose:
+  widening it would fork the definition away from BL-004 for a handful of rows. Revisit if a
   deployment's migration artefacts become material.
 
   `false`, never NULL (AC-012), covering both a clinician-recorded discharge and an encounter

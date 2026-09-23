@@ -27,9 +27,8 @@ discharges as (
     select * from {{ ref('discharges') }}
 ),
 
--- BL-008/BL-010: the OMOP PROVIDER wrapper over bases/users. One row per user, so neither
--- join below can fan out. Projects the display name and omits email and phone number, which
--- is what makes it safe to read here.
+-- BL-008/BL-010: OMOP PROVIDER wrapper over bases/users. One row per user, so the joins
+-- below cannot fan out.
 provider as (
     select * from {{ ref('ref__provider') }}
 ),
@@ -39,8 +38,7 @@ provider as (
 opd_intake as (
     select
         visit_occurrence_id,
-        -- carried so opd_exits and admission_segments can both order against this row on
-        -- exactly the key clinical__visit_detail's own window uses
+        -- the ordering key both CTEs below compare against (BL-011)
         visit_detail_id,
         person_id,
         visit_detail_start_date,
@@ -53,19 +51,13 @@ opd_intake as (
         and visit_detail_concept_id = 9202 -- OMOP 'Outpatient Visit'
 ),
 
--- BL-011: the end of the outpatient episode -- the first segment after intake carrying a
--- concept other than 9202. A later 9202 segment is a clinician handover or a move between
--- clinic rooms, which does not end the outpatient episode, so only a change of concept
--- counts. An encounter that never leaves 9202 falls through to the encounter end below.
+-- BL-011: the end of the outpatient episode -- the first segment after intake at a concept
+-- other than 9202. A later 9202 segment is a handover or a room move, not a departure. An
+-- encounter that never leaves 9202 falls through to the encounter end below.
 --
--- "After intake" is the row comparison (datetime, visit_detail_id), not datetime alone.
--- encounter_history.date has second resolution, so one user action -- or a migration --
--- can write the intake and the segment that ends it at the same timestamp. On datetime
--- alone that segment reads as simultaneous rather than later, this CTE returns nothing,
--- and the duration falls through to the encounter end: for an admitted patient, the
--- hospital discharge days later instead of a zero-length outpatient episode. The pair is
--- exactly the key clinical__visit_detail orders its own window by, so intake, exit and
--- admission all agree on what "first" means.
+-- Compared on (datetime, visit_detail_id), the key clinical__visit_detail orders its own
+-- window by, not on datetime alone: the two can tie, and on datetime alone a tied segment
+-- reads as simultaneous rather than later. See BL-011.
 opd_exits as (
     select
         later.visit_occurrence_id,
@@ -79,19 +71,16 @@ opd_exits as (
     group by later.visit_occurrence_id
 ),
 
--- BL-009/BL-010: the admission segment of an encounter that began as an outpatient visit --
--- the earliest segment at OMOP visit concept 9201/Inpatient Visit. Its existence is the
--- admission outcome (BL-009); its clinician is who admitted the patient (BL-010).
--- `distinct on` holds this to one row per encounter, so the left join below cannot fan out.
+-- BL-009/BL-010: the earliest segment at concept 9201. Its existence is the admission
+-- outcome; its clinician is who admitted the patient. `distinct on` holds it to one row per
+-- encounter, so the left join below cannot fan out.
 admission_segments as (
     select distinct on (adm.visit_occurrence_id)
         adm.visit_occurrence_id,
         adm.provider_id as admission_clinician_id
     from visit_detail adm
-    -- joined to the intake rather than scanning every encounter's inpatient segments: this
-    -- model only ever asks the question of an outpatient visit, and it lets the admission
-    -- be ordered against the intake on the same key opd_exits uses, so the two cannot
-    -- disagree about which segments come after it.
+    -- joined to the intake so this ranks only outpatient encounters, and so the admission is
+    -- ordered against the intake on the same key opd_exits uses
     join opd_intake i
         on i.visit_occurrence_id = adm.visit_occurrence_id
     where adm.visit_detail_concept_id = 9201 -- OMOP 'Inpatient Visit'
@@ -115,39 +104,25 @@ outpatient_visits as (
         pr.gender_source_value as sex,
         -- age in whole years at the visit; the NULL rule lives in the macro
         {{ age_years('i.visit_detail_start_date', 'pr') }} as age_years,
-        -- BL-008: the clinician who saw the patient in the outpatient department, as the
-        -- Tamanu user id. Nullable -- an intake segment recorded with no clinician stays
-        -- NULL rather than excluding the visit.
+        -- BL-008: who saw the patient in clinic. The id keeps its NULL as a key; the label
+        -- takes 'Not recorded', because a NULL is dropped by the array filter a consumer
+        -- exposes it through.
         i.provider_id as clinician_id,
-        -- BL-008: the readable label alongside the id, the same pairing
-        -- metric__opd_procedure makes for procedure/procedure_code. 'Not recorded' covers a
-        -- segment with no clinician and a user record deleted since -- never NULL, because
-        -- the data tables expose this as an array filter and Tupaia's array filter drops NULL
-        -- rows, which would silently disappear the visit from a card grouping by clinician.
-        -- Same treatment int__emergency_visits gives triage_score (its BL-012).
         coalesce(clin.provider_name, 'Not recorded') as clinician_name,
-        -- BL-009: whether the encounter went on to an inpatient admission. False, not NULL,
-        -- where it did not -- the data tables expose this as an array filter, and Tupaia's
-        -- array filter drops NULL rows.
+        -- BL-009: false, not NULL, where the visit was not admitted -- same array-filter
+        -- reason as above.
         adm.visit_occurrence_id is not null as is_admitted,
-        -- BL-010: who admitted the patient, as the Tamanu user id. NULL for a visit that was
-        -- never admitted, and for an admission segment recorded with no clinician.
+        -- BL-010: who admitted the patient. 'Not recorded' here also covers the ordinary case
+        -- of a visit never admitted, so a card ranking it scopes itself to is_admitted.
         adm.admission_clinician_id,
-        -- BL-010: 'Not recorded' for the same reason, which here also covers the ordinary
-        -- case of a visit that was never admitted. A card ranking this scopes itself to
-        -- is_admitted, so that bulk never reaches the chart.
         coalesce(adm_clin.provider_name, 'Not recorded') as admission_clinician_name,
-        -- BL-012: a system-generated discharge, not a clinical one. Tamanu's outpatient
-        -- discharger closes encounters left open at the end of the day, so the end datetime
-        -- of one of these is the sweep's clock, not when the patient actually left -- which
-        -- makes its duration meaningless. Flagged, not filtered: a consumer forming a mean
-        -- excludes them, a consumer counting visits keeps them. Same rule as
-        -- macros/datasets/discharge_audit.sql BL-004, deliberately, so the repo has one
+        -- BL-012: a system-generated discharge, so the encounter end is the discharge
+        -- sweep's clock rather than when the patient left. Flagged, not filtered. Same
+        -- predicate as macros/datasets/discharge_audit.sql BL-004, so the repo holds one
         -- definition of a system discharge.
         coalesce(dis.note like 'Automatically discharged%', false) as is_auto_discharge,
-        -- BL-011: time in the outpatient department -- intake to the departure resolved
-        -- above, falling back to the encounter end for a visit that never left 9202. NULL
-        -- while the encounter is still open and nothing has ended the outpatient episode.
+        -- BL-011: intake to the departure resolved above, falling back to the encounter
+        -- end. NULL while the encounter is open and nothing has ended the episode.
         case
             when coalesce(x.opd_exit__datetime, vo.visit_end_datetime) is null then null
             else extract(epoch from (
@@ -156,49 +131,39 @@ outpatient_visits as (
                 ))::bigint
         end as opd_time__seconds
     from opd_intake i
-    -- inner join: a visit_detail row cannot exist without its parent encounter, so this
-    -- always resolves
+    -- inner: always resolves, a segment cannot exist without its encounter
     join visit_occurrence vo
         on vo.visit_occurrence_id = i.visit_occurrence_id
-    -- inner join: a visit whose patient bases/patients excludes (soft-deleted or merged
-    -- away) is excluded from the metric entirely, not counted with blank demographics
+    -- inner: a visit whose patient bases/patients excludes (deleted or merged) is dropped
+    -- rather than counted with blank demographics
     join person pr
         on pr.person_id = i.person_id
-    -- inner join: encounters always carry a location in practice, so a failure to match
-    -- here (the segment's location has since been soft-deleted) is a genuine anomaly --
-    -- excluded from the metric rather than surfacing with a NULL facility_id
+    -- inner: a visit whose location does not resolve is dropped rather than attributed to a
+    -- NULL facility (BL-006)
     join locations loc
         on loc.id = i.care_site_id
-    -- BL-011: left join -- a visit that never left the outpatient department has no exit
-    -- segment. Grouped to one row per encounter above, so it cannot fan out.
+    -- left: a visit that never left outpatient care has no exit segment
     left join opd_exits x
         on x.visit_occurrence_id = i.visit_occurrence_id
-    -- BL-009/BL-010: left join -- a visit that was never admitted still counts. `distinct on`
-    -- above holds it to one row per encounter, so this cannot fan out.
+    -- left: a visit that was never admitted still counts
     left join admission_segments adm
         on adm.visit_occurrence_id = i.visit_occurrence_id
-    -- BL-012: left join -- a visit with no discharge record still counts. bases/discharges is
-    -- deduplicated to one row per encounter, so it cannot fan out.
+    -- left: a visit with no discharge still counts
     left join discharges dis
         on dis.encounter_id = i.visit_occurrence_id
-    -- BL-008/BL-010: left joins -- a visit with no clinician, or whose user has since been
-    -- deleted, keeps the visit and leaves the name NULL rather than dropping the row.
-    -- ref__provider is one row per user, so neither can fan out.
+    -- left: a visit with no clinician, or a deleted user, still counts
     left join provider clin
         on clin.provider_id = i.provider_id
     left join provider adm_clin
         on adm_clin.provider_id = adm.admission_clinician_id
 )
 
--- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' --
--- period_start and period_end are dates, so a duration taken from them is whole days. The
--- minute-resolution duration is opd_time__minutes, derived from the underlying timestamps
--- (BL-011).
+-- D5 wide format: value_boolean is unused. period_granularity is 'day' -- period_start and
+-- period_end are dates, so opd_time__minutes carries the minute-resolution duration (BL-011).
 --
--- BL-007: facility_id and location_id are emitted as Tamanu ids, untranslated -- crosswalking
--- them to a consumer's own identifiers is a consumer-layer concern. The clinician columns are
--- the exception: the id is emitted for stability and the display name alongside it, so a
--- consumer charting by clinician needs no join of its own (BL-008).
+-- BL-007: facility_id and location_id stay untranslated Tamanu ids, crosswalked by the
+-- consumer. The clinician is the exception -- id and display name are both emitted, so a
+-- consumer charting by clinician needs no join.
 select
     'opd_visit'::text as metric_id,
     null::text as variant_id,
@@ -228,10 +193,8 @@ select
     admission_clinician_name,
     -- BL-012
     is_auto_discharge,
-    -- BL-011: time in the outpatient department as minutes, to two decimal places --
-    -- 0.6-second resolution, finer than any reporting need, and a fixed scale so the value
-    -- is stable to compare. Unbanded, for the same reason as age: a mean, a median or a
-    -- band set are all presentation choices, so the consumer forms them. NULL while the
-    -- encounter is open.
+    -- BL-011: minutes to two decimal places, a fixed scale so the value is stable to
+    -- compare. Unbanded and unaveraged, for the same reason as age: those are presentation
+    -- choices the consumer makes.
     round(opd_time__seconds / 60.0, 2) as opd_time__minutes
 from outpatient_visits

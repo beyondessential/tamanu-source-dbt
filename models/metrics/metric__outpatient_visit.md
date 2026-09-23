@@ -117,10 +117,9 @@ and summing one across facility, sex or age band is meaningless.
 False, never NULL, where the visit was not admitted -- the data tables expose this as an
 array filter, and Tupaia's array filter drops NULL rows.
 
-Read a trend of this with the deployment's adoption date in mind. On FSM the transition is
-recorded only from May 2026 -- every earlier month is exactly zero against thousands of
-clinic encounters -- so a series spanning that boundary shows workflow take-up, not a change
-in who gets admitted. See BL-009 in the spec.
+Read a trend of this with the deployment's adoption date in mind: the rate climbs from zero
+as the clinic-to-admission workflow is taken up, so a series spanning that boundary shows
+take-up rather than a change in who gets admitted. See BL-009 in the spec.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__admission_clinician_id %}
@@ -147,11 +146,9 @@ day, so for those the end datetime is the sweep's clock rather than when the pat
 and `opd_time__minutes` is an artefact of when the job ran.
 
 A visit whose episode ended at a segment -- an admission, or any other change of concept --
-is **not** affected: its duration stops at that segment and never reads the encounter end, so
-it is a genuine measurement even when the encounter was auto-discharged much later. Excluding
-those on the strength of this flag alone discards real data. The two conditions overlap in 4
-of FSM's 22,239 outpatient visits, so a consumer that excludes on the flag alone is
-conservative rather than wrong -- but it is excluding on the wrong thing.
+is **not** affected: its duration stops there and never reads the encounter end, so it is a
+genuine measurement even when the encounter was auto-discharged later. Excluding those on the
+strength of this flag alone discards real data.
 
 Flagged rather than filtered out, so a consumer counting visits keeps them either way.
 
