@@ -209,6 +209,17 @@ This model therefore carries no `data_table_*` meta.
   `metric__emergency_visit`'s durations -- 0.6-second resolution, finer than any reporting
   need, and a fixed scale so the value is stable to compare.
 
+  "After intake" is the row comparison `(visit_detail_start_datetime, visit_detail_id)`, not
+  the datetime alone, and `admission_segments` is ordered against the intake on the same key.
+  `encounter_history.date` has second resolution, so one user action -- or a migration --
+  can write the intake and the segment that ends it at the same timestamp. Compared on
+  datetime alone that segment reads as simultaneous rather than later, no exit is found, and
+  the duration falls through to the encounter end: for an admitted patient, the hospital
+  discharge days later instead of a zero-length outpatient episode. `is_admitted` would still
+  be true, the grain holds and AC-013 passes, so nothing else catches it -- it only inflates
+  a mean. The pair is exactly the key `clinical__visit_detail` orders its own window by, which
+  is what keeps intake, exit and admission agreeing on what "first" means. Covered by AC-014.
+
   The episode ends at the **first segment after intake carrying a concept other than 9202**,
   falling back to `clinical__visit_occurrence.visit_end_datetime` for a visit that never
   left outpatient care. A later 9202 segment is a clinician handover or a move between
@@ -270,7 +281,7 @@ This model therefore carries no `data_table_*` meta.
 | AC-011 | `is_admitted` is `not_null` | BL-009 | `not_null` |
 | AC-012 | `is_auto_discharge` is `not_null` | BL-012 | `not_null` |
 | AC-013 | `opd_time__seconds`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
-| AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
+| AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 
 ## Registry entry
 

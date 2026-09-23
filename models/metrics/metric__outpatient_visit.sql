@@ -32,6 +32,9 @@ discharges as (
 opd_intake as (
     select
         visit_occurrence_id,
+        -- carried so opd_exits and admission_segments can both order against this row on
+        -- exactly the key clinical__visit_detail's own window uses
+        visit_detail_id,
         person_id,
         visit_detail_start_date,
         visit_detail_start_datetime,
@@ -47,6 +50,15 @@ opd_intake as (
 -- concept other than 9202. A later 9202 segment is a clinician handover or a move between
 -- clinic rooms, which does not end the outpatient episode, so only a change of concept
 -- counts. An encounter that never leaves 9202 falls through to the encounter end below.
+--
+-- "After intake" is the row comparison (datetime, visit_detail_id), not datetime alone.
+-- encounter_history.date has second resolution, so one user action -- or a migration --
+-- can write the intake and the segment that ends it at the same timestamp. On datetime
+-- alone that segment reads as simultaneous rather than later, this CTE returns nothing,
+-- and the duration falls through to the encounter end: for an admitted patient, the
+-- hospital discharge days later instead of a zero-length outpatient episode. The pair is
+-- exactly the key clinical__visit_detail orders its own window by, so intake, exit and
+-- admission all agree on what "first" means.
 opd_exits as (
     select
         later.visit_occurrence_id,
@@ -54,7 +66,8 @@ opd_exits as (
     from visit_detail later
     join opd_intake i
         on i.visit_occurrence_id = later.visit_occurrence_id
-    where later.visit_detail_start_datetime > i.visit_detail_start_datetime
+    where (later.visit_detail_start_datetime, later.visit_detail_id)
+        > (i.visit_detail_start_datetime, i.visit_detail_id)
         and later.visit_detail_concept_id <> 9202
     group by later.visit_occurrence_id
 ),
@@ -64,12 +77,20 @@ opd_exits as (
 -- admission outcome (BL-009); its clinician is who admitted the patient (BL-010).
 -- `distinct on` holds this to one row per encounter, so the left join below cannot fan out.
 admission_segments as (
-    select distinct on (visit_occurrence_id)
-        visit_occurrence_id,
-        provider_id as admission_clinician_id
-    from visit_detail
-    where visit_detail_concept_id = 9201 -- OMOP 'Inpatient Visit'
-    order by visit_occurrence_id asc, visit_detail_start_datetime asc, visit_detail_id asc
+    select distinct on (adm.visit_occurrence_id)
+        adm.visit_occurrence_id,
+        adm.provider_id as admission_clinician_id
+    from visit_detail adm
+    -- joined to the intake rather than scanning every encounter's inpatient segments: this
+    -- model only ever asks the question of an outpatient visit, and it lets the admission
+    -- be ordered against the intake on the same key opd_exits uses, so the two cannot
+    -- disagree about which segments come after it.
+    join opd_intake i
+        on i.visit_occurrence_id = adm.visit_occurrence_id
+    where adm.visit_detail_concept_id = 9201 -- OMOP 'Inpatient Visit'
+        and (adm.visit_detail_start_datetime, adm.visit_detail_id)
+        > (i.visit_detail_start_datetime, i.visit_detail_id)
+    order by adm.visit_occurrence_id asc, adm.visit_detail_start_datetime asc, adm.visit_detail_id asc
 ),
 
 -- BL-003: facility, location and demographics are resolved off the intake segment; the

@@ -45,6 +45,14 @@ unit_tests:
           union all
           select 'opd_5', 'opd_5_s0', 'per_1', 'loc_opd', '2024-05-19'::date, '2024-05-19 06:00'::timestamp, null::text, 9202, null::text
           union all
+          -- BL-011: intake and admission recorded at the SAME datetime -- one user action
+          -- writing both history rows, or a migration. The 9202 row sorts first on
+          -- visit_detail_id, so it is still the intake; the episode is zero-length, not the
+          -- three days to the encounter end.
+          select 'opd_6', 'opd_6_s0', 'per_1', 'loc_opd', '2024-05-25'::date, '2024-05-25 08:00'::timestamp, null::text, 9202, 'clin_1'
+          union all
+          select 'opd_6', 'opd_6_s1', 'per_1', 'loc_ward', '2024-05-25'::date, '2024-05-25 08:00'::timestamp, 'opd_6_s0', 9201, 'clin_2'
+          union all
           -- BL-003: a later outpatient segment of some other encounter is not a second visit
           select 'opd_later_segment', 'opd_ls_s1', 'per_1', 'loc_opd', '2024-05-20'::date, '2024-05-20 09:00'::timestamp, 'opd_ls_s0', 9202, 'clin_1'
           union all
@@ -63,6 +71,8 @@ unit_tests:
           select 'opd_4', null::date, null::timestamp
           union all
           select 'opd_5', '2024-05-19'::date, '2024-05-19 06:30'::timestamp
+          union all
+          select 'opd_6', '2024-05-28'::date, '2024-05-28 12:00'::timestamp
           union all
           select 'opd_later_segment', '2024-05-20'::date, '2024-05-20 10:00'::timestamp
           union all
@@ -106,3 +116,5 @@ unit_tests:
         select 'opd_visit', null::text, 'opd_4', '2024-05-18'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', false, null::text, false, null::bigint, null::numeric
         union all
         select 'opd_visit', null::text, 'opd_5', '2024-05-19'::date, '2024-05-19'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, null::text, false, null::text, false, 1800::bigint, 30.00::numeric
+        union all
+        select 'opd_visit', null::text, 'opd_6', '2024-05-25'::date, '2024-05-28'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', true, 'clin_2', false, 0::bigint, 0.00::numeric
