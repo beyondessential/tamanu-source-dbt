@@ -46,6 +46,12 @@ reference_data as (
     select * from {{ ref('reference_data') }}
 ),
 
+-- BL-020: the intake segment's own clinician, resolved to a name -- the same treatment
+-- int__inpatient_admission gives its admission segment (its BL-017).
+providers as (
+    select * from {{ ref('ref__provider') }}
+),
+
 condition_occurrence as (
     select * from {{ ref('clinical__condition_occurrence') }}
 ),
@@ -162,7 +168,10 @@ attendances as (
                     vd.visit_detail_start_date,
                     make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
                 ))::int
-        end as age_years
+        end as age_years,
+        -- BL-020: the clinician on the intake segment -- who the patient was seen by on
+        -- arrival, not whoever the encounter ended with.
+        prov.provider_name as clinician_raw
     from visit_detail vd
     join person pr
         on pr.person_id = vd.person_id
@@ -185,6 +194,10 @@ attendances as (
     -- the backstop if that ever stops holding.
     left join triages tr
         on tr.encounter_id = vd.visit_occurrence_id
+    -- BL-020: left join -- an attendance whose intake segment carries no clinician still
+    -- counts. ref__provider is one row per user, so this cannot fan out.
+    left join providers prov
+        on prov.provider_id = vd.provider_id
     -- BL-013: left join -- an attendance with no principal diagnosis still counts. `distinct on`
     -- above holds it to one row per encounter, so this cannot fan out.
     left join principal_diagnoses pdx
@@ -231,6 +244,9 @@ select
     coalesce(triage_score_raw, 'Not recorded') as triage_score,
     -- BL-017
     coalesce(discharge_disposition_raw, 'Not recorded') as discharge_disposition,
+    -- BL-020: 'Not recorded' covers an intake segment with no clinician and a user record
+    -- since deleted. Never NULL, for the same reason as triage_score.
+    coalesce(clinician_raw, 'Not recorded') as clinician,
     -- BL-016: hour of the day the patient arrived, 0-23. Tamanu stores naive timestamps in
     -- the deployment's central timezone (var('timezone'), see to_user_selected_timezone), so
     -- this is already a local hour and needs no conversion. A deployment spanning timezones

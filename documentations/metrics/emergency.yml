@@ -71,6 +71,7 @@ metrics:
   - triage_score
   - ed_start__hour
   - is_admitted
+  - clinician
   variant_of: null
   owner: bes-maui
   status: approved

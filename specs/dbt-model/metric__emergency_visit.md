@@ -87,6 +87,7 @@ D5 wide format, plus five disaggregation columns and five measure attributes.
 | `length_of_stay__minutes` | numeric | Arrival to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
 | `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016) |
 | `is_admitted` | boolean | Went on to an inpatient admission (BL-005). Always populated (AC-010) |
+| `clinician` | text | The intake segment's own clinician, resolved to a name (BL-020). Always populated (AC-020) |
 
 ## Data tables
 
@@ -263,6 +264,18 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   central timezone (`var('timezone')`), so this is already a local hour; a deployment spanning
   timezones gets the central zone's hour.
 
+- **BL-020 (clinician attribution):** `clinician` is the ED intake segment's own
+  `provider_id`, resolved to a display name through `ref__provider`, so a consumer can rank
+  attendances by the clinician who received the patient. The join is **left** — an attendance
+  whose intake segment carries no clinician still counts — and the result is coalesced to
+  `'Not recorded'`, never NULL, because Tupaia exposes this as an array filter and an array
+  filter drops NULL rows.
+
+  Attribution is the intake segment, not the encounter's latest segment: the question the card
+  answers is who received the patient in the emergency department. For an attendance that went
+  on to an inpatient admission, the admitting clinician is `metric__inpatient_admission`'s own
+  `clinician`, scoped to this same population by its `is_admitted_via_emergency`.
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -273,6 +286,7 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 | AC-004 | `period_start` is `not_null` | BL-002 | `not_null` |
 | AC-005 | `period_granularity` is `not_null` and always `'minute'` | BL-002 | `not_null` + `accepted_values` |
 | AC-006 | `value_numeric` is `not_null` and always `1` | BL-006, BL-011 | `not_null` + `accepted_values` |
+| AC-020 | `clinician` is `not_null` | BL-020 | `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | BL-011 | `not_null` |
 | AC-009 | The shared base resolves as specified: intake segment and concept 9203 only, `is_admitted` on concept 262, triage, diagnosis, disposition and every derived timing, including a second `is_primary` row not duplicating the attendance | BL-003–BL-005, BL-012–BL-018 | unit test `ac_009_int__emergency_visits_derivations` |
@@ -354,4 +368,5 @@ them from configuration alone.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-09-24 | Claude | Added `clinician`, the intake segment's own clinician resolved to a name (BL-020), so an ED dashboard can rank attendances by clinician (MAUI-6907) |
 | 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |
