@@ -31,6 +31,13 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-009: department, resolved to a name for metric_filters scoping. Unlike facility_id
+-- (the procedure's own location), department follows the resolved segment instead --
+-- bases/locations carries no department_id.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 procedures as (
     select
         po.procedure_occurrence_id,
@@ -45,7 +52,9 @@ procedures as (
         ) as procedure,
         po.is_completed,
         -- age in whole years at the procedure; the NULL rule lives in the macro
-        {{ age_years('po.procedure_date', 'pr') }} as age_years
+        {{ age_years('po.procedure_date', 'pr') }} as age_years,
+        -- BL-009
+        coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     -- BL-003: the segment the procedure happened in, resolved once by
     -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
@@ -61,6 +70,8 @@ procedures as (
     -- than attributed to a NULL facility -- the same convention metric__procedure uses
     join locations loc
         on loc.id = po.location_id
+    left join departments dept
+        on dept.id = vd.department_id
     where vd.visit_detail_concept_id = 9202
 )
 
@@ -82,5 +93,6 @@ select
     procedure,
     procedure_code,
     is_completed,
-    age_years
+    age_years,
+    department
 from procedures

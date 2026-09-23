@@ -8,15 +8,15 @@ An outpatient visit is an encounter whose first history segment carries OMOP vis
 segment, so each visit counts once.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, location, sex, clinician, admission outcome, admitting clinician, and whether the
-discharge was system-generated -- and over any time grain from day upwards. Nothing is
-pre-aggregated, so no dimension has to be collapsed to get a total.
+facility, location, sex, clinician, admission outcome, admitting clinician, department, and
+whether the discharge was system-generated -- and over any time grain from day upwards.
+Nothing is pre-aggregated, so no dimension has to be collapsed to get a total.
 
 Two measures ride alongside the count and are not summed as if they were one: age_years,
 and opd_time__minutes, the time in the outpatient department. Both are emitted per visit and
 unbanded, so a consumer forms whatever mean, median or band set it needs.
 
-See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-012.
+See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-013.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__metric_id %}
@@ -214,4 +214,13 @@ as `clinician_name`. That covers the overwhelming majority of visits, so a card 
 scopes itself to `is_admitted`. Read it with `admission_clinician_id`, which is the stable key
 and does keep the NULL; see that column for why the admitting and attending clinicians are kept
 separate.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__department %}
+The intake segment's own department (e.g. Dental), resolved to a name via `departments` so a
+consumer scopes to one department by metric_filters on a readable value (BL-013).
+
+'Not recorded' where the intake segment carries no department. Never NULL: the data tables
+expose this as an array filter and Tupaia's array filter drops NULL rows, which would silently
+disappear the visit from a metric_filters scope.
 {% enddocs %}

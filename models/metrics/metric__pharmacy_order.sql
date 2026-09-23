@@ -47,6 +47,11 @@ person as (
     select * from {{ ref('clinical__person') }}
 ),
 
+-- BL-007: the encounter's own department, resolved to a name for metric_filters scoping.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-002: one row per ordered drug line. Inner join to pharmacy_orders -- every
 -- pharmacy_order_prescriptions row has one by construction (bases/pharmacy_order_prescriptions
 -- already requires it to resolve). Inner join to encounters for the same reason: bases/
@@ -65,7 +70,9 @@ orders as (
         pop.is_completed,
         pr.gender_source_value as sex,
         coalesce(rd.code, 'Not recorded') as drug_source_value,
-        coalesce(rd.name, 'Not recorded') as drug_source_name
+        coalesce(rd.name, 'Not recorded') as drug_source_name,
+        -- BL-007
+        coalesce(dept.name, 'Not recorded') as department
     from pharmacy_order_prescriptions pop
     join pharmacy_orders po
         on po.id = pop.pharmacy_order_id
@@ -77,6 +84,8 @@ orders as (
         on p.id = coalesce(pop.prescription_id, pop.ongoing_prescription_id)
     left join reference_data rd
         on rd.id = p.medication_id
+    left join departments dept
+        on dept.id = e.department_id
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
@@ -97,5 +106,6 @@ select
     sex,
     is_completed,
     drug_source_value,
-    drug_source_name
+    drug_source_name,
+    department
 from orders

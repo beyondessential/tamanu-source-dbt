@@ -76,6 +76,7 @@ D5 wide format, plus five disaggregation columns and one measure attribute.
 | `procedure_code` | text | The procedure type's reference-data code (BL-006). Never NULL |
 | `is_completed` | boolean | Whether the procedure was marked completed. Never NULL |
 | `age_years` | integer | Age in whole years at the procedure, unbanded (BL-007). A measure, not a dimension |
+| `department` | text | The qualifying as-of segment's own department, resolved to a name (BL-009). Never NULL |
 
 ## Data tables
 
@@ -165,6 +166,13 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   `procedure_type_source_value = 'procedure'` before any other join, the same filter
   `metric__procedure` applies -- imaging is `metric__opd_imaging_request`'s population, not
   this one's.
+- **BL-009 (department attribution):** `department` is the same as-of segment's own
+  `department_id` that BL-003 resolves against, resolved to a name through `departments` so
+  a consumer can scope to one department (e.g. Dental) via `metric_filters` on a readable
+  value, the same convention procedure identity (BL-006) already uses rather than an opaque
+  Tamanu id. Unlike `facility_id` (BL-004, resolved from the procedure's own location),
+  department has no location-level source, so it follows the resolved segment instead. Never
+  NULL -- falls back to `'Not recorded'` (MAUI-6909).
 
 ## Acceptance criteria
 
@@ -185,6 +193,7 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
 | AC-013 | `is_completed` is `not_null` | BL-006 | `not_null` (`ac_metric__opd_procedure_is_completed_not_null`) |
 | AC-014 | The outpatient-scope filter over the resolved segment: a 9202 segment is included, a non-9202 one excluded, and a procedure whose segment did not resolve (NULL FK) is dropped | BL-003 | dbt unit test `test_metric__opd_procedure_segment_scope` |
 | AC-015 | The as-of match and first-segment clamp feeding that filter | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
+| AC-016 | `department` is `not_null` | BL-009 | `not_null` (`ac_metric__opd_procedure_department_not_null`) |
 
 Test names are unnumbered (`ac_metric__opd_procedure_<column>_<check>`), matching
 `metric__procedure.yml`'s own convention rather than the newer `ac_NNN_...` scheme -- this
@@ -194,7 +203,7 @@ spec's AC numbering is for cross-reference within this document only.
 
 One active row -- `opd_procedure`, `kind: metric`, `subject_grain: procedure`,
 `status: draft`, `spec_path` pointing here, with `disaggregations:
-facility_id,sex,procedure,procedure_code,is_completed`.
+facility_id,sex,procedure,procedure_code,is_completed,department`.
 
 Every disaggregation is already in the allowlist in
 `assert__metric_definitions__disaggregations`, admitted by `metric__procedure`'s own
@@ -208,6 +217,7 @@ registration -- no vocabulary change was needed for this metric.
 | `clinical__visit_detail` | `clinical/` | Outpatient scope: the segment active at the procedure's own timestamp (BL-003) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
 | `locations` | `bases/` | Facility id of the procedure's own location (BL-004) |
+| `departments` | `bases/` | Department name of the qualifying as-of segment's own department (BL-009) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers

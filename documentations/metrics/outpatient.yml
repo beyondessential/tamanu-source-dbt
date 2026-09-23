@@ -43,6 +43,7 @@ metrics:
   - admission_clinician_id
   - admission_clinician_name
   - is_auto_discharge
+  - department
   variant_of: null
   owner: bes-maui
   status: approved
@@ -80,6 +81,7 @@ metrics:
   - diagnosis_code
   - diagnosis_certainty
   - is_primary
+  - department
   variant_of: null
   owner: bes-maui
   status: draft
@@ -118,6 +120,7 @@ metrics:
   - imaging_type
   - imaging_type_code
   - imaging_area
+  - department
   variant_of: null
   owner: bes-maui
   status: draft
@@ -157,6 +160,7 @@ metrics:
   - procedure
   - procedure_code
   - is_completed
+  - department
   variant_of: null
   owner: bes-maui
   status: draft

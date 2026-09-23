@@ -39,6 +39,11 @@ condition_occurrence as (
     select * from {{ ref('clinical__condition_occurrence') }}
 ),
 
+-- BL-017: the admission segment's own clinician, resolved to a name.
+providers as (
+    select * from {{ ref('ref__provider') }}
+),
+
 -- BL-013: at most one principal diagnosis per encounter. Tamanu does not stop a second
 -- is_primary row being recorded, so the earliest is taken (condition_occurrence_id breaks a
 -- datetime tie) -- without this the join below would fan out and duplicate an admission.
@@ -67,6 +72,8 @@ admission_segments as (
         visit_detail_start_datetime as admission_start__datetime,
         care_site_id,
         department_id,
+        -- BL-017
+        provider_id,
         row_number() over (
             partition by visit_occurrence_id
             order by visit_detail_start_datetime, visit_detail_id
@@ -113,6 +120,8 @@ admissions as (
                     make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
                 ))::int
         end as age_years,
+        -- BL-017
+        coalesce(prov.provider_name, 'Not recorded') as clinician,
         -- BL-015: total time as an inpatient -- admission to discharge from hospital. NULL
         -- while the encounter is open.
         case
@@ -133,6 +142,9 @@ admissions as (
     -- BL-012: the referral source lives on the encounter, not on clinical__visit_occurrence.
     join encounters enc
         on enc.id = adm.visit_occurrence_id
+    -- BL-017: left join -- an admission whose segment carries no clinician still counts.
+    left join providers prov
+        on prov.provider_id = adm.provider_id
     -- BL-012: left join -- an admission with no referral source still counts.
     left join reference_data admission_source_ref
         on admission_source_ref.id = enc.referral_source_id
@@ -172,6 +184,7 @@ select
     admission_ward_id,
     sex,
     age_years,
+    clinician,
     is_admitted_via_emergency,
     -- BL-012: 'Not recorded' covers an admission with no referral source. Never NULL -- the
     -- data tables expose this as an array filter, and Tupaia's array filter drops NULL rows.

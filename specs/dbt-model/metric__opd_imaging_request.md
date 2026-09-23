@@ -96,6 +96,7 @@ D5 wide format, plus six disaggregation columns and one measure attribute.
 | `imaging_type_code` | text | Tamanu's raw imaging-type value, or `'Not recorded'` (BL-007). Never NULL |
 | `imaging_area` | text | Comma-joined body area/study area, or `'Not recorded'` (BL-007). Never NULL |
 | `age_years` | integer | Age in whole years at the request, unbanded (BL-008). A measure, not a dimension |
+| `department` | text | The active clinic segment's own department, resolved to a name (BL-011). Never NULL |
 
 ## Data tables
 
@@ -247,6 +248,12 @@ as of this spec.
   distinction reads `bases/imaging_requests.status` directly, the way this model did before
   this change.
 
+- **BL-011 (department attribution):** `department` is the same active clinic segment's own
+  `department_id` that BL-005 resolves `facility_id` from, resolved to a name through
+  `departments` so a consumer can scope to one department (e.g. Dental) via `metric_filters`
+  on a readable value, the same convention modality identity (BL-007) already uses rather
+  than an opaque Tamanu id. Never NULL -- falls back to `'Not recorded'` (MAUI-6909).
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -267,6 +274,7 @@ as of this spec.
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
 | AC | `clinic`-only scoping over the resolved segment, the branch filter, a pending request with no result still included with a NULL `period_end`, `period_end` gated on `is_completed` rather than on a result existing, and a request whose segment did not resolve (NULL FK) dropped | BL-002, BL-003, BL-010 | dbt unit test `test_metric__opd_imaging_request_scope_and_completion` |
 | AC | The as-of match and first-segment clamp feeding that scoping | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
+| AC | `department` is `not_null` | BL-011 | `not_null` |
 
 Test names are unnumbered (`ac_metric__opd_imaging_request_<column>_<check>`), matching
 `metric__opd_procedure.yml`'s convention.
@@ -275,7 +283,7 @@ Test names are unnumbered (`ac_metric__opd_imaging_request_<column>_<check>`), m
 
 One active row -- `opd_imaging_request`, `kind: metric`, `subject_grain: imaging_request`,
 `status: draft`, `spec_path` pointing here, with `disaggregations:
-facility_id,sex,is_completed,imaging_type,imaging_type_code,imaging_area`.
+facility_id,sex,is_completed,imaging_type,imaging_type_code,imaging_area,department`.
 
 `imaging_type`, `imaging_type_code`, `imaging_area` are new to the allowlist in
 `assert__metric_definitions__disaggregations`; `is_completed` is already admitted
@@ -294,6 +302,7 @@ earlier metrics.
 | `clinical__visit_detail` | `clinical/` | Outpatient scope and facility: the segment active at the request's own timestamp, and its own `care_site_id` (BL-003, BL-004, BL-005) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-008) |
 | `locations` | `bases/` | Facility id of the active segment's own `care_site_id` (BL-005) |
+| `departments` | `bases/` | Department name of the active clinic segment's own department (BL-011) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
@@ -356,3 +365,4 @@ earlier metrics.
 |---|---|---|
 | 2026-09-03 | @gagank16 | Initial draft (MAUI-6806) |
 | 2026-09-09 | @gagank16 | Sourced from clinical__procedure_occurrence instead of bases/imaging_requests directly (BL-010); facility resolved via the active segment's own location instead of the request's location_group_id, fixing a real zero-row bug (BL-005); status narrowed to is_completed, dropping the completed-vs-cancelled split for now (OQ-004); period_end gated on is_completed rather than surfaced merely because a result row exists, fixing a real correctness bug (BL-002); age_years switched to the already-available procedure_date column instead of re-casting procedure_datetime; removed turnaround_time__minutes, not needed by the current visual -- period_start/period_end remain, so it can be computed later if needed; added imaging_type as a readable label alongside the existing raw value, renamed to imaging_type_code (BL-007) |
+| 2026-09-23 | Claude | Added department, resolved to a name from the active clinic segment's own department_id (BL-011), so a consumer scopes to one department (e.g. Dental) via metric_filters (MAUI-6909) |
