@@ -75,8 +75,10 @@ D5 wide format, plus seven disaggregation columns and three measure attributes.
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `age_years` | integer | Age in whole years at the visit, unbanded (BL-004). A measure, not a dimension |
 | `clinician_id` | varchar(255) | Intake segment's clinician, as the Tamanu user id (BL-008). Nullable |
+| `clinician_name` | varchar(255) | That clinician's display name, from `ref__provider` (BL-008). Nullable |
 | `is_admitted` | boolean | Whether the encounter went on to an inpatient admission (BL-009). `not_null` (AC-011) |
 | `admission_clinician_id` | varchar(255) | Admission segment's clinician, as the Tamanu user id (BL-010). NULL where not admitted |
+| `admission_clinician_name` | varchar(255) | That clinician's display name, from `ref__provider` (BL-010). NULL where not admitted |
 | `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
 | `opd_time__seconds` | bigint | Time in the outpatient department, whole seconds (BL-011). NULL while open |
 | `opd_time__minutes` | numeric | The same duration in minutes, 2 dp (BL-011). A measure, not a dimension |
@@ -146,17 +148,29 @@ This model therefore carries no `data_table_*` meta.
   consumer can join to `bases/location_groups` (or a similar area lookup) at the data table
   layer if it wants clinic-level detail, without this model resolving that join itself (see
   § Data tables). First `metric__` disaggregation finer than facility.
-- **BL-007 (facility, location and clinician identity stay Tamanu's):** the model emits
-  `facility_id`, `location_id`, `clinician_id` and `admission_clinician_id` as Tamanu ids,
-  untranslated. Consumer-specific identifiers -- a Tupaia entity code, an area/clinic
-  grouping, a clinician's display name -- are resolved in the consumer layer, not here.
+- **BL-007 (facility and location identity stay Tamanu's; the clinician is labelled here):**
+  `facility_id` and `location_id` are emitted as Tamanu ids, untranslated -- a Tupaia entity
+  code or an area/clinic grouping is a consumer-specific identifier and is crosswalked in the
+  consumer layer.
 
-  For a clinician the consumer joins `ref/ref__provider` on `provider_id` -- the OMOP PROVIDER
-  wrapper that `clinical__visit_detail.provider_id` already points at. It projects
-  `provider_id`, `provider_name`, `provider_source_value` and `role` over `bases/users` and
-  deliberately omits email and phone number, which is what makes it safe to route to
-  `public_tupaia` where the `users` view itself would not be -- a consumer reads its lookups
-  from the same schema as the metric.
+  The clinician columns deliberately do **not** follow that. The model emits the id *and* the
+  display name, joined from `ref/ref__provider` -- the OMOP PROVIDER wrapper that
+  `clinical__visit_detail.provider_id` already points at, which projects `provider_id`,
+  `provider_name`, `provider_source_value` and `role` over `bases/users` and omits email and
+  phone number.
+
+  Two patterns exist in this repo and the clinician follows the first: reference data
+  describing the event carries its label next to its code (`diagnosis`/`diagnosis_code`,
+  `procedure`/`procedure_code`, `drug_source_name`, `imaging_type`), while an *identity* --
+  facility, location -- is emitted as an id for the consumer to crosswalk. A facility id has to
+  stay an id because each consumer maps it to a different thing; a clinician's display name is
+  the same everywhere, so resolving it once here saves every consumer the same join, and saves
+  a deployment having to grant a second relation whose absence fails at query time on a card
+  that looks correctly configured.
+
+  The name is staff-attributable but not patient-identifying: a row says a named clinician saw
+  someone, never who. The id is kept alongside as the stable key, since a display name can be
+  edited and is not unique.
 - **BL-008 (attending clinician):** `clinician_id` is the intake segment's `provider_id` --
   the clinician recorded against the patient in the outpatient department.
 
@@ -312,6 +326,7 @@ which keeps the registry and the model from drifting.
 | `clinical__visit_occurrence` | `clinical/` | Encounter end date (BL-002) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
 | `locations` | `bases/` | Facility and location id of the intake segment's location (BL-006) |
+| `ref__provider` | `ref/` | Attending and admitting clinician display names (BL-008, BL-010) |
 | `discharges` | `bases/` | Discharge note, for the system-discharge flag (BL-012) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
@@ -345,9 +360,10 @@ which keeps the registry and the model from drifting.
    well as the numerator. An auto-discharged visit leaves it too **only where the episode ran
    to the encounter end** -- where the episode ended at a segment the duration is genuine, and
    `is_auto_discharge` alone does not distinguish the two (BL-011, BL-012).
-8. **Label a clinician itself.** `clinician_id` and `admission_clinician_id` are Tamanu user
-   ids -- a consumer joins `ref__provider` on `provider_id` for `provider_name`, and labels
-   the NULL, since a visit may carry no clinician.
+8. **Label the NULL clinician.** `clinician_name` and `admission_clinician_name` arrive
+   resolved, so no join is needed -- but both are nullable (no clinician recorded, or a
+   deleted user), and Tupaia's array filter drops NULL rows, so a consumer exposing either as
+   a filter gives the NULL an explicit label.
 
 ## Related
 
@@ -357,5 +373,5 @@ which keeps the registry and the model from drifting.
 | `int__emergency_visits` | BL-018 resolves departure from the ED by care site and explicitly not by encounter type; BL-011 here resolves it the opposite way, for the reason given there |
 | `metric__inpatient_admission` | Counts the admission itself, anchored on the 9201 segment BL-009/BL-010 read here. An OPD visit ending in admission appears in both, as a visit there and an admission here |
 | `macros/datasets/discharge_audit.sql` | BL-004 defines the system-discharge predicate BL-012 reuses verbatim |
-| `ref__provider` | OMOP PROVIDER wrapper over `bases/users`; resolves the clinician ids this model emits, in the consumer layer (BL-007) |
+| `ref__provider` | OMOP PROVIDER wrapper over `bases/users`; supplies the clinician display names this model emits (BL-007, BL-008, BL-010) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |

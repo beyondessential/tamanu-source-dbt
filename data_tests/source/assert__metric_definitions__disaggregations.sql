@@ -17,10 +17,13 @@ where trim(d) not in (
         -- per-encounter rows rather than as its own metric_id.
         'is_admitted',
         -- opd_visit's clinician: who saw the patient in the outpatient department, and
-        -- separately who admitted them. Tamanu user ids, untranslated -- a consumer labels
-        -- them through ref__provider.
+        -- separately who admitted them. The Tamanu user id as the stable key and the display
+        -- name alongside it, resolved through ref__provider -- the same code/label pairing
+        -- diagnosis and procedure make, so a consumer charting by clinician needs no join.
         'clinician_id',
+        'clinician_name',
         'admission_clinician_id',
+        'admission_clinician_name',
         -- opd_visit's system-discharge flag: the discharge was written by Tamanu's
         -- outpatient discharger rather than by a clinician, so the encounter end is the
         -- sweep's clock and any duration taken from it is an artefact.

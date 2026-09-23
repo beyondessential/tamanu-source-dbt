@@ -90,6 +90,15 @@ unit_tests:
           union all
           select 'loc_ward', 'fac_1'
 
+      # BL-008/BL-010: clin_3 is deliberately absent, standing for a user record deleted
+      # after the encounter -- the visit is kept and the name reads NULL.
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'clin_1' as provider_id, 'Dr Ali' as provider_name
+          union all
+          select 'clin_2', 'Dr Cara'
+
       # BL-012: opd_3 is the system discharge. opd_1 carries a clinician-recorded note that
       # merely mentions discharge, which must not match; opd_2 and opd_5 have a discharge with
       # no note at all; opd_4 has no discharge row.
@@ -107,14 +116,14 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'opd_visit' as metric_id, null::text as variant_id, 'opd_1' as subject_id, '2024-05-15'::date as period_start, '2024-05-16'::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'loc_opd' as location_id, 'female' as sex, 40 as age_years, 'clin_1' as clinician_id, true as is_admitted, 'clin_2' as admission_clinician_id, false as is_auto_discharge, 7200::bigint as opd_time__seconds, 120.00::numeric as opd_time__minutes
+        select 'opd_visit' as metric_id, null::text as variant_id, 'opd_1' as subject_id, '2024-05-15'::date as period_start, '2024-05-16'::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'loc_opd' as location_id, 'female' as sex, 40 as age_years, 'clin_1' as clinician_id, 'Dr Ali' as clinician_name, true as is_admitted, 'clin_2' as admission_clinician_id, 'Dr Cara' as admission_clinician_name, false as is_auto_discharge, 7200::bigint as opd_time__seconds, 120.00::numeric as opd_time__minutes
         union all
-        select 'opd_visit', null::text, 'opd_2', '2024-05-16'::date, '2024-05-16'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', false, null::text, false, 3600::bigint, 60.00::numeric
+        select 'opd_visit', null::text, 'opd_2', '2024-05-16'::date, '2024-05-16'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 3600::bigint, 60.00::numeric
         union all
-        select 'opd_visit', null::text, 'opd_3', '2024-05-17'::date, '2024-05-17'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', false, null::text, true, 50340::bigint, 839.00::numeric
+        select 'opd_visit', null::text, 'opd_3', '2024-05-17'::date, '2024-05-17'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', true, 50340::bigint, 839.00::numeric
         union all
-        select 'opd_visit', null::text, 'opd_4', '2024-05-18'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', false, null::text, false, null::bigint, null::numeric
+        select 'opd_visit', null::text, 'opd_4', '2024-05-18'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, null::bigint, null::numeric
         union all
-        select 'opd_visit', null::text, 'opd_5', '2024-05-19'::date, '2024-05-19'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, null::text, false, null::text, false, 1800::bigint, 30.00::numeric
+        select 'opd_visit', null::text, 'opd_5', '2024-05-19'::date, '2024-05-19'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, null::text, 'Not recorded', false, null::text, 'Not recorded', false, 1800::bigint, 30.00::numeric
         union all
-        select 'opd_visit', null::text, 'opd_6', '2024-05-25'::date, '2024-05-28'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', true, 'clin_2', false, 0::bigint, 0.00::numeric
+        select 'opd_visit', null::text, 'opd_6', '2024-05-25'::date, '2024-05-28'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', true, 'clin_2', 'Dr Cara', false, 0::bigint, 0.00::numeric

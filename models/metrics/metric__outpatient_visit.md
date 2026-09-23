@@ -196,3 +196,33 @@ whatever the discharge note says.
 NULL while the encounter is open and nothing has ended the episode, which is not a duration of
 zero -- those visits leave a mean's denominator as well as its numerator.
 {% enddocs %}
+
+{% docs metric__outpatient_visit__clinician_name %}
+Display name of the clinician recorded on the outpatient intake segment, from `ref__provider`
+-- the OMOP PROVIDER wrapper over `bases/users`.
+
+Emitted alongside `clinician_id` rather than left to the consumer, the same pairing
+`metric__opd_procedure` makes for `procedure`/`procedure_code`: the id is the stable key, the
+name is what a chart axis needs, and resolving it here saves every consumer the same join and
+the grant that goes with it.
+
+It is staff-attributable but not patient-identifying: a row says a named clinician saw
+someone, never who.
+
+'Not recorded' where the intake segment carries no clinician, and where the user record has
+since been deleted. Never NULL: the data tables expose this as an array filter and Tupaia's
+array filter drops NULL rows, which would silently disappear the visit from a card that groups
+by clinician. `clinician_id` keeps the NULL, since it is a key rather than a label.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__admission_clinician_name %}
+Display name of the clinician recorded on the admission segment -- who admitted the patient --
+from `ref__provider`.
+
+'Not recorded' for a visit that was never admitted, for an admission segment with no
+clinician, and where the user record has since been deleted -- never NULL, for the same reason
+as `clinician_name`. That covers the overwhelming majority of visits, so a card ranking this
+scopes itself to `is_admitted`. Read it with `admission_clinician_id`, which is the stable key
+and does keep the NULL; see that column for why the admitting and attending clinicians are kept
+separate.
+{% enddocs %}

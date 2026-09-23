@@ -27,6 +27,13 @@ discharges as (
     select * from {{ ref('discharges') }}
 ),
 
+-- BL-008/BL-010: the OMOP PROVIDER wrapper over bases/users. One row per user, so neither
+-- join below can fan out. Projects the display name and omits email and phone number, which
+-- is what makes it safe to read here.
+provider as (
+    select * from {{ ref('ref__provider') }}
+),
+
 -- BL-003: an outpatient visit is the first history segment of an encounter whose OMOP
 -- visit concept is 9202/Outpatient Visit -- covering clinic, vaccination, and imaging.
 opd_intake as (
@@ -112,6 +119,13 @@ outpatient_visits as (
         -- Tamanu user id. Nullable -- an intake segment recorded with no clinician stays
         -- NULL rather than excluding the visit.
         i.provider_id as clinician_id,
+        -- BL-008: the readable label alongside the id, the same pairing
+        -- metric__opd_procedure makes for procedure/procedure_code. 'Not recorded' covers a
+        -- segment with no clinician and a user record deleted since -- never NULL, because
+        -- the data tables expose this as an array filter and Tupaia's array filter drops NULL
+        -- rows, which would silently disappear the visit from a card grouping by clinician.
+        -- Same treatment int__emergency_visits gives triage_score (its BL-012).
+        coalesce(clin.provider_name, 'Not recorded') as clinician_name,
         -- BL-009: whether the encounter went on to an inpatient admission. False, not NULL,
         -- where it did not -- the data tables expose this as an array filter, and Tupaia's
         -- array filter drops NULL rows.
@@ -119,6 +133,10 @@ outpatient_visits as (
         -- BL-010: who admitted the patient, as the Tamanu user id. NULL for a visit that was
         -- never admitted, and for an admission segment recorded with no clinician.
         adm.admission_clinician_id,
+        -- BL-010: 'Not recorded' for the same reason, which here also covers the ordinary
+        -- case of a visit that was never admitted. A card ranking this scopes itself to
+        -- is_admitted, so that bulk never reaches the chart.
+        coalesce(adm_clin.provider_name, 'Not recorded') as admission_clinician_name,
         -- BL-012: a system-generated discharge, not a clinical one. Tamanu's outpatient
         -- discharger closes encounters left open at the end of the day, so the end datetime
         -- of one of these is the sweep's clock, not when the patient actually left -- which
@@ -163,6 +181,13 @@ outpatient_visits as (
     -- deduplicated to one row per encounter, so it cannot fan out.
     left join discharges dis
         on dis.encounter_id = i.visit_occurrence_id
+    -- BL-008/BL-010: left joins -- a visit with no clinician, or whose user has since been
+    -- deleted, keeps the visit and leaves the name NULL rather than dropping the row.
+    -- ref__provider is one row per user, so neither can fan out.
+    left join provider clin
+        on clin.provider_id = i.provider_id
+    left join provider adm_clin
+        on adm_clin.provider_id = adm.admission_clinician_id
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' --
@@ -170,9 +195,10 @@ outpatient_visits as (
 -- minute-resolution duration is opd_time__minutes, derived from the underlying timestamps
 -- (BL-011).
 --
--- BL-007: facility_id, location_id, clinician_id and admission_clinician_id are emitted as
--- Tamanu ids, untranslated. Translating them to a consumer's own identifiers is a
--- consumer-layer concern and is done there (for Tupaia, in the data table).
+-- BL-007: facility_id and location_id are emitted as Tamanu ids, untranslated -- crosswalking
+-- them to a consumer's own identifiers is a consumer-layer concern. The clinician columns are
+-- the exception: the id is emitted for stability and the display name alongside it, so a
+-- consumer charting by clinician needs no join of its own (BL-008).
 select
     'opd_visit'::text as metric_id,
     null::text as variant_id,
@@ -194,10 +220,12 @@ select
     age_years,
     -- BL-008
     clinician_id,
+    clinician_name,
     -- BL-009
     is_admitted,
     -- BL-010
     admission_clinician_id,
+    admission_clinician_name,
     -- BL-012
     is_auto_discharge,
     opd_time__seconds,
