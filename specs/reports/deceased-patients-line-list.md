@@ -10,10 +10,10 @@
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Linear issue** | [MAUI-6671](https://linear.app/bes/issue/MAUI-6671/update-deceased-patients-line-list-to-show-all-records) |
+| **Linear issue** | [MAUI-6671](https://linear.app/bes/issue/MAUI-6671/update-deceased-patients-line-list-to-show-all-records), [MAUI-6805](https://linear.app/bes/issue/MAUI-6805) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-06-17 |
+| **Last updated** | 2026-08-17 |
 
 ## Purpose
 
@@ -100,6 +100,8 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
   any of `other_condition_1_id` through `other_condition_4_id`; when null, no
   filter is applied.
 - **BL-008:** Output is sorted by `date_of_death` ascending.
+- **BL-012:** Optional `locationGroupId` parameter restricts output to rows
+  whose `location_group_id` matches; when null, no filter is applied.
 
 ## Acceptance criteria
 
@@ -110,6 +112,7 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
 | AC-003 | With `defaultDateRange = allTime` and no dates entered, records with `date_of_death = 1900-01-01` are returned | BL-001 | manual / integration |
 | AC-004 | With a `fromDate` later than `1970-01-01`, every returned row has `date_of_death >= fromDate` | BL-001 | manual / integration |
 | AC-005 | When run with a `causeOfDeath` / `mannerOfDeath` / `facilityId` parameter, every returned row matches that filter | BL-003, BL-004, BL-005 | manual / integration |
+| AC-006 | When run with a `locationGroupId` parameter, every returned row has `location_group_id` matching it | BL-012 | manual / integration |
 
 ## Lineage
 
@@ -131,3 +134,4 @@ _None._
 | Date | Author | Change |
 |---|---|---|
 | 2026-06-17 | Maui team | Initial retrospective spec (MAUI-6671): default the report to all time, treat the 1970-01-01 floor as unbounded, and rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped |
+| 2026-08-17 | Maui team | MAUI-6805: add an optional `locationGroupId` ("Area") filter, paired with the existing `facilityId` filter |
