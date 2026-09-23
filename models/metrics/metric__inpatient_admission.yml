@@ -174,3 +174,9 @@ models:
           # NULL rows, so a NULL here would silently disappear the admission.
           - not_null:
               name: ac_017_metric__inpatient_admission_is_readmission_within_30_days_not_null
+      - name: clinician
+        data_type: text
+        description: "{{ doc('metric__inpatient_admission__clinician') }}"
+        data_tests:
+          - not_null:
+              name: ac_018_metric__inpatient_admission_clinician_not_null

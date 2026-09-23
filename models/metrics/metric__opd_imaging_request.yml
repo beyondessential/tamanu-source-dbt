@@ -164,3 +164,12 @@ models:
           presentation choice a deployment may set differently, so the consumer's data
           table bands it. A measure, not a dimension: absent from the registry's
           disaggregations.
+      - name: department
+        data_type: text
+        description: >-
+          The as-of segment's own department (e.g. Dental), resolved to a name so a consumer
+          scopes to one department by metric_filters on a readable value (BL-011). Never
+          NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__opd_imaging_request_department_not_null

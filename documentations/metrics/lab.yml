@@ -1,0 +1,43 @@
+# Laboratory test activity: completed lab tests carrying a reading.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: lab_request
+  kind: metric
+  name: Lab tests
+  description: >-
+    Completed lab tests carrying a reading. One row per test, not per lab request -- a
+    request can bundle several tests (e.g. a panel).
+  numerator_description: >-
+    Completed lab tests, counted on the date the test completed, or (where that is absent)
+    the date the request was published or requested
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    No external indicator anchor (AIHW/WHO/DHIS2) defines a plain lab-test-count concept --
+    this is a BES composition over Tamanu's own laboratory workflow, sourced from
+    clinical__measurement's lab branch (MAUI-6909). The unit counted is the individual test,
+    the same "bundle vs. line" distinction pharmacy_order draws against pharmacy orders.
+    Only tests carrying a reading under a request that was not withdrawn are counted --
+    clinical__measurement's own scope (its BL-009/BL-011) -- so this metric answers "how much
+    lab activity produced a result," not "how many tests were ordered."
+  unit: count
+  subject_grain: lab_test
+  disaggregations:
+  - facility_id
+  - sex
+  - lab_test_code
+  - lab_test
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__lab_request.md
