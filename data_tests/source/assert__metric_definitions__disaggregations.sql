@@ -109,6 +109,25 @@ where trim(d) not in (
         'procedure_code',
         -- procedure's completion flag
         'is_completed',
+        -- lab_test's setting: the OMOP Visit concept (9201/9202/9203) of the segment the test
+        -- was ordered in. The concept id rather than a label, because the mapping is
+        -- definitional and universal (map__omop_visit_type) -- labelling is the consumer's.
+        -- Not interchangeable with encounter_type above: 9202 covers clinic, imaging and
+        -- vaccination, 9203 covers emergency, observation and triage.
+        'visit_detail_concept_id',
+        -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
+        -- catalogues are deployment reference data, so any panel or category grouping is
+        -- applied downstream rather than registered here.
+        'lab_test_type',
+        'lab_test_type_code',
+        -- lab_test's request-level category (e.g. Haematology), as recorded
+        'lab_test_category',
+        -- lab_test's recorded result, ungrouped -- result vocabularies are deployment
+        -- reference data
+        'result',
+        -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
+        -- a consumer counting clinical acts rather than laboratory workload can separate them
+        'is_panel_request',
         -- immunisation_dose's antigen
         'disease',
         -- immunisation_dose's EPI-style age cohort, banded in months

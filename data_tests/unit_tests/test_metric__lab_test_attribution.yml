@@ -1,0 +1,268 @@
+unit_tests:
+  - name: test_metric__lab_test_membership
+    model: metric__lab_test
+    description: >
+      BL-005/BL-006/BL-007/BL-008. The change this model exists for: an ordered test with no
+      result must still be counted. t1 completed and carries a result -- the only shape the
+      previous metric__lab_request could emit -- with turnaround in whole minutes from request
+      to the test's own completion. t2 is a second test on the SAME published request but was
+      never completed: is_completed false, result 'Not recorded'. That case is why completion
+      is keyed on the test rather than the request (426 such tests on Tokelau), and it proves
+      the results join is LEFT rather than inner. t3 is still pending and t4 is cancelled --
+      both included, since each was genuinely ordered (BL-005), both is_completed false with
+      period_end and turnaround NULL rather than zero. t7 completed a day BEFORE it was
+      requested, a backdating artifact: is_completed true, period_end as recorded, and
+      turnaround emitted as a negative -1440 rather than nulled or clamped, so the deployment
+      can see the bad timestamp and fix it. t5's request is
+      entered-in-error and t6's is deleted -- both excluded, since those statuses assert the
+      order never happened. t1/t2 also prove the panel flag.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 11:30:00'::timestamp as published_datetime, 'published' as status, 'e1' as encounter_id, 'cat1' as lab_test_category_id, 'panel1' as lab_test_panel_request_id
+          union all
+          select 'r2', '2026-03-02 08:00:00'::timestamp, null::timestamp, 'results_pending', 'e1', 'cat1', null::varchar
+          union all
+          select 'r3', '2026-03-03 08:00:00'::timestamp, null::timestamp, 'cancelled', 'e1', null::varchar, null::varchar
+          union all
+          select 'r4', '2026-03-04 08:00:00'::timestamp, null::timestamp, 'entered-in-error', 'e1', 'cat1', null::varchar
+          union all
+          select 'r5', '2026-03-05 08:00:00'::timestamp, null::timestamp, 'deleted', 'e1', 'cat1', null::varchar
+          union all
+          select 'r6', '2026-03-04 08:00:00'::timestamp, null::timestamp, 'published', 'e1', 'cat1', null::varchar
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt1' as lab_test_type_id, '2026-03-01 11:30:00'::timestamp as completed_datetime
+          union all
+          select 't2', 'r1', 'ltt2', null::timestamp
+          union all
+          select 't3', 'r2', 'ltt1', null::timestamp
+          union all
+          select 't4', 'r3', 'ltt1', null::timestamp
+          union all
+          select 't5', 'r4', 'ltt1', null::timestamp
+          union all
+          select 't6', 'r5', 'ltt1', null::timestamp
+          union all
+          select 't7', 'r6', 'ltt1', '2026-03-03 08:00:00'::timestamp
+
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select 't1' as measurement_id, 'p1' as person_id, '2026-03-01'::date as measurement_date, '2026-03-01 11:00:00'::timestamp as measurement_datetime, 'lab' as measurement_type_source_value, 5.4::numeric as value_as_number, '5.4' as value_source_value, 'mmol/L' as unit_source_value, 'u1' as provider_id, 'e1' as visit_occurrence_id, 'ltt1' as measurement_source_id, 'GLUC' as measurement_source_value, 'Glucose' as measurement_source_name
+          union all
+          select 'v1', 'p1', '2026-03-01'::date, '2026-03-01 08:30:00'::timestamp, 'vitals survey', 98.6::numeric, '98.6', 'F', 'u1', 'e1', 'pde1', 'TEMP', 'Temperature'
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt1' as id, 'GLUC' as code, 'Glucose' as name
+          union all
+          select 'ltt2', 'HB', 'Haemoglobin'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'cat1' as id, 'HAEM' as code, 'Haematology' as name, 'labTestCategory' as type
+
+      # One open clinic segment covering every request below, so this test isolates membership
+      # and completion. Segment attribution is exercised separately, by
+      # test_metric__lab_test_segment_attribution.
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, 'dept_dental' as department_id, 'clinic' as visit_detail_source_value
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 9202 as visit_detail_concept_id, 'clinic' as encounter_type, 'female' as sex, true as is_completed, true as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Haematology' as lab_test_category, '5.4' as result, 30 as age_years, 210 as turnaround__minutes
+        union all
+        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', false, true, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 'Not recorded', 30, null::integer
+        union all
+        select 'lab_test', null::text, 't3', '2026-03-02 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, null::integer
+        union all
+        select 'lab_test', null::text, 't4', '2026-03-03 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
+        union all
+        select 'lab_test', null::text, 't7', '2026-03-04 08:00:00'::timestamp, '2026-03-03 08:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', true, false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, -1440
+
+  - name: test_metric__lab_test_result_passthrough
+    model: metric__lab_test
+    description: >
+      BL-008/BL-009. The result is emitted exactly as recorded -- unclassified, and with casing
+      and wording untouched, because deciding which values mean "positive" is the consumer's.
+      t1 ('Reactive') and t2 ('Non-reactive') prove no normalisation happens: neither is folded
+      to a Positive/Negative value, and neither is lower-cased. t3 proves the point-of-care path
+      needs no join in this model -- its reading reaches clinical__measurement through
+      map__lab_test_result_encoding (that model's own BL-009) and arrives here like any other
+      result. t4 has no measurement row at all and reads 'Not recorded' rather than NULL, since
+      Tupaia array filters drop NULL rows.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 09:00:00'::timestamp as published_datetime, 'published' as status, 'e1' as encounter_id, null::varchar as lab_test_category_id, null::varchar as lab_test_panel_request_id
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt_text' as lab_test_type_id, '2026-03-01 09:00:00'::timestamp as completed_datetime
+          union all
+          select 't2', 'r1', 'ltt_text', '2026-03-01 09:00:00'::timestamp
+          union all
+          select 't3', 'r1', 'ltt_poc', '2026-03-01 09:00:00'::timestamp
+          union all
+          select 't4', 'r1', 'ltt_text', '2026-03-01 09:00:00'::timestamp
+
+      # t3 carries no lab_tests.result of its own -- clinical__measurement has already
+      # substituted the result its TEST TYPE encodes, which is why it appears here with a value.
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select 't1' as measurement_id, 'p1' as person_id, '2026-03-01'::date as measurement_date, '2026-03-01 09:00:00'::timestamp as measurement_datetime, 'lab' as measurement_type_source_value, null::numeric as value_as_number, 'Reactive' as value_source_value, null::varchar as unit_source_value, 'u1' as provider_id, 'e1' as visit_occurrence_id, 'ltt_text' as measurement_source_id, 'HIV' as measurement_source_value, 'HIV Test' as measurement_source_name
+          union all
+          select 't2', 'p1', '2026-03-01'::date, '2026-03-01 09:00:00'::timestamp, 'lab', null::numeric, 'Non-reactive', null::varchar, 'u1', 'e1', 'ltt_text', 'HIV', 'HIV Test'
+          union all
+          select 't3', 'p1', '2026-03-01'::date, '2026-03-01 09:00:00'::timestamp, 'lab', null::numeric, 'Positive', null::varchar, 'u1', 'e1', 'ltt_poc', 'HIVPOS', 'HIV Rapid - Positive'
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt_text' as id, 'HIV' as code, 'HIV Test' as name
+          union all
+          select 'ltt_poc', 'HIVPOS', 'HIV Rapid - Positive'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as type where false
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'clinic' as visit_detail_source_value
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status where false
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 09:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 9202 as visit_detail_concept_id, 'clinic' as encounter_type, 'female' as sex, true as is_completed, false as is_panel_request, 'Not recorded' as department, 'HIV' as lab_test_type_code, 'HIV Test' as lab_test_type, 'Not recorded' as lab_test_category, 'Reactive' as result, 30 as age_years, 60 as turnaround__minutes
+        union all
+        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', true, false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Non-reactive', 30, 60
+        union all
+        select 'lab_test', null::text, 't3', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', true, false, 'Not recorded', 'HIVPOS', 'HIV Rapid - Positive', 'Not recorded', 'Positive', 30, 60
+        union all
+        select 'lab_test', null::text, 't4', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', true, false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Not recorded', 30, 60
+
+  - name: test_metric__lab_test_segment_attribution
+    model: metric__lab_test
+    description: >
+      BL-010. Setting, department and facility come from the segment active when the test was
+      ORDERED, not from the encounter as it now stands -- which is the defect this replaced.
+      The encounter runs clinic 07:00-14:00 then admission from 14:00, so its own
+      encounter_type now reads 'admission' and its location the ward. t1, ordered at 08:00,
+      must still resolve to the clinic segment: 9202, 'clinic', Dental, fac1. t2, ordered at
+      16:00 on the same encounter, resolves to the admission segment: 9201, 'admission', Ward,
+      fac2 -- proving the pick tracks the timestamp rather than being pinned to the first
+      segment. t3 is ordered at 06:00, before any segment starts, and clamps to the earliest
+      segment rather than dropping out of the metric entirely.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, 'results_pending' as status, 'e1' as encounter_id, null::varchar as lab_test_category_id, null::varchar as lab_test_panel_request_id
+          union all
+          select 'r2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'results_pending', 'e1', null::varchar, null::varchar
+          union all
+          select 'r3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'results_pending', 'e1', null::varchar, null::varchar
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt1' as lab_test_type_id, null::timestamp as completed_datetime
+          union all
+          select 't2', 'r2', 'ltt1', null::timestamp
+          union all
+          select 't3', 'r3', 'ltt1', null::timestamp
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, '2026-03-01 14:00:00'::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, 'dept_dental' as department_id, 'clinic' as visit_detail_source_value
+          union all
+          select 'seg2', 'e1', 'p1', 9201, '2026-03-01 14:00:00'::timestamp, null::timestamp, 'loc_ward', 'dept_ward', 'admission'
+
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select null::varchar as measurement_id, null::varchar as person_id, null::date as measurement_date, null::timestamp as measurement_datetime, null::text as measurement_type_source_value, null::numeric as value_as_number, null::text as value_source_value, null::varchar as unit_source_value, null::varchar as provider_id, null::varchar as visit_occurrence_id, null::varchar as measurement_source_id, null::varchar as measurement_source_value, null::varchar as measurement_source_name where false
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt1' as id, 'GLUC' as code, 'Glucose' as name
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as type where false
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'dept_ward', 'WARD', 'Ward', 'fac2', 'current'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'loc_ward', 'WARD', 'Ward bed', null::int, null::varchar, 'fac2', 'current'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 9202 as visit_detail_concept_id, 'clinic' as encounter_type, 'female' as sex, false as is_completed, false as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Not recorded' as lab_test_category, 'Not recorded' as result, 30 as age_years, null::integer as turnaround__minutes
+        union all
+        select 'lab_test', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 9201, 'admission', 'female', false, false, 'Ward', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
+        union all
+        select 'lab_test', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 9202, 'clinic', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
