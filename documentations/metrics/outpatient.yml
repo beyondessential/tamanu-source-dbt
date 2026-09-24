@@ -49,6 +49,50 @@ metrics:
   status: approved
   spec_path: specs/dbt-model/metric__outpatient_visit.md
 
+- metric_id: opd_visit_department
+  kind: metric
+  name: OPD visits by department touched
+  description: >-
+    Outpatient department visits, fanned out to one row per clinical__visit_detail segment the
+    visit's history recorded -- not one row per visit like opd_visit. Every other column is the
+    same value on every row of a visit, copied unchanged from its intake segment; only
+    department, clinician and duration vary per row. subject_id repeats across a visit's
+    segment rows -- scope to one department and count distinct subject_id, not sum
+    value_numeric, to count visits.
+  numerator_description: >-
+    Every clinical__visit_detail segment belonging to an encounter whose first recorded segment
+    carries OMOP visit concept 9202 (Outpatient Visit) -- the same population opd_visit selects
+    -- counted on that segment's own start date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Companion to opd_visit (AIHW METeOR 400604 anchor, same population), built to match
+    Tamanu's own in-product Encounter Summary report, which counts a visit against a department
+    wherever it appears in the visit's full history, not only its first segment -- opd_visit's
+    intake-only department undercounts a same-visit department transfer with no encounter_type
+    change relative to that report (MAUI-6909 follow-up). Not a replacement for opd_visit: this
+    metric's grain and sum semantics deliberately differ -- see spec Grain/BL-001 -- so it is
+    registered as its own metric_id rather than a variant_of opd_visit.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  - location_id
+  - sex
+  - clinician_id
+  - clinician_name
+  - is_admitted
+  - admission_clinician_id
+  - admission_clinician_name
+  - is_auto_discharge
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__opd_visit_department.md
+
 - metric_id: opd_diagnosis
   kind: metric
   name: OPD diagnoses
