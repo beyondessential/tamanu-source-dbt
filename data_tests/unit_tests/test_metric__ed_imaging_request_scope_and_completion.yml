@@ -31,6 +31,12 @@ unit_tests:
 
       r10 also proves the as-of match picks the latest segment already started (the 15:00
       admission) over the earlier observation phase.
+
+      BL-007: r9 has no structured area, so its imaging_area falls back to its free-text note,
+      which was edited from 'Chest' to 'Abdomen' -- only the current revision appears. The full
+      set of revision cases is covered once, in
+      test_metric__opd_imaging_request_segment_attribution, since both models rank through
+      notes__revision_rank.
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql
@@ -55,6 +61,9 @@ unit_tests:
           union all
           -- BL-004: raised before the ED segment began -- the clamp keeps it on that segment
           select 'r12', 'p1', '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', null::varchar, 'xRay', 'X-Ray', false
+          union all
+          -- BL-007: area from a free-text note that was edited
+          select 'r9', 'p1', '2026-01-06'::date, '2026-01-06 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', null::varchar, 'xRay', 'X-Ray', false
 
       - input: ref('imaging_results')
         format: sql
@@ -77,7 +86,11 @@ unit_tests:
 
       - input: ref('notes')
         format: sql
-        rows: "select null::varchar as record_id, null::varchar as record_type, null::varchar as note_type, null::varchar as content, null::timestamp as datetime limit 0"
+        rows: |
+          select 'n_chest' as id, '2026-01-06 08:00:00'::timestamp as datetime, '2026-01-06 08:00:00'::timestamp as created_datetime, 'Chest' as content, 'areaToBeImaged' as note_type, 'ImagingRequest' as record_type, 'r9' as record_id, null::varchar as updated_note_id
+          union all
+          -- the edit of n_chest
+          select 'n_abdomen', '2026-01-06 08:05:00'::timestamp, '2026-01-06 08:05:00'::timestamp, 'Abdomen', 'areaToBeImaged', 'ImagingRequest', 'r9', 'n_chest'
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -119,3 +132,5 @@ unit_tests:
         select 'ed_imaging_request', null::text, 'r8', '2026-01-05 09:00:00'::timestamp, '2026-01-05 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Emergency'
         union all
         select 'ed_imaging_request', null::text, 'r12', '2026-01-01 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded'
+        union all
+        select 'ed_imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'X-Ray', 'xRay', 'Abdomen', 30, 'Not recorded'
