@@ -321,6 +321,7 @@ keeps the registry and the model from drifting.
 | `clinical__condition_occurrence` | `clinical/` | Principal diagnosis code and reference-data name (BL-013) |
 | `locations` | `bases/` | Facility of the intake segment's location (BL-007) |
 | `triages` | `bases/` | Acuity, and the wait and target verdict (BL-012, BL-014) |
+| `ref__provider` | `ref/` | Display name of the intake segment's clinician (BL-020) |
 | `age_group__who_primary_classification` | `macros/` | Age banding — applied at the deployment layer, not by this model (BL-004, BL-019) |
 | `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping over `principal_diagnosis_code` — applied at the deployment layer, not by this model (BL-013, BL-019) |
 | `triage_target_minutes_case` | `macros/` | Target minutes per category (BL-014) |

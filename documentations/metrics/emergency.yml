@@ -29,9 +29,10 @@ metrics:
     746081). Same population as ed_visit - the distinction is framing, not inclusion: ed_visit measures
     total length of stay to hospital discharge, ed_stay measures the emergency department portion.
     AIHW registers no length-of-stay data element, so the emitted duration is a BES composition over
-    the AIHW concept. Divergence: Tamanu records the administrative transition
-    out of the emergency department phase, which for an admitted patient can precede physical departure
-    from the department. Pending alignment with the deploying country's national HMIS definition.
+    the AIHW concept. Divergence: physical departure is taken from the first recorded change of
+    location, which may lag the patient leaving and also counts a move between two locations inside
+    the emergency department. Pending alignment with the deploying country's national HMIS
+    definition.
   unit: count
   subject_grain: visit
   disaggregations:

@@ -30,10 +30,6 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
-encounters as (
-    select * from {{ ref('encounters') }}
-),
-
 triages as (
     select * from {{ ref('triages') }}
 ),
@@ -106,15 +102,9 @@ attendances as (
         -- is unique across the rows emitted here.
         vd.visit_occurrence_id,
         vd.visit_detail_start_datetime as ed_start__datetime,
-        -- BL-018: departure from the emergency department, taken as the earliest signal that
-        -- the patient left: the first move to another location, or the time a booked transfer
-        -- takes effect. least() ignores NULLs, so whichever exists wins and the earlier wins
-        -- when both do. Falling through to the encounter end covers a discharge straight from
-        -- the ED and any encounter that never moved.
-        coalesce(
-            least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-            vo.visit_end_datetime
-        ) as ed_end__datetime,
+        -- BL-018: departure from the emergency department -- the first move to another
+        -- location, falling through to the encounter end for a discharge straight from the ED.
+        coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime) as ed_end__datetime,
         -- Encounter end is discharge from hospital, so for an admitted patient it is later
         -- than the ED departure. NULL = encounter still open.
         vo.visit_end_datetime as visit_end__datetime,
@@ -134,15 +124,10 @@ attendances as (
         -- BL-015: time in the ED -- arrival to the departure resolved by BL-018. NULL only
         -- while the patient is in the ED and the encounter is still open.
         case
-            when coalesce(
-                    least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-                    vo.visit_end_datetime
-                ) is null then null
+            when coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime) is null then null
             else extract(epoch from (
-                    coalesce(
-                        least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-                        vo.visit_end_datetime
-                    ) - vd.visit_detail_start_datetime
+                    coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime)
+                    - vd.visit_detail_start_datetime
                 ))::bigint
         end as ed_time__seconds,
         -- BL-015: total length of stay -- arrival to discharge from hospital, so it spans the
@@ -181,10 +166,6 @@ attendances as (
     -- location does not resolve is excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = vd.care_site_id
-    -- BL-018: the booked transfer, one of the two departure signals. encounters.id is the
-    -- primary key, so this yields one row per attendance.
-    join encounters enc
-        on enc.id = vd.visit_occurrence_id
     -- BL-018: the physical departure, where one has been recorded. Grouped to one row per
     -- encounter above, so it cannot fan out.
     left join ed_location_exits x
@@ -231,7 +212,8 @@ select
     round(waiting_time__seconds / 60.0, 2) as waiting_time__minutes,
     ed_time__seconds,
     -- BL-015: time in the ED as minutes, to two decimal places, on the same basis as
-    -- waiting_time__minutes. NULL only while the patient is in the ED with nothing booked.
+    -- waiting_time__minutes. NULL only while the patient is in the ED and the encounter is
+    -- open.
     round(ed_time__seconds / 60.0, 2) as ed_time__minutes,
     length_of_stay__seconds,
     -- BL-015: total length of stay as minutes, on the same basis as the other durations
