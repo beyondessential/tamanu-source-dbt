@@ -1,8 +1,8 @@
 -- metric__ed_procedure -- D5 metric view for the ED-scoped procedure indicator registered in
 -- documentations/metrics/*.yml: ed_procedure.
 --
--- Per-procedure (subject) grain: one row per recorded procedure performed while the patient was
--- in the emergency department, value_numeric 1, so a consumer aggregates at whatever grain it
+-- Per-procedure (subject) grain: one row per recorded procedure performed during the emergency
+-- phase of an encounter, value_numeric 1, so a consumer aggregates at whatever grain it
 -- needs. See specs/dbt-model/metric__ed_procedure.md BL-001 for why this is its own metric.
 --
 -- "Emergency" is OMOP concept 9203, the same definition int__emergency_visits uses for its
@@ -70,6 +70,8 @@ procedures as (
         on loc.id = po.location_id
     left join departments dept
         on dept.id = vd.department_id
+    -- BL-002: the emergency phase only. A procedure while the patient boards falls in the
+    -- admission segment and is not counted.
     where vd.visit_detail_concept_id = 9203
 )
 

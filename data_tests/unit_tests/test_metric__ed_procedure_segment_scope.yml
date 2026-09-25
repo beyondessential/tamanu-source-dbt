@@ -16,6 +16,10 @@ unit_tests:
       about. BL-005: its segment carries a department, so the name resolves rather than
       falling back.
 
+      proc5 is on the same encounter after it was admitted at 14:00, while the patient is still
+      at the ED location -- boarding. Its segment is the 9201 admission segment, so it is
+      admission-phase activity and is not counted (BL-002).
+
       The as-of match and the first-segment clamp are not this model's behaviour and are
       covered once, upstream, by test_clinical__procedure_occurrence_visit_detail_resolution.
     given:
@@ -30,6 +34,9 @@ unit_tests:
           union all
           -- BL-001: performed in the ED on an encounter later retyped as an admission
           select 'proc4', 'p1', '2026-02-04'::date, '2026-02-04 09:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13a', 'loc1', 'code4', 'Procedure Four', false
+          union all
+          -- BL-002: boarding -- admitted, still at the ED location
+          select 'proc5', 'p1', '2026-02-04'::date, '2026-02-04 15:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13b', 'loc1', 'code5', 'Procedure Five', false
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -41,7 +48,7 @@ unit_tests:
           -- the ED phase the procedure happened in
           select 'vd13a', 'e13', 'p1', 9203, '2026-02-04'::date, '2026-02-04 07:00:00'::timestamp, null::date, null::timestamp, 'loc1', 'dept_ed', 'prov1', 'emergency', null::varchar
           union all
-          -- the later admission phase of the same encounter, which the procedure is not in
+          -- admitted at 14:00, still at the ED location -- boarding
           select 'vd13b', 'e13', 'p1', 9201, '2026-02-04'::date, '2026-02-04 14:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', 'vd13a'
 
       - input: ref('clinical__person')

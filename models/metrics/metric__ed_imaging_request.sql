@@ -136,7 +136,8 @@ requests as (
     -- BL-003: OMOP concept 9203 ('Emergency Room Visit'), which covers the emergency, triage
     -- and observation phases -- the same population int__emergency_visits takes its intake
     -- segment from. Scoped on the concept rather than on one source value, unlike the
-    -- clinic-only opd counterpart, because all three phases are emergency care.
+    -- clinic-only opd counterpart, because all three phases are emergency care. A request
+    -- raised while the patient boards falls in the admission segment and is not counted.
     where vd.visit_detail_concept_id = 9203
 )
 

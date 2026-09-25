@@ -102,8 +102,10 @@ metrics:
     by the segment active when the procedure happened, matching the OMOP CDM's own
     PROCEDURE_OCCURRENCE.visit_detail_id convention -- so a procedure performed in the
     emergency department is counted here even where the encounter was later retyped as an
-    admission, which an encounter-type filter would miss. Pending alignment with the
-    deploying country's national HMIS definition.
+    admission, which an encounter-type filter would miss. A procedure performed after that
+    retype, while the patient still boards in the emergency department, is admission-phase
+    activity and is not counted here. Pending alignment with the deploying country's national
+    HMIS definition.
   unit: count
   subject_grain: procedure
   disaggregations:
@@ -142,8 +144,10 @@ metrics:
     9203, which covers the emergency, triage and observation phases alike, rather than on a
     single encounter_type value -- all three are emergency care, and attribution by the
     segment active when the request was raised counts a request placed in the emergency
-    department even where the encounter was later retyped as an admission. Pending alignment
-    with the deploying country's national HMIS definition.
+    department even where the encounter was later retyped as an admission. A request raised
+    after that retype, while the patient still boards in the emergency department, is
+    admission-phase activity and is not counted here. Pending alignment with the deploying
+    country's national HMIS definition.
   unit: count
   subject_grain: imaging_request
   disaggregations:

@@ -13,8 +13,8 @@
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | MAUI-6907 |
 
-Canonical definition for `ed_imaging_request`: one row per imaging request raised while the
-patient was in the emergency department. The emergency-side counterpart of
+Canonical definition for `ed_imaging_request`: one row per imaging request raised during the
+emergency phase of an encounter. The emergency-side counterpart of
 `metric__opd_imaging_request`, built from it directly -- same as-of-segment pattern, same
 output shape, scoped to OMOP concept 9203 instead of the `clinic` source value.
 
@@ -107,6 +107,12 @@ therefore carries no `data_table_*` meta.
   and an imaging *request* are independent concepts. No such ambiguity exists at 9203 -- all
   three phases it covers are emergency care.
 
+  **Boarding is the admission phase.** Once the encounter is retyped as an admission its segment
+  is 9201, even while the patient is still in the ED awaiting a bed. A request raised then is not
+  counted here, and no all-settings imaging metric exists, so it is counted in no imaging
+  metric. For a boarding patient this metric's span therefore ends before the stay
+  `metric__emergency_stay` measures, which runs to physical departure (its BL-018).
+
 - **BL-004 (anchored at request time, not completion time):** the as-of segment match is
   evaluated against the request's own `requested_date`, with the first-segment clamp for a
   request raised before any segment began. Anchoring on the request rather than on a completion
@@ -155,7 +161,7 @@ therefore carries no `data_table_*` meta.
 | AC-006 | `value_numeric` is `not_null` and always `1` | BL-001 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-005 | `not_null` |
 | AC-008 | `imaging_type`, `imaging_type_code`, `imaging_area`, `is_completed`, `department` are `not_null` | BL-007, BL-010, BL-011 | `not_null` |
-| AC-009 | Only 9203 segments are counted, including on an encounter later retyped as an admission; `period_end` is gated on `is_completed` | BL-002, BL-003 | unit test `test_metric__ed_imaging_request_scope_and_completion` |
+| AC-009 | Only 9203 segments are counted, including on an encounter later retyped as an admission, and a request in the boarding (admission) segment is not; `period_end` is gated on `is_completed` | BL-002, BL-003 | unit test `test_metric__ed_imaging_request_scope_and_completion` |
 
 ## Registry entry
 
@@ -189,6 +195,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_imaging_request`, `k
 | `metric__opd_imaging_request` | The model this was built from -- identical shape, scoped to 9203 instead of the `clinic` source value; BL-003 explains why the scoping predicate differs in kind and not just in value |
 | `metric__ed_procedure` | Sibling ED metric over the procedure branch of the same clinical model, with the same 9203 scope |
 | `metric__emergency_visit` | The attendance population these requests sit within |
+| `metric__emergency_stay` | Measures the ED stay to physical departure, including boarding; this metric's emergency phase ends at the admission retype (BL-003) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
 ## Open questions

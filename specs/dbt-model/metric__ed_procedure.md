@@ -13,8 +13,8 @@
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | MAUI-6907 |
 
-Canonical definition for `ed_procedure`: one row per recorded procedure performed while the
-patient was in the emergency department. The emergency-side counterpart of
+Canonical definition for `ed_procedure`: one row per recorded procedure performed during the
+emergency phase of an encounter. The emergency-side counterpart of
 `metric__opd_procedure`, built from it directly -- same as-of-segment pattern, same output
 shape, scoped to OMOP concept 9203 instead of 9202.
 
@@ -88,8 +88,8 @@ therefore carries no `data_table_*` meta.
   therefore drops every admitted-via-ED patient, while `metric__emergency_visit` -- which every
   other card on the ED dashboard reads -- counts them. A procedures table built that way would
   disagree with the admission-rate card beside it, and would undercount worst for the sickest
-  patients. Scoping on the segment instead (BL-002) counts a procedure by where the patient
-  actually was when it happened, which is the question the card asks.
+  patients. Scoping on the segment instead (BL-002) counts a procedure by the phase of care it
+  happened in, so an attendance later admitted keeps the procedures of its emergency phase.
 
   This also follows the precedent `metric__opd_procedure` set (itself a decision, MAUI-6862):
   setting-scoped procedure metrics are kept apart rather than folded into one metric with an
@@ -106,6 +106,12 @@ therefore carries no `data_table_*` meta.
   for a procedure timestamped before any segment began. This model does not re-derive it. A
   procedure whose segment did not resolve carries a NULL `visit_detail_id` and is dropped by
   the inner join, rather than surfaced without a setting.
+
+  **Boarding is the admission phase.** Once the encounter is retyped as an admission its segment
+  is 9201, even while the patient is still in the ED awaiting a bed. A procedure performed then
+  is not counted here -- it is in `metric__procedure` under encounter type `admission`. For a
+  boarding patient this metric's span therefore ends before the stay `metric__emergency_stay`
+  measures, which runs to physical departure (its BL-018).
 
 - **BL-003 (registration + reporting period):** `metric_id` is the constant `'ed_procedure'`,
   registered in `documentations/metrics/emergency.yml`. `period_start` is the procedure date and
@@ -151,7 +157,7 @@ therefore carries no `data_table_*` meta.
 | AC-007 | `value_numeric` is `not_null` and always `1` | BL-003 | `not_null` + `accepted_values` |
 | AC-008 | `facility_id` is `not_null` | BL-006 | `not_null` |
 | AC-009 | `procedure`, `procedure_code`, `is_completed`, `department` are `not_null` | BL-005, BL-008 | `not_null` |
-| AC-010 | Only 9203 segments are counted, including on an encounter later retyped as an admission | BL-001, BL-002 | unit test `test_metric__ed_procedure_segment_scope` |
+| AC-010 | Only 9203 segments are counted, including on an encounter later retyped as an admission, and a procedure in the boarding (admission) segment is not | BL-001, BL-002 | unit test `test_metric__ed_procedure_segment_scope` |
 
 ## Registry entry
 
@@ -183,6 +189,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_procedure`, `kind: m
 | `metric__opd_procedure` | The model this was built from -- identical shape and as-of-segment pattern, scoped to 9202 instead of 9203 |
 | `metric__procedure` | The all-settings procedure metric, scoped by the encounter's own current type -- BL-001 explains why that scoping cannot answer the ED question |
 | `metric__emergency_visit` | The attendance population this metric's procedures sit within; both count the admitted-via-ED patient |
+| `metric__emergency_stay` | Measures the ED stay to physical departure, including boarding; this metric's emergency phase ends at the admission retype (BL-002) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
 ## Change log
