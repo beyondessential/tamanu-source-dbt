@@ -17,6 +17,16 @@ unit_tests:
       clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
       dropped rather than surfaced without a setting.
 
+      BL-007: r9 has no structured area, so its imaging_area falls back to its free-text notes,
+      of which only each chain's current revision counts. 'Chest' was edited to 'Abdomen', so
+      only 'Abdomen' appears. 'Left knee' is a second, separate note and still appears.
+      'Right knee' is a third, recorded in the same second as 'Left knee' but after it -- its id
+      sorts first, so created_datetime is what keeps the string in the order entered.
+      'Pelvis' was edited to 'Hip' within the same second -- the root's id sorts last, so the
+      created_datetime tie-break is what picks 'Hip', not the id. 'Spine' was edited into an
+      'other' note, so its current revision is no longer an area note and neither version
+      appears -- proving the chain is ranked before the note_type filter.
+
       The as-of match and the first-segment clamp are no longer this model's behaviour and
       are covered once, upstream, by
       test_clinical__procedure_occurrence_visit_detail_resolution -- so they are not
@@ -36,6 +46,9 @@ unit_tests:
           select 'r6', 'p1', '2026-01-03'::date, '2026-01-03 09:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', 'vd2b', null::varchar, 'ultrasound', 'Ultrasound', false
           union all
           select 'r7', 'p1', '2026-01-04'::date, '2026-01-04 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e7', null::varchar, null::varchar, 'mri', 'MRI', false
+          union all
+          -- BL-007: area from free-text notes only
+          select 'r9', 'p1', '2026-01-06'::date, '2026-01-06 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', 'vd2b', null::varchar, 'xRay', 'X-Ray', false
 
       - input: ref('imaging_results')
         format: sql
@@ -56,7 +69,27 @@ unit_tests:
 
       - input: ref('notes')
         format: sql
-        rows: "select null::varchar as record_id, null::varchar as record_type, null::varchar as note_type, null::varchar as content, null::timestamp as datetime limit 0"
+        rows: |
+          select 'n_chest' as id, '2026-01-06 08:00:00'::timestamp as datetime, '2026-01-06 08:00:00'::timestamp as created_datetime, 'Chest' as content, 'areaToBeImaged' as note_type, 'ImagingRequest' as record_type, 'r9' as record_id, null::varchar as updated_note_id
+          union all
+          -- the edit of n_chest
+          select 'n_abdomen', '2026-01-06 08:05:00'::timestamp, '2026-01-06 08:05:00'::timestamp, 'Abdomen', 'areaToBeImaged', 'ImagingRequest', 'r9', 'n_chest'
+          union all
+          -- a second, separate area note
+          select 'n_knee', '2026-01-06 08:10:00'::timestamp, '2026-01-06 08:10:00'::timestamp, 'Left knee', 'areaToBeImaged', 'ImagingRequest', 'r9', null::varchar
+          union all
+          -- a third, recorded in the same second as n_knee but after it, with an id sorting first
+          select 'a_rknee', '2026-01-06 08:10:00'::timestamp, '2026-01-06 08:10:00.500'::timestamp, 'Right knee', 'areaToBeImaged', 'ImagingRequest', 'r9', null::varchar
+          union all
+          -- edited within the same second: ties on datetime, and the root's id sorts last
+          select 'z_pelvis', '2026-01-06 08:20:00'::timestamp, '2026-01-06 08:20:00.100'::timestamp, 'Pelvis', 'areaToBeImaged', 'ImagingRequest', 'r9', null::varchar
+          union all
+          select 'a_hip', '2026-01-06 08:20:00'::timestamp, '2026-01-06 08:20:00.900'::timestamp, 'Hip', 'areaToBeImaged', 'ImagingRequest', 'r9', 'z_pelvis'
+          union all
+          -- an area note whose edit changed its type
+          select 'n_spine', '2026-01-06 08:30:00'::timestamp, '2026-01-06 08:30:00'::timestamp, 'Spine', 'areaToBeImaged', 'ImagingRequest', 'r9', null::varchar
+          union all
+          select 'n_spine_2', '2026-01-06 08:35:00'::timestamp, '2026-01-06 08:35:00'::timestamp, 'Spine, see notes', 'other', 'ImagingRequest', 'r9', 'n_spine'
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -87,3 +120,5 @@ unit_tests:
         select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
         union all
         select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
+        union all
+        select 'opd_imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded'

@@ -129,9 +129,11 @@ therefore carries no `data_table_*` meta.
 
 - **BL-007 (modality as name and code; area emitted raw):** `imaging_type_code` and
   `imaging_type` are the raw Tamanu modality value and its readable label; `imaging_area` is the
-  structured body area, falling back to the legacy free-text `areaToBeImaged` note where no
-  structured area exists. All three are coalesced to `'Not recorded'` -- never NULL, since
-  Tupaia's array filter drops NULL rows.
+  structured body area, falling back to the current revision of each legacy free-text
+  `areaToBeImaged` note where no structured area exists, as `notes__revision_rank` defines it,
+  so a superseded revision contributes nothing, joined in the order recorded. All three are
+  coalesced to `'Not recorded'` --
+  never NULL, since Tupaia's array filter drops NULL rows.
 
 - **BL-008 (age is the consumer's to band):** `age_years` is age in whole years at the request,
   emitted raw and unbanded. A measure, not a dimension: absent from the registry's
@@ -214,3 +216,4 @@ Registered in `documentations/metrics/emergency.yml` as `ed_imaging_request`, `k
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-24 | Maui team | Initial draft (MAUI-6907) |
+| 2026-09-25 | Maui team | `imaging_area`'s free-text fallback reads each note's current revision (`notes__revision_rank`) rather than every revision, so an edited note no longer contributes the text it replaced, and joins the notes in the order recorded with a same-second tie broken, so the string is stable (BL-007) |

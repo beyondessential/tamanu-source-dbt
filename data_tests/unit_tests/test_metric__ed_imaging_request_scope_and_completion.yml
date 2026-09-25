@@ -28,6 +28,12 @@ unit_tests:
       the ED location -- boarding. Its segment is the 9201 admission segment, so it is
       admission-phase activity and is not counted (BL-003).
 
+      BL-007: r9 has no structured area, so its imaging_area falls back to its free-text note,
+      which was edited from 'Chest' to 'Abdomen' -- only the current revision appears. The full
+      set of revision cases is covered once, in
+      test_metric__opd_imaging_request_scope_and_completion, since both models rank through
+      notes__revision_rank.
+
       The as-of match and the first-segment clamp are not this model's behaviour and are
       covered once, upstream, by
       test_clinical__procedure_occurrence_visit_detail_resolution.
@@ -52,6 +58,9 @@ unit_tests:
           union all
           -- BL-003: boarding -- admitted, still at the ED location
           select 'r10', 'p1', '2026-01-05'::date, '2026-01-05 16:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e8', 'vd8b', null::varchar, 'ctScan', 'CT Scan', false
+          union all
+          -- BL-007: area from a free-text note that was edited
+          select 'r9', 'p1', '2026-01-06'::date, '2026-01-06 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e1', 'vd2b', null::varchar, 'xRay', 'X-Ray', false
 
       - input: ref('imaging_results')
         format: sql
@@ -74,7 +83,11 @@ unit_tests:
 
       - input: ref('notes')
         format: sql
-        rows: "select null::varchar as record_id, null::varchar as record_type, null::varchar as note_type, null::varchar as content, null::timestamp as datetime limit 0"
+        rows: |
+          select 'n_chest' as id, '2026-01-06 08:00:00'::timestamp as datetime, '2026-01-06 08:00:00'::timestamp as created_datetime, 'Chest' as content, 'areaToBeImaged' as note_type, 'ImagingRequest' as record_type, 'r9' as record_id, null::varchar as updated_note_id
+          union all
+          -- the edit of n_chest
+          select 'n_abdomen', '2026-01-06 08:05:00'::timestamp, '2026-01-06 08:05:00'::timestamp, 'Abdomen', 'areaToBeImaged', 'ImagingRequest', 'r9', 'n_chest'
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -114,3 +127,5 @@ unit_tests:
         select 'ed_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
         union all
         select 'ed_imaging_request', null::text, 'r8', '2026-01-05 09:00:00'::timestamp, '2026-01-05 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Emergency'
+        union all
+        select 'ed_imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'X-Ray', 'xRay', 'Abdomen', 30, 'Not recorded'
