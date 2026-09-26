@@ -128,5 +128,18 @@ where trim(d) not in (
         'imaging_type',
         'imaging_type_code',
         -- opd_imaging_request's aggregated body area/study area
-        'imaging_area'
+        'imaging_area',
+        -- department, added to opd_visit/opd_diagnosis/opd_procedure/opd_imaging_request/
+        -- pharmacy_order/inpatient_admission/lab_request (MAUI-6909): the encounter's or
+        -- qualifying segment's own department (e.g. Dental), resolved to a name so a
+        -- consumer scopes to one department via metric_filters.
+        'department',
+        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909): the encounter's or
+        -- admission segment's own clinician, resolved to a name for a "by clinician" card.
+        'clinician',
+        -- lab_request's recorded lab test type, as code and as readable label. Emitted
+        -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code
+        -- use (MAUI-6909).
+        'lab_test_code',
+        'lab_test'
     )
