@@ -17,18 +17,14 @@ models:
       pii: false
       classification: internal
     data_tests:
-      # BL-001: grain is (metric_id, subject_id, period_start), not (metric_id, subject_id)
-      # like every sibling metric's own AC-001 -- a segment's own start time is what
-      # distinguishes it from another segment of the same visit. department is deliberately
-      # NOT part of this key: a visit that leaves and re-enters the same department produces
-      # two rows sharing a department value, distinguished only by period_start.
+      # BL-001: grain is (metric_id, segment_id), not (metric_id, subject_id) like every
+      # sibling metric's own AC-001 -- subject_id repeats once per segment of the visit.
       - dbt_utils.unique_combination_of_columns:
           name: ac_001_metric__opd_visit_department_grain
           arguments:
             combination_of_columns:
               - metric_id
-              - subject_id
-              - period_start
+              - segment_id
           config:
             severity: error
       # AC-004: period_end, where present, is at or after period_start.
@@ -67,6 +63,12 @@ models:
         data_tests:
           - not_null:
               name: ac_005_metric__opd_visit_department_subject_id_not_null
+      - name: segment_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__opd_visit_department__segment_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_018_metric__opd_visit_department_segment_id_not_null
       - name: period_start
         data_type: date
         description: "{{ doc('metric__opd_visit_department__period_start') }}"
