@@ -149,3 +149,12 @@ models:
           Age in whole years at the diagnosis. Not banded -- an age classification is a
           presentation choice a deployment may set differently, so the consumer's data table
           bands it. A measure, not a dimension: absent from the registry's disaggregations.
+      - name: department
+        data_type: text
+        description: >-
+          The qualifying segment's own department (e.g. Dental), resolved to a name so a
+          consumer scopes to one department by metric_filters on a readable value (BL-008).
+          Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_014_metric__opd_diagnosis_department_not_null
