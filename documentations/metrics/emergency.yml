@@ -104,7 +104,8 @@ metrics:
     emergency department is counted here even where the encounter was later retyped as an
     admission, which an encounter-type filter would miss. A procedure performed after that
     retype, while the patient still boards in the emergency department, is admission-phase
-    activity and is not counted here. Pending alignment with the deploying country's national
+    activity and is not counted here -- except one recorded without a start time on the day of
+    arrival, which is dated at midnight and attributed to the emergency phase. Pending alignment with the deploying country's national
     HMIS definition.
   unit: count
   subject_grain: procedure
