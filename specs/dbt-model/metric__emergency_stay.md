@@ -247,4 +247,4 @@ models.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-26 | Claude | BL-018: departure is the first move to another location or the encounter end. `planned_location_start_time` is no longer a departure signal -- Tamanu sets it when a bed is reserved, not when the move happens, so it had ended a boarding patient's stay at the booking. Added OQ-002 (MAUI-6907) |
+| 2026-09-26 | Maui team | BL-018: departure is the first move to another location or the encounter end. `planned_location_start_time` is no longer a departure signal -- Tamanu sets it when a bed is reserved, not when the move happens, so it had ended a boarding patient's stay at the booking. Added OQ-002 (MAUI-6907) |

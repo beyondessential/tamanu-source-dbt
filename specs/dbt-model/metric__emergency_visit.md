@@ -369,5 +369,5 @@ them from configuration alone.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-24 | Claude | Added `clinician`, the intake segment's own clinician resolved to a name (BL-020), so an ED dashboard can rank attendances by clinician (MAUI-6907) |
+| 2026-09-24 | Maui team | Added `clinician`, the intake segment's own clinician resolved to a name (BL-020), so an ED dashboard can rank attendances by clinician (MAUI-6907) |
 | 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |

@@ -198,4 +198,4 @@ Registered in `documentations/metrics/emergency.yml` as `ed_procedure`, `kind: m
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-24 | Claude | Initial draft (MAUI-6907) |
+| 2026-09-24 | Maui team | Initial draft (MAUI-6907) |
