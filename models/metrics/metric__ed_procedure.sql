@@ -37,6 +37,37 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
+-- BL-002: the segment active at the procedure's own timestamp, not the encounter's first or
+-- current segment. distinct on picks the latest segment that had already started by
+-- procedure_datetime, tie-broken on visit_detail_id -- the same as-of match
+-- metric__opd_procedure uses.
+--
+-- BL-002: clamped to the first segment when the procedure predates every segment -- a
+-- procedure belongs to its own encounter, so a segment recorded starting after it (a
+-- data-timing artefact, not a real ordering) should not exclude it. No join condition on the
+-- timestamp: every encounter has at least one segment (clinical__visit_detail BL-005), so the
+-- join cannot drop a row -- the order by picks the as-of segment where one qualifies, and the
+-- earliest segment otherwise. An encounter with no segment at all has no row here, and its
+-- procedures are dropped by the inner join below.
+procedure_segment as (
+    select distinct on (po.procedure_occurrence_id)
+        po.procedure_occurrence_id,
+        vd.visit_detail_concept_id,
+        -- BL-005
+        vd.department_id
+    from procedure_occurrence po
+    join visit_detail vd
+        on vd.visit_occurrence_id = po.visit_occurrence_id
+    order by
+        po.procedure_occurrence_id,
+        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
+        case when vd.visit_detail_start_datetime <= po.procedure_datetime
+             then vd.visit_detail_start_datetime end desc,
+        case when vd.visit_detail_start_datetime > po.procedure_datetime
+             then vd.visit_detail_start_datetime end asc,
+        vd.visit_detail_id desc
+),
+
 procedures as (
     select
         po.procedure_occurrence_id,
@@ -55,13 +86,9 @@ procedures as (
         -- BL-005
         coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
-    -- BL-002: the segment the procedure happened in, resolved once by
-    -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
-    -- match against the procedure's own timestamp, with the first-segment clamp for a
-    -- procedure timestamped before any segment began. A procedure whose segment did not
-    -- resolve carries a NULL FK and is dropped by this inner join.
-    join visit_detail vd
-        on vd.visit_detail_id = po.visit_detail_id
+    -- BL-002: the segment the procedure happened in, resolved above
+    join procedure_segment ps
+        on ps.procedure_occurrence_id = po.procedure_occurrence_id
     join person pr
         on pr.person_id = po.person_id
     -- BL-006: inner join -- a procedure's location resolving to nothing is an anomaly,
@@ -70,11 +97,11 @@ procedures as (
     join locations loc
         on loc.id = po.location_id
     left join departments dept
-        on dept.id = vd.department_id
+        on dept.id = ps.department_id
     -- BL-002: the emergency phase only. A procedure while the patient boards falls in the
     -- admission segment and is not counted -- unless it has no start time, which BL-002
     -- records as a known limitation.
-    where vd.visit_detail_concept_id = 9203
+    where ps.visit_detail_concept_id = 9203
 )
 
 -- BL-003: D5 wide format. value_boolean is unused by this metric. period_granularity is 'day',

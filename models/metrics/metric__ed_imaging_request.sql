@@ -93,6 +93,40 @@ imaging_areas as (
     group by po.procedure_occurrence_id, n.imaging_area
 ),
 
+-- BL-003, BL-004: the visit_detail segment active at the moment each request was raised --
+-- the latest segment whose start is at or before requested_date, tie-broken on
+-- visit_detail_id descending on a same-instant tie, the same as-of match
+-- metric__opd_imaging_request uses. Anchored on requested_date rather than a completion event
+-- so a still-open or cancelled request (no completion timestamp) still resolves to a segment.
+-- Also carries the segment's own location, used for facility (BL-005), and department
+-- (BL-011).
+--
+-- BL-004: clamped to the first segment when the request predates every segment -- a request
+-- belongs to its own encounter, so a segment recorded starting after it (a data-timing
+-- artefact, not a real ordering) should not exclude it. No join condition on the timestamp:
+-- every encounter has at least one segment (clinical__visit_detail BL-005), so the join
+-- cannot drop a row -- the order by picks the as-of segment where one qualifies, and the
+-- earliest segment otherwise.
+active_segment_at_request as (
+    select distinct on (po.procedure_occurrence_id)
+        po.procedure_occurrence_id as imaging_request_id,
+        vd.person_id,
+        vd.visit_detail_concept_id,
+        vd.care_site_id,
+        vd.department_id
+    from procedure_occurrence po
+    join visit_detail vd
+        on vd.visit_occurrence_id = po.visit_occurrence_id
+    order by
+        po.procedure_occurrence_id,
+        (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
+        case when vd.visit_detail_start_datetime <= po.procedure_datetime
+             then vd.visit_detail_start_datetime end desc,
+        case when vd.visit_detail_start_datetime > po.procedure_datetime
+             then vd.visit_detail_start_datetime end asc,
+        vd.visit_detail_id desc
+),
+
 requests as (
     select
         po.procedure_occurrence_id as imaging_request_id,
@@ -113,32 +147,28 @@ requests as (
         -- BL-011
         coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
-    -- BL-003, BL-004: the segment the request was raised in, resolved once by
-    -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
-    -- match against the request's own requested_date, with the first-segment clamp for a
-    -- request raised before any segment began. Anchoring on the request rather than a
-    -- completion event is what lets a still-open or cancelled request resolve at all.
-    join visit_detail vd
-        on vd.visit_detail_id = po.visit_detail_id
+    -- BL-003, BL-004: the segment the request was raised in, resolved above
+    join active_segment_at_request seg
+        on seg.imaging_request_id = po.procedure_occurrence_id
     join person pr
-        on pr.person_id = vd.person_id
+        on pr.person_id = seg.person_id
     -- inner join: the segment's own location, not the request's location_group_id (BL-005) --
     -- excluded rather than attributed to a NULL facility, the same "excluded rather than
     -- guessed" convention metric__opd_procedure uses for its own location join.
     join locations loc
-        on loc.id = vd.care_site_id
+        on loc.id = seg.care_site_id
     left join completions c
         on c.imaging_request_id = po.procedure_occurrence_id
     left join imaging_areas areas
         on areas.imaging_request_id = po.procedure_occurrence_id
     left join departments dept
-        on dept.id = vd.department_id
+        on dept.id = seg.department_id
     -- BL-003: OMOP concept 9203 ('Emergency Room Visit'), which covers the emergency, triage
     -- and observation phases -- the same population int__emergency_visits takes its intake
     -- segment from. Scoped on the concept rather than on one source value, unlike the
     -- clinic-only opd counterpart, because all three phases are emergency care. A request
     -- raised while the patient boards falls in the admission segment and is not counted.
-    where vd.visit_detail_concept_id = 9203
+    where seg.visit_detail_concept_id = 9203
 )
 
 -- D5 wide format: value_boolean is unused by this metric.
