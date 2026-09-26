@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware -- `table` on `analytics*`, `view` everywhere else (BL-007) |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | MAUI-6907 |
