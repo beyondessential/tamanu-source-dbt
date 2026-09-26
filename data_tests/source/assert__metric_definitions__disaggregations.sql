@@ -134,8 +134,9 @@ where trim(d) not in (
         -- qualifying segment's own department (e.g. Dental), resolved to a name so a
         -- consumer scopes to one department via metric_filters.
         'department',
-        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909): the encounter's or
-        -- admission segment's own clinician, resolved to a name for a "by clinician" card.
+        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
+        -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
+        -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
         -- lab_request's recorded lab test type, as code and as readable label. Emitted
         -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code

@@ -29,9 +29,10 @@ metrics:
     746081). Same population as ed_visit - the distinction is framing, not inclusion: ed_visit measures
     total length of stay to hospital discharge, ed_stay measures the emergency department portion.
     AIHW registers no length-of-stay data element, so the emitted duration is a BES composition over
-    the AIHW concept. Divergence: Tamanu records the administrative transition
-    out of the emergency department phase, which for an admitted patient can precede physical departure
-    from the department. Pending alignment with the deploying country's national HMIS definition.
+    the AIHW concept. Divergence: physical departure is taken from the first recorded change of
+    location, which may lag the patient leaving and also counts a move between two locations inside
+    the emergency department. Pending alignment with the deploying country's national HMIS
+    definition.
   unit: count
   subject_grain: visit
   disaggregations:
@@ -71,7 +72,94 @@ metrics:
   - triage_score
   - ed_start__hour
   - is_admitted
+  - clinician
   variant_of: null
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__emergency_visit.md
+
+- metric_id: ed_procedure
+  kind: metric
+  name: ED procedures
+  description: >-
+    Clinical procedures performed while the encounter's active segment -- the segment in
+    effect at the procedure's own time, not the encounter's first or current one -- is an
+    emergency, triage or observation phase. One row per procedure.
+  numerator_description: >-
+    Recorded procedures whose active segment at the time of the procedure carries OMOP
+    visit concept 9203 (Emergency Room Visit), counted on the date performed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of recorded procedures scoped to the emergency setting, the emergency-side
+    counterpart of opd_procedure. No external body registers a single procedure-count
+    indicator -- procedure classifications (e.g. ICD-10-PCS, CPT) code what a procedure is,
+    not how a deployment should count procedure activity, and deployments differ in what
+    they code procedures with. This metric emits the procedure as recorded and leaves any
+    grouping to the consumer, the same approach metric__opd_procedure takes. Attribution is
+    by the segment active when the procedure happened, matching the OMOP CDM's own
+    PROCEDURE_OCCURRENCE.visit_detail_id convention -- so a procedure performed in the
+    emergency department is counted here even where the encounter was later retyped as an
+    admission, which an encounter-type filter would miss. A procedure performed after that
+    retype, while the patient still boards in the emergency department, is admission-phase
+    activity and is not counted here -- except one recorded without a start time on the day of
+    arrival, which is dated at midnight and attributed to the emergency phase. Pending alignment with the deploying country's national
+    HMIS definition.
+  unit: count
+  subject_grain: procedure
+  disaggregations:
+  - facility_id
+  - sex
+  - procedure
+  - procedure_code
+  - is_completed
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ed_procedure.md
+
+- metric_id: ed_imaging_request
+  kind: metric
+  name: ED imaging requests
+  description: >-
+    Diagnostic imaging requests raised while the patient's active segment -- the segment in
+    effect at the request's own time, not the encounter's first or current one -- is an
+    emergency, triage or observation phase. One row per request, from the moment it is
+    raised to the moment it is marked complete.
+  numerator_description: >-
+    Imaging requests whose active segment at the request's own requested_date carries OMOP
+    visit concept 9203 (Emergency Room Visit), restricted to status pending, in progress,
+    completed, or cancelled -- excluding deleted and entered-in-error records
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of imaging requests scoped to the emergency setting, the emergency-side
+    counterpart of opd_imaging_request. No external body registers this indicator -- AIHW's
+    diagnostic imaging reporting explicitly names request completion, cancellation,
+    turnaround time and body-area breakdown as gaps it cannot report. Scoped on OMOP concept
+    9203, which covers the emergency, triage and observation phases alike, rather than on a
+    single encounter_type value -- all three are emergency care, and attribution by the
+    segment active when the request was raised counts a request placed in the emergency
+    department even where the encounter was later retyped as an admission. A request raised
+    after that retype, while the patient still boards in the emergency department, is
+    admission-phase activity and is not counted here. Pending alignment with the deploying
+    country's national HMIS definition.
+  unit: count
+  subject_grain: imaging_request
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - imaging_type
+  - imaging_type_code
+  - imaging_area
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ed_imaging_request.md
