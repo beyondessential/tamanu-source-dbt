@@ -51,9 +51,14 @@ consumer counts visits from this metric -- and even that is only meaningful once
 department, since an unscoped count still double-counts a visit that touched several.
 {% enddocs %}
 
+{% docs metric__opd_visit_department__segment_id %}
+Identifier of the visit segment this row describes. Unique within this metric: one row per
+segment, and the way to tell apart two segments of the same visit.
+{% enddocs %}
+
 {% docs metric__opd_visit_department__period_start %}
-Calendar day this segment started -- not the visit's own intake date. A visit with three
-segments carries three different period_start values, one per row.
+Calendar day this segment started -- not the visit's own intake date. Segments of one visit
+that start on the same day share a period_start.
 {% enddocs %}
 
 {% docs metric__opd_visit_department__period_end %}
