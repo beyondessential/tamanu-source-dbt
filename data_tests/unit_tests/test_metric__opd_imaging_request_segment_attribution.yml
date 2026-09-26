@@ -81,13 +81,17 @@ unit_tests:
         rows: |
           select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
 
+      - input: ref('departments')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
+
     expect:
       format: sql
       rows: |
-        select 'opd_imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years
+        select 'opd_imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
         union all
-        select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30
+        select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30
+        select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'opd_imaging_request', null::text, 'r7', '2026-01-04 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30
+        select 'opd_imaging_request', null::text, 'r7', '2026-01-04 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'

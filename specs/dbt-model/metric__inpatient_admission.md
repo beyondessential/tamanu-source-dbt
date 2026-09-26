@@ -68,7 +68,7 @@ model unrestricted (BL-010).
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation/measure columns.
+D5 wide format, plus eight disaggregation/measure columns.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -90,6 +90,7 @@ D5 wide format, plus seven disaggregation/measure columns.
 | `discharge_disposition` | text | `'Not recorded'` or the disposition name (BL-014). Always populated (AC-014) |
 | `length_of_stay__minutes` | numeric | Admission to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
 | `is_readmission_within_30_days` | boolean | True where the same patient's immediately preceding admission discharged no more than 30 days before this one started (BL-016). Always populated (AC-017) |
+| `clinician` | text | The admission segment's own clinician, resolved to a name (BL-017). Never NULL |
 
 ## Business logic
 
@@ -191,6 +192,10 @@ D5 wide format, plus seven disaggregation/measure columns.
   NULL, for the same reason as BL-005 and BL-012) where there is no previous admission, the
   previous one is still open (no `visit_end__datetime` to measure the gap from), or the two
   overlap (a data-entry anomaly, not a readmission).
+- **BL-017 (clinician attribution):** `clinician` is the admission segment's own
+  `provider_id`, resolved to a name through `ref__provider` for an "admissions by clinician"
+  card. Never NULL -- falls back to `'Not recorded'`, the same convention `admission_source`
+  (BL-012) and `discharge_disposition` (BL-014) use (MAUI-6909).
 
 ## Acceptance criteria
 
@@ -213,12 +218,13 @@ D5 wide format, plus seven disaggregation/measure columns.
 | AC-015 | `length_of_stay__minutes` is non-negative where present | BL-015 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | The D5 projection over the shared base: `period_end` is the encounter end, the diagnosis code is grouped to its chapter here, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_016_metric__inpatient_admission_projection` |
 | AC-017 | `is_readmission_within_30_days` is `not_null` | BL-016 | `not_null` |
+| AC-018 | `clinician` is `not_null` | BL-017 | `not_null` |
 
 ## Registry entry
 
 One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`,
 `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days`.
+`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician`.
 
 ## Dependencies
 
@@ -234,6 +240,7 @@ One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`
 | `discharges` | `bases/` | Discharge disposition (BL-014) |
 | `reference_data` | `bases/` | Referral source and disposition names (BL-012, BL-014) |
 | `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping (BL-013) |
+| `ref__provider` | `ref/` | Clinician name of the admission segment's own provider (BL-017) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers

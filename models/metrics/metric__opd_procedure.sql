@@ -31,6 +31,13 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-009: department, resolved to a name for metric_filters scoping. Unlike facility_id
+-- (the procedure's own location), department follows the resolved segment instead --
+-- bases/locations carries no department_id.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-003: the segment active at the procedure's own timestamp, not the encounter's first or
 -- current segment. distinct on picks the latest segment that had already started by
 -- procedure_datetime; tie-broken on visit_detail_id, the same tiebreak
@@ -47,7 +54,9 @@ locations as (
 procedure_segment as (
     select distinct on (po.procedure_occurrence_id)
         po.procedure_occurrence_id,
-        vd.visit_detail_concept_id
+        vd.visit_detail_concept_id,
+        -- BL-009
+        vd.department_id
     from procedure_occurrence po
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
@@ -75,7 +84,9 @@ procedures as (
         ) as procedure,
         po.is_completed,
         -- age in whole years at the procedure; the NULL rule lives in the macro
-        {{ age_years('po.procedure_date', 'pr') }} as age_years
+        {{ age_years('po.procedure_date', 'pr') }} as age_years,
+        -- BL-009
+        coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     join procedure_segment ps
         on ps.procedure_occurrence_id = po.procedure_occurrence_id
@@ -85,6 +96,8 @@ procedures as (
     -- than attributed to a NULL facility -- the same convention metric__procedure uses
     join locations loc
         on loc.id = po.location_id
+    left join departments dept
+        on dept.id = ps.department_id
     where ps.visit_detail_concept_id = 9202
 )
 
@@ -106,5 +119,6 @@ select
     procedure,
     procedure_code,
     is_completed,
-    age_years
+    age_years,
+    department
 from procedures
