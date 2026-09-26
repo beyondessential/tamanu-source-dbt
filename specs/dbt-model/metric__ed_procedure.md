@@ -113,8 +113,10 @@ therefore carries no `data_table_*` meta.
   boarding patient this metric's span therefore ends before the stay `metric__emergency_stay`
   measures, which runs to physical departure (its BL-018).
 
-- **BL-003 (registration + reporting period):** `metric_id` is the constant `'ed_procedure'`,
-  registered in `documentations/metrics/emergency.yml`. `period_start` is the procedure date and
+- **BL-003 (registration, count and reporting period):** `metric_id` is the constant
+  `'ed_procedure'`, registered in `documentations/metrics/emergency.yml`. There is one row per
+  procedure, and `value_numeric` is the constant `1`, so a consumer sums it to count procedures
+  at any grain. `period_start` is the procedure date and
   `period_end` is hardcoded NULL -- a procedure is point-in-time, so there is no closing date to
   emit, the same convention `metric__opd_procedure`/`metric__pharmacy_order` use.
   `period_granularity` is `'day'`.
@@ -148,7 +150,7 @@ therefore carries no `data_table_*` meta.
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | One row per `(metric_id, subject_id)` | grain, BL-001 | `dbt_utils.unique_combination_of_columns` (`error`) |
+| AC-001 | One row per `(metric_id, subject_id)` | grain, BL-003 | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is `not_null` and always `ed_procedure` | BL-003 | `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-003 | `relationships` (`error`) |
 | AC-004 | `period_start` is `not_null` | BL-003 | `not_null` |

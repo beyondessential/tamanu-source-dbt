@@ -43,14 +43,14 @@ procedures as (
         po.procedure_date,
         loc.facility_id,
         pr.gender_source_value as sex,
-        -- the procedure as recorded, coalesced so the column is never NULL -- Tupaia exposes
-        -- these as array filters, and an array filter drops a NULL row
+        -- BL-008: the procedure as recorded, coalesced so the column is never NULL -- Tupaia
+        -- exposes these as array filters, and an array filter drops a NULL row
         coalesce(po.procedure_source_value, 'Not recorded') as procedure_code,
         coalesce(
             po.procedure_source_name, po.procedure_source_value, 'Not recorded'
         ) as procedure,
         po.is_completed,
-        -- age in whole years at the procedure; the NULL rule lives in the macro
+        -- BL-008: age in whole years at the procedure -- the NULL rule lives in the macro
         {{ age_years('po.procedure_date', 'pr') }} as age_years,
         -- BL-005
         coalesce(dept.name, 'Not recorded') as department
@@ -64,8 +64,9 @@ procedures as (
         on vd.visit_detail_id = po.visit_detail_id
     join person pr
         on pr.person_id = po.person_id
-    -- inner join: a procedure's location resolving to nothing is an anomaly, excluded rather
-    -- than attributed to a NULL facility -- the same convention metric__opd_procedure uses
+    -- BL-006: inner join -- a procedure's location resolving to nothing is an anomaly,
+    -- excluded rather than attributed to a NULL facility, the same convention
+    -- metric__opd_procedure uses
     join locations loc
         on loc.id = po.location_id
     left join departments dept
@@ -75,8 +76,8 @@ procedures as (
     where vd.visit_detail_concept_id = 9203
 )
 
--- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
--- procedure is recorded against a date, not a timestamp with a period to close.
+-- BL-003: D5 wide format. value_boolean is unused by this metric. period_granularity is 'day',
+-- since a procedure is recorded against a date, not a timestamp with a period to close.
 select
     'ed_procedure'::text as metric_id,
     null::text as variant_id,
@@ -84,8 +85,8 @@ select
     procedure_date as period_start,
     null::date as period_end,
     'day'::text as period_granularity,
-    -- one procedure per row, so the count contribution is always 1. Additive, so a data table
-    -- summing it is correct at every grain.
+    -- BL-003: one procedure per row, so the count contribution is always 1. Additive, so a
+    -- data table summing it is correct at every grain.
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     facility_id,

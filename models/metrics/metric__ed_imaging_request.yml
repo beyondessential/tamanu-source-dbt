@@ -132,14 +132,6 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__ed_imaging_request_is_completed_not_null
-      - name: imaging_type
-        data_type: text
-        description: >-
-          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
-          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
-        data_tests:
-          - not_null:
-              name: ac_metric__ed_imaging_request_imaging_type_not_null
       - name: imaging_type_code
         data_type: text
         description: >-
@@ -149,6 +141,14 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__ed_imaging_request_imaging_type_code_not_null
+      - name: imaging_type
+        data_type: text
+        description: >-
+          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
+          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__ed_imaging_request_imaging_type_not_null
       - name: imaging_area
         data_type: text
         description: >-
@@ -167,9 +167,9 @@ models:
       - name: department
         data_type: text
         description: >-
-          The as-of segment's own department (e.g. Dental), resolved to a name so a consumer
-          scopes to one department by metric_filters on a readable value (BL-011). Never
-          NULL -- falls back to 'Not recorded'.
+          The department the patient was under when the request was raised, resolved to a
+          name so a consumer can scope to one department. Never NULL -- falls back to
+          'Not recorded'.
         data_tests:
           - not_null:
               name: ac_metric__ed_imaging_request_department_not_null

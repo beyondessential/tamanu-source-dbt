@@ -13,7 +13,7 @@
 -- directly -- the same clinical layer metric__procedure and metric__opd_procedure build on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model does
 -- not re-filter status. Facility and completion still need bases/-level detail the clinical
--- model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
+-- model doesn't carry (BL-005, BL-002) -- see those clauses for what and why.
 --
 -- The registry carries the definition; this model is its implementation.
 
@@ -150,7 +150,7 @@ select
     -- BL-002: NULL unless the request has completed.
     completed_datetime as period_end,
     'minute'::text as period_granularity,
-    -- BL-001: one request per row, so the count contribution is always 1. Additive, so a
+    -- BL-009: one request per row, so the count contribution is always 1. Additive, so a
     -- data table summing it is correct at every grain.
     1::numeric as value_numeric,
     null::boolean as value_boolean,

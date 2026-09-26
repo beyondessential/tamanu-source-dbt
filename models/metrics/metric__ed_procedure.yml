@@ -144,9 +144,9 @@ models:
       - name: department
         data_type: text
         description: >-
-          The qualifying as-of segment's own department, resolved to a name so a consumer
-          scopes to one department by metric_filters on a readable value (BL-005). Never NULL
-          -- falls back to 'Not recorded'.
+          The department the patient was under when the procedure was performed, resolved to
+          a name so a consumer can scope to one department. Never NULL -- falls back to
+          'Not recorded'.
         data_tests:
           - not_null:
               name: ac_metric__ed_procedure_department_not_null

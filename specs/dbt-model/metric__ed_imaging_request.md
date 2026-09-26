@@ -137,6 +137,10 @@ therefore carries no `data_table_*` meta.
   emitted raw and unbanded. A measure, not a dimension: absent from the registry's
   disaggregations.
 
+- **BL-009 (registration and count):** `metric_id` is the constant `'ed_imaging_request'`,
+  registered in `documentations/metrics/emergency.yml`. There is one row per request, and
+  `value_numeric` is the constant `1`, so a consumer sums it to count requests at any grain.
+
 - **BL-010 (sourced from the clinical layer, not `bases/imaging_requests` directly):** the
   population is `clinical__procedure_occurrence`'s imaging branch
   (`procedure_type_source_value = 'imaging request'`), which already excludes deleted and
@@ -153,12 +157,12 @@ therefore carries no `data_table_*` meta.
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | One row per `(metric_id, subject_id)` | grain, BL-001 | `dbt_utils.unique_combination_of_columns` (`error`) |
-| AC-002 | `metric_id` is `not_null` and always `ed_imaging_request` | BL-001 | `not_null` + `accepted_values` |
-| AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | `relationships` (`error`) |
+| AC-001 | One row per `(metric_id, subject_id)` | grain, BL-009 | `dbt_utils.unique_combination_of_columns` (`error`) |
+| AC-002 | `metric_id` is `not_null` and always `ed_imaging_request` | BL-009 | `not_null` + `accepted_values` |
+| AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-009 | `relationships` (`error`) |
 | AC-004 | `period_start` is `not_null` | BL-002 | `not_null` |
 | AC-005 | `period_granularity` is `not_null` and always `'minute'` | BL-002 | `not_null` + `accepted_values` |
-| AC-006 | `value_numeric` is `not_null` and always `1` | BL-001 | `not_null` + `accepted_values` |
+| AC-006 | `value_numeric` is `not_null` and always `1` | BL-009 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-005 | `not_null` |
 | AC-008 | `imaging_type`, `imaging_type_code`, `imaging_area`, `is_completed`, `department` are `not_null` | BL-007, BL-010, BL-011 | `not_null` |
 | AC-009 | Only 9203 segments are counted, including on an encounter later retyped as an admission, and a request in the boarding (admission) segment is not; `period_end` is gated on `is_completed` | BL-002, BL-003 | unit test `test_metric__ed_imaging_request_scope_and_completion` |
