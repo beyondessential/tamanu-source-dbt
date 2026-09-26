@@ -1,0 +1,88 @@
+# Diagnostic imaging request metrics, across and within encounter settings.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: imaging_request
+  kind: metric
+  name: Imaging requests
+  description: >-
+    Diagnostic imaging requests raised on a patient, in any encounter setting. One row per
+    request, from the moment it is raised to the moment it is marked complete.
+  numerator_description: >-
+    Recorded imaging requests, counted on the requested date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of imaging requests, which no external body registers as a single indicator --
+    AIHW's own diagnostic-imaging reporting explicitly names request completion,
+    cancellation, turnaround time and body-area breakdown as gaps it cannot report. This
+    metric carries no encounter-setting restriction at all -- encounter_type is emitted as a
+    disaggregation (the encounter's own whole-visit type) so a consumer scopes to one
+    setting, or none, from this single view, the same approach metric__procedure takes for
+    procedures. The segment-precise, single-setting siblings opd_imaging_request and
+    ipd_imaging_request remain separate metrics because they answer a genuinely different
+    question -- the segment active at the request's own time, not the encounter's whole
+    type -- not because this metric supersedes them. Pending alignment with the deploying
+    country's national HMIS definition.
+  unit: count
+  subject_grain: imaging_request
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - sex
+  - is_completed
+  - imaging_type
+  - imaging_type_code
+  - imaging_area
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__imaging_request.md
+
+- metric_id: ipd_imaging_request
+  kind: metric
+  name: IPD imaging requests
+  description: >-
+    Diagnostic imaging requests raised while the patient was in an admission (inpatient)
+    encounter. One row per request, from the moment it is raised to the moment it is marked
+    complete.
+  numerator_description: >-
+    Imaging requests whose active segment at the request's own requested_date carries
+    encounter_type 'admission', restricted to status pending, in progress, completed, or
+    cancelled -- excluding deleted and entered-in-error records
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of imaging requests scoped to the inpatient admission setting -- the inpatient
+    counterpart to opd_imaging_request, built with the exact same as-of segment-matching
+    logic used there, scoped to admission (OMOP concept 9201) instead of clinic. Unlike
+    opd_imaging_request's clinic-only scope, which is narrower than the full OMOP concept
+    9202 it could have used, admission is the single Tamanu encounter_type mapping to 9201,
+    so this metric already is the full 9201 definition rather than a narrowed subset of it.
+    No external body registers this indicator -- AIHW's diagnostic imaging reporting
+    explicitly names request completion, cancellation, turnaround time and body-area
+    breakdown as gaps it cannot report. Pending alignment with the deploying country's
+    national HMIS definition.
+  unit: count
+  subject_grain: imaging_request
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - imaging_type
+  - imaging_type_code
+  - imaging_area
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ipd_imaging_request.md
