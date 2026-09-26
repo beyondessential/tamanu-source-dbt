@@ -50,6 +50,11 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-011: the as-of segment's own department, resolved to a name for metric_filters scoping.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-002: one completion timestamp per request -- the earliest recorded result, the same
 -- rule macros/datasets/imaging_requests.sql uses for ds__imaging_requests.completed_datetime.
 completions as (
@@ -107,7 +112,9 @@ active_segment_at_request as (
         po.procedure_occurrence_id as imaging_request_id,
         vd.person_id,
         vd.visit_detail_source_value,
-        vd.care_site_id
+        vd.care_site_id,
+        -- BL-011
+        vd.department_id
     from procedure_occurrence po
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
@@ -137,7 +144,9 @@ requests as (
         po.is_completed,
         po.procedure_source_value as imaging_type_code_raw,
         po.procedure_source_name as imaging_type_raw,
-        areas.imaging_area as imaging_area_raw
+        areas.imaging_area as imaging_area_raw,
+        -- BL-011
+        coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     join active_segment_at_request seg
         on seg.imaging_request_id = po.procedure_occurrence_id
@@ -152,6 +161,8 @@ requests as (
         on c.imaging_request_id = po.procedure_occurrence_id
     left join imaging_areas areas
         on areas.imaging_request_id = po.procedure_occurrence_id
+    left join departments dept
+        on dept.id = seg.department_id
     -- BL-003: clinic only -- not OMOP concept 9202, which would also admit imaging and
     -- vaccination encounter types (decision, MAUI-6806).
     where seg.visit_detail_source_value = 'clinic'
@@ -186,5 +197,6 @@ select
     -- BL-007: aggregated body area, never NULL.
     coalesce(imaging_area_raw, 'Not recorded') as imaging_area,
     -- BL-008: a measure, not a dimension -- age classification is the consumer's.
-    age_years
+    age_years,
+    department
 from requests

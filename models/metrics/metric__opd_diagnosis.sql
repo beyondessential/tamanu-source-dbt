@@ -24,6 +24,12 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-008: the qualifying segment's own department, resolved to a name for metric_filters
+-- scoping.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-003: a diagnosis's window is [greatest(condition_start_datetime, visit_start_datetime),
 -- visit_end_datetime], open-ended if the encounter has not closed. A diagnosis dated after
 -- the encounter closed is clamped to the close time, so it lands in the last segment the
@@ -52,7 +58,9 @@ diagnosis_window as (
 diagnosis_opd_segment as (
     select distinct on (dw.condition_occurrence_id)
         dw.condition_occurrence_id,
-        vd.care_site_id
+        vd.care_site_id,
+        -- BL-008
+        vd.department_id
     from diagnosis_window dw
     join visit_detail vd
         on vd.visit_occurrence_id = dw.visit_occurrence_id
@@ -76,7 +84,9 @@ diagnoses as (
             cco.condition_source_name, cco.condition_source_value, 'Not recorded'
         ) as diagnosis,
         coalesce(cco.condition_status_source_value, 'Not recorded') as diagnosis_certainty,
-        {{ age_years('cco.condition_start_date', 'pr') }} as age_years
+        {{ age_years('cco.condition_start_date', 'pr') }} as age_years,
+        -- BL-008
+        coalesce(dept.name, 'Not recorded') as department
     from condition_occurrence cco
     join diagnosis_opd_segment dos
         on dos.condition_occurrence_id = cco.condition_occurrence_id
@@ -84,6 +94,8 @@ diagnoses as (
         on pr.person_id = cco.person_id
     join locations loc
         on loc.id = dos.care_site_id
+    left join departments dept
+        on dept.id = dos.department_id
 )
 
 select
@@ -102,5 +114,6 @@ select
     diagnosis,
     diagnosis_certainty,
     is_primary,
-    age_years
+    age_years,
+    department
 from diagnoses
