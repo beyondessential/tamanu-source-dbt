@@ -1,0 +1,127 @@
+unit_tests:
+  - name: ac_017_metric__opd_visit_department_segment_fan_out
+    model: metric__opd_visit_department
+    description: >
+      BL-001: a visit with more than one 9202 segment fans out to one row per segment, not
+      collapsed -- including a revisited department, which is not deduplicated back down to
+      one row. A segment after the visit transitions out of concept 9202 (an inpatient
+      admission) is excluded -- it belongs to that different episode, not to this outpatient
+      visit's own department history. BL-002: period_start/period_end are the segment's own,
+      not the visit's overall dates, and NULL while the segment (and therefore the visit) is
+      open. BL-003: clinician_id is this segment's own provider, not the intake clinician.
+      BL-004: segment_time__minutes is this segment's own duration. BL-005: department is this
+      segment's own department_id, NULL resolving to 'Not recorded'. A visit with no 9202
+      segment at all is excluded entirely, matching opd_visit's own population.
+
+    given:
+      # dep_1 transfer: dept_a 09:00-10:00 under clin_1, dept_b 10:00-10:30 under clin_2 --
+      #       two segments, two rows, contiguous (no gap), different clinicians.
+      # dep_2 revisit: dept_a 08:00-08:30, dept_b 08:30-09:00, dept_a again 09:00-09:15 --
+      #       three rows, dept_a appearing twice, not collapsed to two.
+      # dep_3 single segment: the common case and the "synthesized whole-visit segment" case
+      #       look identical from this model's own perspective (it reads clinical__visit_detail
+      #       directly, not encounter_history) -- one row, ending at the encounter's own end.
+      # dep_4 no department recorded on the segment -- kept, resolves to 'Not recorded'.
+      # dep_5 admitted: a 9202 segment followed by a 9201 admission segment. Only the 9202
+      #       segment appears -- the admission segment (and whatever department it carries)
+      #       is excluded, and the 9202 segment's own end is the admission's start.
+      # dep_6 still open: no encounter end and no later segment -- period_end and
+      #       segment_time__minutes are both NULL, not zero.
+      # dep_not_opd: intake segment is not concept 9202 at all -- excluded entirely, the same
+      #       population opd_visit itself excludes.
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'dep_1' as visit_occurrence_id, 'dep_1_s0' as visit_detail_id, 'per_1' as person_id, 'loc_opd' as care_site_id, '2024-06-01'::date as visit_detail_start_date, '2024-06-01 09:00'::timestamp as visit_detail_start_datetime, '2024-06-01'::date as visit_detail_end_date, '2024-06-01 10:00'::timestamp as visit_detail_end_datetime, null::text as preceding_visit_detail_id, 9202 as visit_detail_concept_id, 'clin_1' as provider_id, 'dept_a' as department_id
+          union all
+          select 'dep_1', 'dep_1_s1', 'per_1', 'loc_opd', '2024-06-01'::date, '2024-06-01 10:00'::timestamp, '2024-06-01'::date, '2024-06-01 10:30'::timestamp, 'dep_1_s0', 9202, 'clin_2', 'dept_b'
+          union all
+          select 'dep_2', 'dep_2_s0', 'per_1', 'loc_opd', '2024-06-01'::date, '2024-06-01 08:00'::timestamp, '2024-06-01'::date, '2024-06-01 08:30'::timestamp, null::text, 9202, 'clin_1', 'dept_a'
+          union all
+          select 'dep_2', 'dep_2_s1', 'per_1', 'loc_opd', '2024-06-01'::date, '2024-06-01 08:30'::timestamp, '2024-06-01'::date, '2024-06-01 09:00'::timestamp, 'dep_2_s0', 9202, 'clin_1', 'dept_b'
+          union all
+          select 'dep_2', 'dep_2_s2', 'per_1', 'loc_opd', '2024-06-01'::date, '2024-06-01 09:00'::timestamp, '2024-06-01'::date, '2024-06-01 09:15'::timestamp, 'dep_2_s1', 9202, 'clin_1', 'dept_a'
+          union all
+          select 'dep_3', 'dep_3_s0', 'per_1', 'loc_opd', '2024-06-02'::date, '2024-06-02 09:00'::timestamp, '2024-06-02'::date, '2024-06-02 09:45'::timestamp, null::text, 9202, 'clin_1', 'dept_c'
+          union all
+          select 'dep_4', 'dep_4_s0', 'per_1', 'loc_opd', '2024-06-03'::date, '2024-06-03 09:00'::timestamp, '2024-06-03'::date, '2024-06-03 09:20'::timestamp, null::text, 9202, 'clin_1', null::varchar
+          union all
+          select 'dep_5', 'dep_5_s0', 'per_1', 'loc_opd', '2024-06-04'::date, '2024-06-04 09:00'::timestamp, '2024-06-04'::date, '2024-06-04 11:00'::timestamp, null::text, 9202, 'clin_1', 'dept_a'
+          union all
+          select 'dep_5', 'dep_5_s1', 'per_1', 'loc_ward', '2024-06-04'::date, '2024-06-04 11:00'::timestamp, null::date, null::timestamp, 'dep_5_s0', 9201, 'clin_2', 'dept_ward'
+          union all
+          select 'dep_6', 'dep_6_s0', 'per_1', 'loc_opd', '2024-06-05'::date, '2024-06-05 09:00'::timestamp, null::date, null::timestamp, null::text, 9202, 'clin_1', 'dept_d'
+          union all
+          select 'dep_not_opd', 'dep_no_s0', 'per_1', 'loc_opd', '2024-06-06'::date, '2024-06-06 09:00'::timestamp, '2024-06-06'::date, '2024-06-06 09:30'::timestamp, null::text, 9203, 'clin_1', 'dept_a'
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'dep_1' as visit_occurrence_id, '2024-06-01'::date as visit_end_date, '2024-06-01 10:30'::timestamp as visit_end_datetime
+          union all
+          select 'dep_2', '2024-06-01'::date, '2024-06-01 09:15'::timestamp
+          union all
+          select 'dep_3', '2024-06-02'::date, '2024-06-02 09:45'::timestamp
+          union all
+          select 'dep_4', '2024-06-03'::date, '2024-06-03 09:20'::timestamp
+          union all
+          select 'dep_5', '2024-06-06'::date, '2024-06-06 12:00'::timestamp
+          union all
+          select 'dep_6', null::date, null::timestamp
+          union all
+          select 'dep_not_opd', '2024-06-06'::date, '2024-06-06 10:00'::timestamp
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_opd' as id, 'fac_1' as facility_id
+          union all
+          select 'loc_ward', 'fac_1'
+
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'clin_1' as provider_id, 'Dr Ali' as provider_name
+          union all
+          select 'clin_2', 'Dr Cara'
+
+      - input: ref('discharges')
+        format: sql
+        rows: "select null::text as encounter_id, null::text as note limit 0"
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_a' as id, 'A' as code, 'Ward A' as name, 'fac_1' as facility_id, 'current' as visibility_status
+          union all
+          select 'dept_b', 'B', 'Ward B', 'fac_1', 'current'
+          union all
+          select 'dept_c', 'C', 'Ward C', 'fac_1', 'current'
+          union all
+          select 'dept_d', 'D', 'Ward D', 'fac_1', 'current'
+
+    expect:
+      format: sql
+      rows: |
+        select 'opd_visit_department' as metric_id, null::text as variant_id, 'dep_1' as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'loc_opd' as location_id, 'female' as sex, 40 as age_years, 'clin_1' as clinician_id, 'Dr Ali' as clinician_name, false as is_admitted, null::text as admission_clinician_id, 'Not recorded' as admission_clinician_name, false as is_auto_discharge, 60.00::numeric as segment_time__minutes, 'Ward A' as department
+        union all
+        select 'opd_visit_department', null::text, 'dep_1', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_2', 'Dr Cara', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
+        union all
+        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward A'
+        union all
+        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
+        union all
+        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 15.00::numeric, 'Ward A'
+        union all
+        select 'opd_visit_department', null::text, 'dep_3', '2024-06-02'::date, '2024-06-02'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 45.00::numeric, 'Ward C'
+        union all
+        select 'opd_visit_department', null::text, 'dep_4', '2024-06-03'::date, '2024-06-03'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 20.00::numeric, 'Not recorded'
+        union all
+        select 'opd_visit_department', null::text, 'dep_5', '2024-06-04'::date, '2024-06-04'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', true, 'clin_2', 'Dr Cara', false, 120.00::numeric, 'Ward A'
+        union all
+        select 'opd_visit_department', null::text, 'dep_6', '2024-06-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, null::numeric, 'Ward D'
