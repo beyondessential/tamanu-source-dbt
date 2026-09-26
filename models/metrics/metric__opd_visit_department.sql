@@ -88,6 +88,7 @@ admission_segments as (
 opd_segments as (
     select
         vd.visit_occurrence_id,
+        vd.visit_detail_id,
         vd.department_id,
         -- this segment's own clinician, not the encounter's intake clinician -- more
         -- accurate for a segment the encounter was transferred into
@@ -168,6 +169,9 @@ select
     'opd_visit_department'::text as metric_id,
     null::text as variant_id,
     ov.visit_occurrence_id::varchar as subject_id,
+    -- BL-001: the segment's own id is the grain key -- period_start is a date, so two
+    -- segments of one visit on the same day share it
+    s.visit_detail_id::varchar as segment_id,
     s.visit_detail_start_date as period_start,
     s.visit_detail_end_date as period_end,
     'day'::text as period_granularity,

@@ -55,10 +55,10 @@ its own AIHW/METeOR anchor.
 **One row per segment, not one row per visit.** Deliberately different from every other
 registered metric in this repo, each of which asserts `(metric_id, subject_id)` unique via its
 own AC-001 -- here `subject_id` legitimately repeats once per `clinical__visit_detail` segment
-the visit's history recorded. Asserted instead as `(metric_id, subject_id, period_start)`
-unique at `error` severity (AC-001): a segment's own start time, not `department`, is what
-distinguishes it from another segment of the same visit, since a visit that leaves and
-re-enters the same department produces two rows sharing a `department` value.
+the visit's history recorded. Asserted instead as `(metric_id, segment_id)` unique at `error`
+severity (AC-001), where `segment_id` is the segment's own `clinical__visit_detail` id.
+`period_start` is a date, so segments of one visit that start on the same day share it, and
+`department` repeats when a visit re-enters a department -- neither distinguishes segments.
 
 `subject_id` is the same OMOP visit occurrence id `metric__outpatient_visit` emits for the same
 visit -- the two metrics correlate on it. **`count(distinct subject_id)` and `sum(value_numeric)`
@@ -78,6 +78,7 @@ source `metric__outpatient_visit` reads -- see that spec for their own BL clause
 | `metric_id` | text | Always `opd_visit_department`. FK -> `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL -- this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id. Repeats once per segment (BL-001). `not_null` (AC-005) |
+| `segment_id` | varchar(255) | The segment's own `clinical__visit_detail` id -- the grain key (BL-001). `not_null` (AC-018) |
 | `period_start` | date | **This segment's own start date**, not the visit's intake date (BL-002) |
 | `period_end` | date | This segment's own end date. NULL while the segment is open (BL-002) |
 | `period_granularity` | text | Constant `'day'` |
@@ -174,7 +175,7 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | One row per `(metric_id, subject_id, period_start)` | grain | `dbt_utils.unique_combination_of_columns` (`error`) |
+| AC-001 | One row per `(metric_id, segment_id)` | grain | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is `not_null` and always `opd_visit_department` | BL-001 | `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | `relationships` (`error`) |
 | AC-004 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
@@ -191,6 +192,7 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
 | AC-015 | `segment_time__minutes`, where present, is `>= 0` | BL-004 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | `department` is `not_null` | BL-005 | `not_null` |
 | AC-017 | Segment fan-out behaves as specified: multiple departments across a visit's history, a revisited department producing multiple rows (not collapsed), the synthesized-single-segment case, a NULL segment department, population parity with `opd_visit`, and an open final segment | BL-001..BL-005 | `unit_test` (`data_tests/unit_tests/metric__opd_visit_department.yml`) |
+| AC-018 | `segment_id` is `not_null` | grain | `not_null` |
 
 ## Registry entry
 
