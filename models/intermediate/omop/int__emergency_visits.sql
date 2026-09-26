@@ -30,10 +30,6 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
-encounters as (
-    select * from {{ ref('encounters') }}
-),
-
 triages as (
     select * from {{ ref('triages') }}
 ),
@@ -44,6 +40,12 @@ discharges as (
 
 reference_data as (
     select * from {{ ref('reference_data') }}
+),
+
+-- BL-020: the intake segment's own clinician, resolved to a name -- the same treatment
+-- int__inpatient_admission gives its admission segment (its BL-017).
+providers as (
+    select * from {{ ref('ref__provider') }}
 ),
 
 condition_occurrence as (
@@ -100,15 +102,9 @@ attendances as (
         -- is unique across the rows emitted here.
         vd.visit_occurrence_id,
         vd.visit_detail_start_datetime as ed_start__datetime,
-        -- BL-018: departure from the emergency department, taken as the earliest signal that
-        -- the patient left: the first move to another location, or the time a booked transfer
-        -- takes effect. least() ignores NULLs, so whichever exists wins and the earlier wins
-        -- when both do. Falling through to the encounter end covers a discharge straight from
-        -- the ED and any encounter that never moved.
-        coalesce(
-            least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-            vo.visit_end_datetime
-        ) as ed_end__datetime,
+        -- BL-018: departure from the emergency department -- the first move to another
+        -- location, falling through to the encounter end for a discharge straight from the ED.
+        coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime) as ed_end__datetime,
         -- Encounter end is discharge from hospital, so for an admitted patient it is later
         -- than the ED departure. NULL = encounter still open.
         vo.visit_end_datetime as visit_end__datetime,
@@ -128,15 +124,10 @@ attendances as (
         -- BL-015: time in the ED -- arrival to the departure resolved by BL-018. NULL only
         -- while the patient is in the ED and the encounter is still open.
         case
-            when coalesce(
-                    least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-                    vo.visit_end_datetime
-                ) is null then null
+            when coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime) is null then null
             else extract(epoch from (
-                    coalesce(
-                        least(x.ed_location_exit__datetime, enc.planned_location_start_datetime),
-                        vo.visit_end_datetime
-                    ) - vd.visit_detail_start_datetime
+                    coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime)
+                    - vd.visit_detail_start_datetime
                 ))::bigint
         end as ed_time__seconds,
         -- BL-015: total length of stay -- arrival to discharge from hospital, so it spans the
@@ -162,7 +153,10 @@ attendances as (
                     vd.visit_detail_start_date,
                     make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
                 ))::int
-        end as age_years
+        end as age_years,
+        -- BL-020: the clinician on the intake segment -- who the patient was seen by on
+        -- arrival, not whoever the encounter ended with.
+        prov.provider_name as clinician_raw
     from visit_detail vd
     join person pr
         on pr.person_id = vd.person_id
@@ -172,10 +166,6 @@ attendances as (
     -- location does not resolve is excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = vd.care_site_id
-    -- BL-018: the booked transfer, one of the two departure signals. encounters.id is the
-    -- primary key, so this yields one row per attendance.
-    join encounters enc
-        on enc.id = vd.visit_occurrence_id
     -- BL-018: the physical departure, where one has been recorded. Grouped to one row per
     -- encounter above, so it cannot fan out.
     left join ed_location_exits x
@@ -185,6 +175,10 @@ attendances as (
     -- the backstop if that ever stops holding.
     left join triages tr
         on tr.encounter_id = vd.visit_occurrence_id
+    -- BL-020: left join -- an attendance whose intake segment carries no clinician still
+    -- counts. ref__provider is one row per user, so this cannot fan out.
+    left join providers prov
+        on prov.provider_id = vd.provider_id
     -- BL-013: left join -- an attendance with no principal diagnosis still counts. `distinct on`
     -- above holds it to one row per encounter, so this cannot fan out.
     left join principal_diagnoses pdx
@@ -218,7 +212,8 @@ select
     round(waiting_time__seconds / 60.0, 2) as waiting_time__minutes,
     ed_time__seconds,
     -- BL-015: time in the ED as minutes, to two decimal places, on the same basis as
-    -- waiting_time__minutes. NULL only while the patient is in the ED with nothing booked.
+    -- waiting_time__minutes. NULL only while the patient is in the ED and the encounter is
+    -- open.
     round(ed_time__seconds / 60.0, 2) as ed_time__minutes,
     length_of_stay__seconds,
     -- BL-015: total length of stay as minutes, on the same basis as the other durations
@@ -231,6 +226,9 @@ select
     coalesce(triage_score_raw, 'Not recorded') as triage_score,
     -- BL-017
     coalesce(discharge_disposition_raw, 'Not recorded') as discharge_disposition,
+    -- BL-020: 'Not recorded' covers an intake segment with no clinician and a user record
+    -- since deleted. Never NULL, for the same reason as triage_score.
+    coalesce(clinician_raw, 'Not recorded') as clinician,
     -- BL-016: hour of the day the patient arrived, 0-23. Tamanu stores naive timestamps in
     -- the deployment's central timezone (var('timezone'), see to_user_selected_timezone), so
     -- this is already a local hour and needs no conversion. A deployment spanning timezones
