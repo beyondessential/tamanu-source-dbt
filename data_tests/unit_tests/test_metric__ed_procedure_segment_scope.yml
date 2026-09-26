@@ -2,12 +2,13 @@ unit_tests:
   - name: test_metric__ed_procedure_segment_scope
     model: metric__ed_procedure
     description: >
-      BL-002. What this metric decides for itself, now that clinical__procedure_occurrence
-      resolves the segment (its BL-005): the emergency-scope filter over the already-resolved
-      visit_detail_id. proc1's segment is 'emergency' (concept 9203) and is included; proc2's
-      is 'clinic' (9202) and is excluded; proc3's FK is NULL, which
-      clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
-      dropped rather than surfaced without a setting.
+      BL-002. The segment is resolved in this model: the latest segment started by the
+      procedure's timestamp, clamped to the encounter's first segment when the procedure
+      predates every segment. proc1's segment is 'emergency' (concept 9203) and is included;
+      proc2 predates its encounter's only segment, a 'clinic' one (9202), so the clamp resolves
+      it there and it is excluded; proc3's encounter has no segment at all, so it is dropped
+      rather than surfaced without a setting. proc6 predates its ED segment and the clamp
+      resolves it to that segment, so it is counted.
 
       proc4 is the case this metric exists for (BL-001): an encounter that began in the ED and
       was later retyped as an admission. The procedure's own as-of segment is still the 9203
@@ -20,23 +21,26 @@ unit_tests:
       at the ED location -- boarding. Its segment is the 9201 admission segment, so it is
       admission-phase activity and is not counted (BL-002).
 
-      The as-of match and the first-segment clamp are not this model's behaviour and are
-      covered once, upstream, by test_clinical__procedure_occurrence_visit_detail_resolution.
+      proc5 also proves the as-of match picks the latest segment already started (the 14:00
+      admission) over the earlier ED intake.
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql
         rows: |
-          select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'vd10a' as visit_detail_id, 'loc1' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
+          select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'loc1' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
           union all
-          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'vd11a', 'loc1', 'code2', 'Procedure Two', true
+          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'loc1', 'code2', 'Procedure Two', true
           union all
-          select 'proc3', 'p1', '2026-02-03'::date, '2026-02-03 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e12', null::varchar, 'loc1', 'code3', 'Procedure Three', true
+          select 'proc3', 'p1', '2026-02-03'::date, '2026-02-03 08:00:00'::timestamp, 32817, 'procedure', 'u1', 'e12', 'loc1', 'code3', 'Procedure Three', true
           union all
           -- BL-001: performed in the ED on an encounter later retyped as an admission
-          select 'proc4', 'p1', '2026-02-04'::date, '2026-02-04 09:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13a', 'loc1', 'code4', 'Procedure Four', false
+          select 'proc4', 'p1', '2026-02-04'::date, '2026-02-04 09:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'loc1', 'code4', 'Procedure Four', false
           union all
           -- BL-002: boarding -- admitted, still at the ED location
-          select 'proc5', 'p1', '2026-02-04'::date, '2026-02-04 15:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13b', 'loc1', 'code5', 'Procedure Five', false
+          select 'proc5', 'p1', '2026-02-04'::date, '2026-02-04 15:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'loc1', 'code5', 'Procedure Five', false
+          union all
+          -- BL-002: timestamped before the ED segment began -- the clamp keeps it on that segment
+          select 'proc6', 'p1', '2026-02-01'::date, '2026-02-01 07:00:00'::timestamp, 32817, 'procedure', 'u1', 'e10', 'loc1', 'code6', 'Procedure Six', true
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -72,3 +76,5 @@ unit_tests:
         select 'ed_procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
         union all
         select 'ed_procedure', null::text, 'proc4', '2026-02-04'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'Procedure Four', 'code4', false, 30, 'Emergency'
+        union all
+        select 'ed_procedure', null::text, 'proc6', '2026-02-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'Procedure Six', 'code6', true, 30, 'Not recorded'

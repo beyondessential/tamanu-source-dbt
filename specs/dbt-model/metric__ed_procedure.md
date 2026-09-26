@@ -101,11 +101,11 @@ therefore carries no `data_table_*` meta.
   `triage` and `observation` encounter phases (`map__omop_visit_type`) -- the same population
   `int__emergency_visits` takes its intake segment from.
 
-  The segment itself is resolved once, upstream, by `clinical__procedure_occurrence` (its
-  BL-005): the as-of match against the procedure's own timestamp, with the first-segment clamp
-  for a procedure timestamped before any segment began. This model does not re-derive it. A
-  procedure whose segment did not resolve carries a NULL `visit_detail_id` and is dropped by
-  the inner join, rather than surfaced without a setting.
+  The segment is resolved in this model, with the as-of match `metric__opd_procedure` uses:
+  the latest segment of the encounter that had started by the procedure's own timestamp,
+  tie-broken on `visit_detail_id`, clamped to the encounter's first segment for a procedure
+  timestamped before any segment began. A procedure on an encounter with no segment is dropped
+  by the inner join, rather than surfaced without a setting.
 
   **Boarding is the admission phase.** Once the encounter is retyped as an admission its segment
   is 9201, even while the patient is still in the ED awaiting a bed. A procedure performed then
@@ -181,7 +181,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_procedure`, `kind: m
 
 | Model | Why |
 |---|---|
-| `clinical__procedure_occurrence` | The procedure population, and the resolved `visit_detail_id` (BL-002, BL-004) |
+| `clinical__procedure_occurrence` | The procedure population and its timestamp (BL-002, BL-004) |
 | `clinical__visit_detail` | The segment whose OMOP concept decides inclusion (BL-002) |
 | `clinical__person` | Sex and birth date (BL-008) |
 | `locations` | Facility resolution (BL-006) |

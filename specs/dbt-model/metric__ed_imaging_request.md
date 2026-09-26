@@ -116,9 +116,8 @@ therefore carries no `data_table_*` meta.
 - **BL-004 (anchored at request time, not completion time):** the as-of segment match is
   evaluated against the request's own `requested_date`, with the first-segment clamp for a
   request raised before any segment began. Anchoring on the request rather than on a completion
-  event is what lets a still-open or cancelled request resolve at all. The match itself is
-  resolved once, upstream, by `clinical__procedure_occurrence` (its BL-005); this model does not
-  re-derive it.
+  event is what lets a still-open or cancelled request resolve at all. The match is resolved in
+  this model, with the as-of pattern `metric__opd_imaging_request` uses.
 
 - **BL-005 (facility attribution):** `facility_id` is the qualifying segment's own
   `care_site_id`, not the request's `location_group_id`. The join is **inner**: a request whose
@@ -177,7 +176,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_imaging_request`, `k
 
 | Model | Why |
 |---|---|
-| `clinical__procedure_occurrence` | The imaging-request population, and the resolved `visit_detail_id` (BL-003, BL-010) |
+| `clinical__procedure_occurrence` | The imaging-request population and its request timestamp (BL-003, BL-010) |
 | `clinical__visit_detail` | The segment whose OMOP concept decides inclusion (BL-003) |
 | `clinical__person` | Sex and birth date (BL-008) |
 | `locations` | Facility resolution (BL-005) |
