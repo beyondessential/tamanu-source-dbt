@@ -108,20 +108,20 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'opd_visit_department' as metric_id, null::text as variant_id, 'dep_1' as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'loc_opd' as location_id, 'female' as sex, 40 as age_years, 'clin_1' as clinician_id, 'Dr Ali' as clinician_name, false as is_admitted, null::text as admission_clinician_id, 'Not recorded' as admission_clinician_name, false as is_auto_discharge, 60.00::numeric as segment_time__minutes, 'Ward A' as department
+        select 'opd_visit_department' as metric_id, null::text as variant_id, 'dep_1' as subject_id, 'dep_1_s0' as segment_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'loc_opd' as location_id, 'female' as sex, 40 as age_years, 'clin_1' as clinician_id, 'Dr Ali' as clinician_name, false as is_admitted, null::text as admission_clinician_id, 'Not recorded' as admission_clinician_name, false as is_auto_discharge, 60.00::numeric as segment_time__minutes, 'Ward A' as department
         union all
-        select 'opd_visit_department', null::text, 'dep_1', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_2', 'Dr Cara', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
+        select 'opd_visit_department', null::text, 'dep_1', 'dep_1_s1', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_2', 'Dr Cara', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
         union all
-        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward A'
+        select 'opd_visit_department', null::text, 'dep_2', 'dep_2_s0', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward A'
         union all
-        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
+        select 'opd_visit_department', null::text, 'dep_2', 'dep_2_s1', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 30.00::numeric, 'Ward B'
         union all
-        select 'opd_visit_department', null::text, 'dep_2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 15.00::numeric, 'Ward A'
+        select 'opd_visit_department', null::text, 'dep_2', 'dep_2_s2', '2024-06-01'::date, '2024-06-01'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 15.00::numeric, 'Ward A'
         union all
-        select 'opd_visit_department', null::text, 'dep_3', '2024-06-02'::date, '2024-06-02'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 45.00::numeric, 'Ward C'
+        select 'opd_visit_department', null::text, 'dep_3', 'dep_3_s0', '2024-06-02'::date, '2024-06-02'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 45.00::numeric, 'Ward C'
         union all
-        select 'opd_visit_department', null::text, 'dep_4', '2024-06-03'::date, '2024-06-03'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 20.00::numeric, 'Not recorded'
+        select 'opd_visit_department', null::text, 'dep_4', 'dep_4_s0', '2024-06-03'::date, '2024-06-03'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, 20.00::numeric, 'Not recorded'
         union all
-        select 'opd_visit_department', null::text, 'dep_5', '2024-06-04'::date, '2024-06-04'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', true, 'clin_2', 'Dr Cara', false, 120.00::numeric, 'Ward A'
+        select 'opd_visit_department', null::text, 'dep_5', 'dep_5_s0', '2024-06-04'::date, '2024-06-04'::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', true, 'clin_2', 'Dr Cara', false, 120.00::numeric, 'Ward A'
         union all
-        select 'opd_visit_department', null::text, 'dep_6', '2024-06-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, null::numeric, 'Ward D'
+        select 'opd_visit_department', null::text, 'dep_6', 'dep_6_s0', '2024-06-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac_1', 'loc_opd', 'female', 40, 'clin_1', 'Dr Ali', false, null::text, 'Not recorded', false, null::numeric, 'Ward D'
