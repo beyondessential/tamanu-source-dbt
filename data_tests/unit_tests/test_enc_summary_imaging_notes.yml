@@ -6,7 +6,9 @@ unit_tests:
       record_id, never the encounter's, so they reach the encounter only by way of
       imaging_requests. Drop that branch and these notes disappear -- and with no
       imaging_request_areas rows, areas_to_be_imaged is derived from the areaToBeImaged
-      note, so it goes blank too.
+      note, so it goes blank too. BL-011: both imaging notes were edited -- 'Left knee' to
+      'Right knee', and 'Check for fracture' to 'Check for dislocation' -- so only the current
+      text of each appears.
     overrides:
       vars:
         timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
@@ -160,9 +162,15 @@ unit_tests:
       - input: ref('notes')
         format: sql
         rows: |
-          select 'n_area' as id, '2024-01-16 10:00:00'::timestamp as datetime, 'Left knee' as content, 'areaToBeImaged' as note_type, 'ImagingRequest' as record_type, 'img_001' as record_id, null::text as updated_note_id, null::text as visibility_status
+          select 'n_area' as id, '2024-01-16 10:00:00'::timestamp as datetime, 'Left knee' as content, 'areaToBeImaged' as note_type, 'ImagingRequest' as record_type, 'img_001' as record_id, null::text as updated_note_id, '2024-01-16 10:00:00'::timestamp as created_datetime, null::text as visibility_status
           union all
-          select 'n_other', '2024-01-16 11:00:00'::timestamp, 'Check for fracture', 'other', 'ImagingRequest', 'img_001', null::text, null::text
+          -- BL-011: revises n_area
+          select 'n_area_edit', '2024-01-16 12:00:00'::timestamp, 'Right knee', 'areaToBeImaged', 'ImagingRequest', 'img_001', 'n_area', '2024-01-16 12:00:00'::timestamp, null::text
+          union all
+          select 'n_other', '2024-01-16 11:00:00'::timestamp, 'Check for fracture', 'other', 'ImagingRequest', 'img_001', null::text, '2024-01-16 11:00:00'::timestamp, null::text
+          union all
+          -- BL-011: revises n_other
+          select 'n_other_edit', '2024-01-16 13:00:00'::timestamp, 'Check for dislocation', 'other', 'ImagingRequest', 'img_001', 'n_other', '2024-01-16 13:00:00'::timestamp, null::text
 
       - input: ref('imaging_requests')
         format: sql
@@ -240,7 +248,7 @@ unit_tests:
           null::text           as "Vaccinations",
           null::text           as "Procedures",
           null::text           as "Lab requests",
-          'X-Ray, Areas to be imaged: Left knee, Notes: Check for fracture'
+          'X-Ray, Areas to be imaged: Right knee, Notes: Check for dislocation'
                                as "Imaging requests",
           null::text           as "Notes",
           null::text           as "invoiceFinalisedDateTime",
