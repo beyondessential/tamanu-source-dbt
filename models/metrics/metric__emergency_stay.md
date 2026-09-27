@@ -6,7 +6,8 @@ consumer aggregates at whatever grain it needs.
 A stay is one ED attendance viewed as a span rather than an arrival: period_start is arrival
 in the ED and period_end is departure from it, so period_end - period_start is time in the
 ED. Departure is departure from the **ED**, not the end of the encounter -- for a stay that
-ended in admission, period_end is the moment of admission.
+ended in admission, period_end is the moment the patient left the ED, so time spent boarding
+there counts toward the stay.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
 facility, sex, age, triage acuity, discharge disposition -- and
@@ -29,8 +30,9 @@ this is the moment the patient left the department, so period_end - period_start
 ED, not total hospital stay. metric__emergency_visit measures the whole encounter over the same
 rows.
 
-**The departure is the first move to another location**, falling through to the encounter end
-when the patient never moved. A segment boundary alone is not a departure -- an encounter_type
+**The departure is the first move out of the emergency department's location area**, falling
+through to the encounter end when the patient never left it. A move between two locations in
+the same area -- bed to bed, or resuscitation to a cubicle -- is still in the ED. A segment boundary alone is not a departure -- an encounter_type
 change to admission closes the intake segment while the patient is still in the ED, so boarding
 time counts toward the stay. Nor is a planned move: it records a bed being reserved, not the
 patient leaving.
