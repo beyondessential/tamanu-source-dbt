@@ -48,9 +48,9 @@ procedure_branch as (
         e.patient_id as person_id,
 
         p.date as procedure_date,
-        -- combines the date and time-of-day columns bases/procedures keeps separate; falls
-        -- back to midnight where start_time was never recorded
-        coalesce(p.date + p.start_time, p.date::timestamp) as procedure_datetime,
+        -- BL-006: the date and start_time bases/procedures keeps separate. start_time is
+        -- never empty -- the base falls it back to date's own time
+        p.date + p.start_time as procedure_datetime,
 
         -- provenance: constant EHR administrative record, the same convention
         -- clinical__visit_occurrence uses for visit_type_concept_id
