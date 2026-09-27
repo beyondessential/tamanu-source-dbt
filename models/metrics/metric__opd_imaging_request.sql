@@ -65,13 +65,29 @@ completions as (
     group by imaging_request_id
 ),
 
--- BL-007: legacy free-text area fallback, one row per request.
+-- BL-007: the current revision of each imaging-request note. Ranked before the note_type
+-- filter, since a revision can change a note's type.
+imaging_request_notes as (
+    select
+        id,
+        record_id,
+        note_type,
+        content,
+        datetime,
+        created_datetime,
+        {{ notes__revision_rank('notes') }} as revision_rank
+    from notes
+    where record_type = 'ImagingRequest'
+),
+
+-- BL-007: legacy free-text area fallback, one row per request, in the order the notes were
+-- recorded. created_datetime and id break a same-second tie so the string is stable.
 imaging_area_notes as (
     select
         record_id as imaging_request_id,
-        string_agg(content, ', ' order by datetime) as imaging_area
-    from notes
-    where record_type = 'ImagingRequest'
+        string_agg(content, ', ' order by datetime, created_datetime, id) as imaging_area
+    from imaging_request_notes
+    where revision_rank = 1
         and note_type = 'areaToBeImaged'
     group by record_id
 ),
