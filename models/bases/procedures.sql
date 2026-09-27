@@ -1,7 +1,9 @@
 select
     p.id,
     p.date::date as date,
-    p.start_time::timestamp::time as start_time,
+    -- clinical__procedure_occurrence BL-006: an untimed procedure takes date's own time --
+    -- Tamanu's form saves date with the start time
+    coalesce(p.start_time, p.date)::timestamp::time as start_time,
     p.end_time::timestamp::time as end_time,
     p.completed as is_completed,
     p.note,

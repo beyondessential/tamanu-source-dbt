@@ -113,16 +113,6 @@ therefore carries no `data_table_*` meta.
   boarding patient this metric's span therefore ends before the stay `metric__emergency_stay`
   measures, which runs to physical departure (its BL-018).
 
-  **Known limitation: untimed procedures.** Where `start_time` is empty,
-  `clinical__procedure_occurrence` dates the procedure at midnight of its date, because
-  `bases/procedures` casts `date` to a date and discards its time. On the day of arrival midnight
-  precedes the ED intake, so the first-segment clamp resolves the procedure to the intake segment,
-  and it is counted here even if it was performed after the admission retype or after the patient
-  left the ED. `start_time` is optional in Tamanu: the web form pre-fills it, but a procedure loaded
-  another way -- by a migration from a previous system, for instance -- need not carry one, even
-  where its `date` holds a full timestamp. The correction belongs upstream: fall back to `date`'s
-  own time rather than midnight. Imaging is unaffected, since a request carries a full timestamp.
-
 - **BL-003 (registration, count and reporting period):** `metric_id` is the constant
   `'ed_procedure'`, registered in `documentations/metrics/emergency.yml`. There is one row per
   procedure, and `value_numeric` is the constant `1`, so a consumer sums it to count procedures
@@ -209,3 +199,4 @@ Registered in `documentations/metrics/emergency.yml` as `ed_procedure`, `kind: m
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-24 | Maui team | Initial draft (MAUI-6907) |
+| 2026-09-28 | Maui team | BL-002: the untimed-procedure limitation is resolved upstream -- `bases/procedures` falls an untimed procedure's start time back to its recorded time (`clinical__procedure_occurrence` BL-006) |
