@@ -22,5 +22,6 @@ select
     fc.record_data ->> 'facility_id' as facility_id,
     fc.record_data ->> 'village_id' as village_id,
     fc.record_data ->> 'deactivated_clinician_id' as deactivated_by_id,
-    (fc.record_data ->> 'deactivated_date')::timestamp as deactivated_datetime
+    (fc.record_data ->> 'deactivated_date')::timestamp as deactivated_datetime,
+    fc.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at
 from filtered_changes fc
