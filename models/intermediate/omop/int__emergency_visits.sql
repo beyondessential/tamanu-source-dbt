@@ -79,10 +79,11 @@ ed_intake as (
         and visit_detail_concept_id = 9203 -- OMOP 'Emergency Room Visit'
 ),
 
--- BL-018: the first time the patient's location leaves the ED. A segment boundary is not by
--- itself a departure: an encounter_type change to admission closes the intake segment while
--- the patient is still physically in the emergency department, which is the boarding case a
--- four-hour measure exists to expose. Only a change of care_site is a physical departure.
+-- BL-018: the first time the patient's location leaves the ED's location group. A segment
+-- boundary is not by itself a departure: an encounter_type change to admission closes the
+-- intake segment while the patient is still physically in the emergency department, which is
+-- the boarding case a four-hour measure exists to expose. A move between two locations in the
+-- intake location's group is still in the ED. A location with no group stands for itself.
 ed_location_exits as (
     select
         later.visit_occurrence_id,
@@ -90,8 +91,13 @@ ed_location_exits as (
     from visit_detail later
     join ed_intake i
         on i.visit_occurrence_id = later.visit_occurrence_id
+    left join locations intake_loc
+        on intake_loc.id = i.care_site_id
+    left join locations later_loc
+        on later_loc.id = later.care_site_id
     where later.visit_detail_start_datetime > i.visit_detail_start_datetime
-        and later.care_site_id is distinct from i.care_site_id
+        and coalesce(later_loc.location_group_id, later.care_site_id)
+        is distinct from coalesce(intake_loc.location_group_id, i.care_site_id)
     group by later.visit_occurrence_id
 ),
 
@@ -102,8 +108,9 @@ attendances as (
         -- is unique across the rows emitted here.
         vd.visit_occurrence_id,
         vd.visit_detail_start_datetime as ed_start__datetime,
-        -- BL-018: departure from the emergency department -- the first move to another
-        -- location, falling through to the encounter end for a discharge straight from the ED.
+        -- BL-018: departure from the emergency department -- the first move out of the
+        -- intake location's group, falling through to the encounter end for a discharge
+        -- straight from the ED.
         coalesce(x.ed_location_exit__datetime, vo.visit_end_datetime) as ed_end__datetime,
         -- Encounter end is discharge from hospital, so for an admitted patient it is later
         -- than the ED departure. NULL = encounter still open.
