@@ -5,7 +5,9 @@ unit_tests:
       BL-009, encounter branch. An encounter note reaches its encounter through
       notes.record_id, which holds the encounter id directly. Also pins the two filters
       sitting on top of that branch: the revision dedup keeps only the latest note of a
-      revision chain, and system notes are excluded.
+      revision chain, and system notes are excluded. BL-011: a same-second edit resolves on
+      created_datetime -- note_3a revises note_3z within the same second, and the root's id
+      sorts last, so an id tie-break alone would keep the draft.
 
       Before BL-009 no unit test touched notes at all -- every fixture stubbed the table
       out with `where false` -- so the entire notes path was uncovered.
@@ -164,14 +166,19 @@ unit_tests:
         rows: |
           -- note_2b revises note_2a, so the two share the partition key
           -- coalesce(updated_note_id, id) = 'note_2a' and only the later survives.
+          -- note_3a revises note_3z within the same second: created_datetime picks note_3a.
           -- note_sys is dropped by note_type, not by the branch.
-          select 'note_1' as id, '2024-01-16 08:00:00'::timestamp as datetime, 'First note' as content, 'nursing' as note_type, 'Encounter' as record_type, 'enc_001' as record_id, null::text as updated_note_id, null::text as visibility_status
+          select 'note_1' as id, '2024-01-16 08:00:00'::timestamp as datetime, 'First note' as content, 'nursing' as note_type, 'Encounter' as record_type, 'enc_001' as record_id, null::text as updated_note_id, '2024-01-16 08:00:00'::timestamp as created_datetime, null::text as visibility_status
           union all
-          select 'note_2a', '2024-01-17 09:00:00'::timestamp, 'Original text', 'nursing', 'Encounter', 'enc_001', null::text, null::text
+          select 'note_2a', '2024-01-17 09:00:00'::timestamp, 'Original text', 'nursing', 'Encounter', 'enc_001', null::text, '2024-01-17 09:00:00'::timestamp, null::text
           union all
-          select 'note_2b', '2024-01-17 15:00:00'::timestamp, 'Revised text', 'nursing', 'Encounter', 'enc_001', 'note_2a', null::text
+          select 'note_2b', '2024-01-17 15:00:00'::timestamp, 'Revised text', 'nursing', 'Encounter', 'enc_001', 'note_2a', '2024-01-17 15:00:00'::timestamp, null::text
           union all
-          select 'note_sys', '2024-01-18 08:00:00'::timestamp, 'System generated', 'system', 'Encounter', 'enc_001', null::text, null::text
+          select 'note_3z', '2024-01-19 08:00:00'::timestamp, 'Draft', 'nursing', 'Encounter', 'enc_001', null::text, '2024-01-19 08:00:00'::timestamp, null::text
+          union all
+          select 'note_3a', '2024-01-19 08:00:00'::timestamp, 'Final', 'nursing', 'Encounter', 'enc_001', 'note_3z', '2024-01-19 08:00:30'::timestamp, null::text
+          union all
+          select 'note_sys', '2024-01-18 08:00:00'::timestamp, 'System generated', 'system', 'Encounter', 'enc_001', null::text, '2024-01-18 08:00:00'::timestamp, null::text
 
       - input: ref('imaging_requests')
         format: sql
@@ -254,7 +261,9 @@ unit_tests:
           concat(
             'Note type: nursing, Content: First note, Note date: 2024-01-16 08:00',
             chr(10),
-            'Note type: nursing, Content: Revised text, Note date: 2024-01-17 15:00'
+            'Note type: nursing, Content: Revised text, Note date: 2024-01-17 15:00',
+            chr(10),
+            'Note type: nursing, Content: Final, Note date: 2024-01-19 08:00'
           )                    as "Notes",
           null::text           as "invoiceFinalisedDateTime",
           null::text           as "invoiceProductCategories"
