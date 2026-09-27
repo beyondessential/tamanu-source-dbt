@@ -10,9 +10,11 @@ unit_tests:
       duplicate the visit -- the earliest wins, and its code and reference-data name are both
       carried through ungrouped. BL-014: waiting_time__minutes is triage to
       active care, NULL where the patient has no active-care time. BL-018: ed_end__datetime is
-      the first move to another location, falling through to the encounter end; an
-      encounter_type change at the same location is boarding, not a departure, so a boarding
-      attendance stays open until the patient moves. BL-015: the durations are emitted in minutes, unbanded.
+      the first move out of the intake location's location group, falling through to the
+      encounter end; an encounter_type change at the same location is boarding, not a
+      departure, so a boarding attendance stays open until the patient moves. A move between two
+      locations in the same group is still in the ED, and a location with no group stands for
+      itself. BL-015: the durations are emitted in minutes, unbanded.
       BL-017: discharge_disposition resolves through the disposition reference data.
       BL-020: clinician is the intake segment's own provider resolved to a name, falling
       back to 'Not recorded' both for a segment with no clinician and for one naming a
@@ -28,6 +30,11 @@ unit_tests:
       # ed_4 boarding and still waiting: encounter_type flips to admission at 09:30 at the same
       #      location, and the patient has not moved. The state a patient awaiting a reserved
       #      bed is in, so the stay is still open.
+      # ed_6 moves within the ED at 08:00 (loc_ed to loc_ed_resus, both in grp_ed) and then to
+      #      the ward at 10:00 -- the ward move is the departure, not the move within the ED.
+      # ed_7 starts at a location with no group and moves to another ungrouped location at
+      #      08:00 -- with no group to compare, the location itself decides, so that is the
+      #      departure.
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
@@ -52,6 +59,19 @@ unit_tests:
           union all
           select 'ed_5', 'per_1', 'loc_ward', '2024-05-22'::date, '2024-05-22 09:00'::timestamp, null::timestamp, 'ed_5_s1', 262, 'usr_1'
           union all
+          select 'ed_6', 'per_1', 'loc_ed', '2024-05-23'::date, '2024-05-23 07:00'::timestamp, '2024-05-23 08:00'::timestamp, null::text, 9203, 'usr_1'
+          union all
+          -- BL-018: a move within the ED's location group -- not a departure
+          select 'ed_6', 'per_1', 'loc_ed_resus', '2024-05-23'::date, '2024-05-23 08:00'::timestamp, '2024-05-23 10:00'::timestamp, 'ed_6_s0', 9203, 'usr_1'
+          union all
+          -- BL-018: the move out of the ED's location group
+          select 'ed_6', 'per_1', 'loc_ward', '2024-05-23'::date, '2024-05-23 10:00'::timestamp, null::timestamp, 'ed_6_s1', 262, 'usr_1'
+          union all
+          select 'ed_7', 'per_1', 'loc_ungrouped_a', '2024-05-24'::date, '2024-05-24 07:00'::timestamp, '2024-05-24 08:00'::timestamp, null::text, 9203, 'usr_1'
+          union all
+          -- BL-018: no location group on either side, so the location change is the departure
+          select 'ed_7', 'per_1', 'loc_ungrouped_b', '2024-05-24'::date, '2024-05-24 08:00'::timestamp, '2024-05-24 12:00'::timestamp, 'ed_7_s0', 9203, 'usr_1'
+          union all
           -- BL-003: a later segment of an ED encounter is not a second visit
           select 'ed_later_segment', 'per_1', 'loc_ed', '2024-05-19'::date, '2024-05-19 09:00'::timestamp, '2024-05-19 10:00'::timestamp, 'vd_earlier', 9203, 'usr_1'
           union all
@@ -71,6 +91,10 @@ unit_tests:
           union all
           select 'ed_5', 262, null::timestamp
           union all
+          select 'ed_6', 262, null::timestamp
+          union all
+          select 'ed_7', 9203, '2024-05-24 12:00'::timestamp
+          union all
           select 'ed_later_segment', 262, '2024-05-19 10:00'::timestamp
           union all
           select 'ed_not_ed', 9201, '2024-05-20 10:00'::timestamp
@@ -84,9 +108,15 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc_ed' as id, 'fac_1' as facility_id
+          select 'loc_ed' as id, 'fac_1' as facility_id, 'grp_ed' as location_group_id
           union all
-          select 'loc_ward', 'fac_1'
+          select 'loc_ed_resus', 'fac_1', 'grp_ed'
+          union all
+          select 'loc_ward', 'fac_1', 'grp_ward'
+          union all
+          select 'loc_ungrouped_a', 'fac_1', null::text
+          union all
+          select 'loc_ungrouped_b', 'fac_1', null::text
 
       # BL-014: ed_1 triaged 08:30 and seen 08:32 -- a 2 minute wait. ed_2 triaged 22:00 and
       # seen 22:45 -- 45 minutes. The rest have no triage row, so their wait is NULL.
@@ -148,3 +178,7 @@ unit_tests:
         select 'ed_4', '2024-05-21 07:00'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Not recorded'
         union all
         select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 09:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 7200::bigint, 120.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
+        union all
+        select 'ed_6', '2024-05-23 07:00'::timestamp, '2024-05-23 10:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 10800::bigint, 180.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
+        union all
+        select 'ed_7', '2024-05-24 07:00'::timestamp, '2024-05-24 08:00'::timestamp, '2024-05-24 12:00'::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, 18000::bigint, 300.00::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
