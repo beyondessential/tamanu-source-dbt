@@ -72,8 +72,7 @@ procedures as (
     left join departments dept
         on dept.id = vd.department_id
     -- BL-002: the emergency phase only. A procedure while the patient boards falls in the
-    -- admission segment and is not counted -- unless it has no start time, which BL-002
-    -- records as a known limitation.
+    -- admission segment and is not counted.
     where vd.visit_detail_concept_id = 9203
 )
 
