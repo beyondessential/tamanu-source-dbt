@@ -120,13 +120,21 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   request id would have to equal an encounter id; when that is forced to happen, the row
   enters `notes_raw` but reaches neither consumer, so the report output is identical
   either way (AC-011).
-- **BL-010:** The three note aggregates order by `datetime, id`, not `datetime` alone. Two
-  notes recorded in the same second otherwise order arbitrarily and the aggregated string
-  follows whatever physical order the plan produces. This is pre-existing and independent
+- **BL-010:** The three note aggregates order by `datetime, created_datetime, id`, not
+  `datetime` alone. Two notes recorded in the same second otherwise order arbitrarily and the
+  aggregated string follows whatever physical order the plan produces. `created_datetime`
+  keeps same-second notes in the order they were entered. This is pre-existing and independent
   of BL-009, but BL-009 changes the plan, so leaving it would have let a report column
   reshuffle for no reason the reader could see. The same latent tie exists in the
   diagnosis, prescription, vaccination, procedure and lab aggregates and is **not** fixed
   here — see OQ-005.
+- **BL-011:** Every note aggregate reads each note's current revision, as
+  `notes__revision_rank` defines it. Tamanu never edits a note in place: an edit inserts a row
+  whose `revised_by_id` points at the chain's root. The current revision is the latest by
+  `datetime`, with `created_datetime` breaking a same-second tie. The ranking runs over every
+  note in scope before any `note_type` filter, since a revision can change a note's type. This
+  covers the encounter notes and both imaging aggregates, so an edited imaging note contributes
+  only its current text.
 
 ## Output
 
@@ -180,6 +188,7 @@ Date ranges and report-specific flags are excluded from it: they differ between 
 | AC-012 | An encounter note reaches its encounter; the revision dedup keeps the latest; system notes are excluded. | BL-009 | `test_enc_summary_encounter_notes` — fails when the encounter branch is removed, passes when the imaging branch is |
 | AC-013 | An imaging request's notes reach its encounter through `imaging_requests`. | BL-009 | `test_enc_summary_imaging_notes` — fails when the imaging branch is removed, passes when the encounter branch is |
 | AC-014 | `notes` is no longer read in full. | BL-009 | `EXPLAIN (ANALYZE)` on the same fixture, best of 5 warm: 7d 1418→12ms, 1mo 984→49ms, 3mo 964→119ms, 12mo 1080→378ms. Under worst-case physical layout (`record_id` correlation −0.003) the 12-month case is ~9% slower and every narrower window is 2.6–41× faster. Not unit-testable; re-measure on a replica. |
+| AC-015 | Each note aggregate reads a note's current revision: an edit replaces the text it revised, a same-second edit resolves on `created_datetime`, and an edited imaging note contributes only its current text. | BL-010, BL-011 | `test_enc_summary_encounter_notes`, `test_enc_summary_imaging_notes` |
 
 ## Open questions
 
@@ -207,3 +216,4 @@ redundant `users` join are gone), OQ-004 (the sensitive variant has a unit test)
 | 2026-09-02 | Split `encounter_summary_report` into `encounter_summary_core` (resolution) and a presentation wrapper. Division and Sub-division added where the branch did not already carry them. |
 | 2026-09-20 | BL-009: `notes_raw` split per `record_type` so the notes join can reach an index (MAUI-6917); BL-010: deterministic ordering for the three note aggregates. BL-008's claim to have fixed the planner's row estimate corrected — it fixed the scan only. Output unchanged. |
 | 2026-09-18 | BL-008: date range filtered against the stored ISO-9075 columns as well as the converted ones, so the scan prunes (MAUI-6917). `models/bases/encounters.sql` grows `start_date_iso` / `end_date_iso` to carry them. Output unchanged. Numbered BL-008 / AC-007..009, skipping BL-007 and AC-006, which `main` already uses for the history-actor left join — this branch and `main` have to stay mergeable. |
+| 2026-09-27 | BL-011: every note aggregate reads each note's current revision (`notes__revision_rank`), so an edited imaging note no longer contributes the text it replaced. BL-010: same-second notes order by `created_datetime`. |
