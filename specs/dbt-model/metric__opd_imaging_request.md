@@ -217,9 +217,11 @@ as of this spec.
   `imaging_type_code` falls back to `'Not recorded'` directly -- neither is ever NULL, since
   Tupaia's array filter drops a NULL row. `imaging_area` is a comma-joined, alphabetically
   ordered list of body-part names from `imaging_request_areas` -> `reference_data.name`,
-  falling back to the legacy free-text note (`notes` where `record_type = 'ImagingRequest'`
-  and `note_type = 'areaToBeImaged'`) -- the identical rule
-  `macros/datasets/imaging_requests.sql` uses for `ds__imaging_requests.imaging_area`.
+  falling back to the current revision of each legacy free-text note (`notes` where
+  `record_type = 'ImagingRequest'` and `note_type = 'areaToBeImaged'`), as
+  `notes__revision_rank` defines it, so a superseded revision contributes nothing, joined in
+  the order recorded -- the identical rule `macros/datasets/imaging_requests.sql` uses for
+  `ds__imaging_requests.imaging_area`.
   `imaging_area` is not grouped into any coarser classification (e.g. AIHW's five-category
   modality taxonomy) -- the same "emit as recorded" discipline `morbidity`'s
   `diagnosis`/`diagnosis_code` applies, since a deployment's own coding may not support a
@@ -366,3 +368,4 @@ earlier metrics.
 | 2026-09-03 | @gagank16 | Initial draft (MAUI-6806) |
 | 2026-09-09 | @gagank16 | Sourced from clinical__procedure_occurrence instead of bases/imaging_requests directly (BL-010); facility resolved via the active segment's own location instead of the request's location_group_id, fixing a real zero-row bug (BL-005); status narrowed to is_completed, dropping the completed-vs-cancelled split for now (OQ-004); period_end gated on is_completed rather than surfaced merely because a result row exists, fixing a real correctness bug (BL-002); age_years switched to the already-available procedure_date column instead of re-casting procedure_datetime; removed turnaround_time__minutes, not needed by the current visual -- period_start/period_end remain, so it can be computed later if needed; added imaging_type as a readable label alongside the existing raw value, renamed to imaging_type_code (BL-007) |
 | 2026-09-23 | Claude | Added department, resolved to a name from the active clinic segment's own department_id (BL-011), so a consumer scopes to one department (e.g. Dental) via metric_filters (MAUI-6909) |
+| 2026-09-25 | Maui team | `imaging_area`'s free-text fallback reads each note's current revision (`notes__revision_rank`) rather than every revision, so an edited note no longer contributes the text it replaced, and joins the notes in the order recorded with a same-second tie broken, so the string is stable (BL-007) |
