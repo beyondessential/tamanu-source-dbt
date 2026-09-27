@@ -1,0 +1,78 @@
+# Platform system-usage metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: clinical_events
+  kind: metric
+  name: Clinical events recorded in Tamanu (OMOP-lite)
+  description: >-
+    Count of clinical-event records with an event date in the reporting month, across the OMOP-lite
+    condition, drug, measurement and observation domains.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: BES PHR MEL / EOPO1 platform-usage indicator
+  unit: count
+  subject_grain: event
+  disaggregations:
+  - sex
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__system_usage.md
+
+- metric_id: clinical_events_legacy
+  kind: metric
+  name: Clinical events recorded in Tamanu (legacy parity)
+  description: >-
+    Legacy-parity reproduction of data-staging ds__clinical_events: one row per record across 17
+    legacy event types (notes, procedures, lab and imaging requests and results, medications,
+    vaccinations, births, forms, referrals, vitals, deaths, diagnoses, patient letters,
+    program-registry adds and status changes) in the reporting month.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: Continuity bridge for the data-staging sunset (D7)
+  unit: count
+  subject_grain: event
+  disaggregations:
+  - sex
+  - facility_id
+  variant_of: clinical_events
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__system_usage.md
+
+- metric_id: active_users
+  kind: metric
+  name: Active Tamanu users
+  description: >-
+    Distinct Tamanu users who authored at least one clinical event in the reporting month.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: BES PHR MEL / EOPO1 platform-usage indicator
+  unit: count
+  subject_grain: user
+  # Deliberately none: active_users is emitted at national grain only
+  # (facility_id NULL on every row, BL-003/BL-006, asserted by AC-005) because a
+  # distinct-user count is not additive across facilities. Declaring facility_id
+  # here would make registry-driven consumers build an always-empty dimension.
+  disaggregations: []
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__system_usage.md
