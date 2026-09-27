@@ -54,12 +54,11 @@ The AIHW object class defines this model's period exactly. AIHW registers no len
 element, so the duration is a BES composition over that concept.
 
 **DV-001 — physical departure.** AIHW's `period_end` is when the patient is recorded as having
-*physically departed*. BL-018 resolves that from the first segment at a different `care_site_id`,
-so boarding time counts toward the stay: an `encounter_type` change to `admission` does not end
-it. Two residual gaps remain against the AIHW definition. A location change is recorded when the
-patient's location is *updated*, which may lag the moment they physically left the department.
-And any change of location counts, so a move between two locations inside the emergency
-department ends the stay (OQ-002).
+*physically departed*. BL-018 resolves that from the first segment outside the intake location's
+location group, so boarding time counts toward the stay: an `encounter_type` change to
+`admission` does not end it. One residual gap remains against the AIHW definition. A location
+change is recorded when the patient's location is *updated*, which may lag the moment they
+physically left the department.
 
 ## Grain
 
@@ -152,8 +151,9 @@ below are this model's own.
   to be common for recent admitted stays. Values are whatever the deployment's disposition
   reference data holds, so the column is open-vocabulary and its test is `not_null` alone.
   `bases/discharges` is `distinct on (encounter_id)`, so the join yields one row per encounter.
-- **BL-018 (resolving the departure):** `period_end` is the start of the first later segment at a
-  **different `care_site_id`** — the physical move out of the emergency department — falling
+- **BL-018 (resolving the departure):** `period_end` is the start of the first later segment whose
+  location is in a **different location group** from the intake segment's location — the physical
+  move out of the emergency department — falling
   through to `clinical__visit_occurrence.visit_end_datetime`, which covers a discharge straight
   from the ED and any encounter that never moved. `period_end` is NULL only while the patient is
   in the ED and the encounter is open.
@@ -162,8 +162,13 @@ below are this model's own.
   or `encounter_type` change (`clinical__visit_detail` BL-001), so an `encounter_type` change to
   `admission` closes the intake segment while the patient is still physically in the ED. Taking
   that boundary as the departure would end the stay at the admission decision and hide boarding
-  time entirely — which is the delay a four-hour measure exists to expose. Only a change of
-  `care_site_id` counts.
+  time entirely — which is the delay a four-hour measure exists to expose. Only a move out of the
+  intake location's group counts.
+
+  **A move within the emergency department is not a departure.** A move between two locations in
+  the intake location's group — bed to bed, or resuscitation to a cubicle — keeps the patient in
+  the ED. A location with no location group stands for itself, so a move from or to one counts as
+  a departure.
 
   **A planned move is not a departure**: `encounters.planned_location_start_time` is set when a
   bed is reserved and cleared once the move is finalised, cancelled or times out, so it only ever
@@ -174,11 +179,6 @@ below are this model's own.
 **OQ-001 — a departure recorded without a location change.** Where a patient left the ED but no
 location-change segment was written, BL-018 falls through to the encounter end and **overstates**
 time in the ED for that stay. How often that happens is a question for deployment data.
-
-**OQ-002 — a move within the emergency department.** BL-018 counts any change of `care_site_id`,
-so a move between two locations inside the ED — bed to bed, or resuscitation to a cubicle — ends
-the stay. Whether departure should be resolved at location-group level instead depends on how
-each deployment models its emergency department's locations.
 
 ## Acceptance criteria
 
@@ -192,7 +192,7 @@ each deployment models its emergency department's locations.
 | AC-006 | `value_numeric` is `not_null` and always `1` | BL-006, BL-011 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | BL-011 | `not_null` |
-| AC-009 | The shared base resolves as specified, including that an `encounter_type` change at the same location is not a departure and that a boarding attendance stays open until the patient moves | BL-003–BL-005, BL-012–BL-018 | unit test `ac_009_int__emergency_visits_derivations` |
+| AC-009 | The shared base resolves as specified, including that an `encounter_type` change at the same location is not a departure, that a move within the intake location's group is not a departure, and that a boarding attendance stays open until the patient moves | BL-003–BL-005, BL-012–BL-018 | unit test `ac_009_int__emergency_visits_derivations` |
 | AC-011 | `triage_score` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 
@@ -247,4 +247,5 @@ models.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-26 | Maui team | BL-018: departure is the first move to another location or the encounter end. `planned_location_start_time` is no longer a departure signal -- Tamanu sets it when a bed is reserved, not when the move happens, so it had ended a boarding patient's stay at the booking. Added OQ-002 (MAUI-6907) |
+| 2026-09-26 | Maui team | BL-018: departure is the first move to another location or the encounter end. `planned_location_start_time` is no longer a departure signal -- Tamanu sets it when a bed is reserved, not when the move happens, so it had ended a boarding patient's stay at the booking. (MAUI-6907) |
+| 2026-09-27 | Maui team | BL-018: departure is the first move out of the intake location's location group, so a move within the emergency department no longer ends the stay. Resolves OQ-002 (MAUI-6907) |
