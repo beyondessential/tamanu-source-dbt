@@ -1,10 +1,10 @@
 with reporting_months as (
     select month::date
     from generate_series(
-        concat(left( {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }}, 7), '-01')::date,
-        concat(left( {{ parameter('toDate', default_value='2024-01-01', data_type='text') }}, 7), '-01')::date,
-        '1 month'::interval
-    ) month
+            concat(left( {{ parameter('fromDate', default_value='2024-01-01', data_type='text') }}, 7), '-01')::date,
+            concat(left( {{ parameter('toDate', default_value='2024-01-01', data_type='text') }}, 7), '-01')::date,
+            '1 month'::interval
+        ) month
 ),
 
 location_summary as (

@@ -21,22 +21,22 @@ facilities as (
 -- organizational care unit (BL-001, BL-005)
 department_sites as (
     select
-        'department'   as care_site_type,
-        d.id::varchar  as care_site_id,
-        d.name         as care_site_name,
-        d.code         as care_site_source_value,
-        d.facility_id  as facility_id
+        'department' as care_site_type,
+        d.id::varchar as care_site_id,
+        d.name as care_site_name,
+        d.code as care_site_source_value,
+        d.facility_id
     from departments d
 ),
 
 -- physical care unit: individual location (room/bed) (BL-001, BL-006)
 location_sites as (
     select
-        'location'      as care_site_type,
+        'location' as care_site_type,
         loc.id::varchar as care_site_id,
-        loc.name        as care_site_name,
-        loc.code        as care_site_source_value,
-        loc.facility_id as facility_id
+        loc.name as care_site_name,
+        loc.code as care_site_source_value,
+        loc.facility_id
     from locations loc
 ),
 
@@ -59,8 +59,8 @@ select
     f.type as place_of_service_source_value,
 
     -- parent facility, denormalised onto the care site (BL-003)
-    cs.facility_id as facility_id,
-    f.name         as facility_name
+    cs.facility_id,
+    f.name as facility_name
 
 from care_sites cs
 -- left join so a care site whose facility is missing/soft-deleted is still emitted (BL-003)

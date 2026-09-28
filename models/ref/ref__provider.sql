@@ -10,12 +10,12 @@ with users as (
 
 select
     -- identity (BL-001, BL-002) -- native UUID PK, no remap to OMOP integer IDs (D1)
-    u.id           as provider_id,
+    u.id as provider_id,
     u.display_name as provider_name,
-    u.display_id   as provider_source_value,
+    u.display_id as provider_source_value,
 
     -- single-valued account role, carried to distinguish clinical from non-clinical users
     -- (specialty is a many-to-many in user_designations and is not emitted, BL-003/BL-004)
-    u.role         as role
+    u.role
 
 from users u

@@ -36,9 +36,17 @@ relations as (
 -- (village->settlement->subdivision->division->country), so depth < 10 is ample
 -- headroom while still bounding a cyclic walk.
 ancestry (location_id, ancestor_id, depth) as (
-    select id::text, id::text, 0 from places where level = 'village'
+    select
+        id::text,
+        id::text,
+        0
+    from places
+    where level = 'village'
     union all
-    select a.location_id, r.parent_id::text, a.depth + 1
+    select
+        a.location_id,
+        r.parent_id::text,
+        a.depth + 1
     from ancestry a
     inner join relations r on r.child_id = a.ancestor_id
     where a.depth < 10
