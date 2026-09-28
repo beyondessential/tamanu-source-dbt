@@ -38,9 +38,11 @@ select
     m.observation_source_name,
     m.value_source_value
 from triage_elements te
-cross join lateral (values
-    ('triage_score',        'Triage score',        te.score),
-    ('chief_complaint',     'Chief complaint',     te.chief_complaint),
-    ('secondary_complaint', 'Secondary complaint', te.secondary_complaint)
-) as m (observation_source_value, observation_source_name, value_source_value)
+cross join
+    lateral (
+        values
+        ('triage_score', 'Triage score', te.score),
+        ('chief_complaint', 'Chief complaint', te.chief_complaint),
+        ('secondary_complaint', 'Secondary complaint', te.secondary_complaint)
+    ) m (observation_source_value, observation_source_name, value_source_value)
 where m.value_source_value is not null and trim(m.value_source_value) != ''
