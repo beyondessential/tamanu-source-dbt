@@ -1,0 +1,115 @@
+unit_tests:
+  - name: ac_005_metric__ed_lab_request_scope_and_completion
+    model: metric__ed_lab_request
+    description: >
+      BL-001 -- BL-004. e1 arrives in the ED (vd1a, concept 9203, 08:00) and is admitted at 12:00
+      (vd1b, 9201). lr1 is raised in the ED and published, so its two tests (t1, t2) are one row
+      each, completed, ending at publication -- a panel contributes one row per test. t8 on lr1
+      has a test type that does not resolve, so it falls back to 'Not recorded'. lr2 is raised at
+      13:00 while the patient boards, so its segment is the admission and t3 is not counted. lr3
+      predates every segment, so it clamps to the first (the ED) and t4 counts, still awaiting
+      results. lr4 is cancelled: t5 counts as requested but not completed, and a publication time
+      on a cancelled request does not end its period. lr9 has no status, so t11 counts as not
+      completed. lr5 is entered in error and lr6 deleted, so t6 and t7 are withdrawn and excluded.
+      e2 has no segment, so t9 is dropped. e3's only segment is a clinic (9202), so t10 is not
+      counted.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'lr1' as id, 'e1' as encounter_id, '2026-01-10 09:00:00'::timestamp as requested_datetime, 'published' as status, '2026-01-10 10:00:00'::timestamp as published_datetime
+          union all
+          select 'lr2', 'e1', '2026-01-10 13:00:00'::timestamp, 'published', '2026-01-10 14:00:00'::timestamp
+          union all
+          select 'lr3', 'e1', '2026-01-10 07:00:00'::timestamp, 'results_pending', null::timestamp
+          union all
+          select 'lr4', 'e1', '2026-01-10 09:30:00'::timestamp, 'cancelled', '2026-01-10 09:45:00'::timestamp
+          union all
+          select 'lr5', 'e1', '2026-01-10 09:40:00'::timestamp, 'entered-in-error', null::timestamp
+          union all
+          select 'lr6', 'e1', '2026-01-10 09:50:00'::timestamp, 'deleted', null::timestamp
+          union all
+          select 'lr7', 'e2', '2026-01-11 09:00:00'::timestamp, 'published', '2026-01-11 10:00:00'::timestamp
+          union all
+          select 'lr8', 'e3', '2026-01-12 09:00:00'::timestamp, 'published', '2026-01-12 10:00:00'::timestamp
+          union all
+          select 'lr9', 'e1', '2026-01-10 10:30:00'::timestamp, null::text, null::timestamp
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'lr1' as lab_request_id, 'ltt_cbc' as lab_test_type_id
+          union all
+          select 't2', 'lr1', 'ltt_ue'
+          union all
+          select 't8', 'lr1', 'ltt_missing'
+          union all
+          select 't3', 'lr2', 'ltt_cbc'
+          union all
+          select 't4', 'lr3', 'ltt_cbc'
+          union all
+          select 't5', 'lr4', 'ltt_ue'
+          union all
+          select 't6', 'lr5', 'ltt_cbc'
+          union all
+          select 't7', 'lr6', 'ltt_cbc'
+          union all
+          select 't9', 'lr7', 'ltt_cbc'
+          union all
+          select 't10', 'lr8', 'ltt_cbc'
+          union all
+          select 't11', 'lr9', 'ltt_ue'
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt_cbc' as id, 'CBC' as code, 'Full blood count' as name
+          union all
+          select 'ltt_ue', 'UE', 'Urea and electrolytes'
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10 08:00:00'::timestamp as visit_detail_start_datetime, 9203 as visit_detail_concept_id, 'loc_ed' as care_site_id, 'dept_ed' as department_id
+          union all
+          select 'vd1b', 'e1', 'p1', '2026-01-10 12:00:00'::timestamp, 9201, 'loc_ward', 'dept_med'
+          union all
+          select 'vd3a', 'e3', 'p1', '2026-01-12 08:00:00'::timestamp, 9202, 'loc_clinic', 'dept_opd'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'female' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ed' as id, 'fac1' as facility_id
+          union all
+          select 'loc_ward', 'fac1'
+          union all
+          select 'loc_clinic', 'fac1'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_ed' as id, 'Emergency' as name
+          union all
+          select 'dept_med', 'Medical'
+          union all
+          select 'dept_opd', 'Outpatients'
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_lab_request' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-01-10 09:00:00'::timestamp as period_start, '2026-01-10 10:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CBC' as lab_test_code, 'Full blood count' as lab_test, 35 as age_years, 'Emergency' as department
+        union all
+        select 'ed_lab_request', null::text, 't2', '2026-01-10 09:00:00'::timestamp, '2026-01-10 10:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, 'UE', 'Urea and electrolytes', 35, 'Emergency'
+        union all
+        select 'ed_lab_request', null::text, 't8', '2026-01-10 09:00:00'::timestamp, '2026-01-10 10:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, 'Not recorded', 'Not recorded', 35, 'Emergency'
+        union all
+        select 'ed_lab_request', null::text, 't4', '2026-01-10 07:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'CBC', 'Full blood count', 35, 'Emergency'
+        union all
+        select 'ed_lab_request', null::text, 't5', '2026-01-10 09:30:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'UE', 'Urea and electrolytes', 35, 'Emergency'
+        union all
+        select 'ed_lab_request', null::text, 't11', '2026-01-10 10:30:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'UE', 'Urea and electrolytes', 35, 'Emergency'
