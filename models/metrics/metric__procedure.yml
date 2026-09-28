@@ -137,6 +137,11 @@ models:
           filter for a setting-scoped count -- it is what the retired metric__opd_procedure
           and metric__ipd_procedure scoped on, and unlike a list of encounter_type values it
           does not drift when map__omop_visit_type gains an encounter type. Never NULL.
+
+          'Emergency' groups the segment's OMOP concept and is not the population
+          metric__emergency_visit or metric__emergency_stay report on -- those count
+          encounters under their own scoping rules, not procedures, so the two will not
+          reconcile and are not meant to.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_setting_not_null
