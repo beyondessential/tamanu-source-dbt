@@ -1,0 +1,49 @@
+# Diagnostic imaging request metrics, across and within encounter settings.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: imaging_request
+  kind: metric
+  name: Imaging requests
+  description: >-
+    Diagnostic imaging requests raised on a patient, in any encounter setting. One row per
+    request, from the moment it is raised to the moment it is marked complete.
+  numerator_description: >-
+    Recorded imaging requests, counted on the requested date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of imaging requests, which no external body registers as a single indicator --
+    AIHW's own diagnostic-imaging reporting explicitly names request completion,
+    cancellation, turnaround time and body-area breakdown as gaps it cannot report. This
+    metric carries no encounter-setting restriction -- encounter_type is the
+    clinical__visit_detail segment active when the request was raised, not the encounter's
+    whole-visit type, so a consumer scopes to one setting, or none, from this single view,
+    the same approach metric__procedure takes for procedures. Outpatient imaging is
+    encounter_type 'clinic' and inpatient is 'admission'. ed_imaging_request reports the
+    emergency phase (OMOP 9203) over these same rows, so the two must never be summed.
+    Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: imaging_request
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - sex
+  - is_completed
+  - imaging_type
+  - imaging_type_code
+  - imaging_area
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__imaging_request.md
+
