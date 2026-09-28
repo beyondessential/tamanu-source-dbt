@@ -13,12 +13,12 @@ models:
         - clinical
     # No data_table_* meta. The Tupaia data tables over this model are configured in
     # tupaia-data-product at tamanu/data_tables/, one file per data table, the same
-    # convention metric__outpatient_visit and metric__opd_procedure use.
+    # convention metric__outpatient_visit and metric__procedure use.
     meta:
       owner: bes-maui
       domain: clinical
       # Per-request rows carrying sex/age alongside a request id -- no patient name or exact
-      # birth date, the same pair metric__opd_procedure carries while staying internal.
+      # birth date, the same pair metric__procedure carries while staying internal.
       pii: false
       classification: internal
     data_tests:

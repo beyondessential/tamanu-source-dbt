@@ -8,7 +8,7 @@
 --
 -- BL-001: sourced from clinical__measurement's lab branch, filtered to
 -- measurement_type_source_value = 'lab' -- the same clinical-layer convention
--- metric__opd_procedure/metric__opd_imaging_request use over clinical__procedure_occurrence,
+-- metric__procedure/metric__opd_imaging_request use over clinical__procedure_occurrence,
 -- rather than reading bases/lab_requests directly. clinical__measurement already restricts
 -- this branch to tests carrying a reading, under a request that was not withdrawn (its own
 -- BL-009/BL-011), so every row here is a completed, resulted test -- there is no separate
@@ -69,7 +69,7 @@ lab_tests as (
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
 -- lab test is recorded against a date, not a timestamp with a period to close, the same
--- convention metric__opd_procedure and metric__pharmacy_order use.
+-- convention metric__procedure and metric__pharmacy_order use.
 select
     'lab_request'::text as metric_id,
     null::text as variant_id,

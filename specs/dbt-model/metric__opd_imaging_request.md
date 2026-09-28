@@ -15,8 +15,8 @@
 
 Canonical definition for `opd_imaging_request`: one row per imaging request raised while the
 patient was in a **clinic** encounter. Sits beside `metric__outpatient_visit` (`opd_visit`)
-and `metric__opd_procedure` in the outpatient product, modelled directly on
-`metric__opd_procedure`'s as-of-segment pattern -- with one deliberate departure from it,
+and `metric__procedure` in the outpatient product, modelled directly on
+`metric__procedure`'s as-of-segment pattern -- with one deliberate departure from it,
 covered in full in BL-003 and BL-004.
 
 ## Purpose
@@ -27,13 +27,13 @@ Diagnostic imaging requests raised during outpatient clinic care, one row per re
 |---|---|---|
 | `opd_imaging_request` | count | Imaging requests raised during a clinic encounter (always 1 per row) |
 
-**Why a separate metric, not a filter.** Following `metric__opd_procedure`'s precedent
+**Why a separate metric, not a filter.** Following `metric__procedure`'s precedent
 (itself a decision, MAUI-6862): outpatient imaging is kept apart as its own metric rather
 than exposing `encounter_type` as a disaggregation on a general "all-settings" imaging
 metric. No such general metric exists yet in this repo; `opd_imaging_request` is the first.
 
-**Why `clinic` only, not the full OMOP 9202 (BL-003 in short).** `opd_visit` and
-`opd_procedure` both scope "outpatient" to OMOP concept 9202, which covers `clinic`,
+**Why `clinic` only, not the full OMOP 9202 (BL-003 in short).** `opd_visit` scopes
+"outpatient" to OMOP concept 9202, which covers `clinic`,
 `imaging`, and `vaccination` encounter types alike (`map__omop_visit_type`). This metric
 scopes to `clinic` only, by decision (MAUI-6806) -- see BL-003 for the reasoning and for
 what is deliberately left out of scope by this choice.
@@ -61,8 +61,7 @@ No AIHW METeOR element is registered. AIHW's own diagnostic-imaging reporting (M
 Benefits Schedule-based) explicitly names request completion, cancellation, turnaround
 time, and body-area breakdown as gaps it cannot report -- MBS data was not designed to
 carry them. This metric is a BES composition over Tamanu's own `imaging_requests` object,
-`definition_source: BES`, the same status `metric__procedure`/`metric__opd_procedure`
-carry.
+`definition_source: BES`, the same status `metric__procedure` carries.
 
 ## Grain
 
@@ -71,7 +70,7 @@ duplicate would double-count a request in any consumer that sums `value_numeric`
 
 `subject_id` is the imaging request's own id, read as `clinical__procedure_occurrence`'s
 `procedure_occurrence_id` (unchanged from `imaging_requests.id`, BL-010), matching the
-registry's `subject_grain: imaging_request`. Like `opd_procedure`, there is no
+registry's `subject_grain: imaging_request`. Like `procedure`, there is no
 encounter-segment stitching to find the subject itself -- one row per request already.
 Segment logic here (BL-003) decides *inclusion and scope*, not identity.
 
@@ -102,13 +101,13 @@ D5 wide format, plus six disaggregation columns and one measure attribute.
 
 The Tupaia data table over this view belongs in `tupaia-data-product`, at
 `tamanu/data_tables/`, the same convention `metric__outpatient_visit` and
-`metric__opd_procedure` use -- filter types, aggregation and any bands are the consumer's
+`metric__procedure` use -- filter types, aggregation and any bands are the consumer's
 vocabulary, not dbt's. This model therefore carries no `data_table_*` meta. Not yet built
 as of this spec.
 
 ## Business logic
 
-- **BL-001 (a dedicated metric, not a filter):** matches `metric__opd_procedure` BL-001 --
+- **BL-001 (a dedicated metric, not a filter):** matches `metric__procedure` BL-001 --
   kept apart from every other setting as its own metric, rather than mixed with them behind
   an `encounter_type` filter on a general metric. No general (all-settings) imaging metric
   exists in this repo to filter, so this is also the first imaging metric of any kind.
@@ -121,7 +120,7 @@ as of this spec.
   because a matching `imaging_results` row exists: a preliminary or otherwise-stray result
   row can exist against a request that isn't (or is no longer) `completed`, and this model
   has no raw status to check against (BL-010), so it checks the boolean flag instead. This is
-  **not** the same as `opd_procedure`'s hardcoded-NULL `period_end`: unlike a procedure, an
+  **not** the same as `procedure`'s hardcoded-NULL `period_end`: unlike a procedure, an
   imaging request has a real completion event worth reporting, so this metric emits it rather
   than omitting it.
 
@@ -139,8 +138,8 @@ as of this spec.
 - **BL-003 (outpatient scope: `clinic` only, not OMOP 9202 in full -- decision, MAUI-6806):**
   a request is included when the `clinical__visit_detail` segment active at its own
   `requested_date` has `visit_detail_source_value = 'clinic'` -- **not**
-  `visit_detail_concept_id = 9202`, the concept `opd_visit`/`opd_procedure` filter on, which
-  also admits `imaging` and `vaccination` encounter types.
+  `visit_detail_concept_id = 9202`, the concept `opd_visit` filters on, which also
+  admits `imaging` and `vaccination` encounter types.
 
   **Why narrower than the sibling metrics.** `encounter_type = 'imaging'` and
   `imaging_requests` are two independent Tamanu concepts that happen to share a name: the
@@ -166,9 +165,9 @@ as of this spec.
   encounter is still coded `clinic`, before a later admission or ED transfer, is scoped
   correctly regardless of what the encounter becomes afterward.
 
-- **BL-004 (request time, not completion time -- departure from `opd_procedure`'s literal
+- **BL-004 (request time, not completion time -- departure from `procedure`'s literal
   pattern):** the as-of match is evaluated at `requested_date`, not at the completion
-  timestamp `opd_procedure` uses (`procedure_datetime` -- procedures only have one
+  timestamp `procedure` uses (`procedure_datetime` -- procedures only have one
   timestamp). Imaging has two, and only one is always populated: a `pending`, `in_progress`,
   or `cancelled` request has no completion event at all. Anchoring on completion time would
   silently exclude every such request from the as-of join (no timestamp to test against a
@@ -189,8 +188,9 @@ as of this spec.
   `location_group_id`):** `facility_id` is resolved through `bases/locations` on the
   `clinical__visit_detail` segment active at the request's own time -- the same segment
   BL-003 finds for clinic-scoping -- via that segment's own `care_site_id`. Not
-  `imaging_requests.location_group_id`, and not `imaging_requests.location_id` the way
-  `metric__opd_procedure` resolves facility from `procedures.location_id`.
+  `imaging_requests.location_group_id`, and not `imaging_requests.location_id`.
+  `metric__procedure` resolves facility the same way, from its own resolved segment's
+  `care_site_id`.
 
   This replaced an earlier design that resolved facility from the request's own
   `location_group_id` via `bases/location_groups`. Confirmed against a real replica: none of
@@ -202,7 +202,7 @@ as of this spec.
 
   The join to `locations` is still **inner**: a clinic segment whose own `care_site_id`
   doesn't resolve to a facility is excluded rather than attributed to a NULL one -- the same
-  "excluded rather than guessed" convention `metric__opd_procedure` uses for its own location
+  "excluded rather than guessed" convention `metric__procedure` uses for its own location
   join.
 
 - **BL-006 (materialisation is env-aware):** `table` when `target.name` starts with
@@ -229,13 +229,13 @@ as of this spec.
 
 - **BL-008 (age is the consumer's to band):** `age_years` is age in whole years at the
   request date (`{{ age_years(...) }}`), emitted raw and unbanded -- a measure, not a
-  dimension, the same reasoning `metric__opd_procedure` BL-007 gives.
+  dimension, the same reasoning `metric__procedure` BL-007 gives.
 
 - **BL-010 (sourced from the clinical layer, not `bases/imaging_requests` directly):** this
   model reads `clinical__procedure_occurrence`, filtered to
   `procedure_type_source_value = 'imaging request'`, for the request's identity, timestamp,
-  and modality -- the same clinical layer `metric__procedure`/`metric__opd_procedure` build
-  on, rather than `bases/imaging_requests` directly. `procedure_occurrence_id` is
+  and modality -- the same clinical layer `metric__procedure` builds on, rather than
+  `bases/imaging_requests` directly. `procedure_occurrence_id` is
   `imaging_requests.id` unchanged, so the remaining `bases/`-level joins (`imaging_results`
   for completion, `imaging_request_areas`/`notes` for area) key on it exactly as before.
   `deleted`/`entered_in_error` requests are excluded upstream, by
@@ -279,7 +279,7 @@ as of this spec.
 | AC | `department` is `not_null` | BL-011 | `not_null` |
 
 Test names are unnumbered (`ac_metric__opd_imaging_request_<column>_<check>`), matching
-`metric__opd_procedure.yml`'s convention.
+`metric__procedure.yml`'s convention.
 
 ## Registry entry
 
@@ -325,10 +325,11 @@ earlier metrics.
 4. **Compute turnaround time itself, if needed.** Not emitted as of this change -- both
    `period_start` and `period_end` remain on the model, so a consumer can derive it, keeping
    the same "only for a completed request" gate `period_end` already applies (BL-002).
-5. **Read BL-003 before reconciling against `opd_visit`/`opd_procedure`.** All three are
+5. **Read BL-003 before reconciling against `opd_visit`/`procedure`.** All three are
    segment-grain, OMOP-scoped decisions, but neither the segment point nor the scope itself
    match exactly -- `opd_visit` uses the encounter's *first* segment at 9202,
-   `opd_procedure` the segment active at the procedure's *own* time at 9202, this metric
+   `procedure` the segment active at the procedure's *own* time with no scope filter at
+   all, this metric
    the segment active at the request's own time at `clinic` only (narrower than 9202). A
    mismatch between this metric's count and either sibling's is expected, not a bug.
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
@@ -338,7 +339,7 @@ earlier metrics.
 
 | Artefact | Relationship |
 |---|---|
-| `metric__opd_procedure` | Same as-of-segment pattern and OPD-scoping decision -- the reference this model was built from, anchored on request time instead of a single procedure timestamp (BL-004), scoped to `clinic` only instead of full OMOP 9202 (BL-003), and resolving facility from the active segment's own location rather than the procedure's own `location_id` (BL-005) |
+| `metric__procedure` | Same as-of-segment pattern and OPD-scoping decision -- the reference this model was built from, anchored on request time instead of a single procedure timestamp (BL-004), scoped to `clinic` only instead of full OMOP 9202 (BL-003), and resolving facility from the active segment's own location, which `metric__procedure` now does too (BL-005) |
 | `metric__outpatient_visit` | Sibling metric in the outpatient product; broader OMOP 9202 definition, encounter-first-segment grain |
 | `ds__imaging_requests` | Report-layer imaging dataset at request grain, with PII -- this model's `imaging_area`/completion-time rules reproduce its own, but its facility comes from the encounter's flat `location_id` rather than the as-of segment (BL-005) -- the two can disagree for a patient who moved location during the encounter |
 | `imaging-requests-summary.sql` | Existing report computing a similar pending/completed funnel, but excluding cancelled entirely -- this metric's BL-002 explicitly departs from that exclusion |
@@ -348,7 +349,7 @@ earlier metrics.
 
 - **OQ-001:** Should `imaging`-typed encounters (and/or `vaccination`) be folded into this
   metric's scope later, moving it from `clinic`-only to the full OMOP 9202 definition
-  `opd_visit`/`opd_procedure` use? Decided narrow for now (MAUI-6806); revisit once it's
+  `opd_visit`/`procedure` use? Decided narrow for now (MAUI-6806); revisit once it's
   clear how much imaging activity, if any, the excluded encounter types actually carry at a
   real deployment.
 - **OQ-002:** Should a coarser AIHW-aligned modality grouping (Ultrasound/CT/X-ray/Nuclear
