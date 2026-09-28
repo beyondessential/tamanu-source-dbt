@@ -12,7 +12,7 @@ models:
         - clinical
     # No data_table_* meta. The Tupaia data tables over this model are configured in
     # tupaia-data-product at tamanu/data_tables/, one file per data table, the same
-    # convention metric__opd_procedure and metric__pharmacy_order use.
+    # convention metric__procedure and metric__pharmacy_order use.
     meta:
       owner: bes-maui
       domain: clinical

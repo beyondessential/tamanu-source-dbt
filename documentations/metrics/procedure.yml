@@ -13,6 +13,9 @@ metrics:
   name: Procedures
   description: >-
     Clinical procedures performed on a patient, in any encounter setting. One row per procedure.
+    encounter_type is the setting the procedure itself was performed in -- the phase the
+    encounter was in at the time, not what it became afterwards -- so a consumer scopes to
+    one setting by filtering this metric rather than reading a separate metric per setting.
   numerator_description: >-
     Recorded procedures, counted on the date performed
   denominator_description: null
@@ -31,11 +34,14 @@ metrics:
   disaggregations:
   - facility_id
   - encounter_type
+  - encounter_setting
   - sex
   - procedure
   - procedure_code
   - is_completed
+  - department
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: null
+  spec_path: specs/dbt-model/metric__procedure.md
+

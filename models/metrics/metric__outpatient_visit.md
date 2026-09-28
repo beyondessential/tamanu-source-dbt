@@ -191,7 +191,7 @@ Display name of the clinician recorded on the outpatient intake segment, from `r
 -- the OMOP PROVIDER wrapper over `bases/users`.
 
 Emitted alongside `clinician_id` rather than left to the consumer, the same pairing
-`metric__opd_procedure` makes for `procedure`/`procedure_code`: the id is the stable key, the
+`metric__procedure` makes for `procedure`/`procedure_code`: the id is the stable key, the
 name is what a chart axis needs, and resolving it here saves every consumer the same join and
 the grant that goes with it.
 
