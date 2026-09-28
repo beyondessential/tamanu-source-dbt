@@ -15,7 +15,7 @@
 
 Canonical definition for `lab_request`: one row per completed lab test carrying a reading,
 at day resolution. Sourced from `clinical__measurement`'s lab branch, the same clinical-layer
-convention `metric__opd_procedure`/`metric__opd_imaging_request` use over
+convention `metric__procedure`/`metric__imaging_request` use over
 `clinical__procedure_occurrence`.
 
 ## Purpose
@@ -92,7 +92,7 @@ model therefore carries no `data_table_*` meta. Not yet built as of this spec.
 - **BL-002 (reporting period):** `period_start` is `clinical__measurement.measurement_date`
   for the lab branch (completed date, else published/requested date -- that model's own
   BL-004 fallback order). `period_end` is hardcoded NULL, the same convention
-  `metric__opd_procedure`/`metric__pharmacy_order` use: a lab test is point-in-time, so there
+  `metric__procedure`/`metric__pharmacy_order` use: a lab test is point-in-time, so there
   is no closing date to emit.
 - **BL-003 (test identity is emitted raw):** `lab_test` and `lab_test_code` are the test
   type's reference-data name and code (`clinical__measurement.measurement_source_name`/
@@ -137,7 +137,7 @@ model therefore carries no `data_table_*` meta. Not yet built as of this spec.
 | AC-014 | Department and facility resolve off the test's encounter, sourced correctly from `clinical__measurement`'s lab branch | BL-001, BL-004, BL-007 | dbt unit test `test_metric__lab_request_attribution` |
 
 Test names are unnumbered (`ac_metric__lab_request_<column>_<check>`), matching
-`metric__opd_procedure.yml`'s own convention rather than the `ac_NNN_...` scheme -- this
+`metric__procedure.yml`'s own convention rather than the `ac_NNN_...` scheme -- this
 spec's AC numbering is for cross-reference within this document only.
 
 ## Registry entry
@@ -180,6 +180,6 @@ earlier metrics.
 
 | Artefact | Relationship |
 |---|---|
-| `clinical__measurement` | The clinical-layer source this model filters to its lab branch, the same convention `metric__opd_procedure` uses over `clinical__procedure_occurrence` |
+| `clinical__measurement` | The clinical-layer source this model filters to its lab branch, the same convention `metric__procedure` uses over `clinical__procedure_occurrence` |
 | `metric__pharmacy_order` | Same "bundle vs. line" grain reasoning (drug line, not order); same encounter-level (not segment-level) facility/department attribution |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
