@@ -1,0 +1,45 @@
+unit_tests:
+  - name: test_metric__procedure_facility_attribution
+    model: metric__procedure
+    description: >
+      BL-004 (metric__procedure). facility_id follows the resolved segment's care_site_id, not the procedure's
+      own location_id. proc1 records location_id locX (facility facX) while its segment sits
+      at loc1 (facility fac1) -- fac1 wins. proc2 records no location_id at all and is still
+      emitted, attributed to its segment's facility.
+    given:
+      - input: ref('clinical__procedure_occurrence')
+        format: sql
+        rows: |
+          select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'vd10a' as visit_detail_id, 'locX' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
+          union all
+          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'vd11a', null::varchar, 'code2', 'Procedure Two', true
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd10a' as visit_detail_id, 'e10' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-02-01'::date as visit_detail_start_date, '2026-02-01 08:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          union all
+          select 'vd11a', 'e11', 'p1', 9201, '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'locX', 'LOCX', 'Location X', null::int, null::varchar, 'facX', 'current'
+
+      - input: ref('departments')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
+
+    expect:
+      format: sql
+      rows: |
+        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
+        union all
+        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'

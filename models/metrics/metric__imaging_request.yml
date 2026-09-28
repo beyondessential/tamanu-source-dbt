@@ -1,31 +1,35 @@
 version: 2
 
 models:
-  - name: metric__opd_imaging_request
+  - name: metric__imaging_request
     description: >-
-      D5 metric view for the opd_imaging_request indicator registered in
-      documentations/metrics/outpatient.yml: opd_imaging_request (MAUI-6806). One row per
-      imaging request whose active clinical__visit_detail segment at the request's own
-      requested_date carries visit_detail_source_value = 'clinic' (see spec BL-003, BL-004)
-      -- per-request (subject) grain, so a consumer aggregates at whatever grain it needs.
+      D5 metric view for the imaging_request indicator registered in
+      documentations/metrics/imaging.yml: imaging_request. One row per imaging request, in
+      any encounter setting -- per-request (subject) grain, so a consumer aggregates at
+      whatever grain it needs. encounter_type is the setting the request was raised in, read
+      off the segment clinical__procedure_occurrence resolves (its BL-005), so a consumer
+      scopes to one setting via a filter on this one metric rather than needing a separate
+      metric per setting -- the same convention metric__procedure uses. Outpatient imaging
+      is encounter_type 'clinic' and inpatient is 'admission'. Emergency imaging is
+      metric__ed_imaging_request's population.
     config:
       tags:
         - clinical
     # No data_table_* meta. The Tupaia data tables over this model are configured in
     # tupaia-data-product at tamanu/data_tables/, one file per data table, the same
-    # convention metric__outpatient_visit and metric__opd_procedure use.
+    # convention metric__procedure uses.
     meta:
       owner: bes-maui
       domain: clinical
       # Per-request rows carrying sex/age alongside a request id -- no patient name or exact
-      # birth date, the same pair metric__opd_procedure carries while staying internal.
+      # birth date, the same pair metric__procedure carries while staying internal.
       pii: false
       classification: internal
     data_tests:
       # One row per request. A duplicate would double-count a request in any consumer that
       # sums value_numeric -- error even though the repo default is warn.
       - dbt_utils.unique_combination_of_columns:
-          name: ac_metric__opd_imaging_request_grain
+          name: ac_metric__imaging_request_grain
           arguments:
             combination_of_columns:
               - metric_id
@@ -34,7 +38,7 @@ models:
             severity: error
       # period_end, where present, is at or after period_start.
       - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
-          name: ac_metric__opd_imaging_request_period_end_at_or_after_start
+          name: ac_metric__imaging_request_period_end_at_or_after_start
           arguments:
             column_A: period_end
             column_B: period_start
@@ -44,23 +48,23 @@ models:
       # row against a still-open or cancelled request must not surface as a completion event
       # (BL-002).
       - dbt_utils.expression_is_true:
-          name: ac_metric__opd_imaging_request_period_end_requires_is_completed
+          name: ac_metric__imaging_request_period_end_requires_is_completed
           arguments:
             expression: "is_completed or period_end is null"
     columns:
       - name: metric_id
         data_type: text
-        description: The registered indicator identifier. Always 'opd_imaging_request'.
+        description: The registered indicator identifier. Always 'imaging_request'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_metric_id_not_null
+              name: ac_metric__imaging_request_metric_id_not_null
           - accepted_values:
-              name: ac_metric__opd_imaging_request_metric_id_values
+              name: ac_metric__imaging_request_metric_id_values
               arguments:
                 values:
-                  - opd_imaging_request
+                  - imaging_request
           - relationships:
-              name: ac_metric__opd_imaging_request_metric_id_registered
+              name: ac_metric__imaging_request_metric_id_registered
               arguments:
                 to: ref('metric_definitions')
                 field: metric_id
@@ -74,13 +78,13 @@ models:
         description: The Tamanu imaging request id.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_subject_id_not_null
+              name: ac_metric__imaging_request_subject_id_not_null
       - name: period_start
         data_type: timestamp
         description: When the request was raised.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_period_start_not_null
+              name: ac_metric__imaging_request_period_start_not_null
       - name: period_end
         data_type: timestamp
         description: >-
@@ -89,13 +93,12 @@ models:
       - name: period_granularity
         data_type: text
         description: >-
-          Constant 'minute' -- period_start/period_end carry a time component, unlike OPD
-          visit's date-only fields.
+          Constant 'minute' -- period_start/period_end carry a time component.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_period_granularity_not_null
+              name: ac_metric__imaging_request_period_granularity_not_null
           - accepted_values:
-              name: ac_metric__opd_imaging_request_period_granularity_is_minute
+              name: ac_metric__imaging_request_period_granularity_is_minute
               arguments:
                 values: ['minute']
       - name: value_numeric
@@ -103,9 +106,9 @@ models:
         description: Always 1 -- one request per row. Sum it to count requests over any grouping.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_value_numeric_not_null
+              name: ac_metric__imaging_request_value_numeric_not_null
           - accepted_values:
-              name: ac_metric__opd_imaging_request_value_numeric_is_one
+              name: ac_metric__imaging_request_value_numeric_is_one
               arguments:
                 values: [1]
                 quote: false
@@ -115,11 +118,34 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: >-
-          The Tamanu facility id the request is attributed to, resolved from the patient's
-          location at the time the request was raised.
+          The Tamanu facility id the request is attributed to, resolved from the segment
+          the request was raised in (not the request's own location_id, which is deprecated
+          in Tamanu and effectively unpopulated -- see the model's header comment). Because
+          it comes from that segment, it is where the patient was at the time, not wherever
+          the encounter later ended up.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_facility_id_not_null
+              name: ac_metric__imaging_request_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: >-
+          The setting the request was raised in -- admission, clinic, emergency and the rest
+          of the deployment's encounter types. This is the phase the encounter was in at the
+          time of the request, not what the encounter became afterwards: a request raised
+          during triage on an encounter later admitted reads as triage.
+
+          Scope a setting by filtering this column: 'clinic' for outpatient imaging and
+          'admission' for inpatient. Outpatient imaging is clinic only, narrower than the
+          OMOP 9202 concept that also covers imaging- and vaccination-typed encounters
+          (MAUI-6806).
+
+          This metric includes emergency, observation and triage requests.
+          metric__ed_imaging_request reports those same rows grouped as OMOP 9203, so it is
+          a subset of this metric rather than a separate population -- never sum the two, or
+          every emergency-phase request is counted twice.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_encounter_type_not_null
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.
@@ -131,15 +157,7 @@ models:
           column alone.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_is_completed_not_null
-      - name: imaging_type
-        data_type: text
-        description: >-
-          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
-          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
-        data_tests:
-          - not_null:
-              name: ac_metric__opd_imaging_request_imaging_type_not_null
+              name: ac_metric__imaging_request_is_completed_not_null
       - name: imaging_type_code
         data_type: text
         description: >-
@@ -148,7 +166,15 @@ models:
           the readable name does not. Never NULL -- falls back to 'Not recorded'.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_imaging_type_code_not_null
+              name: ac_metric__imaging_request_imaging_type_code_not_null
+      - name: imaging_type
+        data_type: text
+        description: >-
+          The imaging modality as a readable label (e.g. X-Ray, CT Scan), the label to rank
+          and trend by. Never NULL; falls back to imaging_type_code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_imaging_type_not_null
       - name: imaging_area
         data_type: text
         description: >-
@@ -156,7 +182,16 @@ models:
           NULL. A request naming several areas stays one row.
         data_tests:
           - not_null:
-              name: ac_metric__opd_imaging_request_imaging_area_not_null
+              name: ac_metric__imaging_request_imaging_area_not_null
+      - name: department
+        data_type: text
+        description: >-
+          The department of the segment the request was raised in (e.g. Dental), resolved to
+          a name so a consumer scopes to one department by metric_filters on a readable
+          value. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_department_not_null
       - name: age_years
         data_type: integer
         description: >-
