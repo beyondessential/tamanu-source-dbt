@@ -108,9 +108,10 @@ models:
         data_type: character varying(255)
         description: >-
           The Tamanu facility id the procedure is attributed to, resolved from the segment
-          the procedure happened in (not the procedure's own location_id). Because it comes
-          from that segment, it is where the patient was at the time, not wherever the
-          encounter later ended up.
+          the procedure happened in (not the procedure's own location_id). For an encounter
+          that moved, this is where the patient was at the time rather than where the
+          encounter ended up. An encounter with no recorded history has a single
+          whole-visit segment, so for those the two are the same value.
         data_tests:
           - not_null:
               name: ac_metric__procedure_facility_id_not_null
@@ -121,9 +122,8 @@ models:
           and the rest of the deployment's encounter types. This is the phase the encounter
           was in at the time of the procedure, not what the encounter became afterwards: a
           procedure performed during triage on an encounter later admitted reads as triage.
-          Filtering to one setting gives that setting's procedures from the same metric, and
           Filtering to 'clinic' gives outpatient procedures and 'admission' inpatient
-          ones, which is what the former scoped metrics did.
+          ones, which is what the retired scoped metrics did.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_type_not_null

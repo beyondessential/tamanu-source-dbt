@@ -14,8 +14,8 @@ metrics:
   description: >-
     Clinical procedures performed on a patient, in any encounter setting. One row per procedure.
     encounter_type is the setting the procedure itself was performed in -- the phase the
-    encounter was in at the time, not what it became afterwards -- so filtering to one
-    setting agrees with the matching scoped metric.
+    encounter was in at the time, not what it became afterwards -- so a consumer scopes to
+    one setting by filtering this metric rather than reading a separate metric per setting.
   numerator_description: >-
     Recorded procedures, counted on the date performed
   denominator_description: null

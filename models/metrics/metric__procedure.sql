@@ -51,8 +51,7 @@ procedures as (
         loc.facility_id,
         -- the segment the procedure happened in, not the encounter's whole-visit type --
         -- lets a consumer scope to inpatient, emergency or outpatient procedures without a
-        -- separate metric per setting, and agrees with the scoped siblings, which filter
-        -- the same column
+        -- separate metric per setting
         vd.visit_detail_source_value as encounter_type,
         pr.gender_source_value as sex,
         -- the procedure as recorded, coalesced so the column is never NULL -- Tupaia exposes
@@ -69,8 +68,8 @@ procedures as (
         coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     -- inner join on the segment FK clinical__procedure_occurrence already resolved -- no
-    -- as-of derivation here, so this metric and its scoped siblings cannot disagree about
-    -- which segment a procedure belongs to. A procedure whose segment did not resolve
+    -- as-of derivation here, so every metric over this clinical model agrees on which
+    -- segment a procedure belongs to. A procedure whose segment did not resolve
     -- (NULL FK, where the encounter's type is absent from map__omop_visit_type) is dropped
     -- rather than surfaced with no setting, the same tradeoff the previous join to
     -- clinical__visit_occurrence made
@@ -80,8 +79,7 @@ procedures as (
         on pr.person_id = po.person_id
     -- facility is the resolved segment's own care_site_id, not the procedure's own
     -- location_id -- the same source metric__imaging_request resolves facility from, so a
-    -- procedure and an imaging request belonging to the same segment agree on facility, and
-    -- the generic and scoped procedure metrics agree with each other by construction. It
+    -- procedure and an imaging request belonging to the same segment agree on facility. It
     -- also means a procedure whose own location_id does not resolve keeps a facility rather
     -- than being dropped by this join.
     -- inner join: a segment's care_site resolving to nothing is an anomaly, excluded rather

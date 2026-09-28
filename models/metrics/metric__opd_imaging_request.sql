@@ -10,7 +10,7 @@
 -- first-segment clamp applied when a request predates every segment.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
--- directly -- the same clinical layer metric__procedure and metric__procedure build on.
+-- directly -- the same clinical layer metric__procedure builds on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model does
 -- not re-filter status. Facility and completion still need bases/-level detail the clinical
 -- model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
