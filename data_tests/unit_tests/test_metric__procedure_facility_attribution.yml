@@ -41,6 +41,6 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
+        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
         union all
-        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'

@@ -34,6 +34,7 @@ metrics:
   disaggregations:
   - facility_id
   - encounter_type
+  - encounter_setting
   - sex
   - procedure
   - procedure_code

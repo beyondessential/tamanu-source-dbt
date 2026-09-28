@@ -86,6 +86,12 @@ where trim(d) not in (
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
         -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
         'encounter_type',
+        -- procedure's encounter type grouped into a setting via the segment's OMOP visit
+        -- concept -- Outpatient (9202: clinic, imaging, vaccination), Inpatient (9201),
+        -- Emergency (9203) or Other. Coarser than encounter_type deliberately: it is what
+        -- the retired opd_procedure/ipd_procedure metrics scoped on, so a consumer filters
+        -- one stable value instead of a list that drifts with map__omop_visit_type.
+        'encounter_setting',
         -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
         -- deployments differ in what they code diagnoses with, so any chapter or block
         -- grouping is applied downstream over diagnosis_code rather than registered here.

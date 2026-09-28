@@ -53,6 +53,19 @@ procedures as (
         -- lets a consumer scope to inpatient, emergency or outpatient procedures without a
         -- separate metric per setting
         vd.visit_detail_source_value as encounter_type,
+        -- the OMOP visit concept of that segment, grouped into a readable setting. This is
+        -- what the retired metric__opd_procedure and metric__ipd_procedure filtered on
+        -- (9202 and 9201), and it is deliberately coarser than encounter_type: 9202 covers
+        -- clinic, imaging and vaccination alike, so 'Outpatient' is not the same set as
+        -- encounter_type = 'clinic'. A consumer scoping to a setting filters this column,
+        -- not encounter_type, so its scope does not shift if map__omop_visit_type gains an
+        -- encounter type.
+        case vd.visit_detail_concept_id
+            when 9201 then 'Inpatient'
+            when 9202 then 'Outpatient'
+            when 9203 then 'Emergency'
+            else 'Other'
+        end as encounter_setting,
         pr.gender_source_value as sex,
         -- the procedure as recorded, coalesced so the column is never NULL -- Tupaia exposes
         -- these as array filters, and an array filter drops a NULL row
@@ -107,6 +120,7 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    encounter_setting,
     sex,
     procedure,
     procedure_code,
