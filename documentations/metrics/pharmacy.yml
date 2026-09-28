@@ -39,6 +39,7 @@ metrics:
   - is_completed
   - drug_source_value
   - drug_source_name
+  - department
   variant_of: null
   owner: bes-maui
   status: draft

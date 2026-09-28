@@ -5,12 +5,12 @@
 -- clinical__visit_detail segment was a clinic encounter, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. See specs/dbt-model/metric__opd_imaging_request.md
 -- BL-003 for why this is clinic-only rather than the full OMOP 9202 clinic/imaging/vaccination
--- definition metric__outpatient_visit and metric__opd_procedure both use, and BL-004 for why
+-- definition metric__outpatient_visit and metric__procedure both use, and BL-004 for why
 -- the as-of join is evaluated at request time rather than completion time, and for the
 -- first-segment clamp applied when a request predates every segment.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
--- directly -- the same clinical layer metric__procedure and metric__opd_procedure build on.
+-- directly -- the same clinical layer metric__procedure builds on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model does
 -- not re-filter status. Facility and completion still need bases/-level detail the clinical
 -- model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
@@ -50,6 +50,11 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-011: the as-of segment's own department, resolved to a name for metric_filters scoping.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-002: one completion timestamp per request -- the earliest recorded result, the same
 -- rule macros/datasets/imaging_requests.sql uses for ds__imaging_requests.completed_datetime.
 completions as (
@@ -60,13 +65,29 @@ completions as (
     group by imaging_request_id
 ),
 
--- BL-007: legacy free-text area fallback, one row per request.
+-- BL-007: the current revision of each imaging-request note. Ranked before the note_type
+-- filter, since a revision can change a note's type.
+imaging_request_notes as (
+    select
+        notes.id,
+        notes.record_id,
+        notes.note_type,
+        notes.content,
+        notes.datetime,
+        notes.created_datetime,
+        {{ notes__revision_rank('notes') }} as revision_rank
+    from notes
+    where notes.record_type = 'ImagingRequest'
+),
+
+-- BL-007: legacy free-text area fallback, one row per request, in the order the notes were
+-- recorded. created_datetime and id break a same-second tie so the string is stable.
 imaging_area_notes as (
     select
         record_id as imaging_request_id,
-        string_agg(content, ', ' order by datetime) as imaging_area
-    from notes
-    where record_type = 'ImagingRequest'
+        string_agg(content, ', ' order by datetime, created_datetime, id) as imaging_area
+    from imaging_request_notes
+    where revision_rank = 1
         and note_type = 'areaToBeImaged'
     group by record_id
 ),
@@ -104,7 +125,9 @@ requests as (
         po.is_completed,
         po.procedure_source_value as imaging_type_code_raw,
         po.procedure_source_name as imaging_type_raw,
-        areas.imaging_area as imaging_area_raw
+        areas.imaging_area as imaging_area_raw,
+        -- BL-011
+        coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     -- BL-003, BL-004: the segment the request was raised in, resolved once by
     -- clinical__procedure_occurrence (its BL-005) rather than re-derived here -- the as-of
@@ -117,13 +140,15 @@ requests as (
         on pr.person_id = vd.person_id
     -- inner join: the segment's own location, not the request's location_group_id (BL-005) --
     -- excluded rather than attributed to a NULL facility, the same "excluded rather than
-    -- guessed" convention metric__opd_procedure uses for its own location join.
+    -- guessed" convention metric__procedure uses for its own location join.
     join locations loc
         on loc.id = vd.care_site_id
     left join completions c
         on c.imaging_request_id = po.procedure_occurrence_id
     left join imaging_areas areas
         on areas.imaging_request_id = po.procedure_occurrence_id
+    left join departments dept
+        on dept.id = vd.department_id
     -- BL-003: clinic only -- not OMOP concept 9202, which would also admit imaging and
     -- vaccination encounter types (decision, MAUI-6806).
     where vd.visit_detail_source_value = 'clinic'
@@ -158,5 +183,6 @@ select
     -- BL-007: aggregated body area, never NULL.
     coalesce(imaging_area_raw, 'Not recorded') as imaging_area,
     -- BL-008: a measure, not a dimension -- age classification is the consumer's.
-    age_years
+    age_years,
+    department
 from requests

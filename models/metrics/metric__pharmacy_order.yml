@@ -144,3 +144,13 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_drug_source_name_not_null
+      - name: department
+        data_type: text
+        description: >-
+          The encounter's own department (e.g. Dental), resolved to a name so a consumer scopes
+          to one department by metric_filters on a readable value, the same convention
+          drug_source_name uses. Never NULL -- falls back to 'Not recorded' where no department
+          is set on the encounter.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_department_not_null

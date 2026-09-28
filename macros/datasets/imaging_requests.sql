@@ -8,12 +8,29 @@ with results as (
     group by imaging_request_id
 ),
 
+-- The current revision of each imaging-request note. Ranked before the note_type filter,
+-- since a revision can change a note's type.
+imaging_request_notes as (
+    select
+        n.id,
+        n.record_id,
+        n.note_type,
+        n.content,
+        n.datetime,
+        n.created_datetime,
+        {{ notes__revision_rank('n') }} as revision_rank
+    from {{ ref('notes') }} n
+    where n.record_type = 'ImagingRequest'
+),
+
+-- In the order the notes were recorded. created_datetime and id break a same-second tie so
+-- the string is stable.
 imaging_area_notes as (
     select
         record_id as imaging_request_id,
-        string_agg(content, ', ' order by datetime) as imaging_area
-    from {{ ref('notes') }}
-    where record_type = 'ImagingRequest'
+        string_agg(content, ', ' order by datetime, created_datetime, id) as imaging_area
+    from imaging_request_notes
+    where revision_rank = 1
         and note_type = 'areaToBeImaged'
     group by record_id
 ),

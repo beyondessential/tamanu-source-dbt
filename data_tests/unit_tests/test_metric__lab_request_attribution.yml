@@ -1,0 +1,48 @@
+unit_tests:
+  - name: test_metric__lab_request_attribution
+    model: metric__lab_request
+    description: >
+      BL-001/BL-004/BL-007. m1 is a lab-branch row on an encounter with a department set --
+      included, department resolved to a name. m2 is a lab-branch row on an encounter with no
+      department -- included, department falls back to 'Not recorded' rather than dropping
+      the row. m3 is a vitals-branch row on the same encounter as m1 -- proves the
+      measurement_type_source_value = 'lab' filter (BL-001) excludes it rather than merely
+      never encountering a non-lab row in practice.
+    given:
+      - input: ref('clinical__measurement')
+        format: sql
+        rows: |
+          select 'm1' as measurement_id, 'p1' as person_id, '2026-03-01'::date as measurement_date, '2026-03-01 10:00:00'::timestamp as measurement_datetime, 'lab' as measurement_type_source_value, 5.4::numeric as value_as_number, '5.4' as value_source_value, 'mmol/L' as unit_source_value, 'u1' as provider_id, 'e1' as visit_occurrence_id, 'ltt1' as measurement_source_id, 'GLUC' as measurement_source_value, 'Glucose' as measurement_source_name
+          union all
+          select 'm2', 'p1', '2026-03-02'::date, '2026-03-02 09:00:00'::timestamp, 'lab', null::numeric, 'Reactive', null::varchar, 'u1', 'e2', 'ltt2', 'HIV', 'HIV Rapid Test'
+          union all
+          select 'm3', 'p1', '2026-03-01'::date, '2026-03-01 08:00:00'::timestamp, 'vitals survey', 98.6::numeric, '98.6', 'F', 'u1', 'e1', 'pde1', 'TEMP', 'Temperature'
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'loc1' as location_id, 'dept_dental' as department_id
+          union all
+          select 'e2', 'loc1', null::varchar
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_request' as metric_id, null::text as variant_id, 'm1' as subject_id, '2026-03-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'GLUC' as lab_test_code, 'Glucose' as lab_test, 30 as age_years, 'Dental' as department
+        union all
+        select 'lab_request', null::text, 'm2', '2026-03-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'female', 'HIV', 'HIV Rapid Test', 30, 'Not recorded'

@@ -51,20 +51,20 @@ encounter_branch as (
 
         -- BL-004: diagnosis datetimes. Encounter diagnoses are point-in-time, so no end
         ed.datetime::date as condition_start_date,
-        ed.datetime       as condition_start_datetime,
-        null::date        as condition_end_date,
-        null::timestamp   as condition_end_datetime,
+        ed.datetime as condition_start_datetime,
+        null::date as condition_end_date,
+        null::timestamp as condition_end_datetime,
 
         -- BL-006: provenance -- every row here is an EHR encounter diagnosis
         'encounter diagnosis' as condition_type_source_value,
 
         -- BL-005: status and primary/secondary flag, certainty retained verbatim
-        ed.certainty  as condition_status_source_value,
-        ed.is_primary as is_primary,
+        ed.certainty as condition_status_source_value,
+        ed.is_primary,
 
         -- BL-002: provider and visit FKs
         ed.diagnosed_by_id as provider_id,
-        ed.encounter_id    as visit_occurrence_id,
+        ed.encounter_id as visit_occurrence_id,
 
         -- BL-003: diagnosis ICD-10 code and name, concept_id deferred to vocab__
         rd.code as condition_source_value,

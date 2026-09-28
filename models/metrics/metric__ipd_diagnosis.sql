@@ -37,9 +37,9 @@ diagnosis_window as (
         case
             when vo.visit_end_datetime is not null
                 then least(
-                    greatest(cco.condition_start_datetime, vo.visit_start_datetime),
-                    vo.visit_end_datetime
-                )
+                        greatest(cco.condition_start_datetime, vo.visit_start_datetime),
+                        vo.visit_end_datetime
+                    )
             else greatest(cco.condition_start_datetime, vo.visit_start_datetime)
         end as window_start,
         vo.visit_end_datetime as window_end
@@ -60,7 +60,7 @@ diagnosis_ipd_segment as (
         and (vd.visit_detail_end_datetime is null or vd.visit_detail_end_datetime >= dw.window_start)
         and (dw.window_end is null or vd.visit_detail_start_datetime <= dw.window_end)
     -- BL-004: facility is the earliest qualifying segment's own care_site_id
-    order by dw.condition_occurrence_id, vd.visit_detail_start_datetime asc, vd.visit_detail_id asc
+    order by dw.condition_occurrence_id asc, vd.visit_detail_start_datetime asc, vd.visit_detail_id asc
 ),
 
 diagnoses as (
