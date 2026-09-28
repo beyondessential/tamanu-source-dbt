@@ -1,0 +1,103 @@
+unit_tests:
+  # medication_dispenses, pharmacy_order_prescriptions and pharmacy_orders ids are uuid
+  # columns, so their fixture ids are uuids ending in a readable tag: d00n for dispenses
+  # (d001 md_mod, d002 md_same, d003 md_null, d004 md_sen, d005 md_std), b00n for pharmacy
+  # order prescriptions (pop_n), a001/a002 for the standard/sensitive pharmacy orders.
+  - name: test_ds__medication_dispenses_dispensed_drug
+    model: ds__medication_dispenses
+    description: >
+      BL-001/BL-002 of ds__medication_dispenses. Three dispenses at a non-sensitive
+      facility, each against a prescription for Drug A:
+
+      md_mod  -- pharmacy modified the prescription at dispensing, so the dispense
+                 carries Drug B. The row must report Drug B (AC-001).
+      md_same -- unmodified; the dispense carries Drug A copied from the prescription.
+                 The row must report Drug A (AC-002).
+      md_null -- legacy dispense with no medication_id of its own. The row must fall
+                 back to the prescription's Drug A (AC-003).
+
+      A fourth dispense at a sensitive facility must not appear in this variant.
+      Reverting the macro to join on prescriptions.medication_id fails md_mod.
+    given:
+      - input: ref('medication_dispenses')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000d001', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b001', quantity: 10, dispensed_at: '2026-09-01 09:00:00', medication_id: drug_b}
+          - {id: '00000000-0000-0000-0000-00000000d002', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b002', quantity: 20, dispensed_at: '2026-09-02 09:00:00', medication_id: drug_a}
+          - {id: '00000000-0000-0000-0000-00000000d003', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b003', quantity: 30, dispensed_at: '2026-09-03 09:00:00', medication_id: null}
+          - {id: '00000000-0000-0000-0000-00000000d004', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b004', quantity: 40, dispensed_at: '2026-09-04 09:00:00', medication_id: drug_b}
+      - input: ref('pharmacy_order_prescriptions')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000b001', pharmacy_order_id: '00000000-0000-0000-0000-00000000a001', prescription_id: pr_1}
+          - {id: '00000000-0000-0000-0000-00000000b002', pharmacy_order_id: '00000000-0000-0000-0000-00000000a001', prescription_id: pr_2}
+          - {id: '00000000-0000-0000-0000-00000000b003', pharmacy_order_id: '00000000-0000-0000-0000-00000000a001', prescription_id: pr_3}
+          - {id: '00000000-0000-0000-0000-00000000b004', pharmacy_order_id: '00000000-0000-0000-0000-00000000a002', prescription_id: pr_4}
+      - input: ref('pharmacy_orders')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000a001', encounter_id: enc_1, facility_id: fac_std}
+          - {id: '00000000-0000-0000-0000-00000000a002', encounter_id: enc_2, facility_id: fac_sen}
+      - input: ref('encounters')
+        rows:
+          - {id: enc_1, patient_id: pat_1}
+          - {id: enc_2, patient_id: pat_2}
+      # sql format: a dict fixture null-fills prescriptions.ideal_times as a bare
+      # `ARRAY` cast, which Postgres rejects. Every prescription is for Drug A.
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'pr_1' as id, 'drug_a' as medication_id
+          union all select 'pr_2', 'drug_a'
+          union all select 'pr_3', 'drug_a'
+          union all select 'pr_4', 'drug_a'
+      - input: ref('reference_data')
+        rows:
+          - {id: drug_a, code: DRUG-A, name: Drug A}
+          - {id: drug_b, code: DRUG-B, name: Drug B}
+      - input: ref('facilities')
+        rows:
+          - {id: fac_std, name: General Hospital, is_sensitive: false}
+          - {id: fac_sen, name: Sensitive Clinic, is_sensitive: true}
+    expect:
+      rows:
+        - {id: '00000000-0000-0000-0000-00000000d001', facility: General Hospital, medication_id: drug_b, medication_code: DRUG-B, medication: Drug B}
+        - {id: '00000000-0000-0000-0000-00000000d002', facility: General Hospital, medication_id: drug_a, medication_code: DRUG-A, medication: Drug A}
+        - {id: '00000000-0000-0000-0000-00000000d003', facility: General Hospital, medication_id: drug_a, medication_code: DRUG-A, medication: Drug A}
+
+  - name: test_ds__sensitive_medication_dispenses_dispensed_drug
+    model: ds__sensitive_medication_dispenses
+    description: >
+      AC-004: the sensitive variant, built from the same macro, also reports the
+      dispensed drug. A modified dispense at a sensitive facility must report Drug B,
+      and a modified dispense at a non-sensitive facility must not appear.
+    given:
+      - input: ref('medication_dispenses')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000d004', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b001', quantity: 10, dispensed_at: '2026-09-01 09:00:00', medication_id: drug_b}
+          - {id: '00000000-0000-0000-0000-00000000d005', pharmacy_order_prescription_id: '00000000-0000-0000-0000-00000000b002', quantity: 20, dispensed_at: '2026-09-02 09:00:00', medication_id: drug_b}
+      - input: ref('pharmacy_order_prescriptions')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000b001', pharmacy_order_id: '00000000-0000-0000-0000-00000000a002', prescription_id: pr_1}
+          - {id: '00000000-0000-0000-0000-00000000b002', pharmacy_order_id: '00000000-0000-0000-0000-00000000a001', prescription_id: pr_2}
+      - input: ref('pharmacy_orders')
+        rows:
+          - {id: '00000000-0000-0000-0000-00000000a002', encounter_id: enc_1, facility_id: fac_sen}
+          - {id: '00000000-0000-0000-0000-00000000a001', encounter_id: enc_2, facility_id: fac_std}
+      - input: ref('encounters')
+        rows:
+          - {id: enc_1, patient_id: pat_1}
+          - {id: enc_2, patient_id: pat_2}
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'pr_1' as id, 'drug_a' as medication_id
+          union all select 'pr_2', 'drug_a'
+      - input: ref('reference_data')
+        rows:
+          - {id: drug_a, code: DRUG-A, name: Drug A}
+          - {id: drug_b, code: DRUG-B, name: Drug B}
+      - input: ref('facilities')
+        rows:
+          - {id: fac_std, name: General Hospital, is_sensitive: false}
+          - {id: fac_sen, name: Sensitive Clinic, is_sensitive: true}
+    expect:
+      rows:
+        - {id: '00000000-0000-0000-0000-00000000d004', facility: Sensitive Clinic, medication_id: drug_b, medication_code: DRUG-B, medication: Drug B}
