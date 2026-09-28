@@ -69,15 +69,15 @@ completions as (
 -- filter, since a revision can change a note's type.
 imaging_request_notes as (
     select
-        id,
-        record_id,
-        note_type,
-        content,
-        datetime,
-        created_datetime,
+        notes.id,
+        notes.record_id,
+        notes.note_type,
+        notes.content,
+        notes.datetime,
+        notes.created_datetime,
         {{ notes__revision_rank('notes') }} as revision_rank
     from notes
-    where record_type = 'ImagingRequest'
+    where notes.record_type = 'ImagingRequest'
 ),
 
 -- BL-007: legacy free-text area fallback, one row per request, in the order the notes were
@@ -135,12 +135,14 @@ active_segment_at_request as (
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
     order by
-        po.procedure_occurrence_id,
+        po.procedure_occurrence_id asc,
         (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
         case when vd.visit_detail_start_datetime <= po.procedure_datetime
-             then vd.visit_detail_start_datetime end desc,
+                then vd.visit_detail_start_datetime
+        end desc,
         case when vd.visit_detail_start_datetime > po.procedure_datetime
-             then vd.visit_detail_start_datetime end asc,
+                then vd.visit_detail_start_datetime
+        end asc,
         vd.visit_detail_id desc
 ),
 

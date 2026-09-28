@@ -13,11 +13,10 @@ with contributing_death_causes as (
 -- most one current row but there is no unique constraint on patient_id so dedupe
 -- defensively and prefer a finalised record when more than one current row exists
 death_data as (
-    select distinct on (patient_id)
-        *
+    select distinct on (patient_id) *
     from {{ ref("patient_death_data") }}
     where visibility_status = 'current'
-    order by patient_id asc, is_final desc nulls last, id
+    order by patient_id asc, is_final desc nulls last, id asc
 ),
 
 encounters_with_death as (
