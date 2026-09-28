@@ -15,7 +15,11 @@ metrics:
     Laboratory tests ordered, whether or not they were completed. One row per test, not per lab
     request -- a request can bundle several tests (e.g. a panel), and is_panel_request preserves
     the order-level view. A test counts as completed when it carries its own completion
-    timestamp, and turnaround runs from the request being placed to that moment.
+    timestamp, and turnaround runs from the request being placed to that moment. Completion is
+    a property of the test alone and does not imply the result still stands -- a request
+    published and later withdrawn leaves its tests completed with their result dropped -- so
+    request_status is emitted for a consumer that needs delivered results rather than
+    throughput.
   numerator_description: >-
     Lab tests ordered, counted on the date the request was placed, excluding requests marked
     deleted or entered-in-error -- cancelled, invalidated, rejected and sample-not-collected
@@ -47,6 +51,7 @@ metrics:
   - encounter_setting
   - sex
   - is_completed
+  - request_status
   - is_panel_request
   - department
   - lab_test_type

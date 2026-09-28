@@ -151,7 +151,7 @@ where trim(d) not in (
         -- opd_imaging_request's aggregated body area/study area
         'imaging_area',
         -- department, added to opd_visit/opd_diagnosis/procedure/opd_imaging_request/
-        -- pharmacy_order/inpatient_admission/lab_request (MAUI-6909): the encounter's or
+        -- pharmacy_order/inpatient_admission/lab_test (MAUI-6909): the encounter's or
         -- qualifying segment's own department (e.g. Dental), resolved to a name so a
         -- consumer scopes to one department via metric_filters.
         'department',
@@ -159,9 +159,9 @@ where trim(d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
-        -- lab_request's recorded lab test type, as code and as readable label. Emitted
-        -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code
-        -- use (MAUI-6909).
-        'lab_test_code',
-        'lab_test'
+        -- lab_test's request lifecycle status, as recorded. is_completed is the test's own
+        -- timestamp, so a withdrawn request's tests can read completed with their result
+        -- dropped -- this is what a consumer filters to count delivered results rather than
+        -- laboratory throughput.
+        'request_status'
     )

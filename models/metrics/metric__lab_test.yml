@@ -7,8 +7,7 @@ models:
       lab_test. One row per lab test ordered, whether or not it produced a result -- per-test
       (subject) grain, so a consumer aggregates at whatever grain it needs. The order side is
       read from bases/lab_requests and bases/lab_tests; the result, where one exists, is LEFT
-      joined from clinical__measurement's lab branch. Renamed from metric__lab_request
-      (MAUI-6909), which counted only resulted tests.
+      joined from clinical__measurement's lab branch.
     config:
       tags:
         - clinical
@@ -37,15 +36,15 @@ models:
               - subject_id
           config:
             severity: error
-      # BL-002: a completed test's period closes at its own completion, so period_end is no
-      # longer hardcoded NULL as it was before the rename.
+      # BL-002: a completed test's period closes at its own completion.
       #
       # EXPECTED TO WARN on deployments with backdated lab entry: period_end is the completion
       # as recorded, and a small number of tests are recorded as completing before they were
       # requested (22 of 2502 on Tokelau, the worst by about a day). Left at the project's
       # default warn severity rather than excluded or silenced, because the count is a genuine
-      # data-quality signal worth surfacing to the country team. It does not affect any average:
-      # turnaround__minutes is already NULL for exactly these rows (BL-007).
+      # data-quality signal worth surfacing to the country team. These rows carry a NEGATIVE
+      # turnaround__minutes rather than a NULL (BL-007), so an unfiltered mean is pulled down by
+      # them -- a turnaround card has to exclude them explicitly.
       - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
           name: ac_metric__lab_test_period_end_after_start
           arguments:
@@ -184,13 +183,31 @@ models:
         description: >-
           Whether the test has its own completion timestamp. Deliberately not the request
           reaching 'published': completion is a property of the individual test, and a request
-          can be published while one of its tests was never run. Does NOT distinguish cancelled
-          from still pending -- both are false. Nor does it mean the test has a result: a
-          completed test can carry no reading, which is why "has a result" is read from the
-          result column instead.
+          can be published while one of its tests was never run.
+
+          Three things it does NOT mean. It does not mean the result still stands: a request
+          published and later invalidated, cancelled or rejected leaves its tests with a
+          completion timestamp, so they read completed here while clinical__measurement has
+          dropped their result -- filter request_status to exclude them. It does not mean the
+          test has a result, since a completed test can carry no reading; that is what the
+          result column is for. And it does not separate a cancelled test from a still-pending
+          one where neither completed -- both are false, and request_status is what tells them
+          apart.
         data_tests:
           - not_null:
               name: ac_metric__lab_test_is_completed_not_null
+      - name: request_status
+        data_type: text
+        description: >-
+          The request's lifecycle status as recorded -- reception_pending, results_pending,
+          interim_results, to_be_verified, verified, published, cancelled, invalidated,
+          rejected or sample-not-collected. Emitted because is_completed cannot carry it:
+          a withdrawn request's tests can still hold a completion timestamp, and a pending and
+          a cancelled test are both is_completed false. A card counting delivered results
+          filters this; one counting laboratory throughput does not. Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_test_request_status_not_null
       - name: lab_request_id
         data_type: character varying(255)
         description: >-

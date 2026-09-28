@@ -1,5 +1,5 @@
 -- metric__lab_test -- D5 metric view for the lab_test indicator registered in
--- documentations/metrics/lab.yml: lab_test (MAUI-6837; renamed from lab_request, MAUI-6909).
+-- documentations/metrics/lab.yml: lab_test (MAUI-6837).
 --
 -- Per-lab-test (subject) grain: one row per lab test *ordered*, whether or not it ever
 -- produced a result, value_numeric 1, so a consumer aggregates at whatever grain it needs. A
@@ -13,14 +13,6 @@
 -- requested and never resulted has no place in the clinical layer. D10-compliant: D10 forbids
 -- reading public.*, not bases/. Results remain clinical events and are read from
 -- clinical__measurement (BL-008).
---
--- This is the change from the model's previous shape, which sourced only from
--- clinical__measurement's lab branch. That branch keeps tests carrying a reading under a
--- request that was not withdrawn (its own BL-009/BL-011), so requested-but-unresulted and
--- cancelled tests were absent by construction -- making "tests requested versus completed",
--- the headline indicator of MAUI-6837, unanswerable. Every row the previous model emitted is
--- still emitted here, as the subset where the results join hits; this model's membership is
--- strictly wider, since BL-005 also keeps the withdrawn statuses that branch excludes.
 --
 -- The registry carries the definition; this model is its implementation.
 -- See specs/dbt-model/metric__lab_test.md for BL-001..BL-012.
@@ -60,12 +52,10 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
--- BL-002: department is the ACTIVE SEGMENT's department at the moment the test was ordered,
--- not the encounter's current one (BL-010). The FSM Dental consumer (MAUI-6909) reads this to
--- scope lab activity to Dental; before this change it read encounters.department_id, which
--- Tamanu updates in place, so a test ordered in Dental on a patient later moved to a ward
--- reported the ward. bases/lab_requests carries its own department_id (the requesting
--- department) -- a third value again, not used here.
+-- BL-002: department is the active segment's own department at the moment the test was
+-- ordered (BL-010), which is what lets a consumer scope lab activity to a department such as
+-- Dental. Not the encounter's department, which Tamanu updates in place as the encounter
+-- moves, and not bases/lab_requests.department_id, which is the requesting department.
 departments as (
     select * from {{ ref('departments') }}
 ),
@@ -115,12 +105,10 @@ ordered_tests as (
 -- (start_datetime, visit_detail_id) order clinical__visit_detail chains its own segments by.
 -- One shared direction would be right for only one of the two.
 --
--- This repeats the rule clinical__procedure_occurrence applies for its own visit_detail_id
--- (that model's BL-005), which metric__procedure and metric__imaging_request then read off an
--- FK. A lab order cannot: it is deliberately not in the clinical layer (BL-004), so there is no
--- FK to read. Kept inline rather than shared, because a second caller does not yet exist --
--- when referrals or appointments need the same resolution, extract it then, for three callers
--- rather than one.
+-- This is the same rule clinical__procedure_occurrence applies for its own visit_detail_id
+-- (that model's BL-005), which metric__procedure and metric__imaging_request read off an FK.
+-- A lab order has no such FK: it is not in the clinical layer (BL-004), so it resolves the
+-- segment here.
 active_segment as (
     select distinct on (o.lab_test_id)
         o.lab_test_id,
@@ -164,6 +152,12 @@ tests as (
         -- lets a consumer average turnaround by filtering is_completed.
         (ot.completed_datetime is not null) as is_completed,
         ot.completed_datetime,
+        -- BL-006: the request's lifecycle status, as recorded. is_completed is the test's own
+        -- timestamp and says nothing about whether the result still stands: a request that was
+        -- published and later invalidated leaves its tests with a completed_datetime, so they
+        -- read completed here while their result is withdrawn. A consumer wanting delivered
+        -- results filters this column; one measuring laboratory throughput does not.
+        coalesce(ot.status, 'Not recorded') as request_status,
         -- BL-003: whether the test arrived as part of a panel, so a consumer counting clinical
         -- acts rather than laboratory workload can separate them from single orders.
         (ot.lab_test_panel_request_id is not null) as is_panel_request,
@@ -173,12 +167,6 @@ tests as (
         -- imaging- and vaccination-typed encounters, and a test ordered during one of those is
         -- outpatient lab activity like any other. Scope a setting by this column and the scope
         -- holds when map__omop_visit_type gains an encounter type.
-        --
-        -- Follows metric__procedure rather than metric__imaging_request, which carries no
-        -- encounter_setting because outpatient imaging is deliberately clinic-only (an
-        -- imaging-typed encounter and an imaging request are independent Tamanu concepts that
-        -- share a name, MAUI-6806). Labs have no such collision, so the full 9202 scope is
-        -- right and the label does not overclaim.
         --
         -- Do not add an emergency value here: emergency reporting has its own metrics
         -- (metric__ed_procedure, metric__ed_imaging_request), and a value would let an
@@ -239,15 +227,13 @@ tests as (
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'minute' --
--- the model reports a request-to-completion interval, not a point-in-time event, so unlike
--- the previous shape there is a period to close (BL-002).
+-- the model reports a request-to-completion interval, not a point-in-time event, so there is a
+-- period to close (BL-002).
 select
     'lab_test'::text as metric_id,
     null::text as variant_id,
     lab_test_id::varchar as subject_id,
-    -- BL-002: when the order was placed. The previous shape used the measurement date, which
-    -- is coalesce(completed, published, requested) -- three different events in one column,
-    -- from which no turnaround can be derived.
+    -- BL-002: when the order was placed, which is what turnaround measures from.
     requested_datetime as period_start,
     -- BL-002, BL-006: the test's own completion, NULL until then.
     completed_datetime as period_end,
@@ -261,6 +247,7 @@ select
     encounter_setting,
     sex,
     is_completed,
+    request_status,
     -- BL-003: the order the test belongs to. A five-test panel is five rows sharing one
     -- lab_request_id, so count(distinct lab_request_id) counts orders where sum(value_numeric)
     -- counts tests.

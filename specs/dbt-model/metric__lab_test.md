@@ -48,18 +48,6 @@ facts therefore source from `bases/` directly, results from `clinical__measureme
 BL-004 -- this is a general rule the team expects to recur (referrals, appointments, tasks),
 not a laboratory-specific carve-out.
 
-**Supersedes `metric__lab_request`** (MAUI-6909, Salman), which this model renames and
-rewrites. That model sourced only from `clinical__measurement`'s lab branch, which keeps tests
-carrying a reading under a request that was not withdrawn (its own BL-009/BL-011) -- so
-requested-but-unresulted and cancelled tests were absent by construction, and the headline
-indicator of this card could not be answered. Its `metric_id` also named a request while its
-grain was the test. Every row it emitted is still emitted here, as the subset where the results
-join hits and `is_completed` is true, so its FSM Dental use case is preserved; `department` is
-carried forward unchanged for that reason (BL-002). Renamed rather than deprecated in place: it
-was one day old with no downstream consumer in `tupaia-data-product`, and D5 holds that a
-`metric_id` is stable and never reused, so correcting it early was cheaper than carrying a
-misnamed id.
-
 **Who reads it.** The Tupaia laboratory dashboard (MAUI-6837), via a data table over this view
 in `tupaia-data-product` -- not yet built as of this spec. The FSM Dental lab-activity cards
 (MAUI-6909) are the inherited consumer, scoped by `department` and `is_completed`.
@@ -131,39 +119,19 @@ dbt's. This model therefore carries no `data_table_*` meta.
 ## Business logic
 
 - **BL-001 (one metric, no outpatient or inpatient siblings):** the setting is a column
-  (`encounter_setting`, BL-010), not a separate `metric_id`. This matches where the procedure
-  and imaging families landed, and departs from diagnosis, which still ships `ipd_` and `opd_`
-  variants. The dividing line is the event's shape, not its domain.
-
-  A **diagnosis** stays valid from its own date to the end of the encounter, so its window can
-  overlap an outpatient *and* an inpatient segment, and it legitimately counts in both. No
-  single column can express membership of two settings at once, which is why
-  `metric__ipd_diagnosis` and `metric__opd_diagnosis` exist.
-
-  A **lab order** is point-in-time. It resolves to exactly one segment, so there is no
-  double-count case, and filtering `encounter_setting = 'Outpatient'` returns precisely the
-  rows a separate `opd_lab_test` would. Three models would be the same answer computed three times
-  -- and in production, where the bundle ships as views (D5), three views re-running the same
-  `lab_requests`/`lab_tests`/`visit_detail` joins.
-
-  Procedures and imaging requests share the lab shape, not the diagnosis shape, and have since
-  been collapsed the same way -- `metric__procedure` folded in its OPD/IPD variants (#1462) and
-  `metric__imaging_request` replaced `metric__opd_imaging_request` (#1385). This model follows
-  that settled pattern rather than setting its own.
+  (`encounter_setting`, BL-010), not a separate `metric_id`. A lab order is point-in-time: it
+  resolves to exactly one segment, so it cannot belong to two settings at once, and filtering
+  `encounter_setting = 'Outpatient'` returns precisely the rows a separate `opd_lab_test`
+  would. This matches `metric__procedure` (#1462) and `metric__imaging_request` (#1385), which
+  share that shape. Diagnosis does not, and keeps its `ipd_`/`opd_` variants: a diagnosis stays
+  valid to the end of the encounter, so its window can overlap an outpatient *and* an inpatient
+  segment and legitimately counts in both, which no single column can express.
 
   **Emergency is the exception, in all three families.** `metric__ed_procedure` and
-  `metric__ed_imaging_request` remain separate metrics on OMOP 9203, and `encounter_setting`
-  deliberately names no emergency value, so an emergency card cannot be drawn off the merged
-  metric. Lab follows suit: emergency-ordered tests read `'Other'` here, and a
-  `metric__ed_lab_test` is deferred until an ED consumer asks (OQ-010). Nothing on MAUI-6837
-  needs it -- the card asks for requested-versus-completed, turnaround, category and result,
-  with no setting split at all.
-
-  **If sibling `metric_id`s are wanted later** -- to address a setting by name from a dashboard
-  rather than by column filter -- D5's grouping pattern covers it: this one model emits extra
-  `metric_id`s off the same scan, no new model. Deliberately deferred, because adding a
-  `metric_id` later is a registry row plus a union branch, while removing one is breaking (D5:
-  a `metric_id` is stable and never reused).
+  `metric__ed_imaging_request` are separate metrics on OMOP 9203, and `encounter_setting`
+  names no emergency value, so an emergency card cannot be drawn off the merged metric.
+  Emergency-ordered lab tests read `'Other'` here; a `metric__ed_lab_test` belongs to an ED
+  consumer (OQ-010).
 
 - **BL-002 (reporting period):** `period_start` is `lab_requests.requested_datetime`, the
   moment the order was placed. It is request-level, denormalised onto every test of the
@@ -172,10 +140,9 @@ dbt's. This model therefore carries no `data_table_*` meta.
   published while one of its tests was never run, so completion is per-test and the two ends of
   the period come from different levels. `period_granularity` is `'minute'`.
 
-- **BL-003 (grain is the test):** `subject_id` is `lab_tests.id`. The alternative, request
-  grain with test types aggregated the way `metric__opd_imaging_request` aggregates body
-  areas, was rejected: it cannot answer requested-versus-completed per test, and it would
-  fan out against `clinical__measurement`, whose lab branch is keyed on `lab_tests.id`.
+- **BL-003 (grain is the test):** `subject_id` is `lab_tests.id`. Test grain is what answers
+  requested-versus-completed per test, and it keeps the join to `clinical__measurement` 1:1,
+  since that model's lab branch is keyed on `lab_tests.id`.
   A request with no `lab_tests` rows contributes nothing, matching
   `macros/datasets/lab_tests.sql`, which inner-joins the same way.
   **Panel consequence:** a five-test panel is five rows. Two columns address that, and they
@@ -183,7 +150,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
   `count(distinct lab_request_id)` counts orders where `sum(value_numeric)` counts tests.
   `is_panel_request` (`lab_requests.lab_test_panel_request_id is not null`) only says whether a
   test arrived as part of a panel -- it cannot support an order count on its own, since it
-  names no panel, and an earlier draft of this spec wrongly claimed it could. See OQ-001.
+  names no panel. See OQ-001.
 
 - **BL-004 (order facts from `bases/`, results from `clinical__`):** decision, Juliana,
   2026-09-23. `clinical__` models hold what clinically happened; an order is an intent.
@@ -274,10 +241,8 @@ dbt's. This model therefore carries no `data_table_*` meta.
   "positive" -- `Reactive`, `Detected`, `POS`, and every local variation -- is a deployment
   vocabulary question, not a definitional one, so it belongs at the data-table layer over
   `result`, the same division BL-008 makes for test type and category and the same precedent
-  MAUI-6836 sets for diagnosis. A standard-package map keyed on result text was built and then
-  removed: it would have added a model every deployment inherits in order to answer a question
-  only some deployments ask, and `tamanu/data_tables/` can already express the mapping through
-  its own `mapped_from` block.
+  MAUI-6836 sets for diagnosis. `tamanu/data_tables/` can express the mapping through its own
+  `mapped_from` block, so the classification needs no model in the standard package.
 
   **The point-of-care path still works without any join here.** A rapid test recorded by
   choosing a result-bearing test type carries its reading in the type, not in `lab_tests.result`
@@ -295,25 +260,21 @@ dbt's. This model therefore carries no `data_table_*` meta.
   segment active when the test was **ordered** -- the latest segment that had started by
   `requested_datetime`, clamped to the earliest segment for a request that predates them all.
 
-  The derivation is **inline**, not shared. It repeats the rule
-  `clinical__procedure_occurrence` applies for its own `visit_detail_id` (that model's BL-005),
-  which `metric__procedure` and `metric__imaging_request` then read off an FK -- a lab order
-  cannot, being deliberately outside the clinical layer (BL-004). A macro was written and then
-  withdrawn: with `clinical__procedure_occurrence` keeping its own copy either way, factoring
-  lab's out removed no duplication, and it moved the model's most consequential rule into a
-  second file against the metric layer's inline-with-BL-comments convention. When referrals or
-  appointments need the same resolution, extract it then -- for three callers, not one.
+  The derivation is **inline**. It is the same rule `clinical__procedure_occurrence` applies
+  for its own `visit_detail_id` (that model's BL-005), which `metric__procedure` and
+  `metric__imaging_request` read off an FK -- a lab order has no such FK, being outside the
+  clinical layer (BL-004). When referrals or appointments need the same resolution, it is worth
+  extracting for the three callers.
 
   **Why not the encounter.** Tamanu updates `encounters.encounter_type`, `location_id` and
   `department_id` **in place** as an encounter progresses, so reading them gives the encounter
-  as it now stands, not as it was at the order. Measured on Tokelau before this was fixed: 166
-  of 2502 tests (6.6%) were attributed to the wrong setting, and every one ran the same
-  direction -- 135 `clinic` → `admission` and 31 `triage` → `admission`. It does not wash out;
-  it systematically inflates inpatient lab activity and erases the ED and outpatient share, on
-  the exact dimension the dashboard splits by. The corrected split is 2111 outpatient, 360
-  inpatient, 31 emergency; previously it read 1976 / 526 / 0. `department` drifted on 164 tests
-  the same way. `facility_id` happened not to move on Tokelau -- all 350 location changes were
-  within one facility -- but that is a deployment fact, not a guarantee.
+  as it now stands, not as it was at the order. The difference is not noise: on Tokelau 166 of
+  2502 tests (6.6%) resolve to a different setting under the two rules, and every one runs the
+  same direction -- `clinic` and `triage` reading as `admission` -- so encounter-level
+  attribution systematically inflates inpatient lab activity and erases the ED and outpatient
+  share, on the exact dimension the dashboard splits by. `department` drifts on 164 tests the
+  same way. `facility_id` happens not to move on Tokelau, since all 350 location changes are
+  within one facility, but that is a deployment fact, not a guarantee.
 
   **Why `requested_datetime` and not `published_datetime`.** The question is where the test was
   *ordered*; and a pending or cancelled test has no publication event to anchor to at all, so
@@ -471,6 +432,25 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 - **OQ-005 (turnaround start point):** BL-007 runs request placed to test completed (decided
   2026-09-24). `lab_requests.collected_datetime` would measure laboratory performance
   specifically, excluding the wait for phlebotomy -- still open as a refinement.
+- **OQ-011 (should `is_completed` exclude withdrawn requests?):** it is the test's own
+  completion timestamp (BL-006), so a request published and later invalidated, cancelled or
+  rejected leaves its tests reading completed, with a turnaround, while their result has been
+  dropped from `clinical__measurement`. Right for a laboratory-throughput reading, wrong for a
+  delivered-results one. `request_status` lets a consumer choose, but the headline
+  requested-versus-completed card inherits the wider definition by default. Changing it is a
+  registry-level decision for the metric owner. Size it first:
+
+  ```sql
+  select lr.status, count(*) as tests
+  from lab_tests lt
+  join lab_requests lr on lr.id = lt.lab_request_id
+  where coalesce(lr.status, '') not in ('deleted', 'entered-in-error')
+    and lt.completed_datetime is not null
+  group by 1 order by 2 desc;
+  ```
+
+  If the withdrawn statuses are a rounding error, documenting is enough; if they are material,
+  BL-006 should change.
 - **OQ-010 (emergency lab tests):** they read `'Other'` in `encounter_setting` and are not
   separately addressable, matching how `metric__procedure` and `metric__imaging_request` handle
   emergency. A `metric__ed_lab_test` on OMOP 9203 is the established answer when an ED consumer
@@ -485,9 +465,8 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
   imaging requests or prescriptions, both of which sit in `clinical__` today. Either they are
   grandfathered and documented as exceptions, or they are unwound -- the latter is rework on
   MAUI-6806, which is Complete. Pending a ruling.
-- **OQ-007 (IPD/OPD siblings):** segment-scoped variants are separate specs. Open within
-  them: whether a test is attributed to the segment active when it was *ordered* or when it
-  was *resulted*, and whether OPD means full OMOP 9202 or `clinic` only.
+- ~~**OQ-007 (IPD/OPD siblings)**~~ -- resolved 2026-09-28: no siblings. The setting is a
+  column (BL-001), attribution is at order time and outpatient is the full OMOP 9202 (BL-010).
 - **OQ-008 (interim and amended results):** `interim_results` is a real status and a result
   can be revised. `clinical__measurement` carries one row per test, so this model inherits
   whatever that model resolves to; confirm it is the current value rather than the first.
@@ -496,10 +475,11 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 
 | Date | Change |
 |---|---|
-| 2026-09-23 | `metric__lab_request` added, sourced from `clinical__measurement`'s lab branch (MAUI-6909) |
+| 2026-09-23 | `metric__lab_request` added, sourced from `clinical__measurement`'s lab branch, counting only resulted tests (MAUI-6909) |
 | 2026-09-24 | Completion and turnaround keyed on the test's own `completed_date` rather than request publication; backdated completions emitted as negative durations rather than repaired, so the deployment can see and fix them (MAUI-6837) |
+| 2026-09-29 | Emit `request_status`: completion is the test's own timestamp, so a withdrawn request's tests can read completed with their result dropped (MAUI-6837) |
 | 2026-09-28 | Review fixes: emit `lab_request_id`, since `is_panel_request` alone cannot support an order count as the spec had claimed; drop a tautological `period_end`/`is_completed` data test in favour of a unit-test fixture that can actually catch a regression to the request's publication time (MAUI-6837) |
 | 2026-09-28 | Merged main and aligned with the settled family shape: `visit_detail_concept_id` replaced by `encounter_setting` (`metric__procedure` #1462, `metric__imaging_request` #1385), emergency deliberately unnamed and deferred to a future `metric__ed_lab_test` (MAUI-6837) |
 | 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, rather than to the encounter as it now stands; per-setting sibling metrics dropped (MAUI-6837) |
 | 2026-09-24 | Dropped `result_classification` and the `map__lab_result_classification` map: classification is a deployment vocabulary question and belongs at the data-table layer over raw `result` (MAUI-6837) |
-| 2026-09-23 | Renamed to `metric__lab_test` and rewritten to source the order side from `bases/`, so requested-but-unresulted and cancelled tests are counted. Added `is_completed`, `encounter_type`, `is_panel_request`, `lab_test_category`, `result` and `turnaround__minutes`; moved `period_start` to the request timestamp at minute granularity (MAUI-6837) |
+| 2026-09-23 | Renamed to `metric__lab_test`, superseding `metric__lab_request`, and rewritten to source the order side from `bases/`, so requested-but-unresulted and cancelled tests are counted. Added `is_completed`, `encounter_type`, `is_panel_request`, `lab_test_category`, `result` and `turnaround__minutes`; moved `period_start` to the request timestamp at minute granularity (MAUI-6837) |
