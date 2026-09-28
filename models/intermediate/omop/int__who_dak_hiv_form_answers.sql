@@ -91,7 +91,7 @@ pivoted as (
         max(case when a.data_element_id = 'pde-{{ code }}' then nullif(trim(a.body), '') end)
             as {{ column }}_raw{{ "," if not loop.last }}
     
-{%- endfor %}
+    {%- endfor %}
     from answers a
     where a.data_element_id in (
             {%- for code in elements.values() %}
@@ -103,56 +103,55 @@ pivoted as (
 
 typed as (
     select
-    r.response_id,
-    r.patient_id,
-    r.facility_id,
-    r.survey_code,
-    r.submitted_datetime,
+        r.response_id,
+        r.patient_id,
+        r.facility_id,
+        r.survey_code,
+        r.submitted_datetime,
 
-    p.gender_source_value as sex,
-    p.year_of_birth,
-    p.month_of_birth,
-    p.day_of_birth,
+        p.gender_source_value as sex,
+        p.year_of_birth,
+        p.month_of_birth,
+        p.day_of_birth,
 
-    -- BL-004: cast to what Annex A declares. try_cast is not available on this adapter, so
-    -- each cast is guarded by the pattern the type requires; anything else reads NULL
-    v.hiv_status_raw as hiv_status,
-    v.hiv_test_result_raw as hiv_test_result,
-    v.viral_load_reason_raw as viral_load_reason,
-    v.art_stopped_reason_raw as art_stopped_reason,
-    v.regimen_substitution_reason_raw as regimen_substitution_reason,
-    -- MultiSelect answers, so each is a JSON array of the values the client selected. The DAK
-    -- asks for key population on the HTS visit and again on the PMTCT pathway, and a client seen
-    -- only on one of them must not be missing from the disaggregation, so both are carried.
-    -- int__who_dak_hiv_key_populations unnests them; nothing else should parse them
-    v.key_population_hts_raw as key_population_hts_json,
-    v.key_population_pmtct_raw as key_population_pmtct_json,
-
+        -- BL-004: cast to what Annex A declares. try_cast is not available on this adapter, so
+        -- each cast is guarded by the pattern the type requires; anything else reads NULL
+        v.hiv_status_raw as hiv_status,
+        v.hiv_test_result_raw as hiv_test_result,
+        v.viral_load_reason_raw as viral_load_reason,
+        v.art_stopped_reason_raw as art_stopped_reason,
+        v.regimen_substitution_reason_raw as regimen_substitution_reason,
+        -- MultiSelect answers, so each is a JSON array of the values the client selected. The DAK
+        -- asks for key population on the HTS visit and again on the PMTCT pathway, and a client seen
+        -- only on one of them must not be missing from the disaggregation, so both are carried.
+        -- int__who_dak_hiv_key_populations unnests them; nothing else should parse them
+        v.key_population_hts_raw as key_population_hts_json,
+        v.key_population_pmtct_raw as key_population_pmtct_json,
 
     {% for column in ['hiv_test_date', 'hiv_test_result_returned_date', 'hiv_diagnosis_date',
                       'art_start_date', 'baseline_cd4_test_date', 'viral_load_sample_date',
                       'dsd_eligibility_assessed_date', 'dsd_start_date', 'art_stopped_date',
                       'substitution_first_line_date', 'substitution_second_line_date',
                       'substitution_third_line_date'] %}
-        case
-            when v.{{ column }}_raw ~ '^\d{4}-\d{2}-\d{2}' then left(v.{{ column }}_raw, 10)::date
-        end as {{ column }},
-    {% endfor %}
+            case
+                when v.{{ column }}_raw ~ '^\d{4}-\d{2}-\d{2}' then left(v.{{ column }}_raw, 10)::date
+            end as {{ column }},
+        {% endfor %}
 
-    {% for column in ['baseline_cd4_count', 'viral_load_result'] %}
-        case
-            when v.{{ column }}_raw ~ '^-?\d+(\.\d+)?$' then v.{{ column }}_raw::numeric
-        end as {{ column }},
-    {% endfor %}
+        {% for column in ['baseline_cd4_count', 'viral_load_result'] %}
+            case
+                when v.{{ column }}_raw ~ '^-?\d+(\.\d+)?$' then v.{{ column }}_raw::numeric
+            end as {{ column }},
+        {% endfor %}
 
     -- a Binary question stores 'Yes'/'No' in the body, not a boolean literal
-{% for column in ['on_art', 'dsd_eligible', 'dsd_enrolled'] %}
-    case
-        when lower(v.{{ column }}_raw) in ('yes', 'true') then true
-        when lower(v.{{ column }}_raw) in ('no', 'false') then false
-    end as {{ column }}{{ "," if not loop.last }}
+    {% for column in ['on_art', 'dsd_eligible', 'dsd_enrolled'] %}
+        case
+            when lower(v.{{ column }}_raw) in ('yes', 'true') then true
+            when lower(v.{{ column }}_raw) in ('no', 'false') then false
+        end as {{ column }}{{ "," if not loop.last }}
 
-{% endfor %}
+    {% endfor %}
 
     from dak_responses r
     join pivoted v on v.response_id = r.response_id
