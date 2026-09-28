@@ -169,7 +169,10 @@ yet built as of this spec.
 - **BL-007 (modality as name and code; area emitted raw):** `imaging_type`/`imaging_type_code` as readable
   label and raw code, `imaging_area` as a comma-joined, alphabetically ordered list of
   body-part names from `imaging_request_areas` -> `reference_data.name`, falling back to the
-  legacy free-text note. None of the three is ever NULL.
+  legacy free-text note. Only the current revision of each note chain counts, ranked before
+  the `note_type` filter since a revision can change a note's type, and ordered by
+  `datetime` then `created_datetime` then `id` so a same-second tie gives a stable string.
+  None of the three is ever NULL.
 
 - **BL-008 (age is the consumer's to band):** `age_years` is age in whole years at the
   request date, emitted raw and unbanded -- a measure, not a dimension.
