@@ -60,10 +60,16 @@ procedures as (
         -- encounter_type = 'clinic'. A consumer scoping to a setting filters this column,
         -- not encounter_type, so its scope does not shift if map__omop_visit_type gains an
         -- encounter type.
+        --
+        -- Only the two settings this metric is meant to be scoped by are named. Emergency
+        -- (9203) is deliberately NOT a value: emergency reporting has its own models with
+        -- their own scoping rules, and naming it here would invite a card to be built off
+        -- this metric instead. It falls in 'Other' along with anything else, which a
+        -- consumer can see the size of but cannot mistake for an emergency figure. Use
+        -- encounter_type if you need to know what is in there.
         case vd.visit_detail_concept_id
             when 9201 then 'Inpatient'
             when 9202 then 'Outpatient'
-            when 9203 then 'Emergency'
             else 'Other'
         end as encounter_setting,
         pr.gender_source_value as sex,

@@ -12,7 +12,11 @@ unit_tests:
       vaccination-typed, which map__omop_visit_type puts under OMOP 9202 alongside clinic
       and imaging. The retired metric__opd_procedure filtered on 9202 and so counted it,
       while encounter_type = 'clinic' does not -- so encounter_setting reads 'Outpatient'
-      here even though encounter_type is 'vaccination'. proc3's FK is NULL, which
+      here even though encounter_type is 'vaccination'.
+
+      proc5 pins the other half of that decision: its segment is triage-typed, OMOP 9203,
+      and reads 'Other' rather than an emergency value. Emergency reporting has its own
+      models, so this metric deliberately offers no setting to scope an emergency card by. proc3's FK is NULL, which
       clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
       dropped rather than surfaced without a setting. img1 is the imaging branch and is not
       this metric's population (BL-001).
@@ -34,6 +38,8 @@ unit_tests:
           select 'img1', 'p1', '2026-02-04'::date, '2026-02-04 08:00:00'::timestamp, 32817, 'imaging request', 'u1', 'e10', 'vd10a', 'loc1', 'xRay', 'X-Ray', true
           union all
           select 'proc4', 'p1', '2026-02-05'::date, '2026-02-05 10:00:00'::timestamp, 32817, 'procedure', 'u1', 'e13', 'vd13a', 'loc1', 'code4', 'Procedure Four', true
+          union all
+          select 'proc5', 'p1', '2026-02-06'::date, '2026-02-06 10:00:00'::timestamp, 32817, 'procedure', 'u1', 'e14', 'vd14a', 'loc1', 'code5', 'Procedure Five', true
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -43,6 +49,8 @@ unit_tests:
           select 'vd11a', 'e11', 'p1', 9201, '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
           union all
           select 'vd13a', 'e13', 'p1', 9202, '2026-02-05'::date, '2026-02-05 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'vaccination', null::varchar
+          union all
+          select 'vd14a', 'e14', 'p1', 9203, '2026-02-06'::date, '2026-02-06 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', null::varchar
 
       - input: ref('clinical__person')
         format: sql
@@ -67,3 +75,5 @@ unit_tests:
         select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
         union all
         select 'procedure', null::text, 'proc4', '2026-02-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'vaccination', 'Outpatient', 'female', 'Procedure Four', 'code4', true, 30, 'Not recorded'
+        union all
+        select 'procedure', null::text, 'proc5', '2026-02-06'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Other', 'female', 'Procedure Five', 'code5', true, 30, 'Not recorded'
