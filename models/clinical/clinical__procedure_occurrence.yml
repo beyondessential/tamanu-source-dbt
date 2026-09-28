@@ -102,6 +102,20 @@ models:
               arguments:
                 to: ref('clinical__visit_occurrence')
                 field: visit_occurrence_id
+      - name: visit_detail_id
+        data_type: character varying(255)
+        description: >-
+          The encounter segment the procedure or imaging request happened in -- the segment
+          active at its own timestamp, falling back to the encounter's earliest segment for
+          an event timestamped before any segment began. NULL where the encounter has no
+          segment to resolve against, which the CDM allows.
+        data_tests:
+          # relationships only checks populated values, so a NULL FK doesn't fail it
+          - relationships:
+              name: ac_008_clinical__procedure_occurrence_visit_detail_id_in_clinical__visit_detail
+              arguments:
+                to: ref('clinical__visit_detail')
+                field: visit_detail_id
       - name: location_id
         data_type: character varying(255)
         description: >-
