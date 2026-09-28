@@ -2,6 +2,9 @@
 select
     n.id,
     n.date::timestamp as datetime,
+    -- `date` is second-precision, so a note created and then edited within the same second
+    -- ties on it. The revised row is inserted at edit time, so this breaks that tie.
+    n.created_at at time zone '{{ var("timezone") }}' as created_datetime,
     n.content,
     n.note_type_id,
     rd.code as note_type,
