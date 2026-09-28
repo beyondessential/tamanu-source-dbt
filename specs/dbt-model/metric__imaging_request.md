@@ -278,4 +278,4 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-11 | @gagank16 | Initial draft (MAUI-6806) -- first all-settings imaging-request metric in the repo |
-| 2026-09-28 | @gagank16 | Single imaging-request metric: the OPD and IPD scoped metrics retired behind an `encounter_type` filter, `department` added (MAUI-6909) |
+| 2026-09-28 | @gagank16 | Single imaging-request metric: the OPD and IPD scoped metrics retired behind an `encounter_type` filter, `department` added |
