@@ -115,9 +115,11 @@ unit_tests:
   - name: ac_012_clinical__measurement_lab_value_reading
     model: clinical__measurement
     description: >
-      A lab reading's number and operator (BL-012, BL-012a): a leading operator, spacing,
-      thousands separators, scientific notation and the test type's own unit are read, and a
-      reading that is not a number after that carries neither a value nor an operator.
+      A lab reading's number and operator (BL-012, BL-012a): a leading operator, thousands
+      separators, scientific notation and the test type's own unit are read, with whitespace
+      allowed only around the operator and before the unit. A reading that is not a number after
+      that, including one with a space inside the number, carries neither a value nor an
+      operator.
     given:
       - input: ref('lab_requests')
         format: sql
@@ -132,7 +134,8 @@ unit_tests:
             ('lt01', '<20'), ('lt02', '< 40'), ('lt03', '1,250'), ('lt04', '1.2e+05'),
             ('lt05', '1.5E5'), ('lt06', '1200 copies/mL'), ('lt07', '≤ 50'), ('lt08', '>10,000,000'),
             ('lt09', '-5.5'), ('lt10', 'Not detected'), ('lt11', '<<20'), ('lt12', '12,34'),
-            ('lt13', '1200 cells'), ('lt14', '<')
+            ('lt13', '1200 cells'), ('lt14', '<'), ('lt15', '<= 30'), ('lt16', '>=5000'),
+            ('lt17', '12 5'), ('lt18', '1 250'), ('lt19', '1200 COPIES / ML')
           ) as t (id, result)
 
       - input: ref('map__lab_test_result_encoding')
@@ -195,3 +198,8 @@ unit_tests:
         lt12,,
         lt13,,
         lt14,,
+        lt15,30,<=
+        lt16,5000,>=
+        lt17,,
+        lt18,,
+        lt19,1200,

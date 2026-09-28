@@ -162,9 +162,9 @@ are **not** emitted — see BL-003 and OQ-1.
 - **BL-011 (withdrawn requests):** A request whose status is `cancelled`, `deleted`,
   `entered-in-error`, `invalidated`, `rejected` or `sample-not-collected` yields no measurement,
   even where a stale result lingers on it.
-- **BL-012 (lab values):** A lab reading's number is read after removing a leading comparison
-  operator, all whitespace, and a trailing unit that matches the test type's unit, ignoring case,
-  and may be a signed decimal, a decimal with thousands separators, or scientific notation.
+- **BL-012 (lab values):** A lab reading's number is a signed decimal, a decimal with thousands
+  separators, or scientific notation, optionally preceded by a comparison operator and followed by
+  the test type's unit, ignoring case and whitespace around the operator and in the unit.
 - **BL-012a (operator):** A leading `<`, `<=`, `>` or `>=` (or `≤` / `≥`) on a lab reading is
   carried in `operator_source_value`, with the stated limit in `value_as_number`, and only where
   a number is read.

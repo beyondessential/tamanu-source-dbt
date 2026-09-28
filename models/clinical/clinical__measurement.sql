@@ -93,59 +93,62 @@ lab_test_readings as (
         lt.lab_request_id,
         lt.lab_test_type_id,
         lt.completed_datetime,
-        coalesce(nullif(trim(lt.result), ''), nullif(trim(enc.encoded_result), '')) as reading
+        coalesce(nullif(trim(lt.result), ''), nullif(trim(enc.encoded_result), '')) as reading,
+        ltt.code as lab_test_type_code,
+        ltt.name as lab_test_type_name,
+        ltt.unit as lab_test_type_unit
     from lab_tests lt
     -- BL-009: one row per type at most, so this cannot fan out
     left join lab_result_encoding enc on enc.lab_test_type_id = lt.lab_test_type_id
+    left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
 ),
 
--- BL-012: split a leading comparison operator off the reading, then drop whitespace and a
--- trailing unit matching the test type's own
+-- BL-012: split a leading comparison operator off the reading, then the number off the front
+-- of what remains, leaving any trailing unit
 lab_reading_parts as (
     select
-        lt.id,
-        case substring(btrim(lt.reading) from '^(<=|>=|≤|≥|<|>)')
+        id,
+        case substring(reading from '^(<=|>=|≤|≥|<|>)')
             when '≤' then '<='
             when '≥' then '>='
-            else substring(btrim(lt.reading) from '^(<=|>=|≤|≥|<|>)')
+            else substring(reading from '^(<=|>=|≤|≥|<|>)')
         end as operator,
-        regexp_replace(
-            regexp_replace(lower(btrim(lt.reading)), '^(<=|>=|≤|≥|<|>)', ''), '\s', '', 'g'
-        ) as compact,
-        lower(regexp_replace(coalesce(ltt.unit, ''), '\s', '', 'g')) as unit_compact
-    from lab_test_readings lt
-    left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
+        btrim(regexp_replace(lower(reading), '^(<=|>=|≤|≥|<|>)', '')) as remainder,
+        lower(regexp_replace(coalesce(lab_test_type_unit, ''), '\s', '', 'g')) as unit_compact
+    from lab_test_readings
 ),
 
 lab_reading_numbers as (
     select
         id,
         operator,
-        case
-            when unit_compact != '' and right(compact, length(unit_compact)) = unit_compact
-                then left(compact, length(compact) - length(unit_compact))
-            else compact
-        end as number_text
+        unit_compact,
+        substring(remainder from '^-?[0-9][0-9,]*(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?') as number_text,
+        remainder
     from lab_reading_parts
 ),
 
 lab_reading_values as (
     select
         id,
-        -- BL-012: a plain decimal, a decimal with thousands separators, or scientific notation
-        case
-            when number_text ~ '^-?[0-9]+(\.[0-9]+)?$' then number_text::numeric
-            when number_text ~ '^-?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$'
-                then replace(number_text, ',', '')::numeric
-            when number_text ~ '^-?[0-9]+(\.[0-9]+)?e[+-]?[0-9]+$' then number_text::numeric
-        end as value_as_number,
-        -- BL-012a: the operator is carried only where a number is read alongside it
-        case
-            when number_text ~ '^-?[0-9]+(\.[0-9]+)?$'
-                or number_text ~ '^-?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$'
-                or number_text ~ '^-?[0-9]+(\.[0-9]+)?e[+-]?[0-9]+$'
-                then operator
-        end as operator_source_value
+        operator,
+        -- BL-012: a plain decimal, a decimal with thousands separators, or scientific notation,
+        -- followed by nothing or by the test type's unit
+        coalesce(
+            number_text ~ '^-?[0-9]+(\.[0-9]+)?$'
+            or number_text ~ '^-?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$'
+            or number_text ~ '^-?[0-9]+(\.[0-9]+)?e[+-]?[0-9]+$',
+            false
+        )
+        and (
+            btrim(substr(remainder, length(number_text) + 1)) = ''
+            or (
+                unit_compact != ''
+                and regexp_replace(substr(remainder, length(number_text) + 1), '\s', '', 'g')
+                = unit_compact
+            )
+        ) as is_number,
+        number_text
     from lab_reading_numbers
 ),
 
@@ -157,19 +160,19 @@ lab_measurements as (
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)::date as measurement_date,
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
         'lab'                 as measurement_type_source_value,
-        v.value_as_number,
-        v.operator_source_value,
+        case when v.is_number then replace(v.number_text, ',', '')::numeric end as value_as_number,
+        -- BL-012a: the operator is carried only where a number is read alongside it
+        case when v.is_number then v.operator end as operator_source_value,
         lt.reading            as value_source_value,
-        ltt.unit              as unit_source_value,
+        lt.lab_test_type_unit as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
         lr.encounter_id::varchar    as visit_occurrence_id,
         lt.lab_test_type_id::varchar as measurement_source_id,  -- BL-010
-        ltt.code as measurement_source_value,
-        ltt.name as measurement_source_name
+        lt.lab_test_type_code as measurement_source_value,
+        lt.lab_test_type_name as measurement_source_name
     from lab_test_readings lt
     join lab_requests lr on lr.id = lt.lab_request_id
     join encounters e on e.id = lr.encounter_id
-    left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
     join lab_reading_values v on v.id = lt.id
     -- BL-009: a reading exists where a result was recorded or the type encodes one
     where lt.reading is not null
