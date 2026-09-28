@@ -161,3 +161,76 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__ed_imaging_request.md
+
+- metric_id: ed_lab_request
+  kind: metric
+  name: ED lab tests
+  description: >-
+    Lab tests requested while the patient's active segment -- the segment in effect at the
+    request's own time, not the encounter's first or current one -- is an emergency, triage or
+    observation phase. One row per test, from the moment it is requested to the moment its
+    results are published.
+  numerator_description: >-
+    Lab tests whose request's active segment at its own requested_datetime carries OMOP visit
+    concept 9203 (Emergency Room Visit), excluding deleted and entered-in-error requests
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of lab tests requested in the emergency setting, a sibling of ed_imaging_request and
+    ed_procedure. No external body registers this indicator. Counted at request time rather than
+    result time, and including tests still awaiting results, so a test ordered in the emergency
+    department is attributed there even where it was resulted after admission -- unlike
+    lab_request, which counts completed tests dated at completion. A test requested after the
+    encounter is retyped as an admission, while the patient still boards in the emergency
+    department, is admission-phase activity and is not counted here. Pending alignment with the
+    deploying country's national HMIS definition.
+  unit: count
+  subject_grain: lab_test
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - lab_test
+  - lab_test_code
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ed_lab_request.md
+
+- metric_id: ed_pharmacy_order
+  kind: metric
+  name: ED pharmacy orders
+  description: >-
+    Drug lines ordered from the pharmacy while the patient's active segment -- the segment in
+    effect at the order's own time -- is an emergency, triage or observation phase. One row per
+    ordered drug line, with whether it has been dispensed.
+  numerator_description: >-
+    Pharmacy order drug lines whose order's active segment at its own datetime carries OMOP
+    visit concept 9203 (Emergency Room Visit)
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of medications ordered from the pharmacy in the emergency setting, the
+    emergency-side counterpart of pharmacy_order. No external body registers this indicator. A
+    consumer forms the dispensed count by filtering on is_completed. An order placed after the
+    encounter is retyped as an admission, while the patient still boards in the emergency
+    department, is admission-phase activity and is not counted here. Pending alignment with the
+    deploying country's national HMIS definition.
+  unit: count
+  subject_grain: pharmacy_order_prescription
+  disaggregations:
+  - facility_id
+  - sex
+  - is_completed
+  - drug_source_value
+  - drug_source_name
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ed_pharmacy_order.md
