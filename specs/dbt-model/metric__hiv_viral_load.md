@@ -8,7 +8,7 @@
 | **Type** | dbt model |
 | **Layer** | `metric` |
 | **Materialisation** | env-aware (`view` in the production bundle) |
-| **Status** | `draft` |
+| **Status** | `review` |
 | **Owner** | `bes-maui` |
 | **Repo** | `tamanu-source-dbt` (definition); implemented per deployment |
 | **Linear issue** | [MAUI-6864](https://linear.app/bes/issue/MAUI-6864/report-viral-load-results-over-time-and-viral-suppression-status) |
