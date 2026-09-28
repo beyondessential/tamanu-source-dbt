@@ -53,11 +53,13 @@ models:
             column_B: period_start
             or_equal: true
             row_condition: period_end is not null
-      # BL-006: period_end is populated if and only if the request published.
-      - dbt_utils.expression_is_true:
-          name: ac_metric__lab_test_period_end_only_when_completed
-          arguments:
-            expression: "(period_end is not null) = is_completed"
+      # No data test pairs period_end against is_completed: period_end IS completed_datetime
+      # and is_completed IS its not-null test, so any such expression is a tautology that
+      # cannot fail whatever the model does. The failure worth catching is a regression to the
+      # request's published_date, which no column-level assertion over this model's own output
+      # can see. test_metric__lab_test_membership covers it instead, with a fixture whose
+      # request publishes at a different time from its test's completion -- the swap changes
+      # period_end and turnaround__minutes, and the test fails.
       # BL-007: turnaround exists exactly where the test completed. Equivalence, not
       # implication -- a backdated completion still yields a duration, just a negative one.
       - dbt_utils.expression_is_true:
@@ -189,6 +191,16 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__lab_test_is_completed_not_null
+      - name: lab_request_id
+        data_type: character varying(255)
+        description: >-
+          The lab request this test belongs to. A panel is one request and several tests, so
+          count(distinct lab_request_id) counts orders where sum(value_numeric) counts tests.
+          Emitted because is_panel_request alone cannot support that -- it says a test came
+          from some panel, not which one.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_test_lab_request_id_not_null
       - name: is_panel_request
         data_type: boolean
         description: >-

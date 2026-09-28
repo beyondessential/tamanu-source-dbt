@@ -89,11 +89,12 @@ double-count a test in any consumer that sums `value_numeric`.
 test type. Test grain is chosen because the requested indicators are test-level, and because
 `clinical__measurement`'s lab branch is keyed on `lab_tests.id` -- so the join to results is
 1:1 and cannot fan out. The cost is that a five-test panel counts as five tests;
-`is_panel_request` lets a consumer that wants order counts recover them. See OQ-001.
+`lab_request_id` is emitted so a consumer that wants order counts can
+`count(distinct lab_request_id)` where `sum(value_numeric)` counts tests. See OQ-001.
 
 ## Output schema
 
-D5 wide format, plus ten disaggregation columns and two measure attributes.
+D5 wide format, plus eleven disaggregation columns, an order identifier, and two measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -110,6 +111,7 @@ D5 wide format, plus ten disaggregation columns and two measure attributes.
 | `encounter_setting` | text | `Outpatient` (9202) / `Inpatient` (9201) / `Other`. Emergency deliberately unnamed (BL-010). `not_null` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | The test carries a completion timestamp (BL-006). Never NULL |
+| `lab_request_id` | varchar(255) | The order this test belongs to, so orders can be counted as well as tests (BL-003). Not a disaggregation -- an identifier, like `age_years` is a measure. `not_null` |
 | `is_panel_request` | boolean | Test was ordered as part of a panel (BL-003). Never NULL |
 | `department` | text | The encounter's own department, e.g. Dental, resolved to a name (BL-002). Never NULL |
 | `lab_test_type` | text | Test name as recorded, else its code, else `'Not recorded'` (BL-008). Never NULL |
@@ -175,9 +177,12 @@ dbt's. This model therefore carries no `data_table_*` meta.
   fan out against `clinical__measurement`, whose lab branch is keyed on `lab_tests.id`.
   A request with no `lab_tests` rows contributes nothing, matching
   `macros/datasets/lab_tests.sql`, which inner-joins the same way.
-  **Panel consequence:** a five-test panel is five rows. `is_panel_request` is emitted
-  (`lab_requests.lab_test_panel_request_id is not null`) so a consumer counting clinical acts
-  rather than laboratory workload can separate them. See OQ-001.
+  **Panel consequence:** a five-test panel is five rows. Two columns address that, and they
+  answer different questions. `lab_request_id` is the order the test belongs to, so
+  `count(distinct lab_request_id)` counts orders where `sum(value_numeric)` counts tests.
+  `is_panel_request` (`lab_requests.lab_test_panel_request_id is not null`) only says whether a
+  test arrived as part of a panel -- it cannot support an order count on its own, since it
+  names no panel, and an earlier draft of this spec wrongly claimed it could. See OQ-001.
 
 - **BL-004 (order facts from `bases/`, results from `clinical__`):** decision, Juliana,
   2026-09-23. `clinical__` models hold what clinically happened; an order is an intent.
@@ -359,13 +364,14 @@ dbt's. This model therefore carries no `data_table_*` meta.
 | AC | `subject_id` is `not_null` | grain | `not_null` |
 | AC | `period_start` is `not_null` | BL-002 | `not_null` |
 | AC | `period_end`, where present, is at or after `period_start` -- **warns** on backdated completions, by design | BL-002, BL-007 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` (warn) |
-| AC | `period_end` is populated if and only if `is_completed` | BL-006 | `dbt_utils.expression_is_true` |
 | AC | `period_granularity` is `not_null` and always `'minute'` | BL-002 | `not_null` + `accepted_values` |
 | AC | `value_numeric` is `not_null` and always `1` | BL-003 | `not_null` + `accepted_values` |
 | AC | `facility_id` is `not_null` | BL-010 | `not_null` |
 | AC | `encounter_type` is `not_null` | BL-010 | `not_null` |
 | AC | `is_completed` is `not_null` | BL-006 | `not_null` |
 | AC | `is_panel_request` is `not_null` | BL-003 | `not_null` |
+| AC | `lab_request_id` is `not_null` | BL-003 | `not_null` |
+| AC | `period_end` and `turnaround__minutes` are read off the test's completion, not the request's publication | BL-006 | dbt unit test `test_metric__lab_test_membership` (its fixture publishes the request at a different time from the test's completion, so the swap fails) |
 | AC | `lab_test_type`, `lab_test_type_code`, `lab_test_category`, `result` are `not_null` | BL-008 | `not_null` |
 | AC | `turnaround__minutes` is populated if and only if `is_completed` | BL-007 | `dbt_utils.expression_is_true` |
 | AC | `turnaround__minutes`, where present, is not negative -- **warns** on backdated completions, by design | BL-007 | `dbt_utils.expression_is_true` (warn) |
@@ -379,6 +385,10 @@ One active row in a new `documentations/metrics/laboratory.yml` -- `lab_test`,
 `kind: metric`, `subject_grain: lab_test`, `status: draft`, `spec_path` pointing here, with
 `disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed,
 is_panel_request, department, lab_test_type, lab_test_type_code, lab_test_category, result`.
+
+`lab_request_id` is emitted but **not** registered as a disaggregation: it is an identifier a
+consumer counts distinctly, not a dimension to group a card by, so it stays out of the
+registry for the same reason `age_years` and `turnaround__minutes` do.
 
 Regenerate `macros/metric_definitions.sql` with
 `python scripts/generate_metric_definitions_macro.py` and commit it -- CI fails on drift.
@@ -446,9 +456,9 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 ## Open questions
 
 - **OQ-001 (panel counting):** a five-test panel counts as five tests. Correct for laboratory
-  workload, wrong for "how often were labs ordered". `is_panel_request` preserves the
-  distinction, but the headline card still needs a decision on which number it shows.
-  Outstanding with Juliana.
+  workload, wrong for "how often were labs ordered". Both numbers are now available --
+  `sum(value_numeric)` for tests, `count(distinct lab_request_id)` for orders -- but the
+  headline card still needs a decision on which one it shows. Outstanding with Juliana.
 - ~~**OQ-002 (what "completed" means)**~~ -- resolved 2026-09-24: the test's own
   `completed_date`, not request publication and not the presence of a result. See BL-006.
 - **OQ-003 (who classifies results for positivity):** the metric classifies nothing (BL-009),
@@ -488,6 +498,7 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 |---|---|
 | 2026-09-23 | `metric__lab_request` added, sourced from `clinical__measurement`'s lab branch (MAUI-6909) |
 | 2026-09-24 | Completion and turnaround keyed on the test's own `completed_date` rather than request publication; backdated completions emitted as negative durations rather than repaired, so the deployment can see and fix them (MAUI-6837) |
+| 2026-09-28 | Review fixes: emit `lab_request_id`, since `is_panel_request` alone cannot support an order count as the spec had claimed; drop a tautological `period_end`/`is_completed` data test in favour of a unit-test fixture that can actually catch a regression to the request's publication time (MAUI-6837) |
 | 2026-09-28 | Merged main and aligned with the settled family shape: `visit_detail_concept_id` replaced by `encounter_setting` (`metric__procedure` #1462, `metric__imaging_request` #1385), emergency deliberately unnamed and deferred to a future `metric__ed_lab_test` (MAUI-6837) |
 | 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, rather than to the encounter as it now stands; per-setting sibling metrics dropped (MAUI-6837) |
 | 2026-09-24 | Dropped `result_classification` and the `map__lab_result_classification` map: classification is a deployment vocabulary question and belongs at the data-table layer over raw `result` (MAUI-6837) |

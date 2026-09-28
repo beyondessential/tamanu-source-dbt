@@ -20,7 +20,7 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'r1' as id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 11:30:00'::timestamp as published_datetime, 'published' as status, 'e1' as encounter_id, 'cat1' as lab_test_category_id, 'panel1' as lab_test_panel_request_id
+          select 'r1' as id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 12:00:00'::timestamp as published_datetime, 'published' as status, 'e1' as encounter_id, 'cat1' as lab_test_category_id, 'panel1' as lab_test_panel_request_id
           union all
           select 'r2', '2026-03-02 08:00:00'::timestamp, null::timestamp, 'results_pending', 'e1', 'cat1', null::varchar
           union all
@@ -94,15 +94,15 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, true as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Haematology' as lab_test_category, '5.4' as result, 30 as age_years, 210 as turnaround__minutes
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, 'r1' as lab_request_id, true as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Haematology' as lab_test_category, '5.4' as result, 30 as age_years, 210 as turnaround__minutes
         union all
-        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, true, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 'Not recorded', 30, null::integer
+        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'r1', true, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 'Not recorded', 30, null::integer
         union all
-        select 'lab_test', null::text, 't3', '2026-03-02 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, null::integer
+        select 'lab_test', null::text, 't3', '2026-03-02 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'r2', false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, null::integer
         union all
-        select 'lab_test', null::text, 't4', '2026-03-03 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
+        select 'lab_test', null::text, 't4', '2026-03-03 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'r3', false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
         union all
-        select 'lab_test', null::text, 't7', '2026-03-04 08:00:00'::timestamp, '2026-03-03 08:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, -1440
+        select 'lab_test', null::text, 't7', '2026-03-04 08:00:00'::timestamp, '2026-03-03 08:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'r6', false, 'Dental', 'GLUC', 'Glucose', 'Haematology', 'Not recorded', 30, -1440
 
   - name: test_metric__lab_test_result_passthrough
     model: metric__lab_test
@@ -178,13 +178,13 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 09:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, false as is_panel_request, 'Not recorded' as department, 'HIV' as lab_test_type_code, 'HIV Test' as lab_test_type, 'Not recorded' as lab_test_category, 'Reactive' as result, 30 as age_years, 60 as turnaround__minutes
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 09:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, 'r1' as lab_request_id, false as is_panel_request, 'Not recorded' as department, 'HIV' as lab_test_type_code, 'HIV Test' as lab_test_type, 'Not recorded' as lab_test_category, 'Reactive' as result, 30 as age_years, 60 as turnaround__minutes
         union all
-        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Non-reactive', 30, 60
+        select 'lab_test', null::text, 't2', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'r1', false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Non-reactive', 30, 60
         union all
-        select 'lab_test', null::text, 't3', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, false, 'Not recorded', 'HIVPOS', 'HIV Rapid - Positive', 'Not recorded', 'Positive', 30, 60
+        select 'lab_test', null::text, 't3', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'r1', false, 'Not recorded', 'HIVPOS', 'HIV Rapid - Positive', 'Not recorded', 'Positive', 30, 60
         union all
-        select 'lab_test', null::text, 't4', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Not recorded', 30, 60
+        select 'lab_test', null::text, 't4', '2026-03-01 08:00:00'::timestamp, '2026-03-01 09:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'r1', false, 'Not recorded', 'HIV', 'HIV Test', 'Not recorded', 'Not recorded', 30, 60
 
   - name: test_metric__lab_test_segment_attribution
     model: metric__lab_test
@@ -261,8 +261,8 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, false as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Not recorded' as lab_test_category, 'Not recorded' as result, 30 as age_years, null::integer as turnaround__minutes
+        select 'lab_test' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, 'r1' as lab_request_id, false as is_panel_request, 'Dental' as department, 'GLUC' as lab_test_type_code, 'Glucose' as lab_test_type, 'Not recorded' as lab_test_category, 'Not recorded' as result, 30 as age_years, null::integer as turnaround__minutes
         union all
-        select 'lab_test', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', false, false, 'Ward', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
+        select 'lab_test', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', false, 'r2', false, 'Ward', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
         union all
-        select 'lab_test', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer
+        select 'lab_test', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'r3', false, 'Dental', 'GLUC', 'Glucose', 'Not recorded', 'Not recorded', 30, null::integer

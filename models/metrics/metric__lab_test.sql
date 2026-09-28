@@ -83,6 +83,7 @@ departments as (
 ordered_tests as (
     select
         lt.id as lab_test_id,
+        lt.lab_request_id,
         lt.lab_test_type_id,
         -- BL-006: the test's own completion, which is what completion and turnaround both key
         -- on. Request status is read only for membership (BL-005), never for completion.
@@ -147,6 +148,10 @@ active_segment as (
 tests as (
     select
         ot.lab_test_id,
+        -- BL-003: the order this test belongs to. Emitted so a consumer counting clinical acts
+        -- rather than laboratory workload can count(distinct lab_request_id) -- is_panel_request
+        -- alone cannot do that, since it says a test came from some panel, not which one.
+        ot.lab_request_id,
         -- BL-002: the order timestamp, request-level and denormalised onto every test of the
         -- request -- every test in a request is ordered together. Completion is NOT shared
         -- that way: it is per-test (BL-006).
@@ -256,6 +261,10 @@ select
     encounter_setting,
     sex,
     is_completed,
+    -- BL-003: the order the test belongs to. A five-test panel is five rows sharing one
+    -- lab_request_id, so count(distinct lab_request_id) counts orders where sum(value_numeric)
+    -- counts tests.
+    lab_request_id,
     is_panel_request,
     department,
     -- BL-008: test identity, category and result as recorded and ungrouped -- classifying any
