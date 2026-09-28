@@ -61,12 +61,14 @@ procedure_segment as (
     join visit_detail vd
         on vd.visit_occurrence_id = po.visit_occurrence_id
     order by
-        po.procedure_occurrence_id,
+        po.procedure_occurrence_id asc,
         (vd.visit_detail_start_datetime <= po.procedure_datetime) desc,
         case when vd.visit_detail_start_datetime <= po.procedure_datetime
-             then vd.visit_detail_start_datetime end desc,
+                then vd.visit_detail_start_datetime
+        end desc,
         case when vd.visit_detail_start_datetime > po.procedure_datetime
-             then vd.visit_detail_start_datetime end asc,
+                then vd.visit_detail_start_datetime
+        end asc,
         vd.visit_detail_id desc
 ),
 

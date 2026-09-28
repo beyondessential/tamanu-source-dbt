@@ -2,7 +2,7 @@ with filtered_changes as (
     {{ base_history_from_log('patient_program_registrations') }}
         and (
             version = 'unknown'
-            or string_to_array(version, '.')::int [] >= string_to_array('2.33.0', '.')::int []
+            or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
         and record_data ->> 'patient_id' != '{{ var("test_patient") }}'
 )
