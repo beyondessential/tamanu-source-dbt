@@ -1,0 +1,67 @@
+# HIV viral load and viral suppression metrics (MAUI-6864).
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: hiv_viral_load_test
+  kind: metric
+  name: HIV viral load, by test
+  description: >-
+    HIV viral load tests for people in the HIV programme cohort, one row per test, each classified
+    as Undetectable, Suppressed, Low-level viremia, Unsuppressed or High viral load.
+  numerator_description: >-
+    COUNT of qualifying HIV viral load tests dated in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Five suppression categories so a patient's trend can be read in more detail than the single
+    1,000 copies/mL threshold of the third 95. The categories are fixed in the metric rather than
+    banded by each consumer, because a result reported against a limit (such as <50) can only be
+    placed correctly with its operator, and a Tamanu report and a Tupaia visual must classify the
+    same result identically.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - test_type
+  - suppression_status
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_viral_load.md
+- metric_id: hiv_viral_load_patient_month
+  kind: metric
+  name: HIV viral load, by patient-month
+  description: >-
+    People in the HIV programme cohort with a viral load test in the reporting month, one row per
+    patient per month, classified by the month's most recent result.
+  numerator_description: >-
+    Distinct patients with at least one qualifying HIV viral load test dated in the reporting month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Registered separately from hiv_viral_load_test because the two grains are not interchangeable:
+    summing this one answers "how many people", summing the test grain answers "how many tests".
+    A patient tested more than once in a month is classified by the most recent result, which is
+    the one that reflects their current state.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - test_type
+  - suppression_status
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__hiv_viral_load.md
