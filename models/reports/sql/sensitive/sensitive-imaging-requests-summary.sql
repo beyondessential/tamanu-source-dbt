@@ -1,10 +1,10 @@
 with reporting_dates as (
     select date::date as date
     from generate_series(
-        {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }},
-        {{ parameter('toDate', default_value='2024-01-31', data_type='date') }},
-        '1 day'::interval
-    ) date
+            {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }},
+            {{ parameter('toDate', default_value='2024-01-31', data_type='date') }},
+            '1 day'::interval
+        ) date
 )
 
 select

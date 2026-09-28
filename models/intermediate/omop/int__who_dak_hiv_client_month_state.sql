@@ -39,7 +39,7 @@ bounds as (
         {% if spine_end -%}
         date_trunc('month', date '{{ spine_end }}')::date as last_month
         {%- else -%}
-        (date_trunc('month', current_date) - interval '1 month')::date as last_month
+            (date_trunc('month', current_date) - interval '1 month')::date as last_month
         {%- endif %}
     from answers
 ),

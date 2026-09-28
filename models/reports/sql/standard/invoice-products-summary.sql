@@ -30,14 +30,17 @@ select
     visibility_status as "{{ translate_label('invoiceProductVisibilityStatus') }}",
     external_code as "{{ translate_label('invoiceProductLabExternalCode') }}"
     {%- for name in price_list_names %}
-    , "Price: {{ name }}"
+        ,
+        "Price: {{ name }}"
     {%- endfor %}
     {%- for name in insurance_plan_names %}
-    , "Insurance: {{ name }}"
+        ,
+        "Insurance: {{ name }}"
     {%- endfor %}
     {%- for name in price_list_names %}
-    , "Price List Charging: {{ name }}"
-        as "{{ translate_label('invoiceProductPriceListCharging') }}: {{ name }}"
+        ,
+        "Price List Charging: {{ name }}"
+            as "{{ translate_label('invoiceProductPriceListCharging') }}: {{ name }}"
     {%- endfor %}
 from {{ ref('ds__invoice_products') }}
 order by name
