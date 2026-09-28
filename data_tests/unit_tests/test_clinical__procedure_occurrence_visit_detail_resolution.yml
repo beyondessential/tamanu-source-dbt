@@ -1,0 +1,70 @@
+unit_tests:
+  - name: test_clinical__procedure_occurrence_visit_detail_resolution
+    model: clinical__procedure_occurrence
+    description: >
+      BL-005. The four cases the visit_detail_id resolution has to get right, none of which
+      were covered while this logic lived copied inside the metrics. proc_asof sits on an
+      encounter with two segments and is timestamped after both -- the as-of branch must
+      pick the later one, not merely any that had started. proc_clamp is timestamped before
+      both of its encounter's segments (a data-timing artifact) -- the clamp must pick the
+      earlier one, the opposite end from the as-of branch, which is why the two tie-breaks
+      are split. proc_nosegment's encounter has no segment at all, so the FK resolves to
+      NULL and the row is still emitted rather than dropped. img_asof shows the imaging
+      branch resolving by the same rule as the procedure branch.
+    given:
+      - input: ref('procedures')
+        format: sql
+        rows: |
+          select 'proc_asof' as id, '2026-03-01'::date as date, '14:00:00'::time as start_time, 'e1' as encounter_id, 'loc1' as location_id, 'rd1' as procedure_type_id, 'usr1' as clinician_id, true as is_completed
+          union all
+          select 'proc_clamp', '2026-03-02'::date, '08:00:00'::time, 'e2', 'loc1', 'rd1', 'usr1', true
+          union all
+          select 'proc_nosegment', '2026-03-03'::date, '09:00:00'::time, 'e3', 'loc1', 'rd1', 'usr1', true
+
+      - input: ref('imaging_requests')
+        format: sql
+        rows: |
+          select 'img_asof' as id, '2026-03-04 14:00:00'::timestamp as datetime, 'completed' as status, 'xRay' as imaging_type, 'e4' as encounter_id, 'usr2' as requested_by_id, 'loc2' as location_id
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'pat1' as patient_id
+          union all
+          select 'e2', 'pat1'
+          union all
+          select 'e3', 'pat1'
+          union all
+          select 'e4', 'pat1'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'rd1' as id, 'PROC1' as code, 'Appendectomy' as name
+
+      # e3 deliberately has no segment, so its procedure's FK resolves to NULL
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, '2026-03-01 08:00:00'::timestamp as visit_detail_start_datetime
+          union all
+          select 'vd1b', 'e1', '2026-03-01 12:00:00'::timestamp
+          union all
+          select 'vd2a', 'e2', '2026-03-02 10:00:00'::timestamp
+          union all
+          select 'vd2b', 'e2', '2026-03-02 12:00:00'::timestamp
+          union all
+          select 'vd4a', 'e4', '2026-03-04 08:00:00'::timestamp
+          union all
+          select 'vd4b', 'e4', '2026-03-04 12:00:00'::timestamp
+
+    expect:
+      format: sql
+      rows: |
+        select 'proc_asof' as procedure_occurrence_id, 'pat1' as person_id, '2026-03-01'::date as procedure_date, '2026-03-01 14:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'usr1' as provider_id, 'e1' as visit_occurrence_id, 'vd1b' as visit_detail_id, 'loc1' as location_id, 'PROC1' as procedure_source_value, 'Appendectomy' as procedure_source_name, true as is_completed
+        union all
+        select 'proc_clamp', 'pat1', '2026-03-02'::date, '2026-03-02 08:00:00'::timestamp, 32817, 'procedure', 'usr1', 'e2', 'vd2a', 'loc1', 'PROC1', 'Appendectomy', true
+        union all
+        select 'proc_nosegment', 'pat1', '2026-03-03'::date, '2026-03-03 09:00:00'::timestamp, 32817, 'procedure', 'usr1', 'e3', null::varchar, 'loc1', 'PROC1', 'Appendectomy', true
+        union all
+        select 'img_asof', 'pat1', '2026-03-04'::date, '2026-03-04 14:00:00'::timestamp, 32817, 'imaging request', 'usr2', 'e4', 'vd4b', 'loc2', 'xRay', 'X-Ray', true
