@@ -1,0 +1,132 @@
+unit_tests:
+  - name: test_ds__medication_dispenses_dispensed_drug
+    model: ds__medication_dispenses
+    description: >
+      BL-001/BL-002 of ds__medication_dispenses. Three dispenses at a non-sensitive
+      facility, each against a prescription for Drug A:
+
+      md_mod  -- pharmacy modified the prescription at dispensing, so the dispense
+                 carries Drug B. The row must report Drug B (AC-001).
+      md_same -- unmodified; the dispense carries Drug A copied from the prescription.
+                 The row must report Drug A (AC-002).
+      md_null -- legacy dispense with no medication_id of its own. The row must fall
+                 back to the prescription's Drug A (AC-003).
+
+      A fourth dispense at a sensitive facility must not appear in this variant.
+      Reverting the macro to join on prescriptions.medication_id fails md_mod.
+    given:
+      - input: ref('medication_dispenses')
+        format: sql
+        rows: |
+          select 'md_mod' as id, 'pop_1' as pharmacy_order_prescription_id, 10 as quantity, '2026-09-01 09:00:00'::timestamp as dispensed_at, 'drug_b' as medication_id
+          union all select 'md_same', 'pop_2', 20, '2026-09-02 09:00:00'::timestamp, 'drug_a'
+          union all select 'md_null', 'pop_3', 30, '2026-09-03 09:00:00'::timestamp, null::text
+          union all select 'md_sen', 'pop_4', 40, '2026-09-04 09:00:00'::timestamp, 'drug_b'
+      - input: ref('pharmacy_order_prescriptions')
+        format: sql
+        rows: |
+          select 'pop_1' as id, 'po_std' as pharmacy_order_id, 'pr_1' as prescription_id
+          union all select 'pop_2', 'po_std', 'pr_2'
+          union all select 'pop_3', 'po_std', 'pr_3'
+          union all select 'pop_4', 'po_sen', 'pr_4'
+      - input: ref('pharmacy_orders')
+        format: sql
+        rows: |
+          select 'po_std' as id, 'enc_1' as encounter_id, 'fac_std' as facility_id
+          union all select 'po_sen', 'enc_2', 'fac_sen'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id
+          union all select 'enc_2', 'pat_2'
+      # every prescription is for Drug A
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'pr_1' as id, 'drug_a' as medication_id
+          union all select 'pr_2', 'drug_a'
+          union all select 'pr_3', 'drug_a'
+          union all select 'pr_4', 'drug_a'
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'drug_a' as id, 'DRUG-A' as code, 'Drug A' as name
+          union all select 'drug_b', 'DRUG-B', 'Drug B'
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std' as id, 'General Hospital' as name, false as is_sensitive
+          union all select 'fac_sen', 'Sensitive Clinic', true
+    expect:
+      format: sql
+      rows: |
+        select
+          'md_mod' as id,
+          10 as quantity,
+          '2026-09-01 09:00:00'::timestamp as dispensed_at,
+          'pat_1' as patient_id,
+          'fac_std' as facility_id,
+          'General Hospital' as facility,
+          'drug_b' as medication_id,
+          'DRUG-B' as medication_code,
+          'Drug B' as medication
+        union all
+        select 'md_same', 20, '2026-09-02 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
+        union all
+        select 'md_null', 30, '2026-09-03 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
+
+  - name: test_ds__sensitive_medication_dispenses_dispensed_drug
+    model: ds__sensitive_medication_dispenses
+    description: >
+      AC-004: the sensitive variant, built from the same macro, also reports the
+      dispensed drug. A modified dispense at a sensitive facility must report Drug B,
+      and a modified dispense at a non-sensitive facility must not appear.
+    given:
+      - input: ref('medication_dispenses')
+        format: sql
+        rows: |
+          select 'md_sen' as id, 'pop_1' as pharmacy_order_prescription_id, 10 as quantity, '2026-09-01 09:00:00'::timestamp as dispensed_at, 'drug_b' as medication_id
+          union all select 'md_std', 'pop_2', 20, '2026-09-02 09:00:00'::timestamp, 'drug_b'
+      - input: ref('pharmacy_order_prescriptions')
+        format: sql
+        rows: |
+          select 'pop_1' as id, 'po_sen' as pharmacy_order_id, 'pr_1' as prescription_id
+          union all select 'pop_2', 'po_std', 'pr_2'
+      - input: ref('pharmacy_orders')
+        format: sql
+        rows: |
+          select 'po_sen' as id, 'enc_1' as encounter_id, 'fac_sen' as facility_id
+          union all select 'po_std', 'enc_2', 'fac_std'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id
+          union all select 'enc_2', 'pat_2'
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'pr_1' as id, 'drug_a' as medication_id
+          union all select 'pr_2', 'drug_a'
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'drug_a' as id, 'DRUG-A' as code, 'Drug A' as name
+          union all select 'drug_b', 'DRUG-B', 'Drug B'
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std' as id, 'General Hospital' as name, false as is_sensitive
+          union all select 'fac_sen', 'Sensitive Clinic', true
+    expect:
+      format: sql
+      rows: |
+        select
+          'md_sen' as id,
+          10 as quantity,
+          '2026-09-01 09:00:00'::timestamp as dispensed_at,
+          'pat_1' as patient_id,
+          'fac_sen' as facility_id,
+          'Sensitive Clinic' as facility,
+          'drug_b' as medication_id,
+          'DRUG-B' as medication_code,
+          'Drug B' as medication
