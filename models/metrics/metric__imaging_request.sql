@@ -136,9 +136,8 @@ requests as (
         case when po.is_completed then c.completed_datetime end as completed_datetime,
         loc.facility_id,
         -- BL-003: the segment the request was raised in, not the encounter's whole-visit
-        -- type -- lets a consumer scope to inpatient, emergency, or outpatient imaging
-        -- requests without a separate metric per setting, and agrees with the scoped
-        -- siblings, which filter this same segment.
+        -- type -- lets a consumer scope to a setting without a separate metric per
+        -- setting.
         vd.visit_detail_source_value as encounter_type,
         pr.gender_source_value as sex,
         {{ age_years('po.procedure_date', 'pr') }} as age_years,
@@ -149,12 +148,11 @@ requests as (
         -- BL-011
         coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
-    -- BL-003: inner join on the segment FK clinical__procedure_occurrence already resolved
-    -- (its BL-005) -- no as-of derivation here, so this metric and its scoped siblings
-    -- cannot disagree about which segment a request belongs to. A request whose segment did
-    -- not resolve (NULL FK, where the encounter's type is absent from map__omop_visit_type)
-    -- is dropped rather than surfaced with no setting, the same tradeoff metric__procedure
-    -- makes.
+    -- BL-003: inner join on the segment FK clinical__procedure_occurrence resolves (its
+    -- BL-005), so every metric over that model agrees on which segment a request belongs
+    -- to. A request whose segment did not resolve (NULL FK, where the encounter's type is
+    -- absent from map__omop_visit_type) is dropped rather than surfaced with no setting,
+    -- the same tradeoff metric__procedure makes.
     join visit_detail vd
         on vd.visit_detail_id = po.visit_detail_id
     join person pr

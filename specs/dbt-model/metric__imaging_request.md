@@ -34,13 +34,12 @@ Diagnostic imaging requests raised in any Tamanu encounter setting, one row per 
 encounter's whole-visit type. A request raised during triage on an encounter later admitted
 reads as `triage`, not `admission`.
 
-**Answers the same three standing questions about imaging as the OPD sibling, but
-unscoped:**
+**Answers three standing questions about imaging, in any setting:**
 
 1. **By modality / area** -- `imaging_type` and `imaging_area`.
-2. **By setting** -- `encounter_type`, new to this metric (absent from the OPD-scoped
-   sibling, which is already fixed to one setting).
-3. **Turnaround time** -- not currently surfaced, same as the OPD sibling. Computable later
+2. **By setting** -- `encounter_type`, so a consumer scopes to one setting from this
+   single view.
+3. **Turnaround time** -- not currently surfaced. Computable later
    from `period_start`/`period_end`.
 
 **Who reads it.** Any Tupaia dashboard needing imaging-request volume across every
@@ -65,7 +64,7 @@ duplicate would double-count a request in any consumer that sums `value_numeric`
 
 `subject_id` is the imaging request's own id, read as `clinical__procedure_occurrence`'s
 `procedure_occurrence_id` (unchanged from `imaging_requests.id`), matching the registry's
-`subject_grain: imaging_request`. As with the OPD/IPD siblings, there is no encounter-segment
+`subject_grain: imaging_request`. There is no encounter-segment
 stitching to find the subject itself -- one row per request already; encounter-type
 attribution here decides *disaggregation*, not identity.
 
@@ -126,9 +125,9 @@ yet built as of this spec.
   `clinical__visit_detail` segment active at the request's own timestamp, reached through
   the `visit_detail_id` that `clinical__procedure_occurrence` resolves once for every
   procedure and imaging request (its BL-005). This model does not derive the segment itself:
-  the as-of rule and the first-segment clamp live there, so this metric and the scoped
-  siblings cannot disagree about which segment a request belongs to, and a fix to that rule
-  reaches all three through the FK.
+  the as-of rule and the first-segment clamp live there, so every metric over that model
+  agrees on which segment a request belongs to, and a fix to that rule reaches all of them
+  through the FK.
 
   A request raised during triage on an encounter later admitted therefore reads as `triage`,
   not `admission` -- what was true when the request was raised, rather than what the
@@ -146,12 +145,12 @@ yet built as of this spec.
 
 - **BL-005 (facility attribution -- the segment's own location, not the request's own
   `location_id`):** `facility_id` is resolved through `bases/locations` on the resolved
-  segment's `care_site_id`, the same source the scoped siblings use. **Not**
-  `clinical__procedure_occurrence.location_id` the way `metric__procedure` resolves facility
-  for the procedure branch -- for the imaging branch that column is
-  `imaging_requests.location_id`, which the clinical model's own header documents as
-  "deprecated in Tamanu and effectively unpopulated." Joining it the way `metric__procedure`
-  does would silently exclude nearly every row via the inner join to `locations`.
+  segment's `care_site_id`, the same source `metric__procedure` resolves facility from, so
+  a procedure and an imaging request belonging to one segment agree on facility. **Not**
+  `clinical__procedure_occurrence.location_id`, which for the imaging branch is
+  `imaging_requests.location_id` -- documented in the clinical model's own header as
+  "deprecated in Tamanu and effectively unpopulated", so an inner join to `locations` on it
+  would silently exclude nearly every row.
 
   Because it comes from the segment rather than the encounter, `facility_id` is where the
   patient was when the request was raised, not wherever the encounter later ended up -- a
@@ -181,8 +180,8 @@ yet built as of this spec.
   `clinical__procedure_occurrence`, filtered to `procedure_type_source_value = 'imaging
   request'`. `deleted`/`entered_in_error` requests are excluded upstream; this model does not
   re-filter status. The clinical model carries only `is_completed` (boolean), not Tamanu's
-  four-value `status`, so `cancelled` and still-open requests remain indistinguishable here,
-  same accepted gap as the OPD sibling.
+  four-value `status`, so `cancelled` and still-open requests remain indistinguishable
+  here.
 
 - **BL-011 (department):** the resolved segment's own `department_id`, resolved to a name
   through `departments` so a consumer scopes to one department (e.g. Dental) via

@@ -1,5 +1,5 @@
 unit_tests:
-  - name: test_metric__imaging_request_scope_and_completion
+  - name: test_metric__imaging_request_setting_and_completion
     model: metric__imaging_request
     description: >
       BL-002, BL-003, BL-010 (metric__imaging_request). r1's segment is 'clinic' and it
@@ -9,7 +9,7 @@ unit_tests:
       this metric applies no setting filter, so a consumer scoping to outpatient imaging
       filters encounter_type = 'clinic' (BL-003). r4 is still
       pending with no imaging_results row at all and must still be included with a NULL
-      period_end -- scope does not depend on a completion event that does not exist yet. r5
+      period_end -- inclusion does not depend on a completion event that does not exist yet. r5
       is a procedure_type_source_value = 'procedure' row on the same clinic segment, proving
       the branch filter excludes it rather than merely never encountering one (BL-010). r6 is
       is_completed = false but does have a matching result (a stray/preliminary result on a

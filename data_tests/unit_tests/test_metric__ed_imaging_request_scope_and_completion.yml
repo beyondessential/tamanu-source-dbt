@@ -31,7 +31,7 @@ unit_tests:
       BL-007: r9 has no structured area, so its imaging_area falls back to its free-text note,
       which was edited from 'Chest' to 'Abdomen' -- only the current revision appears. The full
       set of revision cases is covered once, in
-      test_metric__imaging_request_scope_and_completion, since both models rank through
+      test_metric__imaging_request_setting_and_completion, since both models rank through
       notes__revision_rank.
 
       The as-of match and the first-segment clamp are not this model's behaviour and are
