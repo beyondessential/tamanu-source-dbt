@@ -1,12 +1,13 @@
 unit_tests:
-  - name: test_metric__opd_imaging_request_scope_and_completion
-    model: metric__opd_imaging_request
+  - name: test_metric__imaging_request_scope_and_completion
+    model: metric__imaging_request
     description: >
-      BL-002, BL-003, BL-010. What this metric still decides for itself, now that
-      clinical__procedure_occurrence resolves the segment (its BL-005). r1's segment is
-      'clinic' and it is included, with period_end from its earliest result and facility
+      BL-002, BL-003, BL-010 (metric__imaging_request). r1's segment is 'clinic' and it
+      carries encounter_type 'clinic', with period_end from its earliest result and facility
       from that segment's own care_site_id rather than a request-level location (BL-005).
-      r3's segment is 'triage', so the clinic-only scope excludes it (BL-003). r4 is still
+      r3's segment is 'triage' and it is included too, reading encounter_type 'triage' --
+      this metric applies no setting filter, so a consumer scoping to outpatient imaging
+      filters encounter_type = 'clinic' (BL-003). r4 is still
       pending with no imaging_results row at all and must still be included with a NULL
       period_end -- scope does not depend on a completion event that does not exist yet. r5
       is a procedure_type_source_value = 'procedure' row on the same clinic segment, proving
@@ -115,10 +116,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'opd_imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
+        select 'imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
         union all
-        select 'opd_imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r3', '2026-01-01 10:00:00'::timestamp, '2026-01-01 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'triage', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'opd_imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'opd_imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
+        union all
+        select 'imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded'

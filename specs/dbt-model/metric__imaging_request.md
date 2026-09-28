@@ -16,10 +16,9 @@
 Canonical definition for `imaging_request`: one row per imaging request, in any encounter
 setting. The direct imaging-request counterpart to `metric__procedure` -- modelled on its
 setting-scoping pattern, where `encounter_type` is a disaggregation rather than a
-restriction. This is the first all-settings imaging metric in the repo; the two scoped
-siblings,
-`metric__opd_imaging_request` (`clinic` only) and `metric__ipd_imaging_request`
-(`admission` only), already existed or were built alongside this one.
+restriction. Outpatient imaging is `encounter_type = 'clinic'` and inpatient is
+`'admission'`. Emergency imaging has its own metric, `metric__ed_imaging_request`, on OMOP
+9203.
 
 ## Purpose
 
@@ -33,9 +32,7 @@ Diagnostic imaging requests raised in any Tamanu encounter setting, one row per 
 `clinical__visit_detail` segment active at the request's own timestamp, read off the
 `visit_detail_id` that `clinical__procedure_occurrence` resolves (its BL-005) -- not the
 encounter's whole-visit type. A request raised during triage on an encounter later admitted
-reads as `triage`, not `admission`. Because the scoped siblings
-(`metric__opd_imaging_request`, `metric__ipd_imaging_request`) filter that same segment,
-filtering this metric to one setting agrees with the matching sibling by construction.
+reads as `triage`, not `admission`.
 
 **Answers the same three standing questions about imaging as the OPD sibling, but
 unscoped:**
@@ -56,12 +53,10 @@ built.
 |---|---|---|---|
 | `metric_id` | BES | n/a | A count of imaging requests in any encounter setting -- no external body registers this indicator |
 
-No AIHW METeOR element is registered, for the same reason `metric__opd_imaging_request`
-carries none: AIHW's own diagnostic-imaging reporting (Medicare Benefits Schedule-based)
+No AIHW METeOR element is registered: AIHW's own diagnostic-imaging reporting (Medicare Benefits Schedule-based)
 does not report completion, cancellation, turnaround time, or body-area breakdown. This
 metric is a BES composition over Tamanu's own `imaging_requests` object,
-`definition_source: BES`, the same status `metric__procedure`/`metric__opd_imaging_request`
-carry.
+`definition_source: BES`, the same status `metric__procedure` carries.
 
 ## Grain
 
@@ -76,9 +71,8 @@ attribution here decides *disaggregation*, not identity.
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and one measure attribute -- one more
-disaggregation (`encounter_type`) than `metric__opd_imaging_request`/
-`metric__ipd_imaging_request` carry, since those are already scoped to a single setting.
+D5 wide format, plus eight disaggregation columns and one measure attribute.
+`encounter_type` is among them, since this metric applies no setting restriction.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -98,12 +92,12 @@ disaggregation (`encounter_type`) than `metric__opd_imaging_request`/
 | `imaging_type_code` | text | Tamanu's raw imaging-type value, or `'Not recorded'` (BL-007). Never NULL |
 | `imaging_area` | text | Comma-joined body area/study area, or `'Not recorded'` (BL-007). Never NULL |
 | `age_years` | integer | Age in whole years at the request, unbanded (BL-008). A measure, not a dimension |
+| `department` | text | The department of the segment the request was raised in, resolved to a name (BL-011). Never NULL |
 
 ## Data tables
 
 The Tupaia data table over this view belongs in `tupaia-data-product`, at
-`tamanu/data_tables/`, the same convention `metric__procedure` and
-`metric__opd_imaging_request` use. This model therefore carries no `data_table_*` meta. Not
+`tamanu/data_tables/`, the same convention `metric__procedure` uses. This model therefore carries no `data_table_*` meta. Not
 yet built as of this spec.
 
 ## Business logic
@@ -111,13 +105,15 @@ yet built as of this spec.
 - **BL-001 (a general metric, disaggregated by setting rather than a metric per
   setting):** matches `metric__procedure` BL-... reasoning -- rather than one metric per
   encounter setting, `encounter_type` is emitted as a disaggregation so a consumer filters
-  to one setting (or none) from this single view. `metric__opd_imaging_request` and
-  `metric__ipd_imaging_request` continue to exist alongside this metric because they answer
-  a genuinely different question (segment-precise attribution, and for the OPD one a
-  narrower-than-9202 scope), not because this metric is incomplete without them.
+  to one setting (or none) from this single view. Outpatient imaging is
+  `encounter_type = 'clinic'`, narrower than OMOP 9202, which also admits `imaging`- and
+  `vaccination`-typed encounters: an imaging-typed encounter and an imaging request are
+  independent Tamanu concepts that happen to share a name (MAUI-6806). This metric
+  therefore carries no setting-group column -- `metric__procedure` has `encounter_setting`
+  because its outpatient scope is the full 9202, and reusing that name here would imply a
+  scope this metric does not have.
 
-- **BL-002 (reporting period and status):** identical to `metric__opd_imaging_request`
-  BL-002. `period_start` is `clinical__procedure_occurrence.procedure_datetime`. `period_end`
+- **BL-002 (reporting period and status):** `period_start` is `clinical__procedure_occurrence.procedure_datetime`. `period_end`
   is the completion timestamp -- `min(imaging_results.datetime)` for the request -- gated on
   `is_completed`, not surfaced merely because a matching `imaging_results` row exists.
   `period_end` is left as recorded, unguarded against a completion timestamp before the
@@ -155,10 +151,7 @@ yet built as of this spec.
   for the procedure branch -- for the imaging branch that column is
   `imaging_requests.location_id`, which the clinical model's own header documents as
   "deprecated in Tamanu and effectively unpopulated." Joining it the way `metric__procedure`
-  does would silently exclude nearly every row via the inner join to `locations` -- the same
-  class of real zero-row bug `metric__opd_imaging_request`'s own BL-005 found and fixed
-  (there, against `location_group_id`) before this metric was built, so it is avoided here
-  from the outset rather than discovered against a replica a second time.
+  does would silently exclude nearly every row via the inner join to `locations`.
 
   Because it comes from the segment rather than the encounter, `facility_id` is where the
   patient was when the request was raised, not wherever the encounter later ended up -- a
@@ -167,29 +160,32 @@ yet built as of this spec.
 
   The join to `locations` is still **inner**: a segment whose `care_site_id` doesn't resolve
   to a facility is excluded rather than attributed to a NULL one -- the same "excluded rather
-  than guessed" convention `metric__procedure` and `metric__opd_imaging_request` both use.
+  than guessed" convention `metric__procedure` uses.
 
 - **BL-006 (materialisation is env-aware):** `table` when `target.name` starts with
   `analytics`, `view` otherwise, set on the shared `metrics:` block in `dbt_project.yml` --
   no new config needed for this model.
 
-- **BL-007 (modality as name and code; area emitted raw):** identical to
-  `metric__opd_imaging_request` BL-007 -- `imaging_type`/`imaging_type_code` as readable
+- **BL-007 (modality as name and code; area emitted raw):** `imaging_type`/`imaging_type_code` as readable
   label and raw code, `imaging_area` as a comma-joined, alphabetically ordered list of
   body-part names from `imaging_request_areas` -> `reference_data.name`, falling back to the
   legacy free-text note. None of the three is ever NULL.
 
 - **BL-008 (age is the consumer's to band):** `age_years` is age in whole years at the
-  request date, emitted raw and unbanded -- a measure, not a dimension, matching
-  `metric__opd_imaging_request` BL-008.
+  request date, emitted raw and unbanded -- a measure, not a dimension.
 
-- **BL-010 (sourced from the clinical layer, not `bases/imaging_requests` directly):**
-  identical to `metric__opd_imaging_request` BL-010 -- reads
+- **BL-010 (sourced from the clinical layer, not `bases/imaging_requests` directly):** reads
   `clinical__procedure_occurrence`, filtered to `procedure_type_source_value = 'imaging
   request'`. `deleted`/`entered_in_error` requests are excluded upstream; this model does not
   re-filter status. The clinical model carries only `is_completed` (boolean), not Tamanu's
   four-value `status`, so `cancelled` and still-open requests remain indistinguishable here,
   same accepted gap as the OPD sibling.
+
+- **BL-011 (department):** the resolved segment's own `department_id`, resolved to a name
+  through `departments` so a consumer scopes to one department (e.g. Dental) via
+  `metric_filters` on a readable value, the same convention modality identity (BL-007) uses
+  rather than an opaque Tamanu id. `bases/locations` carries no `department_id`, so it comes
+  off the segment directly. Never NULL -- falls back to `'Not recorded'`.
 
 ## Acceptance criteria
 
@@ -212,7 +208,7 @@ yet built as of this spec.
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
 
 Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), matching
-`metric__opd_imaging_request.yml`'s convention.
+`metric__procedure.yml`'s convention.
 
 ## Registry entry
 
@@ -223,8 +219,7 @@ facility_id,encounter_type,sex,is_completed,imaging_type,imaging_type_code,imagi
 `encounter_type` is already admitted to the allowlist in
 `assert__metric_definitions__disaggregations` (`metric__procedure`'s own setting
 disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_completed`,
-`facility_id`, `sex` are all already admitted by `metric__opd_imaging_request`/
-`metric__procedure`.
+`facility_id`, `sex` are all already admitted by `metric__procedure`.
 
 ## Dependencies
 
@@ -252,13 +247,11 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 2. **Bucket the time grain and exclude the incomplete current period.** The model emits
    minute-resolution timestamps, so a monthly card applies its own month bucketing and
    filters the current month itself.
-3. **Not rely on `is_completed` to mean "not cancelled."** Same caveat as
-   `metric__opd_imaging_request`.
+3. **Not rely on `is_completed` to mean "not cancelled."** A cancelled request and a
+   still-open one are both `false`, indistinguishable by this column alone.
 4. **Filter `encounter_type` itself, if a single setting is wanted.** This metric does not
-   pre-scope to any setting -- a consumer wanting "outpatient clinic imaging requests" can
-   either filter this metric to `encounter_type = 'clinic'` or read
-   `metric__opd_imaging_request` instead. Both read the same resolved segment, so the two
-   agree by construction.
+   pre-scope to any setting -- a consumer wanting outpatient clinic imaging requests
+   filters `encounter_type = 'clinic'`, and inpatient `'admission'`.
 5. **Compute turnaround time itself, if needed.** Not emitted; both `period_start` and
    `period_end` remain on the model.
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
@@ -269,21 +262,19 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 | Artefact | Relationship |
 |---|---|
 | `metric__procedure` | The reference pattern this model is built from: `encounter_type` as a disaggregation rather than a restriction, read off the same resolved segment FK |
-| `metric__opd_imaging_request` | The `clinic`-only sibling; shares this model's imaging-domain joins (completions, areas) and reads the same resolved segment, differing only in restricting to one setting |
-| `metric__ipd_imaging_request` | The `admission`-only sibling; same relationship to this model as the OPD sibling |
+| `metric__ed_imaging_request` | Emergency imaging on OMOP 9203, sharing this model's imaging-domain joins (completions, areas) and reading the same resolved segment, restricted to one setting |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
 ## Open questions
 
 - **OQ-001:** Should a coarser AIHW-aligned modality grouping be added as a data-table-layer
-  derived column in `tupaia-data-product`, alongside the raw `imaging_type`? Same open
-  question as `metric__opd_imaging_request`'s OQ-002.
+  derived column in `tupaia-data-product`, alongside the raw `imaging_type`?
 - **OQ-002:** Should the full `pending`/`in_progress`/`completed`/`cancelled` status
-  lifecycle be reintroduced as a disaggregation? Same open question as
-  `metric__opd_imaging_request`'s OQ-004.
+  lifecycle be reintroduced as a disaggregation?
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-11 | @gagank16 | Initial draft (MAUI-6806) -- first all-settings imaging-request metric in the repo, built alongside metric__ipd_imaging_request |
+| 2026-09-11 | @gagank16 | Initial draft (MAUI-6806) -- first all-settings imaging-request metric in the repo |
+| 2026-09-28 | @gagank16 | Single imaging-request metric: the OPD and IPD scoped metrics retired behind an `encounter_type` filter, `department` added (MAUI-6909) |

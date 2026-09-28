@@ -14,7 +14,7 @@
 --
 -- clinical__procedure_occurrence carries both a procedure and an imaging branch,
 -- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
--- population is the procedure branch only -- imaging is metric__opd_imaging_request's
+-- population is the procedure branch only -- imaging is metric__imaging_request's
 -- population, not this one's.
 --
 -- The registry carries the definition; this model is its implementation.
@@ -92,7 +92,7 @@ procedures as (
         on loc.id = vd.care_site_id
     left join departments dept
         on dept.id = vd.department_id
-    -- BL-001: procedure branch only -- imaging is metric__opd_imaging_request's population
+    -- BL-001: procedure branch only -- imaging is metric__imaging_request's population
     where po.procedure_type_source_value = 'procedure'
 )
 

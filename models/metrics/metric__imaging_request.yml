@@ -9,20 +9,20 @@ models:
       whatever grain it needs. encounter_type is the setting the request was raised in, read
       off the segment clinical__procedure_occurrence resolves (its BL-005), so a consumer
       scopes to one setting via a filter on this one metric rather than needing a separate
-      metric per setting -- the same convention metric__procedure uses. See
-      metric__opd_imaging_request and metric__ipd_imaging_request for the clinic-only and
-      admission-only siblings, which filter that same segment.
+      metric per setting -- the same convention metric__procedure uses. Outpatient imaging
+      is encounter_type 'clinic' and inpatient is 'admission'. Emergency imaging is
+      metric__ed_imaging_request's population.
     config:
       tags:
         - clinical
     # No data_table_* meta. The Tupaia data tables over this model are configured in
     # tupaia-data-product at tamanu/data_tables/, one file per data table, the same
-    # convention metric__procedure and metric__opd_imaging_request use.
+    # convention metric__procedure uses.
     meta:
       owner: bes-maui
       domain: clinical
       # Per-request rows carrying sex/age alongside a request id -- no patient name or exact
-      # birth date, the same pair metric__opd_imaging_request carries while staying internal.
+      # birth date, the same pair metric__procedure carries while staying internal.
       pii: false
       classification: internal
     data_tests:
@@ -132,10 +132,17 @@ models:
           The setting the request was raised in -- admission, clinic, emergency and the rest
           of the deployment's encounter types. This is the phase the encounter was in at the
           time of the request, not what the encounter became afterwards: a request raised
-          during triage on an encounter later admitted reads as triage. Filtering to one
-          setting gives that setting's imaging requests from the same metric, and agrees with
-          the matching scoped metric (metric__opd_imaging_request,
-          metric__ipd_imaging_request), which filter this same segment.
+          during triage on an encounter later admitted reads as triage.
+
+          Scope a setting by filtering this column: 'clinic' for outpatient imaging and
+          'admission' for inpatient. Outpatient imaging is clinic only, narrower than the
+          OMOP 9202 concept that also covers imaging- and vaccination-typed encounters --
+          an imaging-typed encounter and an imaging request are independent Tamanu concepts
+          that happen to share a name (MAUI-6806). This is why the metric carries no
+          setting-group column: metric__procedure has encounter_setting because its
+          outpatient scope is the full 9202, and reusing that name here would imply a scope
+          this metric does not have. Emergency imaging is metric__ed_imaging_request's
+          population, on OMOP 9203, not a filter on this metric.
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_encounter_type_not_null
@@ -176,6 +183,15 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_imaging_area_not_null
+      - name: department
+        data_type: text
+        description: >-
+          The department of the segment the request was raised in (e.g. Dental), resolved to
+          a name so a consumer scopes to one department by metric_filters on a readable
+          value. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_department_not_null
       - name: age_years
         data_type: integer
         description: >-

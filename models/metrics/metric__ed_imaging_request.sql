@@ -4,7 +4,7 @@
 -- Per-request (subject) grain: one row per imaging request raised while the patient's active
 -- clinical__visit_detail segment was an emergency phase, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. The emergency-side counterpart of
--- metric__opd_imaging_request, built from it directly. See
+-- metric__imaging_request, sharing its shape. See
 -- specs/dbt-model/metric__ed_imaging_request.md BL-003 for the scope, and BL-004 for why the
 -- as-of join is evaluated at request time rather than completion time, and for the
 -- first-segment clamp applied when a request predates every segment.

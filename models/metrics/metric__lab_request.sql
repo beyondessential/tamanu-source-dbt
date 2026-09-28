@@ -8,7 +8,7 @@
 --
 -- BL-001: sourced from clinical__measurement's lab branch, filtered to
 -- measurement_type_source_value = 'lab' -- the same clinical-layer convention
--- metric__procedure/metric__opd_imaging_request use over clinical__procedure_occurrence,
+-- metric__procedure/metric__imaging_request use over clinical__procedure_occurrence,
 -- rather than reading bases/lab_requests directly. clinical__measurement already restricts
 -- this branch to tests carrying a reading, under a request that was not withdrawn (its own
 -- BL-009/BL-011), so every row here is a completed, resulted test -- there is no separate
