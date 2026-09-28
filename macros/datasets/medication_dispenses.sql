@@ -7,7 +7,9 @@ select
     e.patient_id,
     po.facility_id,
     f.name as facility,
-    pr.medication_id,
+    -- The dispense's own drug wins, so a pharmacy modification at dispensing is reported (BL-001);
+    -- the prescription's drug only backfills legacy dispenses recorded before the column existed.
+    coalesce(md.medication_id, pr.medication_id) as medication_id,
     m.code as medication_code,
     m.name as medication
 from {{ ref('medication_dispenses') }} md
@@ -22,7 +24,7 @@ join {{ ref('encounters') }} e
 join {{ ref('prescriptions') }} pr
     on pr.id = pop.prescription_id
 join {{ ref('reference_data') }} m
-    on m.id = pr.medication_id
+    on m.id = coalesce(md.medication_id, pr.medication_id)  -- BL-002
 join {{ ref('facilities') }} f
     on f.id = po.facility_id
     and f.is_sensitive = {{ is_sensitive }}
