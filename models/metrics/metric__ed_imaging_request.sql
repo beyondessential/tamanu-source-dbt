@@ -69,15 +69,15 @@ completions as (
 -- filter, since a revision can change a note's type.
 imaging_request_notes as (
     select
-        id,
-        record_id,
-        note_type,
-        content,
-        datetime,
-        created_datetime,
+        notes.id,
+        notes.record_id,
+        notes.note_type,
+        notes.content,
+        notes.datetime,
+        notes.created_datetime,
         {{ notes__revision_rank('notes') }} as revision_rank
     from notes
-    where record_type = 'ImagingRequest'
+    where notes.record_type = 'ImagingRequest'
 ),
 
 -- BL-007: legacy free-text area fallback, one row per request, in the order the notes were

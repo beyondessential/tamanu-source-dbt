@@ -11,7 +11,7 @@ select
     vocabulary_id
 from (
     values
-        ('male', 'Male', 8507, 'MALE', 'Gender'),
-        ('female', 'Female', 8532, 'FEMALE', 'Gender'),
-        ('other', 'Other', 0, 'No matching concept', 'Gender')
-) as t (local_code, local_name, concept_id, concept_name, vocabulary_id)
+    ('male', 'Male', 8507, 'MALE', 'Gender'),
+    ('female', 'Female', 8532, 'FEMALE', 'Gender'),
+    ('other', 'Other', 0, 'No matching concept', 'Gender')
+) t (local_code, local_name, concept_id, concept_name, vocabulary_id)
