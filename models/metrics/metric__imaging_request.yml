@@ -136,13 +136,13 @@ models:
 
           Scope a setting by filtering this column: 'clinic' for outpatient imaging and
           'admission' for inpatient. Outpatient imaging is clinic only, narrower than the
-          OMOP 9202 concept that also covers imaging- and vaccination-typed encounters --
-          an imaging-typed encounter and an imaging request are independent Tamanu concepts
-          that happen to share a name (MAUI-6806). This is why the metric carries no
-          setting-group column: metric__procedure has encounter_setting because its
-          outpatient scope is the full 9202, and reusing that name here would imply a scope
-          this metric does not have. Emergency imaging is metric__ed_imaging_request's
-          population, on OMOP 9203, not a filter on this metric.
+          OMOP 9202 concept that also covers imaging- and vaccination-typed encounters
+          (MAUI-6806).
+
+          This metric includes emergency, observation and triage requests.
+          metric__ed_imaging_request reports those same rows grouped as OMOP 9203, so it is
+          a subset of this metric rather than a separate population -- never sum the two, or
+          every emergency-phase request is counted twice.
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_encounter_type_not_null

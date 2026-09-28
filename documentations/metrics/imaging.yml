@@ -24,14 +24,13 @@ metrics:
     A count of imaging requests, which no external body registers as a single indicator --
     AIHW's own diagnostic-imaging reporting explicitly names request completion,
     cancellation, turnaround time and body-area breakdown as gaps it cannot report. This
-    metric carries no encounter-setting restriction at all -- encounter_type is emitted as a
-    disaggregation (the encounter's own whole-visit type) so a consumer scopes to one
-    setting, or none, from this single view, the same approach metric__procedure takes for
-    procedures. The segment-precise, single-setting siblings opd_imaging_request and
-    ipd_imaging_request remain separate metrics because they answer a genuinely different
-    question -- the segment active at the request's own time, not the encounter's whole
-    type -- not because this metric supersedes them. Pending alignment with the deploying
-    country's national HMIS definition.
+    metric carries no encounter-setting restriction -- encounter_type is the
+    clinical__visit_detail segment active when the request was raised, not the encounter's
+    whole-visit type, so a consumer scopes to one setting, or none, from this single view,
+    the same approach metric__procedure takes for procedures. Outpatient imaging is
+    encounter_type 'clinic' and inpatient is 'admission'. ed_imaging_request reports the
+    emergency phase (OMOP 9203) over these same rows, so the two must never be summed.
+    Pending alignment with the deploying country's national HMIS definition.
   unit: count
   subject_grain: imaging_request
   disaggregations:

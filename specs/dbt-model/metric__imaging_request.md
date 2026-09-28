@@ -102,15 +102,12 @@ yet built as of this spec.
 ## Business logic
 
 - **BL-001 (a general metric, disaggregated by setting rather than a metric per
-  setting):** matches `metric__procedure` BL-... reasoning -- rather than one metric per
-  encounter setting, `encounter_type` is emitted as a disaggregation so a consumer filters
-  to one setting (or none) from this single view. Outpatient imaging is
-  `encounter_type = 'clinic'`, narrower than OMOP 9202, which also admits `imaging`- and
-  `vaccination`-typed encounters: an imaging-typed encounter and an imaging request are
-  independent Tamanu concepts that happen to share a name (MAUI-6806). This metric
-  therefore carries no setting-group column -- `metric__procedure` has `encounter_setting`
-  because its outpatient scope is the full 9202, and reusing that name here would imply a
-  scope this metric does not have.
+  setting):** `encounter_type` is emitted as a disaggregation, so a consumer filters to one
+  setting, or none, from this single view. Outpatient imaging is `encounter_type = 'clinic'`
+  -- narrower than OMOP 9202, which also admits `imaging`- and `vaccination`-typed
+  encounters (MAUI-6806). Inpatient is `'admission'`. `metric__ed_imaging_request` reports
+  the emergency phase over these same rows grouped as OMOP 9203, so it is a subset of this
+  metric and the two are never summed.
 
 - **BL-002 (reporting period and status):** `period_start` is `clinical__procedure_occurrence.procedure_datetime`. `period_end`
   is the completion timestamp -- `min(imaging_results.datetime)` for the request -- gated on
@@ -207,6 +204,7 @@ yet built as of this spec.
 | AC | `imaging_type` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_type_code` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_area` is `not_null` | BL-007 | `not_null` |
+| AC | `department` is `not_null` | BL-011 | `not_null` |
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
 
 Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), matching
@@ -216,7 +214,7 @@ Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), match
 
 One active row -- `imaging_request`, `kind: metric`, `subject_grain: imaging_request`,
 `status: draft`, `spec_path` pointing here, with `disaggregations:
-facility_id,encounter_type,sex,is_completed,imaging_type,imaging_type_code,imaging_area`.
+facility_id,encounter_type,sex,is_completed,imaging_type,imaging_type_code,imaging_area,department`.
 
 `encounter_type` is already admitted to the allowlist in
 `assert__metric_definitions__disaggregations` (`metric__procedure`'s own setting
@@ -228,13 +226,14 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 | Ref | Layer | Role |
 |---|---|---|
 | `clinical__procedure_occurrence` | `clinical/` | The request itself, via its imaging branch: identity, timestamp, modality, completion flag, grain anchor (BL-002, BL-007, BL-010) |
-| `clinical__visit_occurrence` | `clinical/` | `encounter_type` disaggregation and facility: the encounter's own type and `care_site_id` (BL-003, BL-005) |
+| `clinical__visit_detail` | `clinical/` | `encounter_type`, facility and department: the resolved segment's own type, `care_site_id` and `department_id` (BL-003, BL-005, BL-011) |
 | `imaging_results` | `bases/` | Completion timestamp, `min(datetime)` per request (BL-002) |
 | `imaging_request_areas` | `bases/` | Structured body-area links (BL-007) |
 | `reference_data` | `bases/` | Area names for `imaging_request_areas.area_id` (BL-007) |
 | `notes` | `bases/` | Legacy free-text area fallback (BL-007) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-008) |
-| `locations` | `bases/` | Facility id of the encounter's own `care_site_id` (BL-005) |
+| `locations` | `bases/` | Facility id of the resolved segment's `care_site_id` (BL-005) |
+| `departments` | `bases/` | Department name for the resolved segment (BL-011) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
