@@ -39,12 +39,14 @@ select
     m.value_source_value,
     b.measurement_datetime
 from birth b
-cross join lateral (values
-    ('birth_weight',             'Birth weight',             b.birth_weight::varchar),
-    ('birth_length',             'Birth length',             b.birth_length::varchar),
-    ('apgar_score_one_minute',   'APGAR score (1 minute)',   b.apgar_score_one_minute::varchar),
-    ('apgar_score_five_minutes', 'APGAR score (5 minutes)',  b.apgar_score_five_minutes::varchar),
-    ('apgar_score_ten_minutes',  'APGAR score (10 minutes)', b.apgar_score_ten_minutes::varchar),
-    ('gestational_age_estimate', 'Gestational age estimate', b.gestational_age_estimate::varchar)
-) as m (measurement_source_value, measurement_source_name, value_source_value)
+cross join
+    lateral (
+        values
+        ('birth_weight', 'Birth weight', b.birth_weight::varchar),
+        ('birth_length', 'Birth length', b.birth_length::varchar),
+        ('apgar_score_one_minute', 'APGAR score (1 minute)', b.apgar_score_one_minute::varchar),
+        ('apgar_score_five_minutes', 'APGAR score (5 minutes)', b.apgar_score_five_minutes::varchar),
+        ('apgar_score_ten_minutes', 'APGAR score (10 minutes)', b.apgar_score_ten_minutes::varchar),
+        ('gestational_age_estimate', 'Gestational age estimate', b.gestational_age_estimate::varchar)
+    ) m (measurement_source_value, measurement_source_name, value_source_value)
 where m.value_source_value is not null and trim(m.value_source_value) != ''

@@ -43,8 +43,8 @@ metrics:
   subject_grain: lab_test
   disaggregations:
   - facility_id
-  - visit_detail_concept_id
   - encounter_type
+  - encounter_setting
   - sex
   - is_completed
   - is_panel_request

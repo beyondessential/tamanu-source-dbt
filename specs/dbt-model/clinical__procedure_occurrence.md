@@ -61,7 +61,7 @@ unique across both branches without qualification.
 | `procedure_occurrence_id` | varchar(255) | `procedures.id` or `imaging_requests.id`. Native id PK -- no remap to OMOP integer ids (D1) |
 | `person_id` | varchar(255) | Reached through the encounter (both branches). FK to `clinical__person.person_id` |
 | `procedure_date` | date | Date component of `procedure_datetime` |
-| `procedure_datetime` | timestamp | When performed (procedure branch), or when requested -- not completed -- (imaging branch, BL-002) |
+| `procedure_datetime` | timestamp | When performed (procedure branch, BL-006), or when requested -- not completed -- (imaging branch, BL-002) |
 | `procedure_type_concept_id` | integer | Constant `32817` ("EHR administrative record") for both branches -- provenance, not what kind of act this is |
 | `procedure_type_source_value` | text | `'procedure'` or `'imaging request'` -- the branch discriminator (BL-001) |
 | `provider_id` | varchar(255) | Who performed it (procedure branch), or who requested it -- not who completed it -- (imaging branch, BL-003). FK to `ref__provider.provider_id` |
@@ -104,7 +104,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   consumer needing to tell a still-open request apart from a cancelled one, or needing the
   completion timestamp, turnaround time, or the full status lifecycle, reads
   `bases/imaging_requests`/`bases/imaging_results` directly, the same way
-  `metric__opd_imaging_request` does; this model does not carry those facts.
+  `metric__imaging_request` does; this model does not carry those facts.
 - **BL-003 (provider is the point of origin, not completion):** the imaging branch's
   `provider_id` is `requested_by_id`, mirroring `procedure_datetime`'s own request-time
   anchor (BL-002) -- consistent within the row rather than mixing a request-side timestamp
@@ -119,7 +119,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   `location_group_id` from any pre-existing `location_id` value, and the current imaging
   request UI has no field that writes `location_id` at all. `location_group_id` itself
   turned out not to be a safe fallback either -- confirmed against a real replica, it was
-  NULL for every real clinic-scoped imaging request. `metric__opd_imaging_request` resolves
+  NULL for every real clinic-scoped imaging request. `metric__imaging_request` resolves
   facility a third way instead: via the `clinical__visit_detail` segment active at the
   request's own time, using that segment's own location -- the same segment it already
   computes for its own outpatient-scope filter, so no join beyond `bases/locations` is
@@ -162,6 +162,16 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   an event is emitted with a NULL FK rather than dropped. AC-008 is a `relationships` check,
   which only validates populated values.
 
+- **BL-006 (when a procedure was performed):** `procedure_datetime` is `procedures.date` plus
+  `start_time`. `bases/procedures` falls `start_time` back to the time of day in `date`, which
+  holds a full timestamp -- Tamanu's form saves it with the start time -- so an untimed procedure
+  keeps its own time of day rather than falling to midnight, which would place it before every
+  segment of an encounter that began that day.
+
+  This is what Tamanu records. The web form saves `date` and `start_time` as the same value, and
+  a procedure created from a procedure survey response carries `date` -- the time it was created
+  -- with no `start_time`. `start_time` therefore always holds a time of day, and
+  `ds__procedures` measures a procedure's duration from it wherever an end time was recorded.
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -175,6 +185,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
 | AC-007 | Every non-null `location_id` exists in `locations.id` | BL-004 | dbt `relationships` (`warn`) |
 | AC-008 | Every non-null `visit_detail_id` exists in `clinical__visit_detail.visit_detail_id` | BL-005 | dbt `relationships` |
 | AC-009 | The as-of match, the first-segment clamp, a NULL FK where no segment resolves, and the imaging branch resolving by the same rule | BL-005 | unit test (`test_clinical__procedure_occurrence_visit_detail_resolution`) |
+| AC-010 | `start_time` falls back to `date`'s own time where no start time was recorded, and a recorded start time stands | BL-006 | `unit_test` (`test_procedures_start_time_fallback`, on `bases/procedures`) |
 
 ## Registry entry
 
@@ -198,9 +209,9 @@ only `metric__`/`derived__` artefacts get a `metric_definitions` row.
 
 | Consumer | Use |
 |---|---|
-| `metric__procedure` | General procedure metric, all settings (procedure branch) |
-| `metric__opd_procedure` | Outpatient-scoped procedure metric (procedure branch) |
-| `metric__opd_imaging_request` | Outpatient-scoped imaging request metric (imaging branch) |
+| `metric__procedure` | Procedure metric (procedure branch), carrying encounter_type so a consumer scopes to one setting |
+| `metric__imaging_request` | Imaging request metric (imaging branch), carrying encounter_type the same way |
+| `metric__ed_imaging_request` | Emergency-scoped imaging request metric (imaging branch) |
 
 Any consumer here must filter `procedure_type_source_value` per the consumer contract in
 BL-001.
@@ -210,7 +221,7 @@ BL-001.
 - **OQ-1:** `procedure_concept_id` (standard SNOMED/CPT) awaits the `vocab__` layer to map
   the retained source values, for both branches.
 - **OQ-2:** `imaging_requests.location_id` is deprecated (BL-004), and its would-be successor
-  `location_group_id` turned out to be unreliable too (BL-004) -- `metric__opd_imaging_request`
+  `location_group_id` turned out to be unreliable too (BL-004) -- `metric__imaging_request`
   resolves facility a third way, via the active `clinical__visit_detail` segment's own
   location, entirely outside this model. Worth revisiting if a second consumer needs the
   same resolution and duplicating that segment-join becomes a real cost -- for now each
@@ -222,3 +233,4 @@ BL-001.
 |---|---|---|
 | ~2026-08 | Maui team | Initial (`procedures` only) |
 | 2026-09 | @gagank16 | Added the imaging branch and `procedure_type_source_value` discriminator |
+| 2026-09-28 | Maui team | BL-006: `bases/procedures` falls an untimed procedure's `start_time` back to `date`'s own time, so it no longer lands at midnight and resolves to the segment it was performed in |

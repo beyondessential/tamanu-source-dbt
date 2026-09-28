@@ -16,9 +16,9 @@
 
 Canonical definition for `lab_test`: one row per laboratory test ordered, whether or not it
 ever produced a result. The generic (all-settings) metric of the laboratory family, carrying
-`visit_detail_concept_id` so a consumer scopes to emergency, outpatient or inpatient activity
-by filtering a column. **No per-setting sibling metrics**, unlike the diagnosis and procedure
-families -- see BL-001.
+`encounter_setting` so a consumer scopes to outpatient or inpatient activity by filtering a
+column, the same shape `metric__procedure` took when its own OPD/IPD variants were folded in.
+**No outpatient or inpatient sibling metrics** -- see BL-001.
 
 ## Purpose
 
@@ -106,7 +106,8 @@ D5 wide format, plus ten disaggregation columns and two measure attributes.
 | `value_numeric` | numeric | Always `1`. Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | The encounter's own location's facility (BL-010). `not_null` |
-| `encounter_type` | varchar(255) | The encounter's own type, for setting-level scoping (BL-001). `not_null` |
+| `encounter_type` | varchar(255) | The resolved segment's own `encounter_type` (BL-010). `not_null` |
+| `encounter_setting` | text | `Outpatient` (9202) / `Inpatient` (9201) / `Other`. Emergency deliberately unnamed (BL-010). `not_null` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | The test carries a completion timestamp (BL-006). Never NULL |
 | `is_panel_request` | boolean | Test was ordered as part of a panel (BL-003). Never NULL |
@@ -127,10 +128,10 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
 ## Business logic
 
-- **BL-001 (one metric, no per-setting siblings):** the setting is a column
-  (`visit_detail_concept_id`, BL-010), not a separate `metric_id`. This departs from the
-  diagnosis and procedure families, which each ship `ipd_` and `opd_` variants, and the reason
-  is the event's shape rather than its domain.
+- **BL-001 (one metric, no outpatient or inpatient siblings):** the setting is a column
+  (`encounter_setting`, BL-010), not a separate `metric_id`. This matches where the procedure
+  and imaging families landed, and departs from diagnosis, which still ships `ipd_` and `opd_`
+  variants. The dividing line is the event's shape, not its domain.
 
   A **diagnosis** stays valid from its own date to the end of the encounter, so its window can
   overlap an outpatient *and* an inpatient segment, and it legitimately counts in both. No
@@ -138,15 +139,23 @@ dbt's. This model therefore carries no `data_table_*` meta.
   `metric__ipd_diagnosis` and `metric__opd_diagnosis` exist.
 
   A **lab order** is point-in-time. It resolves to exactly one segment, so there is no
-  double-count case, and filtering `visit_detail_concept_id = 9202` returns precisely the rows
-  a separate `opd_lab_test` would. Three models would be the same answer computed three times
+  double-count case, and filtering `encounter_setting = 'Outpatient'` returns precisely the
+  rows a separate `opd_lab_test` would. Three models would be the same answer computed three times
   -- and in production, where the bundle ships as views (D5), three views re-running the same
   `lab_requests`/`lab_tests`/`visit_detail` joins.
 
-  Procedures and imaging requests share the lab shape, not the diagnosis shape, so
-  `metric__procedure`/`metric__ipd_procedure`/`metric__opd_procedure` could be collapsed the
-  same way. Out of scope here: they are shipped and consumed, and this card is not the place to
-  rewrite them.
+  Procedures and imaging requests share the lab shape, not the diagnosis shape, and have since
+  been collapsed the same way -- `metric__procedure` folded in its OPD/IPD variants (#1462) and
+  `metric__imaging_request` replaced `metric__opd_imaging_request` (#1385). This model follows
+  that settled pattern rather than setting its own.
+
+  **Emergency is the exception, in all three families.** `metric__ed_procedure` and
+  `metric__ed_imaging_request` remain separate metrics on OMOP 9203, and `encounter_setting`
+  deliberately names no emergency value, so an emergency card cannot be drawn off the merged
+  metric. Lab follows suit: emergency-ordered tests read `'Other'` here, and a
+  `metric__ed_lab_test` is deferred until an ED consumer asks (OQ-010). Nothing on MAUI-6837
+  needs it -- the card asks for requested-versus-completed, turnaround, category and result,
+  with no setting split at all.
 
   **If sibling `metric_id`s are wanted later** -- to address a setting by name from a dashboard
   rather than by column filter -- D5's grouping pattern covers it: this one model emits extra
@@ -275,7 +284,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
   that classification, it has no positivity rate -- which is the honest state, rather than a
   card reading zero because unclassified tests were silently counted as negative. See OQ-003.
 
-- **BL-010 (attribution is as-at the order, not as-it-now-stands):** `visit_detail_concept_id`,
+- **BL-010 (attribution is as-at the order, not as-it-now-stands):** `encounter_setting`,
   `encounter_type`, `department` and `facility_id` all come from the `clinical__visit_detail`
   segment active when the test was **ordered** -- the latest segment that had started by
   `requested_datetime`, clamped to the earliest segment for a request that predates them all.
@@ -296,15 +305,26 @@ dbt's. This model therefore carries no `data_table_*` meta.
   *ordered*; and a pending or cancelled test has no publication event to anchor to at all, so
   anchoring there would leave exactly the rows this metric exists to count unattributable.
 
-  **Why the concept id rather than a label.** The Tamanu `encounter_type` → OMOP concept
-  mapping is definitional and universal (`map__omop_visit_type`, shipped in the package), and
-  it is **not 1:1**: 9202 covers `clinic`, `imaging` and `vaccination`; 9203 covers `emergency`,
-  `observation` and `triage`. Filtering `encounter_type` is therefore *not* equivalent to
-  filtering the concept, and a consumer left to reproduce that grouping will eventually get it
-  wrong. The concept is emitted as the id, and labelling it is the data-table layer's job via
-  `map__omop_visit_type.concept_name` -- the same division `facility_id` takes, emitted as a
-  Tamanu UUID and crosswalked downstream. `encounter_type` is emitted alongside, raw, for a
-  consumer that wants `vaccination` specifically.
+  **Why a label, not the raw concept id.** `encounter_setting` is the shape `metric__procedure`
+  settled on: one stable value a consumer filters, rather than a concept id each consumer has
+  to know, or an `encounter_type` list that drifts as `map__omop_visit_type` gains types.
+  `'Outpatient'` is the full 9202 scope -- clinic, imaging and vaccination -- which is wider
+  than `encounter_type = 'clinic'`.
+
+  Lab follows `metric__procedure` here rather than `metric__imaging_request`, which carries no
+  `encounter_setting` at all: outpatient imaging is deliberately clinic-only, because an
+  imaging-typed encounter and an imaging request are independent Tamanu concepts that share a
+  name (MAUI-6806), so an `'Outpatient'` label there would overclaim. Labs have no such
+  collision -- a test ordered during a vaccination encounter is outpatient lab activity like
+  any other -- so the full scope is correct and the label is honest.
+
+  `encounter_type` is emitted alongside, raw, for a consumer that wants `vaccination`
+  specifically. The two are **not** interchangeable: 9202 covers three `encounter_type` values
+  and 9203 another three.
+
+  **No emergency value**, matching `metric__procedure`: emergency reporting has its own metrics,
+  and naming it here would let an emergency card be drawn off this one. Emergency-ordered tests
+  fall in `'Other'` (31 of 2502 on Tokelau). See OQ-010.
 
   **Inner join**, so a test whose encounter resolves to no segment is excluded rather than
   carrying a NULL facility. Every encounter has at least one segment, *provided* its
@@ -349,8 +369,8 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
 One active row in a new `documentations/metrics/laboratory.yml` -- `lab_test`,
 `kind: metric`, `subject_grain: lab_test`, `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id, encounter_type, sex, is_completed, is_panel_request,
-department, lab_test_type, lab_test_type_code, lab_test_category, result`.
+`disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed,
+is_panel_request, department, lab_test_type, lab_test_type_code, lab_test_category, result`.
 
 Regenerate `macros/metric_definitions.sql` with
 `python scripts/generate_metric_definitions_macro.py` and commit it -- CI fails on drift.
@@ -358,8 +378,8 @@ Regenerate `macros/metric_definitions.sql` with
 `is_panel_request`, `lab_test_type`, `lab_test_type_code`, `lab_test_category` and `result`
 are new to the allowlist in `assert__metric_definitions__disaggregations`. The
 already-admitted `is_positive` is deliberately not used: this model classifies nothing, so it
-registers no positivity column at all -- see BL-009. `facility_id`, `encounter_type`, `sex`, `is_completed` and
-`department` are already admitted by earlier metrics.
+registers no positivity column at all -- see BL-009. `facility_id`, `encounter_type`, `encounter_setting`, `sex`, `is_completed` and `department`
+are already admitted by earlier metrics -- `encounter_setting` by `metric__procedure`.
 
 ## Dependencies
 
@@ -433,6 +453,10 @@ registers no positivity column at all -- see BL-009. `facility_id`, `encounter_t
 - **OQ-005 (turnaround start point):** BL-007 runs request placed to test completed (decided
   2026-09-24). `lab_requests.collected_datetime` would measure laboratory performance
   specifically, excluding the wait for phlebotomy -- still open as a refinement.
+- **OQ-010 (emergency lab tests):** they read `'Other'` in `encounter_setting` and are not
+  separately addressable, matching how `metric__procedure` and `metric__imaging_request` handle
+  emergency. A `metric__ed_lab_test` on OMOP 9203 is the established answer when an ED consumer
+  asks; nothing on MAUI-6837 does.
 - **OQ-009 (the turnaround visual):** two separate problems for whoever builds the card.
   First, the distribution is heavily skewed -- median 115 minutes against a mean of 2485 on
   Tokelau -- so `view__metric_mean` would report ~41 hours for a lab that usually turns around
@@ -456,6 +480,7 @@ registers no positivity column at all -- see BL-009. `facility_id`, `encounter_t
 |---|---|
 | 2026-09-23 | `metric__lab_request` added, sourced from `clinical__measurement`'s lab branch (MAUI-6909) |
 | 2026-09-24 | Completion and turnaround keyed on the test's own `completed_date` rather than request publication; backdated completions emitted as negative durations rather than repaired, so the deployment can see and fix them (MAUI-6837) |
-| 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, via the new `visit_detail__as_of` macro; `visit_detail_concept_id` added; per-setting sibling metrics dropped (MAUI-6837) |
+| 2026-09-28 | Merged main and aligned with the settled family shape: `visit_detail_concept_id` replaced by `encounter_setting` (`metric__procedure` #1462, `metric__imaging_request` #1385), emergency deliberately unnamed and deferred to a future `metric__ed_lab_test` (MAUI-6837) |
+| 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, via the new `visit_detail__as_of` macro; per-setting sibling metrics dropped (MAUI-6837) |
 | 2026-09-24 | Dropped `result_classification` and the `map__lab_result_classification` map: classification is a deployment vocabulary question and belongs at the data-table layer over raw `result` (MAUI-6837) |
 | 2026-09-23 | Renamed to `metric__lab_test` and rewritten to source the order side from `bases/`, so requested-but-unresulted and cancelled tests are counted. Added `is_completed`, `encounter_type`, `is_panel_request`, `lab_test_category`, `result` and `turnaround__minutes`; moved `period_start` to the request timestamp at minute granularity (MAUI-6837) |

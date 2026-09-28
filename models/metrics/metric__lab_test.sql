@@ -125,17 +125,28 @@ tests as (
         -- acts rather than laboratory workload can separate them from single orders.
         (ot.lab_test_panel_request_id is not null) as is_panel_request,
         loc.facility_id,
-        -- BL-010: the OMOP Visit concept of the segment the test was ordered in -- 9201
-        -- Inpatient, 9202 Outpatient, 9203 Emergency. This is what a consumer filters to scope
-        -- to a setting, and it is why no sibling metric per setting is needed. Emitted as the
-        -- concept id rather than a label: the mapping is definitional and universal
-        -- (map__omop_visit_type, which also carries concept_name), so labelling belongs at the
-        -- data-table layer, the same division facility_id takes.
+        -- BL-010: the setting the test was ordered in, from the resolved segment's OMOP Visit
+        -- concept. 'Outpatient' is wider than encounter_type = 'clinic' -- 9202 also covers
+        -- imaging- and vaccination-typed encounters, and a test ordered during one of those is
+        -- outpatient lab activity like any other. Scope a setting by this column and the scope
+        -- holds when map__omop_visit_type gains an encounter type.
         --
-        -- Note the grouping is not 1:1 with encounter_type -- 9202 covers clinic, imaging and
-        -- vaccination, and 9203 covers emergency, observation and triage -- so filtering
-        -- encounter_type is NOT equivalent to filtering this column.
-        vd.visit_detail_concept_id,
+        -- Follows metric__procedure rather than metric__imaging_request, which carries no
+        -- encounter_setting because outpatient imaging is deliberately clinic-only (an
+        -- imaging-typed encounter and an imaging request are independent Tamanu concepts that
+        -- share a name, MAUI-6806). Labs have no such collision, so the full 9202 scope is
+        -- right and the label does not overclaim.
+        --
+        -- Do not add an emergency value here: emergency reporting has its own metrics
+        -- (metric__ed_procedure, metric__ed_imaging_request), and a value would let an
+        -- emergency card be drawn from this one. Emergency-ordered tests fall in 'Other' until
+        -- an ED consumer asks for metric__ed_lab_test -- the same staging procedures and
+        -- imaging took.
+        case vd.visit_detail_concept_id
+            when 9201 then 'Inpatient'
+            when 9202 then 'Outpatient'
+            else 'Other'
+        end as encounter_setting,
         -- BL-010: the segment's own encounter_type, finer than the concept above, for a
         -- consumer that wants (say) vaccination encounters specifically.
         vd.visit_detail_source_value as encounter_type,
@@ -203,8 +214,8 @@ select
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     facility_id,
-    visit_detail_concept_id,
     encounter_type,
+    encounter_setting,
     sex,
     is_completed,
     is_panel_request,

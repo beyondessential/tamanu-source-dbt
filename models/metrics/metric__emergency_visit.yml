@@ -180,3 +180,12 @@ models:
           # drops NULL rows, so a NULL here would silently disappear the attendance.
           - not_null:
               name: ac_010_metric__emergency_visit_is_admitted_not_null
+      - name: clinician
+        data_type: text
+        description: "{{ doc('metric__emergency_visit__clinician') }}"
+        data_tests:
+          # BL-020: the model coalesces to 'Not recorded' precisely so this holds -- Tupaia's
+          # array filter drops NULL rows, so a NULL would disappear the attendance from a
+          # card that groups by clinician.
+          - not_null:
+              name: ac_020_metric__emergency_visit_clinician_not_null

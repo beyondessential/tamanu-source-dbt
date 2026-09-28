@@ -86,6 +86,14 @@ where trim(d) not in (
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
         -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
         'encounter_type',
+        -- procedure's encounter type grouped into a setting via the segment's OMOP visit
+        -- concept -- Outpatient (9202: clinic, imaging, vaccination), Inpatient (9201), or
+        -- Other. Coarser than encounter_type deliberately: it is what the retired
+        -- opd_procedure/ipd_procedure metrics scoped on, so a consumer filters one stable
+        -- value instead of a list that drifts with map__omop_visit_type. Emergency (9203)
+        -- is deliberately not named -- it falls in Other, so no card can be built off this
+        -- metric as though it were an emergency figure.
+        'encounter_setting',
         -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
         -- deployments differ in what they code diagnoses with, so any chapter or block
         -- grouping is applied downstream over diagnosis_code rather than registered here.
@@ -109,12 +117,6 @@ where trim(d) not in (
         'procedure_code',
         -- procedure's completion flag
         'is_completed',
-        -- lab_test's setting: the OMOP Visit concept (9201/9202/9203) of the segment the test
-        -- was ordered in. The concept id rather than a label, because the mapping is
-        -- definitional and universal (map__omop_visit_type) -- labelling is the consumer's.
-        -- Not interchangeable with encounter_type above: 9202 covers clinic, imaging and
-        -- vaccination, 9203 covers emergency, observation and triage.
-        'visit_detail_concept_id',
         -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
         -- catalogues are deployment reference data, so any panel or category grouping is
         -- applied downstream rather than registered here.
@@ -148,13 +150,14 @@ where trim(d) not in (
         'imaging_type_code',
         -- opd_imaging_request's aggregated body area/study area
         'imaging_area',
-        -- department, added to opd_visit/opd_diagnosis/opd_procedure/opd_imaging_request/
+        -- department, added to opd_visit/opd_diagnosis/procedure/opd_imaging_request/
         -- pharmacy_order/inpatient_admission/lab_request (MAUI-6909): the encounter's or
         -- qualifying segment's own department (e.g. Dental), resolved to a name so a
         -- consumer scopes to one department via metric_filters.
         'department',
-        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909): the encounter's or
-        -- admission segment's own clinician, resolved to a name for a "by clinician" card.
+        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
+        -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
+        -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
         -- lab_request's recorded lab test type, as code and as readable label. Emitted
         -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code

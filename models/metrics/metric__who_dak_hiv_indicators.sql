@@ -266,19 +266,19 @@ events as (
     -- More than one in the same month is reduced to a single row below.
     {%- for line in ['first', 'second', 'third'] %}
 
-    union all
+        union all
 
-    select
-        'who_dak_hiv_art_toxicity',
-        'patient',
-        a.patient_id,
-        a.substitution_{{ line }}_line_date,
-        a.*
-    from answers a
-    join plhiv on plhiv.patient_id = a.patient_id
-    where a.on_art
-        and a.regimen_substitution_reason ilike '%toxicity%'
-        and a.substitution_{{ line }}_line_date is not null
+        select
+            'who_dak_hiv_art_toxicity',
+            'patient',
+            a.patient_id,
+            a.substitution_{{ line }}_line_date,
+            a.*
+        from answers a
+        join plhiv on plhiv.patient_id = a.patient_id
+        where a.on_art
+            and a.regimen_substitution_reason ilike '%toxicity%'
+            and a.substitution_{{ line }}_line_date is not null
     {%- endfor %}
 ),
 

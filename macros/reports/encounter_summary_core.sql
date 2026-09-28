@@ -403,7 +403,8 @@ notes_raw as (
         n.note_type,
         n.record_type,
         n.record_id,
-        n.updated_note_id
+        n.updated_note_id,
+        n.created_datetime
     from {{ ref('notes') }} n
     join encounters_in_scope eis
         on eis.encounter_id = n.record_id
@@ -427,7 +428,8 @@ notes_raw as (
         n.note_type,
         n.record_type,
         n.record_id,
-        n.updated_note_id
+        n.updated_note_id,
+        n.created_datetime
     from {{ ref('notes') }} n
     join {{ ref('imaging_requests') }} ir
         on ir.id = n.record_id
@@ -436,15 +438,36 @@ notes_raw as (
     where n.record_type = 'ImagingRequest'
 ),
 
+{# BL-011: each note's current revision, as notes__revision_rank defines it. Ranked across
+   both branches before any note_type filter, since a revision can change a note's type. A
+   revision stays on its root's record, so the union cannot put one chain in two branches. #}
+notes_current as (
+    select
+        id,
+        datetime,
+        created_datetime,
+        content,
+        note_type,
+        record_type,
+        record_id
+    from (
+        select
+            notes_raw.*,
+            {{ notes__revision_rank('notes_raw') }} as revision_rank
+        from notes_raw
+    ) ranked
+    where revision_rank = 1
+),
+
 encounter_notes_deduped as (
     select
         id,
         datetime,
+        created_datetime,
         content,
         note_type,
-        record_id,
-        row_number() over (partition by coalesce(updated_note_id, id) order by datetime desc) as row_number
-    from notes_raw
+        record_id
+    from notes_current
     where
         record_type = 'Encounter'
         and note_type != 'system'
@@ -479,17 +502,16 @@ imaging_request_areas as (
             string_agg(case
                 when n.note_type = 'areaToBeImaged' then n.content
             end, ', '
-            order by n.datetime, n.id)
+            order by n.datetime, n.created_datetime, n.id)
         ) as areas_to_be_imaged,
-        {# BL-010: `, n.id` breaks datetime ties. Two notes recorded in the same second
-           otherwise order arbitrarily, so the aggregated string depends on the physical
-           order rows arrive in -- which BL-009 changes. Pre-existing, and only visible on
-           ties, but a report column that reshuffles on a plan change is not something to
-           leave in place while deliberately changing the plan. #}
+        {# BL-010: created_datetime and id break datetime ties. Two notes recorded in the
+           same second otherwise order arbitrarily, so the aggregated string depends on the
+           physical order rows arrive in. created_datetime keeps them in the order entered,
+           and id settles any remaining tie. #}
         string_agg(case
             when n.note_type = 'other' then n.content
         end, ','
-        order by n.datetime, n.id) as notes
+        order by n.datetime, n.created_datetime, n.id) as notes
     from {{ ref('imaging_requests') }} ir
     join encounters_in_scope eis
         on eis.encounter_id = ir.encounter_id
@@ -497,7 +519,8 @@ imaging_request_areas as (
         on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} area
         on area.id = ira.area_id
-    left join notes_raw n
+    -- BL-011: the current revision of each imaging-request note
+    left join notes_current n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
@@ -524,9 +547,8 @@ encounter_notes as (
             ', Note date: ', to_char({{ to_user_selected_timezone('n.datetime') }}, '{{ var("datetime_format") }}')
         ),
         E'\n'
-        order by n.datetime, n.id) as notes
+        order by n.datetime, n.created_datetime, n.id) as notes
     from encounter_notes_deduped n
-    where n.row_number = 1
     group by n.record_id
 )
 

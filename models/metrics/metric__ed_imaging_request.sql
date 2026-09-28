@@ -1,19 +1,19 @@
--- metric__opd_imaging_request -- D5 metric view for the OPD-scoped imaging request indicator
--- registered in documentations/metrics/outpatient.yml: opd_imaging_request (MAUI-6806).
+-- metric__ed_imaging_request -- D5 metric view for the ED-scoped imaging request indicator
+-- registered in documentations/metrics/emergency.yml: ed_imaging_request (MAUI-6907).
 --
 -- Per-request (subject) grain: one row per imaging request raised while the patient's active
--- clinical__visit_detail segment was a clinic encounter, value_numeric 1, so a consumer
--- aggregates at whatever grain it needs. See specs/dbt-model/metric__opd_imaging_request.md
--- BL-003 for why this is clinic-only rather than the full OMOP 9202 clinic/imaging/vaccination
--- definition metric__outpatient_visit and metric__opd_procedure both use, and BL-004 for why
--- the as-of join is evaluated at request time rather than completion time, and for the
+-- clinical__visit_detail segment was an emergency phase, value_numeric 1, so a consumer
+-- aggregates at whatever grain it needs. The emergency-side counterpart of
+-- metric__imaging_request, sharing its shape. See
+-- specs/dbt-model/metric__ed_imaging_request.md BL-003 for the scope, and BL-004 for why the
+-- as-of join is evaluated at request time rather than completion time, and for the
 -- first-segment clamp applied when a request predates every segment.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
 -- directly -- the same clinical layer metric__procedure and metric__opd_procedure build on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model does
 -- not re-filter status. Facility and completion still need bases/-level detail the clinical
--- model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
+-- model doesn't carry (BL-005, BL-002) -- see those clauses for what and why.
 --
 -- The registry carries the definition; this model is its implementation.
 
@@ -65,13 +65,29 @@ completions as (
     group by imaging_request_id
 ),
 
--- BL-007: legacy free-text area fallback, one row per request.
+-- BL-007: the current revision of each imaging-request note. Ranked before the note_type
+-- filter, since a revision can change a note's type.
+imaging_request_notes as (
+    select
+        notes.id,
+        notes.record_id,
+        notes.note_type,
+        notes.content,
+        notes.datetime,
+        notes.created_datetime,
+        {{ notes__revision_rank('notes') }} as revision_rank
+    from notes
+    where notes.record_type = 'ImagingRequest'
+),
+
+-- BL-007: legacy free-text area fallback, one row per request, in the order the notes were
+-- recorded. created_datetime and id break a same-second tie so the string is stable.
 imaging_area_notes as (
     select
         record_id as imaging_request_id,
-        string_agg(content, ', ' order by datetime) as imaging_area
-    from notes
-    where record_type = 'ImagingRequest'
+        string_agg(content, ', ' order by datetime, created_datetime, id) as imaging_area
+    from imaging_request_notes
+    where revision_rank = 1
         and note_type = 'areaToBeImaged'
     group by record_id
 ),
@@ -133,21 +149,24 @@ requests as (
         on areas.imaging_request_id = po.procedure_occurrence_id
     left join departments dept
         on dept.id = vd.department_id
-    -- BL-003: clinic only -- not OMOP concept 9202, which would also admit imaging and
-    -- vaccination encounter types (decision, MAUI-6806).
-    where vd.visit_detail_source_value = 'clinic'
+    -- BL-003: OMOP concept 9203 ('Emergency Room Visit'), which covers the emergency, triage
+    -- and observation phases -- the same population int__emergency_visits takes its intake
+    -- segment from. Scoped on the concept rather than on one source value, unlike the
+    -- clinic-only opd counterpart, because all three phases are emergency care. A request
+    -- raised while the patient boards falls in the admission segment and is not counted.
+    where vd.visit_detail_concept_id = 9203
 )
 
 -- D5 wide format: value_boolean is unused by this metric.
 select
-    'opd_imaging_request'::text as metric_id,
+    'ed_imaging_request'::text as metric_id,
     null::text as variant_id,
     imaging_request_id::varchar as subject_id,
     requested_datetime as period_start,
     -- BL-002: NULL unless the request has completed.
     completed_datetime as period_end,
     'minute'::text as period_granularity,
-    -- BL-001: one request per row, so the count contribution is always 1. Additive, so a
+    -- BL-009: one request per row, so the count contribution is always 1. Additive, so a
     -- data table summing it is correct at every grain.
     1::numeric as value_numeric,
     null::boolean as value_boolean,

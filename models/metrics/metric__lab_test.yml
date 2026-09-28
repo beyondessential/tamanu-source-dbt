@@ -146,19 +146,23 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__lab_test_facility_id_not_null
-      - name: visit_detail_concept_id
-        data_type: integer
+      - name: encounter_setting
+        data_type: text
         description: >-
-          OMOP Visit concept of the segment the test was ordered in -- 9201 Inpatient, 9202
-          Outpatient, 9203 Emergency. This is what a consumer filters to scope to a setting,
-          and it is why no sibling metric per setting exists. Emitted as the concept id, not a
-          label: the mapping is definitional and universal (map__omop_visit_type, which carries
-          concept_name for labelling), so labelling belongs at the data-table layer -- the same
-          division facility_id takes. NOT interchangeable with encounter_type: 9202 covers
-          clinic, imaging and vaccination, and 9203 covers emergency, observation and triage.
+          The setting the test was ordered in, from the resolved segment's OMOP Visit concept:
+          Outpatient (9202 -- clinic, imaging, vaccination), Inpatient (9201), or Other.
+          Coarser than encounter_type deliberately, so a consumer filters one stable value
+          instead of a list that drifts with map__omop_visit_type. Emergency (9203) is
+          deliberately not named -- it falls in Other, so no card can be built off this metric
+          as though it were an emergency figure; emergency lab activity would be its own
+          metric, as it is for procedures and imaging requests.
         data_tests:
           - not_null:
-              name: ac_metric__lab_test_visit_detail_concept_id_not_null
+              name: ac_metric__lab_test_encounter_setting_not_null
+          - accepted_values:
+              name: ac_metric__lab_test_encounter_setting_values
+              arguments:
+                values: ['Outpatient', 'Inpatient', 'Other']
       - name: encounter_type
         data_type: character varying(255)
         description: >-
