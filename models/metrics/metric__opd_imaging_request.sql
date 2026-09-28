@@ -5,12 +5,12 @@
 -- clinical__visit_detail segment was a clinic encounter, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. See specs/dbt-model/metric__opd_imaging_request.md
 -- BL-003 for why this is clinic-only rather than the full OMOP 9202 clinic/imaging/vaccination
--- definition metric__outpatient_visit and metric__opd_procedure both use, and BL-004 for why
+-- definition metric__outpatient_visit and metric__procedure both use, and BL-004 for why
 -- the as-of join is evaluated at request time rather than completion time, and for the
 -- first-segment clamp applied when a request predates every segment.
 --
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not bases/imaging_requests
--- directly -- the same clinical layer metric__procedure and metric__opd_procedure build on.
+-- directly -- the same clinical layer metric__procedure and metric__procedure build on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model does
 -- not re-filter status. Facility and completion still need bases/-level detail the clinical
 -- model doesn't carry (BL-004, BL-002) -- see those clauses for what and why.
@@ -124,7 +124,7 @@ requests as (
         on pr.person_id = vd.person_id
     -- inner join: the segment's own location, not the request's location_group_id (BL-005) --
     -- excluded rather than attributed to a NULL facility, the same "excluded rather than
-    -- guessed" convention metric__opd_procedure uses for its own location join.
+    -- guessed" convention metric__procedure uses for its own location join.
     join locations loc
         on loc.id = vd.care_site_id
     left join completions c

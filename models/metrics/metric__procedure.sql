@@ -10,9 +10,9 @@
 -- visit_detail_id (that model's BL-005), not the encounter's own whole-visit type. A
 -- procedure performed during the triage phase of an encounter later admitted is an
 -- emergency procedure, not an inpatient one. A consumer scopes to any single setting via a
--- filter on this one metric rather than needing a separate metric per setting, and because
--- the scoped siblings (metric__opd_procedure, metric__ipd_procedure) read the same segment,
--- filtering this metric to one setting agrees with the matching sibling by construction.
+-- filter on this one metric rather than needing a separate metric per setting. This
+-- replaced the former metric__opd_procedure and metric__ipd_procedure, which were exactly
+-- this metric filtered to one encounter_type and are now a filter on it instead.
 --
 -- clinical__procedure_occurrence carries both a procedure and an imaging branch,
 -- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
@@ -37,6 +37,13 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- department, resolved to a name for metric_filters scoping. Like facility_id, department
+-- follows the resolved segment -- it comes off the segment directly, since bases/locations
+-- carries no department_id.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 procedures as (
     select
         po.procedure_occurrence_id,
@@ -56,7 +63,10 @@ procedures as (
         ) as procedure,
         po.is_completed,
         -- age in whole years at the procedure; the NULL rule lives in the macro
-        {{ age_years('po.procedure_date', 'pr') }} as age_years
+        {{ age_years('po.procedure_date', 'pr') }} as age_years,
+        -- the resolved segment's own department, coalesced so an array filter cannot drop
+        -- the row
+        coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
     -- inner join on the segment FK clinical__procedure_occurrence already resolved -- no
     -- as-of derivation here, so this metric and its scoped siblings cannot disagree about
@@ -78,6 +88,8 @@ procedures as (
     -- than attributed to a NULL facility
     join locations loc
         on loc.id = vd.care_site_id
+    left join departments dept
+        on dept.id = vd.department_id
     -- BL-001: procedure branch only -- imaging is metric__opd_imaging_request's population
     where po.procedure_type_source_value = 'procedure'
 )
@@ -101,5 +113,6 @@ select
     procedure,
     procedure_code,
     is_completed,
-    age_years
+    age_years,
+    department
 from procedures

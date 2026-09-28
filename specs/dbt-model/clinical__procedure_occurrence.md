@@ -199,7 +199,7 @@ only `metric__`/`derived__` artefacts get a `metric_definitions` row.
 | Consumer | Use |
 |---|---|
 | `metric__procedure` | General procedure metric, all settings (procedure branch) |
-| `metric__opd_procedure` | Outpatient-scoped procedure metric (procedure branch) |
+| `metric__procedure` | Procedure metric (procedure branch), carrying encounter_type so a consumer scopes to one setting |
 | `metric__opd_imaging_request` | Outpatient-scoped imaging request metric (imaging branch) |
 
 Any consumer here must filter `procedure_type_source_value` per the consumer contract in

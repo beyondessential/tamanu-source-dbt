@@ -122,8 +122,8 @@ models:
           was in at the time of the procedure, not what the encounter became afterwards: a
           procedure performed during triage on an encounter later admitted reads as triage.
           Filtering to one setting gives that setting's procedures from the same metric, and
-          agrees with the matching scoped metric (metric__opd_procedure,
-          metric__ipd_procedure), which filter this same phase.
+          Filtering to 'clinic' gives outpatient procedures and 'admission' inpatient
+          ones, which is what the former scoped metrics did.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_type_not_null
@@ -159,3 +159,12 @@ models:
           Age in whole years at the procedure. Not banded -- an age classification is a
           presentation choice a deployment may set differently, so the consumer's data table
           bands it. A measure, not a dimension: absent from the registry's disaggregations.
+      - name: department
+        data_type: text
+        description: >-
+          The department of the segment the procedure happened in (e.g. Dental), resolved to
+          a name so a consumer scopes to one department by metric_filters on a readable
+          value. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__procedure_department_not_null
