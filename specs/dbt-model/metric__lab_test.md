@@ -166,10 +166,11 @@ dbt's. This model therefore carries no `data_table_*` meta.
   a `metric_id` is stable and never reused).
 
 - **BL-002 (reporting period):** `period_start` is `lab_requests.requested_datetime`, the
-  moment the order was placed. `period_end` is `lab_requests.published_datetime`, gated on
-  `is_completed` (BL-006) rather than surfaced merely because a timestamp is present.
-  `period_granularity` is `'minute'`. Both are request-level and are denormalised onto every
-  test of the request -- every test in a request was ordered, and released, together.
+  moment the order was placed. It is request-level, denormalised onto every test of the
+  request -- every test in a request is ordered together. `period_end` is the **test's own**
+  `lab_tests.completed_datetime` (BL-006), which is *not* shared that way: a request can be
+  published while one of its tests was never run, so completion is per-test and the two ends of
+  the period come from different levels. `period_granularity` is `'minute'`.
 
 - **BL-003 (grain is the test):** `subject_id` is `lab_tests.id`. The alternative, request
   grain with test types aggregated the way `metric__opd_imaging_request` aggregates body
@@ -375,13 +376,13 @@ dbt's. This model therefore carries no `data_table_*` meta.
 | AC | `lab_test_type`, `lab_test_type_code`, `lab_test_category`, `result` are `not_null` | BL-008 | `not_null` |
 | AC | `turnaround__minutes` is populated if and only if `is_completed` | BL-007 | `dbt_utils.expression_is_true` |
 | AC | `turnaround__minutes`, where present, is not negative -- **warns** on backdated completions, by design | BL-007 | `dbt_utils.expression_is_true` (warn) |
-| AC | The results join does not fan out: row count equals `bases/lab_tests` row count after BL-005 filtering | BL-003, BL-008 | dbt unit test `test_metric__lab_test_grain` |
+| AC | The results join does not fan out: one row per ordered test, whether or not a result exists | BL-003, BL-008 | schema test `ac_metric__lab_test_grain` (`unique_combination_of_columns`, error), plus dbt unit test `test_metric__lab_test_membership`, whose fixture puts a resulted and an unresulted test on one request and expects one row each |
 | AC | An uncompleted, cancelled, completed and backdated test each land correctly across `is_completed`, `period_end`, `result` and `turnaround__minutes` | BL-005, BL-006, BL-007, BL-008 | dbt unit test `test_metric__lab_test_membership` |
 | AC | `result` passes through as recorded -- unclassified, casing preserved, `'Not recorded'` where absent | BL-008, BL-009 | dbt unit test `test_metric__lab_test_result_passthrough` |
 
 ## Registry entry
 
-One active row in a new `documentations/metrics/laboratory.yml` -- `lab_test`,
+One active row in `documentations/metrics/lab.yml` -- `lab_test`,
 `kind: metric`, `subject_grain: lab_test`, `status: draft`, `spec_path` pointing here, with
 `disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed,
 is_panel_request, department, lab_test_type, lab_test_type_code, lab_test_category, result`.
@@ -407,12 +408,11 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 | `lab_tests` | `bases/` | Grain anchor; test type link (BL-003) |
 | `lab_test_types` | `bases/` | Test name and code (BL-008) |
 | `reference_data` | `bases/` | Category name for `lab_requests.lab_test_category_id` (BL-008) |
-| `encounters` | `bases/` | The encounter's `department_id`, which `clinical__visit_occurrence` does not carry (BL-002) |
-| `departments` | `bases/` | Department name (BL-002) |
+| `departments` | `bases/` | Name of the resolved segment's `department_id` (BL-002, BL-010) |
 | `clinical__measurement` | `clinical/` | The result, LEFT joined on the lab branch -- including point-of-care readings it has already resolved through `map__lab_test_result_encoding` (BL-008, BL-009) |
-| `clinical__visit_occurrence` | `clinical/` | Encounter type and `care_site_id` (BL-010) |
+| `clinical__visit_detail` | `clinical/` | The segment active at the order: `visit_detail_concept_id` for `encounter_setting`, `visit_detail_source_value` for `encounter_type`, plus its own `care_site_id`, `department_id` and `person_id` (BL-010) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-011) |
-| `locations` | `bases/` | Facility id of the encounter's `care_site_id` (BL-010) |
+| `locations` | `bases/` | Facility id of the resolved segment's `care_site_id` (BL-010) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
