@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-08-11 |
+| **Last updated** | 2026-09-29 |
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
 Tamanu **departments** (the organizational care unit) and **locations** (physical
@@ -134,6 +134,9 @@ vocabulary can derive the concept downstream.
   so that `clinical__visit_occurrence.care_site_id` and `clinical__visit_detail.care_site_id`
   (both real `locations.id`-shaped values, their own BL-006 in each spec) have a row to
   resolve against.
+- **BL-008:** A location-type care site's `facility_id` is the location's own facility, or its
+  location group's facility when the location has none, via a `left join` on
+  `bases/location_groups`.
 
 ## Acceptance criteria
 
@@ -145,6 +148,8 @@ vocabulary can derive the concept downstream.
 | AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
 | AC-005 | `care_site_type` is `not_null` and one of `department` / `location` | BL-005 | dbt `not_null` + `accepted_values` |
 | AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-006 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
+| AC-009 | A location with no facility takes its location group's facility | BL-008 | dbt unit test (`test_ref__care_site_location_group_facility_fallback`) |
+| AC-010 | A location's own facility is kept when its location group's differs | BL-008 | dbt unit test (`test_ref__care_site_location_facility_wins_over_location_group`) |
 
 ## Registry entry
 
@@ -157,6 +162,7 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 |---|---|---|
 | `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
 | `locations` | `bases/` | Location care sites (id, code, name) and parent facility link (BL-006) |
+| `location_groups` | `bases/` | Fallback facility for a location with none (BL-008) |
 | `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
 
 ## Consumers
