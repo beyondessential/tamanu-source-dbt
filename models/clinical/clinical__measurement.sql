@@ -1,11 +1,12 @@
 -- clinical__measurement -- OMOP-lite MEASUREMENT domain. One row per clinical measurement,
 -- unioning three standard sources: vitals via the Tamanu Vitals survey (BL-006), lab tests
 -- carrying a reading (BL-007), and birth anthropometry unpivoted from patient_birth_data
--- (BL-008, via int__patient_birth_measurements). Numeric results populate value_as_number;
+-- (BL-008, via int__patient_birth_measurements). Numeric results populate value_as_number, with a
+-- lab reading's comparison operator in operator_source_value (BL-012);
 -- categorical results keep value_source_value. FK graph wired from the encounter where one
 -- exists (BL-002); *_concept_id (LOINC) deferred to the future vocab__ layer (BL-003).
 -- Sources only from bases/ + intermediate (D10). Deployment-specific measurements are added
--- by per-deployment override (see spec). See spec for BL-001..BL-011.
+-- by per-deployment override (see spec). See spec for BL-001..BL-012.
 
 with survey_response_answers as (
     select * from {{ ref('survey_response_answers') }}
@@ -71,6 +72,7 @@ vitals_measurements as (
         va.start_datetime       as measurement_datetime,
         'vitals survey'         as measurement_type_source_value,  -- provenance / union discriminator (BL-005)
         case when va.body ~ '^-?[0-9]+(\.[0-9]+)?$' then va.body::numeric end as value_as_number,
+        null::varchar           as operator_source_value,
         va.body                 as value_source_value,
         null::varchar           as unit_source_value,
         va.submitted_by_id::varchar as provider_id,
@@ -97,6 +99,56 @@ lab_test_readings as (
     left join lab_result_encoding enc on enc.lab_test_type_id = lt.lab_test_type_id
 ),
 
+-- BL-012: split a leading comparison operator off the reading, then drop whitespace and a
+-- trailing unit matching the test type's own
+lab_reading_parts as (
+    select
+        lt.id,
+        case substring(btrim(lt.reading) from '^(<=|>=|≤|≥|<|>)')
+            when '≤' then '<='
+            when '≥' then '>='
+            else substring(btrim(lt.reading) from '^(<=|>=|≤|≥|<|>)')
+        end as operator,
+        regexp_replace(
+            regexp_replace(lower(btrim(lt.reading)), '^(<=|>=|≤|≥|<|>)', ''), '\s', '', 'g'
+        ) as compact,
+        lower(regexp_replace(coalesce(ltt.unit, ''), '\s', '', 'g')) as unit_compact
+    from lab_test_readings lt
+    left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
+),
+
+lab_reading_numbers as (
+    select
+        id,
+        operator,
+        case
+            when unit_compact != '' and right(compact, length(unit_compact)) = unit_compact
+                then left(compact, length(compact) - length(unit_compact))
+            else compact
+        end as number_text
+    from lab_reading_parts
+),
+
+lab_reading_values as (
+    select
+        id,
+        -- BL-012: a plain decimal, a decimal with thousands separators, or scientific notation
+        case
+            when number_text ~ '^-?[0-9]+(\.[0-9]+)?$' then number_text::numeric
+            when number_text ~ '^-?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$'
+                then replace(number_text, ',', '')::numeric
+            when number_text ~ '^-?[0-9]+(\.[0-9]+)?e[+-]?[0-9]+$' then number_text::numeric
+        end as value_as_number,
+        -- BL-012a: the operator is carried only where a number is read alongside it
+        case
+            when number_text ~ '^-?[0-9]+(\.[0-9]+)?$'
+                or number_text ~ '^-?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$'
+                or number_text ~ '^-?[0-9]+(\.[0-9]+)?e[+-]?[0-9]+$'
+                then operator
+        end as operator_source_value
+    from lab_reading_numbers
+),
+
 -- lab branch: lab tests carrying a reading, under a request that was not withdrawn (BL-007)
 lab_measurements as (
     select
@@ -105,7 +157,8 @@ lab_measurements as (
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)::date as measurement_date,
         coalesce(lt.completed_datetime, lr.published_datetime, lr.requested_datetime)       as measurement_datetime,  -- completed, else published/requested (BL-004)
         'lab'                 as measurement_type_source_value,
-        case when lt.reading ~ '^-?[0-9]+(\.[0-9]+)?$' then lt.reading::numeric end as value_as_number,
+        v.value_as_number,
+        v.operator_source_value,
         lt.reading            as value_source_value,
         ltt.unit              as unit_source_value,
         lr.requested_by_id::varchar as provider_id,
@@ -117,6 +170,7 @@ lab_measurements as (
     join lab_requests lr on lr.id = lt.lab_request_id
     join encounters e on e.id = lr.encounter_id
     left join lab_test_types ltt on ltt.id = lt.lab_test_type_id
+    join lab_reading_values v on v.id = lt.id
     -- BL-009: a reading exists where a result was recorded or the type encodes one
     where lt.reading is not null
       -- drop requests that never produced a valid result even if a stale value lingers.
@@ -136,6 +190,7 @@ birth_measurements as (
         bm.measurement_datetime as measurement_datetime,
         'birth data'            as measurement_type_source_value,
         case when trim(bm.value_source_value) ~ '^-?[0-9]+(\.[0-9]+)?$' then trim(bm.value_source_value)::numeric end as value_as_number,
+        null::varchar           as operator_source_value,
         bm.value_source_value   as value_source_value,
         null::varchar           as unit_source_value,
         null::varchar           as provider_id,
@@ -154,6 +209,7 @@ select
     measurement_datetime,
     measurement_type_source_value,
     value_as_number,
+    operator_source_value,
     value_source_value,
     unit_source_value,
     provider_id,
@@ -172,6 +228,7 @@ select
     measurement_datetime,
     measurement_type_source_value,
     value_as_number,
+    operator_source_value,
     value_source_value,
     unit_source_value,
     provider_id,
@@ -190,6 +247,7 @@ select
     measurement_datetime,
     measurement_type_source_value,
     value_as_number,
+    operator_source_value,
     value_source_value,
     unit_source_value,
     provider_id,

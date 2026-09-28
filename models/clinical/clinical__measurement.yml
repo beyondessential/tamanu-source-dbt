@@ -44,6 +44,14 @@ models:
       - name: value_as_number
         data_type: numeric
         description: "{{ doc('clinical__measurement__value_as_number') }}"
+      - name: operator_source_value
+        data_type: character varying(255)
+        description: "{{ doc('clinical__measurement__operator_source_value') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_013_clinical__measurement_operator_source_value_accepted_values
+              arguments:
+                values: ['<', '<=', '>', '>=']
       - name: value_source_value
         data_type: character varying(255)
         description: "{{ doc('clinical__measurement__value_source_value') }}"
