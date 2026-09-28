@@ -18,6 +18,9 @@ models:
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__date') }} in notes."
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__created_at') }} in notes."
       - name: content
         data_type: text
         description: "{{ doc('notes__content') }}"
