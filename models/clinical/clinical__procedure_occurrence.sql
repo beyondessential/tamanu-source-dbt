@@ -176,44 +176,14 @@ occurrences as (
     from imaging_branch
 ),
 
--- BL-005: the segment active at the event's own timestamp -- the latest segment that had
--- already started by procedure_datetime. Both branches resolve the same way: a procedure
--- and an imaging request are each a point-in-time event, so exactly one segment holds them
--- (contrast clinical__condition_occurrence, where a diagnosis stays valid for the rest of
--- the encounter and so has no single segment to name).
---
--- Clamped to the earliest segment when the event predates every segment -- an event
--- genuinely belongs to its own encounter, so a segment recorded as starting after it (a
--- data-timing artifact, not a real ordering issue) should not leave it unattributed. The
--- join carries no timestamp condition: the order by picks the correct as-of segment where
--- one qualifies and falls back to the earliest otherwise.
---
--- The visit_detail_id tie-breaks are split by branch on purpose: among segments sharing a
--- start datetime, the as-of branch wants the last of them and the clamp branch the first,
--- matching the (start_datetime, visit_detail_id) order clinical__visit_detail chains its
--- own segments by. One shared direction would be right for only one of the two.
+-- BL-005: the segment active at the event's own timestamp, with the first-segment clamp.
+-- Both branches resolve the same way: a procedure and an imaging request are each a
+-- point-in-time event, so exactly one segment holds them (contrast
+-- clinical__condition_occurrence, where a diagnosis stays valid for the rest of the encounter
+-- and so has no single segment to name). The match is visit_detail__active_segment, shared
+-- with the other metrics that resolve an event's segment.
 active_segment as (
-    select distinct on (o.procedure_occurrence_id)
-        o.procedure_occurrence_id,
-        vd.visit_detail_id
-    from occurrences o
-    join visit_detail vd
-        on vd.visit_occurrence_id = o.visit_occurrence_id
-    order by
-        o.procedure_occurrence_id,
-        (vd.visit_detail_start_datetime <= o.procedure_datetime) desc,
-        case when vd.visit_detail_start_datetime <= o.procedure_datetime
-                then vd.visit_detail_start_datetime
-        end desc,
-        case when vd.visit_detail_start_datetime > o.procedure_datetime
-                then vd.visit_detail_start_datetime
-        end asc,
-        case when vd.visit_detail_start_datetime <= o.procedure_datetime
-                then vd.visit_detail_id
-        end desc,
-        case when vd.visit_detail_start_datetime > o.procedure_datetime
-                then vd.visit_detail_id
-        end asc
+    {{ visit_detail__active_segment('occurrences', 'procedure_occurrence_id', 'procedure_datetime') }}
 )
 
 select
