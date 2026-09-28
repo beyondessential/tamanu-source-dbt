@@ -71,18 +71,36 @@ where trim(d) not in (
         -- who_dak_hiv_art_on_art_key_population: the DAK's key population member type. A
         -- MultiSelect, so the metric counts client-population pairs -- see its registry row.
         'key_population',
+        -- sti_*_test's screening outcome: whether any countable test for that infection in
+        -- the reporting month indicated infection.
+        'is_positive',
+        -- hiv_screening_test's retesting flag: whether the patient has an earlier countable
+        -- screening test. NULL on the confirmatory IDs.
+        'is_repeat_test',
+        -- sti_*_test's treatment stage -- Treated, Untreated, or Not applicable where the
+        -- patient did not test positive. The cascade's third stage, carried as a
+        -- disaggregation rather than as a metric_id per stage.
+        'treatment_status',
         -- encounter_diagnosis's encounter type -- splits morbidity by setting without a
         -- metric per setting. It is the encounter's type as it now stands, not the phase the
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
         -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
         'encounter_type',
-        -- encounter_diagnosis's recorded diagnosis, as code and as readable label. Emitted
-        -- ungrouped: deployments differ in what they code diagnoses with, so any chapter or
-        -- block grouping is applied downstream over diagnosis_code rather than registered here.
+        -- procedure's encounter type grouped into a setting via the segment's OMOP visit
+        -- concept -- Outpatient (9202: clinic, imaging, vaccination), Inpatient (9201), or
+        -- Other. Coarser than encounter_type deliberately: it is what the retired
+        -- opd_procedure/ipd_procedure metrics scoped on, so a consumer filters one stable
+        -- value instead of a list that drifts with map__omop_visit_type. Emergency (9203)
+        -- is deliberately not named -- it falls in Other, so no card can be built off this
+        -- metric as though it were an emergency figure.
+        'encounter_setting',
+        -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
+        -- deployments differ in what they code diagnoses with, so any chapter or block
+        -- grouping is applied downstream over diagnosis_code rather than registered here.
         'diagnosis_code',
         'diagnosis',
-        -- encounter_diagnosis's certainty -- confirmed, suspected and the rest of the
-        -- deployment's list. Disproven and in-error diagnoses never reach the metric.
+        -- diagnosis's certainty -- confirmed, suspected and the rest of the deployment's
+        -- list. Disproven and in-error diagnoses never reach the metric.
         'diagnosis_certainty',
         -- diagnosis's principal/secondary flag, so a casemix view can count each encounter
         -- once without a separate primary-diagnosis metric.
@@ -118,5 +136,19 @@ where trim(d) not in (
         'imaging_type',
         'imaging_type_code',
         -- opd_imaging_request's aggregated body area/study area
-        'imaging_area'
+        'imaging_area',
+        -- department, added to opd_visit/opd_diagnosis/procedure/opd_imaging_request/
+        -- pharmacy_order/inpatient_admission/lab_request (MAUI-6909): the encounter's or
+        -- qualifying segment's own department (e.g. Dental), resolved to a name so a
+        -- consumer scopes to one department via metric_filters.
+        'department',
+        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
+        -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
+        -- clinician, resolved to a name for a "by clinician" card.
+        'clinician',
+        -- lab_request's recorded lab test type, as code and as readable label. Emitted
+        -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code
+        -- use (MAUI-6909).
+        'lab_test_code',
+        'lab_test'
     )
