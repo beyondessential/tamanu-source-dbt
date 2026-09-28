@@ -2,11 +2,10 @@ unit_tests:
   - name: test_metric__procedure_facility_attribution
     model: metric__procedure
     description: >
-      BL-004. facility_id follows the resolved segment's care_site_id, not the procedure's
+      BL-004 (metric__procedure). facility_id follows the resolved segment's care_site_id, not the procedure's
       own location_id. proc1 records location_id locX (facility facX) while its segment sits
       at loc1 (facility fac1) -- fac1 wins. proc2 records no location_id at all and is still
-      emitted, attributed to its segment's facility. Under the previous inner join on
-      location_id, proc1 would have read facX and proc2 would have been dropped entirely.
+      emitted, attributed to its segment's facility.
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql

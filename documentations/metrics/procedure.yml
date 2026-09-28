@@ -43,5 +43,5 @@ metrics:
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: null
+  spec_path: specs/dbt-model/metric__procedure.md
 

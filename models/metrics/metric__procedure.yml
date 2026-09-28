@@ -123,8 +123,9 @@ models:
           was in at the time of the procedure, not what the encounter became afterwards: a
           procedure performed during triage on an encounter later admitted reads as triage.
           This is the deployment's own encounter type, finer than encounter_setting: three
-          of them (clinic, imaging, vaccination) are all outpatient. To scope to a setting,
-          filter encounter_setting instead -- 'clinic' alone is narrower than outpatient.
+          of them (clinic, imaging and vaccination) are all outpatient. To scope to a
+          setting, filter encounter_setting instead -- 'clinic' alone is narrower than
+          outpatient.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_type_not_null
@@ -134,17 +135,15 @@ models:
           The setting the procedure was performed in, grouped from the segment's OMOP visit
           concept: 'Outpatient' (clinic, imaging or vaccination), 'Inpatient' (admission),
           or 'Other' (everything else). This is the column to filter for a setting-scoped
-          count -- it is what the retired metric__opd_procedure and metric__ipd_procedure
-          scoped on, and unlike a list of encounter_type values it does not drift when
+          count: unlike a list of encounter_type values it does not drift when
           map__omop_visit_type gains an encounter type. Never NULL.
 
-          Only the two settings this metric is meant to be scoped by are named. Emergency
-          is deliberately absent: emergency reporting has its own models with their own
-          scoping rules, and a value here would invite a card to be built off this metric
-          instead. Emergency, observation and triage segments therefore land in 'Other',
-          which is sizeable -- 6,810 procedures on FSM, 8.6% -- so 'Other' is a real
-          population, not a rounding bucket. Break it down with encounter_type to see what
-          is in it. Outpatient and Inpatient will not sum to the metric total.
+          Only the two settings this metric is scoped by are named. Emergency reporting is
+          served by its own metrics, so emergency, observation and triage segments fall in
+          'Other' and no emergency figure can be drawn from this metric. 'Other' is a real
+          population rather than a rounding bucket -- break it down by encounter_type to
+          see what is in it -- so 'Outpatient' and 'Inpatient' do not sum to the metric
+          total.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_setting_not_null

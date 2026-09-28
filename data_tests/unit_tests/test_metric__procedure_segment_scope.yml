@@ -2,21 +2,16 @@ unit_tests:
   - name: test_metric__procedure_segment_scope
     model: metric__procedure
     description: >
-      What this metric decides for itself over the segment clinical__procedure_occurrence
+      BL-001, BL-003 (metric__procedure). What this metric decides for itself over the segment clinical__procedure_occurrence
       resolves (its BL-005). proc1 and proc2 sit on segments of different types and both
       appear, each carrying its own segment's encounter_type -- so a consumer filtering to
-      one setting gets that setting's procedures, which is what the retired
-      metric__opd_procedure and metric__ipd_procedure used to do.
+      one setting gets that setting's procedures.
 
-      proc4 is the case that makes encounter_setting necessary: its segment is
-      vaccination-typed, which map__omop_visit_type puts under OMOP 9202 alongside clinic
-      and imaging. The retired metric__opd_procedure filtered on 9202 and so counted it,
-      while encounter_type = 'clinic' does not -- so encounter_setting reads 'Outpatient'
-      here even though encounter_type is 'vaccination'.
-
-      proc5 pins the other half of that decision: its segment is triage-typed, OMOP 9203,
-      and reads 'Other' rather than an emergency value. Emergency reporting has its own
-      models, so this metric deliberately offers no setting to scope an emergency card by. proc3's FK is NULL, which
+      BL-008. proc4's segment is vaccination-typed, which map__omop_visit_type puts under
+      OMOP 9202 alongside clinic and imaging, so encounter_setting reads 'Outpatient' while
+      encounter_type is 'vaccination' -- 'Outpatient' is wider than encounter_type =
+      'clinic'. proc5's segment is triage-typed, OMOP 9203, and reads 'Other': the metric
+      names no emergency setting, so no emergency figure can be drawn from it. proc3's FK is NULL, which
       clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
       dropped rather than surfaced without a setting. img1 is the imaging branch and is not
       this metric's population (BL-001).

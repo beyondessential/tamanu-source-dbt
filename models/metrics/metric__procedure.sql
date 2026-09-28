@@ -10,9 +10,7 @@
 -- visit_detail_id (that model's BL-005), not the encounter's own whole-visit type. A
 -- procedure performed during the triage phase of an encounter later admitted is an
 -- emergency procedure, not an inpatient one. A consumer scopes to any single setting via a
--- filter on this one metric rather than needing a separate metric per setting. This
--- replaced the former metric__opd_procedure and metric__ipd_procedure, which were exactly
--- this metric filtered to one encounter_type and are now a filter on it instead.
+-- filter on this one metric rather than needing a separate metric per setting.
 --
 -- clinical__procedure_occurrence carries both a procedure and an imaging branch,
 -- distinguished by procedure_type_source_value (see its spec, BL-001). This metric's
@@ -20,6 +18,7 @@
 -- population, not this one's.
 --
 -- The registry carries the definition; this model is its implementation.
+-- See specs/dbt-model/metric__procedure.md for BL-001..BL-009.
 
 with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
@@ -37,9 +36,8 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
--- department, resolved to a name for metric_filters scoping. Like facility_id, department
--- follows the resolved segment -- it comes off the segment directly, since bases/locations
--- carries no department_id.
+-- BL-009: department, resolved to a name for metric_filters scoping. It comes off the
+-- segment directly, since bases/locations carries no department_id.
 departments as (
     select * from {{ ref('departments') }}
 ),
@@ -49,24 +47,15 @@ procedures as (
         po.procedure_occurrence_id,
         po.procedure_date,
         loc.facility_id,
-        -- the segment the procedure happened in, not the encounter's whole-visit type --
-        -- lets a consumer scope to inpatient, emergency or outpatient procedures without a
-        -- separate metric per setting
+        -- BL-003: the segment the procedure was performed in, not the encounter's
+        -- whole-visit type
         vd.visit_detail_source_value as encounter_type,
-        -- the OMOP visit concept of that segment, grouped into a readable setting. This is
-        -- what the retired metric__opd_procedure and metric__ipd_procedure filtered on
-        -- (9202 and 9201), and it is deliberately coarser than encounter_type: 9202 covers
-        -- clinic, imaging and vaccination alike, so 'Outpatient' is not the same set as
-        -- encounter_type = 'clinic'. A consumer scoping to a setting filters this column,
-        -- not encounter_type, so its scope does not shift if map__omop_visit_type gains an
-        -- encounter type.
-        --
-        -- Only the two settings this metric is meant to be scoped by are named. Emergency
-        -- (9203) is deliberately NOT a value: emergency reporting has its own models with
-        -- their own scoping rules, and naming it here would invite a card to be built off
-        -- this metric instead. It falls in 'Other' along with anything else, which a
-        -- consumer can see the size of but cannot mistake for an emergency figure. Use
-        -- encounter_type if you need to know what is in there.
+        -- BL-008: the segment's OMOP visit concept grouped to a setting, coarser than
+        -- encounter_type -- 9202 covers clinic, imaging and vaccination alike, so
+        -- 'Outpatient' is wider than encounter_type = 'clinic'. Scope a setting by this
+        -- column and the scope holds when map__omop_visit_type gains an encounter type.
+        -- Do not add an emergency value here: emergency reporting has its own metrics, and
+        -- a value would let an emergency card be drawn from this one.
         case vd.visit_detail_concept_id
             when 9201 then 'Inpatient'
             when 9202 then 'Outpatient'
@@ -86,23 +75,19 @@ procedures as (
         -- the row
         coalesce(dept.name, 'Not recorded') as department
     from procedure_occurrence po
-    -- inner join on the segment FK clinical__procedure_occurrence already resolved -- no
-    -- as-of derivation here, so every metric over this clinical model agrees on which
-    -- segment a procedure belongs to. A procedure whose segment did not resolve
-    -- (NULL FK, where the encounter's type is absent from map__omop_visit_type) is dropped
-    -- rather than surfaced with no setting, the same tradeoff the previous join to
-    -- clinical__visit_occurrence made
+    -- BL-003: inner join on the segment FK clinical__procedure_occurrence resolves (its
+    -- BL-005), so every metric over that model agrees on which segment a procedure belongs
+    -- to. A procedure whose segment did not resolve (NULL FK, where the encounter's type is
+    -- absent from map__omop_visit_type) is dropped rather than surfaced with no setting
     join visit_detail vd
         on vd.visit_detail_id = po.visit_detail_id
     join person pr
         on pr.person_id = po.person_id
-    -- facility is the resolved segment's own care_site_id, not the procedure's own
-    -- location_id -- the same source metric__imaging_request resolves facility from, so a
-    -- procedure and an imaging request belonging to the same segment agree on facility. It
-    -- also means a procedure whose own location_id does not resolve keeps a facility rather
-    -- than being dropped by this join.
-    -- inner join: a segment's care_site resolving to nothing is an anomaly, excluded rather
-    -- than attributed to a NULL facility
+    -- BL-004: facility is the resolved segment's own care_site_id -- the same source
+    -- metric__imaging_request resolves facility from, so a procedure and an imaging request
+    -- belonging to one segment agree on facility. Inner join: a segment's care_site
+    -- resolving to nothing is an anomaly, excluded rather than attributed to a NULL
+    -- facility
     join locations loc
         on loc.id = vd.care_site_id
     left join departments dept
