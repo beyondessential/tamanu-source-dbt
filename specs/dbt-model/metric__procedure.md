@@ -171,4 +171,4 @@ Tupaia data tables over this model are configured in `tupaia-data-product` at
 
 | Change | Issue |
 |---|---|
-| Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind `encounter_setting`; `department` added | MAUI-6909 |
+| Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind `encounter_setting`; `department` added | -- |

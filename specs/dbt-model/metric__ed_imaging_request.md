@@ -15,8 +15,8 @@
 
 Canonical definition for `ed_imaging_request`: one row per imaging request raised during the
 emergency phase of an encounter. The emergency-side counterpart of
-`metric__opd_imaging_request`, built from it directly -- same as-of-segment pattern, same
-output shape, scoped to OMOP concept 9203 instead of the `clinic` source value.
+`metric__imaging_request` -- same as-of-segment pattern and output shape, scoped to OMOP
+concept 9203.
 
 ## Purpose
 
@@ -39,7 +39,7 @@ No AIHW METeOR element is registered. AIHW's own diagnostic-imaging reporting (M
 Benefits Schedule-based) explicitly names request completion, cancellation, turnaround time and
 body-area breakdown as gaps it cannot report. This is a BES composition over Tamanu's own
 `imaging_requests` object, `definition_source: BES`, the same status
-`metric__opd_imaging_request` carries.
+`metric__imaging_request` carries.
 
 ## Grain
 
@@ -81,13 +81,12 @@ therefore carries no `data_table_*` meta.
 
 ## Business logic
 
-- **BL-001 (a dedicated metric, not a filter):** emergency imaging is its own metric rather
-  than an `encounter_type` disaggregation on a general all-settings imaging metric, following
-  `metric__opd_imaging_request`'s own precedent (MAUI-6806). It is also the only scoping that
-  is correct here: `encounter_type` is the encounter's *current* type, so an attendance that
-  began in the ED and was later admitted is retyped `admission` and would be dropped, while
-  `metric__emergency_visit` counts it -- see `metric__ed_procedure` BL-001 for the same
-  argument in full.
+- **BL-001 (a dedicated metric, not a filter):** emergency imaging is its own metric. Its
+  scope is OMOP concept 9203, which covers the `emergency`, `observation` and `triage`
+  encounter types together, so it is not a single `encounter_type` value a consumer could
+  filter `metric__imaging_request` by. Emergency reporting also has its own conventions,
+  which this metric follows alongside `metric__ed_procedure` and `metric__emergency_visit`
+  rather than the all-settings imaging shape.
 
 - **BL-002 (reporting period and status):** `period_start` is the request's own raised
   timestamp and `period_end` is the earliest recorded result, gated on `is_completed` -- an
@@ -198,7 +197,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_imaging_request`, `k
 
 | Artefact | Relationship |
 |---|---|
-| `metric__opd_imaging_request` | The model this was built from -- identical shape, scoped to 9203 instead of the `clinic` source value; BL-003 explains why the scoping predicate differs in kind and not just in value |
+| `metric__imaging_request` | The all-settings imaging-request metric -- identical shape and joins, with no setting restriction; BL-003 explains why this metric's scoping predicate differs in kind and not just in value |
 | `metric__ed_procedure` | Sibling ED metric over the procedure branch of the same clinical model, with the same 9203 scope |
 | `metric__emergency_visit` | The attendance population these requests sit within |
 | `metric__emergency_stay` | Measures the ED stay to physical departure, including boarding; this metric's emergency phase ends at the admission retype (BL-003) |
@@ -207,9 +206,8 @@ Registered in `documentations/metrics/emergency.yml` as `ed_imaging_request`, `k
 ## Open questions
 
 - **OQ-001:** Should the full `pending`/`in_progress`/`completed`/`cancelled` status lifecycle
-  be surfaced as a disaggregation, rather than the `is_completed` flag BL-010 inherits? Carried
-  over unresolved from `metric__opd_imaging_request` OQ-004; the current visual does not need
-  the split.
+  be surfaced as a disaggregation, rather than the `is_completed` flag BL-010 inherits? The
+  current visual does not need the split.
 
 ## Change log
 

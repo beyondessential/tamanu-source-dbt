@@ -104,7 +104,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   consumer needing to tell a still-open request apart from a cancelled one, or needing the
   completion timestamp, turnaround time, or the full status lifecycle, reads
   `bases/imaging_requests`/`bases/imaging_results` directly, the same way
-  `metric__opd_imaging_request` does; this model does not carry those facts.
+  `metric__imaging_request` does; this model does not carry those facts.
 - **BL-003 (provider is the point of origin, not completion):** the imaging branch's
   `provider_id` is `requested_by_id`, mirroring `procedure_datetime`'s own request-time
   anchor (BL-002) -- consistent within the row rather than mixing a request-side timestamp
@@ -119,7 +119,7 @@ emitted -- deferred to the future `vocab__` layer, the same convention
   `location_group_id` from any pre-existing `location_id` value, and the current imaging
   request UI has no field that writes `location_id` at all. `location_group_id` itself
   turned out not to be a safe fallback either -- confirmed against a real replica, it was
-  NULL for every real clinic-scoped imaging request. `metric__opd_imaging_request` resolves
+  NULL for every real clinic-scoped imaging request. `metric__imaging_request` resolves
   facility a third way instead: via the `clinical__visit_detail` segment active at the
   request's own time, using that segment's own location -- the same segment it already
   computes for its own outpatient-scope filter, so no join beyond `bases/locations` is
@@ -209,9 +209,9 @@ only `metric__`/`derived__` artefacts get a `metric_definitions` row.
 
 | Consumer | Use |
 |---|---|
-| `metric__procedure` | General procedure metric, all settings (procedure branch) |
 | `metric__procedure` | Procedure metric (procedure branch), carrying encounter_type so a consumer scopes to one setting |
-| `metric__opd_imaging_request` | Outpatient-scoped imaging request metric (imaging branch) |
+| `metric__imaging_request` | Imaging request metric (imaging branch), carrying encounter_type the same way |
+| `metric__ed_imaging_request` | Emergency-scoped imaging request metric (imaging branch) |
 
 Any consumer here must filter `procedure_type_source_value` per the consumer contract in
 BL-001.
@@ -221,7 +221,7 @@ BL-001.
 - **OQ-1:** `procedure_concept_id` (standard SNOMED/CPT) awaits the `vocab__` layer to map
   the retained source values, for both branches.
 - **OQ-2:** `imaging_requests.location_id` is deprecated (BL-004), and its would-be successor
-  `location_group_id` turned out to be unreliable too (BL-004) -- `metric__opd_imaging_request`
+  `location_group_id` turned out to be unreliable too (BL-004) -- `metric__imaging_request`
   resolves facility a third way, via the active `clinical__visit_detail` segment's own
   location, entirely outside this model. Worth revisiting if a second consumer needs the
   same resolution and duplicating that segment-join becomes a real cost -- for now each

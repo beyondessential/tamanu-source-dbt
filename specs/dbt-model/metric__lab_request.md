@@ -15,7 +15,7 @@
 
 Canonical definition for `lab_request`: one row per completed lab test carrying a reading,
 at day resolution. Sourced from `clinical__measurement`'s lab branch, the same clinical-layer
-convention `metric__procedure`/`metric__opd_imaging_request` use over
+convention `metric__procedure`/`metric__imaging_request` use over
 `clinical__procedure_occurrence`.
 
 ## Purpose
