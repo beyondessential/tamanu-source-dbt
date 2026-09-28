@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-04 |
-| **Last updated** | 2026-09-05 |
+| **Last updated** | 2026-09-28 |
 
 The OMOP-lite `MEASUREMENT` domain — one row per clinical measurement (numeric or
 categorical), unioning three standard sources: **vitals** (blood pressure, weight, glucose,
@@ -79,7 +79,8 @@ is preserved.
 | `measurement_date` | date | Date component of the measurement datetime |
 | `measurement_datetime` | timestamp | Vitals: response `start_time`. Labs: `lab_tests.completed_datetime` (→ published/requested). Birth: birth datetime (→ registration date) |
 | `measurement_type_source_value` | text | `'vitals survey'`, `'lab'`, or `'birth data'` — provenance / union discriminator |
-| `value_as_number` | numeric | The value cast to numeric when numeric; **NULL for categorical results** (BL-003, BL-006, BL-007) |
+| `value_as_number` | numeric | The value cast to numeric when numeric; **NULL for categorical results** (BL-003, BL-006, BL-007, BL-012) |
+| `operator_source_value` | text | `<`, `<=`, `>` or `>=` where a lab result is reported against a limit; NULL otherwise (BL-012a) |
 | `value_source_value` | text | The recorded value, whitespace-trimmed. Always populated — the canonical value for categorical results |
 | `unit_source_value` | text | Unit of measure. Labs: `lab_test_types.unit`. NULL for vitals (units implicit, not stored per answer) |
 | `provider_id` | uuid | Vitals: response submitter. Labs: requesting clinician. Birth: NULL (no user recorded). FK to `ref__provider.provider_id` |
@@ -110,7 +111,8 @@ are **not** emitted — see BL-003 and OQ-1.
   cast to `varchar` for a type-safe union. All resolve to `clinical__person`,
   `clinical__visit_occurrence`, and `ref__provider`.
 - **BL-003:** `value_as_number` is the value cast to numeric **only when it is numeric** (a
-  signed-decimal pattern); for categorical results it is NULL. `value_source_value` always
+  signed-decimal pattern for vitals and birth data, and as BL-012 reads it for labs); for
+  categorical results it is NULL. `value_source_value` always
   keeps the recorded value — the canonical value for categorical results (e.g. AVPU) and the
   raw value for numeric ones. `measurement_source_value`/`_name` are the measurement type's
   code/name (vital data element or lab test type); `unit_source_value` is the lab test's unit
@@ -160,6 +162,12 @@ are **not** emitted — see BL-003 and OQ-1.
 - **BL-011 (withdrawn requests):** A request whose status is `cancelled`, `deleted`,
   `entered-in-error`, `invalidated`, `rejected` or `sample-not-collected` yields no measurement,
   even where a stale result lingers on it.
+- **BL-012 (lab values):** A lab reading's number is a signed decimal, a decimal with thousands
+  separators, or scientific notation, optionally preceded by a comparison operator and followed by
+  the test type's unit, ignoring case and whitespace around the operator and in the unit.
+- **BL-012a (operator):** A leading `<`, `<=`, `>` or `>=` (or `≤` / `≥`) on a lab reading is
+  carried in `operator_source_value`, with the stated limit in `value_as_number`, and only where
+  a number is read.
 
 ## Acceptance criteria
 
@@ -176,6 +184,8 @@ are **not** emitted — see BL-003 and OQ-1.
 | AC-009 | Every lab measurement carries a non-blank reading | BL-007, BL-009 | dbt singular |
 | AC-010 | Where the typed result is blank and the test type is in the encoding map, the encoded result is the reading, and a typed result wins where both exist | BL-009 | dbt unit test |
 | AC-011 | A lab measurement's `measurement_source_id` is its `lab_test_type_id` | BL-010 | dbt unit test |
+| AC-012 | Lab readings with an operator, spacing, thousands separators, scientific notation or the test type's unit read to the right number and operator, and an unreadable reading has neither | BL-012, BL-012a | dbt unit test |
+| AC-013 | `operator_source_value` is one of `<`, `<=`, `>`, `>=` or NULL | BL-012a | dbt `accepted_values` |
 
 ## Registry entry
 

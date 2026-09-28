@@ -39,8 +39,16 @@ sources carry their own values when added by override.
 {% enddocs %}
 
 {% docs clinical__measurement__value_as_number %}
-The measured value as a number, when the vital is numeric. NULL for categorical vitals
-(e.g. AVPU) — read value_source_value in that case.
+The measured value as a number, when the value is numeric. A lab result is read with any
+thousands separators, scientific notation, or trailing unit of measure, and a result reported
+against a limit (such as <20) carries the limit's value. NULL for categorical values (e.g. AVPU)
+— read value_source_value in that case.
+{% enddocs %}
+
+{% docs clinical__measurement__operator_source_value %}
+The comparison a lab result was reported with — <, <=, > or >= — where the laboratory gave a
+limit rather than an exact value, such as <20 for a result below the test's detection limit.
+Read it alongside value_as_number. NULL for an exact value, and for vitals and birth data.
 {% enddocs %}
 
 {% docs clinical__measurement__value_source_value %}
