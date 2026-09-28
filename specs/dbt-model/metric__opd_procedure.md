@@ -70,7 +70,7 @@ D5 wide format, plus five disaggregation columns and one measure attribute.
 | `period_granularity` | text | Constant `'day'` |
 | `value_numeric` | numeric | Always `1` (AC-006). Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
-| `facility_id` | varchar(255) | The procedure's own location's facility (BL-004). `not_null` (AC-007) |
+| `facility_id` | varchar(255) | The facility of the segment the procedure happened in (BL-004). `not_null` (AC-007) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `procedure` | text | The procedure as recorded, ungrouped (BL-006). Never NULL |
 | `procedure_code` | text | The procedure type's reference-data code (BL-006). Never NULL |
@@ -143,11 +143,14 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   procedure is dropped rather than surfaced without a setting -- the same outcome the
   previous in-model derivation produced for that case.
 - **BL-004 (facility attribution):** `facility_id` is resolved through `bases/locations` on
-  the procedure's own `location_id` -- not the encounter's `care_site_id` -- the same
-  convention `metric__procedure` and `clinical__procedure_occurrence` use, since a procedure
-  can be performed somewhere other than where the patient's encounter is otherwise located
-  (e.g. a theatre). The join is **inner**, so a procedure whose location does not resolve is
-  excluded rather than attributed to a NULL facility.
+  the resolved segment's own `care_site_id` -- not the procedure's own `location_id` -- the
+  same source `metric__imaging_request` uses, so a procedure and an imaging request
+  belonging to the same segment agree on facility, and the generic and scoped procedure
+  metrics agree with each other by construction. Resolving from the segment also keeps a
+  procedure whose own `location_id` does not resolve, which the previous inner join on
+  `location_id` silently dropped -- 2,888 of 82,110 procedure rows (3.5%) on FSM. The join
+  is **inner**, so a procedure whose segment's care site does not resolve is excluded rather
+  than attributed to a NULL facility.
 - **BL-005 (materialisation is env-aware):** `table` when `target.name` starts with
   `analytics`, `view` otherwise, set on the `metrics:` block in `dbt_project.yml` (shared
   with every model under `models/metrics/`).
@@ -170,8 +173,7 @@ This model therefore carries no `data_table_*` meta. Not yet built as of this sp
   `department_id` that BL-003 resolves against, resolved to a name through `departments` so
   a consumer can scope to one department (e.g. Dental) via `metric_filters` on a readable
   value, the same convention procedure identity (BL-006) already uses rather than an opaque
-  Tamanu id. Unlike `facility_id` (BL-004, resolved from the procedure's own location),
-  department has no location-level source, so it follows the resolved segment instead. Never
+  Tamanu id. Like `facility_id` (BL-004), department follows the resolved segment. Never
   NULL -- falls back to `'Not recorded'` (MAUI-6909).
 
 ## Acceptance criteria
@@ -216,7 +218,7 @@ registration -- no vocabulary change was needed for this metric.
 | `clinical__procedure_occurrence` | `clinical/` | Procedure date, type, completion, location, person and visit FKs (BL-002, BL-004, BL-006). Filtered to the procedure branch (BL-008) |
 | `clinical__visit_detail` | `clinical/` | Outpatient scope: the segment active at the procedure's own timestamp (BL-003) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
-| `locations` | `bases/` | Facility id of the procedure's own location (BL-004) |
+| `locations` | `bases/` | Facility id of the resolved segment's care site (BL-004) |
 | `departments` | `bases/` | Department name of the qualifying as-of segment's own department (BL-009) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 

@@ -104,8 +104,10 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: >-
-          The Tamanu facility id the procedure was performed at, resolved from the procedure's
-          own location.
+          The Tamanu facility id the procedure is attributed to, resolved from the segment
+          the procedure happened in (not the procedure's own location_id). Because it comes
+          from that segment, it is where the patient was at the time, not wherever the
+          encounter later ended up.
         data_tests:
           - not_null:
               name: ac_metric__ipd_procedure_facility_id_not_null

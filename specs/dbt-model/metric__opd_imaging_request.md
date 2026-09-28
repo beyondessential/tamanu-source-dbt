@@ -336,7 +336,7 @@ earlier metrics.
 
 | Artefact | Relationship |
 |---|---|
-| `metric__opd_procedure` | Same as-of-segment pattern and OPD-scoping decision -- the reference this model was built from, anchored on request time instead of a single procedure timestamp (BL-004), scoped to `clinic` only instead of full OMOP 9202 (BL-003), and resolving facility from the active segment's own location rather than the procedure's own `location_id` (BL-005) |
+| `metric__opd_procedure` | Same as-of-segment pattern and OPD-scoping decision -- the reference this model was built from, anchored on request time instead of a single procedure timestamp (BL-004), scoped to `clinic` only instead of full OMOP 9202 (BL-003), and resolving facility from the active segment's own location, which `metric__opd_procedure` now does too (BL-005) |
 | `metric__outpatient_visit` | Sibling metric in the outpatient product; broader OMOP 9202 definition, encounter-first-segment grain |
 | `ds__imaging_requests` | Report-layer imaging dataset at request grain, with PII -- this model's `imaging_area`/completion-time rules reproduce its own, but its facility comes from the encounter's flat `location_id` rather than the as-of segment (BL-005) -- the two can disagree for a patient who moved location during the encounter |
 | `imaging-requests-summary.sql` | Existing report computing a similar pending/completed funnel, but excluding cancelled entirely -- this metric's BL-002 explicitly departs from that exclusion |

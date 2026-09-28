@@ -68,11 +68,16 @@ procedures as (
         on vd.visit_detail_id = po.visit_detail_id
     join person pr
         on pr.person_id = po.person_id
-    -- inner join: a procedure's location resolving to nothing is an anomaly, excluded rather
-    -- than attributed to a NULL facility -- the same convention metric__encounter_diagnosis
-    -- uses for its facility join
+    -- facility is the resolved segment's own care_site_id, not the procedure's own
+    -- location_id -- the same source metric__imaging_request resolves facility from, so a
+    -- procedure and an imaging request belonging to the same segment agree on facility, and
+    -- the generic and scoped procedure metrics agree with each other by construction. It
+    -- also means a procedure whose own location_id does not resolve keeps a facility rather
+    -- than being dropped by this join.
+    -- inner join: a segment's care_site resolving to nothing is an anomaly, excluded rather
+    -- than attributed to a NULL facility
     join locations loc
-        on loc.id = po.location_id
+        on loc.id = vd.care_site_id
     -- BL-001: procedure branch only -- imaging is metric__opd_imaging_request's population
     where po.procedure_type_source_value = 'procedure'
 )
