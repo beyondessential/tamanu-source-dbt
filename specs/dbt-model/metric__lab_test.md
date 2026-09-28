@@ -288,7 +288,15 @@ dbt's. This model therefore carries no `data_table_*` meta.
   `encounter_type`, `department` and `facility_id` all come from the `clinical__visit_detail`
   segment active when the test was **ordered** -- the latest segment that had started by
   `requested_datetime`, clamped to the earliest segment for a request that predates them all.
-  The derivation is shared: `macros/visit_detail__as_of.sql`.
+
+  The derivation is **inline**, not shared. It repeats the rule
+  `clinical__procedure_occurrence` applies for its own `visit_detail_id` (that model's BL-005),
+  which `metric__procedure` and `metric__imaging_request` then read off an FK -- a lab order
+  cannot, being deliberately outside the clinical layer (BL-004). A macro was written and then
+  withdrawn: with `clinical__procedure_occurrence` keeping its own copy either way, factoring
+  lab's out removed no duplication, and it moved the model's most consequential rule into a
+  second file against the metric layer's inline-with-BL-comments convention. When referrals or
+  appointments need the same resolution, extract it then -- for three callers, not one.
 
   **Why not the encounter.** Tamanu updates `encounters.encounter_type`, `location_id` and
   `department_id` **in place** as an encounter progresses, so reading them gives the encounter
@@ -481,6 +489,6 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 | 2026-09-23 | `metric__lab_request` added, sourced from `clinical__measurement`'s lab branch (MAUI-6909) |
 | 2026-09-24 | Completion and turnaround keyed on the test's own `completed_date` rather than request publication; backdated completions emitted as negative durations rather than repaired, so the deployment can see and fix them (MAUI-6837) |
 | 2026-09-28 | Merged main and aligned with the settled family shape: `visit_detail_concept_id` replaced by `encounter_setting` (`metric__procedure` #1462, `metric__imaging_request` #1385), emergency deliberately unnamed and deferred to a future `metric__ed_lab_test` (MAUI-6837) |
-| 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, via the new `visit_detail__as_of` macro; per-setting sibling metrics dropped (MAUI-6837) |
+| 2026-09-24 | Setting, department and facility attributed to the `clinical__visit_detail` segment active at the order, rather than to the encounter as it now stands; per-setting sibling metrics dropped (MAUI-6837) |
 | 2026-09-24 | Dropped `result_classification` and the `map__lab_result_classification` map: classification is a deployment vocabulary question and belongs at the data-table layer over raw `result` (MAUI-6837) |
 | 2026-09-23 | Renamed to `metric__lab_test` and rewritten to source the order side from `bases/`, so requested-but-unresulted and cancelled tests are counted. Added `is_completed`, `encounter_type`, `is_panel_request`, `lab_test_category`, `result` and `turnaround__minutes`; moved `period_start` to the request timestamp at minute granularity (MAUI-6837) |

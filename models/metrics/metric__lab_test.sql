@@ -97,13 +97,51 @@ ordered_tests as (
     where coalesce(lr.status, '') not in ('deleted', 'entered-in-error')
 ),
 
--- BL-010: the segment the patient was actually in when the test was ordered. The derivation
--- is shared -- see macros/visit_detail__as_of.sql for the as-of rule and the first-segment
--- clamp. Anchored on requested_datetime rather than completed_datetime: the question is where
--- the test was ordered, and a still-pending or cancelled test has no completion event to
--- anchor to at all.
+-- BL-010: the segment the patient was actually in when the test was ordered -- the latest
+-- segment that had already started by requested_datetime. Anchored on requested_datetime
+-- rather than completed_datetime: the question is where the test was ordered, and a
+-- still-pending or cancelled test has no completion event to anchor to at all.
+--
+-- Clamped to the earliest segment when the order predates every segment -- an order genuinely
+-- belongs to its own encounter, so a segment recorded as starting after it (a data-timing
+-- artifact, not a real ordering issue) should not leave it unattributed. The join carries no
+-- timestamp condition: the order by picks the as-of segment where one qualifies and falls back
+-- to the earliest otherwise. Every encounter has at least one segment (clinical__visit_detail
+-- BL-005), so the join itself cannot drop a row.
+--
+-- The tie-breaks are split by direction on purpose: among segments sharing a start datetime,
+-- the as-of branch wants the last of them and the clamp branch the first, matching the
+-- (start_datetime, visit_detail_id) order clinical__visit_detail chains its own segments by.
+-- One shared direction would be right for only one of the two.
+--
+-- This repeats the rule clinical__procedure_occurrence applies for its own visit_detail_id
+-- (that model's BL-005), which metric__procedure and metric__imaging_request then read off an
+-- FK. A lab order cannot: it is deliberately not in the clinical layer (BL-004), so there is no
+-- FK to read. Kept inline rather than shared, because a second caller does not yet exist --
+-- when referrals or appointments need the same resolution, extract it then, for three callers
+-- rather than one.
 active_segment as (
-    {{ visit_detail__as_of('ordered_tests', 'lab_test_id', 'requested_datetime', 'encounter_id') }}
+    select distinct on (o.lab_test_id)
+        o.lab_test_id,
+        vd.visit_detail_id
+    from ordered_tests o
+    join visit_detail vd
+        on vd.visit_occurrence_id = o.encounter_id
+    order by
+        o.lab_test_id,
+        (vd.visit_detail_start_datetime <= o.requested_datetime) desc,
+        case when vd.visit_detail_start_datetime <= o.requested_datetime
+                then vd.visit_detail_start_datetime
+        end desc,
+        case when vd.visit_detail_start_datetime > o.requested_datetime
+                then vd.visit_detail_start_datetime
+        end asc,
+        case when vd.visit_detail_start_datetime <= o.requested_datetime
+                then vd.visit_detail_id
+        end desc,
+        case when vd.visit_detail_start_datetime > o.requested_datetime
+                then vd.visit_detail_id
+        end asc
 ),
 
 tests as (
