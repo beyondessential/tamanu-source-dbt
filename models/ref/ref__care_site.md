@@ -37,7 +37,8 @@ Service vocabulary has no standard concepts.
 {% enddocs %}
 
 {% docs ref__care_site__facility_id %}
-UUID of the parent facility this care site belongs to. NULL when unset.
+UUID of the parent facility this care site belongs to. For a location with no facility of
+its own, the facility of its location group. NULL when unset.
 {% enddocs %}
 
 {% docs ref__care_site__facility_name %}
