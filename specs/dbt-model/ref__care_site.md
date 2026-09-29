@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-08-11 |
+| **Last updated** | 2026-09-29 |
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
 Tamanu **departments** (the organizational care unit) and **locations** (physical
@@ -37,10 +37,10 @@ coexist in the single OMOP `CARE_SITE` table (which is heterogeneous by design):
 
 Each row is denormalised with its parent facility's id, name, and type.
 
-Location_groups (areas) are **not** a grain here. A consumer that needs area-level context
-joins `bases/locations` → `bases/location_groups` directly — that link is a consumer-layer
-concern, not a `ref__care_site` one (see `metric__emergency_care` BL-007, which resolves
-facility the same way and notes why area is not a disaggregation there).
+Location_groups (areas) are **not** a grain here. `ref__care_site` reads a location's group
+only for its facility when the location has none (BL-008). A consumer that needs area-level
+context joins `bases/locations` → `bases/location_groups` directly (see
+`metric__emergency_care` BL-007, which notes why area is not a disaggregation there).
 
 **Why a wrapper.** Tamanu stores care-site structure as `departments` and `locations`, each
 linked to a `facilities` row. `ref__care_site` gives downstream models a typed, OMOP-named
@@ -78,7 +78,7 @@ denormalised `facility_id` / `facility_name` columns without a second model.
 | `care_site_name` | text | `departments.name` or `locations.name`. OMOP `CARE_SITE.care_site_name` |
 | `care_site_source_value` | text | `departments.code` or `locations.code`. OMOP `CARE_SITE.care_site_source_value` |
 | `place_of_service_source_value` | text | `facilities.type`. OMOP `CARE_SITE.place_of_service_source_value`. NULL when the care site has no facility |
-| `facility_id` | uuid | `departments.facility_id` or `locations.facility_id` (matching the row's grain). Parent facility FK, denormalised. NULL when unset |
+| `facility_id` | uuid | `departments.facility_id`, or for a location `locations.facility_id` falling back to its location group's `facility_id` (BL-008). Parent facility FK, denormalised. NULL when unset |
 | `facility_name` | text | `facilities.name`. Parent facility name, denormalised. NULL when the facility is unset/removed |
 
 OMOP `CARE_SITE.location_id` is intentionally omitted — see BL-004.
@@ -90,10 +90,10 @@ vocabulary can derive the concept downstream.
 ## Business logic
 
 - **BL-001:** One row per care site, sourced from `{{ ref('departments') }}`,
-  `{{ ref('locations') }}`, and `{{ ref('facilities') }}` only (D10) — never `public.*`.
+  `{{ ref('locations') }}`, `{{ ref('location_groups') }}` and `{{ ref('facilities') }}` only (D10) — never `public.*`.
   Soft-delete filtering is inherited from the base models. The department and location id
-  spaces are disjoint, so the union preserves a unique `care_site_id`; the facility join is
-  many-to-one, so grain is preserved.
+  spaces are disjoint, so the union preserves a unique `care_site_id`; the facility and
+  location group joins are many-to-one, so grain is preserved.
 - **BL-002:** OMOP column naming is applied — `id → care_site_id`, `name → care_site_name`,
   `code → care_site_source_value` — across both grains. The parent
   facility's `type` is carried verbatim as `place_of_service_source_value`. No
@@ -134,6 +134,9 @@ vocabulary can derive the concept downstream.
   so that `clinical__visit_occurrence.care_site_id` and `clinical__visit_detail.care_site_id`
   (both real `locations.id`-shaped values, their own BL-006 in each spec) have a row to
   resolve against.
+- **BL-008:** A location-type care site's `facility_id` is the location's own facility, or its
+  location group's facility when the location has none, via a `left join` on
+  `bases/location_groups`.
 
 ## Acceptance criteria
 
@@ -145,6 +148,8 @@ vocabulary can derive the concept downstream.
 | AC-004 | A care site whose facility is absent from `bases/facilities` is still emitted, with `facility_name` and `place_of_service_source_value` NULL | BL-003 | dbt unit test (`test_ref__care_site_orphan_care_site_yields_nulls`) |
 | AC-005 | `care_site_type` is `not_null` and one of `department` / `location` | BL-005 | dbt `not_null` + `accepted_values` |
 | AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-006 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
+| AC-009 | A location with no facility takes its location group's facility | BL-008 | dbt unit test (`test_ref__care_site_location_group_facility_fallback`) |
+| AC-010 | A location's own facility is kept when its location group's differs | BL-008 | dbt unit test (`test_ref__care_site_location_facility_wins_over_location_group`) |
 
 ## Registry entry
 
@@ -157,6 +162,7 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 |---|---|---|
 | `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
 | `locations` | `bases/` | Location care sites (id, code, name) and parent facility link (BL-006) |
+| `location_groups` | `bases/` | Fallback facility for a location with none (BL-008) |
 | `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
 
 ## Consumers
