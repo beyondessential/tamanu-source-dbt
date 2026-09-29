@@ -33,3 +33,6 @@ models:
         data_tests:
           - not_null:
               name: ac_003_ds__medication_dispenses_medication_id_not_null
+      - name: route
+        data_type: character varying(255)
+        description: "{{ doc('medication_dispenses__route') }}"
