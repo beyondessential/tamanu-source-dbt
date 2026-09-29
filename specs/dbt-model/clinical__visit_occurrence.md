@@ -66,6 +66,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_type_concept_id` | integer | Constant 32817 (EHR administration record) — all encounters originate from the Tamanu EHR |
 | `provider_id` | uuid | `encounters.clinician_id`. The attending clinician at encounter creation. NULL when no clinician recorded |
 | `care_site_id` | uuid | The encounter's location — the raw `location_id`. FK to `ref__care_site.care_site_id` (location-type rows). NULL only when the encounter has no `location_id` recorded |
+| `department_id` | uuid | `encounters.department_id`. The encounter's department, carried as an attribute. FK to `ref__care_site.care_site_id` (department-type rows) (BL-008) |
 | `visit_source_value` | text | `encounters.encounter_type`. Tamanu local code, retained alongside the concept ID (D1) |
 
 ## Business logic
