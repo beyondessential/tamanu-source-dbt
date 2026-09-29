@@ -4,7 +4,7 @@
 -- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id. Each care
 -- site is denormalised with its parent facility. Native UUID PK (D1). Sources only from
 -- bases/ (D10); OMOP column naming applied (D2).
--- See specs/dbt-model/ref__care_site.md for BL-001..BL-006.
+-- See specs/dbt-model/ref__care_site.md for BL-001..BL-006 and BL-008.
 
 with departments as (
     select * from {{ ref('departments') }}
@@ -12,6 +12,10 @@ with departments as (
 
 locations as (
     select * from {{ ref('locations') }}
+),
+
+location_groups as (
+    select * from {{ ref('location_groups') }}
 ),
 
 facilities as (
@@ -36,8 +40,10 @@ location_sites as (
         loc.id::varchar as care_site_id,
         loc.name as care_site_name,
         loc.code as care_site_source_value,
-        loc.facility_id
+        -- BL-008: the location's own facility, else its location group's facility
+        coalesce(loc.facility_id, lg.facility_id) as facility_id
     from locations loc
+    left join location_groups lg on lg.id = loc.location_group_id
 ),
 
 care_sites as (
