@@ -4,7 +4,8 @@ select
     md.quantity,
     md.dispensed_at::timestamp as dispensed_at,
     md.dispensed_by_user_id,
-    md.medication_id
+    md.medication_id,
+    md.route
 from {{ source('tamanu', 'medication_dispenses') }} md
 join {{ source('tamanu', 'pharmacy_order_prescriptions') }} pop
     on pop.id = md.pharmacy_order_prescription_id

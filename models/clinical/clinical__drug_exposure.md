@@ -43,7 +43,7 @@ Number of repeats authorised on the prescription. NULL for vaccination and dispe
 
 {% docs clinical__drug_exposure__route_source_value %}
 Administration route as recorded in Tamanu — the prescription's route, the vaccination's
-injection site, or (for a dispense) the originating prescription's route.
+injection site, or (for a dispense) the route it was dispensed with.
 {% enddocs %}
 
 {% docs clinical__drug_exposure__stop_reason %}
