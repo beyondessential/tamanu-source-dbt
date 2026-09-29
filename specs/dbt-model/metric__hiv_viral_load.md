@@ -8,12 +8,12 @@
 | **Type** | dbt model |
 | **Layer** | `metric` |
 | **Materialisation** | env-aware (`view` in the production bundle) |
-| **Status** | `review` |
+| **Status** | `implemented` |
 | **Owner** | `bes-maui` |
 | **Repo** | `tamanu-source-dbt` (definition); implemented per deployment |
 | **Linear issue** | [MAUI-6864](https://linear.app/bes/issue/MAUI-6864/report-viral-load-results-over-time-and-viral-suppression-status) |
 | **Created** | 2026-09-28 |
-| **Last updated** | 2026-09-28 |
+| **Last updated** | 2026-09-29 |
 
 Registers two metric IDs in `documentations/metrics/hiv_viral_load.yml`: `hiv_viral_load_test`
 and `hiv_viral_load_patient_month`. `BL` and `AC` numbering is shared with the deployment
