@@ -13,7 +13,11 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as location_group_id where false
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as facility_id where false
       - input: ref('facilities')
         format: sql
         rows: |
@@ -40,7 +44,11 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc1' as id, 'LOC1' as code, 'Room 4 Bed 2' as name, 'fac1' as facility_id
+          select 'loc1' as id, 'LOC1' as code, 'Room 4 Bed 2' as name, 'fac1' as facility_id, null::varchar as location_group_id
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as facility_id where false
       - input: ref('facilities')
         format: sql
         rows: |
@@ -67,7 +75,11 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as location_group_id where false
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as facility_id where false
       - input: ref('facilities')
         format: sql
         rows: |
@@ -80,3 +92,65 @@ unit_tests:
           'Roving Clinic' as care_site_name, 'DEP2' as care_site_source_value,
           null::varchar as place_of_service_source_value,
           'fac_gone' as facility_id, null::varchar as facility_name
+
+  - name: test_ref__care_site_location_group_facility_fallback
+    model: ref__care_site
+    description: >-
+      A location with no facility of its own takes its location group's facility (BL-008).
+    given:
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc2' as id, 'LOC2' as code, 'Ward 3 Bed 1' as name, null::varchar as facility_id, 'lg1' as location_group_id
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg1' as id, 'fac1' as facility_id
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac1' as id, 'General Hospital' as name, 'hospital' as type
+    expect:
+      format: sql
+      rows: |
+        select
+          'loc2' as care_site_id, 'location' as care_site_type,
+          'Ward 3 Bed 1' as care_site_name, 'LOC2' as care_site_source_value,
+          'hospital' as place_of_service_source_value,
+          'fac1' as facility_id, 'General Hospital' as facility_name
+
+  - name: test_ref__care_site_location_facility_wins_over_location_group
+    model: ref__care_site
+    description: >-
+      A location whose own facility differs from its location group's keeps its own
+      facility (BL-008).
+    given:
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc3' as id, 'LOC3' as code, 'Clinic Room 1' as name, 'fac1' as facility_id, 'lg2' as location_group_id
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg2' as id, 'fac2' as facility_id
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac1' as id, 'General Hospital' as name, 'hospital' as type
+          union all select 'fac2', 'Health Centre', 'health_centre'
+    expect:
+      format: sql
+      rows: |
+        select
+          'loc3' as care_site_id, 'location' as care_site_type,
+          'Clinic Room 1' as care_site_name, 'LOC3' as care_site_source_value,
+          'hospital' as place_of_service_source_value,
+          'fac1' as facility_id, 'General Hospital' as facility_name

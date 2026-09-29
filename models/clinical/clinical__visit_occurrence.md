@@ -33,6 +33,11 @@ OMOP concept indicating how the visit was recorded. Always 32817 (EHR administra
 record) for Tamanu-sourced encounters.
 {% enddocs %}
 
+{% docs clinical__visit_occurrence__department_id %}
+UUID of the department (organizational care unit) the encounter is in. Carried as an
+attribute. FK to ref__care_site.care_site_id (department-type rows).
+{% enddocs %}
+
 {% docs clinical__visit_occurrence__care_site_id %}
 UUID of the encounter's location; the raw location_id. FK to ref__care_site.care_site_id
 (location-type rows). NULL only when the encounter has no location_id recorded.
