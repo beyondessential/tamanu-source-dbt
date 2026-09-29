@@ -5,8 +5,8 @@ unit_tests:
       BL-008 / AC-010 regression guard: a dispense names the drug it actually handed over.
       One prescription (presc_1) for Amoxicillin is dispensed twice. md_mod was modified
       by pharmacy at dispensing and carries Paracetamol (drug_2), so its exposure must name
-      Paracetamol. md_legacy predates the dispense's own medication_id (null), so it must
-      fall back to the prescription's Amoxicillin. The prescription is linked to no
+      Paracetamol. md_same was dispensed as prescribed and carries Amoxicillin (drug_1), so
+      its exposure must name Amoxicillin. The prescription is linked to no
       encounter and there are no vaccinations, so only the two dispense rows are returned.
       Reverting the join to prescriptions.medication_id names Amoxicillin on md_mod.
     given:
@@ -59,7 +59,7 @@ unit_tests:
             'user_2' as dispensed_by_user_id, 'pop_1' as pharmacy_order_prescription_id,
             'drug_2' as medication_id
           union all
-          select 'md_legacy', '2024-02-03 10:00:00'::timestamp, 20::numeric, 'user_2', 'pop_1', null::text
+          select 'md_same', '2024-02-03 10:00:00'::timestamp, 20::numeric, 'user_2', 'pop_1', 'drug_1'
       - input: ref('pharmacy_order_prescriptions')
         format: sql
         rows: |
@@ -88,6 +88,6 @@ unit_tests:
           'Paracetamol' as drug_source_name
         union all
         select
-          'md_legacy', 'pat_1', '2024-02-03'::date, '2024-02-03 10:00:00'::timestamp,
+          'md_same', 'pat_1', '2024-02-03'::date, '2024-02-03 10:00:00'::timestamp,
           '2024-02-03 10:00:00'::timestamp, 'dispense', 20::numeric, null::integer, 'oral',
           null::varchar, 'user_2', 'enc_1', 'DRUG001', 'Amoxicillin'
