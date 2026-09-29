@@ -4,11 +4,12 @@ unit_tests:
     description: >-
       BL-008 / AC-010 regression guard: a dispense names the drug it actually handed over.
       One prescription (presc_1) for Amoxicillin is dispensed twice. md_mod was modified
-      by pharmacy at dispensing and carries Paracetamol (drug_2), so its exposure must name
-      Paracetamol. md_same was dispensed as prescribed and carries Amoxicillin (drug_1), so
+      by pharmacy at dispensing and carries Paracetamol (drug_2) given intravenously, so its
+      exposure must name Paracetamol and route 'iv', not the prescription's 'oral'. md_same
+      was dispensed as prescribed and carries Amoxicillin (drug_1), so
       its exposure must name Amoxicillin. The prescription is linked to no
       encounter and there are no vaccinations, so only the two dispense rows are returned.
-      Reverting the join to prescriptions.medication_id names Amoxicillin on md_mod.
+      Reverting to prescriptions.medication_id or prescriptions.route fails md_mod.
     given:
       - input: ref('prescriptions')
         format: sql
@@ -57,9 +58,9 @@ unit_tests:
           select
             'md_mod' as id, '2024-02-02 10:00:00'::timestamp as dispensed_at, 10::numeric as quantity,
             'user_2' as dispensed_by_user_id, 'pop_1' as pharmacy_order_prescription_id,
-            'drug_2' as medication_id
+            'drug_2' as medication_id, 'iv' as route
           union all
-          select 'md_same', '2024-02-03 10:00:00'::timestamp, 20::numeric, 'user_2', 'pop_1', 'drug_1'
+          select 'md_same', '2024-02-03 10:00:00'::timestamp, 20::numeric, 'user_2', 'pop_1', 'drug_1', 'oral'
       - input: ref('pharmacy_order_prescriptions')
         format: sql
         rows: |
@@ -80,7 +81,7 @@ unit_tests:
           'dispense' as drug_exposure_type_source_value,
           10::numeric as quantity,
           null::integer as refills,
-          'oral' as route_source_value,
+          'iv' as route_source_value,
           null::varchar as stop_reason,
           'user_2' as provider_id,
           'enc_1' as visit_occurrence_id,
