@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6945](https://linear.app/bes/issue/MAUI-6945) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-28 |
-| **Last updated** | 2026-09-28 |
+| **Last updated** | 2026-09-29 |
 | **Consumed by** | `medication-dispensed-summary`, `sensitive-medication-dispensed-summary` |
 
 ## Purpose
@@ -24,7 +24,7 @@ This spec was written retrospectively for MAUI-6945, which fixed the drug resolu
 
 ## Grain
 
-One row per non-deleted `medication_dispenses` row that the `medication_dispenses` base keeps: its pharmacy order prescription, pharmacy order and encounter are not deleted, and the encounter is not the test patient's. The standard variant keeps dispenses at non-sensitive facilities, and the sensitive variant keeps those at sensitive facilities. The facility is the pharmacy order's facility.
+One row per non-deleted `medication_dispenses` row that the `medication_dispenses` base keeps: its pharmacy order prescription, pharmacy order and encounter are not deleted, and the encounter is not the test patient's. The dispense's prescription must also be kept by the `prescriptions` base (BL-005). The standard variant keeps dispenses at non-sensitive facilities, and the sensitive variant keeps those at sensitive facilities. The facility is the pharmacy order's facility.
 
 ## Inputs
 
@@ -46,10 +46,11 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 
 ## Business logic
 
-- **BL-001:** `medication_id` is `coalesce(medication_dispenses.medication_id, prescriptions.medication_id)`. From Tamanu v2.61 a dispense records its own drug: it is copied from the prescription, or it is the substituted drug when pharmacy uses "Modify prescription" while dispensing. The prescription itself is never changed, so reading the prescription's drug reports the pre-modification drug. The prescription's drug is only a fallback for legacy dispenses recorded before the column existed. The `medication_dispenses` base passes the column through for this.
-- **BL-002:** The `reference_data` join that supplies `medication_code` and `medication` uses the same coalesced id as BL-001, so the name and code always describe the drug in `medication_id`.
+- **BL-001:** `medication_id` is `medication_dispenses.medication_id`. From Tamanu v2.61 every dispense records its own drug: it is copied from the prescription, or it is the substituted drug when pharmacy uses "Modify prescription" while dispensing. Tamanu v2.61 backfills the column on historical dispenses from their prescription. The prescription itself is never changed, so its drug is the pre-modification drug and is not read.
+- **BL-002:** The `reference_data` join that supplies `medication_code` and `medication` uses `medication_dispenses.medication_id`, so the name and code always describe the drug in `medication_id`.
 - **BL-003:** The `medication_id` column doc describes the dispensed (possibly modified) drug, via `medication_dispenses__medication_id`, not the prescribed one.
 - **BL-004:** The logic lives once in `medication_dispenses_dataset()`. The `is_sensitive` parameter covers both variants. Per-deployment repos pick the change up on their next `tamanu-source-dbt` version bump.
+- **BL-005:** The dataset inner-joins `prescriptions`, so a dispense whose prescription the `prescriptions` base excludes (deleted, or the test patient's) is dropped.
 
 ## Acceptance criteria
 
@@ -57,13 +58,15 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 |---|---|---|
 | AC-001 | For a dispense with a pharmacy modification, `medication_id`, `medication` and `medication_code` match `medication_dispenses.medication_id`, not the linked prescription's drug. | BL-001, BL-002 |
 | AC-002 | For an unmodified dispense, the output is unchanged. | BL-001 |
-| AC-003 | For a legacy dispense with `medication_dispenses.medication_id` null, the output falls back to the prescription's drug. | BL-001 |
+| AC-003 | `medication_dispenses.medication_id` is not null on every row of the `medication_dispenses` base, at `warn` severity. A failure means a dispense has no drug of its own and is dropped from the dataset by the `reference_data` join. | BL-001 |
 | AC-004 | The same holds for `ds__sensitive_medication_dispenses`, which keeps only sensitive-facility dispenses. | BL-001, BL-002, BL-004 |
+| AC-005 | A dispense whose prescription is absent from the `prescriptions` base does not appear. | BL-005 |
 
-AC-001 to AC-003 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). Both tests fail against the pre-fix macro.
+AC-001, AC-002 and AC-005 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base.
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-28 | Maui team | Initial spec, written for MAUI-6945. Drug resolution now prefers the dispense's own `medication_id` over the prescription's, so a prescription modified at dispensing reports the substituted drug (BL-001 to BL-004). |
+| 2026-09-29 | Maui team | `medication_id` reads the dispense's own drug with no prescription fallback, since Tamanu v2.61 backfills it on every dispense (BL-001, BL-002, AC-003). The retained `prescriptions` join is documented as a row filter (BL-005, AC-005). |
