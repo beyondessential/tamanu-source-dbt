@@ -117,6 +117,19 @@ where trim(d) not in (
         'procedure_code',
         -- procedure's completion flag
         'is_completed',
+        -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
+        -- catalogues are deployment reference data, so any panel or category grouping is
+        -- applied downstream rather than registered here.
+        'lab_test_type',
+        'lab_test_type_code',
+        -- lab_test's request-level category (e.g. Haematology), as recorded
+        'lab_test_category',
+        -- lab_test's recorded result, ungrouped -- result vocabularies are deployment
+        -- reference data
+        'result',
+        -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
+        -- a consumer counting clinical acts rather than laboratory workload can separate them
+        'is_panel_request',
         -- immunisation_dose's antigen
         'disease',
         -- immunisation_dose's EPI-style age cohort, banded in months
@@ -138,7 +151,7 @@ where trim(d) not in (
         -- opd_imaging_request's aggregated body area/study area
         'imaging_area',
         -- department, added to opd_visit/opd_diagnosis/procedure/opd_imaging_request/
-        -- pharmacy_order/inpatient_admission/lab_request (MAUI-6909): the encounter's or
+        -- pharmacy_order/inpatient_admission/lab_test (MAUI-6909): the encounter's or
         -- qualifying segment's own department (e.g. Dental), resolved to a name so a
         -- consumer scopes to one department via metric_filters.
         'department',
@@ -146,9 +159,9 @@ where trim(d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
-        -- lab_request's recorded lab test type, as code and as readable label. Emitted
-        -- ungrouped, the same reasoning diagnosis/diagnosis_code and procedure/procedure_code
-        -- use (MAUI-6909).
-        'lab_test_code',
-        'lab_test'
+        -- lab_test's request lifecycle status, as recorded. is_completed is the test's own
+        -- timestamp, so a withdrawn request's tests can read completed with their result
+        -- dropped -- this is what a consumer filters to count delivered results rather than
+        -- laboratory throughput.
+        'request_status'
     )
