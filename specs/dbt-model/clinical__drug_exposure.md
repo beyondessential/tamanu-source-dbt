@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-09 |
-| **Last updated** | 2026-09-28 |
+| **Last updated** | 2026-09-30 |
 
 The OMOP-lite `DRUG_EXPOSURE` domain — one row per drug exposure, unioning three standard
 sources: **medication prescriptions** (the clinical intent to treat), **vaccine
@@ -143,8 +143,8 @@ are many-to-one relative to the row's own PK, so grain is preserved.
 - **BL-008 (dispense branch):** Every `medication_dispenses` row is included, reached through
   `pharmacy_order_prescriptions` → `pharmacy_orders` for the encounter, and via
   `pharmacy_order_prescriptions` → the originating `prescriptions` row. The drug identity
-  (`reference_data`) is the dispense's own `medication_id`, falling back to the prescription's
-  for legacy dispenses with none. From Tamanu v2.61 a dispense records its own drug, and it
+  (`reference_data`) is the dispense's own `medication_id`. From Tamanu v2.61 every dispense
+  records its own drug, backfilled on historical dispenses from their prescription, and it
   differs from the prescription's when pharmacy modifies the prescription at dispensing (the
   prescription itself is never changed), so reading the prescription's drug would name the
   pre-modification drug. The dispenser is the dispense's own `dispensed_by_user_id`, not a
@@ -164,7 +164,7 @@ are many-to-one relative to the row's own PK, so grain is preserved.
 | AC-007 | `drug_exposure_type_source_value` is one of `prescription` / `vaccination` / `dispense` | BL-005 | dbt `accepted_values` |
 | AC-008 | `drug_source_name` is `not_null` (every exposure names a drug/vaccine) — a data-quality signal at project `warn` severity: a failure means a `medication_id` / `vaccine_name` didn't resolve (e.g. a soft-deleted or absent `reference_data` row), not that the row should be dropped | BL-003 | dbt `not_null` |
 | AC-009 | When `drug_exposure_end_datetime` is non-null, `drug_exposure_end_datetime >= drug_exposure_start_datetime` | BL-004 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
-| AC-010 | A dispense whose prescription pharmacy modified at dispensing names the dispensed drug in `drug_source_value` / `drug_source_name`, not the prescription's; a legacy dispense with no `medication_id` falls back to the prescription's drug | BL-008 | unit test `test_clinical__drug_exposure_dispensed_drug` |
+| AC-010 | A dispense whose prescription pharmacy modified at dispensing names the dispensed drug in `drug_source_value` / `drug_source_name`, not the prescription's; an unmodified dispense names the prescription's drug, which it carries as its own `medication_id` | BL-008 | unit test `test_clinical__drug_exposure_dispensed_drug` |
 
 ## Registry entry
 
