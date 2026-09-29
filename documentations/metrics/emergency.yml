@@ -162,43 +162,41 @@ metrics:
   status: approved
   spec_path: specs/dbt-model/metric__ed_imaging_request.md
 
-- metric_id: ed_lab_request
+- metric_id: ed_lab_order
   kind: metric
-  name: ED lab tests
+  name: ED lab orders
   description: >-
-    Lab tests requested while the patient's active segment -- the segment in effect at the
-    request's own time, not the encounter's first or current one -- is an emergency, triage or
-    observation phase. One row per test, from the moment it is requested to the moment its
-    results are published.
+    Lab test panels, and lab tests ordered outside a panel, requested while the patient's active
+    segment -- the segment in effect at the request's own time -- is an emergency, triage or
+    observation phase. One row per order line: a panel counts once however many tests it holds.
   numerator_description: >-
-    Lab tests whose request's active segment at its own requested_datetime carries OMOP visit
-    concept 9203 (Emergency Room Visit), excluding deleted and entered-in-error requests
+    Panels, and tests ordered outside a panel, whose request's active segment at its own
+    requested_datetime carries OMOP visit concept 9203 (Emergency Room Visit), excluding deleted
+    and entered-in-error requests
   denominator_description: null
   data_source: tamanu
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    A count of lab tests requested in the emergency setting, a sibling of ed_imaging_request and
-    ed_procedure. No external body registers this indicator. Counted at request time rather than
-    result time, and including tests still awaiting results, so a test ordered in the emergency
-    department is attributed there even where it was resulted after admission -- unlike
-    lab_request, which counts completed tests dated at completion. A test requested after the
-    encounter is retyped as an admission, while the patient still boards in the emergency
-    department, is admission-phase activity and is not counted here. Pending alignment with the
-    deploying country's national HMIS definition.
+    A count of what a clinician ordered from the laboratory in the emergency setting, so a
+    ranking reads as panels and tests rather than as the analytes a panel expands to. Counted at
+    request time, including orders still awaiting results. No external body registers this
+    indicator. Pending alignment with the deploying country's national HMIS
+    definition.
   unit: count
-  subject_grain: lab_test
+  subject_grain: lab_order
   disaggregations:
   - facility_id
   - sex
   - is_completed
-  - lab_test
-  - lab_test_code
+  - is_panel
+  - lab_order
+  - lab_order_code
   - department
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: specs/dbt-model/metric__ed_lab_request.md
+  spec_path: specs/dbt-model/metric__ed_lab_order.md
 
 - metric_id: ed_pharmacy_order
   kind: metric
