@@ -1,4 +1,4 @@
-# Laboratory metrics: tests ordered, their turnaround, and their results.
+# Laboratory metrics: lab orders placed, counted by panel.
 #
 # Part of the canonical registry of `metric__` indicators and `der__` derived elements:
 # every documentations/metrics/*.yml file is merged by metric_id.
@@ -34,7 +34,7 @@ metrics:
     unnamed, since emergency lab ordering is ed_lab_order's population. Panel and test
     identities are emitted as recorded and ungrouped.
   unit: count
-  subject_grain: lab_order_line
+  subject_grain: lab_order
   disaggregations:
   - facility_id
   - encounter_type

@@ -33,6 +33,10 @@ models:
               - subject_id
           config:
             severity: error
+      # EXPECTED TO WARN wherever lab entry is backdated: a request recorded as published
+      # before it was placed. period_end is the publication as recorded, emitted rather than
+      # repaired, so the row count on this warning going to zero is what a cleaned deployment
+      # looks like. It cannot fail a build.
       - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
           name: ac_metric__lab_order_period_end_after_start
           arguments:
@@ -40,7 +44,9 @@ models:
             column_B: period_start
             or_equal: true
             row_condition: period_end is not null
-      # BL-006: the period closes exactly when the request published.
+      # BL-006: the period closes exactly when the request published. Warns on a request whose
+      # status is 'published' but which carries no publication date -- period_end is then NULL
+      # while is_completed is true, which is a recording gap worth surfacing rather than hiding.
       - dbt_utils.expression_is_true:
           name: ac_metric__lab_order_period_end_only_when_completed
           arguments:
