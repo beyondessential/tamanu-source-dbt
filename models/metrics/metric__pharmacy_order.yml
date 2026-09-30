@@ -9,7 +9,9 @@ models:
       consumer aggregates at whatever grain it needs. is_completed splits the total into
       dispensed vs still-pending, so a dispensing rate is formed downstream as
       sum(value_numeric) filter (where is_completed) / sum(value_numeric), never stored as a
-      percentage.
+      percentage. Facility, department and setting are those of the encounter segment active
+      when the order was placed, so a consumer scopes to one setting by filtering
+      encounter_setting.
     config:
       tags:
         - clinical
@@ -38,6 +40,13 @@ models:
       # A pharmacy order is point-in-time, so period_end is hardcoded NULL. Asserted as the null
       # invariant itself rather than as an end-after-start comparison, so a change that ever
       # populates it flags for a deliberate revisit instead of passing on an empty row set.
+      # Every drug line resolves to a segment, patient and location, so the row count matches
+      # the source. A shortfall is drug lines the inner joins dropped -- most likely an
+      # encounter type missing from map__omop_visit_type.
+      - dbt_utils.equal_rowcount:
+          name: ac_metric__pharmacy_order_every_drug_line
+          arguments:
+            compare_model: ref('pharmacy_order_prescriptions')
       - dbt_expectations.expect_column_values_to_be_null:
           name: ac_metric__pharmacy_order_period_end_null
           arguments:
@@ -109,10 +118,41 @@ models:
         description: NULL -- unused by this metric.
       - name: facility_id
         data_type: character varying(255)
-        description: The Tamanu facility id the pharmacy order was placed at.
+        description: >-
+          The Tamanu facility id of the location of the encounter segment active when the order
+          was placed -- the same attribution metric__procedure and metric__lab_order use, so a
+          drug line and a procedure belonging to one segment agree on facility.
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: >-
+          The segment's own encounter_type, as it stood when the order was placed -- finer than
+          encounter_setting, for a consumer wanting one encounter type specifically.
+          Segment-level, not the encounter's current type: Tamanu updates
+          encounters.encounter_type in place, so an order placed in clinic on a patient later
+          admitted would otherwise read 'admission'.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_encounter_type_not_null
+      - name: encounter_setting
+        data_type: text
+        description: >-
+          The setting the order was placed in, from the resolved segment's OMOP Visit concept:
+          Outpatient (9202 -- clinic, imaging, vaccination), Inpatient (9201), or Other.
+          Coarser than encounter_type deliberately, so a consumer filters one stable value
+          instead of a list that drifts with map__omop_visit_type. Emergency (9203) is
+          deliberately not named -- it falls in Other, so no card can be built off this metric
+          as though it were an emergency figure; emergency pharmacy activity is
+          metric__ed_pharmacy_order.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_encounter_setting_not_null
+          - accepted_values:
+              name: ac_metric__pharmacy_order_encounter_setting_values
+              arguments:
+                values: ['Outpatient', 'Inpatient', 'Other']
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.
@@ -144,13 +184,19 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_drug_source_name_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years when the order was placed. Not banded -- the consumer's data table
+          bands it. NULL where the patient's birth date is not recorded.
       - name: department
         data_type: text
         description: >-
-          The encounter's own department (e.g. Dental), resolved to a name so a consumer scopes
-          to one department by metric_filters on a readable value, the same convention
-          drug_source_name uses. Never NULL -- falls back to 'Not recorded' where no department
-          is set on the encounter.
+          The department of the encounter segment active when the order was placed (e.g.
+          Dental), resolved to a name so a consumer scopes to one department by metric_filters
+          on a readable value. Segment-level, not the encounter's current department, which
+          Tamanu updates in place as the patient moves. Never NULL -- falls back to 'Not
+          recorded' where the segment's department does not resolve.
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_department_not_null
