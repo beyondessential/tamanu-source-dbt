@@ -1,4 +1,4 @@
-# Laboratory metrics: tests ordered, their turnaround, and their results.
+# Laboratory metrics: lab orders placed, counted by panel.
 #
 # Part of the canonical registry of `metric__` indicators and `der__` derived elements:
 # every documentations/metrics/*.yml file is merged by metric_id.
@@ -8,57 +8,45 @@
 # Run that after editing, and commit the regenerated macro -- CI fails on drift.
 
 metrics:
-- metric_id: lab_test
+- metric_id: lab_order
   kind: metric
-  name: Lab tests
+  name: Lab orders
   description: >-
-    Laboratory tests ordered, whether or not they were completed. One row per test, not per lab
-    request -- a request can bundle several tests (e.g. a panel), and is_panel_request preserves
-    the order-level view. A test counts as completed when it carries its own completion
-    timestamp, and turnaround runs from the request being placed to that moment. Completion is
-    a property of the test alone and does not imply the result still stands -- a request
-    published and later withdrawn leaves its tests completed with their result dropped -- so
-    request_status is emitted for a consumer that needs delivered results rather than
-    throughput.
+    Laboratory orders placed, whether or not they were completed. One row per request raised
+    from a panel, labelled with the panel however many tests it holds, and one row per test on
+    a request raised without one -- so a panel counts once rather than once per test.
   numerator_description: >-
-    Lab tests ordered, counted on the date the request was placed, excluding requests marked
-    deleted or entered-in-error -- cancelled, invalidated, rejected and sample-not-collected
-    requests are counted, each having been genuinely ordered
+    Lab order lines placed, counted on the date the request was placed, excluding requests
+    marked deleted or entered-in-error -- cancelled, invalidated, rejected and
+    sample-not-collected requests are counted, each having been genuinely ordered
   denominator_description: null
   data_source: tamanu
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    No external indicator anchor (AIHW/WHO/DHIS2) defines a plain lab-test-count concept --
-    AIHW's pathology reporting is built on Medicare Benefits Schedule item counts, which carry
-    neither an unfulfilled order nor a turnaround time, so neither requested-versus-completed
-    nor turnaround can be anchored to it. This is a BES composition over Tamanu's own
-    laboratory workflow (MAUI-6837). The unit counted is the individual test, the same
-    "bundle vs. line" distinction pharmacy_order draws against pharmacy orders. The order side
-    is read from bases/ rather than a clinical__ model, per the decision that the OMOP clinical
-    models record what has clinically happened and an order is an intent, not an occurrence
-    (Juliana, 2026-09-23). Test type, category and result are emitted as recorded and
-    ungrouped, the same approach encounter_diagnosis takes. Positivity is not materialised and not
-    classified: which recorded values mean "positive" is a deployment vocabulary question, so
-    the result is emitted raw and both the classification and the ratio are the consumer's --
-    a stored proportion sums incorrectly wherever a disaggregation is collapsed. Pending
-    alignment with the deploying country's national HMIS definition.
+    No external indicator anchor defines a lab-order count concept. This is a BES composition
+    over Tamanu's own laboratory workflow (MAUI-6837), the generic counterpart to
+    ed_lab_order. The unit counted is the order line rather than the individual test, so a
+    panel ordered as one clinical act counts once. Setting, facility and department are
+    attributed to the clinical__visit_detail segment active when the order was placed, not to
+    the encounter as it now stands, since Tamanu updates encounter_type and location in place.
+    encounter_setting carries the OMOP Visit concept of that segment; emergency is deliberately
+    unnamed, since emergency lab ordering is ed_lab_order's population. Panel and test
+    identities are emitted as recorded and ungrouped.
   unit: count
-  subject_grain: lab_test
+  subject_grain: lab_order
   disaggregations:
   - facility_id
   - encounter_type
   - encounter_setting
   - sex
   - is_completed
-  - request_status
-  - is_panel_request
+  - is_panel
   - department
-  - lab_test_type
-  - lab_test_type_code
+  - lab_order
+  - lab_order_code
   - lab_test_category
-  - result
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: specs/dbt-model/metric__lab_test.md
+  spec_path: specs/dbt-model/metric__lab_order.md
