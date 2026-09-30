@@ -411,7 +411,7 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 | `clinical__measurement` | Holds the result side; excludes unresulted and withdrawn tests, which is why BL-005's membership is wider and BL-008's join is LEFT |
 | `ds__lab_requests` / `ds__lab_tests` | Report-layer lab datasets at test grain, with PII -- different layer (D6), different consumer, not affected by this work |
 | `metric__lab_request` | Superseded by this model -- same grain, narrower membership (resulted tests only), misnamed id. Renamed, not deprecated in place; see Purpose |
-| `metric__pharmacy_order` | The "bundle vs. line" grain reasoning this model inherits (the ordered line, not the order), and the same encounter-level facility and department attribution |
+| `metric__pharmacy_order` | The "bundle vs. line" grain reasoning this model inherits (the ordered line, not the order), and the same segment-level facility, department and `encounter_setting` attribution |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
 ## Open questions
