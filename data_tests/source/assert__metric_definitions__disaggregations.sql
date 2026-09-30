@@ -155,10 +155,5 @@ where trim(d) not in (
         -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
-        'clinician',
-        -- lab_test's request lifecycle status, as recorded. is_completed is the test's own
-        -- timestamp, so a withdrawn request's tests can read completed with their result
-        -- dropped -- this is what a consumer filters to count delivered results rather than
-        -- laboratory throughput.
-        'request_status'
+        'clinician'
     )

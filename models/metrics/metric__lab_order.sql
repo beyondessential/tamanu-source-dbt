@@ -59,8 +59,7 @@ departments as (
 -- BL-005: every request that was not deleted or entered in error, including one with no
 -- status. Those two assert the order never happened. 'cancelled', 'invalidated', 'rejected'
 -- and 'sample-not-collected' are KEPT -- each was genuinely ordered, and they are half the
--- requested-versus-completed story. request_status is emitted (BL-006) so a consumer counting
--- delivered results rather than orders placed can exclude them.
+-- requested-versus-completed story.
 live_requests as (
     select
         lr.id as lab_request_id,
@@ -70,7 +69,6 @@ live_requests as (
         -- several tests, so the test's own completed_datetime cannot describe it.
         coalesce(lr.status = 'published', false) as is_completed,
         lr.published_datetime,
-        coalesce(lr.status, 'Not recorded') as request_status,
         lr.lab_test_category_id,
         lr.lab_test_panel_request_id
     from lab_requests lr
@@ -85,12 +83,10 @@ live_requests as (
 panel_orders as (
     select
         r.lab_request_id as order_id,
-        r.lab_request_id,
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
         r.published_datetime,
-        r.request_status,
         r.lab_test_category_id,
         true as is_panel,
         -- BL-007: emitted as recorded, coalesced so an array filter cannot drop the row
@@ -108,12 +104,10 @@ panel_orders as (
 test_orders as (
     select
         lt.id as order_id,
-        r.lab_request_id,
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
         r.published_datetime,
-        r.request_status,
         r.lab_test_category_id,
         false as is_panel,
         -- BL-007
@@ -170,11 +164,6 @@ select
     end as encounter_setting,
     pr.gender_source_value as sex,
     o.is_completed,
-    -- BL-006: the request's lifecycle status as recorded. is_completed says the request
-    -- published, not that its results still stand -- a request published and later invalidated
-    -- reads completed here, so a card counting delivered results filters this.
-    o.request_status,
-    o.lab_request_id,
     -- BL-002: whether this line is a panel or a single test
     o.is_panel,
     coalesce(dept.name, 'Not recorded') as department,

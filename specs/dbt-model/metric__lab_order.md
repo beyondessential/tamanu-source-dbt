@@ -77,7 +77,7 @@ timestamps. Collapsing them onto the panel request would leave no single status 
 
 ## Output schema
 
-D5 wide format, plus eleven disaggregation columns, an order identifier, and one measure.
+D5 wide format, plus ten disaggregation columns and one measure.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -94,8 +94,6 @@ D5 wide format, plus eleven disaggregation columns, an order identifier, and one
 | `encounter_setting` | text | `Outpatient` (9202) / `Inpatient` (9201) / `Other`. Emergency deliberately unnamed (BL-010). `not_null` |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | The request published (BL-006). Never NULL |
-| `request_status` | text | The request's lifecycle status as recorded (BL-006). Never NULL |
-| `lab_request_id` | varchar(255) | The request this line belongs to. Not a disaggregation -- an identifier. `not_null` |
 | `is_panel` | boolean | Whether the line is a panel or a single test (BL-002, BL-003). Never NULL |
 | `department` | text | The resolved segment's own department, resolved to a name (BL-010). Never NULL |
 | `lab_order_code` | text | Panel code on a panel line, test type code on a single (BL-007). Never NULL |
@@ -161,10 +159,9 @@ dbt's. This model therefore carries no `data_table_*` meta.
   panel rule, not an independent choice, and it is the same rule `metric__ed_lab_order` uses.
 
   It does **not** mean the results still stand: a request published and later invalidated,
-  cancelled or rejected reads `is_completed` true. `request_status` carries the lifecycle
-  value as recorded so a card counting delivered results can exclude those, while one counting
-  orders placed does not. Nor does `is_completed` separate a cancelled line from a pending one
-  -- both are false, and again `request_status` is what tells them apart.
+  cancelled or rejected reads `is_completed` true. Nor does it separate a cancelled line from a
+  pending one -- both are false. The request's lifecycle status is not emitted, matching
+  `metric__ed_lab_order`; see OQ-011.
 
 - **BL-007 (order identity, as recorded):** `lab_order` and `lab_order_code` are the panel's
   name and code on a panel line and the test type's on a single. Emitted raw and ungrouped --
@@ -264,7 +261,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
 | AC | `value_numeric` is `not_null` and always `1` | BL-001 | `not_null` + `accepted_values` |
 | AC | `facility_id`, `encounter_type`, `department` are `not_null` | BL-010 | `not_null` |
 | AC | `encounter_setting` is `not_null` and one of `Outpatient`/`Inpatient`/`Other` | BL-010 | `not_null` + `accepted_values` |
-| AC | `is_completed`, `request_status`, `lab_request_id`, `is_panel` are `not_null` | BL-002, BL-003, BL-006 | `not_null` |
+| AC | `is_completed` and `is_panel` are `not_null` | BL-002, BL-003, BL-006 | `not_null` |
 | AC | `lab_order`, `lab_order_code`, `lab_test_category` are `not_null` | BL-007, BL-008 | `not_null` |
 | AC | A panel request with three tests yields ONE row labelled with the panel; a non-panel request with two tests yields one row each labelled with the test type | BL-002, BL-003 | dbt unit test `test_metric__lab_order_grain` |
 | AC | A cancelled request is included with `is_completed` false and its status carried; deleted and entered-in-error are excluded | BL-005, BL-006 | dbt unit test `test_metric__lab_order_grain` |
@@ -272,23 +269,20 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
 ## Registry entry
 
-One active row in `documentations/metrics/lab.yml` -- `lab_test`,
-`kind: metric`, `subject_grain: lab_test`, `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed,
-is_panel_request, department, lab_test_type, lab_test_type_code, lab_test_category, result`.
-
-`lab_request_id` is emitted but **not** registered as a disaggregation: it is an identifier a
-consumer counts distinctly, not a dimension to group a card by, so it stays out of the
-registry for the same reason `age_years` does.
+One active row in `documentations/metrics/lab.yml` -- `lab_order`, `kind: metric`,
+`subject_grain: lab_order_line`, `status: draft`, `spec_path` pointing here, with
+`disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed, is_panel,
+department, lab_order, lab_order_code, lab_test_category`.
 
 Regenerate `macros/metric_definitions.sql` with
 `python scripts/generate_metric_definitions_macro.py` and commit it -- CI fails on drift.
 
-`is_panel_request`, `lab_test_type`, `lab_test_type_code`, `lab_test_category` and `result`
-are new to the allowlist in `assert__metric_definitions__disaggregations`. The
-already-admitted `is_positive` is deliberately not used: this model classifies nothing, so it
-registers no positivity column at all -- see BL-009. `facility_id`, `encounter_type`, `encounter_setting`, `sex`, `is_completed` and `department`
-are already admitted by earlier metrics -- `encounter_setting` by `metric__procedure`.
+`lab_order`, `lab_order_code`, `is_panel` and `lab_test_category` are allowlisted in
+`assert__metric_definitions__disaggregations` by this change. The first three are also
+`metric__ed_lab_order`'s columns, which were not in the allowlist on main, so that metric warned
+on them until now. `facility_id`, `encounter_type`, `encounter_setting`, `sex`, `is_completed`
+and `department` are already admitted by earlier metrics -- `encounter_setting` by
+`metric__procedure`.
 
 ## Dependencies
 
@@ -318,9 +312,9 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
    counts once.
 2. **Know what a row is.** A panel line covers several tests, so this metric counts *ordering
    activity*, not tests performed. `is_panel` separates the two kinds of line.
-3. **Not read `is_completed` as "results still stand."** A withdrawn request's line reads
-   completed; filter `request_status` to exclude cancelled, invalidated, rejected and
-   sample-not-collected (BL-006).
+3. **Not read `is_completed` as "results still stand."** A request published and later
+   withdrawn still reads completed, and a cancelled line reads the same as a pending one
+   (BL-006).
 4. **Not expect results or positivity here.** Neither exists at this grain (BL-009).
 5. **Band `age_years` and group `lab_order` / `lab_test_category` itself**, if wanted -- none
    is emitted grouped (BL-007, BL-008, BL-011).
@@ -342,25 +336,17 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 
 ## Open questions
 
-- **OQ-001 (panel counting):** a five-test panel counts as five tests. Correct for laboratory
-  workload, wrong for "how often were labs ordered". Both numbers are now available --
-  `sum(value_numeric)` for tests, `count(distinct lab_request_id)` for orders -- but the
-  headline card still needs a decision on which one it shows. Outstanding with Juliana.
-- ~~**OQ-002 (what "completed" means)**~~ -- resolved 2026-09-24: the test's own
-  `completed_date`, not request publication and not the presence of a result. See BL-006.
-- **OQ-003 (who classifies results for positivity):** the metric classifies nothing (BL-009),
-  so Tokelau's positivity card needs a classification written at the data-table layer by
-  someone who knows the deployment's result vocabulary. Unassigned, and it blocks that card
-  specifically -- not the rest of the dashboard.
-- **OQ-004 (sensitive test types):** include, exclude, or include while suppressing the
-  test-name disaggregation. A low-volume facility plus a named test type can be revealing
-  even in aggregate.
+- ~~**OQ-001 (panel counting)**~~ -- resolved 2026-09-30 (Juliana): a panel is one order line
+  however many tests it holds (BL-002).
 - ~~**OQ-005 (turnaround start point)**~~ -- moot: turnaround is not emitted at this grain
   (BL-009). `period_start` and `period_end` remain, so a consumer can derive a
   request-to-publication duration itself.
 - ~~**OQ-009 (the turnaround visual)**~~ -- moot for the same reason.
-- ~~**OQ-011 (should `is_completed` exclude withdrawn requests?)**~~ -- unchanged in substance:
-  it still does not, and `request_status` is still how a consumer excludes them (BL-006).
+- **OQ-011 (withdrawn requests read as completed):** `is_completed` is the request reaching
+  `published`, so a request published and later invalidated still reads completed, and a
+  cancelled line is indistinguishable from a pending one. The request's status is not emitted,
+  matching `metric__ed_lab_order`, so a consumer has no way to exclude them. If a "delivered
+  results" card is wanted, the status column would need to come back.
 - **OQ-003 (results and positivity have no home):** the original card asked Queen of Sheba and
   Tokelau for a results breakdown, and Tokelau for a positivity rate. Neither is expressible at
   order-line grain (BL-009). If those cards are still wanted, a per-test metric is needed
@@ -379,7 +365,6 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 
 | Date | Change |
 |---|---|
-| 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution moved from an inlined CTE to the shared `visit_detail__active_segment` macro (MAUI-6837) |
-| 2026-09-29 | `request_status` emitted: completion does not imply the result still stands, since a withdrawn request's line still reads completed (MAUI-6837) |
-| 2026-09-28 | Aligned with the procedure and imaging families: `encounter_setting` in place of the raw OMOP concept, no per-setting siblings, and setting/department/facility attributed to the segment active at the order rather than the encounter as it now stands. `lab_request_id` emitted so orders can be counted (MAUI-6837) |
+| 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution uses the shared `visit_detail__active_segment` macro, and columns match `metric__ed_lab_order`: no `request_status` or `lab_request_id`, `published_datetime` carried through both branches (MAUI-6837) |
+| 2026-09-28 | Aligned with the procedure and imaging families: `encounter_setting` in place of the raw OMOP concept, no per-setting siblings, and setting/department/facility attributed to the segment active at the order rather than the encounter as it now stands. (MAUI-6837) |
 | 2026-09-23 | Added as `metric__lab_request` over `clinical__measurement`'s lab branch, then renamed to `metric__lab_test` and rewritten to source orders from `bases/`, so requested-but-unresulted and cancelled tests are counted (MAUI-6909, MAUI-6837) |

@@ -147,29 +147,11 @@ models:
         description: >-
           Whether the request reached 'published'. At order-line grain a row can cover several
           tests, so the test's own completion timestamp cannot describe it. Does NOT mean the
-          results still stand: a request published and later invalidated reads true here, which
-          is what request_status is for. Nor does it separate a cancelled line from a pending
-          one -- both are false.
+          results still stand: a request published and later invalidated reads true here. Nor
+          does it separate a cancelled line from a pending one -- both are false.
         data_tests:
           - not_null:
               name: ac_metric__lab_order_is_completed_not_null
-      - name: request_status
-        data_type: text
-        description: >-
-          The request's lifecycle status as recorded. A card counting delivered results filters
-          out cancelled, invalidated, rejected and sample-not-collected; one counting orders
-          placed does not. Never NULL.
-        data_tests:
-          - not_null:
-              name: ac_metric__lab_order_request_status_not_null
-      - name: lab_request_id
-        data_type: character varying(255)
-        description: >-
-          The request this line belongs to. Equals subject_id on a panel line; on single-test
-          lines several rows share one value.
-        data_tests:
-          - not_null:
-              name: ac_metric__lab_order_lab_request_id_not_null
       - name: is_panel
         data_type: boolean
         description: >-

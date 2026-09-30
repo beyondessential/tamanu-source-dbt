@@ -41,7 +41,6 @@ metrics:
   - encounter_setting
   - sex
   - is_completed
-  - request_status
   - is_panel
   - department
   - lab_order
