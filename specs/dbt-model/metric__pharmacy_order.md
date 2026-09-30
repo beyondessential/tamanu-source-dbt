@@ -125,7 +125,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `pharmacy_order`, `kind: 
 | Artefact | Relationship |
 |---|---|
 | `metric__ed_pharmacy_order` | The emergency-phase counterpart, resolving the segment the same way and counting only 9203 segments |
-| `metric__procedure`, `metric__lab_test` | The same segment attribution and the same `encounter_setting` values |
+| `metric__procedure`, `metric__lab_order` | The same segment attribution and the same `encounter_setting` values |
 
 ## Change log
 

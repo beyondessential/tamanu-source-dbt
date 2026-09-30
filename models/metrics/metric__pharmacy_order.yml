@@ -120,7 +120,7 @@ models:
         data_type: character varying(255)
         description: >-
           The Tamanu facility id of the location of the encounter segment active when the order
-          was placed -- the same attribution metric__procedure and metric__lab_test use, so a
+          was placed -- the same attribution metric__procedure and metric__lab_order use, so a
           drug line and a procedure belonging to one segment agree on facility.
         data_tests:
           - not_null:
