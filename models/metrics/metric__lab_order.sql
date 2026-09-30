@@ -89,6 +89,7 @@ panel_orders as (
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
+        r.published_datetime,
         r.request_status,
         r.lab_test_category_id,
         true as is_panel,
@@ -111,6 +112,7 @@ test_orders as (
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
+        r.published_datetime,
         r.request_status,
         r.lab_test_category_id,
         false as is_panel,
@@ -149,7 +151,7 @@ select
     -- BL-002: when the order was placed
     o.requested_datetime as period_start,
     -- BL-002, BL-006: NULL until the request publishes
-    case when o.is_completed then r.published_datetime end as period_end,
+    case when o.is_completed then o.published_datetime end as period_end,
     'minute'::text as period_granularity,
     -- BL-001: one order line per row, so the count contribution is always 1. Additive, so a
     -- data table summing it is correct at every grain.
@@ -186,8 +188,6 @@ select
     -- consumer's
     {{ age_years('o.requested_datetime::date', 'pr') }} as age_years
 from orders o
-join live_requests r
-    on r.lab_request_id = o.lab_request_id
 -- BL-010: inner join -- an order whose encounter resolves to no segment is excluded rather
 -- than attributed to a NULL facility. An encounter_type missing from map__omop_visit_type
 -- loses its segments entirely (clinical__visit_detail BL-003), which would drop the order;
