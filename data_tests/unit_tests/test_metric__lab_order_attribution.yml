@@ -1,0 +1,261 @@
+unit_tests:
+  - name: test_metric__lab_order_grain
+    model: metric__lab_order
+    description: >
+      BL-002/BL-003/BL-005/BL-006. The panel rule: r1 was raised from a panel and holds three
+      tests, and must produce ONE row labelled with the panel, not three labelled with the
+      tests. r2 was raised without a panel and holds two tests, so it produces one row each,
+      labelled with the test type. r3 is cancelled with one test -- included, since it was
+      genuinely ordered, with is_completed false. r4 is
+      entered-in-error and r5 is deleted, both excluded because those statuses assert the order
+      never happened. r1 also proves period_end tracks the request's publication rather than
+      any test's own completion, since no lab_tests row here carries one.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 11:30:00'::timestamp as published_datetime, 'published' as status, 'cat1' as lab_test_category_id, 'p1' as lab_test_panel_request_id
+          union all
+          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', 'cat1', null::varchar
+          union all
+          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'cancelled', null::varchar, null::varchar
+          union all
+          select 'r4', 'e1', '2026-03-01 11:00:00'::timestamp, null::timestamp, 'entered-in-error', 'cat1', 'p1'
+          union all
+          select 'r5', 'e1', '2026-03-01 12:00:00'::timestamp, null::timestamp, 'deleted', 'cat1', null::varchar
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt1' as lab_test_type_id
+          union all
+          select 't2', 'r1', 'ltt2'
+          union all
+          select 't3', 'r1', 'ltt3'
+          union all
+          select 't4', 'r2', 'ltt1'
+          union all
+          select 't5', 'r2', 'ltt2'
+          union all
+          select 't6', 'r3', 'ltt1'
+          union all
+          select 't7', 'r4', 'ltt1'
+          union all
+          select 't8', 'r5', 'ltt1'
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select 'p1' as id, 'panel1' as lab_test_panel_id
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select 'panel1' as id, 'FBC' as code, 'Full Blood Count' as name
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt1' as id, 'HB' as code, 'Haemoglobin' as name
+          union all
+          select 'ltt2', 'WCC', 'White Cell Count'
+          union all
+          select 'ltt3', 'PLT', 'Platelets'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'cat1' as id, 'HAEM' as code, 'Haematology' as name, 'labTestCategory' as type
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, 'dept_dental' as department_id, 'clinic' as visit_detail_source_value
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_order' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, true as is_panel, 'Dental' as department, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 'Haematology' as lab_test_category, 30 as age_years
+        union all
+        select 'lab_order', null::text, 't4', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 30
+        union all
+        select 'lab_order', null::text, 't5', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'WCC', 'White Cell Count', 'Haematology', 30
+        union all
+        select 'lab_order', null::text, 't6', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+
+  - name: test_metric__lab_order_segment_attribution
+    model: metric__lab_order
+    description: >
+      BL-010. Setting, department and facility come from the segment active when the order was
+      PLACED, not the encounter as it now stands. The encounter runs clinic 07:00-14:00 then
+      admission from 14:00, so its own type now reads 'admission'. r1, placed at 08:00, must
+      still resolve to the clinic segment; r2, placed at 16:00, to the admission one; r3,
+      placed at 06:00 before any segment starts, clamps to the earliest rather than dropping
+      out of the metric.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, 'results_pending' as status, null::varchar as lab_test_category_id, null::varchar as lab_test_panel_request_id
+          union all
+          select 'r2', 'e1', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, null::varchar
+          union all
+          select 'r3', 'e1', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, null::varchar
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt1' as lab_test_type_id
+          union all
+          select 't2', 'r2', 'ltt1'
+          union all
+          select 't3', 'r3', 'ltt1'
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as lab_test_panel_id where false
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name where false
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt1' as id, 'HB' as code, 'Haemoglobin' as name
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as type where false
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, '2026-03-01 14:00:00'::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, 'dept_dental' as department_id, 'clinic' as visit_detail_source_value
+          union all
+          select 'seg2', 'e1', 'p1', 9201, '2026-03-01 14:00:00'::timestamp, null::timestamp, 'loc_ward', 'dept_ward', 'admission'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'dept_ward', 'WARD', 'Ward', 'fac2', 'current'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'loc_ward', 'WARD', 'Ward bed', null::int, null::varchar, 'fac2', 'current'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, false as is_panel, 'Dental' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        union all
+        select 'lab_order', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', false, false, 'Ward', 'HB', 'Haemoglobin', 'Not recorded', 30
+        union all
+        select 'lab_order', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+
+  - name: test_metric__lab_order_edge_cases
+    model: metric__lab_order
+    description: >
+      BL-002/BL-003/BL-005/BL-007. Three cases the model handles that the tests above do not
+      exercise. r1 has NO status: the status filter must keep it rather than drop it on a
+      NULL comparison, and it reads is_completed false. r2 was raised from a panel request
+      whose row is missing from lab_test_panel_requests, and holds a test: it is still ONE
+      panel line, labelled 'Not recorded' rather than NULL or dropped, since an array filter
+      silently drops a NULL row. r3 is a panel request with NO lab_tests rows at all: the panel
+      branch does not read lab_tests, so it still yields its one line, labelled with the panel
+      and completed at the request's publication.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, null::varchar as status, null::varchar as lab_test_category_id, null::varchar as lab_test_panel_request_id
+          union all
+          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, 'p_missing'
+          union all
+          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'published', null::varchar, 'p2'
+
+      # r3 deliberately has no row here: a panel request with no tests.
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'r1' as lab_request_id, 'ltt1' as lab_test_type_id
+          union all
+          select 't2', 'r2', 'ltt1'
+
+      # p_missing is deliberately absent, so r2's panel cannot be resolved.
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select 'p2' as id, 'panel1' as lab_test_panel_id
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select 'panel1' as id, 'FBC' as code, 'Full Blood Count' as name
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt1' as id, 'HB' as code, 'Haemoglobin' as name
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as type where false
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-03-01 07:00:00'::timestamp as visit_detail_start_datetime, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'clinic' as visit_detail_source_value
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status where false
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'MRN1' as person_source_value, null::int as gender_concept_id, 'female' as gender_source_value, 1996 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::timestamp as birth_datetime, null::varchar as ethnicity_source_value, null::varchar as location_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, false as is_panel, 'Not recorded' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        union all
+        select 'lab_order', null::text, 'r2', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, true, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 30
+        union all
+        select 'lab_order', null::text, 'r3', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, true, 'Not recorded', 'FBC', 'Full Blood Count', 'Not recorded', 30
