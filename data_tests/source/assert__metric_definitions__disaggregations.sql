@@ -120,16 +120,13 @@ where trim(d) not in (
         -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
         -- catalogues are deployment reference data, so any panel or category grouping is
         -- applied downstream rather than registered here.
-        'lab_test_type',
-        'lab_test_type_code',
+        'lab_order',
+        'lab_order_code',
         -- lab_test's request-level category (e.g. Haematology), as recorded
         'lab_test_category',
-        -- lab_test's recorded result, ungrouped -- result vocabularies are deployment
-        -- reference data
-        'result',
         -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
         -- a consumer counting clinical acts rather than laboratory workload can separate them
-        'is_panel_request',
+        'is_panel',
         -- immunisation_dose's antigen
         'disease',
         -- immunisation_dose's EPI-style age cohort, banded in months
@@ -158,10 +155,5 @@ where trim(d) not in (
         -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
-        'clinician',
-        -- lab_test's request lifecycle status, as recorded. is_completed is the test's own
-        -- timestamp, so a withdrawn request's tests can read completed with their result
-        -- dropped -- this is what a consumer filters to count delivered results rather than
-        -- laboratory throughput.
-        'request_status'
+        'clinician'
     )
