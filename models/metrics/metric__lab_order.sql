@@ -133,35 +133,11 @@ orders as (
 
 -- BL-010: the segment the patient was in when the order was placed -- the latest segment that
 -- had already started by requested_datetime, clamped to the earliest when the order predates
--- every segment. The join carries no timestamp condition: the order by picks the as-of segment
--- where one qualifies and falls back to the earliest otherwise, and every encounter has at
--- least one segment (clinical__visit_detail BL-005), so it cannot drop a row.
---
--- The tie-breaks are split by direction on purpose: among segments sharing a start datetime
--- the as-of branch wants the last of them and the clamp branch the first, matching the
--- (start_datetime, visit_detail_id) order clinical__visit_detail chains its own segments by.
+-- every segment. Shared with clinical__procedure_occurrence and metric__ed_lab_order, so every
+-- metric over an order or event agrees on which segment it belongs to; see the macro for the
+-- as-of rule and the split tie-breaks.
 active_segment as (
-    select distinct on (o.order_id)
-        o.order_id,
-        vd.visit_detail_id
-    from orders o
-    join visit_detail vd
-        on vd.visit_occurrence_id = o.encounter_id
-    order by
-        o.order_id,
-        (vd.visit_detail_start_datetime <= o.requested_datetime) desc,
-        case when vd.visit_detail_start_datetime <= o.requested_datetime
-                then vd.visit_detail_start_datetime
-        end desc,
-        case when vd.visit_detail_start_datetime > o.requested_datetime
-                then vd.visit_detail_start_datetime
-        end asc,
-        case when vd.visit_detail_start_datetime <= o.requested_datetime
-                then vd.visit_detail_id
-        end desc,
-        case when vd.visit_detail_start_datetime > o.requested_datetime
-                then vd.visit_detail_id
-        end asc
+    {{ visit_detail__active_segment('orders', 'order_id', 'requested_datetime', 'encounter_id') }}
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'minute' --

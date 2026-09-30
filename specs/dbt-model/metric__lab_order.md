@@ -192,11 +192,12 @@ dbt's. This model therefore carries no `data_table_*` meta.
   segment active when the test was **ordered** -- the latest segment that had started by
   `requested_datetime`, clamped to the earliest segment for a request that predates them all.
 
-  The derivation is **inline**. It is the same rule `clinical__procedure_occurrence` applies
-  for its own `visit_detail_id` (that model's BL-005), which `metric__procedure` and
-  `metric__imaging_request` read off an FK -- a lab order has no such FK, being outside the
-  clinical layer (BL-004). When referrals or appointments need the same resolution, it is worth
-  extracting for the three callers.
+  The resolution is the shared `visit_detail__active_segment` macro, the same one
+  `clinical__procedure_occurrence` and `metric__ed_lab_order` use, so every metric over an
+  order or event agrees on which segment it belongs to. `metric__procedure` and
+  `metric__imaging_request` read the result off `clinical__procedure_occurrence`'s
+  `visit_detail_id`; a lab order has no such FK, being outside the clinical layer (BL-004), so
+  it calls the macro directly.
 
   **Why not the encounter.** Tamanu updates `encounters.encounter_type`, `location_id` and
   `department_id` **in place** as an encounter progresses, so reading them gives the encounter
@@ -302,6 +303,7 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 | `clinical__visit_detail` | `clinical/` | The segment active at the order: `visit_detail_concept_id` for `encounter_setting`, `visit_detail_source_value` for `encounter_type`, plus its own `care_site_id`, `department_id` and `person_id` (BL-010) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-011) |
 | `locations` | `bases/` | Facility id of the resolved segment's `care_site_id` (BL-010) |
+| `visit_detail__active_segment` | macro | The as-of segment resolution and first-segment clamp (BL-010) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
@@ -377,7 +379,7 @@ are already admitted by earlier metrics -- `encounter_setting` by `metric__proce
 
 | Date | Change |
 |---|---|
-| 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added (MAUI-6837) |
+| 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution moved from an inlined CTE to the shared `visit_detail__active_segment` macro (MAUI-6837) |
 | 2026-09-29 | `request_status` emitted: completion does not imply the result still stands, since a withdrawn request's line still reads completed (MAUI-6837) |
 | 2026-09-28 | Aligned with the procedure and imaging families: `encounter_setting` in place of the raw OMOP concept, no per-setting siblings, and setting/department/facility attributed to the segment active at the order rather than the encounter as it now stands. `lab_request_id` emitted so orders can be counted (MAUI-6837) |
 | 2026-09-23 | Added as `metric__lab_request` over `clinical__measurement`'s lab branch, then renamed to `metric__lab_test` and rewritten to source orders from `bases/`, so requested-but-unresulted and cancelled tests are counted (MAUI-6909, MAUI-6837) |
