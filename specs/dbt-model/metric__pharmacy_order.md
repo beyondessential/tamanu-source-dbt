@@ -71,7 +71,7 @@ so this model carries no `data_table_*` meta.
 
 ## Business logic
 
-- **BL-001 (medication source):** the medication is resolved from `prescriptions` and `reference_data` directly, not through `clinical__drug_exposure`, whose prescription branch is keyed on a different id space and carries no row for an ongoing prescription sent to pharmacy.
+- **BL-001 (medication source):** the medication is resolved from `prescriptions` and `reference_data` directly.
 - **BL-002 (population):** every drug line on a pharmacy order is a candidate, in every setting, whether or not it has been dispensed.
 - **BL-003 (prescription):** a drug line carries either an encounter prescription or an ongoing prescription, never both, and the medication is read from whichever is set.
 - **BL-004 (medication fallback):** `drug_source_value` and `drug_source_name` are `'Not recorded'` where the prescription or its medication does not resolve, so the drug line is kept.
@@ -91,7 +91,8 @@ so this model carries no `data_table_*` meta.
 | AC-003 | `subject_id`, `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `encounter_setting`, `is_completed`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-004 -- BL-010 | `not_null` |
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-006 | `expect_column_values_to_be_null` + `accepted_values` |
 | AC-005 | `encounter_setting` is one of `Outpatient`, `Inpatient`, `Other` | BL-010 | `accepted_values` |
-| AC-006 | Facility, department and setting follow the segment active at the order, not the encounter's later segment; an order predating its segments clamps to the first; an emergency-phase order reads `Other`; a drug line on an encounter with no segment is dropped; an ongoing-prescription line resolves its medication; an unresolved medication falls back to `'Not recorded'` | BL-002 -- BL-004, BL-007 -- BL-010 | unit test `ac_006_metric__pharmacy_order_segment` |
+| AC-006 | Facility, department and setting follow the segment active at the order, not the encounter's later segment; an order predating its segments clamps to the first; an order on a segment's start time falls in that segment; an order after the last segment began falls in the last segment; an emergency-phase order reads `Other`; a drug line on an encounter with no segment is dropped; an ongoing-prescription line resolves its medication; an unresolved medication falls back to `'Not recorded'` | BL-002 -- BL-004, BL-007 -- BL-010 | unit test `ac_006_metric__pharmacy_order_segment` |
+| AC-007 | Every drug line in `pharmacy_order_prescriptions` has a row, so a drug line dropped for want of a segment, patient or location is surfaced | BL-002, BL-008, BL-009 | `dbt_utils.equal_rowcount` against `pharmacy_order_prescriptions` (`warn`) |
 
 ## Registry entry
 

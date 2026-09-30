@@ -40,6 +40,13 @@ models:
       # A pharmacy order is point-in-time, so period_end is hardcoded NULL. Asserted as the null
       # invariant itself rather than as an end-after-start comparison, so a change that ever
       # populates it flags for a deliberate revisit instead of passing on an empty row set.
+      # Every drug line resolves to a segment, patient and location, so the row count matches
+      # the source. A shortfall is drug lines the inner joins dropped -- most likely an
+      # encounter type missing from map__omop_visit_type.
+      - dbt_utils.equal_rowcount:
+          name: ac_metric__pharmacy_order_every_drug_line
+          arguments:
+            compare_model: ref('pharmacy_order_prescriptions')
       - dbt_expectations.expect_column_values_to_be_null:
           name: ac_metric__pharmacy_order_period_end_null
           arguments:
