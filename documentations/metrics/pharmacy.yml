@@ -35,6 +35,8 @@ metrics:
   subject_grain: pharmacy_order_prescription
   disaggregations:
   - facility_id
+  - encounter_type
+  - encounter_setting
   - sex
   - is_completed
   - drug_source_value
@@ -43,4 +45,4 @@ metrics:
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: null
+  spec_path: specs/dbt-model/metric__pharmacy_order.md
