@@ -14,6 +14,7 @@ unit_tests:
       counted as Other. e3 has no segment, so pop6 is dropped. po7 is placed at 10:00, the
       Dental segment's own start, so pop7 falls in Dental. po8 is a discharge order at 20:00,
       after the admission began, so pop8 falls in the admission segment like any later order.
+      p1 turns 46 on 2026-01-11, so pop5, ordered that day, reads 46 and every other line 45.
     given:
       - input: ref('pharmacy_order_prescriptions')
         format: sql
@@ -87,7 +88,7 @@ unit_tests:
       - input: ref('clinical__person')
         format: sql
         rows: |
-          select 'p1' as person_id, 'female' as gender_source_value
+          select 'p1' as person_id, 'female' as gender_source_value, 1980 as year_of_birth, 1 as month_of_birth, 11 as day_of_birth
 
       - input: ref('locations')
         format: sql
@@ -114,16 +115,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'pharmacy_order' as metric_id, null::text as variant_id, 'pop1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 'General OPD' as department
+        select 'pharmacy_order' as metric_id, null::text as variant_id, 'pop1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'General OPD' as department
         union all
-        select 'pharmacy_order', null::text, 'pop2', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'AMOX', 'Amoxicillin', 'Dental'
+        select 'pharmacy_order', null::text, 'pop2', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'AMOX', 'Amoxicillin', 45, 'Dental'
         union all
-        select 'pharmacy_order', null::text, 'pop3', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', true, 'SALB', 'Salbutamol', 'Medical'
+        select 'pharmacy_order', null::text, 'pop3', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', true, 'SALB', 'Salbutamol', 45, 'Medical'
         union all
-        select 'pharmacy_order', null::text, 'pop4', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'Not recorded', 'Not recorded', 'General OPD'
+        select 'pharmacy_order', null::text, 'pop4', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', false, 'Not recorded', 'Not recorded', 45, 'General OPD'
         union all
-        select 'pharmacy_order', null::text, 'pop5', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Other', 'female', true, 'PARA', 'Paracetamol', 'Emergency'
+        select 'pharmacy_order', null::text, 'pop5', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Other', 'female', true, 'PARA', 'Paracetamol', 46, 'Emergency'
         union all
-        select 'pharmacy_order', null::text, 'pop7', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'AMOX', 'Amoxicillin', 'Dental'
+        select 'pharmacy_order', null::text, 'pop7', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'female', true, 'AMOX', 'Amoxicillin', 45, 'Dental'
         union all
-        select 'pharmacy_order', null::text, 'pop8', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', false, 'PARA', 'Paracetamol', 'Medical'
+        select 'pharmacy_order', null::text, 'pop8', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'admission', 'Inpatient', 'female', false, 'PARA', 'Paracetamol', 45, 'Medical'

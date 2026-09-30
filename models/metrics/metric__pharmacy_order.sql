@@ -112,6 +112,8 @@ orders as (
         -- keeps its row on the 'Not recorded' fallback rather than disappearing
         coalesce(rd.code, 'Not recorded') as drug_source_value,
         coalesce(rd.name, 'Not recorded') as drug_source_name,
+        -- age in whole years at the order, the NULL rule lives in the macro
+        {{ age_years('d.ordered_datetime::date', 'pr') }} as age_years,
         -- BL-007
         coalesce(dept.name, 'Not recorded') as department
     from drug_lines d
@@ -157,5 +159,6 @@ select
     is_completed,
     drug_source_value,
     drug_source_name,
+    age_years,
     department
 from orders

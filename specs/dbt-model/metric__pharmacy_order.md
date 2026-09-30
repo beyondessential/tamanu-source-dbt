@@ -62,6 +62,7 @@ dispenses). Asserted by AC-001.
 | `is_completed` | boolean | Whether the drug line has been dispensed (BL-006) |
 | `drug_source_value` | text | The medication's code (BL-001, BL-004) |
 | `drug_source_name` | text | The medication's name (BL-001, BL-004) |
+| `age_years` | integer | Age in whole years at the order, unbanded -- a measure, not a dimension |
 | `department` | text | The active segment's department, resolved to a name (BL-007) |
 
 ## Data tables
@@ -108,7 +109,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `pharmacy_order`, `kind: 
 | `pharmacy_order_prescriptions`, `pharmacy_orders` | The population, order time and dispensed flag (BL-002, BL-006) |
 | `prescriptions`, `reference_data` | The medication (BL-001, BL-003, BL-004) |
 | `clinical__visit_detail` | The active segment, its OMOP concept and department (BL-007, BL-008, BL-010) |
-| `clinical__person` | Sex |
+| `clinical__person` | Sex and birth date |
 | `locations` | Facility resolution (BL-009) |
 | `departments` | Department name resolution (BL-007) |
 | `metric_definitions` | The canonical registry |

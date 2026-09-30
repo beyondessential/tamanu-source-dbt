@@ -184,6 +184,11 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_drug_source_name_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years when the order was placed. Not banded -- the consumer's data table
+          bands it. NULL where the patient's birth date is not recorded.
       - name: department
         data_type: text
         description: >-
