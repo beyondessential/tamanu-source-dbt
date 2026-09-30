@@ -114,7 +114,7 @@ Registered in `documentations/metrics/emergency.yml` as `ed_pharmacy_order`, `ki
 
 | Artefact | Relationship |
 |---|---|
-| `metric__pharmacy_order` | The same population across all settings, with the pharmacy order's own facility and the encounter's department |
+| `metric__pharmacy_order` | The same population across all settings, resolving the segment the same way and carrying its setting as `encounter_setting` rather than filtering to one |
 | `metric__ed_lab_order`, `metric__ed_imaging_request`, `metric__ed_procedure` | Sibling ED metrics, the same scoping |
 | `metric__emergency_visit` | The attendance population these orders sit within |
 
