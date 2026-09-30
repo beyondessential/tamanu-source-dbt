@@ -64,7 +64,7 @@ departments as (
 live_requests as (
     select
         lr.id as lab_request_id,
-        lr.encounter_id,
+        lr.encounter_id as visit_occurrence_id,
         lr.requested_datetime,
         -- BL-006: completion is the request's publication. At order-line grain a row can span
         -- several tests, so the test's own completed_datetime cannot describe it.
@@ -86,7 +86,7 @@ panel_orders as (
     select
         r.lab_request_id as order_id,
         r.lab_request_id,
-        r.encounter_id,
+        r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
         r.request_status,
@@ -108,7 +108,7 @@ test_orders as (
     select
         lt.id as order_id,
         r.lab_request_id,
-        r.encounter_id,
+        r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
         r.request_status,
@@ -137,7 +137,7 @@ orders as (
 -- metric over an order or event agrees on which segment it belongs to; see the macro for the
 -- as-of rule and the split tie-breaks.
 active_segment as (
-    {{ visit_detail__active_segment('orders', 'order_id', 'requested_datetime', 'encounter_id') }}
+    {{ visit_detail__active_segment('orders', 'order_id', 'requested_datetime') }}
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'minute' --
