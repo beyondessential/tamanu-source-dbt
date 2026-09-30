@@ -13,7 +13,7 @@
 -- stored 0-100 (the metric__emergency_visit / MAUI-6787 convention).
 --
 -- Facility, department and setting are those of the clinical__visit_detail segment active when
--- the order was placed -- the same attribution metric__procedure and metric__lab_test use. A consumer scopes to one setting via a filter on
+-- the order was placed -- the same attribution metric__procedure and metric__lab_order use. A consumer scopes to one setting via a filter on
 -- this one metric rather than needing a separate metric per setting.
 --
 -- The registry carries the definition; this model is its implementation.
