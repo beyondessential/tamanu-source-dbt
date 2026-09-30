@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-17 |
-| **Last updated** | 2026-09-17 |
+| **Last updated** | 2026-09-30 |
 
 The package's dbt unit tests run in the package's own CI against package-standard
 translations, and do not run in deployment repos.
@@ -31,8 +31,8 @@ where the package's own translations apply, which is the package repo.
 
 ## Scope
 
-Applies to every unit test shipped in `tamanu-source-dbt` under `data_tests/unit_tests/`
-and `models/unit_tests/`. Does not apply to data tests, which remain deployment-relevant
+Applies to every unit test shipped in `tamanu-source-dbt`, all of which live under
+`data_tests/unit_tests/`. Does not apply to data tests, which remain deployment-relevant
 and continue to run everywhere.
 
 ## Constraints
