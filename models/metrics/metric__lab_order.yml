@@ -1,0 +1,203 @@
+version: 2
+
+models:
+  - name: metric__lab_order
+    description: >-
+      D5 metric view for the lab_order indicator registered in documentations/metrics/lab.yml:
+      lab_order. One row per lab request raised from a panel, labelled with the panel however
+      many tests it holds, and one row per lab test on a request raised without one. The
+      generic counterpart to metric__ed_lab_order, carrying encounter_setting rather than
+      scoping to a single setting.
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-order-line rows, but the subject is a request or test id with no patient
+      # identifier, name or birth date alongside it -- no patient is identifiable through a
+      # row. Note lab_order is NOT filtered on lab_test_types.is_sensitive: suppressing a
+      # sensitive test or panel is a deployment privacy decision taken at the data-table
+      # layer, not a definitional one.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per order line. A duplicate would double-count it in any consumer that sums
+      # value_numeric -- error even though the repo default is warn. This is also what guards
+      # the panel/single union: an id appearing in both branches would surface here.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_metric__lab_order_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # EXPECTED TO WARN wherever lab entry is backdated: a request recorded as published
+      # before it was placed. period_end is the publication as recorded, emitted rather than
+      # repaired, so the row count on this warning going to zero is what a cleaned deployment
+      # looks like. It cannot fail a build.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_metric__lab_order_period_end_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: period_end is not null
+      # BL-006: the period closes exactly when the request published. Warns on a request whose
+      # status is 'published' but which carries no publication date -- period_end is then NULL
+      # while is_completed is true, which is a recording gap worth surfacing rather than hiding.
+      - dbt_utils.expression_is_true:
+          name: ac_metric__lab_order_period_end_only_when_completed
+          arguments:
+            expression: "(period_end is not null) = is_completed"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'lab_order'.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_metric_id_not_null
+          - accepted_values:
+              name: ac_metric__lab_order_metric_id_values
+              arguments:
+                values:
+                  - lab_order
+          - relationships:
+              name: ac_metric__lab_order_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: >-
+          The order line's id -- the lab_requests id for a panel line, the lab_tests id for a
+          single test. The two id spaces are disjoint, so this is unique across the union.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_subject_id_not_null
+      - name: period_start
+        data_type: timestamp without time zone
+        description: When the request was placed. Request-level, so every line of a request shares it.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_period_start_not_null
+      - name: period_end
+        data_type: timestamp without time zone
+        description: When the request published. NULL until then.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'minute'.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_period_granularity_not_null
+          - accepted_values:
+              name: ac_metric__lab_order_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one order line per row. Sum it to count order lines over any grouping.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_value_numeric_not_null
+          - accepted_values:
+              name: ac_metric__lab_order_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The facility of the segment the order was placed in -- the segment's own location,
+          not the encounter's current one.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: >-
+          The segment's own encounter_type as it stood when the order was placed. Finer than
+          encounter_setting, for a consumer wanting (say) vaccination encounters specifically.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_encounter_type_not_null
+      - name: encounter_setting
+        data_type: text
+        description: >-
+          Outpatient (OMOP 9202 -- clinic, imaging, vaccination), Inpatient (9201), or Other.
+          Coarser than encounter_type deliberately, so a consumer filters one stable value
+          instead of a list that drifts with map__omop_visit_type. Emergency (9203) is
+          deliberately not named -- it falls in Other, and emergency lab ordering is
+          metric__ed_lab_order's population.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_encounter_setting_not_null
+          - accepted_values:
+              name: ac_metric__lab_order_encounter_setting_values
+              arguments:
+                values: ['Outpatient', 'Inpatient', 'Other']
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: is_completed
+        data_type: boolean
+        description: >-
+          Whether the request reached 'published'. At order-line grain a row can cover several
+          tests, so the test's own completion timestamp cannot describe it. Does NOT mean the
+          results still stand: a request published and later invalidated reads true here. Nor
+          does it separate a cancelled line from a pending one -- both are false.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_is_completed_not_null
+      - name: is_panel
+        data_type: boolean
+        description: >-
+          Whether this line is a panel (one row however many tests it holds) or a single test.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_is_panel_not_null
+      - name: department
+        data_type: text
+        description: >-
+          The department of the segment the order was placed in (e.g. Dental), resolved to a
+          name. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_department_not_null
+      - name: lab_order_code
+        data_type: text
+        description: >-
+          The panel's code on a panel line, the test type's code on a single. Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_lab_order_code_not_null
+      - name: lab_order
+        data_type: text
+        description: >-
+          The panel's name on a panel line, the test type's name on a single -- the label to
+          rank and trend by, as recorded and ungrouped. Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_lab_order_not_null
+      - name: lab_test_category
+        data_type: text
+        description: >-
+          The request's category (e.g. Haematology), as recorded and ungrouped. Request-level:
+          a Tamanu request carries exactly one. Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_lab_test_category_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at the order. Not banded -- the classification is the consumer's.
+          A measure, not a dimension: absent from the registry's disaggregations.
