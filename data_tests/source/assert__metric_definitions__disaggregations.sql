@@ -162,5 +162,16 @@ where trim(d) not in (
         'care_setting',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
-        'department_id'
+        'department_id',
+        -- death's primary cause from the death record, as recorded, with its reference-data
+        -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
+        'primary_cause',
+        'primary_cause_code',
+        -- death's place of death (health facility or outside one) and manner of death, from
+        -- the death record (MAUI-6906).
+        'place_of_death',
+        'manner_of_death',
+        -- death's facility source: whether the facility came from the death record or from the
+        -- encounter the patient died in (MAUI-6906).
+        'facility_source'
     )
