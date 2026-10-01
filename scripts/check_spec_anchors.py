@@ -32,9 +32,10 @@ ANCHOR_PATTERN = re.compile(
 )
 
 # BL clause heading in a spec body. Matches the common templated form
-# `- **BL-001:** …`, but also tolerates `**BL-001** …` and bare `BL-001:` lines.
+# `- **BL-001:** …`, but also tolerates `**BL-001** …`, bare `BL-001:` lines and a
+# labelled heading, `- **BL-001 (label):** …`.
 SPEC_BL_PATTERN = re.compile(
-    r"\*?\*?(?P<id>BL-\d{3,4})\*?\*?\s*[:\.]",
+    r"\*?\*?(?P<id>BL-\d{3,4})(?:\s*\([^)]*\))?\*?\*?\s*[:\.]",
 )
 
 # File suffixes scanned for anchor comments.

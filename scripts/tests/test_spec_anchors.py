@@ -8,7 +8,7 @@ spec clauses with no code anchor stay advisory and are not asserted here.
 
 from pathlib import Path
 
-from check_spec_anchors import collect_code_anchors, collect_spec_ids
+from check_spec_anchors import SPEC_BL_PATTERN, collect_code_anchors, collect_spec_ids
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -24,3 +24,14 @@ def test_every_code_bl_anchor_resolves_to_a_spec_clause():
         for bl_id, sites in sorted(dangling.items())
         for site, lineno in sites
     )
+
+
+def test_spec_clause_heading_forms_are_recognised():
+    for heading in (
+        "**BL-001:** Exclude soft-deleted records.",
+        "**BL-001**: Exclude soft-deleted records.",
+        "BL-001: Exclude soft-deleted records.",
+        "**BL-001 (soft deletes):** Exclude soft-deleted records.",
+    ):
+        m = SPEC_BL_PATTERN.match(heading)
+        assert m and m.group("id") == "BL-001", heading
