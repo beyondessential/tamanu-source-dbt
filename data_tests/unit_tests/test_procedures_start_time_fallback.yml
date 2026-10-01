@@ -1,0 +1,37 @@
+unit_tests:
+  - name: test_procedures_start_time_fallback
+    model: procedures
+    description: >
+      clinical__procedure_occurrence BL-006. start_time falls back to the time of day in date,
+      which Tamanu's form saves with the start time. proc_timed and proc_later_start keep their
+      recorded start time -- the latter proving start_time wins where it differs from date.
+      proc_untimed has none, so it takes date's 14:00 rather than nothing, which downstream
+      would date it at midnight. proc_untimed_midnight was recorded at midnight and stays there.
+    given:
+      - input: source('tamanu', 'procedures')
+        format: sql
+        rows: |
+          select 'proc_timed' as id, '2026-03-01 09:30:00' as date, '2026-03-01 09:30:00' as start_time, null::text as end_time, true as completed, null::text as note, null::text as completed_note, 'e1' as encounter_id, 'loc1' as location_id, 'rd1' as procedure_type_id, null::text as anaesthetic_id, 'usr1' as physician_id, null::text as anaesthetist_id, null::text as assistant_anaesthetist_id, null::text as time_in, null::text as time_out, null::timestamp as deleted_at
+          union all
+          select 'proc_later_start', '2026-03-04 08:00:00', '2026-03-04 10:15:00', null::text, true, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::text, null::text, null::timestamp
+          union all
+          -- BL-006: no start_time -- date's own time stands in
+          select 'proc_untimed', '2026-03-02 14:00:00', null::text, null::text, true, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'proc_untimed_midnight', '2026-03-03 00:00:00', null::text, null::text, false, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::text, null::text, null::timestamp
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'pat1' as patient_id, null::timestamp as deleted_at
+
+    expect:
+      format: sql
+      rows: |
+        select 'proc_timed' as id, '2026-03-01'::date as date, '09:30:00'::time as start_time, null::time as end_time, true as is_completed, null::text as note, null::text as completed_note, 'e1' as encounter_id, 'loc1' as location_id, 'rd1' as procedure_type_id, null::text as anaesthetic_id, 'usr1' as clinician_id, null::text as anaesthetist_id, null::text as assistant_anaesthetist_id, null::time as time_in, null::time as time_out
+        union all
+        select 'proc_later_start', '2026-03-04'::date, '10:15:00'::time, null::time, true, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::time, null::time
+        union all
+        select 'proc_untimed', '2026-03-02'::date, '14:00:00'::time, null::time, true, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::time, null::time
+        union all
+        select 'proc_untimed_midnight', '2026-03-03'::date, '00:00:00'::time, null::time, false, null::text, null::text, 'e1', 'loc1', 'rd1', null::text, 'usr1', null::text, null::text, null::time, null::time

@@ -1,0 +1,65 @@
+unit_tests:
+  - name: test_prescriptions_patient_scope
+    model: prescriptions
+    description: >
+      A prescription is kept when it belongs to a live patient other than the test patient,
+      through an encounter prescription or through a patient ongoing prescription. rx_encounter
+      has a live encounter prescription. rx_ongoing has only a patient ongoing prescription -- an
+      ongoing medication added from the patient's record -- and is kept too. rx_orphan has
+      neither. rx_test_patient's ongoing link is the test patient's, rx_link_deleted's link is
+      deleted, rx_patient_deleted's patient is deleted, and rx_deleted is itself deleted, so all
+      five are dropped.
+    given:
+      - input: source('tamanu', 'prescriptions')
+        format: sql
+        rows: |
+          select 'rx_encounter' as id, '2026-01-10 09:00:00' as date, '2026-01-10 09:00:00' as start_date, null::text as end_date, 'med_para' as medication_id, null::text as prescriber_id, null::text as indication, 'oral' as route, null::integer as quantity, null::integer as repeats, null::boolean as is_ongoing, null::boolean as is_prn, null::boolean as is_variable_dose, null::numeric as dose_amount, null::text as dosing_unit, null::text as dispensing_unit, 1::numeric as unit_conversion, 'daily' as frequency, null::numeric as duration_value, null::text as duration_unit, null::boolean as is_phone_order, null::text[] as ideal_times, null::boolean as discontinued, null::text as discontinuing_clinician_id, null::text as discontinuing_reason, null::text as discontinued_date, null::timestamp as deleted_at
+          union all
+          select 'rx_ongoing', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_sal', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'rx_orphan', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_para', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'rx_test_patient', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_para', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'rx_link_deleted', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_para', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'rx_patient_deleted', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_para', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, null::timestamp
+          union all
+          select 'rx_deleted', '2026-01-10 09:00:00', '2026-01-10 09:00:00', null::text, 'med_para', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::text, '2026-01-11 00:00:00'::timestamp
+
+      - input: source('tamanu', 'encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep1' as id, 'e1' as encounter_id, 'rx_encounter' as prescription_id, null::timestamp as deleted_at
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'pat1' as patient_id, null::timestamp as deleted_at
+
+      - input: source('tamanu', 'patient_ongoing_prescriptions')
+        format: sql
+        rows: |
+          select 'opp1' as id, 'pat1' as patient_id, 'rx_ongoing' as prescription_id, null::timestamp as deleted_at
+          union all
+          select 'opp2', 'h1627394-3778-4c31-a510-9fcb88efdbf3', 'rx_test_patient', null::timestamp
+          union all
+          select 'opp3', 'pat1', 'rx_link_deleted', '2026-01-11 00:00:00'::timestamp
+          union all
+          select 'opp4', 'pat_deleted', 'rx_patient_deleted', null::timestamp
+
+      - input: source('tamanu', 'patients')
+        format: sql
+        rows: |
+          select 'pat1' as id, null::timestamp as deleted_at
+          union all
+          select 'h1627394-3778-4c31-a510-9fcb88efdbf3', null::timestamp
+          union all
+          select 'pat_deleted', '2026-01-11 00:00:00'::timestamp
+
+    expect:
+      format: sql
+      rows: |
+        select 'rx_encounter' as id, '2026-01-10 09:00:00'::timestamp as datetime, '2026-01-10 09:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'med_para' as medication_id, null::text as prescriber_id, null::text as indication, 'oral' as route, null::integer as quantity, null::integer as repeats, null::boolean as is_ongoing, null::boolean as is_prn, null::boolean as is_variable_dose, null::numeric as dose_amount, null::text as dosing_unit, null::text as dispensing_unit, 1::numeric as unit_conversion, 'daily' as frequency, null::numeric as duration_value, null::text as duration_unit, null::boolean as is_phone_order, null::text[] as ideal_times, null::boolean as is_discontinued, null::text as discontinued_by_id, null::text as discontinuing_reason, null::timestamp as discontinued_datetime
+        union all
+        select 'rx_ongoing', '2026-01-10 09:00:00'::timestamp, '2026-01-10 09:00:00'::timestamp, null::timestamp, 'med_sal', null::text, null::text, 'oral', null::integer, null::integer, null::boolean, null::boolean, null::boolean, null::numeric, null::text, null::text, 1::numeric, 'daily', null::numeric, null::text, null::boolean, null::text[], null::boolean, null::text, null::text, null::timestamp

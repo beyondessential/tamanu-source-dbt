@@ -70,5 +70,7 @@ select
     length_of_stay__minutes,
     -- BL-016: local hour of arrival, 0-23
     ed_start__hour,
-    is_admitted
+    is_admitted,
+    -- BL-020: the clinician on the intake segment, for a "by clinician" card
+    clinician
 from ed_visits
