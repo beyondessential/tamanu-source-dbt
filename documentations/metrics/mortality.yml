@@ -25,8 +25,9 @@ metrics:
     A count of patients Tamanu records as deceased. The population and attribution follow
     ds__deaths, the dataset behind the deceased patients line list, so a dashboard count and
     that report agree: every patient with a date of death and the latest current death record
-    for each. Where the record names no facility, the facility is that of the encounter the
-    patient died in, so a death can be placed on a facility-rooted dashboard.
+    for each. Where the record names no facility and does not say the death was outside a
+    health facility, the facility is that of the encounter the patient died in, so a death can
+    be placed on a facility-rooted dashboard.
   unit: count
   subject_grain: patient
   disaggregations:

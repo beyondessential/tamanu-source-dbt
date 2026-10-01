@@ -97,15 +97,16 @@ models:
         data_type: character varying(255)
         description: >-
           The facility on the patient's death record, falling back to the facility of the
-          encounter the patient died in -- its final location's -- where the record names none.
-          NULL where neither does, and a consumer rooted at a facility does not count those
-          deaths. ds__deaths reports the death record's facility only, so the two differ on the
+          encounter the patient died in -- its final location's -- where the record names none
+          and does not say the death was outside a health facility. NULL where neither applies,
+          and a consumer rooted at a facility does not count those deaths. ds__deaths reports the death record's facility only, so the two differ on the
           rows whose facility_source is 'Encounter'.
       - name: facility_source
         data_type: text
         description: >-
           Where facility_id came from: 'Death record', 'Encounter' (the encounter the patient died
-          in, used where the record names no facility), or 'Not recorded' where neither does.
+          in, used where the record names no facility and does not say the death was outside a
+          health facility), or 'Not recorded' where neither does.
         data_tests:
           - accepted_values:
               name: ac_005_metric__death_facility_source_values

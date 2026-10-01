@@ -69,9 +69,9 @@ so this model carries no `data_table_*` meta.
 - **BL-001 (population):** every patient with a date of death is counted, whether or not a death record exists.
 - **BL-002 (death record):** each patient's death record is the latest current one, preferring a finalised record, the same pick `ds__deaths` makes.
 - **BL-003 (period):** `period_start` is the patient's date of death.
-- **BL-004 (facility):** `facility_id` is the facility on the death record, and where the record names none, the facility of the final location of the encounter the patient died in (BL-006); NULL where neither names one. `facility_source` records which: `Death record`, `Encounter` or `Not recorded`.
+- **BL-004 (facility):** `facility_id` is the facility on the death record, and where the record names none, the facility of the final location of the encounter the patient died in (BL-006), except where the record says the death was outside a health facility; NULL where neither applies. `facility_source` records which: `Death record`, `Encounter` or `Not recorded`.
 - **BL-005 (death record attributes):** `primary_cause` and `primary_cause_code` are the name and code of the record's primary cause, `manner_of_death` is the record's manner, and `place_of_death` is `Outside health facility` or `Health facility` as the record says, and `Not recorded` where there is no record or the record does not say; every text value falls back to `'Not recorded'`.
-- **BL-006 (encounter died in):** the encounter the patient died in is the latest one whose span, start to end, covers the date of death, the match `ds__deaths` makes; an encounter with no end does not match. `department` is that encounter's department, `'Not recorded'` where there is none.
+- **BL-006 (encounter died in):** the encounter the patient died in is the one whose span, start to end, covers the date of death, the match `ds__deaths` makes, taking the latest end and then the latest start. Recording a death closes every open encounter at the time of death, so encounters open at the time are matched, and where several end together the most recently started is taken. An encounter still without an end does not match. `department` is that encounter's department, `'Not recorded'` where there is none.
 - **BL-007 (registration and count):** `metric_id` is the constant `'death'` and `value_numeric` the constant `1`, so a consumer sums it to count deaths at any grain.
 
 ## Acceptance criteria
@@ -83,7 +83,7 @@ so this model carries no `data_table_*` meta.
 | AC-003 | `subject_id`, `period_start`, `value_numeric`, `primary_cause`, `primary_cause_code`, `manner_of_death` and `department` are populated, and `value_numeric` is 1 | BL-003, BL-005 -- BL-007 | `not_null` + `accepted_values` |
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-003 | `expect_column_values_to_be_null` + `accepted_values` |
 | AC-005 | `place_of_death` is one of `Health facility`, `Outside health facility`, `Not recorded`, and `facility_source` one of `Death record`, `Encounter`, `Not recorded` | BL-004, BL-005 | `accepted_values` |
-| AC-006 | A patient with two current death records reads the finalised one and its facility; a record with no facility takes the facility of the encounter spanning the death; a death with neither has a NULL facility; a death during an encounter with no end matches no encounter; a patient with no date of death is not counted | BL-001 -- BL-006 | unit test `ac_006_metric__death_population` |
+| AC-006 | A patient with two current death records reads the finalised one and its facility; a record with no facility takes the facility of the encounter spanning the death, unless it says the death was outside a health facility; where two encounters end at the time of death the later-started one is matched; a death with neither has a NULL facility; a death during an encounter with no end matches no encounter; a patient with no date of death is not counted | BL-001 -- BL-006 | unit test `ac_006_metric__death_population` |
 
 ## Registry entry
 
@@ -120,4 +120,4 @@ Registered in `documentations/metrics/mortality.yml` as `death`, `kind: metric`,
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-10-01 | Maui team | Initial draft (MAUI-6906) |
+| 2026-10-01 | Maui team | Initial draft (MAUI-6906). Facility falls back to the encounter died in, agreed with Juliana since most FSM death records carry none; not where the record says the death was outside a facility, because recording a death closes every open encounter at that time, so a stale encounter can span a death at home |

@@ -7,7 +7,8 @@
 -- The population, the death record chosen for each patient and the encounter the patient died
 -- in are those of ds__deaths, the dataset behind the deceased patients line list, so a dashboard
 -- count and that report agree. The facility is the death record's, falling back to the facility
--- of the encounter the patient died in.
+-- of the encounter the patient died in, unless the record says the death was outside a health
+-- facility.
 --
 -- The registry carries the definition and this model is its implementation.
 -- See specs/dbt-model/metric__death.md for BL-001..BL-007.
@@ -42,7 +43,9 @@ death_data as (
 ),
 
 -- BL-006: the encounter the patient died in -- the latest one whose span covers the date of
--- death, the same match ds__deaths makes. Its location is the encounter's final one.
+-- death, the same match ds__deaths makes. Its location is the encounter's final one. Recording a
+-- death closes every open encounter at the time of death, so several can end together, and the
+-- most recently started of those is taken.
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
@@ -52,7 +55,7 @@ encounters_with_death as (
     join patients p
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
-    order by e.patient_id asc, e.end_datetime desc
+    order by e.patient_id asc, e.end_datetime desc, e.start_datetime desc, e.id asc
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day'.
@@ -69,12 +72,17 @@ select
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     -- BL-004: the death record's facility, falling back to the facility of the encounter the
-    -- patient died in. NULL where neither names one.
-    coalesce(pdd.facility_id, loc.facility_id) as facility_id,
+    -- patient died in unless the record says the death was outside a health facility. NULL
+    -- where neither names one.
+    coalesce(
+        pdd.facility_id,
+        case when pdd.was_outside_health_facility is not true then loc.facility_id end
+    ) as facility_id,
     -- BL-004: which of the two the facility came from
     case
         when pdd.facility_id is not null then 'Death record'
-        when loc.facility_id is not null then 'Encounter'
+        when pdd.was_outside_health_facility is not true and loc.facility_id is not null
+            then 'Encounter'
         else 'Not recorded'
     end as facility_source,
     pr.gender_source_value as sex,
