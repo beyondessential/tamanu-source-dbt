@@ -1,0 +1,146 @@
+version: 2
+
+models:
+  - name: metric__encounter
+    description: >-
+      D5 metric view for the encounter indicator registered in documentations/metrics/*.yml:
+      encounter. One row per encounter, of every type, attributed to the encounter's first
+      segment -- the setting, facility, department and clinician it started at -- so an
+      encounter that moves between settings is still counted once.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-encounter rows, but the subject is an encounter id with no patient identifier,
+      # name or birth date alongside it -- no patient is identifiable through a row, so this
+      # stays unrestricted and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+    data_tests:
+      # One row per encounter. A duplicate would double-count an encounter in any consumer that
+      # sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__encounter_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_004_metric__encounter_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'encounter'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__encounter_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__encounter_metric_id_values
+              arguments:
+                values:
+                  - encounter
+          - relationships:
+              name: ac_002_metric__encounter_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu encounter id.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The date the encounter started -- its first segment's start date.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: NULL -- the metric counts encounters at their start and emits no end date.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - accepted_values:
+              name: ac_004_metric__encounter_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one encounter per row. Sum it to count encounters over any grouping.
+        data_tests:
+          - accepted_values:
+              name: ac_003_metric__encounter_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: The Tamanu facility id of the first segment's location.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: >-
+          The first segment's own encounter type (clinic, triage, admission, surveyResponse and
+          so on), as it stood when the encounter started. Finer than encounter_setting.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_encounter_type_not_null
+      - name: encounter_setting
+        data_type: text
+        description: >-
+          The setting the encounter started in, from the first segment's OMOP Visit concept:
+          Outpatient (9202 -- clinic, imaging, vaccination), Inpatient (9201), Emergency (9203 --
+          triage, observation, emergency), or Other (everything else, including survey
+          responses). An ED attendance later admitted is Emergency.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_encounter_setting_not_null
+          - accepted_values:
+              name: ac_005_metric__encounter_encounter_setting_values
+              arguments:
+                values: ['Outpatient', 'Inpatient', 'Emergency', 'Other']
+      - name: department
+        data_type: text
+        description: >-
+          The first segment's department (e.g. Dental), resolved to a name. Never NULL -- falls
+          back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_department_not_null
+      - name: clinician
+        data_type: text
+        description: >-
+          The clinician recorded on the first segment, resolved to a name -- the same clinician
+          metric__outpatient_visit reports. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_clinician_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at the encounter start. Not banded -- the consumer's data table bands
+          it. NULL where the patient's birth date is not recorded.

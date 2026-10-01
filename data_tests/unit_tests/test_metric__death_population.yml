@@ -1,0 +1,68 @@
+unit_tests:
+  - name: ac_006_metric__death_population
+    model: metric__death
+    description: >
+      BL-001 -- BL-006. p1 has two current death records, d1a not final and d1b final, so the
+      row reads d1b's facility, cause and manner; p1 died during e1, so the department is e1's.
+      p2's record says the death was outside a health facility and names no facility or cause.
+      p3 has a date of death but no death record and is still counted, with a NULL facility.
+      p4 has no date of death and is not counted. d4 is a historical record and is ignored.
+    given:
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'p1' as id, '2026-03-05'::date as date_of_death
+          union all
+          select 'p2', '2026-03-10'::date
+          union all
+          select 'p3', '2026-03-12'::date
+          union all
+          select 'p4', null::date
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'male' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 1 as day_of_birth
+          union all
+          select 'p2', 'female', 1990, 6, 1
+          union all
+          select 'p3', 'male', 1990, 6, 1
+          union all
+          select 'p4', 'female', 1990, 6, 1
+
+      - input: ref('patient_death_data')
+        format: sql
+        rows: |
+          select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner
+          union all
+          select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease'
+          union all
+          select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text
+          union all
+          select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease'
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'p1' as patient_id, '2026-03-04 08:00:00'::timestamp as start_datetime, '2026-03-06 08:00:00'::timestamp as end_datetime, 'dept_med' as department_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'c1' as id, 'I21' as code, 'Myocardial infarction' as name
+          union all
+          select 'c2', 'J18', 'Pneumonia'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_med' as id, 'Medical' as name
+
+    expect:
+      format: sql
+      rows: |
+        select 'death' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'facB' as facility_id, 'male' as sex, 35 as age_years, 'Pneumonia' as primary_cause, 'J18' as primary_cause_code, 'Health facility' as place_of_death, 'Disease' as manner_of_death, 'Medical' as department
+        union all
+        select 'death', null::text, 'p2', '2026-03-10'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'female', 35, 'Not recorded', 'Not recorded', 'Outside health facility', 'Not recorded', 'Not recorded'
+        union all
+        select 'death', null::text, 'p3', '2026-03-12'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'male', 35, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded'

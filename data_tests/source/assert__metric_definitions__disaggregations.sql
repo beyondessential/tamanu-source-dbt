@@ -155,5 +155,13 @@ where trim(d) not in (
         -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
-        'clinician'
+        'clinician',
+        -- death's primary cause from the death record, as recorded, with its reference-data
+        -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
+        'primary_cause',
+        'primary_cause_code',
+        -- death's place of death (health facility or outside one) and manner of death, from
+        -- the death record (MAUI-6906).
+        'place_of_death',
+        'manner_of_death'
     )

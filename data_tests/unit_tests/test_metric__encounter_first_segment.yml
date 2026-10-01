@@ -1,0 +1,60 @@
+unit_tests:
+  - name: ac_006_metric__encounter_first_segment
+    model: metric__encounter
+    description: >
+      BL-001, BL-002, BL-004 -- BL-006. e1 is triaged at fac1 (vd1a, 9203) and admitted at fac2
+      (vd1b, 9201): one row, Emergency, at the triage segment's facility, department and
+      clinician -- the admission segment is not a second encounter. e2 is a clinic visit (9202)
+      with no clinician recorded, so it is Outpatient with clinician 'Not recorded'. e3 is a
+      survey-response encounter (concept 0) with no department, counted as Other with department
+      'Not recorded'.
+    given:
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10'::date as visit_detail_start_date, 9203 as visit_detail_concept_id, 'triage' as visit_detail_source_value, 'loc_ed' as care_site_id, 'u1' as provider_id, 'dept_ed' as department_id, null::text as preceding_visit_detail_id
+          union all
+          select 'vd1b', 'e1', 'p1', '2026-01-10'::date, 9201, 'admission', 'loc_ward', 'u2', 'dept_med', 'vd1a'
+          union all
+          select 'vd2a', 'e2', 'p1', '2026-01-11'::date, 9202, 'clinic', 'loc_clinic', null::text, 'dept_opd', null::text
+          union all
+          select 'vd3a', 'e3', 'p1', '2026-01-12'::date, 0, 'surveyResponse', 'loc_clinic', 'u1', null::text, null::text
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'female' as gender_source_value, 1980 as year_of_birth, 1 as month_of_birth, 20 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ed' as id, 'fac1' as facility_id
+          union all
+          select 'loc_ward', 'fac2'
+          union all
+          select 'loc_clinic', 'fac1'
+
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'u1' as provider_id, 'Dr Ana' as provider_name
+          union all
+          select 'u2', 'Dr Ben'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_ed' as id, 'Emergency' as name
+          union all
+          select 'dept_med', 'Medical'
+          union all
+          select 'dept_opd', 'General OPD'
+
+    expect:
+      format: sql
+      rows: |
+        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'triage' as encounter_type, 'Emergency' as encounter_setting, 'Emergency' as department, 'Dr Ana' as clinician, 'female' as sex, 45 as age_years
+        union all
+        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'General OPD', 'Not recorded', 'female', 45
+        union all
+        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'surveyResponse', 'Other', 'Not recorded', 'Dr Ana', 'female', 45

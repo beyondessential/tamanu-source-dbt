@@ -1,0 +1,41 @@
+# Recorded deaths.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: death
+  kind: metric
+  name: Deaths
+  description: >-
+    Recorded deaths, one row per deceased patient, on the date of death, with the facility,
+    primary cause and place of death from the patient's death record.
+  numerator_description: >-
+    Patients with a recorded date of death, counted on that date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of patients Tamanu records as deceased. The population and attribution follow
+    ds__deaths, the dataset behind the deceased patients line list, so a dashboard count and
+    that report agree: every patient with a date of death, the latest current death record for
+    each, and the facility on that record.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - primary_cause
+  - primary_cause_code
+  - place_of_death
+  - manner_of_death
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__death.md

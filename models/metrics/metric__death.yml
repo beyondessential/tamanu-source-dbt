@@ -1,0 +1,146 @@
+version: 2
+
+models:
+  - name: metric__death
+    description: >-
+      D5 metric view for the death indicator registered in documentations/metrics/*.yml: death.
+      One row per deceased patient, on the date of death, with the facility, primary cause and
+      place of death from the patient's death record. The population and attribution are those
+      of ds__deaths, the dataset behind the deceased patients line list.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      # Restricted, like metric__birth: a row carries a specific patient's subject_id, date of
+      # death, facility and cause -- in a low-death-count deployment that combination can
+      # identify the patient.
+      classification: restricted
+    data_tests:
+      # One row per deceased patient. A duplicate would double-count a death in any consumer
+      # that sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__death_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      - dbt_expectations.expect_column_values_to_be_null:
+          name: ac_004_metric__death_period_end_null
+          arguments:
+            column_name: period_end
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'death'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__death_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__death_metric_id_values
+              arguments:
+                values:
+                  - death
+          - relationships:
+              name: ac_002_metric__death_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The Tamanu patient id of the deceased patient.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The patient's date of death.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: NULL -- a death is point-in-time.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - accepted_values:
+              name: ac_004_metric__death_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one death per row. Sum it to count deaths over any grouping.
+        data_tests:
+          - accepted_values:
+              name: ac_003_metric__death_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The facility on the patient's death record, as ds__deaths reports it. NULL where the
+          patient has no current death record or the record names no facility -- a consumer
+          rooted at a facility does not count those deaths.
+      - name: sex
+        data_type: character varying(255)
+        description: The patient's sex, from clinical__person.
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years at death. Not banded -- the consumer's data table bands it. NULL
+          where the patient's birth date is not recorded.
+      - name: primary_cause
+        data_type: text
+        description: >-
+          The primary cause on the death record, as recorded and ungrouped. Never NULL -- falls
+          back to 'Not recorded' where there is no death record or no primary cause.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_primary_cause_not_null
+      - name: primary_cause_code
+        data_type: text
+        description: The primary cause's reference-data code. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_primary_cause_code_not_null
+      - name: place_of_death
+        data_type: text
+        description: >-
+          'Health facility' or 'Outside health facility', from the death record; 'Not recorded'
+          where the patient has no current death record.
+        data_tests:
+          - accepted_values:
+              name: ac_005_metric__death_place_of_death_values
+              arguments:
+                values: ['Health facility', 'Outside health facility', 'Not recorded']
+      - name: manner_of_death
+        data_type: text
+        description: The manner of death on the death record, as recorded. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_manner_of_death_not_null
+      - name: department
+        data_type: text
+        description: >-
+          The department of the encounter the patient died in -- the latest whose span covers the
+          date of death -- resolved to a name. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__death_department_not_null
