@@ -81,6 +81,7 @@ so this model carries no `data_table_*` meta.
 | AC-003 | `subject_id`, `period_start`, `value_numeric`, `facility_id`, `encounter_type`, `department` and `clinician` are populated, and `value_numeric` is 1 | BL-002 -- BL-006 | `not_null` + `accepted_values` |
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-002 | `expect_column_values_to_be_null` + `accepted_values` |
 | AC-005 | Each encounter is one row with the facility, type, department and clinician on its record; a survey-response encounter is counted; an unrecorded department and clinician read `'Not recorded'`; an encounter whose location does not resolve is excluded | BL-001, BL-003 -- BL-005 | unit test `ac_005_metric__encounter_attribution` |
+| AC-006 | Every encounter in `clinical__visit_occurrence` has a row, so an encounter dropped for want of a location or patient is surfaced | BL-001, BL-003 | `dbt_utils.equal_rowcount` against `clinical__visit_occurrence` (`warn`) |
 
 ## Registry entry
 

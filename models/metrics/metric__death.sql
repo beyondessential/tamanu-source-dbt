@@ -9,7 +9,7 @@
 -- count and that report agree. The facility is the death record's, falling back to the facility
 -- of the encounter the patient died in.
 --
--- The registry carries the definition; this model is its implementation.
+-- The registry carries the definition and this model is its implementation.
 -- See specs/dbt-model/metric__death.md for BL-001..BL-007.
 
 with patients as (
@@ -78,13 +78,13 @@ select
         else 'Not recorded'
     end as facility_source,
     pr.gender_source_value as sex,
-    -- age in whole years at death; the NULL rule lives in the macro
+    -- age in whole years at death, and the NULL rule lives in the macro
     {{ age_years('p.date_of_death::date', 'pr') }} as age_years,
     -- BL-005: the death record's primary cause and where the death happened, never NULL
     coalesce(cause.name, 'Not recorded') as primary_cause,
     coalesce(cause.code, 'Not recorded') as primary_cause_code,
     case
-        when pdd.id is null then 'Not recorded'
+        when pdd.was_outside_health_facility is null then 'Not recorded'
         when pdd.was_outside_health_facility then 'Outside health facility'
         else 'Health facility'
     end as place_of_death,

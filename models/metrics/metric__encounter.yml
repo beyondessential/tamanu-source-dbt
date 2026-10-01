@@ -6,7 +6,9 @@ models:
       D5 metric view for the encounter indicator registered in documentations/metrics/*.yml:
       encounter. One row per encounter, of every type, with the facility, encounter type,
       department and clinician on the encounter record -- the attribution Tamanu's own encounter
-      reports use, so the counts reconcile with them.
+      reports use. Counts match the encounter summary report except where that report narrows
+      its population: it excludes sensitive facilities and drops encounters with no history or
+      no department, which are counted here.
     config:
       tags:
         - clinical
@@ -31,6 +33,13 @@ models:
               - subject_id
           config:
             severity: error
+      # Every encounter in clinical__visit_occurrence has a row. A shortfall is encounters the
+      # inner joins dropped -- a location that no longer resolves, or a patient missing from
+      # clinical__person -- which would quietly undercount every encounter total.
+      - dbt_utils.equal_rowcount:
+          name: ac_006_metric__encounter_every_encounter
+          arguments:
+            compare_model: ref('clinical__visit_occurrence')
       - dbt_expectations.expect_column_values_to_be_null:
           name: ac_004_metric__encounter_period_end_null
           arguments:

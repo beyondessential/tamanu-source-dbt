@@ -8,10 +8,11 @@
 -- Every attribute is the encounter's own, as clinical__visit_occurrence carries it -- the
 -- location, department, encounter type and clinician on the encounter record, which Tamanu
 -- updates as the patient moves. This is the attribution the report-layer datasets use
--- (encounters_core and the dataset macros), so a count here reconciles with Tamanu's own
--- encounter reports.
+-- (encounters_core and the dataset macros). Counts match the encounter summary report except
+-- where that report narrows its own population: it excludes sensitive facilities and drops
+-- encounters with no history or no department, which are counted here.
 --
--- The registry carries the definition; this model is its implementation.
+-- The registry carries the definition and this model is its implementation.
 -- See specs/dbt-model/metric__encounter.md for BL-001..BL-006.
 
 with visit_occurrence as (
@@ -49,7 +50,7 @@ encounters as (
         -- BL-005
         coalesce(prov.provider_name, 'Not recorded') as clinician,
         pr.gender_source_value as sex,
-        -- age in whole years at the encounter start; the NULL rule lives in the macro
+        -- age in whole years at the encounter start, and the NULL rule lives in the macro
         {{ age_years('vo.visit_start_date', 'pr') }} as age_years
     from visit_occurrence vo
     -- BL-003: inner join -- an encounter whose location does not resolve is excluded rather

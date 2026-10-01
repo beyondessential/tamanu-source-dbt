@@ -136,8 +136,8 @@ models:
       - name: place_of_death
         data_type: text
         description: >-
-          'Health facility' or 'Outside health facility', from the death record; 'Not recorded'
-          where the patient has no current death record.
+          'Health facility' or 'Outside health facility', from the death record. 'Not recorded'
+          where the patient has no current death record or the record does not say.
         data_tests:
           - accepted_values:
               name: ac_005_metric__death_place_of_death_values

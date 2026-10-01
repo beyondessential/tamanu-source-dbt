@@ -9,7 +9,8 @@ unit_tests:
       encounter, so the facility is NULL and 'Not recorded'. p3 has a date of death but no death
       record, and died during e3, so p3 is counted with e3's facility (facC) and department, from
       the encounter. p5's record names no facility and p5 died during e5, which has no end yet,
-      so e5 is not matched and the facility stays NULL. p4 has no date of death and is not
+      so e5 is not matched and the facility stays NULL, and d5 leaves the outside-a-facility
+      question unanswered, so place_of_death is 'Not recorded'. p4 has no date of death and is not
       counted, and d4 is a historical record and is ignored.
     given:
       - input: ref('patients')
@@ -49,7 +50,7 @@ unit_tests:
           union all
           select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease'
           union all
-          select 'd5', 'p5', 'current', true, null::text, 'c1', false, 'Disease'
+          select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease'
 
       - input: ref('encounters')
         format: sql
@@ -90,4 +91,4 @@ unit_tests:
         union all
         select 'death', null::text, 'p3', '2026-03-12'::date, null::date, 'day', 1::numeric, null::boolean, 'facC', 'Encounter', 'male', 35, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'General OPD'
         union all
-        select 'death', null::text, 'p5', '2026-03-20'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Myocardial infarction', 'I21', 'Health facility', 'Disease', 'Not recorded'
+        select 'death', null::text, 'p5', '2026-03-20'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Myocardial infarction', 'I21', 'Not recorded', 'Disease', 'Not recorded'
