@@ -4,9 +4,10 @@ models:
   - name: metric__death
     description: >-
       D5 metric view for the death indicator registered in documentations/metrics/*.yml: death.
-      One row per deceased patient, on the date of death, with the facility, primary cause and
-      place of death from the patient's death record. The population and attribution are those
-      of ds__deaths, the dataset behind the deceased patients line list.
+      One row per deceased patient, on the date of death, with the primary cause and place of
+      death from the patient's death record. The population, death record and encounter died in
+      are those of ds__deaths, the dataset behind the deceased patients line list. The facility
+      is the death record's, falling back to that of the encounter the patient died in.
     config:
       tags:
         - clinical
@@ -95,9 +96,21 @@ models:
       - name: facility_id
         data_type: character varying(255)
         description: >-
-          The facility on the patient's death record, as ds__deaths reports it. NULL where the
-          patient has no current death record or the record names no facility -- a consumer
-          rooted at a facility does not count those deaths.
+          The facility on the patient's death record, falling back to the facility of the
+          encounter the patient died in -- its final location's -- where the record names none.
+          NULL where neither does, and a consumer rooted at a facility does not count those
+          deaths. ds__deaths reports the death record's facility only, so the two differ on the
+          rows whose facility_source is 'Encounter'.
+      - name: facility_source
+        data_type: text
+        description: >-
+          Where facility_id came from: 'Death record', 'Encounter' (the encounter the patient died
+          in, used where the record names no facility), or 'Not recorded' where neither does.
+        data_tests:
+          - accepted_values:
+              name: ac_005_metric__death_facility_source_values
+              arguments:
+                values: ['Death record', 'Encounter', 'Not recorded']
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.

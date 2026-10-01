@@ -4,9 +4,10 @@
 -- Per-death (subject) grain: one row per deceased patient, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs.
 --
--- The population, the death record chosen for each patient, the facility and the encounter
--- the patient died in are those of ds__deaths, the dataset behind the deceased patients line
--- list, so a dashboard count and that report agree.
+-- The population, the death record chosen for each patient and the encounter the patient died
+-- in are those of ds__deaths, the dataset behind the deceased patients line list, so a dashboard
+-- count and that report agree. The facility is the death record's, falling back to the facility
+-- of the encounter the patient died in.
 --
 -- The registry carries the definition; this model is its implementation.
 -- See specs/dbt-model/metric__death.md for BL-001..BL-007.
@@ -27,6 +28,10 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
+locations as (
+    select * from {{ ref('locations') }}
+),
+
 -- BL-002: the latest current death record per patient, preferring a finalised one -- the
 -- same pick ds__deaths makes (its BL-010).
 death_data as (
@@ -37,11 +42,12 @@ death_data as (
 ),
 
 -- BL-006: the encounter the patient died in -- the latest one whose span covers the date of
--- death, the same match ds__deaths makes.
+-- death, the same match ds__deaths makes. Its location is the encounter's final one.
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
-        e.department_id
+        e.department_id,
+        e.location_id
     from {{ ref('encounters') }} e
     join patients p
         on p.id = e.patient_id
@@ -62,9 +68,15 @@ select
     -- BL-007: one death per row, so the count contribution is always 1
     1::numeric as value_numeric,
     null::boolean as value_boolean,
-    -- BL-004: the death record's facility. NULL where there is no death record or it names
-    -- no facility.
-    pdd.facility_id,
+    -- BL-004: the death record's facility, falling back to the facility of the encounter the
+    -- patient died in. NULL where neither names one.
+    coalesce(pdd.facility_id, loc.facility_id) as facility_id,
+    -- BL-004: which of the two the facility came from
+    case
+        when pdd.facility_id is not null then 'Death record'
+        when loc.facility_id is not null then 'Encounter'
+        else 'Not recorded'
+    end as facility_source,
     pr.gender_source_value as sex,
     -- age in whole years at death; the NULL rule lives in the macro
     {{ age_years('p.date_of_death::date', 'pr') }} as age_years,
@@ -90,5 +102,7 @@ left join encounters_with_death ewd
     on ewd.patient_id = p.id
 left join departments dept
     on dept.id = ewd.department_id
+left join locations loc
+    on loc.id = ewd.location_id
 -- BL-001
 where p.date_of_death is not null

@@ -12,8 +12,9 @@ metrics:
   kind: metric
   name: Deaths
   description: >-
-    Recorded deaths, one row per deceased patient, on the date of death, with the facility,
-    primary cause and place of death from the patient's death record.
+    Recorded deaths, one row per deceased patient, on the date of death, with the primary cause
+    and place of death from the patient's death record, and the record's facility or else that
+    of the encounter the patient died in.
   numerator_description: >-
     Patients with a recorded date of death, counted on that date
   denominator_description: null
@@ -23,12 +24,14 @@ metrics:
   definition_rationale: >-
     A count of patients Tamanu records as deceased. The population and attribution follow
     ds__deaths, the dataset behind the deceased patients line list, so a dashboard count and
-    that report agree: every patient with a date of death, the latest current death record for
-    each, and the facility on that record.
+    that report agree: every patient with a date of death and the latest current death record
+    for each. Where the record names no facility, the facility is that of the encounter the
+    patient died in, so a death can be placed on a facility-rooted dashboard.
   unit: count
   subject_grain: patient
   disaggregations:
   - facility_id
+  - facility_source
   - sex
   - primary_cause
   - primary_cause_code

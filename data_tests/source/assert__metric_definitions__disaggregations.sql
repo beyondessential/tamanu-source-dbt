@@ -163,5 +163,8 @@ where trim(d) not in (
         -- death's place of death (health facility or outside one) and manner of death, from
         -- the death record (MAUI-6906).
         'place_of_death',
-        'manner_of_death'
+        'manner_of_death',
+        -- death's facility source: whether the facility came from the death record or from the
+        -- encounter the patient died in (MAUI-6906).
+        'facility_source'
     )
