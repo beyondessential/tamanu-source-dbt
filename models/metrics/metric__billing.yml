@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: metric__billing
+    description: "{{ doc('metric__billing') }}"
+    config:
+      tags:
+        - billing
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: billing
+      # BL-016: invoice and payment ids only, with no patient identifier or attribute, so this
+      # stays unrestricted and covers standard and sensitive facilities alike.
+      pii: false
+      classification: internal
+    data_tests:
+      # A duplicate row would double-count an amount in any consumer that sums value_numeric.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__billing_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__billing__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__billing_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__billing_metric_id_values
+              arguments:
+                values:
+                  - invoice
+                  - invoice_total
+                  - invoice_insurance_coverage
+                  - invoice_discount
+                  - invoice_patient_total
+                  - invoice_patient_paid
+                  - invoice_patient_balance
+                  - invoice_patient_payment
+          - relationships:
+              name: ac_003_metric__billing_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__billing__variant_id') }}"
+      - name: subject_id
+        data_type: character varying
+        description: "{{ doc('metric__billing__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_metric__billing_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: "{{ doc('metric__billing__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__billing_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: Always empty. Billing rows are dated to a single point in time.
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__billing__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__billing_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__billing_period_granularity_values
+              arguments:
+                values: ['minute', 'day']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__billing__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__billing_value_numeric_not_null
+      - name: value_boolean
+        data_type: boolean
+        description: Always empty. Every billing metric is numeric.
+      - name: invoice_id
+        data_type: character varying
+        description: The invoice the row belongs to.
+        data_tests:
+          - not_null:
+              name: ac_007_metric__billing_invoice_id_not_null
+      - name: invoice_status
+        data_type: text
+        description: "{{ doc('metric__billing__invoice_status') }}"
+        data_tests:
+          - not_null:
+              name: ac_007_metric__billing_invoice_status_not_null
+          - accepted_values:
+              name: ac_007_metric__billing_invoice_status_values
+              arguments:
+                values: ['in_progress', 'finalised']
+      - name: facility_id
+        data_type: character varying
+        description: "{{ doc('generic__facility_id') }} the invoice's encounter took place at."
+        data_tests:
+          - not_null:
+              name: ac_013_metric__billing_facility_id_not_null
+      - name: care_setting
+        data_type: text
+        description: "{{ doc('metric__billing__care_setting') }}"
+        data_tests:
+          - not_null:
+              name: ac_011_metric__billing_care_setting_not_null
+          - accepted_values:
+              name: ac_011_metric__billing_care_setting_values
+              arguments:
+                values: ['outpatient', 'emergency', 'inpatient', 'none']
+      - name: is_admitted_via_emergency
+        data_type: boolean
+        description: "{{ doc('metric__billing__is_admitted_via_emergency') }}"
+        data_tests:
+          - not_null:
+              name: ac_012_metric__billing_is_admitted_via_emergency_not_null
+      - name: department_id
+        data_type: character varying
+        description: The department of the invoice's encounter, as a Tamanu id.
+      - name: encounter_type
+        data_type: text
+        description: "{{ doc('metric__billing__encounter_type') }}"
+        data_tests:
+          - not_null:
+              name: ac_013_metric__billing_encounter_type_not_null

@@ -1,0 +1,196 @@
+# Patient billing metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: invoice
+  kind: metric
+  name: Invoices
+  description: >-
+    Non-cancelled invoices, finalised or in progress. One row per invoice, dated to the invoice.
+  numerator_description: >-
+    Invoices whose status is in progress or finalised, counted on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES definition over Tamanu invoicing. Tamanu raises one invoice per encounter, so this also
+    counts billed encounters. Cancelled invoices are excluded.
+  unit: count
+  subject_grain: invoice
+  disaggregations: &billing_disaggregations
+  - facility_id
+  - invoice_status
+  - care_setting
+  - is_admitted_via_emergency
+  - department_id
+  - encounter_type
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_total
+  kind: metric
+  name: Invoice total
+  description: >-
+    The amount charged on an invoice: the sum of its items after item discounts. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    Sum of discounted item totals on non-cancelled invoices, on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Follows Tamanu's own invoice arithmetic, so the figure matches the invoice screen. It is the
+    invoice's current total, so a change after the invoice's month restates that month.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_insurance_coverage
+  kind: metric
+  name: Insurance coverage
+  description: >-
+    The insurer's share of an invoice's total, as set by its insurance plans. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    Sum of per-item insurance coverage on non-cancelled invoices, on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    The share insurance is expected to cover, not the amount insurers have paid. Insurers may
+    reimburse by capitation rather than per invoice, so per-invoice receipts do not describe the
+    bill. Divide by invoice_total for coverage as a proportion of the bill.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_discount
+  kind: metric
+  name: Invoice discount
+  description: >-
+    The invoice-level discount, applied to the patient's share of the bill. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    Invoice-level discount on non-cancelled invoices, on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Follows Tamanu's own invoice arithmetic. Item-level discounts are already inside
+    invoice_total, so this is the invoice-level discount only.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_patient_total
+  kind: metric
+  name: Patient total
+  description: >-
+    The patient's share of an invoice: the invoice total less insurance coverage and the
+    invoice-level discount. One row per invoice, dated to the invoice.
+  numerator_description: >-
+    Invoice total less insurance coverage and invoice discount, on non-cancelled invoices, on
+    the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Follows Tamanu's own invoice arithmetic. invoice_total equals invoice_insurance_coverage plus
+    invoice_discount plus this figure, invoice by invoice.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_patient_paid
+  kind: metric
+  name: Patient paid
+  description: >-
+    Net patient payments made against an invoice to date, whenever they were made. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    Patient payments less refunds on non-cancelled invoices, counted on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Dated to the invoice, so a month's figure says how much of that month's billing has been
+    collected so far, and grows as later payments arrive. Divide by invoice_patient_total for
+    the patient collection rate. Cash by the date it was received is invoice_patient_payment.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_patient_balance
+  kind: metric
+  name: Patient balance
+  description: >-
+    The patient's share of an invoice still owed: patient total less patient paid. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    invoice_patient_total less invoice_patient_paid, on non-cancelled invoices, on the invoice
+    date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Negative when an invoice is overpaid, so a sum over invoices nets overpayments against
+    amounts owed.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_patient_payment
+  kind: metric
+  name: Patient payments received
+  description: >-
+    Patient payments and refunds on the day they were made. One row per payment, with refunds
+    negative.
+  numerator_description: >-
+    Patient payments on non-cancelled invoices, less refunds, counted on the payment date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Cash by the date it was received. Per invoice the rows sum to invoice_patient_paid, so the
+    outstanding patient balance at the end of a month is the running sum of
+    invoice_patient_total less the running sum of this metric, both up to that month.
+  unit: currency
+  subject_grain: payment
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__billing.md
