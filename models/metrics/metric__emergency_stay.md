@@ -6,7 +6,8 @@ consumer aggregates at whatever grain it needs.
 A stay is one ED attendance viewed as a span rather than an arrival: period_start is arrival
 in the ED and period_end is departure from it, so period_end - period_start is time in the
 ED. Departure is departure from the **ED**, not the end of the encounter -- for a stay that
-ended in admission, period_end is the moment of admission.
+ended in admission, period_end is the moment the patient left the ED, so time spent boarding
+there counts toward the stay.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
 facility, sex, age, triage acuity, discharge disposition -- and
@@ -29,14 +30,14 @@ this is the moment the patient left the department, so period_end - period_start
 ED, not total hospital stay. metric__emergency_visit measures the whole encounter over the same
 rows.
 
-**The departure is the earliest signal that the patient left**: the first move to another
-location, or the time a booked transfer takes effect, falling through to the encounter end when
-neither is recorded. A segment boundary alone is not a departure -- an encounter_type change to
-admission closes the intake segment while the patient is still in the ED, so boarding time counts
-toward the stay. Where the booked time is still in the future, the resulting duration is a planned
-one: the model reads no clock, so it does not distinguish a plan already elapsed from one pending.
+**The departure is the first move out of the emergency department's location area**, falling
+through to the encounter end when the patient never left it. A move between two locations in
+the same area -- bed to bed, or resuscitation to a cubicle -- is still in the ED. A segment boundary alone is not a departure -- an encounter_type
+change to admission closes the intake segment while the patient is still in the ED, so boarding
+time counts toward the stay. Nor is a planned move: it records a bed being reserved, not the
+patient leaving.
 
-**NULL only while the patient is in the ED with nothing booked and the encounter open**, so this
+**NULL only while the patient is in the ED and the encounter open**, so this
 column is deliberately nullable: time in the ED is undefined until they leave. A consumer
 measuring duration filters these rows out; a consumer counting stays keeps them.
 {% enddocs %}
@@ -67,8 +68,8 @@ A measure, not a dimension: the value is continuous, so no data table exposes it
 not registered as a disaggregation. Not banded either -- a four-hour split is a presentation
 choice a deployment may set differently, so the consumer's data table bands it.
 
-NULL only while the patient is in the ED with nothing booked and the encounter open, so a
-duration visual restricts to non-NULL rows.
+NULL only while the patient is in the ED and the encounter open, so a duration visual
+restricts to non-NULL rows.
 {% enddocs %}
 
 {% docs metric__emergency_stay__discharge_disposition %}
