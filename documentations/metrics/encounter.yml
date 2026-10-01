@@ -12,8 +12,8 @@ metrics:
   kind: metric
   name: Encounters
   description: >-
-    Encounters of every type, one row per encounter, attributed to the setting, facility,
-    department and clinician of the encounter's first segment.
+    Encounters of every type, one row per encounter, with the facility, encounter type,
+    department and clinician on the encounter record.
   numerator_description: >-
     Encounters, counted once each on the date the encounter started
   denominator_description: null
@@ -23,16 +23,15 @@ metrics:
   definition_rationale: >-
     A count of every Tamanu encounter, the whole-facility total that the setting-scoped visit
     metrics (opd_visit, ed_visit, inpatient_admission) cannot add up to: an encounter that passes
-    through more than one setting appears in more than one of them. Attributing each encounter
-    to its first segment counts it once and places it in the setting it started in, the same
-    intake rule opd_visit and ed_visit use. Survey-response encounters are included, as they are
-    in every encounter-level dataset in this repo.
+    through more than one setting appears in more than one of them. Attributes are the encounter
+    record's own, the attribution the report-layer encounter datasets use, so a count here
+    reconciles with Tamanu's encounter reports. Survey-response encounters are included, as they
+    are in every encounter-level dataset in this repo.
   unit: count
   subject_grain: encounter
   disaggregations:
   - facility_id
   - encounter_type
-  - encounter_setting
   - department
   - clinician
   - sex

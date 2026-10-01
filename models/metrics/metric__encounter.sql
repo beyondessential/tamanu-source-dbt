@@ -5,16 +5,17 @@
 -- aggregates at whatever grain it needs -- any subset of the disaggregations, and any time
 -- grain from day upwards.
 --
--- Every attribute is read off the encounter's first segment, the same intake segment
--- metric__outpatient_visit and metric__emergency_visit attribute a visit to. An encounter
--- that moves between settings is still one row, at the setting it started in, so a consumer
--- counts encounters once however many phases they pass through.
+-- Every attribute is the encounter's own, as clinical__visit_occurrence carries it -- the
+-- location, department, encounter type and clinician on the encounter record, which Tamanu
+-- updates as the patient moves. This is the attribution the report-layer datasets use
+-- (encounters_core and the dataset macros), so a count here reconciles with Tamanu's own
+-- encounter reports.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__encounter.md for BL-001..BL-007.
+-- See specs/dbt-model/metric__encounter.md for BL-001..BL-006.
 
-with visit_detail as (
-    select * from {{ ref('clinical__visit_detail') }}
+with visit_occurrence as (
+    select * from {{ ref('clinical__visit_occurrence') }}
 ),
 
 person as (
@@ -25,7 +26,7 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
--- BL-006: OMOP PROVIDER wrapper over bases/users. One row per user, so the join below cannot
+-- BL-005: OMOP PROVIDER wrapper over bases/users. One row per user, so the join below cannot
 -- fan out.
 provider as (
     select * from {{ ref('ref__provider') }}
@@ -35,73 +36,49 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
--- BL-002: the first segment of every encounter. clinical__visit_detail chains an encounter's
--- segments by preceding_visit_detail_id, and synthesises a whole-visit segment for an
--- encounter with no history, so every encounter has exactly one first segment.
-first_segments as (
-    select
-        visit_occurrence_id,
-        person_id,
-        visit_detail_start_date,
-        visit_detail_concept_id,
-        visit_detail_source_value,
-        care_site_id,
-        provider_id,
-        department_id
-    from visit_detail
-    where preceding_visit_detail_id is null
-),
-
 encounters as (
     select
-        f.visit_occurrence_id,
-        f.visit_detail_start_date,
-        -- BL-004
+        vo.visit_occurrence_id,
+        vo.visit_start_date,
+        -- BL-003
         loc.facility_id,
-        -- BL-005: the first segment's own encounter type, and the setting it groups to
-        f.visit_detail_source_value as encounter_type,
-        case f.visit_detail_concept_id
-            when 9201 then 'Inpatient'
-            when 9202 then 'Outpatient'
-            when 9203 then 'Emergency'
-            else 'Other'
-        end as encounter_setting,
-        -- BL-005: never NULL, so an array filter cannot drop the row
+        -- BL-004: the encounter's own type, and its department resolved to a name -- never
+        -- NULL, so an array filter cannot drop the row
+        vo.visit_source_value as encounter_type,
         coalesce(dept.name, 'Not recorded') as department,
-        -- BL-006
+        -- BL-005
         coalesce(prov.provider_name, 'Not recorded') as clinician,
         pr.gender_source_value as sex,
         -- age in whole years at the encounter start; the NULL rule lives in the macro
-        {{ age_years('f.visit_detail_start_date', 'pr') }} as age_years
-    from first_segments f
-    -- BL-004: inner join -- a segment whose location does not resolve is excluded rather than
-    -- attributed to a NULL facility
+        {{ age_years('vo.visit_start_date', 'pr') }} as age_years
+    from visit_occurrence vo
+    -- BL-003: inner join -- an encounter whose location does not resolve is excluded rather
+    -- than attributed to a NULL facility
     join locations loc
-        on loc.id = f.care_site_id
+        on loc.id = vo.care_site_id
     join person pr
-        on pr.person_id = f.person_id
+        on pr.person_id = vo.person_id
     left join provider prov
-        on prov.provider_id = f.provider_id
+        on prov.provider_id = vo.provider_id
     left join departments dept
-        on dept.id = f.department_id
+        on dept.id = vo.department_id
 )
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day'.
 select
-    -- BL-007
+    -- BL-006
     'encounter'::text as metric_id,
     null::text as variant_id,
     visit_occurrence_id::varchar as subject_id,
-    -- BL-003
-    visit_detail_start_date as period_start,
+    -- BL-002
+    visit_start_date as period_start,
     null::date as period_end,
     'day'::text as period_granularity,
-    -- BL-007: one encounter per row, so the count contribution is always 1
+    -- BL-006: one encounter per row, so the count contribution is always 1
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
-    encounter_setting,
     department,
     clinician,
     sex,

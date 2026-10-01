@@ -4,9 +4,9 @@ models:
   - name: metric__encounter
     description: >-
       D5 metric view for the encounter indicator registered in documentations/metrics/*.yml:
-      encounter. One row per encounter, of every type, attributed to the encounter's first
-      segment -- the setting, facility, department and clinician it started at -- so an
-      encounter that moves between settings is still counted once.
+      encounter. One row per encounter, of every type, with the facility, encounter type,
+      department and clinician on the encounter record -- the attribution Tamanu's own encounter
+      reports use, so the counts reconcile with them.
     config:
       tags:
         - clinical
@@ -65,7 +65,7 @@ models:
               name: ac_003_metric__encounter_subject_id_not_null
       - name: period_start
         data_type: date
-        description: The date the encounter started -- its first segment's start date.
+        description: The date the encounter started.
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_period_start_not_null
@@ -94,45 +94,34 @@ models:
         description: NULL -- unused by this metric.
       - name: facility_id
         data_type: character varying(255)
-        description: The Tamanu facility id of the first segment's location.
+        description: The Tamanu facility id of the encounter's location.
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_facility_id_not_null
       - name: encounter_type
         data_type: character varying(255)
         description: >-
-          The first segment's own encounter type (clinic, triage, admission, surveyResponse and
-          so on), as it stood when the encounter started. Finer than encounter_setting.
+          The encounter's type as recorded on the encounter (clinic, triage, admission,
+          surveyResponse and so on). Tamanu updates it in place, so an emergency attendance later
+          admitted reads 'admission'.
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_encounter_type_not_null
-      - name: encounter_setting
-        data_type: text
-        description: >-
-          The setting the encounter started in, from the first segment's OMOP Visit concept:
-          Outpatient (9202 -- clinic, imaging, vaccination), Inpatient (9201), Emergency (9203 --
-          triage, observation, emergency), or Other (everything else, including survey
-          responses). An ED attendance later admitted is Emergency.
-        data_tests:
-          - not_null:
-              name: ac_003_metric__encounter_encounter_setting_not_null
-          - accepted_values:
-              name: ac_005_metric__encounter_encounter_setting_values
-              arguments:
-                values: ['Outpatient', 'Inpatient', 'Emergency', 'Other']
       - name: department
         data_type: text
         description: >-
-          The first segment's department (e.g. Dental), resolved to a name. Never NULL -- falls
-          back to 'Not recorded'.
+          The encounter's department (e.g. Dental), resolved to a name -- the department on the
+          encounter record, which Tamanu updates as the patient moves. Never NULL -- falls back to
+          'Not recorded'.
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_department_not_null
       - name: clinician
         data_type: text
         description: >-
-          The clinician recorded on the first segment, resolved to a name -- the same clinician
-          metric__outpatient_visit reports. Never NULL -- falls back to 'Not recorded'.
+          The encounter's supervising clinician, resolved to a name -- the clinician on the
+          encounter record, which Tamanu updates as the patient moves. Never NULL -- falls back to
+          'Not recorded'.
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_clinician_not_null
