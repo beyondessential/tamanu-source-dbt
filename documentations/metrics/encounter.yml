@@ -1,0 +1,42 @@
+# Encounters of every type, counted once each.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: encounter
+  kind: metric
+  name: Encounters
+  description: >-
+    Encounters of every type, one row per encounter, with the facility, encounter type,
+    department and clinician on the encounter record.
+  numerator_description: >-
+    Encounters, counted once each on the date the encounter started
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of every Tamanu encounter, the whole-facility total that the setting-scoped visit
+    metrics (opd_visit, ed_visit, inpatient_admission) cannot add up to: an encounter that passes
+    through more than one setting appears in more than one of them. Attributes are the encounter
+    record's own, the attribution the report-layer encounter datasets use. Counts match the
+    encounter summary report except where that report narrows its population: it excludes
+    sensitive facilities and drops encounters with no history or no department. Survey-response
+    encounters are included, as they are in every encounter-level dataset in this repo.
+  unit: count
+  subject_grain: encounter
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - department
+  - clinician
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__encounter.md
