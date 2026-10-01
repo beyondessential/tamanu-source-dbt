@@ -11,70 +11,124 @@ unit_tests:
       setting (BL-004, BL-009). inv_5 is cancelled, so it and its payment are excluded (BL-002).
     given:
       - input: ref('ds__encounter_invoices')
-        rows:
-          - {invoice_id: 00000000-0000-0000-0000-000000000001, encounter_id: 00000000-0000-0000-0000-0000000000e1, status: finalised, invoice_datetime: '2026-08-03 09:15:00', invoice_total: 100.00, insurance_coverage: 40.00, invoice_discount: 6.00, patient_subtotal: 54.00, patient_payment: 30.00}
-          - {invoice_id: 00000000-0000-0000-0000-000000000002, encounter_id: 00000000-0000-0000-0000-0000000000e2, status: in_progress, invoice_datetime: '2026-08-04 22:40:00', invoice_total: 200.00, insurance_coverage: 120.00, invoice_discount: 0.00, patient_subtotal: 80.00, patient_payment: null}
-          - {invoice_id: 00000000-0000-0000-0000-000000000003, encounter_id: 00000000-0000-0000-0000-0000000000e3, status: finalised, invoice_datetime: '2026-08-05 11:00:00', invoice_total: 10.00, insurance_coverage: null, invoice_discount: 0.00, patient_subtotal: 10.00, patient_payment: 15.00}
-          - {invoice_id: 00000000-0000-0000-0000-000000000004, encounter_id: 00000000-0000-0000-0000-0000000000e4, status: in_progress, invoice_datetime: '2026-08-06 08:00:00', invoice_total: null, insurance_coverage: null, invoice_discount: 0.00, patient_subtotal: null, patient_payment: null}
-          - {invoice_id: 00000000-0000-0000-0000-000000000005, encounter_id: 00000000-0000-0000-0000-0000000000e5, status: cancelled, invoice_datetime: '2026-08-07 10:00:00', invoice_total: 50.00, insurance_coverage: 0.00, invoice_discount: 0.00, patient_subtotal: 50.00, patient_payment: 50.00}
+        format: sql
+        rows: |
+          select 'inv_1' as invoice_id, 'enc_1' as encounter_id, 'finalised' as status, '2026-08-03 09:15:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 40.00::numeric as insurance_coverage, 6.00::numeric as invoice_discount, 30.00::numeric as patient_payment, 54.00::numeric as patient_subtotal, null::text as products_no_category
+          union all
+          select 'inv_2', 'enc_2', 'in_progress', '2026-08-04 22:40:00'::timestamp, null::timestamp, 200.00::numeric, 120.00::numeric, 0.00::numeric, null::numeric, 80.00::numeric, null::text
+          union all
+          select 'inv_3', 'enc_3', 'finalised', '2026-08-05 11:00:00'::timestamp, null::timestamp, 10.00::numeric, null::numeric, 0.00::numeric, 15.00::numeric, 10.00::numeric, null::text
+          union all
+          select 'inv_4', 'enc_4', 'in_progress', '2026-08-06 08:00:00'::timestamp, null::timestamp, null::numeric, null::numeric, 0.00::numeric, null::numeric, null::numeric, null::text
+          union all
+          select 'inv_5', 'enc_5', 'cancelled', '2026-08-07 10:00:00'::timestamp, null::timestamp, 50.00::numeric, 0.00::numeric, 0.00::numeric, 50.00::numeric, 50.00::numeric, null::text
       - input: ref('clinical__visit_occurrence')
-        rows:
-          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e1, visit_concept_id: 9202, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_opd, visit_source_value: clinic}
-          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e2, visit_concept_id: 262, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_ward, visit_source_value: admission}
-          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e3, visit_concept_id: 9203, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_ed, visit_source_value: emergency}
-          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e4, visit_concept_id: 0, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: null, visit_source_value: surveyResponse}
-          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e5, visit_concept_id: 9202, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_opd, visit_source_value: clinic}
+        format: sql
+        rows: |
+          select 'enc_1' as visit_occurrence_id, 9202 as visit_concept_id, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_2', 262, 'loc_1', 'dept_ward', 'admission'
+          union all
+          select 'enc_3', 9203, 'loc_1', 'dept_ed', 'emergency'
+          union all
+          select 'enc_4', 0, 'loc_1', null::text, 'surveyResponse'
+          union all
+          select 'enc_5', 9202, 'loc_1', 'dept_opd', 'clinic'
       - input: ref('locations')
-        rows:
-          - {id: 00000000-0000-0000-0000-0000000000c1, facility_id: fac_1}
+        format: sql
+        rows: |
+          select 'loc_1' as id, 'fac_1' as facility_id
       - input: ref('invoice_payments')
-        rows:
-          - {id: 00000000-0000-0000-0000-0000000000a1, invoice_id: 00000000-0000-0000-0000-000000000001, date: '2026-08-03', amount: 30.00, original_payment_id: null}
-          # insurer payment: no invoice_patient_payments row
-          - {id: 00000000-0000-0000-0000-0000000000a6, invoice_id: 00000000-0000-0000-0000-000000000001, date: '2026-09-01', amount: 40.00, original_payment_id: null}
-          - {id: 00000000-0000-0000-0000-0000000000a2, invoice_id: 00000000-0000-0000-0000-000000000002, date: '2026-08-05', amount: 50.00, original_payment_id: null}
-          # refund of pay_2, stored positive
-          - {id: 00000000-0000-0000-0000-0000000000a3, invoice_id: 00000000-0000-0000-0000-000000000002, date: '2026-08-09', amount: 50.00, original_payment_id: 00000000-0000-0000-0000-0000000000a2}
-          - {id: 00000000-0000-0000-0000-0000000000a4, invoice_id: 00000000-0000-0000-0000-000000000003, date: '2026-09-02', amount: 15.00, original_payment_id: null}
-          - {id: 00000000-0000-0000-0000-0000000000a5, invoice_id: 00000000-0000-0000-0000-000000000005, date: '2026-08-07', amount: 50.00, original_payment_id: null}
+        format: sql
+        rows: |
+          -- pay_6 is an insurer payment (no invoice_patient_payments row), and pay_3 refunds
+          -- pay_2, stored as a positive amount
+          select 'pay_1' as id, 'inv_1' as invoice_id, '2026-08-03'::date as date, 30.00::numeric as amount, null::text as original_payment_id
+          union all
+          select 'pay_6', 'inv_1', '2026-09-01'::date, 40.00::numeric, null::text
+          union all
+          select 'pay_2', 'inv_2', '2026-08-05'::date, 50.00::numeric, null::text
+          union all
+          select 'pay_3', 'inv_2', '2026-08-09'::date, 50.00::numeric, 'pay_2'
+          union all
+          select 'pay_4', 'inv_3', '2026-09-02'::date, 15.00::numeric, null::text
+          union all
+          select 'pay_5', 'inv_5', '2026-08-07'::date, 50.00::numeric, null::text
       - input: ref('invoice_patient_payments')
-        rows:
-          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a1}
-          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a2}
-          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a3}
-          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a4}
-          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a5}
+        format: sql
+        rows: |
+          select 'pay_1' as invoice_payment_id
+          union all
+          select 'pay_2'
+          union all
+          select 'pay_3'
+          union all
+          select 'pay_4'
+          union all
+          select 'pay_5'
     expect:
-      rows:
-        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 1, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 100.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 40.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 6.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 54.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 30.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 24.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a1, period_granularity: day, value_numeric: 30.00, care_setting: outpatient, is_admitted_via_emergency: false}
-        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 1, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 200.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 120.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 0.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 80.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 0, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 80.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a2, period_granularity: day, value_numeric: 50.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a3, period_granularity: day, value_numeric: -50.00, care_setting: inpatient, is_admitted_via_emergency: true}
-        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 1, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 10.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 0, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 0.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 10.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 15.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: -5.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a4, period_granularity: day, value_numeric: 15.00, care_setting: emergency, is_admitted_via_emergency: false}
-        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 1, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0.00, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
-        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
+      format: sql
+      rows: |
+        select 'invoice' as metric_id, null::text as variant_id, 'inv_1' as subject_id, '2026-08-03 09:15:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'inv_1' as invoice_id, 'finalised' as invoice_status, 'fac_1' as facility_id, 'outpatient' as care_setting, false as is_admitted_via_emergency, 'dept_opd' as department_id, 'clinic' as encounter_type
+        union all
+        select 'invoice_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 100.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_insurance_coverage', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 40.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_discount', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 6.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_patient_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 54.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_patient_paid', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_patient_balance', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 24.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice_patient_payment', null::text, 'pay_1', '2026-08-03'::timestamp, null::timestamp, 'day', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        union all
+        select 'invoice', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 200.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_insurance_coverage', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 120.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_discount', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_patient_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_patient_paid', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_patient_balance', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_patient_payment', null::text, 'pay_2', '2026-08-05'::timestamp, null::timestamp, 'day', 50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice_patient_payment', null::text, 'pay_3', '2026-08-09'::timestamp, null::timestamp, 'day', -50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        union all
+        select 'invoice', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_insurance_coverage', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_discount', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_patient_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_patient_paid', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_patient_balance', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', -5.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice_patient_payment', null::text, 'pay_4', '2026-09-02'::timestamp, null::timestamp, 'day', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        union all
+        select 'invoice', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_insurance_coverage', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_discount', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_patient_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_patient_paid', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        union all
+        select 'invoice_patient_balance', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
