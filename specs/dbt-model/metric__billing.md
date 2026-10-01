@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-015) |
-| **Status** | `review` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911/fsm-6-billing-dashboard) |
 | **Repo** | `tamanu-source-dbt` |
