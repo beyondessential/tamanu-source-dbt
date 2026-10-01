@@ -1,0 +1,135 @@
+unit_tests:
+  - name: ac_005_metric__ed_lab_order_scope_and_grouping
+    model: metric__ed_lab_order
+    description: >
+      BL-001 -- BL-007. e1 arrives in the ED (vd1a, concept 9203, 08:00) and is admitted at 12:00
+      (vd1b, 9201). lr1 is a Full Blood Count panel raised in the ED and published: its three
+      tests (t1-t3) are one row, keyed on the request, labelled with the panel. lr2 is raised
+      without a panel, so its two tests (t4, t5) are a row each, labelled with the test type;
+      t9 on lr7 has a test type that does not resolve, so it falls back to 'Not recorded'. lr4
+      names a panel request that does not resolve: it is still one panel row, labelled 'Not
+      recorded', and is not split into its test t6. lr3 is a panel raised at 13:00 while the
+      patient boards, so its segment is the admission and it is not counted. lr6 is a panel with
+      no status that predates every segment, so it clamps to the first (the ED) and counts as not
+      completed. lr5 is entered in error, so its panel is withdrawn and excluded. e3's only
+      segment is a clinic (9202), so lr8 is not counted.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'lr1' as id, 'e1' as encounter_id, '2026-01-10 09:00:00'::timestamp as requested_datetime, 'published' as status, '2026-01-10 10:00:00'::timestamp as published_datetime, 'ltpr1' as lab_test_panel_request_id
+          union all
+          select 'lr2', 'e1', '2026-01-10 09:10:00'::timestamp, 'results_pending', null::timestamp, null::text
+          union all
+          select 'lr3', 'e1', '2026-01-10 13:00:00'::timestamp, 'published', '2026-01-10 14:00:00'::timestamp, 'ltpr3'
+          union all
+          select 'lr4', 'e1', '2026-01-10 09:20:00'::timestamp, 'results_pending', null::timestamp, 'ltpr_gone'
+          union all
+          select 'lr5', 'e1', '2026-01-10 09:30:00'::timestamp, 'entered-in-error', null::timestamp, 'ltpr5'
+          union all
+          select 'lr6', 'e1', '2026-01-10 07:00:00'::timestamp, null::text, null::timestamp, 'ltpr6'
+          union all
+          select 'lr7', 'e1', '2026-01-10 09:40:00'::timestamp, 'published', '2026-01-10 11:00:00'::timestamp, null::text
+          union all
+          select 'lr8', 'e3', '2026-01-12 09:00:00'::timestamp, 'published', '2026-01-12 10:00:00'::timestamp, 'ltpr8'
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 't1' as id, 'lr1' as lab_request_id, 'ltt_hb' as lab_test_type_id
+          union all
+          select 't2', 'lr1', 'ltt_wbc'
+          union all
+          select 't3', 'lr1', 'ltt_plt'
+          union all
+          select 't4', 'lr2', 'ltt_ue'
+          union all
+          select 't5', 'lr2', 'ltt_crp'
+          union all
+          select 't6', 'lr4', 'ltt_hb'
+          union all
+          select 't7', 'lr3', 'ltt_hb'
+          union all
+          select 't8', 'lr6', 'ltt_hb'
+          union all
+          select 't9', 'lr7', 'ltt_missing'
+          union all
+          select 't10', 'lr8', 'ltt_hb'
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt_hb' as id, 'HB' as code, 'Haemoglobin' as name
+          union all
+          select 'ltt_wbc', 'WBC', 'White cell count'
+          union all
+          select 'ltt_plt', 'PLT', 'Platelet count'
+          union all
+          select 'ltt_ue', 'UE', 'Urea and electrolytes'
+          union all
+          select 'ltt_crp', 'CRP', 'C-reactive protein'
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select 'ltpr1' as id, 'ltp_fbc' as lab_test_panel_id
+          union all
+          select 'ltpr3', 'ltp_fbc'
+          union all
+          select 'ltpr5', 'ltp_fbc'
+          union all
+          select 'ltpr6', 'ltp_fbc'
+          union all
+          select 'ltpr8', 'ltp_fbc'
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select 'ltp_fbc' as id, 'FBC' as code, 'Full Blood Count' as name
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10 08:00:00'::timestamp as visit_detail_start_datetime, 9203 as visit_detail_concept_id, 'loc_ed' as care_site_id, 'dept_ed' as department_id
+          union all
+          select 'vd1b', 'e1', 'p1', '2026-01-10 12:00:00'::timestamp, 9201, 'loc_ward', 'dept_med'
+          union all
+          select 'vd3a', 'e3', 'p1', '2026-01-12 08:00:00'::timestamp, 9202, 'loc_clinic', 'dept_opd'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'female' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ed' as id, 'fac1' as facility_id
+          union all
+          select 'loc_ward', 'fac1'
+          union all
+          select 'loc_clinic', 'fac1'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_ed' as id, 'Emergency' as name
+          union all
+          select 'dept_med', 'Medical'
+          union all
+          select 'dept_opd', 'Outpatients'
+
+    expect:
+      format: sql
+      rows: |
+        select 'ed_lab_order' as metric_id, null::text as variant_id, 'lr1' as subject_id, '2026-01-10 09:00:00'::timestamp as period_start, '2026-01-10 10:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, true as is_panel, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 35 as age_years, 'Emergency' as department
+        union all
+        select 'ed_lab_order', null::text, 't4', '2026-01-10 09:10:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, false, 'UE', 'Urea and electrolytes', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 't5', '2026-01-10 09:10:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, false, 'CRP', 'C-reactive protein', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 'lr4', '2026-01-10 09:20:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'Not recorded', 'Not recorded', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 'lr6', '2026-01-10 07:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'FBC', 'Full Blood Count', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 't9', '2026-01-10 09:40:00'::timestamp, '2026-01-10 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, false, 'Not recorded', 'Not recorded', 35, 'Emergency'
