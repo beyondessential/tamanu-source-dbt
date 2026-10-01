@@ -1,0 +1,112 @@
+unit_tests:
+  - name: ac_006_metric__death_population
+    model: metric__death
+    description: >
+      BL-001 -- BL-006. p1 has two current death records, d1a not final and d1b final, so the
+      row reads d1b's cause, manner and facility (facB) -- the record's facility wins over the
+      ward p1 died on (e1, fac9), which still supplies the department. p2's record says the
+      death was outside a health facility and names no facility or cause, so although p2's
+      stale clinic encounter (e2, facC) spans the death it supplies no facility, which stays
+      NULL and 'Not recorded'; e2 still supplies the department. p3 has a date of death but no death
+      record, and died during e3, so p3 is counted with e3's facility (facC) and department, from
+      the encounter. p5's record names no facility and p5 died during e5, which has no end yet,
+      so e5 is not matched and the facility stays NULL, and d5 leaves the outside-a-facility
+      question unanswered, so place_of_death is 'Not recorded'. p7's record names no facility,
+      and recording the death closed both of p7's open encounters at the time of death -- a stale
+      clinic visit (e7a) and a later admission (e7b) -- so the later-started e7b is the one
+      matched, giving fac9 and Medical. p4 has no date of death and is not
+      counted, and d4 is a historical record and is ignored.
+    given:
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'p1' as id, '2026-03-05 10:00:00'::timestamp as date_of_death
+          union all
+          select 'p2', '2026-03-10 10:00:00'::timestamp
+          union all
+          select 'p3', '2026-03-12 10:00:00'::timestamp
+          union all
+          select 'p4', null::timestamp
+          union all
+          select 'p5', '2026-03-20 10:00:00'::timestamp
+          union all
+          select 'p7', '2026-03-25 10:00:00'::timestamp
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'male' as gender_source_value, 1990 as year_of_birth, 6 as month_of_birth, 1 as day_of_birth
+          union all
+          select 'p2', 'female', 1990, 6, 1
+          union all
+          select 'p3', 'male', 1990, 6, 1
+          union all
+          select 'p4', 'female', 1990, 6, 1
+          union all
+          select 'p5', 'female', 1990, 6, 1
+          union all
+          select 'p7', 'male', 1990, 6, 1
+
+      - input: ref('patient_death_data')
+        format: sql
+        rows: |
+          select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner
+          union all
+          select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease'
+          union all
+          select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text
+          union all
+          select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease'
+          union all
+          select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease'
+          union all
+          select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease'
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'p1' as patient_id, '2026-03-04 08:00:00'::timestamp as start_datetime, '2026-03-06 08:00:00'::timestamp as end_datetime, 'dept_med' as department_id, 'loc_ward' as location_id
+          union all
+          select 'e2', 'p2', '2026-02-01 09:00:00'::timestamp, '2026-03-10 10:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+          union all
+          select 'e3', 'p3', '2026-03-12 06:00:00'::timestamp, '2026-03-12 12:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+          union all
+          select 'e5', 'p5', '2026-03-19 08:00:00'::timestamp, null::timestamp, 'dept_med', 'loc_ward'
+          union all
+          select 'e7a', 'p7', '2026-02-01 09:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+          union all
+          select 'e7b', 'p7', '2026-03-24 14:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_med', 'loc_ward'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ward' as id, 'fac9' as facility_id
+          union all
+          select 'loc_clinic', 'facC'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'c1' as id, 'I21' as code, 'Myocardial infarction' as name
+          union all
+          select 'c2', 'J18', 'Pneumonia'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_med' as id, 'Medical' as name
+          union all
+          select 'dept_opd', 'General OPD'
+
+    expect:
+      format: sql
+      rows: |
+        select 'death' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'facB' as facility_id, 'Death record' as facility_source, 'male' as sex, 35 as age_years, 'Pneumonia' as primary_cause, 'J18' as primary_cause_code, 'Health facility' as place_of_death, 'Disease' as manner_of_death, 'Medical' as department
+        union all
+        select 'death', null::text, 'p2', '2026-03-10'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Not recorded', 'Not recorded', 'Outside health facility', 'Not recorded', 'General OPD'
+        union all
+        select 'death', null::text, 'p3', '2026-03-12'::date, null::date, 'day', 1::numeric, null::boolean, 'facC', 'Encounter', 'male', 35, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'General OPD'
+        union all
+        select 'death', null::text, 'p5', '2026-03-20'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Myocardial infarction', 'I21', 'Not recorded', 'Disease', 'Not recorded'
+        union all
+        select 'death', null::text, 'p7', '2026-03-25'::date, null::date, 'day', 1::numeric, null::boolean, 'fac9', 'Encounter', 'male', 35, 'Pneumonia', 'J18', 'Health facility', 'Disease', 'Medical'
