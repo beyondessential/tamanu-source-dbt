@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: metric__ed_lab_order
+    description: >-
+      D5 metric view for the ed_lab_order indicator registered in
+      documentations/metrics/emergency.yml: ed_lab_order (MAUI-6907). One row per lab test panel
+      ordered, and one per lab test ordered outside a panel, while the patient was in the
+      emergency department -- per-order-line (subject) grain, so a consumer aggregates at
+      whatever grain it needs. A panel is one row however many tests it holds.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-subject rows carrying sex/age alongside a record id -- no patient name or exact
+      # birth date, the same pair the other ED metrics carry while staying internal.
+      pii: false
+      classification: internal
+    data_tests:
+      # AC-001: one row per subject. A duplicate would double-count in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__ed_lab_order_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-004: period_end, where present, is at or after period_start, and is only ever
+      # populated for a completed request.
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_004_metric__ed_lab_order_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
+      - dbt_utils.expression_is_true:
+          name: ac_004_metric__ed_lab_order_period_end_requires_is_completed
+          arguments:
+            expression: "is_completed or period_end is null"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: >-
+          The registered indicator identifier. Always 'ed_lab_order'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__ed_lab_order_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__ed_lab_order_metric_id_values
+              arguments:
+                values:
+                  - ed_lab_order
+          - relationships:
+              name: ac_002_metric__ed_lab_order_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: >-
+          NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: >-
+          The order line's Tamanu id: the lab request id for a panel, the lab test id for a test
+          ordered outside a panel.
+      - name: period_start
+        data_type: timestamp
+        description: >-
+          When the lab request was raised.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: >-
+          When the lab request's results were published. NULL until then.
+      - name: period_granularity
+        data_type: text
+        description: >-
+          Constant 'minute' -- period_start and period_end carry a time of day.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_period_granularity_not_null
+      - name: value_numeric
+        data_type: numeric
+        description: >-
+          Always 1 -- one order line per row. Sum it to count panels and tests ordered over any
+          grouping.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_value_numeric_not_null
+      - name: value_boolean
+        data_type: boolean
+        description: >-
+          NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu facility id the order is attributed to, from the patient's location when it
+          was requested.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: >-
+          The patient's sex.
+      - name: is_completed
+        data_type: boolean
+        description: >-
+          Whether the lab request's results have been published. Never NULL -- a pending,
+          cancelled or rejected request is false.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_is_completed_not_null
+      - name: is_panel
+        data_type: boolean
+        description: >-
+          True where the order line is a panel, false where it is a test ordered outside one.
+          Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_is_panel_not_null
+      - name: lab_order_code
+        data_type: text
+        description: >-
+          The panel's code, or the test type's code for a test ordered outside a panel. Never
+          NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_lab_order_code_not_null
+      - name: lab_order
+        data_type: text
+        description: >-
+          The panel's name, or the test type's name for a test ordered outside a panel -- the
+          label to rank by. Never NULL -- falls back to the code, then 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_lab_order_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years when the order was requested. Not banded -- the consumer's data
+          table bands it.
+      - name: department
+        data_type: text
+        description: >-
+          The department the patient was under when the order was requested. Never NULL -- falls
+          back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_lab_order_department_not_null

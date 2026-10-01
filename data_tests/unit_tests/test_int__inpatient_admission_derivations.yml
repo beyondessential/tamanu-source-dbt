@@ -35,23 +35,23 @@ unit_tests:
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
-          select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
+          select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, null::varchar as provider_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
           union all
-          select 'vd_2a', 'inp_2', 'per_1', 'loc_ed', 'dept_ed', '2024-06-02 07:00'::timestamp, 9203
+          select 'vd_2a', 'inp_2', 'per_1', 'loc_ed', 'dept_ed', null::varchar, '2024-06-02 07:00'::timestamp, 9203
           union all
-          select 'vd_2b', 'inp_2', 'per_1', 'loc_ward', 'dept_surg', '2024-06-02 09:30'::timestamp, 9201
+          select 'vd_2b', 'inp_2', 'per_1', 'loc_ward', 'dept_surg', null::varchar, '2024-06-02 09:30'::timestamp, 9201
           union all
-          select 'vd_3', 'inp_3', 'per_1', 'loc_ward', null::text, '2024-06-03 14:00'::timestamp, 9201
+          select 'vd_3', 'inp_3', 'per_1', 'loc_ward', null::text, null::varchar, '2024-06-03 14:00'::timestamp, 9201
           union all
-          select 'vd_4', 'inp_4', 'per_1', 'loc_ward', 'dept_med', '2024-06-04 05:00'::timestamp, 9201
+          select 'vd_4', 'inp_4', 'per_1', 'loc_ward', 'dept_med', null::varchar, '2024-06-04 05:00'::timestamp, 9201
           union all
-          select 'vd_ed_only', 'inp_ed_only', 'per_1', 'loc_ed', 'dept_ed', '2024-06-07 09:00'::timestamp, 9203
+          select 'vd_ed_only', 'inp_ed_only', 'per_1', 'loc_ed', 'dept_ed', null::varchar, '2024-06-07 09:00'::timestamp, 9203
           union all
-          select 'vd_5', 'inp_5', 'per_2', 'loc_ward', 'dept_med', '2024-07-01 09:00'::timestamp, 9201
+          select 'vd_5', 'inp_5', 'per_2', 'loc_ward', 'dept_med', null::varchar, '2024-07-01 09:00'::timestamp, 9201
           union all
-          select 'vd_6', 'inp_6', 'per_2', 'loc_ward', 'dept_med', '2024-07-10 09:00'::timestamp, 9201
+          select 'vd_6', 'inp_6', 'per_2', 'loc_ward', 'dept_med', null::varchar, '2024-07-10 09:00'::timestamp, 9201
           union all
-          select 'vd_7', 'inp_7', 'per_2', 'loc_ward', 'dept_med', '2024-08-25 09:00'::timestamp, 9201
+          select 'vd_7', 'inp_7', 'per_2', 'loc_ward', 'dept_med', null::varchar, '2024-08-25 09:00'::timestamp, 9201
 
       - input: ref('clinical__visit_occurrence')
         format: sql
@@ -115,6 +115,10 @@ unit_tests:
           union all
           select 'inp_2', 'disp_transfer'
 
+      - input: ref('ref__provider')
+        format: sql
+        rows: "select null::varchar as provider_id, null::varchar as provider_name, null::varchar as provider_source_value, null::varchar as role limit 0"
+
       - input: ref('reference_data')
         format: sql
         rows: |
@@ -140,16 +144,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
+        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, 'Not recorded' as clinician, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
         union all
-        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false
+        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, 'Not recorded', true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false
         union all
-        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false
+        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, 'Not recorded', false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false
+        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, 'Not recorded', false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
+        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true
+        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true
         union all
-        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
+        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
