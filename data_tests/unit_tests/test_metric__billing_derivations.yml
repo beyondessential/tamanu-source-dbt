@@ -1,0 +1,80 @@
+unit_tests:
+  - name: ac_014_metric__billing_derivations
+    model: metric__billing
+    description: >
+      The derivations in specs/dbt-model/metric__billing.md. inv_1 is a clinic visit with a
+      patient payment and an insurer payment, and only the patient payment is emitted (BL-007).
+      inv_2 is an emergency encounter that became an admission, so it is inpatient with the flag
+      set (BL-009, BL-010), and its payment was refunded, so the pair nets to 0 against a NULL
+      patient paid (BL-004, BL-008). inv_3 is overpaid, so its balance is negative (BL-005).
+      inv_4 has no items, so every amount is 0, and its survey-response encounter has no care
+      setting (BL-004, BL-009). inv_5 is cancelled, so it and its payment are excluded (BL-002).
+    given:
+      - input: ref('ds__encounter_invoices')
+        rows:
+          - {invoice_id: 00000000-0000-0000-0000-000000000001, encounter_id: 00000000-0000-0000-0000-0000000000e1, status: finalised, invoice_datetime: '2026-08-03 09:15:00', invoice_total: 100.00, insurance_coverage: 40.00, invoice_discount: 6.00, patient_subtotal: 54.00, patient_payment: 30.00}
+          - {invoice_id: 00000000-0000-0000-0000-000000000002, encounter_id: 00000000-0000-0000-0000-0000000000e2, status: in_progress, invoice_datetime: '2026-08-04 22:40:00', invoice_total: 200.00, insurance_coverage: 120.00, invoice_discount: 0.00, patient_subtotal: 80.00, patient_payment: null}
+          - {invoice_id: 00000000-0000-0000-0000-000000000003, encounter_id: 00000000-0000-0000-0000-0000000000e3, status: finalised, invoice_datetime: '2026-08-05 11:00:00', invoice_total: 10.00, insurance_coverage: null, invoice_discount: 0.00, patient_subtotal: 10.00, patient_payment: 15.00}
+          - {invoice_id: 00000000-0000-0000-0000-000000000004, encounter_id: 00000000-0000-0000-0000-0000000000e4, status: in_progress, invoice_datetime: '2026-08-06 08:00:00', invoice_total: null, insurance_coverage: null, invoice_discount: 0.00, patient_subtotal: null, patient_payment: null}
+          - {invoice_id: 00000000-0000-0000-0000-000000000005, encounter_id: 00000000-0000-0000-0000-0000000000e5, status: cancelled, invoice_datetime: '2026-08-07 10:00:00', invoice_total: 50.00, insurance_coverage: 0.00, invoice_discount: 0.00, patient_subtotal: 50.00, patient_payment: 50.00}
+      - input: ref('clinical__visit_occurrence')
+        rows:
+          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e1, visit_concept_id: 9202, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_opd, visit_source_value: clinic}
+          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e2, visit_concept_id: 262, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_ward, visit_source_value: admission}
+          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e3, visit_concept_id: 9203, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_ed, visit_source_value: emergency}
+          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e4, visit_concept_id: 0, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: null, visit_source_value: surveyResponse}
+          - {visit_occurrence_id: 00000000-0000-0000-0000-0000000000e5, visit_concept_id: 9202, care_site_id: 00000000-0000-0000-0000-0000000000c1, department_id: dept_opd, visit_source_value: clinic}
+      - input: ref('locations')
+        rows:
+          - {id: 00000000-0000-0000-0000-0000000000c1, facility_id: fac_1}
+      - input: ref('invoice_payments')
+        rows:
+          - {id: 00000000-0000-0000-0000-0000000000a1, invoice_id: 00000000-0000-0000-0000-000000000001, date: '2026-08-03', amount: 30.00, original_payment_id: null}
+          # insurer payment: no invoice_patient_payments row
+          - {id: 00000000-0000-0000-0000-0000000000a6, invoice_id: 00000000-0000-0000-0000-000000000001, date: '2026-09-01', amount: 40.00, original_payment_id: null}
+          - {id: 00000000-0000-0000-0000-0000000000a2, invoice_id: 00000000-0000-0000-0000-000000000002, date: '2026-08-05', amount: 50.00, original_payment_id: null}
+          # refund of pay_2, stored positive
+          - {id: 00000000-0000-0000-0000-0000000000a3, invoice_id: 00000000-0000-0000-0000-000000000002, date: '2026-08-09', amount: 50.00, original_payment_id: 00000000-0000-0000-0000-0000000000a2}
+          - {id: 00000000-0000-0000-0000-0000000000a4, invoice_id: 00000000-0000-0000-0000-000000000003, date: '2026-09-02', amount: 15.00, original_payment_id: null}
+          - {id: 00000000-0000-0000-0000-0000000000a5, invoice_id: 00000000-0000-0000-0000-000000000005, date: '2026-08-07', amount: 50.00, original_payment_id: null}
+      - input: ref('invoice_patient_payments')
+        rows:
+          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a1}
+          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a2}
+          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a3}
+          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a4}
+          - {invoice_payment_id: 00000000-0000-0000-0000-0000000000a5}
+    expect:
+      rows:
+        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 1, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 100.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 40.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 6.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 54.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 30.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000001, period_granularity: minute, value_numeric: 24.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a1, period_granularity: day, value_numeric: 30.00, care_setting: outpatient, is_admitted_via_emergency: false}
+        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 1, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 200.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 120.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 0.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 80.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 0, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000002, period_granularity: minute, value_numeric: 80.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a2, period_granularity: day, value_numeric: 50.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a3, period_granularity: day, value_numeric: -50.00, care_setting: inpatient, is_admitted_via_emergency: true}
+        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 1, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 10.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 0, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 0.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 10.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: 15.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000003, period_granularity: minute, value_numeric: -5.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_payment, subject_id: 00000000-0000-0000-0000-0000000000a4, period_granularity: day, value_numeric: 15.00, care_setting: emergency, is_admitted_via_emergency: false}
+        - {metric_id: invoice, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 1, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_total, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_insurance_coverage, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_discount, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0.00, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_total, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_paid, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
+        - {metric_id: invoice_patient_balance, subject_id: 00000000-0000-0000-0000-000000000004, period_granularity: minute, value_numeric: 0, care_setting: none, is_admitted_via_emergency: false}
