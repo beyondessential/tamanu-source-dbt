@@ -4,7 +4,7 @@
 -- Per-request (subject) grain: one row per imaging request, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. It is the imaging-request counterpart to
 -- metric__procedure over the same clinical model.
--- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-011.
+-- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-012.
 --
 -- BL-003: encounter_type is the setting the request was raised in -- read off the
 -- clinical__visit_detail segment clinical__procedure_occurrence resolves as its
@@ -139,6 +139,10 @@ requests as (
         -- type -- lets a consumer scope to a setting without a separate metric per
         -- setting.
         vd.visit_detail_source_value as encounter_type,
+        -- BL-012: the segment's OMOP Visit concept and its name, as clinical__visit_detail
+        -- carries them
+        vd.visit_detail_concept_id,
+        vd.visit_detail_concept_name,
         pr.gender_source_value as sex,
         {{ age_years('po.procedure_date', 'pr') }} as age_years,
         po.is_completed,
@@ -184,6 +188,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    visit_detail_concept_id,
+    visit_detail_concept_name,
     sex,
     -- the clinical model's own completion flag -- cancelled and still-open requests are
     -- both false, indistinguishable from each other by this column alone.
