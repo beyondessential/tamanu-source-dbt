@@ -59,6 +59,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_occurrence_id` | uuid | `encounters.id`. Native UUID PK — no remap to OMOP integer IDs (D1) |
 | `person_id` | uuid | `encounters.patient_id`. FK to `clinical__person.person_id` |
 | `visit_concept_id` | integer | OMOP Visit concept from `map__omop_visit_type` (9201 Inpatient, 9202 Outpatient, 9203 ER, 0 no-match, or 262 for ER→admission). Never NULL — an unmapped `encounter_type` excludes the encounter entirely rather than yielding a NULL concept (BL-002) |
+| `visit_concept_name` | text | The OMOP name of `visit_concept_id`: `map__omop_visit_type.concept_name`, or Emergency Room and Inpatient Visit for 262 (BL-002). Never NULL |
 | `visit_start_date` | date | Date component of `start_datetime` |
 | `visit_start_datetime` | timestamp | `encounters.start_datetime`. Always non-null |
 | `visit_end_date` | date | Date component of `end_datetime`. NULL for open encounters |
@@ -74,7 +75,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 - **BL-001:** One row per encounter, sourced from `{{ ref('encounters') }}` only — never
   `public.*` (D10). Deleted / test-patient filtering is inherited from the base model.
 - **BL-002:** `visit_concept_id` is the OMOP standard Visit concept for the encounter
-  type. For all types except `admission` it is looked up from `map__omop_visit_type`
+  type, and `visit_concept_name` is its OMOP name. For all types except `admission` it is looked up from `map__omop_visit_type`
   on `encounter_type = local_code`. The join is an **inner** join: `visit_concept_id` is
   never NULL, by construction — an encounter whose `encounter_type` has no row in the map
   is excluded from the model entirely, not kept with a NULL concept. This is a deliberate
@@ -162,6 +163,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | AC-010 | Every `encounter_type` value in `encounters` / `encounter_history` exists in `map__omop_visit_type.local_code` (flags schema drift before it silently excludes an encounter here) | BL-002 | singular test (`data_test__map__omop_visit_type_coverage`) |
 | AC-011 | Every `encounters.id` has a corresponding `visit_occurrence_id` here (the direct completeness check for BL-002's inner join) | BL-002 | singular test (`data_test__clinical__visit_occurrence`) |
 | AC-012 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-008 | dbt `relationships` |
+| AC-013 | `visit_concept_name` is not null | BL-002 | dbt `not_null` |
 
 ## Registry entry
 

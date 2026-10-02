@@ -75,6 +75,8 @@ D5 wide format, plus seven disaggregation columns and one measure attribute.
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | The encounter's facility (BL-005). `not_null` (AC-007) |
 | `encounter_type` | varchar(255) | The encounter's type (BL-005). `not_null` (AC-011) |
+| `visit_concept_id` | integer | The encounter's OMOP Visit concept: 9201, 9202, 9203, 262 or 0 (BL-010) |
+| `visit_concept_name` | text | Its OMOP name, e.g. Emergency Room and Inpatient Visit (BL-010) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `diagnosis_code` | varchar(255) | Reference-data code as recorded, never NULL (BL-007, AC-010) |
 | `diagnosis` | varchar(255) | Readable name as recorded, never NULL (BL-007, AC-010) |
@@ -177,6 +179,7 @@ so is any grouping of the diagnosis itself (BL-006). This model therefore carrie
 - **BL-009 (materialisation is env-aware):** `table` when `target.name` starts with
   `analytics`, `view` otherwise, set on the `metrics:` block in `dbt_project.yml` (shared with
   every model under `models/metrics/`).
+- **BL-010 (visit concept):** `visit_concept_id` and `visit_concept_name` are the encounter's OMOP Visit concept and its name, as `clinical__visit_occurrence` carries them.
 
 ## Acceptance criteria
 
