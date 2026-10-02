@@ -51,6 +51,14 @@ models:
               arguments:
                 to: ref('map__omop_visit_type')
                 field: concept_id
+      - name: visit_concept_name
+        data_type: text
+        description: >-
+          The OMOP name of visit_concept_id: from map__omop_visit_type, or Emergency Room and
+          Inpatient Visit for 262. Never NULL.
+        data_tests:
+          - not_null:
+              name: ac_013_clinical__visit_occurrence_visit_concept_name_not_null
       - name: visit_start_date
         data_type: date
         description: "{{ doc('clinical__visit_occurrence__visit_start_date') }}"

@@ -53,6 +53,8 @@ AC-001.
 | `value_boolean` | boolean | NULL -- unused |
 | `facility_id` | varchar(255) | The facility of the encounter's location (BL-003) |
 | `encounter_type` | varchar(255) | The encounter's type (BL-004) |
+| `visit_concept_id` | integer | The encounter's OMOP Visit concept: 9201, 9202, 9203, 262 or 0 (BL-007) |
+| `visit_concept_name` | text | Its OMOP name, e.g. Emergency Room and Inpatient Visit (BL-007) |
 | `department` | text | The encounter's department, resolved to a name (BL-004) |
 | `clinician` | text | The encounter's supervising clinician, resolved to a name (BL-005) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
@@ -71,6 +73,7 @@ so this model carries no `data_table_*` meta.
 - **BL-004 (type and department):** `encounter_type` is the encounter's type and `department` its department name, both as on the encounter record, `'Not recorded'` where the department does not resolve.
 - **BL-005 (clinician):** `clinician` is the name of the encounter's supervising clinician, `'Not recorded'` where there is none.
 - **BL-006 (registration and count):** `metric_id` is the constant `'encounter'` and `value_numeric` the constant `1`, so a consumer sums it to count encounters at any grain.
+- **BL-007 (visit concept):** `visit_concept_id` and `visit_concept_name` are the encounter's OMOP Visit concept and its name, as `clinical__visit_occurrence` carries them.
 
 ## Acceptance criteria
 

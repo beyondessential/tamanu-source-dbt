@@ -107,6 +107,8 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 | `invoice_status` | text | `in_progress` or `finalised` | `not_null`, `accepted_values` |
 | `facility_id` | varchar | Facility of the encounter | `not_null` |
 | `care_setting` | text | `outpatient`, `emergency`, `inpatient` or `none` | `not_null`, `accepted_values` |
+| `visit_concept_id` | integer | The encounter's OMOP Visit concept: 9201, 9202, 9203, 262 or 0 (BL-019) |
+| `visit_concept_name` | text | Its OMOP name, e.g. Emergency Room and Inpatient Visit (BL-019) |
 | `is_admitted_via_emergency` | boolean | Inpatient encounter with an earlier emergency phase | `not_null` |
 | `department_id` | varchar | Department of the encounter | |
 | `encounter_type` | text | Tamanu encounter type of the encounter | `not_null` |
@@ -140,7 +142,7 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
   encounter's current values as Tamanu ids and codes, unresolved and ungrouped.
 - **BL-012 (facility):** `facility_id` is the facility of the encounter's location.
 - **BL-013 (one setting per invoice):** every row of an invoice, including its payments,
-  carries the same `care_setting`, `is_admitted_via_emergency`, `department_id`,
+  carries the same `care_setting`, `visit_concept_id`, `visit_concept_name`, `is_admitted_via_emergency`, `department_id`,
   `encounter_type`, `facility_id` and `invoice_status`.
 - **BL-014 (rates and running totals are the consumer's):** the model emits counts and
   amounts only, and ratios such as coverage % or payment %, and running totals, are formed by
@@ -152,6 +154,7 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
   change to an invoice after its month has passed restates that month.
 - **BL-018 (one invoice per encounter):** each encounter is expected to have at most one
   non-cancelled invoice, and an encounter with more has each invoice counted as its own subject.
+- **BL-019 (visit concept):** `visit_concept_id` and `visit_concept_name` are the encounter's OMOP Visit concept and its name, as `clinical__visit_occurrence` carries them.
 
 ## Acceptance criteria
 
