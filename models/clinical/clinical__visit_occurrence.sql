@@ -20,6 +20,14 @@ encounter_history_types as (
         encounter_id,
         encounter_type
     from {{ ref('encounter_history') }}
+),
+
+-- BL-002: encounters with an emergency, triage or observation phase in their history -- an
+-- admission among them is an ER-to-admission episode (262)
+er_phases as (
+    select distinct encounter_id
+    from encounter_history_types
+    where encounter_type in ('emergency', 'triage', 'observation')
 )
 
 select
@@ -32,16 +40,13 @@ select
     -- visit type: concept shadow + retained source value (BL-002)
     -- admission encounters that had a prior emergency/triage/observation phase
     -- map to 262 (Emergency Room and Inpatient Visit); all others use the map
+    case when e.encounter_type = 'admission' and er.encounter_id is not null then 262 else vm.concept_id end as visit_concept_id,
+    -- the concept's OMOP name, the same choice as visit_concept_id (BL-002)
     case
-        when e.encounter_type = 'admission'
-            and exists (
-                select 1 from encounter_history_types eht
-                where eht.encounter_id = e.id
-                    and eht.encounter_type in ('emergency', 'triage', 'observation')
-            )
-            then 262
-        else vm.concept_id
-    end as visit_concept_id,
+        when e.encounter_type = 'admission' and er.encounter_id is not null
+            then 'Emergency Room and Inpatient Visit'
+        else vm.concept_name
+    end as visit_concept_name,
 
     -- visit datetimes (BL-004)
     e.start_datetime::date as visit_start_date,
@@ -66,3 +71,4 @@ select
 
 from encounters e
 join visit_map vm on vm.local_code = e.encounter_type
+left join er_phases er on er.encounter_id = e.id
