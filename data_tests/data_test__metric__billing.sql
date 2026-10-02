@@ -75,7 +75,7 @@ ac_012 as (
     where is_admitted_via_emergency and care_setting != 'inpatient'
 ),
 
--- AC-015: no encounter has more than one non-cancelled invoice (BL-013).
+-- BL-018: AC-015, one non-cancelled invoice per encounter (see specs/dbt-model/metric__billing.md)
 ac_015 as (
     select
         encounter_id::varchar as subject_id,
