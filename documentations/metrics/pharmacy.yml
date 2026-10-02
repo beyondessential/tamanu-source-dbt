@@ -46,3 +46,39 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__pharmacy_order.md
+- metric_id: medication_dispense
+  kind: metric
+  name: Medications dispensed
+  description: >-
+    Medication handed over by pharmacy against an ordered drug line, one row per dispense, dated
+    to the day it was dispensed. A drug line dispensed in several partial fills counts once per
+    fill.
+  numerator_description: >-
+    Medication dispenses, counted on the date each was dispensed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    The dispensing counterpart of pharmacy_order, which counts ordered drug lines on the day they
+    were ordered. Dated to the dispense so a period's figure is what pharmacy handed out in that
+    period. The setting is the OMOP Visit concept of the segment the patient was in when it was
+    dispensed, id and name, so the date and the place describe the same moment, and an
+    emergency card scopes this metric on 9203 rather than reading a separate one. No external indicator anchor
+    (AIHW/WHO/DHIS2) defines medication dispensing as a standard count; flag for realignment if a
+    national HMIS or WHO essential-medicines indicator surfaces later.
+  unit: count
+  subject_grain: medication_dispense
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - visit_detail_concept_id
+  - visit_detail_concept_name
+  - sex
+  - drug_source_value
+  - drug_source_name
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__medication_dispense.md
