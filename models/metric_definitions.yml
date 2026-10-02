@@ -111,7 +111,9 @@ models:
           relabelling them here without changing that model would make this registry wrong.
           Migrating them is a change in that repo.
         tests:
+          # AC-016 (metric__billing): `currency` is an accepted unit.
           - accepted_values:
+              name: ac_016_metric__billing_unit_accepts_currency
               arguments:
                 values: ['count', 'proportion', 'percentage', 'rate_per_1000', 'currency']
       - name: subject_grain
