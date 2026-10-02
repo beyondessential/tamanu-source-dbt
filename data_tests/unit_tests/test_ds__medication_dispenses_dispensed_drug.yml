@@ -2,7 +2,7 @@ unit_tests:
   - name: test_ds__medication_dispenses_dispensed_drug
     model: ds__medication_dispenses
     description: >
-      BL-001/BL-002/BL-005 of ds__medication_dispenses. Three dispenses at a
+      BL-001/BL-002/BL-005/BL-006 of ds__medication_dispenses. Three dispenses at a
       non-sensitive facility, each against a prescription for Drug A:
 
       md_mod  -- pharmacy modified the prescription at dispensing, so the dispense
@@ -12,8 +12,12 @@ unit_tests:
       md_gone -- its prescription is absent from the prescriptions base (deleted, or
                  the test patient's). The row must not appear (AC-005).
 
-      A fourth dispense at a sensitive facility must not appear in this variant.
-      Reverting the macro to join on prescriptions.medication_id fails md_mod.
+      A fourth dispense, on an encounter at a sensitive facility, must not appear in this
+      variant. md_moved's pharmacy order names the sensitive facility, but its encounter is at
+      the general hospital, so it appears here under the general hospital: the facility and
+      the variant are the encounter's (AC-006). md_noloc's encounter has a location that does
+      not resolve, so it appears in neither variant (AC-008). Reverting the macro to join on
+      prescriptions.medication_id fails md_mod.
     given:
       - input: ref('medication_dispenses')
         format: sql
@@ -22,6 +26,8 @@ unit_tests:
           union all select 'md_same', 'pop_2', 20, '2026-09-02 09:00:00'::timestamp, 'drug_a'
           union all select 'md_gone', 'pop_3', 30, '2026-09-03 09:00:00'::timestamp, 'drug_a'
           union all select 'md_sen', 'pop_4', 40, '2026-09-04 09:00:00'::timestamp, 'drug_b'
+          union all select 'md_moved', 'pop_5', 50, '2026-09-05 09:00:00'::timestamp, 'drug_a'
+          union all select 'md_noloc', 'pop_6', 60, '2026-09-06 09:00:00'::timestamp, 'drug_a'
       - input: ref('pharmacy_order_prescriptions')
         format: sql
         rows: |
@@ -29,16 +35,26 @@ unit_tests:
           union all select 'pop_2', 'po_std', 'pr_2'
           union all select 'pop_3', 'po_std', 'pr_3'
           union all select 'pop_4', 'po_sen', 'pr_4'
+          union all select 'pop_5', 'po_moved', 'pr_5'
+          union all select 'pop_6', 'po_noloc', 'pr_6'
       - input: ref('pharmacy_orders')
         format: sql
         rows: |
           select 'po_std' as id, 'enc_1' as encounter_id, 'fac_std' as facility_id
           union all select 'po_sen', 'enc_2', 'fac_sen'
+          union all select 'po_moved', 'enc_1', 'fac_sen'
+          union all select 'po_noloc', 'enc_3', 'fac_std'
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_1' as id, 'pat_1' as patient_id
-          union all select 'enc_2', 'pat_2'
+          select 'enc_1' as id, 'pat_1' as patient_id, 'loc_std' as location_id, null::text as encounter_type, null::text as reason_for_encounter, null::timestamp as start_datetime, null::timestamp as end_datetime, null::text as planned_location_id, null::timestamp as planned_location_start_datetime, null::text as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all select 'enc_2', 'pat_2', 'loc_sen', null::text, null::text, null::timestamp, null::timestamp, null::text, null::timestamp, null::text, null::text, null::text
+          union all select 'enc_3', 'pat_1', 'loc_gone', null::text, null::text, null::timestamp, null::timestamp, null::text, null::timestamp, null::text, null::text, null::text
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_std' as id, 'fac_std' as facility_id
+          union all select 'loc_sen', 'fac_sen'
       # every prescription is for Drug A, and pr_3 is filtered out by the base
       - input: ref('prescriptions')
         format: sql
@@ -46,6 +62,8 @@ unit_tests:
           select 'pr_1' as id, 'drug_a' as medication_id
           union all select 'pr_2', 'drug_a'
           union all select 'pr_4', 'drug_a'
+          union all select 'pr_5', 'drug_a'
+          union all select 'pr_6', 'drug_a'
       - input: ref('reference_data')
         format: sql
         rows: |
@@ -71,13 +89,17 @@ unit_tests:
           'Drug B' as medication
         union all
         select 'md_same', 20, '2026-09-02 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
+        union all
+        select 'md_moved', 50, '2026-09-05 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
 
   - name: test_ds__sensitive_medication_dispenses_dispensed_drug
     model: ds__sensitive_medication_dispenses
     description: >
       AC-004: the sensitive variant, built from the same macro, also reports the
-      dispensed drug. A modified dispense at a sensitive facility must report Drug B,
-      and a modified dispense at a non-sensitive facility must not appear.
+      dispensed drug. A modified dispense on an encounter at a sensitive facility must report
+      Drug B, and one on an encounter at a non-sensitive facility must not appear. md_sen's
+      pharmacy order names the general hospital, but its encounter is at the sensitive clinic,
+      so it appears here: the variant is the encounter's (AC-006).
     given:
       - input: ref('medication_dispenses')
         format: sql
@@ -92,13 +114,18 @@ unit_tests:
       - input: ref('pharmacy_orders')
         format: sql
         rows: |
-          select 'po_sen' as id, 'enc_1' as encounter_id, 'fac_sen' as facility_id
+          select 'po_sen' as id, 'enc_1' as encounter_id, 'fac_std' as facility_id
           union all select 'po_std', 'enc_2', 'fac_std'
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_1' as id, 'pat_1' as patient_id
-          union all select 'enc_2', 'pat_2'
+          select 'enc_1' as id, 'pat_1' as patient_id, 'loc_sen' as location_id, null::text as encounter_type, null::text as reason_for_encounter, null::timestamp as start_datetime, null::timestamp as end_datetime, null::text as planned_location_id, null::timestamp as planned_location_start_datetime, null::text as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all select 'enc_2', 'pat_2', 'loc_std', null::text, null::text, null::timestamp, null::timestamp, null::text, null::timestamp, null::text, null::text, null::text
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_std' as id, 'fac_std' as facility_id
+          union all select 'loc_sen', 'fac_sen'
       - input: ref('prescriptions')
         format: sql
         rows: |
