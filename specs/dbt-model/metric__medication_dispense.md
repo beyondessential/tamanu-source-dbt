@@ -26,9 +26,8 @@ pharmacy dispensed in that period.
 |---|---|---|
 | `medication_dispense` | count | Medication dispenses (always 1 per row) |
 
-**Who reads it.** The FSM emergency, outpatient, dental, inpatient and summary dashboards'
-medications dispensed cards, via data tables in `tupaia-data-product`, each scoping to its setting
-by `visit_detail_concept_id` and `department`.
+**Who reads it.** Tupaia setting-scoped medications dispensed cards, via data tables in
+`tupaia-data-product`, each scoping to its setting by `visit_detail_concept_id` and `department`.
 
 ## Definition sources
 
@@ -71,9 +70,9 @@ so this model carries no `data_table_*` meta.
 
 ## Business logic
 
-- **BL-001 (population):** every medication dispense against a drug line on a pharmacy order is counted.
+- **BL-001 (population):** every live dispense against a drug line on a pharmacy order is a candidate, in every setting.
 - **BL-002 (period):** `period_start` is the date of the dispense's `dispensed_at`.
-- **BL-003 (segment):** each dispense resolves to the `clinical__visit_detail` segment active at its `dispensed_at`, clamped to the encounter's first segment where the dispense predates every segment, by `visit_detail__active_segment`.
+- **BL-003 (segment):** each dispense resolves to the `clinical__visit_detail` segment active at its `dispensed_at`, clamped to the encounter's first segment where the dispense predates every segment, by `visit_detail__active_segment`. A dispense whose encounter has no segment is excluded.
 - **BL-004 (facility):** `facility_id` is the facility of the segment's `care_site_id`, and a dispense whose patient or segment location does not resolve is excluded.
 - **BL-005 (setting):** `visit_detail_concept_id` is the segment's OMOP Visit concept, `visit_detail_concept_name` is that concept's name in `map__omop_visit_type`, and `encounter_type` is the segment's own encounter type.
 - **BL-006 (medication):** `drug_source_value` and `drug_source_name` are the code and name of the dispense's own medication, `'Not recorded'` where it does not resolve.
@@ -90,7 +89,8 @@ so this model carries no `data_table_*` meta.
 | AC-002 | `metric_id` is always `medication_dispense` and registered in `metric_definitions` | BL-008 | `not_null` + `accepted_values` + `relationships` |
 | AC-003 | `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `visit_detail_concept_id`, `visit_detail_concept_name`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-002, BL-004 -- BL-008 | `not_null` |
 | AC-004 | `visit_detail_concept_id` is one of 9201, 9202, 9203, 0 | BL-005 | `accepted_values` |
-| AC-005 | A drug line dispensed twice has a row on each dispense's own date, a substituted drug reports the dispensed medication, an unresolved medication falls back to `'Not recorded'`, a dispense takes the concept and name of the segment active when it was dispensed (an ED-ordered line dispensed after admission is 9201), a dispense predating its segments clamps to the first, and a dispense whose encounter has no segment is dropped | BL-001 -- BL-007, BL-009 | unit test `ac_005_metric__medication_dispense_segment` |
+| AC-005 | A drug line dispensed twice has a row on each dispense's own date, a substituted drug reports the dispensed medication, an unresolved medication falls back to `'Not recorded'`, a dispense takes the concept, name and facility of the segment active when it was dispensed (an ED-ordered line dispensed after admission is 9201, at the ward's facility rather than the ED's or the order's own), a dispense predating its segments clamps to the first, a dispense whose encounter has no segment is dropped, a dispense whose segment's location does not resolve is dropped, and a dispense whose segment's department does not resolve falls back to `'Not recorded'` | BL-001 -- BL-007, BL-009 | unit test `ac_005_metric__medication_dispense_segment` |
+| AC-006 | Every dispense in `medication_dispenses` has a row, so a dispense dropped for want of a segment, patient or location is surfaced | BL-001, BL-003, BL-004 | `dbt_utils.equal_rowcount` against `medication_dispenses` (`warn`) |
 
 ## Registry entry
 
@@ -117,7 +117,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_dispense`, `k
 
 | Consumer | Use |
 |---|---|
-| Tupaia FSM emergency, outpatient, dental, inpatient and summary dashboards | Medications dispensed tables, the ED daily summary and the monthly summaries' medications dispensed column |
+| Tupaia emergency, outpatient, dental, inpatient and summary dashboards | Medications dispensed tables, daily summaries and monthly summaries' medications dispensed column |
 
 ## Related
 
