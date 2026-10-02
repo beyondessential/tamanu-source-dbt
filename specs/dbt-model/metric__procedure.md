@@ -46,6 +46,8 @@ procedures at any grouping.
 | `facility_id` | varchar(255) | The facility of the segment the procedure was performed in (BL-004). `not_null` (AC-007) |
 | `encounter_type` | varchar(255) | The deployment's own encounter type for that segment (BL-003). `not_null` (AC-014) |
 | `encounter_setting` | text | That segment's OMOP visit concept grouped to a setting (BL-008). `not_null` (AC-015) |
+| `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-010) |
+| `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-010) |
 | `sex` | varchar(255) | The patient's sex, from `clinical__person` |
 | `procedure` | text | The procedure as recorded, ungrouped (BL-006). Never NULL |
 | `procedure_code` | text | The procedure type's reference-data code (BL-006). Never NULL |
@@ -115,6 +117,7 @@ procedures at any grouping.
   `metric_filters` on a readable value, the same convention procedure identity (BL-006)
   uses rather than an opaque Tamanu id. `bases/locations` carries no `department_id`, so it
   comes off the segment directly. Never NULL -- falls back to `'Not recorded'`.
+- **BL-010 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
 

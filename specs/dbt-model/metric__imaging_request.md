@@ -85,6 +85,8 @@ D5 wide format, plus eight disaggregation columns and one measure attribute.
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | The resolved segment's own location's facility (BL-005). `not_null` |
 | `encounter_type` | varchar(255) | The setting the request was raised in -- the resolved segment's own type (BL-003). `not_null` |
+| `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-012) |
+| `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-012) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | `clinical__procedure_occurrence`'s completion flag. Never NULL. Does not distinguish `cancelled` from `pending`/`in_progress` |
 | `imaging_type` | text | Readable modality label, falling back to `imaging_type_code` then `'Not recorded'` (BL-007). Never NULL |
@@ -185,6 +187,7 @@ yet built as of this spec.
   `metric_filters` on a readable value, the same convention modality identity (BL-007) uses
   rather than an opaque Tamanu id. `bases/locations` carries no `department_id`, so it comes
   off the segment directly. Never NULL -- falls back to `'Not recorded'`.
+- **BL-012 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
 

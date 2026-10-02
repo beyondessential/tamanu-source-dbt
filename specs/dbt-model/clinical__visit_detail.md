@@ -73,6 +73,7 @@ inner join, not kept with a NULL concept — see BL-003 and
 | `visit_occurrence_id` | uuid | Parent encounter. FK to `clinical__visit_occurrence.visit_occurrence_id` |
 | `person_id` | uuid | Patient (`encounters.patient_id`) |
 | `visit_detail_concept_id` | integer | OMOP Visit concept for this segment's `encounter_type`, from `map__omop_visit_type`. Never NULL — an unmapped `encounter_type` excludes the segment entirely rather than yielding a NULL concept (BL-003) |
+| `visit_detail_concept_name` | text | The OMOP name of `visit_detail_concept_id`, from `map__omop_visit_type.concept_name` (BL-003). Never NULL |
 | `visit_detail_start_date` | date | Date component of `visit_detail_start_datetime` |
 | `visit_detail_start_datetime` | timestamp | Segment start (the `encounter_history` event datetime, or the encounter start for a synthesized segment) |
 | `visit_detail_end_date` | date | Date component of `visit_detail_end_datetime`. NULL for the final segment of an open encounter |
@@ -105,7 +106,7 @@ inner join, not kept with a NULL concept — see BL-003 and
   `encounter_history` events share a timestamp, a segment's `end` equals its `start`
   (AC-006 permits `>=`), so length-of-stay-by-segment math should expect the occasional
   zero-duration phase rather than assume every segment spans a positive interval.
-- **BL-003:** `visit_detail_concept_id` reuses `map__omop_visit_type` on the segment's
+- **BL-003:** `visit_detail_concept_id` and `visit_detail_concept_name` reuse `map__omop_visit_type` on the segment's
   `encounter_type` (same map as `clinical__visit_occurrence` BL-002), applied per segment
   rather than once per encounter — so an ER phase and a subsequent inpatient phase of one
   encounter get 9203 and 9201 respectively, while the parent `VISIT_OCCURRENCE` row
@@ -177,6 +178,7 @@ inner join, not kept with a NULL concept — see BL-003 and
 | AC-012 | Every `encounter_type` value in `encounters` / `encounter_history` exists in `map__omop_visit_type.local_code` (flags schema drift before it silently excludes a segment here) | BL-003 | singular test (`data_test__map__omop_visit_type_coverage`) |
 | AC-013 | Every `encounters.id` has at least one corresponding row here (the direct completeness check for BL-003's inner join) | BL-003, BL-005 | singular test (`data_test__clinical__visit_detail`) |
 | AC-014 | The final segment of an encounter that has not closed (`end_datetime` is NULL) has a NULL `visit_detail_end_datetime` / `visit_detail_end_date`, not the segment's own start | BL-002 | dbt unit test (`test_clinical__visit_detail_open_encounter_stays_open`) |
+| AC-015 | `visit_detail_concept_name` is not null | BL-003 | `not_null` |
 
 `test_clinical__visit_detail_synthesized_segment` additionally covers BL-005
 (history-less encounter → one whole-visit segment).

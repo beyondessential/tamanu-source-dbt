@@ -59,10 +59,6 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
--- BL-005: the OMOP Visit concept name for the segment's encounter type
-visit_types as (
-    select * from {{ ref('map__omop_visit_type') }}
-),
 
 -- BL-001: one row per live dispense, carrying its encounter for the segment lookup. Inner joins --
 -- bases/medication_dispenses already excludes soft-deleted dispenses, drug lines, orders and
@@ -94,7 +90,7 @@ dispense_rows as (
         loc.facility_id,
         -- BL-005: the setting at dispensing, as the segment's OMOP Visit concept
         vd.visit_detail_concept_id,
-        vt.concept_name as visit_detail_concept_name,
+        vd.visit_detail_concept_name,
         -- BL-005: the segment's own encounter_type, finer than the setting above
         vd.visit_detail_source_value as encounter_type,
         pr.gender_source_value as sex,
@@ -120,10 +116,6 @@ dispense_rows as (
         on loc.id = vd.care_site_id
     left join reference_data rd
         on rd.id = d.medication_id
-    -- BL-005: inner join -- clinical__visit_detail already keeps only segments whose
-    -- encounter type the map covers, so this drops nothing
-    join visit_types vt
-        on vt.local_code = vd.visit_detail_source_value
     left join departments dept
         on dept.id = vd.department_id
 )

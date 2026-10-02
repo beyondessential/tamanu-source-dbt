@@ -74,7 +74,7 @@ so this model carries no `data_table_*` meta.
 - **BL-002 (period):** `period_start` is the date of the dispense's `dispensed_at`.
 - **BL-003 (segment):** each dispense resolves to the `clinical__visit_detail` segment active at its `dispensed_at`, clamped to the encounter's first segment where the dispense predates every segment, by `visit_detail__active_segment`. A dispense whose encounter has no segment is excluded.
 - **BL-004 (facility):** `facility_id` is the facility of the segment's `care_site_id`, and a dispense whose patient or segment location does not resolve is excluded.
-- **BL-005 (setting):** `visit_detail_concept_id` is the segment's OMOP Visit concept, `visit_detail_concept_name` is that concept's name in `map__omop_visit_type`, and `encounter_type` is the segment's own encounter type.
+- **BL-005 (setting):** `visit_detail_concept_id` is the segment's OMOP Visit concept, `visit_detail_concept_name` is that concept's name, both as `clinical__visit_detail` carries them, and `encounter_type` is the segment's own encounter type.
 - **BL-006 (medication):** `drug_source_value` and `drug_source_name` are the code and name of the dispense's own medication, `'Not recorded'` where it does not resolve.
 - **BL-007 (department):** `department` is the segment's department name, `'Not recorded'` where it does not resolve.
 - **BL-008 (registration and count):** `metric_id` is the constant `'medication_dispense'` and `value_numeric` the constant `1`, so a consumer sums it to count dispenses at any grain.
@@ -106,8 +106,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_dispense`, `k
 | `medication_dispenses` | The population, dispense date, quantity and dispensed medication (BL-001, BL-002, BL-006, BL-009) |
 | `pharmacy_order_prescriptions`, `pharmacy_orders` | The dispense's encounter, for the segment (BL-003) |
 | `reference_data` | The medication's code and name (BL-006) |
-| `clinical__visit_detail` | The dispensing segment and its OMOP Visit concept (BL-003, BL-005) |
-| `map__omop_visit_type` | The concept's OMOP name (BL-005) |
+| `clinical__visit_detail` | The dispensing segment and its OMOP Visit concept id and name (BL-003, BL-005) |
 | `clinical__person` | Sex and birth date |
 | `locations` | Facility resolution (BL-004) |
 | `departments` | Department name resolution (BL-007) |

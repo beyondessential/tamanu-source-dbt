@@ -17,9 +17,9 @@ unit_tests:
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
-          select 'vd10a' as visit_detail_id, 'e10' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-02-01'::date as visit_detail_start_date, '2026-02-01 08:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          select 'vd10a' as visit_detail_id, 'e10' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, '2026-02-01'::date as visit_detail_start_date, '2026-02-01 08:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
           union all
-          select 'vd11a', 'e11', 'p1', 9201, '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
+          select 'vd11a', 'e11', 'p1', 9201, 'Inpatient Visit', '2026-02-02'::date, '2026-02-02 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'admission', null::varchar
 
       - input: ref('clinical__person')
         format: sql
@@ -40,6 +40,6 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'Outpatient' as encounter_setting, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
+        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'Outpatient' as encounter_setting, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
         union all
-        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
