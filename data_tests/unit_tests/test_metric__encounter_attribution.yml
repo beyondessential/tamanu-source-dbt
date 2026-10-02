@@ -11,13 +11,13 @@ unit_tests:
       - input: ref('clinical__visit_occurrence')
         format: sql
         rows: |
-          select 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10'::date as visit_start_date, 'admission' as visit_source_value, 'u2' as provider_id, 'loc_ward' as care_site_id, 'dept_med' as department_id
+          select 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10'::date as visit_start_date, 'admission' as visit_source_value, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'u2' as provider_id, 'loc_ward' as care_site_id, 'dept_med' as department_id
           union all
-          select 'e2', 'p1', '2026-01-11'::date, 'clinic', null::text, 'loc_clinic', 'dept_opd'
+          select 'e2', 'p1', '2026-01-11'::date, 'clinic', 9202, 'Outpatient Visit', null::text, 'loc_clinic', 'dept_opd'
           union all
-          select 'e3', 'p1', '2026-01-12'::date, 'surveyResponse', 'u1', 'loc_clinic', null::text
+          select 'e3', 'p1', '2026-01-12'::date, 'surveyResponse', 0, 'No matching concept', 'u1', 'loc_clinic', null::text
           union all
-          select 'e4', 'p1', '2026-01-13'::date, 'clinic', 'u1', 'loc_missing', 'dept_opd'
+          select 'e4', 'p1', '2026-01-13'::date, 'clinic', 9202, 'Outpatient Visit', 'u1', 'loc_missing', 'dept_opd'
 
       - input: ref('clinical__person')
         format: sql
@@ -48,8 +48,8 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac2' as facility_id, 'admission' as encounter_type, 'Medical' as department, 'Dr Ben' as clinician, 'female' as sex, 45 as age_years
+        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac2' as facility_id, 'admission' as encounter_type, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'Medical' as department, 'Dr Ben' as clinician, 'female' as sex, 45 as age_years
         union all
-        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'General OPD', 'Not recorded', 'female', 45
+        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'General OPD', 'Not recorded', 'female', 45
         union all
-        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'surveyResponse', 'Not recorded', 'Dr Ana', 'female', 45
+        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'surveyResponse', 0, 'No matching concept', 'Not recorded', 'Dr Ana', 'female', 45
