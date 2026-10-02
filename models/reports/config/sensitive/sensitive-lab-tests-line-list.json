@@ -2,7 +2,7 @@
   "query": "replace this",
   "name": "Sensitive lab tests line list",
   "status": "published",
-  "notes": "This report generates a list of all patients that have had sensitive lab tests performed for the selected parameters. Patients are listed in chronological order based on the lab request date and time. Only lab tests marked as sensitive in the system are included in this report.\n\nThe report includes detailed test results, verification status, and completion information for sensitive tests only.",
+  "notes": "This report generates a list of all patients that have had a lab test performed at a sensitive facility for the selected parameters. Patients are listed in chronological order based on the lab request date and time. All lab tests performed at a sensitive facility are included in this report, regardless of whether the individual lab test itself is marked as sensitive.\n\nThe report includes detailed test results, verification status, and completion information.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "7days",

@@ -147,3 +147,19 @@ emits the duration and the consumer's data table bands it.
 A measure, not a dimension: continuous, so no data table exposes it as a filter and it is absent
 from the registry's disaggregations. NULL while the encounter is open.
 {% enddocs %}
+
+{% docs metric__emergency_visit__clinician %}
+Display name of the clinician recorded on the ED intake segment, from `ref__provider`.
+
+The clinician the patient was seen by on arrival, not whoever the encounter ended with -- for
+an attendance later admitted, the admitting clinician is on `metric__inpatient_admission`
+instead, which carries `is_admitted_via_emergency` to scope to this same population.
+
+It is staff-attributable but not patient-identifying: a row says a named clinician saw
+someone, never who.
+
+'Not recorded' where the intake segment carries no clinician, and where the user record has
+since been deleted. Never NULL: the data tables expose this as an array filter and Tupaia's
+array filter drops NULL rows, which would silently disappear the attendance from a card that
+groups by clinician.
+{% enddocs %}

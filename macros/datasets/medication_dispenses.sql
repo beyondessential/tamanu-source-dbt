@@ -7,7 +7,8 @@ select
     e.patient_id,
     po.facility_id,
     f.name as facility,
-    pr.medication_id,
+    -- The dispense's own drug, so a pharmacy modification at dispensing is reported (BL-001)
+    md.medication_id,
     m.code as medication_code,
     m.name as medication
 from {{ ref('medication_dispenses') }} md
@@ -18,11 +19,11 @@ join {{ ref('pharmacy_orders') }} po
 join {{ ref('encounters') }} e 
     on e.id = po.encounter_id
 -- prescription_id is not null on all pharmacy_order_prescriptions rows (enforced by source not_null test).
--- ongoing_prescription_id is the nullable supplementary reference and is not used for the medication lookup
+-- Keeps only dispenses against a prescription the prescriptions base keeps (BL-005)
 join {{ ref('prescriptions') }} pr
     on pr.id = pop.prescription_id
 join {{ ref('reference_data') }} m
-    on m.id = pr.medication_id
+    on m.id = md.medication_id  -- BL-002
 join {{ ref('facilities') }} f
     on f.id = po.facility_id
     and f.is_sensitive = {{ is_sensitive }}

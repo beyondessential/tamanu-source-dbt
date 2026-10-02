@@ -19,7 +19,9 @@ models:
         description: "{{ doc('generic__date') }} in procedures."
       - name: start_time
         data_type: time
-        description: "{{ doc('procedures__start_time') }}"
+        description: >-
+          When the procedure started. Where no start time was recorded, the time of day the
+          procedure was recorded as performed.
       - name: end_time
         data_type: time
         description: "{{ doc('procedures__end_time') }}"

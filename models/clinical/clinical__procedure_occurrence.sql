@@ -16,11 +16,20 @@
 -- imaging_requests.status. procedure_concept_id is deferred to the future vocab__ layer, the
 -- same convention clinical__condition_occurrence uses for condition_concept_id.
 --
+-- BL-005: visit_detail_id is the segment the event happened in -- the CDM carries both
+-- visit_occurrence_id and visit_detail_id on PROCEDURE_OCCURRENCE, and its own field
+-- description gives this exact case ("if the Person was in the ICU at the time of the
+-- Procedure the VISIT_OCCURRENCE record would reflect the overall hospital stay and the
+-- VISIT_DETAIL record would reflect the ICU stay"). Resolved here, once, so every consumer
+-- reads the segment off an FK rather than re-deriving it -- see that clause for the as-of
+-- rule and the first-segment clamp. Nullable, as the CDM specifies.
+--
 -- bases/procedures carries free-text note/completed_note, which is why that model is
 -- classification: restricted -- this model excludes both, the same split
 -- clinical__visit_occurrence draws against encounters.reason_for_encounter, so it can stay
--- unrestricted. Sources only from bases/ (D10).
--- See specs/dbt-model/clinical__procedure_occurrence.md for BL-001..BL-004.
+-- unrestricted. Sources from bases/ plus clinical__visit_detail for BL-005's FK, the same
+-- clinical-on-clinical dependency clinical__observation_period already takes.
+-- See specs/dbt-model/clinical__procedure_occurrence.md for BL-001..BL-005.
 
 with procedures as (
     select * from {{ ref('procedures') }}
@@ -38,6 +47,10 @@ reference_data as (
     select * from {{ ref('reference_data') }}
 ),
 
+visit_detail as (
+    select * from {{ ref('clinical__visit_detail') }}
+),
+
 -- recorded procedures
 procedure_branch as (
     select
@@ -48,9 +61,9 @@ procedure_branch as (
         e.patient_id as person_id,
 
         p.date as procedure_date,
-        -- combines the date and time-of-day columns bases/procedures keeps separate; falls
-        -- back to midnight where start_time was never recorded
-        coalesce(p.date + p.start_time, p.date::timestamp) as procedure_datetime,
+        -- BL-006: the date and start_time bases/procedures keeps separate. start_time is
+        -- never empty -- the base falls it back to date's own time
+        p.date + p.start_time as procedure_datetime,
 
         -- provenance: constant EHR administrative record, the same convention
         -- clinical__visit_occurrence uses for visit_type_concept_id
@@ -125,38 +138,72 @@ imaging_branch as (
     join encounters e on e.id = ir.encounter_id
     -- BL-002: excludes deleted/entered_in_error; cancelled stays
     where ir.status not in ('deleted', 'entered_in_error')
-)
+),
 
 -- BL-001: columns listed explicitly per branch so reordering one branch cannot silently
 -- mis-map, the same convention clinical__condition_occurrence/clinical__drug_exposure use.
-select
-    procedure_occurrence_id,
-    person_id,
-    procedure_date,
-    procedure_datetime,
-    procedure_type_concept_id,
-    procedure_type_source_value,
-    provider_id,
-    visit_occurrence_id,
-    location_id,
-    procedure_source_value,
-    procedure_source_name,
-    is_completed
-from procedure_branch
+occurrences as (
+    select
+        procedure_occurrence_id,
+        person_id,
+        procedure_date,
+        procedure_datetime,
+        procedure_type_concept_id,
+        procedure_type_source_value,
+        provider_id,
+        visit_occurrence_id,
+        location_id,
+        procedure_source_value,
+        procedure_source_name,
+        is_completed
+    from procedure_branch
 
-union all
+    union all
+
+    select
+        procedure_occurrence_id,
+        person_id,
+        procedure_date,
+        procedure_datetime,
+        procedure_type_concept_id,
+        procedure_type_source_value,
+        provider_id,
+        visit_occurrence_id,
+        location_id,
+        procedure_source_value,
+        procedure_source_name,
+        is_completed
+    from imaging_branch
+),
+
+-- BL-005: the segment active at the event's own timestamp, with the first-segment clamp.
+-- Both branches resolve the same way: a procedure and an imaging request are each a
+-- point-in-time event, so exactly one segment holds them (contrast
+-- clinical__condition_occurrence, where a diagnosis stays valid for the rest of the encounter
+-- and so has no single segment to name). The match is visit_detail__active_segment, shared
+-- with the other metrics that resolve an event's segment.
+active_segment as (
+    {{ visit_detail__active_segment('occurrences', 'procedure_occurrence_id', 'procedure_datetime') }}
+)
 
 select
-    procedure_occurrence_id,
-    person_id,
-    procedure_date,
-    procedure_datetime,
-    procedure_type_concept_id,
-    procedure_type_source_value,
-    provider_id,
-    visit_occurrence_id,
-    location_id,
-    procedure_source_value,
-    procedure_source_name,
-    is_completed
-from imaging_branch
+    o.procedure_occurrence_id,
+    o.person_id,
+    o.procedure_date,
+    o.procedure_datetime,
+    o.procedure_type_concept_id,
+    o.procedure_type_source_value,
+    o.provider_id,
+    o.visit_occurrence_id,
+    -- BL-005: left join -- clinical__visit_detail drops an encounter whose encounter_type
+    -- is absent from map__omop_visit_type (its own BL-003), so the segment can genuinely
+    -- fail to resolve. The CDM makes visit_detail_id optional for exactly this reason, so
+    -- the event is emitted with a NULL FK rather than dropped from the domain table.
+    seg.visit_detail_id,
+    o.location_id,
+    o.procedure_source_value,
+    o.procedure_source_name,
+    o.is_completed
+from occurrences o
+left join active_segment seg
+    on seg.procedure_occurrence_id = o.procedure_occurrence_id

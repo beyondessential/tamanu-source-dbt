@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-08-11 |
+| **Last updated** | 2026-09-29 |
 
 The OMOP-lite `VISIT_OCCURRENCE` domain — the canonical encounter surface every
 `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to for visit
@@ -66,6 +66,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | `visit_type_concept_id` | integer | Constant 32817 (EHR administration record) — all encounters originate from the Tamanu EHR |
 | `provider_id` | uuid | `encounters.clinician_id`. The attending clinician at encounter creation. NULL when no clinician recorded |
 | `care_site_id` | uuid | The encounter's location — the raw `location_id`. FK to `ref__care_site.care_site_id` (location-type rows). NULL only when the encounter has no `location_id` recorded |
+| `department_id` | uuid | `encounters.department_id`. The encounter's department, carried as an attribute. FK to `ref__care_site.care_site_id` (department-type rows) (BL-008) |
 | `visit_source_value` | text | `encounters.encounter_type`. Tamanu local code, retained alongside the concept ID (D1) |
 
 ## Business logic
@@ -124,8 +125,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
   every encounter's location resolves whenever the encounter has one at all — location is
   the grain that stays populated for the great majority of encounters, matching
   `clinical__visit_detail`'s own `care_site_id` (BL-006 there, same reasoning).
-  `department_id` is not used: department is carried instead as an attribute on
-  `clinical__visit_detail` (its own BL-007), not as a visit-level care site.
+  Department is carried as an attribute (BL-008), not as a visit-level care site.
 
   This is the reason `ref__care_site` carries a `care_site_type = 'location'` grain
   (wrapping every Tamanu `location` as its own care site, see `ref__care_site` BL-006): it
@@ -143,6 +143,8 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 - **BL-007:** `visit_source_value` carries the raw Tamanu `encounter_type` value
   alongside the OMOP concept. It is not a direct identifier and is not withheld on
   analytics targets.
+- **BL-008:** `department_id` carries the encounter's raw `department_id` as an attribute, a
+  foreign key to department-type rows in `ref__care_site`.
 
 ## Acceptance criteria
 
@@ -159,6 +161,7 @@ All joins in this model are many-to-one (encounter → map row), so grain is pre
 | AC-009 | Every non-null `provider_id` exists in `ref__provider.provider_id` | BL-005 | dbt `relationships` |
 | AC-010 | Every `encounter_type` value in `encounters` / `encounter_history` exists in `map__omop_visit_type.local_code` (flags schema drift before it silently excludes an encounter here) | BL-002 | singular test (`data_test__map__omop_visit_type_coverage`) |
 | AC-011 | Every `encounters.id` has a corresponding `visit_occurrence_id` here (the direct completeness check for BL-002's inner join) | BL-002 | singular test (`data_test__clinical__visit_occurrence`) |
+| AC-012 | Every non-null `department_id` exists in `ref__care_site.care_site_id` | BL-008 | dbt `relationships` |
 
 ## Registry entry
 

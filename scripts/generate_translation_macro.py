@@ -114,7 +114,10 @@ Run: python scripts/generate_translation_macro.py
 
     macro_path = os.path.join(macros_dir, filename)
 
-    with open(macro_path, "w", encoding="utf-8") as f:
+    # newline="": see write_file in utils/file_utils.py -- on Windows the default
+    # emits CRLF, so the generated macro would differ by line ending depending on
+    # who ran the generator.
+    with open(macro_path, "w", encoding="utf-8", newline="") as f:
         f.write(macro_content)
 
     print(f"Generated {macro_path}")

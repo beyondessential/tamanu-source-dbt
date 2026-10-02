@@ -100,8 +100,8 @@ vaccination_exposures as (
     where av.status = 'GIVEN'
 ),
 
--- dispense branch: physical hand-over of stock; drug identity comes from the originating
--- prescription, since a dispense carries no medication_id of its own (BL-008)
+-- dispense branch: physical hand-over of stock; drug identity and route are the dispense's
+-- own, which differ from the prescription's when pharmacy modified it at dispensing (BL-008)
 dispense_exposures as (
     select
         md.id::varchar as drug_exposure_id,
@@ -112,7 +112,7 @@ dispense_exposures as (
         'dispense' as drug_exposure_type_source_value,
         md.quantity::numeric as quantity,
         null::integer as refills,
-        p.route as route_source_value,
+        md.route as route_source_value,
         null::varchar as stop_reason,
         md.dispensed_by_user_id::varchar as provider_id,
         po.encounter_id::varchar as visit_occurrence_id,
@@ -122,8 +122,9 @@ dispense_exposures as (
     join pharmacy_order_prescriptions pop on pop.id = md.pharmacy_order_prescription_id
     join pharmacy_orders po on po.id = pop.pharmacy_order_id
     join encounters e on e.id = po.encounter_id
+    -- keeps only dispenses against a prescription the prescriptions base keeps (BL-008)
     join prescriptions p on p.id = pop.prescription_id
-    left join reference_data rd on rd.id = p.medication_id
+    left join reference_data rd on rd.id = md.medication_id
 )
 
 -- columns listed explicitly per branch so reordering one branch can't silently mis-map

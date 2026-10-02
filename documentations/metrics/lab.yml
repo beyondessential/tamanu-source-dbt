@@ -1,0 +1,52 @@
+# Laboratory metrics: lab orders placed, counted by panel.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: lab_order
+  kind: metric
+  name: Lab orders
+  description: >-
+    Laboratory orders placed, whether or not they were completed. One row per request raised
+    from a panel, labelled with the panel however many tests it holds, and one row per test on
+    a request raised without one -- so a panel counts once rather than once per test.
+  numerator_description: >-
+    Lab order lines placed, counted on the date the request was placed, excluding requests
+    marked deleted or entered-in-error -- cancelled, invalidated, rejected and
+    sample-not-collected requests are counted, each having been genuinely ordered
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    No external indicator anchor defines a lab-order count concept. This is a BES composition
+    over Tamanu's own laboratory workflow (MAUI-6837), the generic counterpart to
+    ed_lab_order. The unit counted is the order line rather than the individual test, so a
+    panel ordered as one clinical act counts once. Setting, facility and department are
+    attributed to the clinical__visit_detail segment active when the order was placed, not to
+    the encounter as it now stands, since Tamanu updates encounter_type and location in place.
+    encounter_setting carries the OMOP Visit concept of that segment; emergency is deliberately
+    unnamed, since emergency lab ordering is ed_lab_order's population. Panel and test
+    identities are emitted as recorded and ungrouped.
+  unit: count
+  subject_grain: lab_order
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - encounter_setting
+  - sex
+  - is_completed
+  - is_panel
+  - department
+  - lab_order
+  - lab_order_code
+  - lab_test_category
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__lab_order.md

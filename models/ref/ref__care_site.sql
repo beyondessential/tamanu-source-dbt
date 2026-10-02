@@ -6,7 +6,7 @@
 -- facilities feed clinical__episode.care_site_id, an enrolment being registered at a
 -- facility and never at a room. Each care site is denormalised with its parent facility.
 -- Native UUID PK (D1). Sources only from bases/ (D10); OMOP column naming applied (D2).
--- See specs/dbt-model/ref__care_site.md for BL-001..BL-007.
+-- See specs/dbt-model/ref__care_site.md for BL-001..BL-008.
 
 with departments as (
     select * from {{ ref('departments') }}
@@ -16,6 +16,10 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 facilities as (
     select * from {{ ref('facilities') }}
 ),
@@ -23,23 +27,25 @@ facilities as (
 -- organizational care unit (BL-001, BL-005)
 department_sites as (
     select
-        'department'   as care_site_type,
-        d.id::varchar  as care_site_id,
-        d.name         as care_site_name,
-        d.code         as care_site_source_value,
-        d.facility_id  as facility_id
+        'department' as care_site_type,
+        d.id::varchar as care_site_id,
+        d.name as care_site_name,
+        d.code as care_site_source_value,
+        d.facility_id
     from departments d
 ),
 
 -- physical care unit: individual location (room/bed) (BL-001, BL-006)
 location_sites as (
     select
-        'location'      as care_site_type,
+        'location' as care_site_type,
         loc.id::varchar as care_site_id,
-        loc.name        as care_site_name,
-        loc.code        as care_site_source_value,
-        loc.facility_id as facility_id
+        loc.name as care_site_name,
+        loc.code as care_site_source_value,
+        -- BL-008: the location's own facility, else its location group's facility
+        coalesce(loc.facility_id, lg.facility_id) as facility_id
     from locations loc
+    left join location_groups lg on lg.id = loc.location_group_id
 ),
 
 -- BL-007: the site as a whole. Its parent facility is itself, so the join below denormalises
@@ -47,11 +53,11 @@ location_sites as (
 -- works uniformly across all three grains (BL-001)
 facility_sites as (
     select
-        'facility'    as care_site_type,
+        'facility' as care_site_type,
         f.id::varchar as care_site_id,
-        f.name        as care_site_name,
-        f.code        as care_site_source_value,
-        f.id          as facility_id
+        f.name as care_site_name,
+        f.code as care_site_source_value,
+        f.id as facility_id
     from facilities f
 ),
 
@@ -76,8 +82,8 @@ select
     f.type as place_of_service_source_value,
 
     -- parent facility, denormalised onto the care site (BL-003)
-    cs.facility_id as facility_id,
-    f.name         as facility_name
+    cs.facility_id,
+    f.name as facility_name
 
 from care_sites cs
 -- left join so a care site whose facility is missing/soft-deleted is still emitted (BL-003)

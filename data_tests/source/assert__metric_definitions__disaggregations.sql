@@ -13,9 +13,21 @@ where trim(d) not in (
         -- First metric__ disaggregation finer than facility.
         'location_id',
         'dhis_ncd_category',
-        -- ed_visit's admission outcome, carried as a disaggregation on
-        -- metric__emergency_visit's per-encounter rows rather than as its own metric_id.
+        -- ed_visit's and opd_visit's admission outcome, carried as a disaggregation on
+        -- per-encounter rows rather than as its own metric_id.
         'is_admitted',
+        -- opd_visit's clinician: who saw the patient in the outpatient department, and
+        -- separately who admitted them. The Tamanu user id as the stable key and the display
+        -- name alongside it, resolved through ref__provider -- the same code/label pairing
+        -- diagnosis and procedure make, so a consumer charting by clinician needs no join.
+        'clinician_id',
+        'clinician_name',
+        'admission_clinician_id',
+        'admission_clinician_name',
+        -- opd_visit's system-discharge flag: the discharge was written by Tamanu's
+        -- outpatient discharger rather than by a clinician, so the encounter end is the
+        -- sweep's clock and any duration taken from it is an artefact.
+        'is_auto_discharge',
         -- ed_visit's triage acuity category
         'triage_score',
         -- ed_visit's arrival hour
@@ -74,6 +86,14 @@ where trim(d) not in (
         -- diagnosis was recorded in: Tamanu updates it in place, so an ED-phase diagnosis on
         -- a patient later admitted reads as 'admission' (metric__encounter_diagnosis BL-005).
         'encounter_type',
+        -- procedure's encounter type grouped into a setting via the segment's OMOP visit
+        -- concept -- Outpatient (9202: clinic, imaging, vaccination), Inpatient (9201), or
+        -- Other. Coarser than encounter_type deliberately: it is what the retired
+        -- opd_procedure/ipd_procedure metrics scoped on, so a consumer filters one stable
+        -- value instead of a list that drifts with map__omop_visit_type. Emergency (9203)
+        -- is deliberately not named -- it falls in Other, so no card can be built off this
+        -- metric as though it were an emergency figure.
+        'encounter_setting',
         -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
         -- deployments differ in what they code diagnoses with, so any chapter or block
         -- grouping is applied downstream over diagnosis_code rather than registered here.
@@ -97,6 +117,16 @@ where trim(d) not in (
         'procedure_code',
         -- procedure's completion flag
         'is_completed',
+        -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
+        -- catalogues are deployment reference data, so any panel or category grouping is
+        -- applied downstream rather than registered here.
+        'lab_order',
+        'lab_order_code',
+        -- lab_test's request-level category (e.g. Haematology), as recorded
+        'lab_test_category',
+        -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
+        -- a consumer counting clinical acts rather than laboratory workload can separate them
+        'is_panel',
         -- immunisation_dose's antigen
         'disease',
         -- immunisation_dose's EPI-style age cohort, banded in months
@@ -116,5 +146,32 @@ where trim(d) not in (
         'imaging_type',
         'imaging_type_code',
         -- opd_imaging_request's aggregated body area/study area
-        'imaging_area'
+        'imaging_area',
+        -- department, added to opd_visit/opd_diagnosis/procedure/opd_imaging_request/
+        -- pharmacy_order/inpatient_admission/lab_test (MAUI-6909): the encounter's or
+        -- qualifying segment's own department (e.g. Dental), resolved to a name so a
+        -- consumer scopes to one department via metric_filters.
+        'department',
+        -- clinician, added to opd_visit/inpatient_admission (MAUI-6909) and ed_visit
+        -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
+        -- clinician, resolved to a name for a "by clinician" card.
+        'clinician',
+        -- death's primary cause from the death record, as recorded, with its reference-data
+        -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
+        'primary_cause',
+        'primary_cause_code',
+        -- death's place of death (health facility or outside one) and manner of death, from
+        -- the death record (MAUI-6906).
+        'place_of_death',
+        'manner_of_death',
+        -- death's facility source: whether the facility came from the death record or from the
+        -- encounter the patient died in (MAUI-6906).
+        'facility_source',
+        -- billing (MAUI-6911): the invoice's status, and the care setting from the
+        -- encounter's visit concept.
+        'invoice_status',
+        'care_setting',
+        -- billing's encounter department as the Tamanu id, so a deployment groups
+        -- departments (e.g. Dental) by id in its data table.
+        'department_id'
     )

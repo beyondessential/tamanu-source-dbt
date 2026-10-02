@@ -1,0 +1,94 @@
+unit_tests:
+  - name: test_clinical__drug_exposure_dispensed_drug
+    model: clinical__drug_exposure
+    description: >-
+      BL-008 / AC-010 regression guard: a dispense names the drug it actually handed over.
+      One prescription (presc_1) for Amoxicillin is dispensed twice. md_mod was modified
+      by pharmacy at dispensing and carries Paracetamol (drug_2) given intravenously, so its
+      exposure must name Paracetamol and route 'iv', not the prescription's 'oral'. md_same
+      was dispensed as prescribed and carries Amoxicillin (drug_1), so
+      its exposure must name Amoxicillin. The prescription is linked to no
+      encounter and there are no vaccinations, so only the two dispense rows are returned.
+      Reverting to prescriptions.medication_id or prescriptions.route fails md_mod.
+    given:
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select
+            'presc_1' as id,
+            '2024-02-01 09:00:00'::timestamp as start_datetime,
+            '2024-01-15 08:00:00'::timestamp as datetime,
+            null::timestamp as end_datetime,
+            30::numeric as quantity,
+            0 as repeats,
+            'oral' as route,
+            false as is_discontinued,
+            null::text as discontinuing_reason,
+            'user_1' as prescriber_id,
+            'drug_1' as medication_id
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select null::text as id, null::text as prescription_id, null::text as encounter_id where false
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'drug_1' as id, 'DRUG001' as code, 'Amoxicillin' as name
+          union all
+          select 'drug_2', 'DRUG002', 'Paracetamol'
+      - input: ref('vaccine_administrations')
+        format: sql
+        rows: |
+          select
+            null::text as id, null::timestamp as datetime, null::text as injection_site,
+            null::text as recorded_by_id, null::text as given_by, null::text as encounter_id,
+            null::text as scheduled_vaccine_id, null::text as status, null::text as vaccine_name
+          where false
+      - input: ref('vaccine_schedules')
+        format: sql
+        rows: |
+          select null::text as id, null::text as vaccine_id where false
+      - input: ref('medication_dispenses')
+        format: sql
+        rows: |
+          select
+            'md_mod' as id, '2024-02-02 10:00:00'::timestamp as dispensed_at, 10::numeric as quantity,
+            'user_2' as dispensed_by_user_id, 'pop_1' as pharmacy_order_prescription_id,
+            'drug_2' as medication_id, 'iv' as route
+          union all
+          select 'md_same', '2024-02-03 10:00:00'::timestamp, 20::numeric, 'user_2', 'pop_1', 'drug_1', 'oral'
+      - input: ref('pharmacy_order_prescriptions')
+        format: sql
+        rows: |
+          select 'pop_1' as id, 'po_1' as pharmacy_order_id, 'presc_1' as prescription_id
+      - input: ref('pharmacy_orders')
+        format: sql
+        rows: |
+          select 'po_1' as id, 'enc_1' as encounter_id
+    expect:
+      format: sql
+      rows: |
+        select
+          'md_mod' as drug_exposure_id,
+          'pat_1' as person_id,
+          '2024-02-02'::date as drug_exposure_start_date,
+          '2024-02-02 10:00:00'::timestamp as drug_exposure_start_datetime,
+          '2024-02-02 10:00:00'::timestamp as drug_exposure_end_datetime,
+          'dispense' as drug_exposure_type_source_value,
+          10::numeric as quantity,
+          null::integer as refills,
+          'iv' as route_source_value,
+          null::varchar as stop_reason,
+          'user_2' as provider_id,
+          'enc_1' as visit_occurrence_id,
+          'DRUG002' as drug_source_value,
+          'Paracetamol' as drug_source_name
+        union all
+        select
+          'md_same', 'pat_1', '2024-02-03'::date, '2024-02-03 10:00:00'::timestamp,
+          '2024-02-03 10:00:00'::timestamp, 'dispense', 20::numeric, null::integer, 'oral',
+          null::varchar, 'user_2', 'enc_1', 'DRUG001', 'Amoxicillin'

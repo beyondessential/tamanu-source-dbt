@@ -189,3 +189,8 @@ Never NULL -- the data tables expose this as an array filter, and Tupaia's array
 NULL rows, so the model coalesces to false where there is no previous admission, the previous
 one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 {% enddocs %}
+
+{% docs metric__inpatient_admission__clinician %}
+The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
+clinician" card. Never NULL -- falls back to 'Not recorded'.
+{% enddocs %}

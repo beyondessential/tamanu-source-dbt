@@ -3,7 +3,7 @@
 -- join, see BL-002 for the consequence of an unmapped encounter_type). Visit-concept shadow
 -- column sits alongside local encounter_type source value; native UUID PK (D1 OMOP-lite).
 -- Sources only from bases/ (D10).
--- See specs/dbt-model/clinical__visit_occurrence.md for BL-001..BL-007.
+-- See specs/dbt-model/clinical__visit_occurrence.md for BL-001..BL-008.
 
 with encounters as (
     select * from {{ ref('encounters') }}
@@ -39,15 +39,15 @@ select
                 where eht.encounter_id = e.id
                     and eht.encounter_type in ('emergency', 'triage', 'observation')
             )
-        then 262
+            then 262
         else vm.concept_id
     end as visit_concept_id,
 
     -- visit datetimes (BL-004)
     e.start_datetime::date as visit_start_date,
-    e.start_datetime       as visit_start_datetime,
-    e.end_datetime::date   as visit_end_date,
-    e.end_datetime         as visit_end_datetime,
+    e.start_datetime as visit_start_datetime,
+    e.end_datetime::date as visit_end_date,
+    e.end_datetime as visit_end_datetime,
 
     -- visit type provenance: constant EHR administration record (BL-003)
     32817 as visit_type_concept_id,
@@ -57,6 +57,9 @@ select
 
     -- care site is the encounter's location. FK to ref__care_site (location-type rows) (BL-006)
     e.location_id as care_site_id,
+
+    -- department carried as an attribute. FK to ref__care_site (department-type rows) (BL-008)
+    e.department_id,
 
     -- source value retained alongside concept (BL-007)
     e.encounter_type as visit_source_value

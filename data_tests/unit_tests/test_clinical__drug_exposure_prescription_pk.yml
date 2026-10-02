@@ -58,7 +58,8 @@ unit_tests:
         rows: |
           select
             null::text as id, null::timestamp as dispensed_at, null::numeric as quantity,
-            null::text as dispensed_by_user_id, null::text as pharmacy_order_prescription_id
+            null::text as dispensed_by_user_id, null::text as pharmacy_order_prescription_id,
+            null::text as medication_id, null::text as route
           where false
       - input: ref('pharmacy_order_prescriptions')
         format: sql
