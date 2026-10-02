@@ -14,7 +14,7 @@
 -- reading public.*, not bases/.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__lab_order.md for BL-001..BL-012.
+-- See specs/dbt-model/metric__lab_order.md for BL-001..BL-013.
 
 with lab_requests as (
     select * from {{ ref('lab_requests') }}
@@ -154,6 +154,10 @@ select
     loc.facility_id,
     -- BL-010: the segment's own encounter_type, finer than encounter_setting
     vd.visit_detail_source_value as encounter_type,
+    -- BL-013: the segment's OMOP Visit concept and its name, as clinical__visit_detail
+    -- carries them
+    vd.visit_detail_concept_id,
+    vd.visit_detail_concept_name,
     -- BL-010: Outpatient covers the full OMOP 9202 -- clinic, imaging and vaccination. No
     -- emergency value: emergency lab ordering is metric__ed_lab_order's population, and a
     -- value here would let an emergency card be drawn from this metric.
