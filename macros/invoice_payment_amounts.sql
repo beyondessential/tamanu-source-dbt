@@ -41,6 +41,8 @@
     from {{ ref('invoice_payments') }} ipay
     -- BL-001: a payment belongs to the payer whose link table carries it
     -- BL-007: no invoice-status, encounter or facility filter here
+    -- BL-008: patient refunds carry their own link row, so patient signed sums net to paid
+    -- BL-009: insurer reversals carry none, so an insurer total excludes is_reversed rows
     where exists (
         select 1 from {{ ref(link) }} payer_link
         where payer_link.invoice_payment_id = ipay.id

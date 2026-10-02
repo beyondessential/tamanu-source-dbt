@@ -24,11 +24,10 @@ rows and the same refund flags. Each consumer totals them its own way:
 |---|---|---|
 | `int__encounter_invoice_amounts` | paid to date per invoice, patient and insurer | `amount` where neither `is_refund` nor `is_reversed` |
 | `metric__billing` (`invoice_patient_payment`) | one row per patient payment | `signed_amount`, dated `payment_date` |
-| Deployment cash reports (FSM's Daily Cash Collection Summary) | cash per day | `sum(signed_amount)` by `payment_date` |
+| Deployment cash reports | cash per day | `sum(signed_amount)` by `payment_date` |
 
-Both totals agree per invoice because Tamanu has no partial refund: a refund reverses the whole
-of its original payment, so a refunded pair is 0 whether both sides are dropped or both are
-summed with signs.
+For patient payments the two totals agree per invoice (BL-008). For insurer payments only the
+paid-to-date rule is valid (BL-009).
 
 **Who consumes it.** The three models above. The macro is embedded rather than exposed as a
 model, like `invoice_item_amounts()`, so each consumer keeps `invoice_payments` and the payer's
@@ -42,7 +41,7 @@ link table as direct refs and its unit tests mock them directly.
 | **Branches mirrored** | payer by link table (BL-001), refund by `original_payment_id` (BL-004), reversed by a refund pointing at it (BL-005) |
 | **Stored app fields** | `invoices.patient_payment_status`, `invoices.insurer_payment_status` — reconciliation only, not read |
 | **Reconciliation** | AC-002, AC-003 |
-| **Other surfaces** | Encounter invoice audit report, `clinical__cost`, Tupaia billing, FSM Daily Cash Collection Summary |
+| **Other surfaces** | Encounter invoice audit report, `clinical__cost`, Tupaia billing, deployment cash reports |
 
 ## Grain
 
@@ -60,9 +59,9 @@ link table as direct refs and its unit tests mock them directly.
 
 | Column | Type | Description |
 |---|---|---|
-| `payment_id` | varchar | The payment |
-| `invoice_id` | varchar | The invoice it was made against |
-| `payment_date` | date | The date recorded on the payment |
+| `payment_id` | uuid | The payment |
+| `invoice_id` | uuid | The invoice it was made against |
+| `payment_date` | date | The date recorded on the payment, as the base casts it |
 | `amount` | numeric | The stored amount, positive for a payment and a refund alike |
 | `is_refund` | boolean | The row refunds another payment |
 | `is_reversed` | boolean | A refund points at this payment |
@@ -81,13 +80,19 @@ link table as direct refs and its unit tests mock them directly.
 - **BL-006 (signed amount):** `signed_amount` is `amount` negated for a refund.
 - **BL-007 (no scope filter):** the macro applies no invoice-status, encounter or facility
   filter, and each consumer applies its own.
+- **BL-008 (patient totals agree):** for `payer='patient'`, an invoice's `signed_amount` sum
+  equals its paid to date, since a patient refund carries its own link row and reverses the
+  whole of its original payment.
+- **BL-009 (insurer totals exclude reversed):** for `payer='insurer'`, a reversal carries no
+  link row and is not emitted, so an insurer total excludes `is_reversed` rows and never sums
+  `signed_amount`.
 
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | Paid to date nets a refunded pair to 0 and counts insurer payments separately | BL-001, BL-004, BL-005 | unit tests `test_int__encounter_invoice_amounts_refund_netting`, `_payment_totals`, `_insurer_payment` |
-| AC-002 | An invoice's `invoice_patient_payment` rows sum to its `invoice_patient_paid` | BL-003–BL-006 | `metric__billing` AC-010 (singular test) |
+| AC-001 | Paid to date nets a refunded pair to 0 and counts insurer payments separately, excluding a reversed one | BL-001, BL-004, BL-005, BL-009 | unit tests `test_int__encounter_invoice_amounts_refund_netting`, `_payment_totals`, `_insurer_payment` |
+| AC-002 | An invoice's `invoice_patient_payment` rows sum to its `invoice_patient_paid` | BL-008 | `metric__billing` AC-010 (singular test) |
 | AC-003 | A refund is a negative payment on its own date | BL-002, BL-006 | unit test `ac_014_metric__billing_derivations` |
 
 ## Lineage
