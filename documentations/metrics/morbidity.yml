@@ -35,6 +35,8 @@ metrics:
   disaggregations:
   - facility_id
   - encounter_type
+  - visit_concept_id
+  - visit_concept_name
   - sex
   - diagnosis_code
   - diagnosis

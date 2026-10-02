@@ -25,15 +25,15 @@ unit_tests:
       - input: ref('clinical__visit_occurrence')
         format: sql
         rows: |
-          select 'enc_1' as visit_occurrence_id, 9202 as visit_concept_id, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          select 'enc_1' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
           union all
-          select 'enc_2', 262, 'loc_1', 'dept_ward', 'admission'
+          select 'enc_2', 262, 'Emergency Room and Inpatient Visit', 'loc_1', 'dept_ward', 'admission'
           union all
-          select 'enc_3', 9203, 'loc_1', 'dept_ed', 'emergency'
+          select 'enc_3', 9203, 'Emergency Room Visit', 'loc_1', 'dept_ed', 'emergency'
           union all
-          select 'enc_4', 0, 'loc_1', null::text, 'surveyResponse'
+          select 'enc_4', 0, 'No matching concept', 'loc_1', null::text, 'surveyResponse'
           union all
-          select 'enc_5', 9202, 'loc_1', 'dept_opd', 'clinic'
+          select 'enc_5', 9202, 'Outpatient Visit', 'loc_1', 'dept_opd', 'clinic'
       - input: ref('locations')
         format: sql
         rows: |
@@ -69,66 +69,66 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'invoice' as metric_id, null::text as variant_id, 'inv_1' as subject_id, '2026-08-03 09:15:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'inv_1' as invoice_id, 'finalised' as invoice_status, 'fac_1' as facility_id, 'outpatient' as care_setting, false as is_admitted_via_emergency, 'dept_opd' as department_id, 'clinic' as encounter_type
+        select 'invoice' as metric_id, null::text as variant_id, 'inv_1' as subject_id, '2026-08-03 09:15:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'inv_1' as invoice_id, 'finalised' as invoice_status, 'fac_1' as facility_id, 'outpatient' as care_setting, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, false as is_admitted_via_emergency, 'dept_opd' as department_id, 'clinic' as encounter_type
         union all
-        select 'invoice_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 100.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 100.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_insurance_coverage', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 40.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_insurance_coverage', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 40.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_discount', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 6.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_discount', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 6.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_patient_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 54.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_patient_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 54.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_patient_paid', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_patient_paid', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_patient_balance', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 24.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_patient_balance', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 24.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice_patient_payment', null::text, 'pay_1', '2026-08-03'::timestamp, null::timestamp, 'day', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', false, 'dept_opd', 'clinic'
+        select 'invoice_patient_payment', null::text, 'pay_1', '2026-08-03'::timestamp, null::timestamp, 'day', 30.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 'outpatient', 9202, 'Outpatient Visit', false, 'dept_opd', 'clinic'
         union all
-        select 'invoice', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 200.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 200.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_insurance_coverage', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 120.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_insurance_coverage', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 120.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_discount', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_discount', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_patient_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_patient_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_patient_paid', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_patient_paid', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_patient_balance', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_patient_balance', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 80.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_patient_payment', null::text, 'pay_2', '2026-08-05'::timestamp, null::timestamp, 'day', 50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_patient_payment', null::text, 'pay_2', '2026-08-05'::timestamp, null::timestamp, 'day', 50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice_patient_payment', null::text, 'pay_3', '2026-08-09'::timestamp, null::timestamp, 'day', -50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', true, 'dept_ward', 'admission'
+        select 'invoice_patient_payment', null::text, 'pay_3', '2026-08-09'::timestamp, null::timestamp, 'day', -50.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 'inpatient', 262, 'Emergency Room and Inpatient Visit', true, 'dept_ward', 'admission'
         union all
-        select 'invoice', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_insurance_coverage', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_insurance_coverage', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_discount', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_discount', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_patient_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_patient_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_patient_paid', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_patient_paid', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_patient_balance', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', -5.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_patient_balance', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', -5.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice_patient_payment', null::text, 'pay_4', '2026-09-02'::timestamp, null::timestamp, 'day', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', false, 'dept_ed', 'emergency'
+        select 'invoice_patient_payment', null::text, 'pay_4', '2026-09-02'::timestamp, null::timestamp, 'day', 15.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 'emergency', 9203, 'Emergency Room Visit', false, 'dept_ed', 'emergency'
         union all
-        select 'invoice', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_insurance_coverage', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_insurance_coverage', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_discount', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_discount', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_patient_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_patient_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_patient_paid', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_patient_paid', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'
         union all
-        select 'invoice_patient_balance', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', false, null::text, 'surveyResponse'
+        select 'invoice_patient_balance', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 'none', 0, 'No matching concept', false, null::text, 'surveyResponse'

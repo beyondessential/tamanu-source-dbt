@@ -6,7 +6,7 @@
 -- any time grain from day upwards (BL-002).
 --
 -- The registry carries the definition; this model is its implementation (BL-001).
--- See specs/dbt-model/metric__encounter_diagnosis.md for BL-001..BL-009.
+-- See specs/dbt-model/metric__encounter_diagnosis.md for BL-001..BL-010.
 
 with condition_occurrence as (
     select * from {{ ref('clinical__condition_occurrence') }}
@@ -41,6 +41,10 @@ diagnoses as (
         -- BL-005: the encounter's own type -- lets a consumer scope morbidity to emergency,
         -- outpatient or inpatient activity without a separate metric per setting
         vo.visit_source_value as encounter_type,
+        -- BL-010: the encounter's OMOP Visit concept and its name, as
+        -- clinical__visit_occurrence carries them
+        vo.visit_concept_id,
+        vo.visit_concept_name,
         pr.gender_source_value as sex,
         -- BL-007: the diagnosis as recorded, coalesced so the column is never NULL. Tupaia
         -- exposes these as array filters, and an array filter drops a NULL row -- an
@@ -94,6 +98,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    visit_concept_id,
+    visit_concept_name,
     sex,
     diagnosis_code,
     diagnosis,
