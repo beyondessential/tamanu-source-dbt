@@ -64,8 +64,9 @@ visit_types as (
     select * from {{ ref('map__omop_visit_type') }}
 ),
 
--- BL-001: one row per dispense, carrying its encounter for the segment lookup. Inner joins --
--- bases/medication_dispenses already requires a live drug line, order and encounter.
+-- BL-001: one row per live dispense, carrying its encounter for the segment lookup. Inner joins --
+-- bases/medication_dispenses already excludes soft-deleted dispenses, drug lines, orders and
+-- encounters.
 dispenses as (
     select
         md.id as medication_dispense_id,
@@ -105,12 +106,14 @@ dispense_rows as (
         -- BL-007
         coalesce(dept.name, 'Not recorded') as department
     from dispenses d
-    -- BL-004: inner joins -- a dispense whose encounter does not resolve to a segment, patient or
-    -- location is excluded rather than attributed to a NULL facility
+    -- BL-003: inner join -- a dispense whose encounter has no segment is excluded rather than
+    -- attributed to a NULL segment
     join active_segment s
         on s.medication_dispense_id = d.medication_dispense_id
     join visit_detail vd
         on vd.visit_detail_id = s.visit_detail_id
+    -- BL-004: inner joins -- a dispense whose patient or segment location does not resolve is
+    -- excluded rather than attributed to a NULL facility
     join person pr
         on pr.person_id = vd.person_id
     join locations loc
