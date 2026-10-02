@@ -86,15 +86,15 @@ unit_tests:
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
-          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10 08:00:00'::timestamp as visit_detail_start_datetime, 9203 as visit_detail_concept_id, 'triage' as visit_detail_source_value, 'loc_ed' as care_site_id, 'dept_ed' as department_id
+          select 'vd1a' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10 08:00:00'::timestamp as visit_detail_start_datetime, 9203 as visit_detail_concept_id, 'Emergency Room Visit' as visit_detail_concept_name, 'triage' as visit_detail_source_value, 'loc_ed' as care_site_id, 'dept_ed' as department_id
           union all
-          select 'vd1b', 'e1', 'p1', '2026-01-10 12:00:00'::timestamp, 9201, 'admission', 'loc_ward', 'dept_med'
+          select 'vd1b', 'e1', 'p1', '2026-01-10 12:00:00'::timestamp, 9201, 'Inpatient Visit', 'admission', 'loc_ward', 'dept_med'
           union all
-          select 'vd3a', 'e3', 'p1', '2026-01-12 08:00:00'::timestamp, 9202, 'clinic', 'loc_clinic', 'dept_opd'
+          select 'vd3a', 'e3', 'p1', '2026-01-12 08:00:00'::timestamp, 9202, 'Outpatient Visit', 'clinic', 'loc_clinic', 'dept_opd'
           union all
-          select 'vd4a', 'e4', 'p1', '2026-01-13 08:00:00'::timestamp, 9202, 'clinic', 'loc_unknown', 'dept_ed'
+          select 'vd4a', 'e4', 'p1', '2026-01-13 08:00:00'::timestamp, 9202, 'Outpatient Visit', 'clinic', 'loc_unknown', 'dept_ed'
           union all
-          select 'vd5a', 'e5', 'p1', '2026-01-14 08:00:00'::timestamp, 9202, 'clinic', 'loc_clinic', 'dept_unknown'
+          select 'vd5a', 'e5', 'p1', '2026-01-14 08:00:00'::timestamp, 9202, 'Outpatient Visit', 'clinic', 'loc_clinic', 'dept_unknown'
 
       - input: ref('clinical__person')
         format: sql
@@ -109,15 +109,6 @@ unit_tests:
           select 'loc_ward', 'fac2'
           union all
           select 'loc_clinic', 'fac1'
-
-      - input: ref('map__omop_visit_type')
-        format: sql
-        rows: |
-          select 'triage' as local_code, 9203 as concept_id, 'Emergency Room Visit' as concept_name
-          union all
-          select 'admission', 9201, 'Inpatient Visit'
-          union all
-          select 'clinic', 9202, 'Outpatient Visit'
 
       - input: ref('departments')
         format: sql
