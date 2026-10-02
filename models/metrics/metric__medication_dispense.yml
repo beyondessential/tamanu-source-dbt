@@ -6,8 +6,8 @@ models:
       D5 metric view for the medication_dispense indicator registered in
       documentations/metrics/pharmacy.yml: medication_dispense. One row per medication dispense -- each time
       pharmacy hands medication over, dispensed against an ordered drug line, in any setting -- dated to the day it was dispensed. A drug line
-      dispensed in several partial fills has a row for each. Facility and department are those of
-      the encounter segment active when the line was ordered.
+      dispensed in several partial fills has a row for each. Facility, department and setting are
+      those of the encounter segment active when the medication was dispensed.
     config:
       tags:
         - clinical
@@ -92,14 +92,14 @@ models:
         data_type: character varying(255)
         description: >-
           The Tamanu facility id the dispense is attributed to, from the patient's location when
-          the drug line was ordered.
+          the medication was dispensed.
         data_tests:
           - not_null:
               name: ac_003_metric__medication_dispense_facility_id_not_null
       - name: encounter_type
         data_type: character varying(255)
         description: >-
-          The ordering segment's own encounter_type, as it stood when the drug line was ordered --
+          The dispensing segment's own encounter_type, as it stood when the medication was dispensed --
           finer than visit_detail_concept_id.
         data_tests:
           - not_null:
@@ -107,7 +107,7 @@ models:
       - name: visit_detail_concept_id
         data_type: integer
         description: >-
-          The OMOP Visit concept of the segment the drug line was ordered in: 9201 Inpatient
+          The OMOP Visit concept of the segment active when the medication was dispensed: 9201 Inpatient
           Visit, 9202 Outpatient Visit, 9203 Emergency Room Visit (the emergency, triage and
           observation phases) or 0 No matching concept. A consumer scopes a setting on this id.
         data_tests:
@@ -154,7 +154,7 @@ models:
       - name: department
         data_type: text
         description: >-
-          The department the patient was under when the drug line was ordered. Never NULL --
+          The department the patient was under when the medication was dispensed. Never NULL --
           falls back to 'Not recorded'.
         data_tests:
           - not_null:
