@@ -13,7 +13,7 @@
 -- encounters with no history or no department, which are counted here.
 --
 -- The registry carries the definition and this model is its implementation.
--- See specs/dbt-model/metric__encounter.md for BL-001..BL-006.
+-- See specs/dbt-model/metric__encounter.md for BL-001..BL-007.
 
 with visit_occurrence as (
     select * from {{ ref('clinical__visit_occurrence') }}
@@ -46,6 +46,10 @@ encounters as (
         -- BL-004: the encounter's own type, and its department resolved to a name -- never
         -- NULL, so an array filter cannot drop the row
         vo.visit_source_value as encounter_type,
+        -- BL-007: the encounter's OMOP Visit concept and its name, as
+        -- clinical__visit_occurrence carries them
+        vo.visit_concept_id,
+        vo.visit_concept_name,
         coalesce(dept.name, 'Not recorded') as department,
         -- BL-005
         coalesce(prov.provider_name, 'Not recorded') as clinician,
@@ -80,6 +84,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    visit_concept_id,
+    visit_concept_name,
     department,
     clinician,
     sex,

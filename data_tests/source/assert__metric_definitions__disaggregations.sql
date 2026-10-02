@@ -94,6 +94,9 @@ where trim(d) not in (
         -- is deliberately not named -- it falls in Other, so no card can be built off this
         -- metric as though it were an emergency figure.
         'encounter_setting',
+        -- the encounter's OMOP Visit concept and its name, from clinical__visit_occurrence
+        'visit_concept_id',
+        'visit_concept_name',
         -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
         -- deployments differ in what they code diagnoses with, so any chapter or block
         -- grouping is applied downstream over diagnosis_code rather than registered here.
