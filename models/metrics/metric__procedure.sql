@@ -18,7 +18,7 @@
 -- population, not this one's.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__procedure.md for BL-001..BL-009.
+-- See specs/dbt-model/metric__procedure.md for BL-001..BL-010.
 
 with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
@@ -50,6 +50,10 @@ procedures as (
         -- BL-003: the segment the procedure was performed in, not the encounter's
         -- whole-visit type
         vd.visit_detail_source_value as encounter_type,
+        -- BL-010: the segment's OMOP Visit concept and its name, as clinical__visit_detail
+        -- carries them
+        vd.visit_detail_concept_id,
+        vd.visit_detail_concept_name,
         -- BL-008: the segment's OMOP visit concept grouped to a setting, coarser than
         -- encounter_type -- 9202 covers clinic, imaging and vaccination alike, so
         -- 'Outpatient' is wider than encounter_type = 'clinic'. Scope a setting by this
@@ -111,6 +115,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    visit_detail_concept_id,
+    visit_detail_concept_name,
     encounter_setting,
     sex,
     procedure,
