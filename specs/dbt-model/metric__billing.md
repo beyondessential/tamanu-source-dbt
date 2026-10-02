@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911/fsm-6-billing-dashboard) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-10-01 |
-| **Last updated** | 2026-10-01 |
+| **Last updated** | 2026-10-02 |
 
 Canonical definition for patient billing: what each invoice charged, how that charge splits
 between insurance, discount and the patient, what the patient has paid against it, and every
@@ -150,6 +150,8 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 - **BL-016 (unrestricted):** the model carries no patient identifier or patient attribute.
 - **BL-017 (current figures):** invoice-subject amounts are the invoice's current figures, so a
   change to an invoice after its month has passed restates that month.
+- **BL-018 (one invoice per encounter):** each encounter is expected to have at most one
+  non-cancelled invoice, and an encounter with more has each invoice counted as its own subject.
 
 ## Acceptance criteria
 
@@ -169,7 +171,7 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 | AC-012 | `is_admitted_via_emergency` is `not_null`, and true only where `care_setting` is `inpatient` | BL-010 | `not_null` + singular test |
 | AC-013 | `facility_id` and `encounter_type` are `not_null` | BL-011, BL-012 | `not_null` |
 | AC-014 | The derivations resolve as specified: a cancelled invoice and its payments are excluded, a refunded payment pair nets to 0, an overpaid invoice has a negative balance, a no-items invoice emits zeros, an ED-then-admitted encounter is `inpatient` with the flag set, a survey-response encounter is `none` | BL-002, BL-004–BL-010 | unit test `ac_014_metric__billing_derivations` |
-| AC-015 | No encounter has more than one non-cancelled invoice | BL-013 | singular test (`warn`) |
+| AC-015 | No encounter has more than one non-cancelled invoice | BL-018 | singular test (`warn`) |
 | AC-016 | `metric_definitions.unit` accepts `currency` | BL-001 | `accepted_values` on the registry |
 
 Singular tests live in one file, `data_test__metric__billing.sql`, one `union all` branch per
@@ -195,3 +197,4 @@ None.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft |
+| 2026-10-02 | Maui team | BL-018 states the one-invoice-per-encounter expectation AC-015 asserts |
