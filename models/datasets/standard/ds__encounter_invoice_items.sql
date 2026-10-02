@@ -28,6 +28,8 @@ select
     it.product_name,
     it.category,
     it.quantity,
+    -- BL-009: fixed-price (flat fee) line -- quantity is informational, not charged
+    it.is_fixed_price,
     -- BL-002: resolved unit price
     it.unit_price,
     -- BL-003: signed item adjustment (negative discount / positive markup)

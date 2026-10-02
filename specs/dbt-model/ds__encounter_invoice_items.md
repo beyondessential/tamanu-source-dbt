@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (spun off from `clinical__cost` OQ-001 — item-level billing detail) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-26 |
-| **Last updated** | 2026-07-26 |
+| **Last updated** | 2026-10-02 |
 
 Per-invoice-item billing detail: one row per `invoice_items` line with its resolved
 price, discount, discounted total and insurance coverage. This is a **Tamanu billing
@@ -80,10 +80,11 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
 | `product_id` | character varying(255) | The invoice product billed | |
 | `product_name` | text | Finalised `product_name_final`, falling back to live `invoice_products.name` (BL-005) | |
 | `category` | text | Product category (null for uncategorised products) | |
-| `quantity` | numeric | Line quantity | |
+| `quantity` | numeric | Line quantity (informational only on a fixed-price line — BL-009) | |
+| `is_fixed_price` | boolean | The line is charged as a flat fee (`unit_price × 1`) regardless of quantity (BL-009) | |
 | `unit_price` | numeric | Resolved unit price (BL-002) | |
-| `item_adjustment` | numeric | Signed item adjustment `discounted_total − unit_price × quantity` — negative for a discount, positive for a markup, mirroring the app's `getItemAdjustmentAmount`; 0 when none (BL-003) | |
-| `discounted_total` | numeric | `unit_price × quantity` after the item discount (BL-003) | `not_null` |
+| `item_adjustment` | numeric | Signed item adjustment `discounted_total − unit_price × charged quantity` — negative for a discount, positive for a markup, mirroring the app's `getItemAdjustmentAmount`; 0 when none (BL-003) | |
+| `discounted_total` | numeric | `unit_price × charged quantity` after the item discount (BL-003, BL-009) | `not_null` |
 | `insurance_coverage` | numeric | Per-item insurance coverage, capped at `discounted_total` (BL-004) | |
 | `source_record_type` **[ext]** | text | Originating clinical record type: `Prescription` / `LabTest` / `Procedure` / `ImagingRequestArea`, or null for manually-added products (BL-006) | |
 | `source_record_id` **[ext]** | character varying(255) | FK into the `source_record_type` table (BL-006) | |
@@ -105,11 +106,12 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
   `invoice_items.manual_entry_price` → the resolved `invoice_price_list_items.price` → `0`,
   mirroring `getInvoiceItemPrice`. Price-list resolution reuses the invoice's single
   matched price list (as in `int__encounter_invoice_amounts` BL-006).
-- **BL-003:** `discounted_total` applies the item discount to `unit_price × quantity`:
+- **BL-003:** `discounted_total` applies the item discount to `unit_price × charged quantity`
+  (the charged quantity is `quantity`, or `1` on a fixed-price line — BL-009):
   `percentage` discounts multiply by `(1 − amount)`; `amount` discounts subtract `amount`
   with no floor (a negative line total is possible, mirroring the app). Mirrors
   `getInvoiceItemTotalDiscountedPrice`. `item_adjustment` is the **signed** difference
-  `discounted_total − unit_price × quantity` — negative for a discount, positive for a
+  `discounted_total − unit_price × charged quantity` — negative for a discount, positive for a
   markup, `0` when neither — mirroring the app's `getItemAdjustmentAmount` (OQ-002
   resolved: match the app's signed convention rather than a positive discount magnitude).
 - **BL-004:** `insurance_coverage` is the per-item coverage — for each insurance plan linked
@@ -130,6 +132,13 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
   non-goal, not an omission.
 - **BL-008:** `invoice_status` is carried from the invoice so consumers can exclude cancelled
   invoices (whose items still carry charges).
+- **BL-009:** **Fixed-price (flat fee) lines are charged once.** Mirroring the app's
+  `isFixedPriceItem` / `getInvoiceItemTotalPrice`, `is_fixed_price` is the finalised
+  `invoice_items.is_fixed_price_final` snapshot once the line is finalised (`price_final` set),
+  authoritative in both directions so a later price-list change cannot flip it; before
+  finalisation it is the resolved price-list item's `is_fixed_price`, honoured only for `Drug`
+  products. A fixed-price line is charged `unit_price × 1`: the item discount (BL-003) and the
+  coverage cap (BL-004) apply to the flat fee, and `quantity` is carried but never charged.
 
 ## Acceptance criteria
 
@@ -176,3 +185,4 @@ Resolved during implementation — none outstanding.
 | 2026-07-26 | Maui team | Initial draft — item-grain billing detail spun off from `clinical__cost` OQ-001. Item detail is a Tamanu (non-OMOP) construct, so it lives in `ds__`/`int__`; per-item arithmetic shared via the `invoice_item_amounts()` macro; payments intentionally stay invoice-grained. |
 | 2026-07-26 | Maui team | Implemented: `invoice_item_amounts()` macro, `int__encounter_invoice_item_amounts`, `ds__encounter_invoice_items` (+ yml/docs), reconciliation singular tests and an item-grain unit test; OQ-002 resolved (signed adjustment). AC tests run green against the 2.57 replica; status → `implemented`. |
 | 2026-08-31 | Maui team | DV-001's AC-008 evidence corrected. The retargeted `test_int__encounter_invoice_amounts_*` tests were verified on 2.57 but never reached `main`, which kept the pre-extraction `test_ds__encounter_invoices_*` copies — those name the projection as the model under test and cannot compile, so AC-008 was unverified on `main` from the extraction until the tests were carried across. |
+| 2026-10-02 | Maui team | [MAUI-6967](https://linear.app/bes/issue/MAUI-6967): added BL-009 fixed-price charging and the `is_fixed_price` column. The macro previously ignored `is_fixed_price` / `is_fixed_price_final` and charged every line `unit_price × quantity`, so fixed-price medications (Yap, Kosrae) were overstated by their dispensed quantity in the invoice audit report and the Tupaia billing metrics. |

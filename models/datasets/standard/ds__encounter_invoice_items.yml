@@ -64,6 +64,9 @@ models:
       - name: quantity
         data_type: integer
         description: "{{ doc('ds__encounter_invoice_items__quantity') }}"
+      - name: is_fixed_price
+        data_type: boolean
+        description: "{{ doc('ds__encounter_invoice_items__is_fixed_price') }}"
       - name: unit_price
         data_type: numeric
         description: "{{ doc('ds__encounter_invoice_items__unit_price') }}"

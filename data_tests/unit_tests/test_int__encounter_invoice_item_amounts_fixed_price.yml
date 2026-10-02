@@ -1,0 +1,123 @@
+unit_tests:
+  - name: test_int__encounter_invoice_item_amounts_fixed_price
+    model: int__encounter_invoice_item_amounts
+    description: >
+      BL-009 fixed-price (flat fee) charging, mirroring isFixedPriceItem /
+      getInvoiceItemTotalPrice. All lines have quantity 30 and a $2 price.
+      In progress (live price-list flag, drugs only):
+        item_001 fixed drug with a 10% discount and 80% coverage -> 2 x 1 = 2, less 10% = 1.80,
+                 adjustment -0.20, coverage 1.44 (discount and coverage apply to the flat fee);
+        item_002 per-unit drug -> 2 x 30 = 60;
+        item_003 non-drug flagged fixed -> flag ignored, 2 x 30 = 60;
+        item_006 fixed drug with a $7 manual price override -> stays fixed, 7 x 1 = 7.
+      Finalised (is_fixed_price_final snapshot is authoritative both ways):
+        item_004 snapshot fixed on a now per-unit product -> 2 x 1 = 2;
+        item_005 snapshot per-unit on a now fixed product -> 2 x 30 = 60.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001'::text as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, null::text as product_name_final, '2024-01-14'::date as date, 'prod_fixed' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 30::integer as quantity, 'Prescription' as source_record_type, 'rx_1' as source_record_id, false as is_fixed_price_final
+          union all
+          select 'item_002', '00000000-0000-0000-0000-000000000001', null, '2024-01-14'::date, 'prod_per_unit', null, null, 30, 'Prescription', 'rx_2', false
+          union all
+          select 'item_003', '00000000-0000-0000-0000-000000000001', null, '2024-01-14'::date, 'prod_lab', null, null, 30, 'LabTest', 'lt_1', false
+          union all
+          select 'item_004', '00000000-0000-0000-0000-000000000001', 'Per-unit drug', '2024-01-14'::date, 'prod_per_unit', 2.00, null, 30, 'Prescription', 'rx_3', true
+          union all
+          select 'item_005', '00000000-0000-0000-0000-000000000001', 'Fixed drug', '2024-01-14'::date, 'prod_fixed', 2.00, null, 30, 'Prescription', 'rx_4', false
+          union all
+          select 'item_006', '00000000-0000-0000-0000-000000000001', null, '2024-01-14'::date, 'prod_fixed', null, 7.00, 30, 'Prescription', 'rx_5', false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_fixed' as id, 'Drug' as category, true as insurable, 'Fixed drug' as name
+          union all
+          select 'prod_per_unit', 'Drug', false, 'Per-unit drug'
+          union all
+          select 'prod_lab', 'LabTestType', false, 'Lab test'
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select 'item_001'::text as invoice_item_id, 0.10::numeric as amount, 'percentage' as type, '00000000-0000-0000-0000-0000000000d1'::text as id
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select 'pl_001'::text as id, 'PL1' as code, '{}'::jsonb as rules, 1::integer as evaluation_order, '2024-01-01'::timestamp as created_at, 'current' as visibility_status
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select 'pl_001'::text as invoice_price_list_id, 'prod_fixed' as invoice_product_id, 2.00::numeric as price, false as is_hidden, true as is_fixed_price
+          union all
+          select 'pl_001', 'prod_per_unit', 2.00, false, false
+          union all
+          select 'pl_001', 'prod_lab', 2.00, false, true
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select 'iiip_001'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'plan_001' as invoice_insurance_plan_id
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select 'plan_001'::text as id, 80::numeric as default_coverage
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'item_001' as invoice_item_id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'prod_fixed' as product_id, '2024-01-14'::date as date, 'Fixed drug' as product_name, 'Drug' as category, 30::integer as quantity, true as is_fixed_price, 2.00::numeric as unit_price, 1.8000::numeric as discounted_total, -0.2000::numeric as item_adjustment, 1.4400000000000000::numeric as insurance_coverage, 'Prescription' as source_record_type, 'rx_1' as source_record_id
+        union all
+        select 'item_002', '00000000-0000-0000-0000-000000000001', 'prod_per_unit', '2024-01-14'::date, 'Per-unit drug', 'Drug', 30, false, 2.00, 60.00, 0.00, null, 'Prescription', 'rx_2'
+        union all
+        select 'item_003', '00000000-0000-0000-0000-000000000001', 'prod_lab', '2024-01-14'::date, 'Lab test', 'LabTestType', 30, false, 2.00, 60.00, 0.00, null, 'LabTest', 'lt_1'
+        union all
+        select 'item_004', '00000000-0000-0000-0000-000000000001', 'prod_per_unit', '2024-01-14'::date, 'Per-unit drug', 'Drug', 30, true, 2.00, 2.00, 0.00, null, 'Prescription', 'rx_3'
+        union all
+        select 'item_005', '00000000-0000-0000-0000-000000000001', 'prod_fixed', '2024-01-14'::date, 'Fixed drug', 'Drug', 30, false, 2.00, 60.00, 0.00, 48.0000000000000000, 'Prescription', 'rx_4'
+        union all
+        select 'item_006', '00000000-0000-0000-0000-000000000001', 'prod_fixed', '2024-01-14'::date, 'Fixed drug', 'Drug', 30, true, 7.00, 7.00, 0.00, 5.6000000000000000, 'Prescription', 'rx_5'

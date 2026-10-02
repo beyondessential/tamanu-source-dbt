@@ -6,6 +6,7 @@ select
     ii.product_code_final,
     ii.product_name_final,
     ii.price_final,
+    ii.is_fixed_price_final,
     ii.manual_entry_price,
     ii.quantity,
     ii.ordered_by_user_id,
