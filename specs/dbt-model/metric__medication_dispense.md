@@ -122,7 +122,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_dispense`, `k
 
 | Artefact | Relationship |
 |---|---|
-| `metric__pharmacy_order` | The same drug lines counted on their order date, with whether each has been dispensed. It labels the setting with `encounter_setting`; emergency orders are `metric__ed_pharmacy_order` |
+| `metric__pharmacy_order` | The same drug lines counted on their order date, with whether each has been dispensed. It carries the same OMOP Visit concept columns |
 | `clinical__drug_exposure` | Carries the same dispenses as OMOP drug exposures |
 
 ## Change log

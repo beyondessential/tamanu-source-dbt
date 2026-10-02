@@ -16,8 +16,8 @@
 
 Canonical definition for `lab_order`: one row per lab request raised from a panel, labelled
 with the panel however many tests it holds, and one row per lab test on a request raised
-without one. The generic counterpart to `metric__ed_lab_order`, carrying `encounter_setting`
-rather than scoping to a single setting. **No outpatient or inpatient siblings** -- see BL-001.
+without one. The generic counterpart to `metric__ed_lab_order`, carrying the segment's OMOP
+Visit concept rather than scoping to a single setting. **No outpatient or inpatient siblings** -- see BL-001.
 
 ## Purpose
 
@@ -91,7 +91,6 @@ D5 wide format, plus ten disaggregation columns and one measure.
 | `value_boolean` | boolean | NULL -- this metric's value is the count in `value_numeric` |
 | `facility_id` | varchar(255) | The resolved segment's own location's facility (BL-010). `not_null` |
 | `encounter_type` | varchar(255) | The resolved segment's own `encounter_type` (BL-010). `not_null` |
-| `encounter_setting` | text | `Outpatient` (9202) / `Inpatient` (9201) / `Other`. Emergency deliberately unnamed (BL-010). `not_null` |
 | `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-013) |
 | `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-013) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
@@ -113,9 +112,9 @@ dbt's. This model therefore carries no `data_table_*` meta.
 ## Business logic
 
 - **BL-001 (one metric, no outpatient or inpatient siblings):** the setting is a column
-  (`encounter_setting`, BL-010), not a separate `metric_id`. A lab order is point-in-time: it
+  (`visit_detail_concept_id`, BL-013), not a separate `metric_id`. A lab order is point-in-time: it
   resolves to exactly one segment, so it cannot belong to two settings at once, and filtering
-  `encounter_setting = 'Outpatient'` returns precisely the rows a separate `opd_lab_test`
+  `visit_detail_concept_id = 9202` returns precisely the rows a separate `opd_lab_test`
   would. This matches `metric__procedure` (#1462) and `metric__imaging_request` (#1385), which
   share that shape. Diagnosis does not, and keeps its `ipd_`/`opd_` variants: a diagnosis stays
   valid to the end of the encounter, so its window can overlap an outpatient *and* an inpatient
@@ -123,8 +122,8 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
   **Emergency is the exception, in all three families.** `metric__ed_procedure`,
   `metric__ed_imaging_request` and `metric__ed_lab_order` are separate metrics on OMOP 9203,
-  and `encounter_setting` names no emergency value, so an emergency card cannot be drawn off
-  the merged metric. Orders placed in the emergency phase read `'Other'` here.
+  and they are what emergency cards read. Orders placed in the emergency phase carry 9203
+  here.
 
 - **BL-002 (the panel rule, and the reporting period):** a request raised from a panel is one
   order line, labelled with the panel, however many tests it holds. `is_panel` is true on
@@ -185,7 +184,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
   card asked for a results breakdown and a positivity rate, and neither is expressible here. A
   consumer needing them needs a per-test metric alongside this one. See OQ-003.
 
-- **BL-010 (attribution is as-at the order, not as-it-now-stands):** `encounter_setting`,
+- **BL-010 (attribution is as-at the order, not as-it-now-stands):** the OMOP Visit concept,
   `encounter_type`, `department` and `facility_id` all come from the `clinical__visit_detail`
   segment active when the order was **placed** -- the latest segment that had started by
   `requested_datetime`, clamped to the earliest segment for a request that predates them all.
@@ -211,26 +210,9 @@ dbt's. This model therefore carries no `data_table_*` meta.
   *placed*; and a pending or cancelled order has no publication event to anchor to at all, so
   anchoring there would leave exactly the rows this metric exists to count unattributable.
 
-  **Why a label, not the raw concept id.** `encounter_setting` is the shape `metric__procedure`
-  settled on: one stable value a consumer filters, rather than a concept id each consumer has
-  to know, or an `encounter_type` list that drifts as `map__omop_visit_type` gains types.
-  `'Outpatient'` is the full 9202 scope -- clinic, imaging and vaccination -- which is wider
-  than `encounter_type = 'clinic'`.
-
-  Lab follows `metric__procedure` here rather than `metric__imaging_request`, which carries no
-  `encounter_setting` at all: outpatient imaging is deliberately clinic-only, because an
-  imaging-typed encounter and an imaging request are independent Tamanu concepts that share a
-  name (MAUI-6806), so an `'Outpatient'` label there would overclaim. Labs have no such
-  collision -- a test ordered during a vaccination encounter is outpatient lab activity like
-  any other -- so the full scope is correct and the label is honest.
-
-  `encounter_type` is emitted alongside, raw, for a consumer that wants `vaccination`
+  `encounter_type` is emitted alongside the concept, raw, for a consumer that wants `vaccination`
   specifically. The two are **not** interchangeable: 9202 covers three `encounter_type` values
   and 9203 another three.
-
-  **No emergency value**, matching `metric__procedure`: emergency reporting has its own metrics,
-  and naming it here would let an emergency card be drawn off this one. Orders placed in the
-  emergency phase fall in `'Other'`.
 
   **Inner join**, so an order whose encounter resolves to no segment is excluded rather than
   carrying a NULL facility. Every encounter has at least one segment, *provided* its
@@ -262,7 +244,6 @@ dbt's. This model therefore carries no `data_table_*` meta.
 | AC | `period_granularity` is `not_null` and always `'minute'` | BL-002 | `not_null` + `accepted_values` |
 | AC | `value_numeric` is `not_null` and always `1` | BL-001 | `not_null` + `accepted_values` |
 | AC | `facility_id`, `encounter_type`, `department` are `not_null` | BL-010 | `not_null` |
-| AC | `encounter_setting` is `not_null` and one of `Outpatient`/`Inpatient`/`Other` | BL-010 | `not_null` + `accepted_values` |
 | AC | `is_completed` and `is_panel` are `not_null` | BL-002, BL-003, BL-006 | `not_null` |
 | AC | `lab_order`, `lab_order_code`, `lab_test_category` are `not_null` | BL-007, BL-008 | `not_null` |
 | AC | A panel request with three tests yields ONE row labelled with the panel; a non-panel request with two tests yields one row each labelled with the test type | BL-002, BL-003 | dbt unit test `test_metric__lab_order_grain` |
@@ -276,7 +257,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
 One active row in `documentations/metrics/lab.yml` -- `lab_order`, `kind: metric`,
 `subject_grain: lab_order`, `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id, encounter_type, encounter_setting, sex, is_completed, is_panel,
+`disaggregations: facility_id, encounter_type, visit_detail_concept_id, visit_detail_concept_name, sex, is_completed, is_panel,
 department, lab_order, lab_order_code, lab_test_category`.
 
 Regenerate `macros/metric_definitions.sql` with
@@ -285,9 +266,8 @@ Regenerate `macros/metric_definitions.sql` with
 `lab_order`, `lab_order_code`, `is_panel` and `lab_test_category` are allowlisted in
 `assert__metric_definitions__disaggregations` by this change. The first three are also
 `metric__ed_lab_order`'s columns, which were not in the allowlist on main, so that metric warned
-on them until now. `facility_id`, `encounter_type`, `encounter_setting`, `sex`, `is_completed`
-and `department` are already admitted by earlier metrics -- `encounter_setting` by
-`metric__procedure`.
+on them until now. `facility_id`, `encounter_type`, `sex`, `is_completed` and `department` are already admitted
+by earlier metrics.
 
 ## Dependencies
 
@@ -301,7 +281,7 @@ and `department` are already admitted by earlier metrics -- `encounter_setting` 
 | `reference_data` | `bases/` | Category name for `lab_requests.lab_test_category_id` (BL-008) |
 | `departments` | `bases/` | Name of the resolved segment's `department_id` (BL-010) |
 | `locations` | `bases/` | Facility id of the resolved segment's `care_site_id` (BL-010) |
-| `clinical__visit_detail` | `clinical/` | The segment active at the order: `visit_detail_concept_id` for `encounter_setting`, `visit_detail_source_value` for `encounter_type`, plus its own `care_site_id`, `department_id` and `person_id` (BL-010) |
+| `clinical__visit_detail` | `clinical/` | The segment active at the order: `visit_detail_concept_id` and `visit_detail_concept_name`, `visit_detail_source_value` for `encounter_type`, plus its own `care_site_id`, `department_id` and `person_id` (BL-010) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-011) |
 | `visit_detail__active_segment` | macro | The as-of segment resolution and first-segment clamp (BL-010) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
@@ -330,8 +310,8 @@ and `department` are already admitted by earlier metrics -- `encounter_setting` 
 
 | Artefact | Relationship |
 |---|---|
-| `metric__ed_lab_order` | The ED-scoped sibling this model mirrors: same panel rule, same completion rule, same segment macro, scoped to OMOP 9203 instead of carrying `encounter_setting` |
-| `metric__procedure` / `metric__imaging_request` | The one-metric-with-`encounter_setting` shape this model follows (BL-001). They read the segment off `clinical__procedure_occurrence`'s `visit_detail_id`; a lab order calls the macro directly (BL-010) |
+| `metric__ed_lab_order` | The ED-scoped sibling this model mirrors: same panel rule, same completion rule, same segment macro, scoped to OMOP 9203 instead of carrying the concept |
+| `metric__procedure` / `metric__imaging_request` | The one-metric-across-settings shape this model follows (BL-001). They read the segment off `clinical__procedure_occurrence`'s `visit_detail_id`; a lab order calls the macro directly (BL-010) |
 | `metric__encounter_diagnosis` | Keeps `ipd_`/`opd_` variants because a diagnosis's window can span two settings (BL-001), and sets the raw-and-ungrouped convention for recorded values (BL-007, BL-008) |
 | `ds__lab_requests` / `ds__lab_tests` | Report-layer lab datasets at test grain, with PII -- different layer (D6), different consumer, not affected by this work |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
@@ -358,6 +338,7 @@ and `department` are already admitted by earlier metrics -- `encounter_setting` 
 
 | Date | Change |
 |---|---|
+| 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution uses the shared `visit_detail__active_segment` macro, and columns match `metric__ed_lab_order`: no `request_status` or `lab_request_id`, `published_datetime` carried through both branches, `subject_grain` aligned with `ed_lab_order`, and the spec brought back into line with the code (MAUI-6837) |
 | 2026-09-28 | Aligned with the procedure and imaging families: `encounter_setting` in place of the raw OMOP concept, no per-setting siblings, and setting/department/facility attributed to the segment active at the order rather than the encounter as it now stands. (MAUI-6837) |
 | 2026-09-23 | Added as `metric__lab_request` over `clinical__measurement`'s lab branch, then renamed to `metric__lab_test` and rewritten to source orders from `bases/`, so requested-but-unresulted and cancelled tests are counted (MAUI-6909, MAUI-6837) |
