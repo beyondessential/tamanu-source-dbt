@@ -64,8 +64,9 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 | AC-005 | A dispense whose prescription is absent from the `prescriptions` base does not appear. | BL-005 |
 | AC-006 | A dispense whose pharmacy order names a different facility from its encounter is reported under the encounter's facility and appears only in the encounter's variant. | BL-006 |
 | AC-007 | Every dispense's pharmacy order names the same facility as its encounter, at `warn` severity. A failure lists dispenses whose order facility differs; they are reported by the encounter's facility. | BL-006 |
+| AC-008 | Every dispense the base keeps, whose prescription the `prescriptions` base keeps and whose drug resolves, appears in one variant, at `warn` severity. A failure lists dispenses dropped from both because their encounter's location or facility does not resolve. | BL-006 |
 
-AC-001, AC-002, AC-005 and AC-006 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 and AC-006 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base, and AC-007 the singular test `data_test__ds__medication_dispenses`.
+AC-001, AC-002, AC-005, AC-006 and AC-008 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 and AC-006 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base, and AC-007 the singular test `data_test__ds__medication_dispenses`, which also checks AC-008 against data.
 
 ## Change log
 
@@ -73,4 +74,4 @@ AC-001, AC-002, AC-005 and AC-006 are covered by `test_ds__medication_dispenses_
 |---|---|---|
 | 2026-09-28 | Maui team | Initial spec, written for MAUI-6945. Drug resolution now prefers the dispense's own `medication_id` over the prescription's, so a prescription modified at dispensing reports the substituted drug (BL-001 to BL-004). |
 | 2026-09-29 | Maui team | `medication_id` reads the dispense's own drug with no prescription fallback, since Tamanu v2.61 backfills it on every dispense (BL-001, BL-002, AC-003). The retained `prescriptions` join is documented as a row filter (BL-005, AC-005). |
-| 2026-10-02 | Maui team | Facility and sensitivity partition come from the encounter's current location through `encounters_core()`, matching every encounter report; a dispense whose encounter has no resolvable location or facility is now dropped from both variants (BL-006, AC-006, AC-007). |
+| 2026-10-02 | Maui team | Facility and sensitivity partition come from the encounter's current location through `encounters_core()`, matching every encounter report; a dispense whose encounter has no resolvable location or facility is now dropped from both variants (BL-006, AC-006 -- AC-008). |
