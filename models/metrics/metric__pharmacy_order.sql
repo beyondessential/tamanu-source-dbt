@@ -17,7 +17,7 @@
 -- this one metric rather than needing a separate metric per setting.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__pharmacy_order.md for BL-001..BL-010.
+-- See specs/dbt-model/metric__pharmacy_order.md for BL-001..BL-011.
 
 with pharmacy_order_prescriptions as (
     select * from {{ ref('pharmacy_order_prescriptions') }}
@@ -105,6 +105,10 @@ orders as (
         end as encounter_setting,
         -- BL-010: the segment's own encounter_type, finer than the setting above
         vd.visit_detail_source_value as encounter_type,
+        -- BL-011: the segment's OMOP Visit concept and its name, as clinical__visit_detail
+        -- carries them
+        vd.visit_detail_concept_id,
+        vd.visit_detail_concept_name,
         -- BL-006
         d.is_completed,
         pr.gender_source_value as sex,
@@ -154,6 +158,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
+    visit_detail_concept_id,
+    visit_detail_concept_name,
     encounter_setting,
     sex,
     is_completed,
