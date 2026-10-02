@@ -94,6 +94,9 @@ where trim(d) not in (
         -- is deliberately not named -- it falls in Other, so no card can be built off this
         -- metric as though it were an emergency figure.
         'encounter_setting',
+        -- the encounter's OMOP Visit concept and its name, from clinical__visit_occurrence
+        'visit_concept_id',
+        'visit_concept_name',
         -- the OMOP Visit concept of the segment an event is attributed to, and its name from
         -- map__omop_visit_type: the setting as OMOP states it, so no model relabels it
         'visit_detail_concept_id',
