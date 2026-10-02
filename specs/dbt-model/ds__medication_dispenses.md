@@ -24,7 +24,7 @@ Only the medication and facility clauses are numbered; the rest of the dataset i
 
 ## Grain
 
-One row per non-deleted `medication_dispenses` row that the `medication_dispenses` base keeps: its pharmacy order prescription, pharmacy order and encounter are not deleted, and the encounter is not the test patient's. The dispense's prescription must also be kept by the `prescriptions` base (BL-005). The standard variant keeps dispenses whose encounter is at a non-sensitive facility, and the sensitive variant keeps those at sensitive facilities (BL-006).
+One row per non-deleted `medication_dispenses` row that the `medication_dispenses` base keeps: its pharmacy order prescription, pharmacy order and encounter are not deleted, and the encounter is not the test patient's. The dispense's prescription must also be kept by the `prescriptions` base (BL-005). The standard variant keeps dispenses whose encounter is currently at a non-sensitive facility, and the sensitive variant keeps those at sensitive facilities (BL-006); a dispense whose encounter has no resolvable location or facility appears in neither variant (BL-006).
 
 ## Inputs
 
@@ -38,7 +38,7 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 | `quantity` | integer | Quantity dispensed |
 | `dispensed_at` | timestamp | When the dispense was recorded |
 | `patient_id` | text | The encounter's patient |
-| `facility_id` | text | The facility of the encounter's location (BL-006) |
+| `facility_id` | text | The facility of the encounter's current location (BL-006) |
 | `facility` | text | That facility's name |
 | `medication_id` | text | The drug dispensed (BL-001) |
 | `medication_code` | text | `reference_data.code` of that drug (BL-002) |
@@ -51,7 +51,7 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 - **BL-003:** The `medication_id` column doc describes the dispensed (possibly modified) drug, via `medication_dispenses__medication_id`, not the prescribed one.
 - **BL-004:** The logic lives once in `medication_dispenses_dataset()`. The `is_sensitive` parameter covers both variants. Per-deployment repos pick the change up on their next `tamanu-source-dbt` version bump.
 - **BL-005:** The dataset inner-joins `prescriptions`, so a dispense whose prescription the `prescriptions` base excludes (deleted, or the test patient's) is dropped.
-- **BL-006:** `facility_id`, `facility`, `patient_id` and the sensitivity partition come from the dispense's encounter through `encounters_core()`, the encounter's location's facility, so a dispense is reported, and lands in a report variant, by the same facility as the rest of its encounter.
+- **BL-006:** `facility_id`, `facility`, `patient_id` and the sensitivity partition come from the dispense's encounter through `encounters_core()`, the encounter's *current* location's facility, so a dispense is reported, and lands in a report variant, by the same facility as the rest of its encounter. A dispense's facility moves if the encounter is later moved to another location. `encounters_core()` inner-joins `locations` and `facilities`, so a dispense whose encounter has no location, or a location with no facility, is dropped from both variants.
 
 ## Acceptance criteria
 
@@ -73,4 +73,4 @@ AC-001, AC-002, AC-005 and AC-006 are covered by `test_ds__medication_dispenses_
 |---|---|---|
 | 2026-09-28 | Maui team | Initial spec, written for MAUI-6945. Drug resolution now prefers the dispense's own `medication_id` over the prescription's, so a prescription modified at dispensing reports the substituted drug (BL-001 to BL-004). |
 | 2026-09-29 | Maui team | `medication_id` reads the dispense's own drug with no prescription fallback, since Tamanu v2.61 backfills it on every dispense (BL-001, BL-002, AC-003). The retained `prescriptions` join is documented as a row filter (BL-005, AC-005). |
-| 2026-10-02 | Maui team | Facility and sensitivity partition come from the encounter's location through `encounters_core()`, matching every encounter report (BL-006, AC-006, AC-007). |
+| 2026-10-02 | Maui team | Facility and sensitivity partition come from the encounter's current location through `encounters_core()`, matching every encounter report; a dispense whose encounter has no resolvable location or facility is now dropped from both variants (BL-006, AC-006, AC-007). |

@@ -2,7 +2,7 @@ unit_tests:
   - name: test_ds__medication_dispenses_dispensed_drug
     model: ds__medication_dispenses
     description: >
-      BL-001/BL-002/BL-005 of ds__medication_dispenses. Three dispenses at a
+      BL-001/BL-002/BL-005/BL-006 of ds__medication_dispenses. Three dispenses at a
       non-sensitive facility, each against a prescription for Drug A:
 
       md_mod  -- pharmacy modified the prescription at dispensing, so the dispense
