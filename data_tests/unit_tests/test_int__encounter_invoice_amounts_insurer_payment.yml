@@ -50,7 +50,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 50.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id, false as is_fixed_price_final
 
       - input: ref('invoice_products')
         format: sql
@@ -61,15 +61,15 @@ unit_tests:
         format: sql
         rows: |
           -- insurer: $100 paid, $30 partial, $0 rejected, $100 refund of the paid one; plus a $25 patient payment
-          select '00000000-0000-0000-0000-000000000010'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 100.00::numeric as amount, null::text as original_payment_id
+          select '00000000-0000-0000-0000-000000000010'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 100.00::numeric as amount, null::text as original_payment_id, null::date as date
           union all
-          select '00000000-0000-0000-0000-000000000011'::text, '00000000-0000-0000-0000-000000000001'::text, 30.00::numeric, null::text
+          select '00000000-0000-0000-0000-000000000011'::text, '00000000-0000-0000-0000-000000000001'::text, 30.00::numeric, null::text, null::date
           union all
-          select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 0.00::numeric, null::text
+          select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 0.00::numeric, null::text, null::date
           union all
-          select '00000000-0000-0000-0000-000000000013'::text, '00000000-0000-0000-0000-000000000001'::text, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::text
+          select '00000000-0000-0000-0000-000000000013'::text, '00000000-0000-0000-0000-000000000001'::text, 100.00::numeric, '00000000-0000-0000-0000-000000000010'::text, null::date
           union all
-          select '00000000-0000-0000-0000-000000000020'::text, '00000000-0000-0000-0000-000000000001'::text, 25.00::numeric, null::text
+          select '00000000-0000-0000-0000-000000000020'::text, '00000000-0000-0000-0000-000000000001'::text, 25.00::numeric, null::text, null::date
 
       - input: ref('invoice_insurer_payments')
         format: sql
@@ -128,7 +128,7 @@ unit_tests:
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden where false
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden, null::boolean as is_fixed_price where false
 
     expect:
       format: sql

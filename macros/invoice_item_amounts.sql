@@ -126,6 +126,14 @@ item_unit_price as (
         -- polymorphic link to the originating clinical record, carried through (BL-006)
         ii.source_record_type,
         ii.source_record_id,
+        -- BL-009: mirrors isFixedPriceItem. Once finalised (price_final set) the
+        -- is_fixed_price_final snapshot is authoritative in both directions; before that
+        -- the live price-list flag applies, honoured for drugs only. A fixed-price line is
+        -- charged its price once (x 1); quantity stays informational.
+        case
+            when ii.price_final is not null then coalesce(ii.is_fixed_price_final, false)
+            else ip.category = 'Drug' and coalesce(ipli.is_fixed_price, false)
+        end as is_fixed_price,
         coalesce(
             ii.price_final,
             ii.manual_entry_price,
@@ -147,7 +155,8 @@ item_unit_price as (
 
 item_resolved_price as (
     -- BL-003: mirrors getInvoiceItemTotalDiscountedPrice. Applies the item-level
-    -- discount (percentage or flat amount) to unit price x quantity.
+    -- discount (percentage or flat amount) to unit price x charged quantity, where the
+    -- charged quantity is 1 for a fixed-price line (BL-009, getInvoiceItemTotalPrice).
     select
         iup.invoice_item_id,
         iup.invoice_id,
@@ -159,17 +168,24 @@ item_resolved_price as (
         iup.insurable,
         iup.source_record_type,
         iup.source_record_id,
+        iup.is_fixed_price,
         iup.price,
+        iup.charged_quantity,
         case
             when iid.type = 'percentage'
-                then iup.price * iup.quantity * (1 - coalesce(iid.amount, 0))
+                then iup.price * iup.charged_quantity * (1 - coalesce(iid.amount, 0))
             when iid.type = 'amount'
                 -- flat amount subtracted with no floor, so an over-large discount
                 -- can take the line total negative (matching the application)
-                then iup.price * iup.quantity - coalesce(iid.amount, 0)
-            else iup.price * iup.quantity
+                then iup.price * iup.charged_quantity - coalesce(iid.amount, 0)
+            else iup.price * iup.charged_quantity
         end as discounted_total
-    from item_unit_price iup
+    from (
+        select
+            *,
+            case when is_fixed_price then 1 else quantity end as charged_quantity
+        from item_unit_price
+    ) iup
     -- Tamanu enforces one discount per item (application logic, no DB
     -- unique constraint) and the id tie-break makes distinct on
     -- deterministic if unexpected duplicates exist
@@ -229,11 +245,13 @@ select
     irp.product_name,
     irp.category,
     irp.quantity,
+    -- BL-009: fixed-price (flat fee) line, charged price x 1 regardless of quantity
+    irp.is_fixed_price,
     irp.price as unit_price,
     irp.discounted_total,
     -- BL-003: signed item adjustment (discounted minus undiscounted) -- negative for a
     -- discount, positive for a markup -- mirroring getItemAdjustmentAmount
-    irp.discounted_total - irp.price * irp.quantity as item_adjustment,
+    irp.discounted_total - irp.price * irp.charged_quantity as item_adjustment,
     -- BL-004: per-item insurance coverage, capped at the discounted total; null when the
     -- item has no coverage row so the invoice-level sum stays null for no-insurance invoices
     case
