@@ -159,7 +159,7 @@ Provides autocomplete functionality using predefined API endpoints.
 - `specimenType`, `stressTestImagingArea`, `subdivision`, `survey`, `taskDeletionReason`
 - `taskNotCompletedReason`, `taskSet`, `taskTemplate`, `template`, `timeZone`
 - `triageReason`, `ultrasoundImagingArea`, `vaccineCircumstance`, `vaccineNotGivenReason`, `vascularStudyImagingArea`
-- `village`, `xRayImagingArea`
+- `village`, `xRayImagingArea`, `xRayPortableImagingArea`
 
 ### 3. ParameterMultiselectField
 

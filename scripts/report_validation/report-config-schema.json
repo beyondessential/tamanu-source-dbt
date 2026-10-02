@@ -258,7 +258,8 @@
             "vaccineNotGivenReason",
             "vascularStudyImagingArea",
             "village",
-            "xRayImagingArea"
+            "xRayImagingArea",
+            "xRayPortableImagingArea"
           ]
         },
         "suggesterOptions": {
