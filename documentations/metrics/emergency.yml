@@ -232,3 +232,35 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__ed_pharmacy_order.md
+- metric_id: ed_medication_dispense
+  kind: metric
+  name: ED medications dispensed
+  description: >-
+    Medication handed over by pharmacy against a drug line ordered while the patient's active
+    segment was an emergency, triage or observation phase, one row per dispense, dated to the
+    day it was dispensed.
+  numerator_description: >-
+    Medication dispenses against drug lines whose order's active segment carries OMOP visit
+    concept 9203 (Emergency Room Visit), counted on the date each was dispensed
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    The emergency-side counterpart of medication_dispense and the dispensing counterpart of
+    ed_pharmacy_order, scoped the same way. A drug line ordered after the encounter is retyped as
+    an admission is admission-phase activity and is not counted, however late it is dispensed.
+    No external body registers this indicator. Pending alignment with the deploying country's
+    national HMIS definition.
+  unit: count
+  subject_grain: medication_dispense
+  disaggregations:
+  - facility_id
+  - sex
+  - drug_source_value
+  - drug_source_name
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__ed_medication_dispense.md

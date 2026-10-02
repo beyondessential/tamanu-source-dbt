@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: metric__ed_medication_dispense
+    description: >-
+      D5 metric view for the ed_medication_dispense indicator registered in
+      documentations/metrics/emergency.yml: ed_medication_dispense. One row per medication dispense -- each time
+      pharmacy hands medication over, dispensed against a drug line ordered during the emergency phase -- dated to the day it was dispensed. A drug line
+      dispensed in several partial fills has a row for each. Facility and department are those of
+      the encounter segment active when the line was ordered.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-dispense rows carrying sex and age alongside a record id -- no patient name or exact
+      # birth date, the same pair the pharmacy order metrics carry while staying internal.
+      pii: false
+      classification: internal
+    data_tests:
+      # AC-001: one row per dispense. A duplicate would double-count in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__ed_medication_dispense_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        data_type: text
+        description: >-
+          The registered indicator identifier. Always 'ed_medication_dispense'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__ed_medication_dispense_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__ed_medication_dispense_metric_id_values
+              arguments:
+                values:
+                  - ed_medication_dispense
+          - relationships:
+              name: ac_002_metric__ed_medication_dispense_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: >-
+          NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu medication dispense id.
+      - name: period_start
+        data_type: date
+        description: >-
+          The date the medication was dispensed.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: >-
+          NULL -- unused by this metric.
+      - name: period_granularity
+        data_type: text
+        description: >-
+          Constant 'day' -- a dispense is reported against the date it happened.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_period_granularity_not_null
+      - name: value_numeric
+        data_type: numeric
+        description: >-
+          Always 1 -- one dispense per row. Sum it to count dispenses over any grouping.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_value_numeric_not_null
+      - name: value_boolean
+        data_type: boolean
+        description: >-
+          NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu facility id the dispense is attributed to, from the patient's location when
+          the drug line was ordered.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: >-
+          The patient's sex.
+      - name: drug_source_value
+        data_type: text
+        description: >-
+          The dispensed medication's code, which differs from the prescribed one when pharmacy
+          changed it at dispensing. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_drug_source_value_not_null
+      - name: drug_source_name
+        data_type: text
+        description: >-
+          The dispensed medication's name, the label to rank by. Never NULL -- falls back to 'Not
+          recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_drug_source_name_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years on the day of the dispense. Not banded -- the consumer's data table
+          bands it.
+      - name: department
+        data_type: text
+        description: >-
+          The department the patient was under when the drug line was ordered. Never NULL --
+          falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__ed_medication_dispense_department_not_null
+      - name: quantity
+        data_type: numeric
+        description: >-
+          The quantity handed over in this dispense, as Tamanu records it -- a measure alongside
+          the count, not a disaggregation.
