@@ -92,6 +92,8 @@ D5 wide format, plus ten disaggregation columns and one measure.
 | `facility_id` | varchar(255) | The resolved segment's own location's facility (BL-010). `not_null` |
 | `encounter_type` | varchar(255) | The resolved segment's own `encounter_type` (BL-010). `not_null` |
 | `encounter_setting` | text | `Outpatient` (9202) / `Inpatient` (9201) / `Other`. Emergency deliberately unnamed (BL-010). `not_null` |
+| `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-013) |
+| `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-013) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | The request published (BL-006). Never NULL |
 | `is_panel` | boolean | Whether the line is a panel or a single test (BL-002, BL-003). Never NULL |
@@ -244,6 +246,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
   available but is **not** applied here. Filtering it is a deployment privacy decision, not a
   definitional one, and the standard metric stays universal. A deployment that must suppress
   them does so at the data-table layer. Flagged rather than assumed -- see OQ-004.
+- **BL-013 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
 
