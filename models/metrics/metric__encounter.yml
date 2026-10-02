@@ -116,6 +116,26 @@ models:
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_encounter_type_not_null
+      - name: visit_concept_id
+        data_type: integer
+        description: >-
+          The encounter's OMOP Visit concept: 9201 Inpatient Visit, 9202 Outpatient Visit, 9203
+          Emergency Room Visit, 262 Emergency Room and Inpatient Visit or 0 No matching concept.
+        data_tests:
+          - not_null:
+              name: ac_metric__encounter_visit_concept_id_not_null
+          - accepted_values:
+              name: ac_metric__encounter_visit_concept_id_values
+              arguments:
+                values: [9201, 9202, 9203, 262, 0]
+                quote: false
+      - name: visit_concept_name
+        data_type: text
+        description: >-
+          The OMOP name of visit_concept_id, from clinical__visit_occurrence. The label to show.
+        data_tests:
+          - not_null:
+              name: ac_metric__encounter_visit_concept_name_not_null
       - name: department
         data_type: text
         description: >-
