@@ -116,8 +116,9 @@ select
     b.visit_occurrence_id,
     b.person_id,
 
-    -- per-segment visit concept (BL-003)
+    -- per-segment visit concept and its OMOP name (BL-003)
     vm.concept_id as visit_detail_concept_id,
+    vm.concept_name as visit_detail_concept_name,
 
     -- date + datetime pair, mirroring clinical__visit_occurrence (BL-002)
     b.visit_detail_start_datetime::date as visit_detail_start_date,
