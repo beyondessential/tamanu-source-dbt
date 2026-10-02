@@ -3,7 +3,7 @@
 -- invoice_discount, invoice_patient_total, invoice_patient_paid, invoice_patient_balance and
 -- invoice_patient_payment.
 -- See specs/dbt-model/metric__billing.md for the BL clauses this model implements
--- (BL-001..BL-018).
+-- (BL-001..BL-019).
 --
 -- Per-subject grain. The seven invoice metrics have one row per non-cancelled invoice, dated
 -- to the invoice. invoice_patient_payment has one row per patient payment or refund, dated to
@@ -50,6 +50,10 @@ invoice_context as (
             when 9202 then 'outpatient'
             when 0 then 'none'
         end as care_setting,
+        -- BL-019: the encounter's OMOP Visit concept and its name, as
+        -- clinical__visit_occurrence carries them
+        vo.visit_concept_id,
+        vo.visit_concept_name,
         -- BL-010: concept 262 is an admission with an earlier emergency phase
         coalesce(vo.visit_concept_id = 262, false) as is_admitted_via_emergency,
         -- BL-011: current values, unresolved and ungrouped
@@ -74,6 +78,8 @@ invoice_rows as (
         ic.invoice_status,
         ic.facility_id,
         ic.care_setting,
+        ic.visit_concept_id,
+        ic.visit_concept_name,
         ic.is_admitted_via_emergency,
         ic.department_id,
         ic.encounter_type
@@ -109,6 +115,8 @@ payment_rows as (
         ic.invoice_status,
         ic.facility_id,
         ic.care_setting,
+        ic.visit_concept_id,
+        ic.visit_concept_name,
         ic.is_admitted_via_emergency,
         ic.department_id,
         ic.encounter_type
@@ -139,6 +147,8 @@ select
     invoice_status::text as invoice_status,
     facility_id,
     care_setting,
+    visit_concept_id,
+    visit_concept_name,
     is_admitted_via_emergency,
     department_id,
     encounter_type::text as encounter_type
