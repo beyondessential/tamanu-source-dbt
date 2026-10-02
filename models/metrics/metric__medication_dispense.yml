@@ -108,15 +108,15 @@ models:
         data_type: text
         description: >-
           The setting the drug line was ordered in, from the ordering segment's OMOP Visit
-          concept: Outpatient (9202), Inpatient (9201), or Other. Emergency (9203) falls in Other;
-          emergency dispensing is metric__ed_medication_dispense.
+          concept: Outpatient (9202), Inpatient (9201), Emergency (9203 -- the emergency, triage
+          and observation phases), or Other.
         data_tests:
           - not_null:
               name: ac_003_metric__medication_dispense_encounter_setting_not_null
           - accepted_values:
               name: ac_004_metric__medication_dispense_encounter_setting_values
               arguments:
-                values: ['Outpatient', 'Inpatient', 'Other']
+                values: ['Outpatient', 'Inpatient', 'Emergency', 'Other']
       - name: sex
         data_type: character varying(255)
         description: >-

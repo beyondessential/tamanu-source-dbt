@@ -10,9 +10,21 @@
 -- Facility, department and setting are those of the clinical__visit_detail segment active when
 -- the drug line was ordered, the same attribution metric__pharmacy_order uses, so a dispense lands
 -- in the setting its order came from rather than wherever the patient is when pharmacy fills it.
+-- Emergency-phase dispenses carry their own setting, so an emergency card scopes this model
+-- rather than reading a separate one.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__medication_dispense.md for BL-001..BL-009.
+-- See specs/dbt-model/metric__medication_dispense.md for BL-001..BL-010.
+
+-- BL-010: indexed for the data tables' reads -- every one ranges period_start, and the scoped
+-- ones filter encounter_setting first. Applied where the model is a table (analytics targets);
+-- a view carries none.
+{{ config(
+    indexes=[
+        {'columns': ['encounter_setting', 'period_start']},
+        {'columns': ['period_start']},
+    ]
+) }}
 
 with medication_dispenses as (
     select * from {{ ref('medication_dispenses') }}
@@ -75,11 +87,11 @@ dispense_rows as (
         d.dispensed_at,
         d.quantity,
         loc.facility_id,
-        -- BL-005: the setting the drug line was ordered in. Emergency-phase orders fall in
-        -- 'Other': emergency reporting reads metric__ed_medication_dispense.
+        -- BL-005: the setting the drug line was ordered in
         case vd.visit_detail_concept_id
             when 9201 then 'Inpatient'
             when 9202 then 'Outpatient'
+            when 9203 then 'Emergency'
             else 'Other'
         end as encounter_setting,
         -- BL-005: the segment's own encounter_type, finer than the setting above
