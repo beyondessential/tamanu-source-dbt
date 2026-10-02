@@ -8,8 +8,8 @@
 -- day they were ordered.
 --
 -- Facility, department and setting are those of the clinical__visit_detail segment active when
--- the drug line was ordered, the same attribution metric__pharmacy_order uses, so a dispense lands
--- in the setting its order came from rather than wherever the patient is when pharmacy fills it.
+-- the medication was dispensed, so the date and the place describe the same moment: a line ordered
+-- in the emergency department and dispensed after admission is an inpatient dispense.
 -- The setting is the segment's OMOP Visit concept, id and name, so an emergency card scopes this
 -- model on 9203 rather than reading a separate one.
 --
@@ -64,13 +64,12 @@ visit_types as (
     select * from {{ ref('map__omop_visit_type') }}
 ),
 
--- BL-001: one row per dispense, carrying its drug line's order for the segment lookup. Inner
--- joins -- bases/medication_dispenses already requires a live drug line, order and encounter.
+-- BL-001: one row per dispense, carrying its encounter for the segment lookup. Inner joins --
+-- bases/medication_dispenses already requires a live drug line, order and encounter.
 dispenses as (
     select
         md.id as medication_dispense_id,
         po.encounter_id as visit_occurrence_id,
-        po.datetime as ordered_datetime,
         md.dispensed_at,
         md.quantity,
         md.medication_id
@@ -81,9 +80,9 @@ dispenses as (
         on po.id = pop.pharmacy_order_id
 ),
 
--- BL-003: the segment active at the order's own time, with the first-segment clamp
+-- BL-003: the segment active when the medication was dispensed, with the first-segment clamp
 active_segment as (
-    {{ visit_detail__active_segment('dispenses', 'medication_dispense_id', 'ordered_datetime') }}
+    {{ visit_detail__active_segment('dispenses', 'medication_dispense_id', 'dispensed_at') }}
 ),
 
 dispense_rows as (
@@ -92,7 +91,7 @@ dispense_rows as (
         d.dispensed_at,
         d.quantity,
         loc.facility_id,
-        -- BL-005: the setting the drug line was ordered in, as the segment's OMOP Visit concept
+        -- BL-005: the setting at dispensing, as the segment's OMOP Visit concept
         vd.visit_detail_concept_id,
         vt.concept_name as visit_detail_concept_name,
         -- BL-005: the segment's own encounter_type, finer than the setting above
@@ -106,7 +105,7 @@ dispense_rows as (
         -- BL-007
         coalesce(dept.name, 'Not recorded') as department
     from dispenses d
-    -- BL-004: inner joins -- a dispense whose order does not resolve to a segment, patient or
+    -- BL-004: inner joins -- a dispense whose encounter does not resolve to a segment, patient or
     -- location is excluded rather than attributed to a NULL facility
     join active_segment s
         on s.medication_dispense_id = d.medication_dispense_id

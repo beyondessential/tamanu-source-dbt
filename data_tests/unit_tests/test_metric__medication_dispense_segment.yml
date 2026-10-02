@@ -2,16 +2,14 @@ unit_tests:
   - name: ac_005_metric__medication_dispense_segment
     model: metric__medication_dispense
     description: >
-      BL-001 -- BL-007, BL-009.
-      e1 arrives in the ED (vd1a, concept 9203, 08:00) and is admitted at 12:00 (vd1b, 9201).
-      pop1 is ordered in the ED and dispensed in two partial fills, md1 on the 10th and md2 on the
-      11th, each its own row on its own day. md3 is dispensed as Amoxicillin, so the dispensed
-      drug is reported. md4's dispense names no medication, so it falls back to 'Not recorded'.
-      pop5 is ordered at 13:00 while the patient boards, so md5 belongs to the admission segment.
-      po3 predates every segment, so md6 clamps to the first (the ED). e2 has no segment, so md7
-      is dropped. e3's only segment is a clinic (9202), so md8 is outpatient.
-      Every resolved dispense is counted, in the setting its drug line was ordered in: md1-md4 and
-      md6 on 9203 Emergency Room Visit, md5 on 9201 Inpatient Visit, md8 on 9202 Outpatient Visit.
+      BL-001 -- BL-007, BL-009. e1 arrives in the ED (vd1a, concept 9203, 08:00) and is admitted at
+      12:00 (vd1b, 9201). pop1 is ordered in the ED and dispensed in two partial fills: md1 on the
+      10th at 10:00, still in the ED, and md2 on the 11th after admission, so md2 is an inpatient
+      dispense on its own day. md3 is dispensed as Amoxicillin, so the dispensed drug is reported.
+      md4's dispense names no medication, so it falls back to 'Not recorded'. md5 is dispensed at
+      14:00, after admission. md6 is dispensed at 07:30, before every segment, so it clamps to the
+      first (the ED). e2 has no segment, so md7 is dropped. e3's only segment is a clinic (9202), so
+      md8 is outpatient.
     given:
       - input: ref('medication_dispenses')
         format: sql
@@ -26,7 +24,7 @@ unit_tests:
           union all
           select 'md5', 'pop5', '2026-01-10 14:00:00'::timestamp, 5::numeric, 'med_para'
           union all
-          select 'md6', 'pop6', '2026-01-10 08:00:00'::timestamp, 2::numeric, 'med_para'
+          select 'md6', 'pop6', '2026-01-10 07:30:00'::timestamp, 2::numeric, 'med_para'
           union all
           select 'md7', 'pop7', '2026-01-11 10:00:00'::timestamp, 3::numeric, 'med_para'
           union all
@@ -115,7 +113,7 @@ unit_tests:
       rows: |
         select 'medication_dispense' as metric_id, null::text as variant_id, 'md1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'triage' as encounter_type, 9203 as visit_detail_concept_id, 'Emergency Room Visit' as visit_detail_concept_name, 'male' as sex, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'Emergency' as department, 10::numeric as quantity
         union all
-        select 'medication_dispense', null::text, 'md2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'PARA', 'Paracetamol', 45, 'Emergency', 10::numeric
+        select 'medication_dispense', null::text, 'md2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'male', 'PARA', 'Paracetamol', 45, 'Medical', 10::numeric
         union all
         select 'medication_dispense', null::text, 'md3', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'AMOX', 'Amoxicillin', 45, 'Emergency', 21::numeric
         union all

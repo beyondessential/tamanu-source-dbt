@@ -62,9 +62,9 @@ metrics:
   definition_rationale: >-
     The dispensing counterpart of pharmacy_order, which counts ordered drug lines on the day they
     were ordered. Dated to the dispense so a period's figure is what pharmacy handed out in that
-    period. The setting is the OMOP Visit concept of the segment the drug line was ordered in,
-    id and name, so an emergency card scopes this metric on 9203 rather than reading a separate
-    one. No external indicator anchor
+    period. The setting is the OMOP Visit concept of the segment the patient was in when it was
+    dispensed, id and name, so the date and the place describe the same moment, and an
+    emergency card scopes this metric on 9203 rather than reading a separate one. No external indicator anchor
     (AIHW/WHO/DHIS2) defines medication dispensing as a standard count; flag for realignment if a
     national HMIS or WHO essential-medicines indicator surfaces later.
   unit: count
