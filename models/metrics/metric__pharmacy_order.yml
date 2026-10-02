@@ -153,6 +153,26 @@ models:
               name: ac_metric__pharmacy_order_encounter_setting_values
               arguments:
                 values: ['Outpatient', 'Inpatient', 'Other']
+      - name: visit_detail_concept_id
+        data_type: integer
+        description: >-
+          The resolved segment's OMOP Visit concept: 9201 Inpatient Visit, 9202 Outpatient Visit,
+          9203 Emergency Room Visit or 0 No matching concept. A consumer scopes a setting on this id.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_visit_detail_concept_id_not_null
+          - accepted_values:
+              name: ac_metric__pharmacy_order_visit_detail_concept_id_values
+              arguments:
+                values: [9201, 9202, 9203, 0]
+                quote: false
+      - name: visit_detail_concept_name
+        data_type: text
+        description: >-
+          The OMOP name of visit_detail_concept_id, from clinical__visit_detail. The label to show.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_visit_detail_concept_name_not_null
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.
