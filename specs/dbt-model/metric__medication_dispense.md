@@ -26,9 +26,9 @@ pharmacy dispensed in that period.
 |---|---|---|
 | `medication_dispense` | count | Medication dispenses (always 1 per row) |
 
-**Who reads it.** The FSM outpatient, dental, inpatient and summary dashboards' medications
-dispensed cards, via data tables in `tupaia-data-product`, each scoping to its setting by
-`encounter_setting` and `department`.
+**Who reads it.** The FSM emergency, outpatient, dental, inpatient and summary dashboards'
+medications dispensed cards, via data tables in `tupaia-data-product`, each scoping to its setting
+by `encounter_setting` and `department`.
 
 ## Definition sources
 
@@ -55,7 +55,7 @@ drug line dispensed in several partial fills has one row per fill. Asserted by A
 | `value_boolean` | boolean | NULL -- unused |
 | `facility_id` | varchar(255) | The ordering segment's location's facility (BL-004) |
 | `encounter_type` | varchar(255) | The ordering segment's encounter type (BL-005) |
-| `encounter_setting` | text | `Outpatient`, `Inpatient` or `Other` (BL-005) |
+| `encounter_setting` | text | `Outpatient`, `Inpatient`, `Emergency` or `Other` (BL-005) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `drug_source_value` | text | The dispensed medication's code (BL-006) |
 | `drug_source_name` | text | The dispensed medication's name (BL-006) |
@@ -74,11 +74,12 @@ so this model carries no `data_table_*` meta.
 - **BL-002 (period):** `period_start` is the date of the dispense's `dispensed_at`.
 - **BL-003 (segment):** each dispense resolves to the `clinical__visit_detail` segment active at its drug line's order `datetime`, clamped to the encounter's first segment where the order predates every segment, by `visit_detail__active_segment`.
 - **BL-004 (facility):** `facility_id` is the facility of the segment's `care_site_id`, and a dispense whose patient or segment location does not resolve is excluded.
-- **BL-005 (setting):** `encounter_setting` is `Inpatient` for OMOP concept 9201, `Outpatient` for 9202 and `Other` for every other concept, and `encounter_type` is the segment's own encounter type.
+- **BL-005 (setting):** `encounter_setting` is `Inpatient` for OMOP concept 9201, `Outpatient` for 9202, `Emergency` for 9203 and `Other` for every other concept, and `encounter_type` is the segment's own encounter type.
 - **BL-006 (medication):** `drug_source_value` and `drug_source_name` are the code and name of the dispense's own medication, `'Not recorded'` where it does not resolve.
 - **BL-007 (department):** `department` is the segment's department name, `'Not recorded'` where it does not resolve.
 - **BL-008 (registration and count):** `metric_id` is the constant `'medication_dispense'` and `value_numeric` the constant `1`, so a consumer sums it to count dispenses at any grain.
 - **BL-009 (quantity):** `quantity` is the dispense's own recorded quantity.
+- **BL-010 (indexes):** where the model is materialised as a table, it carries a btree index on `(encounter_setting, period_start)` and one on `period_start`.
 
 ## Acceptance criteria
 
@@ -87,8 +88,8 @@ so this model carries no `data_table_*` meta.
 | AC-001 | One row per `(metric_id, subject_id)` | grain, BL-008 | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is always `medication_dispense` and registered in `metric_definitions` | BL-008 | `not_null` + `accepted_values` + `relationships` |
 | AC-003 | `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `encounter_setting`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-002, BL-004 -- BL-008 | `not_null` |
-| AC-004 | `encounter_setting` is one of `Outpatient`, `Inpatient`, `Other` | BL-005 | `accepted_values` |
-| AC-005 | A drug line dispensed twice has a row on each dispense's own date, a substituted drug reports the dispensed medication, an unresolved medication falls back to `'Not recorded'`, a dispense is set by its order's segment, an order predating its segments clamps to the first, and a dispense whose encounter has no segment is dropped | BL-001 -- BL-007, BL-009 | unit test `ac_005_metric__medication_dispense_segment` |
+| AC-004 | `encounter_setting` is one of `Outpatient`, `Inpatient`, `Emergency`, `Other` | BL-005 | `accepted_values` |
+| AC-005 | A drug line dispensed twice has a row on each dispense's own date, a substituted drug reports the dispensed medication, an unresolved medication falls back to `'Not recorded'`, a dispense is set by its order's segment (Emergency, Inpatient, Outpatient), an order predating its segments clamps to the first, and a dispense whose encounter has no segment is dropped | BL-001 -- BL-007, BL-009 | unit test `ac_005_metric__medication_dispense_segment` |
 
 ## Registry entry
 
@@ -114,14 +115,13 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_dispense`, `k
 
 | Consumer | Use |
 |---|---|
-| Tupaia FSM outpatient, dental, inpatient and summary dashboards | Medications dispensed tables and the monthly summaries' medications dispensed column |
+| Tupaia FSM emergency, outpatient, dental, inpatient and summary dashboards | Medications dispensed tables, the ED daily summary and the monthly summaries' medications dispensed column |
 
 ## Related
 
 | Artefact | Relationship |
 |---|---|
-| `metric__pharmacy_order` | The same drug lines counted on their order date, with whether each has been dispensed |
-| `metric__ed_medication_dispense` | The emergency-phase subset, scoped the way `metric__ed_pharmacy_order` is |
+| `metric__pharmacy_order` | The same drug lines counted on their order date, with whether each has been dispensed. It carries no Emergency setting, because emergency orders are `metric__ed_pharmacy_order` |
 | `clinical__drug_exposure` | Carries the same dispenses as OMOP drug exposures |
 
 ## Change log
