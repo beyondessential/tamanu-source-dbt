@@ -97,6 +97,10 @@ where trim(d) not in (
         -- the encounter's OMOP Visit concept and its name, from clinical__visit_occurrence
         'visit_concept_id',
         'visit_concept_name',
+        -- the OMOP Visit concept of the segment an event is attributed to, and its name from
+        -- map__omop_visit_type: the setting as OMOP states it, so no model relabels it
+        'visit_detail_concept_id',
+        'visit_detail_concept_name',
         -- diagnosis's recorded diagnosis, as code and as readable label. Emitted ungrouped:
         -- deployments differ in what they code diagnoses with, so any chapter or block
         -- grouping is applied downstream over diagnosis_code rather than registered here.
