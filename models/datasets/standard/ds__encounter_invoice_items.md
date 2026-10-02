@@ -44,7 +44,13 @@ Product category; null for uncategorised products.
 {% enddocs %}
 
 {% docs ds__encounter_invoice_items__quantity %}
-Line quantity.
+Line quantity. Informational only on a fixed-price line, which is charged once regardless of quantity.
+{% enddocs %}
+
+{% docs ds__encounter_invoice_items__is_fixed_price %}
+True when the line is charged as a flat fee (unit price x 1) regardless of quantity. Taken from the
+finalised snapshot once the invoice is finalised, otherwise from the price-list item; only honoured
+for drugs, mirroring the app.
 {% enddocs %}
 
 {% docs ds__encounter_invoice_items__unit_price %}
@@ -53,12 +59,13 @@ price-list price, else 0.
 {% enddocs %}
 
 {% docs ds__encounter_invoice_items__item_adjustment %}
-Signed item adjustment: `discounted_total − unit_price × quantity`. Negative for a
+Signed item adjustment: `discounted_total − unit_price × charged quantity` (charged quantity is 1 on a fixed-price line). Negative for a
 discount, positive for a markup, 0 when neither — mirroring the app's item adjustment.
 {% enddocs %}
 
 {% docs ds__encounter_invoice_items__discounted_total %}
-Line total after the item-level discount (`unit_price × quantity`, adjusted). May be
+Line total after the item-level discount (`unit_price × quantity`, or `unit_price × 1` on a
+fixed-price line, adjusted). May be
 negative if a flat discount exceeds the line total, mirroring the app.
 {% enddocs %}
 

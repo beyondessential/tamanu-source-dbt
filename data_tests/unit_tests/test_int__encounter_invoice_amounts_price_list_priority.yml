@@ -46,7 +46,7 @@ unit_tests:
       - input: ref('invoice_items')
         format: sql
         rows: |
-          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, null::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id, false as is_fixed_price_final
 
       - input: ref('invoice_products')
         format: sql
@@ -110,9 +110,9 @@ unit_tests:
       - input: ref('invoice_price_list_items')
         format: sql
         rows: |
-          select 'pl_priority' as invoice_price_list_id, 'prod_001' as invoice_product_id, 60.00::numeric as price, false as is_hidden
+          select 'pl_priority' as invoice_price_list_id, 'prod_001' as invoice_product_id, 60.00::numeric as price, false as is_hidden, false as is_fixed_price
           union all
-          select 'pl_other', 'prod_001', 90.00::numeric, false
+          select 'pl_other', 'prod_001', 90.00::numeric, false, false
 
     expect:
       format: sql
