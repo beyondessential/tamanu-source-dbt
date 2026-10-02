@@ -73,20 +73,14 @@ invoice_payments_agg as (
     -- sum of payments that are neither a reversal (original_payment_id set) nor
     -- themselves reversed (a reversal points at them) -- a refunded pair nets to 0 by
     -- excluding both sides.
+    -- The payment rows come from the shared invoice_payment_amounts() macro.
     select
-        ipay.invoice_id,
-        sum(ipay.amount) as patient_payment
-    from {{ ref('invoice_payments') }} ipay
-    where exists (
-            select 1 from {{ ref('invoice_patient_payments') }} ipp
-            where ipp.invoice_payment_id = ipay.id
-        )
-        and ipay.original_payment_id is null
-        and not exists (
-            select 1 from {{ ref('invoice_payments') }} refund
-            where refund.original_payment_id = ipay.id
-        )
-    group by ipay.invoice_id
+        pay.invoice_id,
+        sum(pay.amount) as patient_payment
+    from ({{ invoice_payment_amounts('patient') }}) pay
+    where not pay.is_refund
+        and not pay.is_reversed
+    group by pay.invoice_id
 ),
 
 invoice_insurer_payments_agg as (
@@ -104,19 +98,12 @@ invoice_insurer_payments_agg as (
     -- partial), so a rejected payment already contributes 0 and a partial one
     -- contributes its real received value.
     select
-        ipay.invoice_id,
-        sum(ipay.amount) as insurer_payment
-    from {{ ref('invoice_payments') }} ipay
-    where exists (
-            select 1 from {{ ref('invoice_insurer_payments') }} iip
-            where iip.invoice_payment_id = ipay.id
-        )
-        and ipay.original_payment_id is null
-        and not exists (
-            select 1 from {{ ref('invoice_payments') }} refund
-            where refund.original_payment_id = ipay.id
-        )
-    group by ipay.invoice_id
+        pay.invoice_id,
+        sum(pay.amount) as insurer_payment
+    from ({{ invoice_payment_amounts('insurer') }}) pay
+    where not pay.is_refund
+        and not pay.is_reversed
+    group by pay.invoice_id
 )
 
 -- One row per invoice. The status column lets consumers filter (e.g. exclude

@@ -239,12 +239,14 @@ would carry the registry row.
 (`clinical__cost`'s only direct `ref()` is `int__encounter_invoice_amounts`. The
 `invoices` `display_id` reaches it *through* the shared ephemeral — `clinical__cost`
 does not `ref('invoices')` directly. `invoice_payments` / `invoice_insurer_payments`
-are likewise consumed by `int__encounter_invoice_amounts`, not by `clinical__cost`.)
+are likewise consumed by `int__encounter_invoice_amounts`, through the shared
+`invoice_payment_amounts()` macro, not by `clinical__cost`.)
 
 ## Lineage
 
 ```
-invoice_payments    ──┐
+invoice_payment_   ──┐
+  amounts() (macro)   │
 invoice_insurer_    ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
   payments             │      invoice_amounts   │    (display_id →     └►  Tupaia cost & coverage
 invoices, items,    ──┘      (carries display_id)│     cost_source_value)
@@ -275,3 +277,4 @@ implementation to reconcile.
 | Date | Author | Change |
 |---|---|---|
 | 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. Payment-method split and shared-arithmetic layering resolved. AC tests run green against the 2.57 replica; status → `implemented` |
+| 2026-10-02 | Maui team | Payments reach `int__encounter_invoice_amounts` through the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`), with no change to `paid_by_patient` or `paid_by_payer` |

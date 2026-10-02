@@ -72,8 +72,8 @@ refund on a non-cancelled invoice. `(metric_id, subject_id)` is unique (AC-001).
 | Reference | Why we need it |
 |---|---|
 | `{{ ref('ds__encounter_invoices') }}` | Per-invoice resolved billing figures |
-| `{{ ref('invoice_payments') }}` | Individual payments and refunds, with dates |
-| `{{ ref('invoice_patient_payments') }}` | Marks a payment as a patient payment |
+| `{{ ref('invoice_payments') }}` | Individual payments and refunds, with dates, read through the shared `invoice_payment_amounts('patient')` macro |
+| `{{ ref('invoice_patient_payments') }}` | Marks a payment as a patient payment, read through the same macro |
 | `{{ ref('clinical__visit_occurrence') }}` | Visit concept (care setting, ED admission), department, encounter type, location |
 | `{{ ref('locations') }}` | Location → facility |
 
@@ -197,4 +197,4 @@ None.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft |
-| 2026-10-02 | Maui team | BL-018 states the one-invoice-per-encounter expectation AC-015 asserts |
+| 2026-10-02 | Maui team | BL-018 states the one-invoice-per-encounter expectation AC-015 asserts. Payment rows come from the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`) |

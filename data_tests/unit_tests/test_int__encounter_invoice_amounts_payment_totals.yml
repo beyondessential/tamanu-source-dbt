@@ -57,7 +57,7 @@ unit_tests:
       - input: ref('invoice_payments')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000011'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 25.00::numeric as amount, null::text as original_payment_id
+          select '00000000-0000-0000-0000-000000000011'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 25.00::numeric as amount, null::text as original_payment_id, null::date as date
 
       - input: ref('invoice_insurer_payments')
         format: sql

@@ -26,14 +26,6 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
-invoice_payments as (
-    select * from {{ ref('invoice_payments') }}
-),
-
-invoice_patient_payments as (
-    select * from {{ ref('invoice_patient_payments') }}
-),
-
 invoice_context as (
     select
         i.invoice_id::varchar as invoice_id,
@@ -104,17 +96,13 @@ invoice_rows as (
 payment_rows as (
     select
         'invoice_patient_payment'::text as metric_id,
-        ipay.id::varchar as subject_id,
+        pay.payment_id::varchar as subject_id,
         -- BL-007: dated to the payment
-        ipay.date::timestamp as period_start,
+        pay.payment_date::timestamp as period_start,
         'day'::text as period_granularity,
-        -- BL-007: a refund carries original_payment_id and a positive amount, so negate it
-        -- to net it against the payment it reverses
+        -- BL-007: a refund is negated, so it nets against the payment it reverses
         -- BL-008: so an invoice's payment rows sum to its invoice_patient_paid
-        case
-            when ipay.original_payment_id is not null then -ipay.amount
-            else ipay.amount
-        end::numeric as value_numeric,
+        pay.signed_amount::numeric as value_numeric,
         -- BL-013: the invoice's disaggregations, and the inner join drops payments on
         -- cancelled invoices (BL-002)
         ic.invoice_id,
@@ -124,14 +112,10 @@ payment_rows as (
         ic.is_admitted_via_emergency,
         ic.department_id,
         ic.encounter_type
-    from invoice_payments ipay
+    -- BL-007: patient payments only, from the shared invoice_payment_amounts() macro
+    from ({{ invoice_payment_amounts('patient') }}) pay
     join invoice_context ic
-        on ic.invoice_id = ipay.invoice_id::varchar
-    -- BL-007: patient payments only
-    where exists (
-            select 1 from invoice_patient_payments ipp
-            where ipp.invoice_payment_id = ipay.id
-        )
+        on ic.invoice_id = pay.invoice_id::varchar
 ),
 
 billing_rows as (
