@@ -11,7 +11,7 @@ unit_tests:
       po3 predates every segment, so md6 clamps to the first (the ED). e2 has no segment, so md7
       is dropped. e3's only segment is a clinic (9202), so md8 is outpatient.
       Every resolved dispense is counted, in the setting its drug line was ordered in: md1-md4 and
-      md6 in Emergency, md5 Inpatient, md8 Outpatient.
+      md6 on 9203 Emergency Room Visit, md5 on 9201 Inpatient Visit, md8 on 9202 Outpatient Visit.
     given:
       - input: ref('medication_dispenses')
         format: sql
@@ -92,6 +92,15 @@ unit_tests:
           union all
           select 'loc_clinic', 'fac1'
 
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'triage' as local_code, 9203 as concept_id, 'Emergency Room Visit' as concept_name
+          union all
+          select 'admission', 9201, 'Inpatient Visit'
+          union all
+          select 'clinic', 9202, 'Outpatient Visit'
+
       - input: ref('departments')
         format: sql
         rows: |
@@ -104,16 +113,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'medication_dispense' as metric_id, null::text as variant_id, 'md1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'triage' as encounter_type, 'Emergency' as encounter_setting, 'male' as sex, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'Emergency' as department, 10::numeric as quantity
+        select 'medication_dispense' as metric_id, null::text as variant_id, 'md1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'triage' as encounter_type, 9203 as visit_detail_concept_id, 'Emergency Room Visit' as visit_detail_concept_name, 'male' as sex, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'Emergency' as department, 10::numeric as quantity
         union all
-        select 'medication_dispense', null::text, 'md2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Emergency', 'male', 'PARA', 'Paracetamol', 45, 'Emergency', 10::numeric
+        select 'medication_dispense', null::text, 'md2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'PARA', 'Paracetamol', 45, 'Emergency', 10::numeric
         union all
-        select 'medication_dispense', null::text, 'md3', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Emergency', 'male', 'AMOX', 'Amoxicillin', 45, 'Emergency', 21::numeric
+        select 'medication_dispense', null::text, 'md3', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'AMOX', 'Amoxicillin', 45, 'Emergency', 21::numeric
         union all
-        select 'medication_dispense', null::text, 'md4', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Emergency', 'male', 'Not recorded', 'Not recorded', 45, 'Emergency', 1::numeric
+        select 'medication_dispense', null::text, 'md4', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'Not recorded', 'Not recorded', 45, 'Emergency', 1::numeric
         union all
-        select 'medication_dispense', null::text, 'md5', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 'Inpatient', 'male', 'PARA', 'Paracetamol', 45, 'Medical', 5::numeric
+        select 'medication_dispense', null::text, 'md5', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'male', 'PARA', 'Paracetamol', 45, 'Medical', 5::numeric
         union all
-        select 'medication_dispense', null::text, 'md6', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 'Emergency', 'male', 'PARA', 'Paracetamol', 45, 'Emergency', 2::numeric
+        select 'medication_dispense', null::text, 'md6', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'male', 'PARA', 'Paracetamol', 45, 'Emergency', 2::numeric
         union all
-        select 'medication_dispense', null::text, 'md8', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 'Outpatient', 'male', 'PARA', 'Paracetamol', 45, 'Outpatients', 4::numeric
+        select 'medication_dispense', null::text, 'md8', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'male', 'PARA', 'Paracetamol', 45, 'Outpatients', 4::numeric

@@ -100,23 +100,32 @@ models:
         data_type: character varying(255)
         description: >-
           The ordering segment's own encounter_type, as it stood when the drug line was ordered --
-          finer than encounter_setting.
+          finer than visit_detail_concept_id.
         data_tests:
           - not_null:
               name: ac_003_metric__medication_dispense_encounter_type_not_null
-      - name: encounter_setting
-        data_type: text
+      - name: visit_detail_concept_id
+        data_type: integer
         description: >-
-          The setting the drug line was ordered in, from the ordering segment's OMOP Visit
-          concept: Outpatient (9202), Inpatient (9201), Emergency (9203 -- the emergency, triage
-          and observation phases), or Other.
+          The OMOP Visit concept of the segment the drug line was ordered in: 9201 Inpatient
+          Visit, 9202 Outpatient Visit, 9203 Emergency Room Visit (the emergency, triage and
+          observation phases) or 0 No matching concept. A consumer scopes a setting on this id.
         data_tests:
           - not_null:
-              name: ac_003_metric__medication_dispense_encounter_setting_not_null
+              name: ac_003_metric__medication_dispense_visit_detail_concept_id_not_null
           - accepted_values:
-              name: ac_004_metric__medication_dispense_encounter_setting_values
+              name: ac_004_metric__medication_dispense_visit_detail_concept_id_values
               arguments:
-                values: ['Outpatient', 'Inpatient', 'Emergency', 'Other']
+                values: [9201, 9202, 9203, 0]
+                quote: false
+      - name: visit_detail_concept_name
+        data_type: text
+        description: >-
+          The OMOP name of visit_detail_concept_id, from map__omop_visit_type: Inpatient Visit,
+          Outpatient Visit, Emergency Room Visit or No matching concept. The label to show.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__medication_dispense_visit_detail_concept_name_not_null
       - name: sex
         data_type: character varying(255)
         description: >-

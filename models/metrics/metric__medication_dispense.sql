@@ -10,18 +10,18 @@
 -- Facility, department and setting are those of the clinical__visit_detail segment active when
 -- the drug line was ordered, the same attribution metric__pharmacy_order uses, so a dispense lands
 -- in the setting its order came from rather than wherever the patient is when pharmacy fills it.
--- Emergency-phase dispenses carry their own setting, so an emergency card scopes this model
--- rather than reading a separate one.
+-- The setting is the segment's OMOP Visit concept, id and name, so an emergency card scopes this
+-- model on 9203 rather than reading a separate one.
 --
 -- The registry carries the definition; this model is its implementation.
 -- See specs/dbt-model/metric__medication_dispense.md for BL-001..BL-010.
 
 -- BL-010: indexed for the data tables' reads -- every one ranges period_start, and the scoped
--- ones filter encounter_setting first. Applied where the model is a table (analytics targets);
--- a view carries none.
+-- ones filter visit_detail_concept_id first. Applied where the model is a table (analytics
+-- targets); a view carries none.
 {{ config(
     indexes=[
-        {'columns': ['encounter_setting', 'period_start']},
+        {'columns': ['visit_detail_concept_id', 'period_start']},
         {'columns': ['period_start']},
     ]
 ) }}
@@ -59,6 +59,11 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
+-- BL-005: the OMOP Visit concept name for the segment's encounter type
+visit_types as (
+    select * from {{ ref('map__omop_visit_type') }}
+),
+
 -- BL-001: one row per dispense, carrying its drug line's order for the segment lookup. Inner
 -- joins -- bases/medication_dispenses already requires a live drug line, order and encounter.
 dispenses as (
@@ -87,13 +92,9 @@ dispense_rows as (
         d.dispensed_at,
         d.quantity,
         loc.facility_id,
-        -- BL-005: the setting the drug line was ordered in
-        case vd.visit_detail_concept_id
-            when 9201 then 'Inpatient'
-            when 9202 then 'Outpatient'
-            when 9203 then 'Emergency'
-            else 'Other'
-        end as encounter_setting,
+        -- BL-005: the setting the drug line was ordered in, as the segment's OMOP Visit concept
+        vd.visit_detail_concept_id,
+        vt.concept_name as visit_detail_concept_name,
         -- BL-005: the segment's own encounter_type, finer than the setting above
         vd.visit_detail_source_value as encounter_type,
         pr.gender_source_value as sex,
@@ -117,6 +118,10 @@ dispense_rows as (
         on loc.id = vd.care_site_id
     left join reference_data rd
         on rd.id = d.medication_id
+    -- BL-005: inner join -- clinical__visit_detail already keeps only segments whose
+    -- encounter type the map covers, so this drops nothing
+    join visit_types vt
+        on vt.local_code = vd.visit_detail_source_value
     left join departments dept
         on dept.id = vd.department_id
 )
@@ -136,7 +141,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     encounter_type,
-    encounter_setting,
+    visit_detail_concept_id,
+    visit_detail_concept_name,
     sex,
     drug_source_value,
     drug_source_name,
