@@ -95,9 +95,9 @@ unit_tests:
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
-          select 'vd2b' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, '2026-01-01'::date as visit_detail_start_date, '2026-01-01 09:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
+          select 'vd2b' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, '2026-01-01'::date as visit_detail_start_date, '2026-01-01 09:00:00'::timestamp as visit_detail_start_datetime, null::date as visit_detail_end_date, null::timestamp as visit_detail_end_datetime, 'loc1' as care_site_id, null::varchar as department_id, 'prov1' as provider_id, 'clinic' as visit_detail_source_value, null::varchar as preceding_visit_detail_id
           union all
-          select 'vd3', 'e3', 'p1', 9203, '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', null::varchar
+          select 'vd3', 'e3', 'p1', 9203, 'Emergency Room Visit', '2026-01-01'::date, '2026-01-01 08:00:00'::timestamp, null::date, null::timestamp, 'loc1', null::varchar, 'prov1', 'triage', null::varchar
 
       - input: ref('clinical__person')
         format: sql
@@ -116,12 +116,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
+        select 'imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department
         union all
-        select 'imaging_request', null::text, 'r3', '2026-01-01 10:00:00'::timestamp, '2026-01-01 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'triage', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r3', '2026-01-01 10:00:00'::timestamp, '2026-01-01 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'female', true, 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'MRI', 'mri', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded'
         union all
-        select 'imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 'female', false, 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded'
+        select 'imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded'

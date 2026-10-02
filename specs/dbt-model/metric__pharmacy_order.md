@@ -58,6 +58,8 @@ dispenses). Asserted by AC-001.
 | `facility_id` | varchar(255) | The facility of the active segment's location (BL-009) |
 | `encounter_type` | varchar(255) | The active segment's encounter type (BL-010) |
 | `encounter_setting` | text | `Outpatient`, `Inpatient` or `Other`, from the active segment's OMOP concept (BL-010) |
+| `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-011) |
+| `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-011) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | Whether the drug line has been dispensed (BL-006) |
 | `drug_source_value` | text | The medication's code (BL-001, BL-004) |
@@ -82,6 +84,7 @@ so this model carries no `data_table_*` meta.
 - **BL-008 (segment):** each drug line resolves to the `clinical__visit_detail` segment active at its order's `datetime`, clamped to the encounter's first segment where the order predates every segment, by `visit_detail__active_segment`. A drug line whose encounter has no segment is excluded.
 - **BL-009 (facility):** `facility_id` is the facility of the active segment's `care_site_id`, and a drug line whose patient or segment location does not resolve is excluded.
 - **BL-010 (setting):** `encounter_setting` is `Inpatient` for OMOP concept 9201, `Outpatient` for 9202 and `Other` for everything else, and `encounter_type` is the active segment's own encounter type. An emergency-phase order falls in `Other` -- emergency reporting reads `metric__ed_pharmacy_order`.
+- **BL-011 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
 
