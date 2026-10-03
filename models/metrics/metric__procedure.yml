@@ -122,35 +122,13 @@ models:
           and the rest of the deployment's encounter types. This is the phase the encounter
           was in at the time of the procedure, not what the encounter became afterwards: a
           procedure performed during triage on an encounter later admitted reads as triage.
-          This is the deployment's own encounter type, finer than encounter_setting: three
-          of them (clinic, imaging and vaccination) are all outpatient. To scope to a
-          setting, filter encounter_setting instead -- 'clinic' alone is narrower than
+          This is the deployment's own encounter type, finer than visit_detail_concept_id:
+          three of them (clinic, imaging and vaccination) are all OMOP 9202. To scope to a
+          setting, filter visit_detail_concept_id instead -- 'clinic' alone is narrower than
           outpatient.
         data_tests:
           - not_null:
               name: ac_metric__procedure_encounter_type_not_null
-      - name: encounter_setting
-        data_type: text
-        description: >-
-          The setting the procedure was performed in, grouped from the segment's OMOP visit
-          concept: 'Outpatient' (clinic, imaging or vaccination), 'Inpatient' (admission),
-          or 'Other' (everything else). This is the column to filter for a setting-scoped
-          count: unlike a list of encounter_type values it does not drift when
-          map__omop_visit_type gains an encounter type. Never NULL.
-
-          Only the two settings this metric is scoped by are named. Emergency reporting is
-          served by its own metrics, so emergency, observation and triage segments fall in
-          'Other' and no emergency figure can be drawn from this metric. 'Other' is a real
-          population rather than a rounding bucket -- break it down by encounter_type to
-          see what is in it -- so 'Outpatient' and 'Inpatient' do not sum to the metric
-          total.
-        data_tests:
-          - not_null:
-              name: ac_metric__procedure_encounter_setting_not_null
-          - accepted_values:
-              name: ac_metric__procedure_encounter_setting_values
-              arguments:
-                values: ['Outpatient', 'Inpatient', 'Other']
       - name: visit_detail_concept_id
         data_type: integer
         description: >-
