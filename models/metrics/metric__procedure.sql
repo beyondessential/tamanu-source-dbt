@@ -54,17 +54,6 @@ procedures as (
         -- carries them
         vd.visit_detail_concept_id,
         vd.visit_detail_concept_name,
-        -- BL-008: the segment's OMOP visit concept grouped to a setting, coarser than
-        -- encounter_type -- 9202 covers clinic, imaging and vaccination alike, so
-        -- 'Outpatient' is wider than encounter_type = 'clinic'. Scope a setting by this
-        -- column and the scope holds when map__omop_visit_type gains an encounter type.
-        -- Do not add an emergency value here: emergency reporting has its own metrics, and
-        -- a value would let an emergency card be drawn from this one.
-        case vd.visit_detail_concept_id
-            when 9201 then 'Inpatient'
-            when 9202 then 'Outpatient'
-            else 'Other'
-        end as encounter_setting,
         pr.gender_source_value as sex,
         -- the procedure as recorded, coalesced so the column is never NULL -- Tupaia exposes
         -- these as array filters, and an array filter drops a NULL row
@@ -117,7 +106,6 @@ select
     encounter_type,
     visit_detail_concept_id,
     visit_detail_concept_name,
-    encounter_setting,
     sex,
     procedure,
     procedure_code,
