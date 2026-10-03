@@ -34,7 +34,6 @@ metrics:
   disaggregations:
   - facility_id
   - encounter_type
-  - encounter_setting
   - visit_detail_concept_id
   - visit_detail_concept_name
   - sex
