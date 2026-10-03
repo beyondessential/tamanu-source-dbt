@@ -90,20 +90,7 @@ orders as (
         d.pharmacy_order_prescription_id,
         d.ordered_datetime,
         loc.facility_id,
-        -- BL-010: the setting the order was placed in, from the resolved segment's OMOP Visit
-        -- concept. 'Outpatient' is wider than encounter_type = 'clinic' -- 9202 also covers
-        -- imaging- and vaccination-typed encounters. Scope a setting by this column and the
-        -- scope holds when map__omop_visit_type gains an encounter type.
-        --
-        -- Do not add an emergency value here: emergency reporting reads
-        -- metric__ed_pharmacy_order, and a value would let an emergency card be drawn from this
-        -- one. Emergency-phase orders fall in 'Other'.
-        case vd.visit_detail_concept_id
-            when 9201 then 'Inpatient'
-            when 9202 then 'Outpatient'
-            else 'Other'
-        end as encounter_setting,
-        -- BL-010: the segment's own encounter_type, finer than the setting above
+        -- BL-010: the segment's own encounter_type, finer than its OMOP Visit concept
         vd.visit_detail_source_value as encounter_type,
         -- BL-011: the segment's OMOP Visit concept and its name, as clinical__visit_detail
         -- carries them
@@ -160,7 +147,6 @@ select
     encounter_type,
     visit_detail_concept_id,
     visit_detail_concept_name,
-    encounter_setting,
     sex,
     is_completed,
     drug_source_value,
