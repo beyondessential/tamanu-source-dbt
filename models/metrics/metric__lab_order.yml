@@ -6,8 +6,8 @@ models:
       D5 metric view for the lab_order indicator registered in documentations/metrics/lab.yml:
       lab_order. One row per lab request raised from a panel, labelled with the panel however
       many tests it holds, and one row per lab test on a request raised without one. The
-      generic counterpart to metric__ed_lab_order, carrying encounter_setting rather than
-      scoping to a single setting.
+      generic counterpart to metric__ed_lab_order, carrying the segment's OMOP Visit concept
+      rather than scoping to a single setting.
     config:
       tags:
         - clinical
@@ -126,25 +126,10 @@ models:
         data_type: character varying(255)
         description: >-
           The segment's own encounter_type as it stood when the order was placed. Finer than
-          encounter_setting, for a consumer wanting (say) vaccination encounters specifically.
+          visit_detail_concept_id, for a consumer wanting (say) vaccination encounters specifically.
         data_tests:
           - not_null:
               name: ac_metric__lab_order_encounter_type_not_null
-      - name: encounter_setting
-        data_type: text
-        description: >-
-          Outpatient (OMOP 9202 -- clinic, imaging, vaccination), Inpatient (9201), or Other.
-          Coarser than encounter_type deliberately, so a consumer filters one stable value
-          instead of a list that drifts with map__omop_visit_type. Emergency (9203) is
-          deliberately not named -- it falls in Other, and emergency lab ordering is
-          metric__ed_lab_order's population.
-        data_tests:
-          - not_null:
-              name: ac_metric__lab_order_encounter_setting_not_null
-          - accepted_values:
-              name: ac_metric__lab_order_encounter_setting_values
-              arguments:
-                values: ['Outpatient', 'Inpatient', 'Other']
       - name: visit_detail_concept_id
         data_type: integer
         description: >-
