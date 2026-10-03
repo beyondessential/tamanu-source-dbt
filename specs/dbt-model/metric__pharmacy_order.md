@@ -28,7 +28,7 @@ dispensed.
 **Who reads it.** Tupaia pharmacy cards via data tables in `tupaia-data-product`. A consumer
 forms the dispensed count by filtering on `is_completed`, and the dispensing rate as
 `sum(value_numeric) filter (where is_completed) / sum(value_numeric)`. A consumer scopes to one
-setting by filtering `encounter_setting`.
+setting by filtering `visit_detail_concept_id`.
 
 ## Definition sources
 
@@ -57,7 +57,6 @@ dispenses). Asserted by AC-001.
 | `value_boolean` | boolean | NULL -- unused |
 | `facility_id` | varchar(255) | The facility of the active segment's location (BL-009) |
 | `encounter_type` | varchar(255) | The active segment's encounter type (BL-010) |
-| `encounter_setting` | text | `Outpatient`, `Inpatient` or `Other`, from the active segment's OMOP concept (BL-010) |
 | `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-011) |
 | `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-011) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
@@ -83,7 +82,7 @@ so this model carries no `data_table_*` meta.
 - **BL-007 (department):** `department` is the active segment's department name, `'Not recorded'` where it does not resolve.
 - **BL-008 (segment):** each drug line resolves to the `clinical__visit_detail` segment active at its order's `datetime`, clamped to the encounter's first segment where the order predates every segment, by `visit_detail__active_segment`. A drug line whose encounter has no segment is excluded.
 - **BL-009 (facility):** `facility_id` is the facility of the active segment's `care_site_id`, and a drug line whose patient or segment location does not resolve is excluded.
-- **BL-010 (setting):** `encounter_setting` is `Inpatient` for OMOP concept 9201, `Outpatient` for 9202 and `Other` for everything else, and `encounter_type` is the active segment's own encounter type. An emergency-phase order falls in `Other` -- emergency reporting reads `metric__ed_pharmacy_order`.
+- **BL-010 (encounter type):** `encounter_type` is the active segment's own encounter type.
 - **BL-011 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
@@ -92,17 +91,16 @@ so this model carries no `data_table_*` meta.
 |---|---|---|---|
 | AC-001 | One row per `(metric_id, subject_id)` | grain, BL-005 | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is always `pharmacy_order` and registered in `metric_definitions` | BL-005 | `not_null` + `accepted_values` + `relationships` |
-| AC-003 | `subject_id`, `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `encounter_setting`, `is_completed`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-004 -- BL-010 | `not_null` |
+| AC-003 | `subject_id`, `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `is_completed`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-004 -- BL-010 | `not_null` |
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-006 | `expect_column_values_to_be_null` + `accepted_values` |
-| AC-005 | `encounter_setting` is one of `Outpatient`, `Inpatient`, `Other` | BL-010 | `accepted_values` |
-| AC-006 | Facility, department and setting follow the segment active at the order, not the encounter's later segment; an order predating its segments clamps to the first; an order on a segment's start time falls in that segment; an order after the last segment began falls in the last segment; an emergency-phase order reads `Other`; a drug line on an encounter with no segment is dropped; an ongoing-prescription line resolves its medication; an unresolved medication falls back to `'Not recorded'` | BL-002 -- BL-004, BL-007 -- BL-010 | unit test `ac_006_metric__pharmacy_order_segment` |
+| AC-006 | Facility, department and visit concept follow the segment active at the order, not the encounter's later segment; an order predating its segments clamps to the first; an order on a segment's start time falls in that segment; an order after the last segment began falls in the last segment; an emergency-phase order carries 9203; a drug line on an encounter with no segment is dropped; an ongoing-prescription line resolves its medication; an unresolved medication falls back to `'Not recorded'` | BL-002 -- BL-004, BL-007 -- BL-011 | unit test `ac_006_metric__pharmacy_order_segment` |
 | AC-007 | Every drug line in `pharmacy_order_prescriptions` has a row, so a drug line dropped for want of a segment, patient or location is surfaced | BL-002, BL-008, BL-009 | `dbt_utils.equal_rowcount` against `pharmacy_order_prescriptions` (`warn`) |
 
 ## Registry entry
 
 Registered in `documentations/metrics/pharmacy.yml` as `pharmacy_order`, `kind: metric`,
 `unit: count`, `subject_grain: pharmacy_order_prescription`, with disaggregations `facility_id`,
-`encounter_type`, `encounter_setting`, `sex`, `is_completed`, `drug_source_value`,
+`encounter_type`, `visit_detail_concept_id`, `visit_detail_concept_name`, `sex`, `is_completed`, `drug_source_value`,
 `drug_source_name` and `department`.
 
 ## Dependencies
@@ -128,10 +126,11 @@ Registered in `documentations/metrics/pharmacy.yml` as `pharmacy_order`, `kind: 
 | Artefact | Relationship |
 |---|---|
 | `metric__ed_pharmacy_order` | The emergency-phase counterpart, resolving the segment the same way and counting only 9203 segments |
-| `metric__procedure`, `metric__lab_order` | The same segment attribution and the same `encounter_setting` values |
+| `metric__procedure`, `metric__lab_order` | The same segment attribution and the same OMOP Visit concept columns |
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-03 | Maui team | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Maui team | Spec written; facility, department and setting resolved from the active segment |
