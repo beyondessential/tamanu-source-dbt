@@ -15,7 +15,7 @@
 ## Purpose
 
 A count of recorded clinical procedures, in any encounter setting, at per-procedure grain.
-`encounter_setting` and `encounter_type` carry the setting the procedure was performed in,
+`visit_detail_concept_id`, `visit_detail_concept_name` and `encounter_type` carry the setting the procedure was performed in,
 so a consumer scopes to outpatient or inpatient activity by filtering this one metric.
 
 ## Definition sources
@@ -45,7 +45,6 @@ procedures at any grouping.
 | `value_boolean` | boolean | NULL -- unused |
 | `facility_id` | varchar(255) | The facility of the segment the procedure was performed in (BL-004). `not_null` (AC-007) |
 | `encounter_type` | varchar(255) | The deployment's own encounter type for that segment (BL-003). `not_null` (AC-014) |
-| `encounter_setting` | text | That segment's OMOP visit concept grouped to a setting (BL-008). `not_null` (AC-015) |
 | `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-010) |
 | `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-010) |
 | `sex` | varchar(255) | The patient's sex, from `clinical__person` |
@@ -101,17 +100,6 @@ procedures at any grouping.
   differently, so the consumer's data table bands it. A measure, not a dimension: absent
   from the registry's disaggregations.
 
-- **BL-008 (setting grouping):** `encounter_setting` groups the segment's
-  `visit_detail_concept_id` -- `'Outpatient'` for OMOP 9202, `'Inpatient'` for 9201, and
-  `'Other'` for everything else. It is coarser than `encounter_type` on purpose: 9202 covers
-  `clinic`, `imaging` and `vaccination` alike, so `'Outpatient'` is a wider set than
-  `encounter_type = 'clinic'`. A setting-scoped consumer filters this column, so its scope
-  does not shift when `map__omop_visit_type` gains an encounter type. Only the two settings
-  this metric is scoped by are named: emergency reporting is served by its own metrics, so
-  emergency, observation and triage segments fall in `'Other'` and no emergency figure can
-  be drawn from this metric. `'Outpatient'` and `'Inpatient'` therefore do not sum to the
-  metric total.
-
 - **BL-009 (department):** the resolved segment's own `department_id`, resolved to a name
   through `departments` so a consumer scopes to one department (e.g. Dental) via
   `metric_filters` on a readable value, the same convention procedure identity (BL-006)
@@ -137,9 +125,8 @@ procedures at any grouping.
 | AC-012 | `procedure_code` is `not_null` | BL-006 | `not_null` (`ac_metric__procedure_procedure_code_not_null`) |
 | AC-013 | `is_completed` is `not_null` | BL-006 | `not_null` (`ac_metric__procedure_is_completed_not_null`) |
 | AC-014 | `encounter_type` is `not_null` | BL-003 | `not_null` (`ac_metric__procedure_encounter_type_not_null`) |
-| AC-015 | `encounter_setting` is `not_null` and one of `Outpatient` / `Inpatient` / `Other` | BL-008 | `not_null` + `accepted_values` (`ac_metric__procedure_encounter_setting_not_null` / `_values`) |
 | AC-016 | `department` is `not_null` | BL-009 | `not_null` (`ac_metric__procedure_department_not_null`) |
-| AC-017 | Each row carries its own segment's `encounter_type`, a procedure whose segment did not resolve (NULL FK) is dropped, the imaging branch is excluded, a 9202 segment that is not `clinic` still reads `Outpatient`, and a 9203 segment reads `Other` | BL-001, BL-003, BL-008 | dbt unit test `test_metric__procedure_segment_scope` |
+| AC-017 | Each row carries its own segment's `encounter_type`, a procedure whose segment did not resolve (NULL FK) is dropped, the imaging branch is excluded, a 9202 segment that is not `clinic` still carries 9202, and a 9203 segment carries 9203 | BL-001, BL-003, BL-010 | dbt unit test `test_metric__procedure_segment_scope` |
 | AC-018 | `facility_id` follows the segment's `care_site_id`, including where the procedure's own `location_id` names a different facility or is absent | BL-004 | dbt unit test `test_metric__procedure_facility_attribution` |
 | AC-019 | The as-of match and first-segment clamp that resolve the segment | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
 
@@ -152,7 +139,7 @@ AC numbering is for cross-reference within this document only.
 | Model | Layer | Used for |
 |---|---|---|
 | `clinical__procedure_occurrence` | `clinical` | Procedure identity, date, completion flag, and the resolved `visit_detail_id` (BL-001) |
-| `clinical__visit_detail` | `clinical` | The segment's encounter type, visit concept, care site and department (BL-003, BL-004, BL-008, BL-009) |
+| `clinical__visit_detail` | `clinical` | The segment's encounter type, visit concept, care site and department (BL-003, BL-004, BL-009, BL-010) |
 | `clinical__person` | `clinical` | Sex and birth date for `age_years` |
 | `locations` | `bases/` | Facility id of the resolved segment's care site (BL-004) |
 | `departments` | `bases/` | Department name for the resolved segment (BL-009) |
@@ -168,10 +155,11 @@ Tupaia data tables over this model are configured in `tupaia-data-product` at
 |---|---|
 | `clinical__procedure_occurrence` | The clinical-layer source, which resolves the segment once for every metric over it (its BL-005) |
 | `metric__imaging_request` | The imaging-branch counterpart over the same clinical model, resolving facility from the same segment `care_site_id` |
-| `metric__emergency_visit`, `metric__emergency_stay` | Emergency reporting, on their own scoping rules and at encounter grain -- not a population this metric reproduces (BL-008) |
+| `metric__emergency_visit`, `metric__emergency_stay` | Emergency reporting, on their own scoping rules and at encounter grain -- not a population this metric reproduces |
 
 ## Change log
 
-| Change | Issue |
-|---|---|
-| Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind `encounter_setting`; `department` added | -- |
+| Date | Change | Issue |
+|---|---|---|
+| 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` | -- |
+| 2026-09-28 | Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind the segment's OMOP Visit concept; `department` added | -- |
