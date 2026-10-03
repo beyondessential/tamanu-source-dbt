@@ -7,11 +7,10 @@ unit_tests:
       appear, each carrying its own segment's encounter_type -- so a consumer filtering to
       one setting gets that setting's procedures.
 
-      BL-008. proc4's segment is vaccination-typed, which map__omop_visit_type puts under
-      OMOP 9202 alongside clinic and imaging, so encounter_setting reads 'Outpatient' while
-      encounter_type is 'vaccination' -- 'Outpatient' is wider than encounter_type =
-      'clinic'. proc5's segment is triage-typed, OMOP 9203, and reads 'Other': the metric
-      names no emergency setting, so no emergency figure can be drawn from it. proc3's FK is NULL, which
+      BL-010. proc4's segment is vaccination-typed, which map__omop_visit_type puts under
+      OMOP 9202 alongside clinic and imaging, so it carries 9202 Outpatient Visit while
+      encounter_type is 'vaccination' -- 9202 is wider than encounter_type = 'clinic'.
+      proc5's segment is triage-typed and carries 9203 Emergency Room Visit. proc3's FK is NULL, which
       clinical__procedure_occurrence emits where an encounter has no mapped segment, and is
       dropped rather than surfaced without a setting. img1 is the imaging branch and is not
       this metric's population (BL-001).
@@ -65,10 +64,10 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'Outpatient' as encounter_setting, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Dental' as department
+        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Dental' as department
         union all
-        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'Inpatient', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
         union all
-        select 'procedure', null::text, 'proc4', '2026-02-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'vaccination', 9202, 'Outpatient Visit', 'Outpatient', 'female', 'Procedure Four', 'code4', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc4', '2026-02-05'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'vaccination', 9202, 'Outpatient Visit', 'female', 'Procedure Four', 'code4', true, 30, 'Not recorded'
         union all
-        select 'procedure', null::text, 'proc5', '2026-02-06'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'Other', 'female', 'Procedure Five', 'code5', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc5', '2026-02-06'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'female', 'Procedure Five', 'code5', true, 30, 'Not recorded'
