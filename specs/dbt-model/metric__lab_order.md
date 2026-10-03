@@ -77,7 +77,7 @@ timestamps. Collapsing them onto the panel request would leave no single status 
 
 ## Output schema
 
-D5 wide format, plus ten disaggregation columns and one measure.
+D5 wide format, plus eleven disaggregation columns and one measure.
 
 | Column | Type | Notes |
 |---|---|---|

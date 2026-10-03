@@ -159,7 +159,7 @@ Tupaia data tables over this model are configured in `tupaia-data-product` at
 
 ## Change log
 
-| Change | Issue |
-|---|---|
-| Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind the segment's OMOP Visit concept; `department` added | -- |
-| `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` | -- |
+| Date | Change | Issue |
+|---|---|---|
+| 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` | -- |
+| 2026-09-28 | Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind the segment's OMOP Visit concept; `department` added | -- |
