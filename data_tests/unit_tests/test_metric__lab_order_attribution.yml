@@ -90,13 +90,13 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'Outpatient' as encounter_setting, 'female' as sex, true as is_completed, true as is_panel, 'Dental' as department, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 'Haematology' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, true as is_panel, 'Dental' as department, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 'Haematology' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 't4', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 30
+        select 'lab_order', null::text, 't4', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 't5', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', false, false, 'Dental', 'WCC', 'White Cell Count', 'Haematology', 30
+        select 'lab_order', null::text, 't5', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'WCC', 'White Cell Count', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 't6', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't6', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
 
   - name: test_metric__lab_order_segment_attribution
     model: metric__lab_order
@@ -175,11 +175,11 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, false as is_panel, 'Dental' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, false as is_panel, 'Dental' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 9201, 'Inpatient Visit', 'Inpatient', 'female', false, false, 'Ward', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 9201, 'Inpatient Visit', 'female', false, false, 'Ward', 'HB', 'Haemoglobin', 'Not recorded', 30
         union all
-        select 'lab_order', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
 
   - name: test_metric__lab_order_edge_cases
     model: metric__lab_order
@@ -254,8 +254,8 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'Outpatient' as encounter_setting, 'female' as sex, false as is_completed, false as is_panel, 'Not recorded' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, false as is_panel, 'Not recorded' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 'r2', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', false, true, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 30
+        select 'lab_order', null::text, 'r2', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, true, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 30
         union all
-        select 'lab_order', null::text, 'r3', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'Outpatient', 'female', true, true, 'Not recorded', 'FBC', 'Full Blood Count', 'Not recorded', 30
+        select 'lab_order', null::text, 'r3', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', true, true, 'Not recorded', 'FBC', 'Full Blood Count', 'Not recorded', 30
