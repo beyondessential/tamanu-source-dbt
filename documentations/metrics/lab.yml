@@ -30,15 +30,14 @@ metrics:
     panel ordered as one clinical act counts once. Setting, facility and department are
     attributed to the clinical__visit_detail segment active when the order was placed, not to
     the encounter as it now stands, since Tamanu updates encounter_type and location in place.
-    encounter_setting carries the OMOP Visit concept of that segment; emergency is deliberately
-    unnamed, since emergency lab ordering is ed_lab_order's population. Panel and test
+    visit_detail_concept_id and visit_detail_concept_name carry the OMOP Visit concept of that
+    segment. Panel and test
     identities are emitted as recorded and ungrouped.
   unit: count
   subject_grain: lab_order
   disaggregations:
   - facility_id
   - encounter_type
-  - encounter_setting
   - visit_detail_concept_id
   - visit_detail_concept_name
   - sex

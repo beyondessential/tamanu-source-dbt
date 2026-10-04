@@ -4,8 +4,8 @@
 -- Per-order-line (subject) grain: one row per lab request raised from a panel, labelled with
 -- the panel however many tests it holds, and one row per lab test on a request raised without
 -- one. value_numeric 1, so a consumer aggregates at whatever grain it needs. The generic
--- counterpart to metric__ed_lab_order, carrying encounter_setting rather than scoping to a
--- single setting.
+-- counterpart to metric__ed_lab_order, carrying the segment's OMOP Visit concept rather than
+-- scoping to a single setting.
 --
 -- BL-004: the order side is read from bases/lab_requests and bases/lab_tests directly, NOT
 -- from a clinical__ model. Decision (Juliana, 2026-09-23): the OMOP clinical models record
@@ -152,20 +152,12 @@ select
     1::numeric as value_numeric,
     null::boolean as value_boolean,
     loc.facility_id,
-    -- BL-010: the segment's own encounter_type, finer than encounter_setting
+    -- BL-010: the segment's own encounter_type, finer than its OMOP Visit concept
     vd.visit_detail_source_value as encounter_type,
     -- BL-013: the segment's OMOP Visit concept and its name, as clinical__visit_detail
     -- carries them
     vd.visit_detail_concept_id,
     vd.visit_detail_concept_name,
-    -- BL-010: Outpatient covers the full OMOP 9202 -- clinic, imaging and vaccination. No
-    -- emergency value: emergency lab ordering is metric__ed_lab_order's population, and a
-    -- value here would let an emergency card be drawn from this metric.
-    case vd.visit_detail_concept_id
-        when 9201 then 'Inpatient'
-        when 9202 then 'Outpatient'
-        else 'Other'
-    end as encounter_setting,
     pr.gender_source_value as sex,
     o.is_completed,
     -- BL-002: whether this line is a panel or a single test
