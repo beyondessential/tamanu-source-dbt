@@ -27,10 +27,8 @@ metrics:
   disaggregations: &billing_disaggregations
   - facility_id
   - invoice_status
-  - care_setting
   - visit_concept_id
   - visit_concept_name
-  - is_admitted_via_emergency
   - department_id
   - encounter_type
   variant_of: null

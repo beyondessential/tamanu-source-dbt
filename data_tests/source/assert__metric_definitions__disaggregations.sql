@@ -166,10 +166,8 @@ where trim(d) not in (
         -- death's facility source: whether the facility came from the death record or from the
         -- encounter the patient died in (MAUI-6906).
         'facility_source',
-        -- billing (MAUI-6911): the invoice's status, and the care setting from the
-        -- encounter's visit concept.
+        -- billing (MAUI-6911): the invoice's status.
         'invoice_status',
-        'care_setting',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
         'department_id'

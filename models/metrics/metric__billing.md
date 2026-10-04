@@ -48,17 +48,6 @@ negative when the invoice is overpaid, and a refund is a negative payment.
 The invoice's status: in progress or finalised. Cancelled invoices are not included.
 {% enddocs %}
 
-{% docs metric__billing__care_setting %}
-The care setting of the invoice's encounter: outpatient, emergency, inpatient, or none for an
-encounter that is not a clinical contact, such as a survey response. A patient admitted from the
-emergency department or a clinic is inpatient, and everything on the invoice counts there.
-{% enddocs %}
-
-{% docs metric__billing__is_admitted_via_emergency %}
-Whether the patient was admitted after an emergency department, triage or observation phase in
-the same encounter.
-{% enddocs %}
-
 {% docs metric__billing__encounter_type %}
 The Tamanu encounter type of the invoice's encounter, for example clinic, emergency, admission
 or surveyResponse.

@@ -41,21 +41,10 @@ invoice_context as (
         coalesce(i.patient_payment, 0) as patient_paid,
         -- BL-012: the facility of the encounter's location
         l.facility_id,
-        -- BL-009: no else branch, so a visit concept outside the map surfaces as NULL and
-        -- fails the not_null test rather than landing in a bucket
-        case vo.visit_concept_id
-            when 9201 then 'inpatient'
-            when 262 then 'inpatient'
-            when 9203 then 'emergency'
-            when 9202 then 'outpatient'
-            when 0 then 'none'
-        end as care_setting,
         -- BL-019: the encounter's OMOP Visit concept and its name, as
         -- clinical__visit_occurrence carries them
         vo.visit_concept_id,
         vo.visit_concept_name,
-        -- BL-010: concept 262 is an admission with an earlier emergency phase
-        coalesce(vo.visit_concept_id = 262, false) as is_admitted_via_emergency,
         -- BL-011: current values, unresolved and ungrouped
         vo.department_id,
         vo.visit_source_value as encounter_type
@@ -77,10 +66,8 @@ invoice_rows as (
         ic.invoice_id,
         ic.invoice_status,
         ic.facility_id,
-        ic.care_setting,
         ic.visit_concept_id,
         ic.visit_concept_name,
-        ic.is_admitted_via_emergency,
         ic.department_id,
         ic.encounter_type
     from invoice_context ic
@@ -114,10 +101,8 @@ payment_rows as (
         ic.invoice_id,
         ic.invoice_status,
         ic.facility_id,
-        ic.care_setting,
         ic.visit_concept_id,
         ic.visit_concept_name,
-        ic.is_admitted_via_emergency,
         ic.department_id,
         ic.encounter_type
     -- BL-007: patient payments only, from the shared invoice_payment_amounts() macro
@@ -146,10 +131,8 @@ select
     invoice_id,
     invoice_status::text as invoice_status,
     facility_id,
-    care_setting,
     visit_concept_id,
     visit_concept_name,
-    is_admitted_via_emergency,
     department_id,
     encounter_type::text as encounter_type
 from billing_rows
