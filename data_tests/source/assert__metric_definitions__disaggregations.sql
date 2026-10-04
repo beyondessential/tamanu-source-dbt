@@ -155,10 +155,8 @@ where trim(d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
-        -- billing (MAUI-6911): the invoice's status, and the care setting from the
-        -- encounter's visit concept.
+        -- billing (MAUI-6911): the invoice's status.
         'invoice_status',
-        'care_setting',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
         'department_id',
