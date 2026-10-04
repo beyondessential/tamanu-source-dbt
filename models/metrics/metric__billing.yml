@@ -110,16 +110,6 @@ models:
         data_tests:
           - not_null:
               name: ac_013_metric__billing_facility_id_not_null
-      - name: care_setting
-        data_type: text
-        description: "{{ doc('metric__billing__care_setting') }}"
-        data_tests:
-          - not_null:
-              name: ac_011_metric__billing_care_setting_not_null
-          - accepted_values:
-              name: ac_011_metric__billing_care_setting_values
-              arguments:
-                values: ['outpatient', 'emergency', 'inpatient', 'none']
       - name: visit_concept_id
         data_type: integer
         description: >-
@@ -140,12 +130,6 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__billing_visit_concept_name_not_null
-      - name: is_admitted_via_emergency
-        data_type: boolean
-        description: "{{ doc('metric__billing__is_admitted_via_emergency') }}"
-        data_tests:
-          - not_null:
-              name: ac_012_metric__billing_is_admitted_via_emergency_not_null
       - name: department_id
         data_type: character varying
         description: The department of the invoice's encounter, as a Tamanu id.
