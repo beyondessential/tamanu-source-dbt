@@ -1,6 +1,7 @@
 from .analytics_utils import generate_analytics_metadata
 from .dbt_utils import (
     get_dbt_project_config,
+    get_dbt_target_arg,
     get_deployment_name,
     get_deployment_version,
     hide_macros_from_docs,

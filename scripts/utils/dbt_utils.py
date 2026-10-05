@@ -81,23 +81,43 @@ def hide_tests_from_docs():
 
 def get_deployment_version():
     """
-    Retrieves the version of the dbt project from the dbt_project.yml file.
+    Retrieves the version to build for.
+
+    Taken from TAMANU_VERSION where it is set, so a build can be asked for a
+    version other than the one the checkout sits at, and from the
+    dbt_project.yml file otherwise.
 
     Args:
         None
 
     Returns:
-        str: The version of the dbt project as a string.
+        str: The version to build for, as a string.
 
     Raises:
         ValueError: If the version is not found in the dbt_project.yml file.
     """
+    requested = os.environ.get("TAMANU_VERSION", "").strip()
+    if requested:
+        return requested.lstrip("v")
+
     try:
         config = get_dbt_project_config()
         return config.get("version")
     except Exception as e:
         cprint(f"Error reading version: {e}", "error")
         exit(1)
+
+
+def get_dbt_target_arg() -> str:
+    """
+    The --target flag for dbt calls, where TAMANU_DBT_TARGET names a target.
+
+    Returns:
+        str: " --target <name>", or "" where none is named, so a call lands on
+            the profile's own default target as it otherwise would.
+    """
+    target = os.environ.get("TAMANU_DBT_TARGET", "").strip()
+    return f" --target {target}" if target else ""
 
 
 def get_dbt_project_vars(param_name: str = None) -> dict | str:
@@ -141,8 +161,15 @@ def get_project_name() -> str:
 
 def get_deployment_name() -> str:
     """
-    Retrieves the deployment name of the dbt project from the project name.
+    Retrieves the deployment name of the dbt project.
+
+    Taken from TAMANU_DEPLOYMENT where it is set, and from the project name
+    otherwise.
     """
+    requested = os.environ.get("TAMANU_DEPLOYMENT", "").strip()
+    if requested:
+        return requested
+
     try:
         project_name = get_project_name()
         if project_name == "tamanu_source_dbt":
