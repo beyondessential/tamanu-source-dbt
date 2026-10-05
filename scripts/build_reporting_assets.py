@@ -10,6 +10,7 @@ from utils import (
     generate_reporting_schema_script,
     generate_project_reports,
     get_dbt_project_config,
+    get_dbt_target_arg,
     get_deployment_name,
     get_deployment_version,
     hide_macros_from_docs,
@@ -68,8 +69,8 @@ def main():
         cprint("Processing translations...", "info")
         execute_command(f"python {SCRIPTS_DIR / 'check_translations.py'}")
 
-        execute_command("dbt run --profiles-dir config")
-        execute_command("dbt docs generate --profiles-dir config --static")
+        execute_command(f"dbt run --profiles-dir config{get_dbt_target_arg()}")
+        execute_command(f"dbt docs generate --profiles-dir config --static{get_dbt_target_arg()}")
 
         hide_macros_from_docs()
         hide_tests_from_docs()
@@ -85,7 +86,9 @@ def main():
 
         # Generate language-specific reports
         for language in supported_languages:
-            execute_command(f'dbt compile --profiles-dir config --vars "{{language: {language}}}"')
+            execute_command(
+                f'dbt compile --profiles-dir config{get_dbt_target_arg()} --vars "{{language: {language}}}"'
+            )
             generate_project_reports(language)
 
         cprint(f"\n✓ Build complete for version {VERSION}", "success")
