@@ -106,10 +106,8 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 | `invoice_id` | varchar | The invoice the row belongs to | `not_null` |
 | `invoice_status` | text | `in_progress` or `finalised` | `not_null`, `accepted_values` |
 | `facility_id` | varchar | Facility of the encounter | `not_null` |
-| `care_setting` | text | `outpatient`, `emergency`, `inpatient` or `none` | `not_null`, `accepted_values` |
 | `visit_concept_id` | integer | The encounter's OMOP Visit concept: 9201, 9202, 9203, 262 or 0 (BL-019) |
 | `visit_concept_name` | text | Its OMOP name, e.g. Emergency Room and Inpatient Visit (BL-019) |
-| `is_admitted_via_emergency` | boolean | Inpatient encounter with an earlier emergency phase | `not_null` |
 | `department_id` | varchar | Department of the encounter | |
 | `encounter_type` | text | Tamanu encounter type of the encounter | `not_null` |
 
@@ -134,15 +132,11 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
   granularity, with a refund's amount negated.
 - **BL-008 (payments reconcile):** for every invoice, the `invoice_patient_payment` rows sum to
   its `invoice_patient_paid`.
-- **BL-009 (care setting):** `care_setting` maps the encounter's `visit_concept_id`: 9201 and
-  262 to `inpatient`, 9203 to `emergency`, 9202 to `outpatient`, and 0 to `none`.
-- **BL-010 (admitted via emergency):** `is_admitted_via_emergency` is true when the encounter's
-  `visit_concept_id` is 262, and false otherwise.
 - **BL-011 (grouping is the consumer's):** `department_id` and `encounter_type` are the
   encounter's current values as Tamanu ids and codes, unresolved and ungrouped.
 - **BL-012 (facility):** `facility_id` is the facility of the encounter's location.
 - **BL-013 (one setting per invoice):** every row of an invoice, including its payments,
-  carries the same `care_setting`, `visit_concept_id`, `visit_concept_name`, `is_admitted_via_emergency`, `department_id`,
+  carries the same `visit_concept_id`, `visit_concept_name`, `department_id`,
   `encounter_type`, `facility_id` and `invoice_status`.
 - **BL-014 (rates and running totals are the consumer's):** the model emits counts and
   amounts only, and ratios such as coverage % or payment %, and running totals, are formed by
@@ -170,10 +164,8 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 | AC-008 | `invoice_total` = coverage + discount + patient total, per invoice, within 0.01 | BL-004 | singular test |
 | AC-009 | `invoice_patient_balance` = `invoice_patient_total` − `invoice_patient_paid`, per invoice | BL-005 | singular test |
 | AC-010 | Payment rows sum to `invoice_patient_paid`, per invoice, within 0.01 | BL-007, BL-008 | singular test |
-| AC-011 | `care_setting` is `not_null` and one of the four values | BL-009 | `not_null` + `accepted_values` |
-| AC-012 | `is_admitted_via_emergency` is `not_null`, and true only where `care_setting` is `inpatient` | BL-010 | `not_null` + singular test |
 | AC-013 | `facility_id` and `encounter_type` are `not_null` | BL-011, BL-012 | `not_null` |
-| AC-014 | The derivations resolve as specified: a cancelled invoice and its payments are excluded, a refunded payment pair nets to 0, an overpaid invoice has a negative balance, a no-items invoice emits zeros, an ED-then-admitted encounter is `inpatient` with the flag set, a survey-response encounter is `none` | BL-002, BL-004–BL-010 | unit test `ac_014_metric__billing_derivations` |
+| AC-014 | The derivations resolve as specified: a cancelled invoice and its payments are excluded, a refunded payment pair nets to 0, an overpaid invoice has a negative balance, a no-items invoice emits zeros, an ED-then-admitted encounter carries concept 262, a survey-response encounter carries concept 0 | BL-002, BL-004–BL-008, BL-019 | unit test `ac_014_metric__billing_derivations` |
 | AC-015 | No encounter has more than one non-cancelled invoice | BL-018 | singular test (`warn`) |
 | AC-016 | `metric_definitions.unit` accepts `currency` | BL-001 | `accepted_values` on the registry |
 
@@ -200,4 +192,5 @@ None.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft |
+| 2026-10-05 | Maui team | `care_setting` and `is_admitted_via_emergency` retired: a consumer reads the setting from `visit_concept_id` and `visit_concept_name` (BL-019) |
 | 2026-10-02 | Maui team | BL-018 states the one-invoice-per-encounter expectation AC-015 asserts. Payment rows come from the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`) |

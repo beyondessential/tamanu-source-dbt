@@ -66,15 +66,6 @@ ac_010 as (
     where abs(payments - patient_paid) > 0.01
 ),
 
--- AC-012: only an inpatient invoice can be flagged as admitted via emergency (BL-010).
-ac_012 as (
-    select
-        subject_id,
-        'AC-012' as failed_ac
-    from billing
-    where is_admitted_via_emergency and care_setting != 'inpatient'
-),
-
 -- BL-018: AC-015, one non-cancelled invoice per encounter (see specs/dbt-model/metric__billing.md)
 ac_015 as (
     select
@@ -110,11 +101,6 @@ select
     subject_id,
     failed_ac
 from ac_010
-union all
-select
-    subject_id,
-    failed_ac
-from ac_012
 union all
 select
     subject_id,
