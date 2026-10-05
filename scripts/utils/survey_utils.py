@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .dbt_utils import get_dbt_target_arg
 from .file_utils import ensure_directory_exists, write_file
 from .system_utils import cprint, execute_command_with_output
 
@@ -24,16 +25,20 @@ def get_surveys_from_deployment():
     """
     Get all surveys from the database using dbt using the get_surveys_list macro.
     Returns:
-        list: List of tuples containing (id, code, name) for each survey
+        list: List of tuples containing (id, code, name) for each survey. Empty
+            where the deployment genuinely has no surveys.
+    Raises:
+        RuntimeError: Where the dbt call itself failed, so a database that could
+            not be read is not mistaken for a deployment with no surveys.
     """
     surveys = []
-    cmd = f"dbt run-operation get_surveys_list --profiles-dir config"
+    cmd = f"dbt run-operation get_surveys_list --profiles-dir config{get_dbt_target_arg()}"
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
         if not result or result.returncode != 0:
             if result:
                 cprint(f"Error running dbt command {cmd}:\n {result.stderr}", "error")
-            return surveys
+            raise RuntimeError("Failed to list the deployment's surveys -- see error logged above")
 
         for line in (result.stdout + result.stderr).split("\n"):
             if "SURVEY_DATA:" in line:
@@ -43,9 +48,11 @@ def get_surveys_from_deployment():
 
         return surveys
 
+    except RuntimeError:
+        raise
     except Exception as e:
         cprint(f"Error getting surveys from dbt: {e}", "error")
-        return surveys
+        raise RuntimeError(f"Failed to list the deployment's surveys: {e}") from e
 
 
 def get_survey_columns_from_deployment(survey_id):
@@ -60,7 +67,7 @@ def get_survey_columns_from_deployment(survey_id):
             genuinely has no questions. None when the dbt call itself failed;
             callers must not treat that the same as "no questions" (see #896).
     """
-    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
+    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config{get_dbt_target_arg()}'
 
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
