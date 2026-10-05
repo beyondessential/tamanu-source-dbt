@@ -8,6 +8,7 @@ select
     sex as "{{ translate_label('patientSex') }}",
     village as "{{ translate_label('patientVillage') }}",
     facility as "{{ translate_label('facility') }}",
+    prescriber as "{{ translate_label('prescriptionPrescriberName') }}",
     is_selected_for_discharge as "{{ translate_label('prescriptionSelectedForDischarge') }}",
     medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
     medication as "{{ translate_label('encounterPrescriptionMedication') }}",
@@ -21,7 +22,8 @@ select
     dosing_unit as "{{ translate_label('prescriptionDosingUnit') }}",
     dispensing_unit as "{{ translate_label('prescriptionDispensingUnit') }}",
     unit_conversion as "{{ translate_label('prescriptionUnitConversion') }}",
-    frequency as "{{ translate_label('prescriptionFrequency') }}"
+    frequency as "{{ translate_label('prescriptionFrequency') }}",
+    discontinuing_reason as "{{ translate_label('prescriptionDiscontinuingReason') }}"
 from {{ ref('ds__sensitive_encounter_prescriptions') }}
 where
     {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
