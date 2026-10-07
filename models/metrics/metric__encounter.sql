@@ -45,14 +45,7 @@ location_groups as (
 -- an encounter whose clinician holds several cannot fan out. Tamanu keeps no designation history,
 -- so these are the designations held now, not at the encounter.
 clinician_designations as (
-    select
-        ud.user_id,
-        string_agg(distinct designation.name, ', ' order by designation.name) as designations
-    from {{ ref('user_designations') }} ud
-    join {{ ref('reference_data') }} designation
-        on designation.id = ud.designation_id
-        and designation.type = 'designation'
-    group by ud.user_id
+    {{ user_designation_names() }}
 ),
 
 encounters as (
