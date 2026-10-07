@@ -57,6 +57,9 @@ AC-001.
 | `visit_concept_name` | text | Its OMOP name, e.g. Emergency Room and Inpatient Visit (BL-007) |
 | `department` | text | The encounter's department, resolved to a name (BL-004) |
 | `clinician` | text | The encounter's supervising clinician, resolved to a name (BL-005) |
+| `clinician_designation` | text | The clinician's designations, comma-separated (BL-008) |
+| `location_group_id` | varchar(255) | The location group of the encounter's location; nullable (BL-009) |
+| `location_group_name` | varchar(255) | That location group's name (BL-009) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `age_years` | integer | Age in whole years at the encounter start, unbanded -- a measure, not a dimension |
 
@@ -74,6 +77,8 @@ so this model carries no `data_table_*` meta.
 - **BL-005 (clinician):** `clinician` is the name of the encounter's supervising clinician, `'Not recorded'` where there is none.
 - **BL-006 (registration and count):** `metric_id` is the constant `'encounter'` and `value_numeric` the constant `1`, so a consumer sums it to count encounters at any grain.
 - **BL-007 (visit concept):** `visit_concept_id` and `visit_concept_name` are the encounter's OMOP Visit concept and its name, as `clinical__visit_occurrence` carries them.
+- **BL-008 (clinician designation):** `clinician_designation` is the names of the supervising clinician's designations (`user_designations`, resolved through `reference_data` of type `designation`), alphabetical and joined with `', '`, `'Not recorded'` where the clinician has none or there is no clinician. Designations are collapsed to one row per user before the join, so a clinician with several cannot fan an encounter out. Tamanu keeps no designation history, so these are the clinician's current designations, not those held at the encounter. Kept apart from `clinician` so a consumer filters by name unchanged and combines the two for display.
+- **BL-009 (location group):** `location_group_id` and `location_group_name` are the location group (area) of the encounter's location, the location `facility_id` comes from (BL-003). Where the location has no group, or the group does not resolve, the id is NULL and the name `'Not recorded'`.
 
 ## Acceptance criteria
 
@@ -81,16 +86,18 @@ so this model carries no `data_table_*` meta.
 |---|---|---|---|
 | AC-001 | One row per `(metric_id, subject_id)` | grain, BL-001 | `dbt_utils.unique_combination_of_columns` (`error`) |
 | AC-002 | `metric_id` is always `encounter` and registered in `metric_definitions` | BL-006 | `not_null` + `accepted_values` + `relationships` |
-| AC-003 | `subject_id`, `period_start`, `value_numeric`, `facility_id`, `encounter_type`, `department` and `clinician` are populated, and `value_numeric` is 1 | BL-002 -- BL-006 | `not_null` + `accepted_values` |
+| AC-003 | `subject_id`, `period_start`, `value_numeric`, `facility_id`, `encounter_type`, `department`, `clinician`, `clinician_designation` and `location_group_name` are populated, and `value_numeric` is 1 | BL-002 -- BL-006, BL-008, BL-009 | `not_null` + `accepted_values` |
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-002 | `expect_column_values_to_be_null` + `accepted_values` |
 | AC-005 | Each encounter is one row with the facility, type, department and clinician on its record; a survey-response encounter is counted; an unrecorded department and clinician read `'Not recorded'`; an encounter whose location does not resolve is excluded | BL-001, BL-003 -- BL-005 | unit test `ac_005_metric__encounter_attribution` |
 | AC-006 | Every encounter in `clinical__visit_occurrence` has a row, so an encounter dropped for want of a location or patient is surfaced | BL-001, BL-003 | `dbt_utils.equal_rowcount` against `clinical__visit_occurrence` (`warn`) |
+| AC-007 | A clinician with two designations reads both, alphabetical and comma-separated, on one row; a clinician with none, and an encounter with no clinician, read `'Not recorded'`; a location with no group reads a NULL id and `'Not recorded'` | BL-008, BL-009 | unit test `ac_007_metric__encounter_designation_location_group` |
 
 ## Registry entry
 
 Registered in `documentations/metrics/encounter.yml` as `encounter`, `kind: metric`,
 `unit: count`, `subject_grain: encounter`, with disaggregations `facility_id`, `encounter_type`,
-`department`, `clinician` and `sex`.
+`visit_concept_id`, `visit_concept_name`, `department`, `clinician`, `clinician_designation`,
+`location_group_id`, `location_group_name` and `sex`.
 
 ## Dependencies
 
@@ -101,6 +108,8 @@ Registered in `documentations/metrics/encounter.yml` as `encounter`, `kind: metr
 | `locations` | Facility resolution (BL-003) |
 | `departments` | Department name resolution (BL-004) |
 | `ref__provider` | Clinician name resolution (BL-005) |
+| `user_designations`, `reference_data` | The clinician's designations (BL-008) |
+| `location_groups` | The location's group (BL-009) |
 | `metric_definitions` | The canonical registry |
 
 ## Consumers
@@ -121,3 +130,4 @@ Registered in `documentations/metrics/encounter.yml` as `encounter`, `kind: metr
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft (MAUI-6906) |
+| 2026-10-08 | Maui team | Add `clinician_designation` (BL-008) and `location_group_id` / `location_group_name` (BL-009), for the Tupaia Summary dashboard's clinician table (MAUI-6906) |
