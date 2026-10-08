@@ -367,10 +367,13 @@ report.reporting.triageTargetTimeMet,Target time met
 report.reporting.triageTotalLengthOfStay,Total length of stay triage to discharge (hh:mm:ss)
 report.reporting.triageWaitingTime,Time seen following triage/Waiting time (hh:mm:ss)
 report.reporting.triageWaitingTimeToActiveCare,Waiting time triage to active care (hh:mm:ss)
+report.reporting.userAllowedFacilities,Allowed facilities
 report.reporting.userDesignations,Designations
 report.reporting.userDisplayId,User ID
 report.reporting.userEmail,User email
+report.reporting.userLastLoginDate,Last log in date
 report.reporting.userName,User name
+report.reporting.userNumberLogins,Number logins
 report.reporting.userRole,User role
 report.reporting.vaccinationBatch,Batch
 report.reporting.vaccinationDate,Vaccination date
