@@ -38,6 +38,12 @@ departments as (
     select * from {{ ref('departments') }}
 ),
 
+-- BL-014: each user's current designations, one row per user, so the two joins below cannot
+-- fan a visit out where a clinician holds several.
+clinician_designations as (
+    {{ user_designation_names() }}
+),
+
 -- BL-003: an outpatient visit is the first history segment of an encounter whose OMOP
 -- visit concept is 9202/Outpatient Visit -- covering clinic, vaccination, and imaging.
 opd_intake as (
@@ -116,6 +122,8 @@ outpatient_visits as (
         -- exposes it through.
         i.provider_id as clinician_id,
         coalesce(clin.provider_name, 'Not recorded') as clinician_name,
+        -- BL-014: that clinician's designations -- 'Not recorded' for none, or no clinician
+        coalesce(clin_des.designations, 'Not recorded') as clinician_designation,
         -- BL-009: false, not NULL, where the visit was not admitted -- same array-filter
         -- reason as above.
         adm.visit_occurrence_id is not null as is_admitted,
@@ -123,6 +131,8 @@ outpatient_visits as (
         -- of a visit never admitted, so a card ranking it scopes itself to is_admitted.
         adm.admission_clinician_id,
         coalesce(adm_clin.provider_name, 'Not recorded') as admission_clinician_name,
+        -- BL-014: the admitting clinician's designations, 'Not recorded' as above
+        coalesce(adm_clin_des.designations, 'Not recorded') as admission_clinician_designation,
         -- BL-012: a system-generated discharge, so the encounter end is the discharge
         -- sweep's clock rather than when the patient left. Flagged, not filtered. Same
         -- predicate as macros/datasets/discharge_audit.sql BL-004, so the repo holds one
@@ -165,6 +175,10 @@ outpatient_visits as (
         on clin.provider_id = i.provider_id
     left join provider adm_clin
         on adm_clin.provider_id = adm.admission_clinician_id
+    left join clinician_designations clin_des
+        on clin_des.user_id = clin.provider_id
+    left join clinician_designations adm_clin_des
+        on adm_clin_des.user_id = adm_clin.provider_id
     -- left: a visit with no department set still counts
     left join departments dept
         on dept.id = i.department_id
@@ -198,11 +212,15 @@ select
     -- BL-008
     clinician_id,
     clinician_name,
+    -- BL-014
+    clinician_designation,
     -- BL-009
     is_admitted,
     -- BL-010
     admission_clinician_id,
     admission_clinician_name,
+    -- BL-014
+    admission_clinician_designation,
     -- BL-012
     is_auto_discharge,
     -- BL-011: minutes to two decimal places, a fixed scale so the value is stable to
