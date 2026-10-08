@@ -39,9 +39,11 @@ metrics:
   - sex
   - clinician_id
   - clinician_name
+  - clinician_designation
   - is_admitted
   - admission_clinician_id
   - admission_clinician_name
+  - admission_clinician_designation
   - is_auto_discharge
   - department
   variant_of: null
