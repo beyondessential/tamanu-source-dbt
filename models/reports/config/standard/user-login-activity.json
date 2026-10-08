@@ -1,0 +1,35 @@
+{
+  "query": "replace this",
+  "name": "User login activity",
+  "status": "published",
+  "notes": "This report lists every activated user (excluding the system user) with their role, designation, allowed facilities, the date of their last login and the number of times they logged in during the selected date range.\n\nUsers who have never logged in are included with a blank last log in date. Use it to identify users who are not actively using Tamanu.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dateRangeLabel": "Date range sets the period for the number of logins. All users are listed regardless of the dates",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Role",
+        "name": "roleId",
+        "suggesterEndpoint": "role"
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Designation",
+        "name": "designationId",
+        "suggesterEndpoint": "designation"
+      }
+    ]
+  }
+}
