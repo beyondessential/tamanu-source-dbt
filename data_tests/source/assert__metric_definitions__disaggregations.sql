@@ -160,6 +160,13 @@ where trim(d) not in (
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
         'department_id',
+        -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
+        -- opd_visit, and the admitting clinician's on opd_visit (MAUI-6906)
+        'clinician_designation',
+        'admission_clinician_designation',
+        -- encounter's location group (area), id and name (MAUI-6906)
+        'location_group_id',
+        'location_group_name',
         -- death's primary cause from the death record, as recorded, with its reference-data
         -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
         'primary_cause',
