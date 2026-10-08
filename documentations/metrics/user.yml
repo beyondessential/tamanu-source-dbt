@@ -1,0 +1,64 @@
+# User activity metrics.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: active_user
+  kind: metric
+  name: Users
+  description: >-
+    All users per designation and allowed facility, with role and visibility status so a consumer
+    can restrict to activated, non-admin users. The population a login rate is measured against.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES definition for monitoring Tamanu utilisation. A user
+    with several designations or facilities has one row per combination.
+  unit: count
+  subject_grain: user
+  disaggregations:
+  - facility_id
+  - designation_id
+  - designation
+  - role_id
+  - visibility_status
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__user_login.md
+- metric_id: user_login
+  kind: metric
+  name: User logins
+  description: >-
+    Successful logins by any user, carrying the same user columns as active_user. One row
+    per login per designation and allowed facility, dated to the login.
+  numerator_description: >-
+    Distinct users with at least one login in the period, divided by active_user, gives the
+    percentage of users who logged in.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES definition for monitoring Tamanu utilisation. Logins are rows in user_login_attempts
+    with outcome 'succeeded', recorded since that table was introduced.
+  unit: count
+  subject_grain: user
+  disaggregations:
+  - facility_id
+  - designation_id
+  - designation
+  - role_id
+  - visibility_status
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__user_login.md
