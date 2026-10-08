@@ -42,6 +42,7 @@ metrics:
   - discharge_disposition
   - is_readmission_within_30_days
   - clinician
+  - clinician_designation
   variant_of: null
   owner: bes-maui
   status: draft

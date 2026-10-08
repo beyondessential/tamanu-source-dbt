@@ -6,7 +6,7 @@ models:
       D5 metric view for the encounter indicator registered in documentations/metrics/*.yml:
       encounter. One row per encounter, of every type, with the facility, encounter type,
       department and clinician on the encounter record -- the attribution Tamanu's own encounter
-      reports use. Counts match the encounter summary report except where that report narrows
+      reports use -- and the clinician's designations and the location's group. Counts match the encounter summary report except where that report narrows
       its population: it excludes sensitive facilities and drops encounters with no history or
       no department, which are counted here.
     config:
@@ -154,6 +154,30 @@ models:
         data_tests:
           - not_null:
               name: ac_003_metric__encounter_clinician_not_null
+      - name: clinician_designation
+        data_type: text
+        description: >-
+          The supervising clinician's designations (e.g. Dentist), alphabetical and
+          comma-separated where they hold more than one. Current designations: Tamanu keeps no
+          history, so a clinician who changed role reads the new designation on earlier encounters
+          too. Never NULL -- falls back to 'Not recorded' where the clinician has none or there is
+          no clinician.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_clinician_designation_not_null
+      - name: location_group_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu id of the location group (area) of the encounter's location -- the location
+          facility_id comes from. NULL where the location has no group.
+      - name: location_group_name
+        data_type: character varying(255)
+        description: >-
+          The name of that location group. Never NULL -- falls back to 'Not recorded' where the
+          location has no group.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__encounter_location_group_name_not_null
       - name: sex
         data_type: character varying(255)
         description: The patient's sex, from clinical__person.

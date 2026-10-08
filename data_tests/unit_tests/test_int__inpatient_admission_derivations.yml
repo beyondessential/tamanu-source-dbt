@@ -16,7 +16,9 @@ unit_tests:
       encounter is open. BL-016: is_readmission_within_30_days is true only where the same
       patient's immediately preceding admission discharged no more than 30 days before this one
       started -- false for no previous admission, a previous admission still open, an
-      overlapping pair, or a gap over 30 days.
+      overlapping pair, or a gap over 30 days. BL-017/BL-018: inp_1's clinician holds two
+      designations, read alphabetically on one row; inp_2's holds none; the rest have no
+      clinician.
 
     given:
       # inp_1 is a direct admission: one segment, concept 9201.
@@ -35,11 +37,11 @@ unit_tests:
       - input: ref('clinical__visit_detail')
         format: sql
         rows: |
-          select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, null::varchar as provider_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
+          select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, 'clin_1'::varchar as provider_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
           union all
           select 'vd_2a', 'inp_2', 'per_1', 'loc_ed', 'dept_ed', null::varchar, '2024-06-02 07:00'::timestamp, 9203
           union all
-          select 'vd_2b', 'inp_2', 'per_1', 'loc_ward', 'dept_surg', null::varchar, '2024-06-02 09:30'::timestamp, 9201
+          select 'vd_2b', 'inp_2', 'per_1', 'loc_ward', 'dept_surg', 'clin_2'::varchar, '2024-06-02 09:30'::timestamp, 9201
           union all
           select 'vd_3', 'inp_3', 'per_1', 'loc_ward', null::text, null::varchar, '2024-06-03 14:00'::timestamp, 9201
           union all
@@ -117,16 +119,34 @@ unit_tests:
 
       - input: ref('ref__provider')
         format: sql
-        rows: "select null::varchar as provider_id, null::varchar as provider_name, null::varchar as provider_source_value, null::varchar as role limit 0"
+        rows: |
+          select 'clin_1'::varchar as provider_id, 'Dr Ana'::varchar as provider_name, null::varchar as provider_source_value, 'practitioner'::varchar as role
+          union all
+          select 'clin_2', 'Dr Ben', null::varchar, 'practitioner'
+
+      # BL-018: clin_1 holds two designations, read alphabetically on one row; clin_2 holds
+      # none. The third row points at reference data of another type and is ignored.
+      - input: ref('user_designations')
+        format: sql
+        rows: |
+          select 'ud1' as id, 'clin_1' as user_id, 'des_mo' as designation_id
+          union all
+          select 'ud2', 'clin_1', 'des_dent'
+          union all
+          select 'ud3', 'clin_1', 'ref_gp'
 
       - input: ref('reference_data')
         format: sql
         rows: |
-          select 'ref_gp' as id, 'General practitioner referral' as name
+          select 'ref_gp' as id, 'General practitioner referral' as name, 'referralSource' as type
           union all
-          select 'disp_home', 'Home'
+          select 'disp_home', 'Home', 'dischargeDisposition'
           union all
-          select 'disp_transfer', 'Transfer to another facility'
+          select 'disp_transfer', 'Transfer to another facility', 'dischargeDisposition'
+          union all
+          select 'des_mo', 'Medical Officer', 'designation'
+          union all
+          select 'des_dent', 'Dentist', 'designation'
 
       # BL-013: inp_1 carries two is_primary rows -- the earlier (A00.0) must win. inp_2 has
       # one principal diagnosis. inp_3, inp_4 and per_2's admissions have none.
@@ -144,16 +164,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, 'Not recorded' as clinician, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
+        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'male' as sex, 33 as age_years, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days
         union all
-        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, 'Not recorded', true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false
+        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'male', 33, 'Dr Ben', 'Not recorded', true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false
         union all
-        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, 'Not recorded', false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false
+        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, 'Not recorded', false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false
+        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
+        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
         union all
-        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true
+        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true
         union all
-        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
+        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false
