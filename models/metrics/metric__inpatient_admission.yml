@@ -180,3 +180,9 @@ models:
         data_tests:
           - not_null:
               name: ac_018_metric__inpatient_admission_clinician_not_null
+      - name: clinician_designation
+        data_type: text
+        description: "{{ doc('metric__inpatient_admission__clinician_designation') }}"
+        data_tests:
+          - not_null:
+              name: ac_019_metric__inpatient_admission_clinician_designation_not_null
