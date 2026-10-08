@@ -42,7 +42,7 @@ The below information is included for each discharge:
 - Number of times the discharge was edited after it was first recorded.
 - Primary and secondary diagnoses recorded against the encounter, with their diagnosis codes in separate columns.
 
-Discharges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.
+Discharges recorded before change logging was enabled on this deployment show no recorded date and time, no days between discharge and recording, and no recording user or edit count.
 
 **Filters**
 
@@ -269,7 +269,7 @@ Facility, Department, Area, Patient billing type, Supervising clinician
 
 ---
 
-### Hospital admissions by area summary
+### Hospital admissions by area summary *(sensitive version available)*
 
 **Report Description**
 
@@ -295,7 +295,7 @@ Facility, Area
 
 ---
 
-### Hospital admissions by department summary
+### Hospital admissions by department summary *(sensitive version available)*
 
 **Report Description**
 
@@ -318,7 +318,7 @@ Facility, Department
 
 ---
 
-### Hospital admissions by location summary
+### Hospital admissions by location summary *(sensitive version available)*
 
 **Report Description**
 
@@ -663,6 +663,27 @@ This report generates a list of all patients that have been registered, includin
 
 ---
 
+### Task followup register *(sensitive version available)*
+
+**Report Description**
+
+This report lists tasks assigned to a designation, so the staff holding that designation can review what was done and follow up what was not. Each row is one task. Leave 'Designation' blank to see every designation's tasks, or set it to (for example) Physiotherapist for that designation's register alone.
+Tamanu places no encounter-type restriction on tasks, so a task raised during an emergency, clinic or triage encounter is included alongside inpatient admissions. Use 'Encounter type' to narrow the register -- select 'Hospital admission' on its own for an inpatient-only view. Leaving it blank returns every type, so a missed task is never hidden by the encounter it was raised under.
+Tasks are selected by when they fell due, so a task that came due within the date range appears whether or not the encounter started in it.
+Task status maps Tamanu's three stored statuses onto four outcomes: 'Completed'; 'Outstanding' for a task still to do; 'Missed' for a repeating task the system marked not completed because it went more than two days past due; and 'Not completed' for a task a clinician marked not completed, with their reason shown alongside.
+Only tasks assigned to at least one designation are included -- an unassigned task belongs to nobody to follow up. Medication due tasks are excluded, as they exist only to drive the ward dashboard. Deleted tasks are excluded.
+'Length of stay' is the span between the encounter starting and ending, so it reads as a length of stay for an admission and as the encounter's duration for a shorter encounter type.
+'Notes recorded by designation' is Yes when someone currently holding one of the task's designations authored a note on that encounter, or a note was recorded on their behalf. It reflects designations as they stand now, not as they stood when the note was written.
+
+**Filters**
+
+Designation, Encounter type, Facility, Area, Patient, Task status
+
+**Default date range**: 30days
+
+
+---
+
 ### Upcoming vaccinations line list
 
 **Report Description**
@@ -749,6 +770,23 @@ The following details are included for each encounter:
 Facility, Department, Area
 
 **Default date range**: 24hours
+
+
+---
+
+### User login activity
+
+**Report Description**
+
+This report lists every activated user (excluding the system user) with their role, designation, allowed facilities, the date of their last login and the number of times they logged in during the selected date range.
+
+Users who have never logged in are included with a blank last log in date. Use it to identify users who are not actively using Tamanu.
+
+**Filters**
+
+Facility, Role, Designation
+
+**Default date range**: 30days
 
 
 ---
