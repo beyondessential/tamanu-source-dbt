@@ -1,0 +1,22 @@
+version: 2
+models:
+  - name: user_facilities
+    description: '{{ doc("table__user_facilities") }}'
+    config:
+      tags:
+        - administration
+    meta:
+      owner: bes-maui
+      domain: admin
+      pii: false
+      classification: confidential
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in user_facilities."
+      - name: user_id
+        data_type: character varying(255)
+        description: "{{ doc('user_facilities__user_id') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('user_facilities__facility_id') }}"
