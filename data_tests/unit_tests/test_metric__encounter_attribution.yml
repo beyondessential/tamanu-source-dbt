@@ -27,9 +27,9 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc_ward' as id, 'fac2' as facility_id
+          select 'loc_ward' as id, 'fac2' as facility_id, null::text as location_group_id
           union all
-          select 'loc_clinic', 'fac1'
+          select 'loc_clinic', 'fac1', null::text
 
       - input: ref('ref__provider')
         format: sql
@@ -45,11 +45,103 @@ unit_tests:
           union all
           select 'dept_opd', 'General OPD'
 
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('user_designations')
+        format: sql
+        rows: |
+          select null::text as id, null::text as user_id, null::text as designation_id where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name, null::text as type where false
+
     expect:
       format: sql
       rows: |
-        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac2' as facility_id, 'admission' as encounter_type, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'Medical' as department, 'Dr Ben' as clinician, 'female' as sex, 45 as age_years
+        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac2' as facility_id, 'admission' as encounter_type, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'Medical' as department, 'Dr Ben' as clinician, 'Not recorded' as clinician_designation, null::text as location_group_id, 'Not recorded' as location_group_name, 'female' as sex, 45 as age_years
         union all
-        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'General OPD', 'Not recorded', 'female', 45
+        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'General OPD', 'Not recorded', 'Not recorded', null::text, 'Not recorded', 'female', 45
         union all
-        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'surveyResponse', 0, 'No matching concept', 'Not recorded', 'Dr Ana', 'female', 45
+        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'surveyResponse', 0, 'No matching concept', 'Not recorded', 'Dr Ana', 'Not recorded', null::text, 'Not recorded', 'female', 45
+
+  - name: ac_007_metric__encounter_designation_location_group
+    model: metric__encounter
+    description: >
+      BL-008, BL-009. e1's clinician u1 holds two designations, Medical Officer and Dentist, so
+      the row reads both, alphabetical and comma-separated -- one row, not two. u1's third
+      designation row points at reference data of another type and is ignored. e2's clinician u2
+      holds none, and e3 has no clinician, so both read 'Not recorded'. e1 and e3 are at a ward in
+      the Medical Wards group; e2's clinic location has no group, so its id is NULL and its name
+      'Not recorded'.
+    given:
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10'::date as visit_start_date, 'admission' as visit_source_value, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'u1' as provider_id, 'loc_ward' as care_site_id, 'dept_med' as department_id
+          union all
+          select 'e2', 'p1', '2026-01-11'::date, 'clinic', 9202, 'Outpatient Visit', 'u2', 'loc_clinic', 'dept_opd'
+          union all
+          select 'e3', 'p1', '2026-01-12'::date, 'admission', 9201, 'Inpatient Visit', null::text, 'loc_ward', 'dept_med'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'female' as gender_source_value, 1980 as year_of_birth, 1 as month_of_birth, 20 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ward' as id, 'fac2' as facility_id, 'lg_med' as location_group_id
+          union all
+          select 'loc_clinic', 'fac1', null::text
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_med' as id, 'Medical Wards' as name
+
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'u1' as provider_id, 'Dr Ana' as provider_name
+          union all
+          select 'u2', 'Dr Ben'
+
+      - input: ref('user_designations')
+        format: sql
+        rows: |
+          select 'ud1' as id, 'u1' as user_id, 'des_mo' as designation_id
+          union all
+          select 'ud2', 'u1', 'des_dent'
+          union all
+          select 'ud3', 'u1', 'not_a_designation'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'des_mo' as id, 'Medical Officer' as name, 'designation' as type
+          union all
+          select 'des_dent', 'Dentist', 'designation'
+          union all
+          select 'not_a_designation', 'Pharmacy', 'department'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_med' as id, 'Medical' as name
+          union all
+          select 'dept_opd', 'General OPD'
+
+    expect:
+      format: sql
+      rows: |
+        select 'encounter' as metric_id, null::text as variant_id, 'e1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac2' as facility_id, 'admission' as encounter_type, 9201 as visit_concept_id, 'Inpatient Visit' as visit_concept_name, 'Medical' as department, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation, 'lg_med' as location_group_id, 'Medical Wards' as location_group_name, 'female' as sex, 45 as age_years
+        union all
+        select 'encounter', null::text, 'e2', '2026-01-11'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'General OPD', 'Dr Ben', 'Not recorded', null::text, 'Not recorded', 'female', 45
+        union all
+        select 'encounter', null::text, 'e3', '2026-01-12'::date, null::date, 'day', 1::numeric, null::boolean, 'fac2', 'admission', 9201, 'Inpatient Visit', 'Medical', 'Not recorded', 'Not recorded', 'lg_med', 'Medical Wards', 'female', 45
