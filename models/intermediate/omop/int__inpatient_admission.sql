@@ -44,6 +44,12 @@ providers as (
     select * from {{ ref('ref__provider') }}
 ),
 
+-- BL-018: each user's current designations, one row per user, so the join below cannot fan an
+-- admission out where its clinician holds several.
+clinician_designations as (
+    {{ user_designation_names() }}
+),
+
 -- BL-013: at most one principal diagnosis per encounter. Tamanu does not stop a second
 -- is_primary row being recorded, so the earliest is taken (condition_occurrence_id breaks a
 -- datetime tie) -- without this the join below would fan out and duplicate an admission.
@@ -122,6 +128,8 @@ admissions as (
         end as age_years,
         -- BL-017
         coalesce(prov.provider_name, 'Not recorded') as clinician,
+        -- BL-018: that clinician's designations -- 'Not recorded' for none, or no clinician
+        coalesce(cd.designations, 'Not recorded') as clinician_designation,
         -- BL-015: total time as an inpatient -- admission to discharge from hospital. NULL
         -- while the encounter is open.
         case
@@ -145,6 +153,8 @@ admissions as (
     -- BL-017: left join -- an admission whose segment carries no clinician still counts.
     left join providers prov
         on prov.provider_id = adm.provider_id
+    left join clinician_designations cd
+        on cd.user_id = prov.provider_id
     -- BL-012: left join -- an admission with no referral source still counts.
     left join reference_data admission_source_ref
         on admission_source_ref.id = enc.referral_source_id
@@ -185,6 +195,7 @@ select
     sex,
     age_years,
     clinician,
+    clinician_designation,
     is_admitted_via_emergency,
     -- BL-012: 'Not recorded' covers an admission with no referral source. Never NULL -- the
     -- data tables expose this as an array filter, and Tupaia's array filter drops NULL rows.
