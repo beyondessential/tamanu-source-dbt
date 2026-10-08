@@ -42,7 +42,7 @@ The below information is included for each discharge:
 - Number of times the discharge was edited after it was first recorded.
 - Primary and secondary diagnoses recorded against the encounter, with their diagnosis codes in separate columns.
 
-Discharges recorded before change logging was enabled on this deployment fall back to the discharge record's creation time, and show no recording user or edit count.
+Discharges recorded before change logging was enabled on this deployment show no recorded date and time, no days between discharge and recording, and no recording user or edit count.
 
 **Filters**
 
@@ -269,7 +269,7 @@ Facility, Department, Area, Patient billing type, Supervising clinician
 
 ---
 
-### Hospital admissions by area summary
+### Hospital admissions by area summary *(sensitive version available)*
 
 **Report Description**
 
@@ -295,7 +295,7 @@ Facility, Area
 
 ---
 
-### Hospital admissions by department summary
+### Hospital admissions by department summary *(sensitive version available)*
 
 **Report Description**
 
@@ -318,7 +318,7 @@ Facility, Department
 
 ---
 
-### Hospital admissions by location summary
+### Hospital admissions by location summary *(sensitive version available)*
 
 **Report Description**
 
@@ -785,6 +785,23 @@ The following details are included for each encounter:
 Facility, Department, Area
 
 **Default date range**: 24hours
+
+
+---
+
+### User login activity
+
+**Report Description**
+
+This report lists every activated user (excluding the system user) with their role, designation, allowed facilities, the date of their last login and the number of times they logged in during the selected date range.
+
+Users who have never logged in are included with a blank last log in date. Use it to identify users who are not actively using Tamanu.
+
+**Filters**
+
+Facility, Role, Designation
+
+**Default date range**: 30days
 
 
 ---
