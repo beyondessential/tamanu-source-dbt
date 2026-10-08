@@ -1,6 +1,6 @@
 -- metric__inpatient_admission -- D5 metric view for the inpatient admission indicator
 -- registered in documentations/metrics/*.yml: inpatient_admission.
--- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-017).
+-- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-018).
 --
 -- Per-admission (subject) grain: one row per hospital admission, value_numeric 1, so a
 -- consumer aggregates at whatever grain it needs -- any subset of the disaggregations, and
@@ -69,5 +69,7 @@ select
     -- BL-016
     is_readmission_within_30_days,
     -- BL-017
-    clinician
+    clinician,
+    -- BL-018
+    clinician_designation
 from inpatient_admission
