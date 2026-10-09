@@ -9,6 +9,8 @@ unit_tests:
       (BL-004, BL-008). inv_3 is overpaid, so its balance is negative (BL-005). inv_4 has no
       items, so every amount is 0, and its survey-response encounter carries concept 0
       (BL-004, BL-019). inv_5 is cancelled, so it and its payment are excluded (BL-002).
+      inv_1 and inv_3 are finalised and inv_2 has a patient payment, so all three are seen by
+      billing, and inv_4 is not (BL-020).
     given:
       - input: ref('ds__encounter_invoices')
         format: sql
@@ -66,6 +68,18 @@ unit_tests:
           select 'pay_4'
           union all
           select 'pay_5'
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::boolean as approved where false
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as invoice_id where false
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_id where false
     expect:
       format: sql
       rows: |
@@ -132,3 +146,11 @@ unit_tests:
         select 'invoice_patient_paid', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
         union all
         select 'invoice_patient_balance', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
+        union all
+        select 'invoice_seen_by_billing', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 9202, 'Outpatient Visit', 'dept_opd', 'clinic'
+        union all
+        select 'invoice_seen_by_billing', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 262, 'Emergency Room and Inpatient Visit', 'dept_ward', 'admission'
+        union all
+        select 'invoice_seen_by_billing', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
+        union all
+        select 'invoice_seen_by_billing', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
