@@ -66,6 +66,15 @@ ac_010 as (
     where abs(payments - patient_paid) > 0.01
 ),
 
+-- AC-017: seen by billing is 0 or 1 on every row (BL-020).
+ac_017 as (
+    select
+        subject_id,
+        'AC-017' as failed_ac
+    from billing
+    where metric_id = 'invoice_seen_by_billing' and value_numeric not in (0, 1)
+),
+
 -- BL-018: AC-015, one non-cancelled invoice per encounter (see specs/dbt-model/metric__billing.md)
 ac_015 as (
     select
@@ -106,3 +115,8 @@ select
     subject_id,
     failed_ac
 from ac_015
+union all
+select
+    subject_id,
+    failed_ac
+from ac_017

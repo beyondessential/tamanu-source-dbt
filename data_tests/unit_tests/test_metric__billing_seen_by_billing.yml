@@ -1,0 +1,143 @@
+unit_tests:
+  - name: ac_018_metric__billing_seen_by_billing
+    model: metric__billing
+    description: >
+      Each billing signal alone marks an invoice as seen (BL-020). s_fin is finalised, s_appr
+      has an approved item, s_refund has a patient payment that was refunded (BL-021), s_plan
+      has an insurance plan and s_disc an invoice discount, so each is 1. s_unappr has only an
+      unapproved item and s_ins_pay only an insurer payment (BL-021), so each is 0. s_cancel is
+      cancelled, so it is excluded despite an approved item (BL-002).
+    given:
+      - input: ref('ds__encounter_invoices')
+        format: sql
+        rows: |
+          select 's_fin' as invoice_id, 'enc_s_fin' as encounter_id, 'finalised' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_appr' as invoice_id, 'enc_s_appr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_unappr' as invoice_id, 'enc_s_unappr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_refund' as invoice_id, 'enc_s_refund' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_ins_pay' as invoice_id, 'enc_s_ins_pay' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_plan' as invoice_id, 'enc_s_plan' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_disc' as invoice_id, 'enc_s_disc' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          union all
+          select 's_cancel' as invoice_id, 'enc_s_cancel' as encounter_id, 'cancelled' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'enc_s_fin' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_appr' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_unappr' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_refund' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_ins_pay' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_plan' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_disc' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+          union all
+          select 'enc_s_cancel' as visit_occurrence_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id, 'dept_opd' as department_id, 'clinic' as visit_source_value
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1' as id, 'fac_1' as facility_id
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 's_appr' as invoice_id, true as approved
+          union all
+          select 's_unappr', false
+          union all
+          select 's_cancel', true
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          -- pay_r2 refunds pay_r1, and pay_i1 is an insurer payment (no invoice_patient_payments row)
+          select 'pay_r1' as id, 's_refund' as invoice_id, '2026-08-03'::date as date, 10.00::numeric as amount, null::text as original_payment_id
+          union all
+          select 'pay_r2', 's_refund', '2026-08-04'::date, 10.00::numeric, 'pay_r1'
+          union all
+          select 'pay_i1', 's_ins_pay', '2026-08-03'::date, 10.00::numeric, null::text
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select 'pay_r1' as invoice_payment_id
+          union all
+          select 'pay_r2'
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select 's_plan' as invoice_id
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select 's_disc' as invoice_id
+    expect:
+      format: csv
+      rows: |
+        metric_id,subject_id,value_numeric
+        invoice,s_fin,1
+        invoice_total,s_fin,0
+        invoice_insurance_coverage,s_fin,0
+        invoice_discount,s_fin,0
+        invoice_patient_total,s_fin,0
+        invoice_patient_paid,s_fin,0
+        invoice_patient_balance,s_fin,0
+        invoice_seen_by_billing,s_fin,1
+        invoice,s_appr,1
+        invoice_total,s_appr,0
+        invoice_insurance_coverage,s_appr,0
+        invoice_discount,s_appr,0
+        invoice_patient_total,s_appr,0
+        invoice_patient_paid,s_appr,0
+        invoice_patient_balance,s_appr,0
+        invoice_seen_by_billing,s_appr,1
+        invoice,s_unappr,1
+        invoice_total,s_unappr,0
+        invoice_insurance_coverage,s_unappr,0
+        invoice_discount,s_unappr,0
+        invoice_patient_total,s_unappr,0
+        invoice_patient_paid,s_unappr,0
+        invoice_patient_balance,s_unappr,0
+        invoice_seen_by_billing,s_unappr,0
+        invoice,s_refund,1
+        invoice_total,s_refund,0
+        invoice_insurance_coverage,s_refund,0
+        invoice_discount,s_refund,0
+        invoice_patient_total,s_refund,0
+        invoice_patient_paid,s_refund,0
+        invoice_patient_balance,s_refund,0
+        invoice_seen_by_billing,s_refund,1
+        invoice,s_ins_pay,1
+        invoice_total,s_ins_pay,0
+        invoice_insurance_coverage,s_ins_pay,0
+        invoice_discount,s_ins_pay,0
+        invoice_patient_total,s_ins_pay,0
+        invoice_patient_paid,s_ins_pay,0
+        invoice_patient_balance,s_ins_pay,0
+        invoice_seen_by_billing,s_ins_pay,0
+        invoice,s_plan,1
+        invoice_total,s_plan,0
+        invoice_insurance_coverage,s_plan,0
+        invoice_discount,s_plan,0
+        invoice_patient_total,s_plan,0
+        invoice_patient_paid,s_plan,0
+        invoice_patient_balance,s_plan,0
+        invoice_seen_by_billing,s_plan,1
+        invoice,s_disc,1
+        invoice_total,s_disc,0
+        invoice_insurance_coverage,s_disc,0
+        invoice_discount,s_disc,0
+        invoice_patient_total,s_disc,0
+        invoice_patient_paid,s_disc,0
+        invoice_patient_balance,s_disc,0
+        invoice_seen_by_billing,s_disc,1
+        invoice_patient_payment,pay_r1,10.00
+        invoice_patient_payment,pay_r2,-10.00
