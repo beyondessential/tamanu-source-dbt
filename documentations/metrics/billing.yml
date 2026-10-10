@@ -219,5 +219,5 @@ metrics:
   disaggregations: *billing_disaggregations
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__billing.md
