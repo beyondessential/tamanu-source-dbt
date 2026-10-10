@@ -194,3 +194,30 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_seen_by_billing
+  kind: metric
+  name: Seen by billing
+  description: >-
+    Whether billing staff have acted on an invoice: 1 when they have, otherwise 0. One row per
+    invoice, dated to the invoice.
+  numerator_description: >-
+    Non-cancelled invoices that are finalised, or that have an approved item, a patient payment,
+    an insurance plan or an invoice discount, on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A patient who needs no medication can leave without visiting the cashier. Approving items,
+    taking a patient payment, adding an insurance plan, applying an invoice discount and
+    finalising are billing staff actions, so any one marks the invoice as seen. A payment later
+    refunded still counts, and an insurer payment does not. Divide by invoice for the share of
+    invoices seen. It is the invoice's current state, so billing activity after the invoice's
+    month restates that month.
+  unit: count
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__billing.md

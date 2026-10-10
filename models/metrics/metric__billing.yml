@@ -44,6 +44,7 @@ models:
                   - invoice_patient_paid
                   - invoice_patient_balance
                   - invoice_patient_payment
+                  - invoice_seen_by_billing
           - relationships:
               name: ac_003_metric__billing_metric_id_registered
               arguments:
