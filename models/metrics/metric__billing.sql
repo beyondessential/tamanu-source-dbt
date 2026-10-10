@@ -1,11 +1,11 @@
 -- metric__billing -- D5 metric view for the patient billing indicators registered in
 -- documentations/metrics/billing.yml: invoice, invoice_total, invoice_insurance_coverage,
--- invoice_discount, invoice_patient_total, invoice_patient_paid, invoice_patient_balance and
--- invoice_patient_payment.
+-- invoice_discount, invoice_patient_total, invoice_patient_paid, invoice_patient_balance,
+-- invoice_patient_payment and invoice_seen_by_billing.
 -- See specs/dbt-model/metric__billing.md for the BL clauses this model implements
--- (BL-001..BL-019).
+-- (BL-001..BL-021).
 --
--- Per-subject grain. The seven invoice metrics have one row per non-cancelled invoice, dated
+-- Per-subject grain. The eight invoice metrics have one row per non-cancelled invoice, dated
 -- to the invoice. invoice_patient_payment has one row per patient payment or refund, dated to
 -- the payment. Every row of an invoice carries the same disaggregations, so a consumer can
 -- group invoice and payment rows together.
@@ -26,6 +26,19 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-020: invoices billing staff have acted on, other than by finalising them
+billing_activity as (
+    select invoice_id::varchar as invoice_id from {{ ref('invoice_items') }}
+    where approved
+    union
+    -- BL-021: any patient payment, refunded or not, and never an insurer payment
+    select invoice_id::varchar from ({{ invoice_payment_amounts('patient') }}) pay
+    union
+    select invoice_id::varchar from {{ ref('invoices_invoice_insurance_plans') }}
+    union
+    select invoice_id::varchar from {{ ref('invoice_discounts') }}
+),
+
 invoice_context as (
     select
         i.invoice_id::varchar as invoice_id,
@@ -39,6 +52,14 @@ invoice_context as (
         coalesce(i.invoice_discount, 0) as invoice_discount,
         coalesce(i.patient_subtotal, 0) as patient_total,
         coalesce(i.patient_payment, 0) as patient_paid,
+        -- BL-020: finalised, or any other billing activity on the invoice
+        (
+            i.status = 'finalised'
+            or exists (
+                select 1 from billing_activity ba
+                where ba.invoice_id = i.invoice_id::varchar
+            )
+        ) as is_seen_by_billing,
         -- BL-012: the facility of the encounter's location
         l.facility_id,
         -- BL-019: the encounter's OMOP Visit concept and its name, as
@@ -82,7 +103,9 @@ invoice_rows as (
         ('invoice_patient_total', ic.patient_total),
         ('invoice_patient_paid', ic.patient_paid),
         -- BL-005: negative when the invoice is overpaid
-        ('invoice_patient_balance', ic.patient_total - ic.patient_paid)
+        ('invoice_patient_balance', ic.patient_total - ic.patient_paid),
+        -- BL-020: 1 when seen by billing, so a sum counts the invoices seen
+        ('invoice_seen_by_billing', case when ic.is_seen_by_billing then 1 else 0 end::numeric)
     ) m (metric_id, value_numeric)
 ),
 

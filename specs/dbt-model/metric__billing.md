@@ -4,20 +4,20 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `metric__billing` (8 registered indicators) |
+| **Name** | `metric__billing` (9 registered indicators) |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-015) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Linear issue** | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911/fsm-6-billing-dashboard) |
+| **Linear issue** | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911/fsm-6-billing-dashboard), [MAUI-6984](https://linear.app/bes/issue/MAUI-6984/seen-by-cashier-in-tupaia) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-10-01 |
-| **Last updated** | 2026-10-02 |
+| **Last updated** | 2026-10-09 |
 
 Canonical definition for patient billing: what each invoice charged, how that charge splits
 between insurance, discount and the patient, what the patient has paid against it, and every
-patient payment on the day it was received.
+patient payment on the day it was received, and whether billing staff have acted on each invoice.
 
 ## Purpose
 
@@ -33,12 +33,13 @@ Billing activity at a Tamanu facility, for finance dashboards.
 | `invoice_patient_paid` | currency | invoice | Net patient payments made against the invoice to date |
 | `invoice_patient_balance` | currency | invoice | Patient share still owed on the invoice |
 | `invoice_patient_payment` | currency | payment | One patient payment or refund, on the day it was made |
+| `invoice_seen_by_billing` | count | invoice | 1 when billing staff have acted on the invoice, otherwise 0 |
 
 **Definition source.** `BES`. The amounts follow Tamanu's own invoice arithmetic, as resolved
 by `ds__encounter_invoices`, so every figure matches what the invoice screen shows. Care setting
 follows the OMOP visit concepts in `clinical__visit_occurrence`.
 
-**Two time bases.** The seven invoice-subject metrics are dated to the invoice, so a month's
+**Two time bases.** The eight invoice-subject metrics are dated to the invoice, so a month's
 figures describe what was billed that month and how much of it has been collected so far. A
 payment made later is counted against its invoice's month. `invoice_patient_payment` is dated to
 the payment, so a month's figure is the cash received that month. The two reconcile: the
@@ -51,17 +52,22 @@ invoice, not against its items. A patient admitted from the emergency department
 encounter, so the ED fee, the items ordered before admission and the bed-fee nights all sit on
 one invoice.
 
+A patient who needs no medication can leave without visiting the cashier. Billing staff are the
+only users who approve invoice items, take payments, add insurance plans, apply invoice
+discounts or finalise an invoice, so any one of those marks an invoice as seen by billing.
+
 **Who reads it.** `tupaia-data-product`, via a billing data table over this model, feeding the
 FSM billing dashboards (MAUI-6911): monthly billing matrices by care setting, a stacked column
 of where each month's billing went, running outstanding and cumulative billed-vs-collected
-lines, and headline tiles. Deployment-specific grouping is applied in that data table, not here
+lines, headline tiles, and Seen by Billing count and percentage rows (MAUI-6984), the
+percentage being `invoice_seen_by_billing` over `invoice`. Deployment-specific grouping is applied in that data table, not here
 (BL-011). FSM uses four categories: IPD (`inpatient`), OPD Dental (any other care setting in a
 Dental department), ER (`emergency`) and OPD (everything else). It also excludes
 pre-Tamanu-invoicing charges on survey-response encounters.
 
 ## Grain
 
-**One row per:** `metric_id` × subject. For the seven invoice metrics the subject is one
+**One row per:** `metric_id` × subject. For the eight invoice metrics the subject is one
 non-cancelled invoice. For `invoice_patient_payment` the subject is one patient payment or
 refund on a non-cancelled invoice. `(metric_id, subject_id)` is unique (AC-001).
 
@@ -74,6 +80,9 @@ refund on a non-cancelled invoice. `(metric_id, subject_id)` is unique (AC-001).
 | `{{ ref('ds__encounter_invoices') }}` | Per-invoice resolved billing figures |
 | `{{ ref('invoice_payments') }}` | Individual payments and refunds, with dates, read through the shared `invoice_payment_amounts('patient')` macro |
 | `{{ ref('invoice_patient_payments') }}` | Marks a payment as a patient payment, read through the same macro |
+| `{{ ref('invoice_items') }}` | Approved items (BL-020) |
+| `{{ ref('invoices_invoice_insurance_plans') }}` | Insurance plans added to the invoice (BL-020) |
+| `{{ ref('invoice_discounts') }}` | Invoice-level discounts (BL-020) |
 | `{{ ref('clinical__visit_occurrence') }}` | Visit concept (care setting, ED admission), department, encounter type, location |
 | `{{ ref('locations') }}` | Location → facility |
 
@@ -84,6 +93,9 @@ refund on a non-cancelled invoice. `(metric_id, subject_id)` is unique (AC-001).
 | `ds__encounter_invoices` | `invoice_id`, `encounter_id`, `status`, `invoice_datetime`, `invoice_total`, `insurance_coverage`, `invoice_discount`, `patient_subtotal`, `patient_payment` |
 | `invoice_payments` | `id`, `invoice_id`, `date`, `amount`, `original_payment_id` |
 | `invoice_patient_payments` | `invoice_payment_id` |
+| `invoice_items` | `invoice_id`, `approved` |
+| `invoices_invoice_insurance_plans` | `invoice_id` |
+| `invoice_discounts` | `invoice_id` |
 | `clinical__visit_occurrence` | `visit_occurrence_id`, `visit_concept_id`, `care_site_id`, `department_id`, `visit_source_value` |
 | `locations` | `id`, `facility_id` |
 
@@ -149,13 +161,18 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 - **BL-018 (one invoice per encounter):** each encounter is expected to have at most one
   non-cancelled invoice, and an encounter with more has each invoice counted as its own subject.
 - **BL-019 (visit concept):** `visit_concept_id` and `visit_concept_name` are the encounter's OMOP Visit concept and its name, as `clinical__visit_occurrence` carries them.
+- **BL-020 (seen by billing):** `invoice_seen_by_billing` is 1 when the invoice is
+  `finalised`, or has an approved item, a patient payment, an insurance plan or an invoice
+  discount, and 0 otherwise.
+- **BL-021 (any patient payment):** a patient payment marks an invoice as seen whether or not
+  it was later refunded, and an insurer payment does not.
 
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | `(metric_id, subject_id)` is unique | Grain | `dbt_utils.unique_combination_of_columns` |
-| AC-002 | `metric_id` is `not_null` and one of the eight ids | BL-001 | `not_null` + `accepted_values` |
+| AC-002 | `metric_id` is `not_null` and one of the nine ids | BL-001 | `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | `relationships` (`error`) |
 | AC-004 | `period_start` is `not_null` | BL-003, BL-007 | `not_null` |
 | AC-005 | `period_granularity` is `minute` for invoice metrics and `day` for `invoice_patient_payment` | BL-003, BL-007 | singular test |
@@ -168,6 +185,8 @@ Bases refreshed within 24 hours. The current month's figures are month to date.
 | AC-014 | The derivations resolve as specified: a cancelled invoice and its payments are excluded, a refunded payment pair nets to 0, an overpaid invoice has a negative balance, a no-items invoice emits zeros, an ED-then-admitted encounter carries concept 262, a survey-response encounter carries concept 0 | BL-002, BL-004–BL-008, BL-019 | unit test `ac_014_metric__billing_derivations` |
 | AC-015 | No encounter has more than one non-cancelled invoice | BL-018 | singular test (`warn`) |
 | AC-016 | `metric_definitions.unit` accepts `currency` | BL-001 | `accepted_values` on the registry |
+| AC-017 | `invoice_seen_by_billing` is 0 or 1 on every row | BL-020 | singular test |
+| AC-018 | Each signal alone marks an invoice as seen: finalised, an approved item, a refunded patient payment, an insurance plan and an invoice discount. An invoice with only an unapproved item or only an insurer payment is not seen | BL-020, BL-021 | unit test `ac_018_metric__billing_seen_by_billing` |
 
 Singular tests live in one file, `data_test__metric__billing.sql`, one `union all` branch per
 AC, tagged with `failed_ac`.
@@ -178,7 +197,10 @@ AC, tagged with `failed_ac`.
 upstream                          this model             downstream
 ds__encounter_invoices    ──┐
 invoice_payments          ──┤
-invoice_patient_payments  ──┼──►  metric__billing  ──►  tupaia-data-product: billing data table
+invoice_patient_payments  ──┤
+invoice_items             ──┤
+invoices_invoice_insurance_plans ┤
+invoice_discounts         ──┼──►  metric__billing  ──►  tupaia-data-product: billing data table
 clinical__visit_occurrence──┤                                 └►  Tupaia: FSM billing dashboards (MAUI-6911)
 locations                 ──┘
 ```
@@ -192,5 +214,6 @@ None.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft |
+| 2026-10-09 | Maui team | `invoice_seen_by_billing` added: 1 when billing staff have acted on the invoice (BL-020, BL-021, MAUI-6984) |
 | 2026-10-05 | Maui team | `care_setting` and `is_admitted_via_emergency` retired: a consumer reads the setting from `visit_concept_id` and `visit_concept_name` (BL-019) |
 | 2026-10-02 | Maui team | BL-018 states the one-invoice-per-encounter expectation AC-015 asserts. Payment rows come from the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`) |
