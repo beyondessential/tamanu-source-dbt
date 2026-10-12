@@ -140,8 +140,10 @@ Releases are usually cut from the maintenance branch for the version (`2.60`, `2
 not from `main`. `main` carries the next in-development version.
 
 1. Run the **Release** workflow (Actions → Release → Run workflow) with the branch to
-   release. Leave the version empty for the next patch. It stamps `dbt_project.yml` and
-   `pyproject.toml` and opens a `release: vX.Y.Z` PR against that branch.
+   release. Leave the version empty for the branch's current version if it is untagged
+   (such as the `vX.Y.0` that a Tamanu upgrade sets on `main`), otherwise the next patch.
+   It stamps `dbt_project.yml` and `pyproject.toml` and opens a `release: vX.Y.Z` PR
+   against that branch; if both already carry the version, it opens no PR.
 2. Merge the PR.
 3. Publish a GitHub release: tag `vX.Y.Z`, target the same branch, generate the notes.
    Only the Maui team can create `v*` tags. Publishing a `vX.Y.0` release also runs

@@ -17,7 +17,7 @@ on:
         required: true
         type: string
       version:
-        description: Version to release (X.Y.Z). Defaults to the next patch after the branch's current version.
+        description: Version to release (X.Y.Z). Defaults to the branch's current version if untagged, else the next patch.
         required: false
         type: string
 
@@ -47,8 +47,23 @@ jobs:
             exit 1
           fi
 
+          # 0 = tag exists, 2 = it does not; anything else is a failed lookup, so stop.
+          tag_exists() {
+            local rc=0
+            git ls-remote --exit-code --tags origin "refs/tags/v$1" >/dev/null || rc=$?
+            case "$rc" in
+              0) return 0 ;;
+              2) return 1 ;;
+              *) echo "::error::Could not check for tag v$1 (git ls-remote exit $rc)"; exit 1 ;;
+            esac
+          }
+
+          # The current version is releasable as-is when it was never tagged: tamanu-upgrade.yml
+          # sets main to an untagged vX.Y.0, which this must be able to release.
           if [ -n "$REQUESTED" ]; then
             next="${REQUESTED#v}"
+          elif ! tag_exists "$current"; then
+            next="$current"
           else
             IFS=. read -r major minor patch <<< "$current"
             next="$major.$minor.$((patch + 1))"
@@ -58,15 +73,15 @@ jobs:
             echo "::error::'$next' is not a X.Y.Z version"
             exit 1
           fi
-          if [ "$(printf '%s\n%s\n' "$current" "$next" | sort -V | tail -1)" != "$next" ] || [ "$current" = "$next" ]; then
-            echo "::error::$next is not higher than the branch's current version $current"
+          if [ "$(printf '%s\n%s\n' "$current" "$next" | sort -V | tail -1)" != "$next" ]; then
+            echo "::error::$next is lower than the branch's current version $current"
             exit 1
           fi
           if [[ "$BRANCH" =~ ^[0-9]+\.[0-9]+$ ]] && [[ "$next" != "$BRANCH".* ]]; then
             echo "::error::$next is not in the $BRANCH series"
             exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/v$next" >/dev/null; then
+          if tag_exists "$next"; then
             echo "::error::Tag v$next already exists"
             exit 1
           fi
@@ -84,6 +99,10 @@ jobs:
           sed -i "s/^version:.*/version: $NEXT/" dbt_project.yml
           sed -i "s/^version = \".*\"/version = \"$NEXT\"/" pyproject.toml
           if git diff --quiet; then
+            if [ "$CURRENT" = "$NEXT" ]; then
+              echo "::notice::$BASE already carries $NEXT in both files; no PR needed. Publish release v$NEXT on $BASE."
+              exit 0
+            fi
             echo "::error::Stamping changed nothing; check the version lines in both files"
             exit 1
           fi
