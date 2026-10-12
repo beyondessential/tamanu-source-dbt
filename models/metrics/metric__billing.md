@@ -2,15 +2,15 @@
 D5 metric view for the patient billing indicators registered in
 documentations/metrics/billing.yml.
 
-Eight metrics have one row per non-cancelled invoice, dated to the invoice: the invoice count,
-invoice total, insurance coverage, invoice discount, patient total, patient paid to date,
-patient balance, and seen by billing (1 when billing staff have acted on the invoice, otherwise
-0). The ninth, invoice_patient_payment, has one row per patient payment or refund, dated to the
+Nine metrics have one row per non-cancelled invoice, dated to the invoice: the invoice count,
+invoice total, item adjustments, insurance coverage, invoice discount, patient total, patient
+paid to date, patient balance, and seen by billing (1 when billing staff have acted on the
+invoice, otherwise 0). The tenth, invoice_patient_payment, has one row per patient payment or refund, dated to the
 day it was made, with refunds negative.
 
 Sum value_numeric for one metric_id at a time, over any subset of the disaggregations and any
 time grain. Never sum across metric_ids. Coverage and collection rates are ratios of sums, for
-example invoice_insurance_coverage over invoice_total, or invoice_seen_by_billing over invoice.
+example invoice_insurance_coverage over invoice_total plus invoice_item_adjustment, or invoice_seen_by_billing over invoice.
 
 The two time bases reconcile. The outstanding patient balance at the end of a month is the
 running sum of invoice_patient_total less the running sum of invoice_patient_payment, both up to
