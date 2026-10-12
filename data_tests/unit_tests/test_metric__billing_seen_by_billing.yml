@@ -11,21 +11,21 @@ unit_tests:
       - input: ref('ds__encounter_invoices')
         format: sql
         rows: |
-          select 's_fin' as invoice_id, 'enc_s_fin' as encounter_id, 'finalised' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_fin' as invoice_id, 'enc_s_fin' as encounter_id, 'finalised' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_appr' as invoice_id, 'enc_s_appr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_appr' as invoice_id, 'enc_s_appr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_unappr' as invoice_id, 'enc_s_unappr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_unappr' as invoice_id, 'enc_s_unappr' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_refund' as invoice_id, 'enc_s_refund' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_refund' as invoice_id, 'enc_s_refund' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_ins_pay' as invoice_id, 'enc_s_ins_pay' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_ins_pay' as invoice_id, 'enc_s_ins_pay' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_plan' as invoice_id, 'enc_s_plan' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_plan' as invoice_id, 'enc_s_plan' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_disc' as invoice_id, 'enc_s_disc' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_disc' as invoice_id, 'enc_s_disc' as encounter_id, 'in_progress' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
           union all
-          select 's_cancel' as invoice_id, 'enc_s_cancel' as encounter_id, 'cancelled' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
+          select 's_cancel' as invoice_id, 'enc_s_cancel' as encounter_id, 'cancelled' as status, '2026-08-03 09:00:00'::timestamp as invoice_datetime, 0::numeric as invoice_total, 0::numeric as item_adjustment, 0::numeric as insurance_coverage, 0::numeric as invoice_discount, 0::numeric as patient_payment, 0::numeric as patient_subtotal
       - input: ref('clinical__visit_occurrence')
         format: sql
         rows: |
@@ -85,6 +85,7 @@ unit_tests:
         metric_id,subject_id,value_numeric
         invoice,s_fin,1
         invoice_total,s_fin,0
+        invoice_item_adjustment,s_fin,0
         invoice_insurance_coverage,s_fin,0
         invoice_discount,s_fin,0
         invoice_patient_total,s_fin,0
@@ -93,6 +94,7 @@ unit_tests:
         invoice_seen_by_billing,s_fin,1
         invoice,s_appr,1
         invoice_total,s_appr,0
+        invoice_item_adjustment,s_appr,0
         invoice_insurance_coverage,s_appr,0
         invoice_discount,s_appr,0
         invoice_patient_total,s_appr,0
@@ -101,6 +103,7 @@ unit_tests:
         invoice_seen_by_billing,s_appr,1
         invoice,s_unappr,1
         invoice_total,s_unappr,0
+        invoice_item_adjustment,s_unappr,0
         invoice_insurance_coverage,s_unappr,0
         invoice_discount,s_unappr,0
         invoice_patient_total,s_unappr,0
@@ -109,6 +112,7 @@ unit_tests:
         invoice_seen_by_billing,s_unappr,0
         invoice,s_refund,1
         invoice_total,s_refund,0
+        invoice_item_adjustment,s_refund,0
         invoice_insurance_coverage,s_refund,0
         invoice_discount,s_refund,0
         invoice_patient_total,s_refund,0
@@ -117,6 +121,7 @@ unit_tests:
         invoice_seen_by_billing,s_refund,1
         invoice,s_ins_pay,1
         invoice_total,s_ins_pay,0
+        invoice_item_adjustment,s_ins_pay,0
         invoice_insurance_coverage,s_ins_pay,0
         invoice_discount,s_ins_pay,0
         invoice_patient_total,s_ins_pay,0
@@ -125,6 +130,7 @@ unit_tests:
         invoice_seen_by_billing,s_ins_pay,0
         invoice,s_plan,1
         invoice_total,s_plan,0
+        invoice_item_adjustment,s_plan,0
         invoice_insurance_coverage,s_plan,0
         invoice_discount,s_plan,0
         invoice_patient_total,s_plan,0
@@ -133,6 +139,7 @@ unit_tests:
         invoice_seen_by_billing,s_plan,1
         invoice,s_disc,1
         invoice_total,s_disc,0
+        invoice_item_adjustment,s_disc,0
         invoice_insurance_coverage,s_disc,0
         invoice_discount,s_disc,0
         invoice_patient_total,s_disc,0

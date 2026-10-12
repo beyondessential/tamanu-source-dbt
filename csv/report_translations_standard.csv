@@ -169,6 +169,7 @@ report.reporting.insuranceCoverage,Insurance coverage
 report.reporting.insurerId,Insurer ID
 report.reporting.insurerName,Name of insurer
 report.reporting.invoiceFinalisedDateTime,Invoice finalised date and time
+report.reporting.invoiceItemAdjustments,Item adjustments
 report.reporting.invoicePatientPayment,Patient payment
 report.reporting.invoicePatientSubtotal,Patient subtotal
 report.reporting.invoicePatientTotal,Patient total

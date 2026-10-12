@@ -10,6 +10,7 @@ per_invoice as (
     select
         invoice_id,
         sum(value_numeric) filter (where metric_id = 'invoice_total') as invoice_total,
+        sum(value_numeric) filter (where metric_id = 'invoice_item_adjustment') as item_adjustment,
         sum(value_numeric) filter (where metric_id = 'invoice_insurance_coverage') as insurance_coverage,
         sum(value_numeric) filter (where metric_id = 'invoice_discount') as invoice_discount,
         sum(value_numeric) filter (where metric_id = 'invoice_patient_total') as patient_total,
@@ -39,13 +40,16 @@ ac_006 as (
     where metric_id = 'invoice' and value_numeric != 1
 ),
 
--- AC-008: invoice total = coverage + discount + patient total (BL-004).
+-- AC-008: invoice total + item adjustment = coverage + discount + patient total (BL-004).
 ac_008 as (
     select
         invoice_id as subject_id,
         'AC-008' as failed_ac
     from per_invoice
-    where abs(invoice_total - (insurance_coverage + invoice_discount + patient_total)) > 0.01
+    where abs(
+            invoice_total + item_adjustment
+            - (insurance_coverage + invoice_discount + patient_total)
+        ) > 0.01
 ),
 
 -- AC-009: patient balance = patient total - patient paid (BL-005).

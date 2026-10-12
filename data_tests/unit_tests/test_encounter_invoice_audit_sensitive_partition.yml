@@ -73,7 +73,7 @@ unit_tests:
           select
             null::text as invoice_id, null::text as encounter_id, null::text as status,
             null::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime,
-            null::numeric as invoice_total, null::numeric as insurance_coverage,
+            null::numeric as invoice_total, null::numeric as item_adjustment, null::numeric as insurance_coverage,
             null::numeric as invoice_discount, null::numeric as patient_payment,
             null::numeric as patient_subtotal, null::text as products_no_category
           where false
@@ -98,6 +98,7 @@ unit_tests:
           null::text as "Supervising clinician",
           null::text as "Invoice finalised date and time",
           null::numeric as "Invoice total",
+          null::numeric as "Item adjustments",
           null::numeric as "Insurance coverage",
           null::numeric as "Patient subtotal",
           null::numeric as "Patient payment",

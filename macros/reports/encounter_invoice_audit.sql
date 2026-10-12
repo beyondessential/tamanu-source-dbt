@@ -43,6 +43,7 @@ invoice_data as (
             order by ei.invoice_datetime, ei.invoice_id
         ) filter (where ei.products_no_category is not null) as invoice_products_no_category,
         coalesce(sum(ei.invoice_total), 0) as invoice_total,
+        coalesce(sum(ei.item_adjustment), 0) as item_adjustment,
         sum(ei.insurance_coverage) as insurance_coverage,
         sum(ei.invoice_discount) as invoice_discount,
         sum(ei.patient_payment) as patient_payment,
@@ -84,6 +85,7 @@ select
     -- BL-019: money columns rounded to 2dp for display, matching the app's
     -- formatDisplayPrice (the dataset carries full-precision values)
     round(invd.invoice_total, 2) as "{{ translate_label('invoiceTotal') }}",
+    round(invd.item_adjustment, 2) as "{{ translate_label('invoiceItemAdjustments') }}",
     round(invd.insurance_coverage, 2) as "{{ translate_label('insuranceCoverage') }}",
     -- BL-013: patient subtotal
     round(invd.patient_subtotal, 2) as "{{ translate_label('invoicePatientSubtotal') }}",
