@@ -163,3 +163,15 @@ since been deleted. Never NULL: the data tables expose this as an array filter a
 array filter drops NULL rows, which would silently disappear the attendance from a card that
 groups by clinician.
 {% enddocs %}
+
+{% docs metric__emergency_visit__chief_complaint %}
+The chief complaint recorded on the attendance's triage, resolved to its reference-data name.
+
+A disaggregation, so a consumer groups by it to profile presenting complaints, or filters to
+one complaint. Passed through as recorded: the complaint list is the deployment's own
+reference data, so no grouping is applied.
+
+'Not recorded' covers an attendance with no triage record, a triage with no chief complaint,
+and a complaint whose reference-data record no longer resolves. Never NULL: the data tables
+expose this as an array filter and Tupaia's array filter drops NULL rows.
+{% enddocs %}
