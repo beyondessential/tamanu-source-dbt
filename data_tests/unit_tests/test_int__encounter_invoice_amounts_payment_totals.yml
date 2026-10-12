@@ -121,6 +121,7 @@ unit_tests:
           '2024-01-14 09:00:00'::timestamp as invoice_datetime,
           null::timestamp as invoice_finalised_datetime,
           100.00::numeric as invoice_total,
+          0.00::numeric as item_adjustment,
           60.00::numeric as insurance_coverage,
           0.00::numeric as invoice_discount,
           25.00::numeric as patient_payment,

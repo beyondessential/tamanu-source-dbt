@@ -13,7 +13,7 @@
 | **Linear issue** | _none_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-06-23 |
+| **Last updated** | 2026-10-13 |
 
 ## Purpose
 
@@ -74,9 +74,10 @@ One row per encounter that matches the parameter filters. An encounter without a
 | `dischargeDepartment` | text | Department recorded on the encounter |
 | `encounterSupervisingClinician` | text | Supervising clinician display name |
 | `invoiceFinalisedDateTime` | text | Most recent transition into `finalised` status, in deployment timezone |
-| `invoiceTotal` | numeric | Sum of discounted item totals across non-cancelled invoices |
+| `invoiceTotal` | numeric | Sum of item totals before item adjustments across non-cancelled invoices |
+| `invoiceItemAdjustments` | numeric | Sum of item adjustments across non-cancelled invoices: negative for a discount, positive for a markup |
 | `insuranceCoverage` | numeric | Sum of per-item insurance coverage across non-cancelled invoices |
-| `invoicePatientSubtotal` | numeric | `invoiceTotal − insuranceCoverage − invoiceDiscount` |
+| `invoicePatientSubtotal` | numeric | `invoiceTotal + invoiceItemAdjustments − insuranceCoverage − invoiceDiscount` |
 | `invoicePatientPayment` | numeric | Net patient payment (payments minus refunds) on non-cancelled invoices |
 | `invoicePatientTotal` | numeric | `invoicePatientSubtotal − invoicePatientPayment` (outstanding balance) |
 | `invoiceProductsNoCategory` | text | Comma-separated list of products without a category on non-cancelled invoices |
@@ -90,14 +91,14 @@ One row per encounter that matches the parameter filters. An encounter without a
 - **BL-004:** Apply optional restrictions on facility, department, patient billing type, and supervising clinician. A null parameter disables that filter.
 - **BL-005:** Length of stay is `end_datetime::date − start_datetime::date`, with a minimum of 1 day. For in-progress encounters, use `current_date − start_datetime::date` with the same minimum.
 - **BL-006 to BL-012, BL-015, BL-016, BL-020 (per-invoice financials):** Price-list resolution, item pricing and discount, invoice total, insurance coverage, invoice-level discount, patient-payment netting, patient subtotal, finalisation timestamp, and the no-category product list are realised per invoice in `ds__encounter_invoices` (see `specs/dbt-model/ds__encounter_invoices.md`).
-- **BL-013:** Patient subtotal is `invoiceTotal − insuranceCoverage − invoiceDiscount`, summed per encounter from `ds__encounter_invoices.patient_subtotal` (its BL-020) rather than re-derived from the aggregated components. The sum is coalesced to 0 for the same reason `invoiceTotal` is: a no-items invoice carries a null `patient_subtotal`, so an encounter whose every non-cancelled invoice has no items reads 0, while an encounter with no invoice at all stays null via the outer join.
+- **BL-013:** Patient subtotal is `invoiceTotal + invoiceItemAdjustments − insuranceCoverage − invoiceDiscount`, summed per encounter from `ds__encounter_invoices.patient_subtotal` (its BL-020) rather than re-derived from the aggregated components. The sum is coalesced to 0 for the same reason `invoiceTotal` is: a no-items invoice carries a null `patient_subtotal`, so an encounter whose every non-cancelled invoice has no items reads 0, while an encounter with no invoice at all stays null via the outer join.
 - **BL-014:** Patient total is `patientSubtotal − patientPayment`.
 - **BL-017:** Facility scope is partitioned by the `is_sensitive` macro argument: the standard variant covers non-sensitive facilities (`is_sensitive = false`); the sensitive variant covers sensitive facilities (`is_sensitive = true`).
   Realised by `encounters_core()` BL-001 — see `specs/dbt-model/encounters_core.md`.
   BL-002, BL-003 and BL-004 above remain this report's own, passed to that macro as
   `extra_predicates` under its row-selecting contract (its BL-004).
-- **BL-018:** Aggregate `ds__encounter_invoices` to one row per in-scope encounter, excluding cancelled invoices: invoice total, insurance coverage, invoice discount and patient payment are summed; finalised datetime is the maximum; no-category products are concatenated (ordered by invoice datetime then id). Encounters with no non-cancelled invoices still appear with null invoice columns. An encounter that has a non-cancelled invoice with no items reads a total of 0; an encounter with no invoice at all stays null.
-- **BL-019:** Money columns (invoice total, insurance coverage, patient subtotal, patient payment, patient total) are rounded to 2 decimal places for display, matching the application's `formatDisplayPrice`. NULL is preserved.
+- **BL-018:** Aggregate `ds__encounter_invoices` to one row per in-scope encounter, excluding cancelled invoices: invoice total, item adjustments, insurance coverage, invoice discount and patient payment are summed; finalised datetime is the maximum; no-category products are concatenated (ordered by invoice datetime then id). Encounters with no non-cancelled invoices still appear with null invoice columns. An encounter that has a non-cancelled invoice with no items reads a total and item adjustments of 0; an encounter with no invoice at all stays null.
+- **BL-019:** Money columns (invoice total, item adjustments, insurance coverage, patient subtotal, patient payment, patient total) are rounded to 2 decimal places for display, matching the application's `formatDisplayPrice`. NULL is preserved.
 
 ## Acceptance criteria
 
@@ -108,14 +109,14 @@ One row per encounter that matches the parameter filters. An encounter without a
 | AC-003 | When `includeOpenEncounters = 'no'`, no rows have `end_datetime is null`. When `'yes'` (or null), rows with `end_datetime is null` may appear. | BL-003 |
 | AC-004 | When a parameter filter is non-null, every row matches it (facility, department, billing type, clinician). | BL-004 |
 | AC-005 | `encounterLengthOfStay >= 1` for every row. | BL-005 |
-| AC-006 | `invoiceTotal` equals the sum of `ds__encounter_invoices.invoice_total` for the encounter's non-cancelled invoices; cancelled invoices are excluded. | BL-018 |
+| AC-006 | `invoiceTotal` and `invoiceItemAdjustments` equal the sums of `ds__encounter_invoices.invoice_total` and `item_adjustment` for the encounter's non-cancelled invoices; cancelled invoices are excluded. | BL-018 |
 | AC-007 | An encounter with no non-cancelled invoices has null invoice columns but still appears. | BL-018 |
-| AC-008 | `insuranceCoverage <= invoiceTotal` for every row. | BL-010, BL-018 |
-| AC-009 | `invoicePatientSubtotal = invoiceTotal − coalesce(insuranceCoverage, 0) − coalesce(invoiceDiscount, 0)`. | BL-013 |
+| AC-008 | `insuranceCoverage <= invoiceTotal + invoiceItemAdjustments` for every row. | BL-010, BL-018 |
+| AC-009 | `invoicePatientSubtotal = invoiceTotal + invoiceItemAdjustments − coalesce(insuranceCoverage, 0) − coalesce(invoiceDiscount, 0)`. | BL-013 |
 | AC-010 | `invoicePatientTotal = invoicePatientSubtotal − coalesce(invoicePatientPayment, 0)`. | BL-014 |
 | AC-011 | `invoiceFinalisedDateTime` is null for encounters whose invoices never transitioned to `finalised`. | BL-015 |
 | AC-012 | The standard variant returns only non-sensitive facilities; the sensitive variant returns only sensitive facilities. | BL-017 |
-| AC-013 | An encounter whose every non-cancelled invoice has no items reads 0 — not null — for `invoiceTotal`, `invoicePatientSubtotal` and `invoicePatientTotal`. | BL-013, BL-014, BL-018 |
+| AC-013 | An encounter whose every non-cancelled invoice has no items reads 0 — not null — for `invoiceTotal`, `invoiceItemAdjustments`, `invoicePatientSubtotal` and `invoicePatientTotal`. | BL-013, BL-014, BL-018 |
 
 Tests: there is no `.yml` for this report (report layer is exempt from generic-test files per `dbt-conventions.md` § Documentation). ACs above are validated by manual run + spot-check against the Tamanu UI.
 
@@ -131,3 +132,4 @@ _None._
 | 2026-06-23 | Maui team | Renamed report from `encounter-invoice-audit-line-list` to `audit-encounter-invoice` (config/SQL `audit-encounter-invoice.*`, display name "Audit - encounter invoice"). No logic change. |
 | 2026-09-02 | Maui team | Extracted the `encounters_in_scope` CTE into the shared `encounters_core()` macro; BL-001 and BL-017 now resolve there. No behaviour change — verified by a full-project compiled diff (2 of 2952 models changed, both intended, token-identical apart from the macro's superset columns and one redundant wrapping paren). |
 | 2026-09-04 | Maui team | BL-013's patient subtotal now sums `ds__encounter_invoices.patient_subtotal` (its new BL-020) instead of re-deriving the formula from the aggregated invoice/insurance/discount sums, prompted by `tamanu-dbt-fsm`'s new `daily-cash-collection-summary` report needing the same formula. The two aggregation orders agree wherever any invoice has items, but not when every non-cancelled invoice on an encounter has none: summing a null per-invoice subtotal yields null where the old expression's `coalesce(sum(...), 0)` yielded 0. The summed subtotal is therefore coalesced to 0, restoring exact equivalence, and new AC-013 (`test_encounter_invoice_audit_no_items_invoice`) pins the case. |
+| 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `invoiceTotal` is the total before item adjustments, matching the app's "Invoice total", and item adjustments are their own column, `invoiceItemAdjustments`. Patient subtotal and patient total are unchanged in value. |

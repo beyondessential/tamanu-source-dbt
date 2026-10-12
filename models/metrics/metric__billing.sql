@@ -1,7 +1,7 @@
 -- metric__billing -- D5 metric view for the patient billing indicators registered in
--- documentations/metrics/billing.yml: invoice, invoice_total, invoice_insurance_coverage,
--- invoice_discount, invoice_patient_total, invoice_patient_paid, invoice_patient_balance,
--- invoice_patient_payment and invoice_seen_by_billing.
+-- documentations/metrics/billing.yml: invoice, invoice_total, invoice_item_adjustment,
+-- invoice_insurance_coverage, invoice_discount, invoice_patient_total, invoice_patient_paid,
+-- invoice_patient_balance, invoice_patient_payment and invoice_seen_by_billing.
 -- See specs/dbt-model/metric__billing.md for the BL clauses this model implements
 -- (BL-001..BL-021).
 --
@@ -48,6 +48,7 @@ invoice_context as (
         -- BL-004: the dataset's resolved figures, unchanged, with NULL emitted as 0
         -- BL-017: the invoice's current figures, so a later change restates its month
         coalesce(i.invoice_total, 0) as invoice_total,
+        coalesce(i.item_adjustment, 0) as item_adjustment,
         coalesce(i.insurance_coverage, 0) as insurance_coverage,
         coalesce(i.invoice_discount, 0) as invoice_discount,
         coalesce(i.patient_subtotal, 0) as patient_total,
@@ -98,6 +99,7 @@ invoice_rows as (
         ('invoice', 1::numeric),
         -- BL-004: the invoice amounts
         ('invoice_total', ic.invoice_total),
+        ('invoice_item_adjustment', ic.item_adjustment),
         ('invoice_insurance_coverage', ic.insurance_coverage),
         ('invoice_discount', ic.invoice_discount),
         ('invoice_patient_total', ic.patient_total),

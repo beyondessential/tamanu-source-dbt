@@ -38,6 +38,7 @@ models:
                 values:
                   - invoice
                   - invoice_total
+                  - invoice_item_adjustment
                   - invoice_insurance_coverage
                   - invoice_discount
                   - invoice_patient_total

@@ -1,0 +1,142 @@
+unit_tests:
+  - name: test_int__encounter_invoice_amounts_item_adjustment
+    model: int__encounter_invoice_amounts
+    description: >
+      AC-014 (ds__encounter_invoices): invoice_total is the total before item
+      adjustments and item_adjustment is their signed sum, mirroring
+      invoiceItemsUndiscountedTotal and itemAdjustmentsTotal. A $100 line with a
+      10% discount (-10), a $30 line with a $5 flat discount (-5) and a 2 x $20 line
+      with a 25% markup (+10) give invoice_total = 170 and item_adjustment = -5. The
+      10% invoice-level discount applies to the adjusted total, 165, so
+      invoice_discount = 16.50.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, '2024-01-15 11:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV' as display_id
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_001'::text as id, '00000000-0000-0000-0000-000000000001' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 100.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id, false as is_fixed_price_final
+          union all
+          select 'item_002', '00000000-0000-0000-0000-000000000001', 'Dressing', '2024-01-15'::date, 'prod_002', 30.00::numeric, null::numeric, 1::integer, null::text, null::text, false
+          union all
+          select 'item_003', '00000000-0000-0000-0000-000000000001', 'Injection', '2024-01-16'::date, 'prod_003', 20.00::numeric, null::numeric, 2::integer, null::text, null::text, false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, null::text as category, false as insurable, null::text as name
+          union all
+          select 'prod_002', null::text, false, null::text
+          union all
+          select 'prod_003', null::text, false, null::text
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id, null::date as date where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-0000000000d1'::text as id, 'item_001'::text as invoice_item_id, 0.10::numeric as amount, 'percentage' as type
+          union all
+          select '00000000-0000-0000-0000-0000000000d2', 'item_002', 5.00::numeric, 'amount'
+          union all
+          -- a markup is a negative discount
+          select '00000000-0000-0000-0000-0000000000d3', 'item_003', -0.25::numeric, 'percentage'
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 0.10::numeric as percentage, '2024-01-16 10:00:00'::timestamp as applied_time, 'disc_001' as id
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden, null::boolean as is_fixed_price where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          '00000000-0000-0000-0000-000000000001' as invoice_id,
+          'enc_001' as encounter_id,
+          'in_progress' as status,
+          '2024-01-14 09:00:00'::timestamp as invoice_datetime,
+          null::timestamp as invoice_finalised_datetime,
+          170.0000::numeric as invoice_total,
+          -5.0000::numeric as item_adjustment,
+          null::numeric as insurance_coverage,
+          16.50::numeric as invoice_discount,
+          null::numeric as patient_payment,
+          null::numeric as insurer_payment,
+          'Consultation, Dressing, Injection' as products_no_category,
+          'INV' as display_id
