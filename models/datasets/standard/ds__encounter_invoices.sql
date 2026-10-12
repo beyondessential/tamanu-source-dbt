@@ -3,7 +3,7 @@
 -- clinical__cost can share the same source of truth without a backwards
 -- clinical->ds dependency (D2). This dataset is a thin projection over it: the
 -- projected columns carry that model's semantics unchanged, and patient_subtotal
--- is derived here from three of them.
+-- is derived here from four of them.
 -- See specs/dbt-model/clinical__cost.md.
 
 select
@@ -13,6 +13,7 @@ select
     invoice_datetime,
     invoice_finalised_datetime,
     invoice_total,
+    item_adjustment,
     insurance_coverage,
     invoice_discount,
     patient_payment,
@@ -20,6 +21,7 @@ select
     -- subtotal, resolved once here so consumers read one definition rather
     -- than re-deriving it. Null when invoice_total is null (a no-items
     -- invoice), which a consumer aggregating it has to coalesce.
-    invoice_total - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal,
+    invoice_total + item_adjustment
+    - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal,
     products_no_category
 from {{ ref('int__encounter_invoice_amounts') }}

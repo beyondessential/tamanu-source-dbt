@@ -39,23 +39,47 @@ metrics:
   kind: metric
   name: Invoice total
   description: >-
-    The amount charged on an invoice: the sum of its items after item discounts. One row per
-    invoice, dated to the invoice.
+    The amount charged on an invoice before item adjustments: the sum of its items at their
+    price. One row per invoice, dated to the invoice.
   numerator_description: >-
-    Sum of discounted item totals on non-cancelled invoices, on the invoice date
+    Sum of item totals before item adjustments on non-cancelled invoices, on the invoice date
   denominator_description: null
   data_source: tamanu
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    Follows Tamanu's own invoice arithmetic, so the figure matches the invoice screen. It is the
-    invoice's current total, so a change after the invoice's month restates that month.
+    Follows Tamanu's own invoice arithmetic, so the figure matches the invoice screen's Invoice
+    total. It is the invoice's current total, so a change after the invoice's month restates
+    that month.
   unit: currency
   subject_grain: invoice
   disaggregations: *billing_disaggregations
   variant_of: null
   owner: bes-maui
   status: approved
+  spec_path: specs/dbt-model/metric__billing.md
+- metric_id: invoice_item_adjustment
+  kind: metric
+  name: Item adjustments
+  description: >-
+    The change item adjustments make to an invoice's total: negative for a discount, positive
+    for a markup. One row per invoice, dated to the invoice.
+  numerator_description: >-
+    Sum of item adjustments on non-cancelled invoices, on the invoice date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Follows Tamanu's own invoice arithmetic, so the figure matches the invoice screen's Item
+    adjustments. invoice_total plus this figure is what the items charge, before insurance and
+    the invoice-level discount.
+  unit: currency
+  subject_grain: invoice
+  disaggregations: *billing_disaggregations
+  variant_of: null
+  owner: bes-maui
+  status: draft
   spec_path: specs/dbt-model/metric__billing.md
 - metric_id: invoice_insurance_coverage
   kind: metric
@@ -72,7 +96,8 @@ metrics:
   definition_rationale: >-
     The share insurance is expected to cover, not the amount insurers have paid. Insurers may
     reimburse by capitation rather than per invoice, so per-invoice receipts do not describe the
-    bill. Divide by invoice_total for coverage as a proportion of the bill.
+    bill. Divide by invoice_total plus invoice_item_adjustment for coverage as a proportion of
+    the bill.
   unit: currency
   subject_grain: invoice
   disaggregations: *billing_disaggregations
@@ -93,8 +118,9 @@ metrics:
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    Follows Tamanu's own invoice arithmetic. Item-level discounts are already inside
-    invoice_total, so this is the invoice-level discount only.
+    Follows Tamanu's own invoice arithmetic. Item-level discounts and markups are
+    invoice_item_adjustment, so this is the invoice-level discount only. The invoice screen
+    shows it as the fee scale adjustment.
   unit: currency
   subject_grain: invoice
   disaggregations: *billing_disaggregations
@@ -106,18 +132,18 @@ metrics:
   kind: metric
   name: Patient total
   description: >-
-    The patient's share of an invoice: the invoice total less insurance coverage and the
-    invoice-level discount. One row per invoice, dated to the invoice.
+    The patient's share of an invoice: the invoice total plus item adjustments, less insurance
+    coverage and the invoice-level discount. One row per invoice, dated to the invoice.
   numerator_description: >-
-    Invoice total less insurance coverage and invoice discount, on non-cancelled invoices, on
-    the invoice date
+    Invoice total plus item adjustments, less insurance coverage and invoice discount, on
+    non-cancelled invoices, on the invoice date
   denominator_description: null
   data_source: tamanu
   definition_source: BES
   definition_source_code: null
   definition_rationale: >-
-    Follows Tamanu's own invoice arithmetic. invoice_total equals invoice_insurance_coverage plus
-    invoice_discount plus this figure, invoice by invoice.
+    Follows Tamanu's own invoice arithmetic. invoice_total plus invoice_item_adjustment equals
+    invoice_insurance_coverage plus invoice_discount plus this figure, invoice by invoice.
   unit: currency
   subject_grain: invoice
   disaggregations: *billing_disaggregations

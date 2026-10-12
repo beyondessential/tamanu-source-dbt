@@ -37,7 +37,7 @@ select
 
     -- charged, paid and expected-coverage amounts. Default to 0 so downstream sums
     -- never need coalesce (BL-010)
-    coalesce(a.invoice_total, 0) as total_charge,      -- BL-003
+    coalesce(a.invoice_total + a.item_adjustment, 0) as total_charge,      -- BL-003
     coalesce(a.patient_payment, 0) + coalesce(a.insurer_payment, 0) as total_paid,  -- BL-007
     coalesce(a.patient_payment, 0) as paid_by_patient,   -- BL-005
     coalesce(a.insurer_payment, 0) as paid_by_payer,     -- BL-006

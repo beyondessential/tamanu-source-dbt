@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (design spun off from the Queen of Sheba End-of-day Invoice Report) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-26 |
-| **Last updated** | 2026-07-26 |
+| **Last updated** | 2026-10-13 |
 
 The OMOP-lite `COST` domain — the canonical billing surface for Tamanu invoices,
 mapping the invoice / charge / payment graph onto OMOP CDM v5.4 Standardized
@@ -164,8 +164,8 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
 - **BL-002:** `cost_event_id` is the invoice's encounter id, and is an FK to
   `clinical__visit_occurrence.visit_occurrence_id`. Every invoice has a non-null
   `encounter_id` upstream, so the FK is total.
-- **BL-003:** `total_charge` is `int__encounter_invoice_amounts.invoice_total` —
-  the sum of discounted item totals. `clinical__cost` does not re-derive it.
+- **BL-003:** `total_charge` is `int__encounter_invoice_amounts.invoice_total` plus
+  its `item_adjustment` — the sum of discounted item totals.
 - **BL-004:** `amount_allowed` is `int__encounter_invoice_amounts.insurance_coverage`
   (the amount insurance is expected to cover) and is kept strictly separate from
   `paid_by_payer` (money the insurer has actually paid). Coverage is an
@@ -278,3 +278,4 @@ implementation to reconcile.
 |---|---|---|
 | 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. Payment-method split and shared-arithmetic layering resolved. AC tests run green against the 2.57 replica; status → `implemented` |
 | 2026-10-02 | Maui team | Payments reach `int__encounter_invoice_amounts` through the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`), with no change to `paid_by_patient` or `paid_by_payer` |
+| 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `int__encounter_invoice_amounts.invoice_total` is the total before item adjustments, so BL-003 adds `item_adjustment` back. `total_charge` is unchanged in value. |

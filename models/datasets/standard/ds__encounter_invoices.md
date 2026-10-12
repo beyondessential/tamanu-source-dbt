@@ -17,8 +17,14 @@ deployment-local time. NULL until the invoice is finalised.
 {% enddocs %}
 
 {% docs ds__encounter_invoices__invoice_total %}
-Sum of the discounted item totals on the invoice (unit price, then item-level
-discount, times quantity). NULL when the invoice has no items.
+Sum of the item totals on the invoice before item adjustments: unit price times
+quantity, or the price once for a fixed-price item. The invoice screen's "Invoice
+total". NULL when the invoice has no items.
+{% enddocs %}
+
+{% docs ds__encounter_invoices__item_adjustment %}
+Sum of the item adjustments on the invoice: negative for a discount, positive for a
+markup. The invoice screen's "Item adjustments". NULL when the invoice has no items.
 {% enddocs %}
 
 {% docs ds__encounter_invoices__insurance_coverage %}
@@ -38,7 +44,8 @@ payments are excluded.
 {% enddocs %}
 
 {% docs ds__encounter_invoices__patient_subtotal %}
-Invoice total less insurance coverage and invoice-level discount — the amount
+Invoice total plus item adjustments, less insurance coverage and invoice-level
+discount — the amount
 billed to the patient before payments are netted off. NULL when `invoice_total`
 is NULL (the invoice has no items).
 {% enddocs %}

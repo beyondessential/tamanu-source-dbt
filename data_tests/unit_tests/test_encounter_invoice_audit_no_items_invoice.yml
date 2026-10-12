@@ -61,7 +61,7 @@ unit_tests:
           -- A no-items invoice as ds__encounter_invoices emits it: invoice_total
           -- null (left join to invoice_items_agg found nothing), so patient_subtotal
           -- is null too, while invoice_discount is still 0.00 (never null).
-          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-10 09:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, null::numeric as invoice_total, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, null::numeric as patient_subtotal, null::text as products_no_category
+          select '00000000-0000-0000-0000-000000000001' as invoice_id, 'enc_001' as encounter_id, 'in_progress' as status, '2024-01-10 09:00:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, null::numeric as invoice_total, null::numeric as item_adjustment, null::numeric as insurance_coverage, 0.00::numeric as invoice_discount, null::numeric as patient_payment, null::numeric as patient_subtotal, null::text as products_no_category
 
     expect:
       format: sql
@@ -82,6 +82,7 @@ unit_tests:
           null::text as "Supervising clinician",
           null::text as "Invoice finalised date and time",
           0.00::numeric as "Invoice total",
+          0.00::numeric as "Item adjustments",
           null::numeric as "Insurance coverage",
           0.00::numeric as "Patient subtotal",
           null::numeric as "Patient payment",

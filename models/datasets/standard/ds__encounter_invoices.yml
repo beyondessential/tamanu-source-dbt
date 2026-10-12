@@ -43,6 +43,9 @@ models:
       - name: invoice_total
         data_type: numeric
         description: "{{ doc('ds__encounter_invoices__invoice_total') }}"
+      - name: item_adjustment
+        data_type: numeric
+        description: "{{ doc('ds__encounter_invoices__item_adjustment') }}"
       - name: insurance_coverage
         data_type: numeric
         description: "{{ doc('ds__encounter_invoices__insurance_coverage') }}"

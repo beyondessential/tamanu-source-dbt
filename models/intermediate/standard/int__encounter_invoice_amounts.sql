@@ -1,6 +1,7 @@
 -- int__encounter_invoice_amounts -- shared per-invoice billing arithmetic.
--- One row per invoice: item totals and insurance coverage (aggregated from the shared
--- per-item arithmetic in the invoice_item_amounts() macro), invoice-level discount, net
+-- One row per invoice: item totals, item adjustments and insurance coverage (aggregated
+-- from the shared per-item arithmetic in the invoice_item_amounts() macro), invoice-level
+-- discount, net
 -- patient payment, net insurer payment, and finalisation. Consumed by both
 -- ds__encounter_invoices (dataset) and clinical__cost (OMOP COST) so there is one source
 -- of truth without a backwards clinical->ds dependency (D2). The per-item arithmetic is
@@ -41,7 +42,6 @@ insurance_coverage_agg as (
 ),
 
 invoice_items_agg as (
-    -- BL-009: invoice item total (sum of discounted item totals)
     select
         invoice_id,
         -- BL-016: names of the invoice's products that have no category, ordered by item date
@@ -49,6 +49,10 @@ invoice_items_agg as (
             product_name, ', '
             order by date
         ) filter (where category is null) as products_no_category,
+        -- BL-009: invoice total before item adjustments (invoiceItemsUndiscountedTotal)
+        sum(discounted_total - item_adjustment) as invoice_total,
+        -- BL-021: signed item adjustments (itemAdjustmentsTotal)
+        sum(item_adjustment) as item_adjustment,
         sum(discounted_total) as item_total
     from items
     group by invoice_id
@@ -116,11 +120,11 @@ select
     i.datetime as invoice_datetime,
     -- BL-015: finalisation timestamp, in deployment-local time (null until finalised)
     inf.finalised_at as invoice_finalised_datetime,
-    -- BL-009: invoice total (sum of discounted item totals)
-    iia.item_total as invoice_total,
+    iia.invoice_total,
+    iia.item_adjustment,
     ica.insurance_coverage,
     -- BL-011: invoice-level discount amount, percentage applied to the patient
-    -- subtotal (item total less insurance coverage), mirroring
+    -- subtotal (discounted item total less insurance coverage), mirroring
     -- getInvoiceLevelDiscountAmount over patientSubtotal
     round(
         (coalesce(iia.item_total, 0) - coalesce(ica.insurance_coverage, 0))

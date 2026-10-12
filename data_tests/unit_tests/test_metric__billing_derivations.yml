@@ -6,7 +6,8 @@ unit_tests:
       patient payment and an insurer payment, and only the patient payment is emitted (BL-007).
       inv_2 is an emergency encounter that became an admission, so it carries concept 262
       (BL-019), and its payment was refunded, so the pair nets to 0 against a NULL patient paid
-      (BL-004, BL-008). inv_3 is overpaid, so its balance is negative (BL-005). inv_4 has no
+      (BL-004, BL-008). inv_3 is overpaid, so its balance is negative (BL-005). inv_1 has an
+      item discount and inv_3 an item markup, each carried as a signed item adjustment (BL-004). inv_4 has no
       items, so every amount is 0, and its survey-response encounter carries concept 0
       (BL-004, BL-019). inv_5 is cancelled, so it and its payment are excluded (BL-002).
       inv_1 and inv_3 are finalised and inv_2 has a patient payment, so all three are seen by
@@ -15,15 +16,15 @@ unit_tests:
       - input: ref('ds__encounter_invoices')
         format: sql
         rows: |
-          select 'inv_1' as invoice_id, 'enc_1' as encounter_id, 'finalised' as status, '2026-08-03 09:15:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 100.00::numeric as invoice_total, 40.00::numeric as insurance_coverage, 6.00::numeric as invoice_discount, 30.00::numeric as patient_payment, 54.00::numeric as patient_subtotal, null::text as products_no_category
+          select 'inv_1' as invoice_id, 'enc_1' as encounter_id, 'finalised' as status, '2026-08-03 09:15:00'::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime, 110.00::numeric as invoice_total, -10.00::numeric as item_adjustment, 40.00::numeric as insurance_coverage, 6.00::numeric as invoice_discount, 30.00::numeric as patient_payment, 54.00::numeric as patient_subtotal, null::text as products_no_category
           union all
-          select 'inv_2', 'enc_2', 'in_progress', '2026-08-04 22:40:00'::timestamp, null::timestamp, 200.00::numeric, 120.00::numeric, 0.00::numeric, null::numeric, 80.00::numeric, null::text
+          select 'inv_2', 'enc_2', 'in_progress', '2026-08-04 22:40:00'::timestamp, null::timestamp, 200.00::numeric, 0.00::numeric, 120.00::numeric, 0.00::numeric, null::numeric, 80.00::numeric, null::text
           union all
-          select 'inv_3', 'enc_3', 'finalised', '2026-08-05 11:00:00'::timestamp, null::timestamp, 10.00::numeric, null::numeric, 0.00::numeric, 15.00::numeric, 10.00::numeric, null::text
+          select 'inv_3', 'enc_3', 'finalised', '2026-08-05 11:00:00'::timestamp, null::timestamp, 8.00::numeric, 2.00::numeric, null::numeric, 0.00::numeric, 15.00::numeric, 10.00::numeric, null::text
           union all
-          select 'inv_4', 'enc_4', 'in_progress', '2026-08-06 08:00:00'::timestamp, null::timestamp, null::numeric, null::numeric, 0.00::numeric, null::numeric, null::numeric, null::text
+          select 'inv_4', 'enc_4', 'in_progress', '2026-08-06 08:00:00'::timestamp, null::timestamp, null::numeric, null::numeric, null::numeric, 0.00::numeric, null::numeric, null::numeric, null::text
           union all
-          select 'inv_5', 'enc_5', 'cancelled', '2026-08-07 10:00:00'::timestamp, null::timestamp, 50.00::numeric, 0.00::numeric, 0.00::numeric, 50.00::numeric, 50.00::numeric, null::text
+          select 'inv_5', 'enc_5', 'cancelled', '2026-08-07 10:00:00'::timestamp, null::timestamp, 50.00::numeric, 0.00::numeric, 0.00::numeric, 0.00::numeric, 50.00::numeric, 50.00::numeric, null::text
       - input: ref('clinical__visit_occurrence')
         format: sql
         rows: |
@@ -85,7 +86,9 @@ unit_tests:
       rows: |
         select 'invoice' as metric_id, null::text as variant_id, 'inv_1' as subject_id, '2026-08-03 09:15:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'inv_1' as invoice_id, 'finalised' as invoice_status, 'fac_1' as facility_id, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'dept_opd' as department_id, 'clinic' as encounter_type
         union all
-        select 'invoice_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 100.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 9202, 'Outpatient Visit', 'dept_opd', 'clinic'
+        select 'invoice_total', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 110.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 9202, 'Outpatient Visit', 'dept_opd', 'clinic'
+        union all
+        select 'invoice_item_adjustment', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', -10.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 9202, 'Outpatient Visit', 'dept_opd', 'clinic'
         union all
         select 'invoice_insurance_coverage', null::text, 'inv_1', '2026-08-03 09:15:00'::timestamp, null::timestamp, 'minute', 40.00::numeric, null::boolean, 'inv_1', 'finalised', 'fac_1', 9202, 'Outpatient Visit', 'dept_opd', 'clinic'
         union all
@@ -103,6 +106,8 @@ unit_tests:
         union all
         select 'invoice_total', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 200.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 262, 'Emergency Room and Inpatient Visit', 'dept_ward', 'admission'
         union all
+        select 'invoice_item_adjustment', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 262, 'Emergency Room and Inpatient Visit', 'dept_ward', 'admission'
+        union all
         select 'invoice_insurance_coverage', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 120.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 262, 'Emergency Room and Inpatient Visit', 'dept_ward', 'admission'
         union all
         select 'invoice_discount', null::text, 'inv_2', '2026-08-04 22:40:00'::timestamp, null::timestamp, 'minute', 0.00::numeric, null::boolean, 'inv_2', 'in_progress', 'fac_1', 262, 'Emergency Room and Inpatient Visit', 'dept_ward', 'admission'
@@ -119,7 +124,9 @@ unit_tests:
         union all
         select 'invoice', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
         union all
-        select 'invoice_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 10.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
+        select 'invoice_total', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 8.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
+        union all
+        select 'invoice_item_adjustment', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 2.00::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
         union all
         select 'invoice_insurance_coverage', null::text, 'inv_3', '2026-08-05 11:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_3', 'finalised', 'fac_1', 9203, 'Emergency Room Visit', 'dept_ed', 'emergency'
         union all
@@ -136,6 +143,8 @@ unit_tests:
         select 'invoice', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
         union all
         select 'invoice_total', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
+        union all
+        select 'invoice_item_adjustment', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
         union all
         select 'invoice_insurance_coverage', null::text, 'inv_4', '2026-08-06 08:00:00'::timestamp, null::timestamp, 'minute', 0::numeric, null::boolean, 'inv_4', 'in_progress', 'fac_1', 0, 'No matching concept', null::text, 'surveyResponse'
         union all
