@@ -122,6 +122,8 @@ attendances as (
         coalesce(vo.visit_concept_id = 262, false) as is_admitted,
         -- BL-012: the triage practitioner's acuity category, '1' to '5'
         tr.score as triage_score_raw,
+        -- BL-021: the triage's chief complaint, resolved to its reference-data name
+        complaint.name as chief_complaint_raw,
         -- BL-014: waiting time is triage to the start of active care, which is when the
         -- triage is closed. A time recorded before the triage is unusable.
         case
@@ -182,6 +184,10 @@ attendances as (
     -- the backstop if that ever stops holding.
     left join triages tr
         on tr.encounter_id = vd.visit_occurrence_id
+    -- BL-021: left join -- a triage with no chief complaint, or none that resolves, still
+    -- counts. reference_data is keyed on id, so this cannot fan out.
+    left join reference_data complaint
+        on complaint.id = tr.chief_complaint_id
     -- BL-020: left join -- an attendance whose intake segment carries no clinician still
     -- counts. ref__provider is one row per user, so this cannot fan out.
     left join providers prov
@@ -231,6 +237,10 @@ select
     -- with a blank score. Never NULL -- the data tables expose these as array filters, and
     -- Tupaia's array filter drops NULL rows.
     coalesce(triage_score_raw, 'Not recorded') as triage_score,
+    -- BL-021: 'Not recorded' covers an attendance with no triage row, a triage with no chief
+    -- complaint, and one whose complaint no longer resolves. Never NULL, for the same reason
+    -- as triage_score.
+    coalesce(chief_complaint_raw, 'Not recorded') as chief_complaint,
     -- BL-017
     coalesce(discharge_disposition_raw, 'Not recorded') as discharge_disposition,
     -- BL-020: 'Not recorded' covers an intake segment with no clinician and a user record
