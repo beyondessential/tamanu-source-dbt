@@ -72,5 +72,7 @@ select
     ed_start__hour,
     is_admitted,
     -- BL-020: the clinician on the intake segment, for a "by clinician" card
-    clinician
+    clinician,
+    -- BL-021: the triage's chief complaint, for a presenting-complaint casemix card
+    chief_complaint
 from ed_visits
