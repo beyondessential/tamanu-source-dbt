@@ -24,7 +24,7 @@ package-lock.yml
 uv.lock
 
 # Build and generated files
-compiled/
+compiled/*/*.json
 /logs/
 macros/default_translations.sql
 models/surveys/

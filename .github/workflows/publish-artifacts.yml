@@ -1,8 +1,7 @@
 name: Publish Artifacts
 
-# Reusable workflow only: tamanu-dbt-* deployment repos call it on their own
-# releases. It no longer runs on this repo's releases, which publish no bundle,
-# so the standard-only paths below are not reached.
+# Runs directly in this repo on release, and is also callable as a reusable
+# workflow from any tamanu-dbt-* deployment repo.
 #
 # Deployment name is derived from the calling repository name:
 #   tamanu-source-dbt  → standard
@@ -18,6 +17,8 @@ name: Publish Artifacts
 # and commits the result straight back to main.
 
 on:
+  release:
+    types: [published]
   workflow_call:
 
 jobs:
