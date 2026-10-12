@@ -18,7 +18,9 @@ unit_tests:
       BL-017: discharge_disposition resolves through the disposition reference data.
       BL-020: clinician is the intake segment's own provider resolved to a name, falling
       back to 'Not recorded' both for a segment with no clinician and for one naming a
-      user record that no longer exists.
+      user record that no longer exists. BL-021: chief_complaint resolves through the
+      reference data, falling back to 'Not recorded' for a triage with no complaint and for
+      a missing triage row.
 
     given:
       # ed_1 boards then moves: intake 08:30, encounter_type flips at 11:45 *at the same
@@ -120,12 +122,13 @@ unit_tests:
 
       # BL-014: ed_1 triaged 08:30 and seen 08:32 -- a 2 minute wait. ed_2 triaged 22:00 and
       # seen 22:45 -- 45 minutes. The rest have no triage row, so their wait is NULL.
+      # BL-021: ed_1's chief complaint resolves; ed_2's triage records none.
       - input: ref('triages')
         format: sql
         rows: |
-          select 'ed_1' as encounter_id, '1' as score, '2024-05-15 08:30'::timestamp as triage_datetime, '2024-05-15 08:32'::timestamp as closed_datetime
+          select 'ed_1' as encounter_id, '1' as score, '2024-05-15 08:30'::timestamp as triage_datetime, '2024-05-15 08:32'::timestamp as closed_datetime, 'cc_chest' as chief_complaint_id
           union all
-          select 'ed_2', '3', '2024-05-16 22:00'::timestamp, '2024-05-16 22:45'::timestamp
+          select 'ed_2', '3', '2024-05-16 22:00'::timestamp, '2024-05-16 22:45'::timestamp, null::text
 
       # BL-013: ed_1 carries two is_primary rows -- the earlier (J18.9) must win, with its
       # reference-data name carried alongside. The non-primary row must be ignored. ed_2's
@@ -156,6 +159,8 @@ unit_tests:
           select 'disp_home' as id, 'Home' as name
           union all
           select 'disp_transfer', 'Transfer to another facility'
+          union all
+          select 'cc_chest', 'Chest pain'
 
       # BL-020: usr_deleted is deliberately absent -- a segment naming a user record that has
       # since been deleted must fall back to 'Not recorded', not drop the attendance.
@@ -169,16 +174,16 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 1470.00::numeric as length_of_stay__minutes, 'J18.9' as principal_diagnosis_code, 'Pneumonia, unspecified organism' as principal_diagnosis, '1' as triage_score, 'Home' as discharge_disposition, 8 as ed_start__hour, 'Dr Alice Nguyen' as clinician
+        select 'ed_1' as visit_occurrence_id, '2024-05-15 08:30'::timestamp as ed_start__datetime, '2024-05-15 13:00'::timestamp as ed_end__datetime, '2024-05-16 09:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'female' as sex, 40 as age_years, true as is_admitted, 120::bigint as waiting_time__seconds, 2.00::numeric as waiting_time__minutes, 16200::bigint as ed_time__seconds, 270.00::numeric as ed_time__minutes, 88200::bigint as length_of_stay__seconds, 1470.00::numeric as length_of_stay__minutes, 'J18.9' as principal_diagnosis_code, 'Pneumonia, unspecified organism' as principal_diagnosis, '1' as triage_score, 'Chest pain' as chief_complaint, 'Home' as discharge_disposition, 8 as ed_start__hour, 'Dr Alice Nguyen' as clinician
         union all
-        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 300.00::numeric, 'ZZ999', 'Unspecified condition', '3', 'Transfer to another facility', 22, 'Dr Ben Osei'
+        select 'ed_2', '2024-05-16 22:00'::timestamp, '2024-05-17 03:00'::timestamp, '2024-05-17 03:00'::timestamp, 'fac_1', 'female', 40, false, 2700::bigint, 45.00::numeric, 18000::bigint, 300.00::numeric, 18000::bigint, 300.00::numeric, 'ZZ999', 'Unspecified condition', '3', 'Not recorded', 'Transfer to another facility', 22, 'Dr Ben Osei'
         union all
-        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 6, 'Not recorded'
+        select 'ed_3', '2024-05-18 06:05'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 'Not recorded', 6, 'Not recorded'
         union all
-        select 'ed_4', '2024-05-21 07:00'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Not recorded'
+        select 'ed_4', '2024-05-21 07:00'::timestamp, null::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, null::bigint, null::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 'Not recorded', 7, 'Not recorded'
         union all
-        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 09:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 7200::bigint, 120.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
+        select 'ed_5', '2024-05-22 07:00'::timestamp, '2024-05-22 09:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 7200::bigint, 120.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
         union all
-        select 'ed_6', '2024-05-23 07:00'::timestamp, '2024-05-23 10:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 10800::bigint, 180.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
+        select 'ed_6', '2024-05-23 07:00'::timestamp, '2024-05-23 10:00'::timestamp, null::timestamp, 'fac_1', 'female', 40, true, null::bigint, null::numeric, 10800::bigint, 180.00::numeric, null::bigint, null::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
         union all
-        select 'ed_7', '2024-05-24 07:00'::timestamp, '2024-05-24 08:00'::timestamp, '2024-05-24 12:00'::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, 18000::bigint, 300.00::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'
+        select 'ed_7', '2024-05-24 07:00'::timestamp, '2024-05-24 08:00'::timestamp, '2024-05-24 12:00'::timestamp, 'fac_1', 'female', 40, false, null::bigint, null::numeric, 3600::bigint, 60.00::numeric, 18000::bigint, 300.00::numeric, null::text, null::text, 'Not recorded', 'Not recorded', 'Not recorded', 7, 'Dr Alice Nguyen'

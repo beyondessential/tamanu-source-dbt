@@ -155,6 +155,8 @@ where trim(d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
+        -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
+        'chief_complaint',
         -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
         -- opd_visit, and the admitting clinician's on opd_visit (MAUI-6906)
         'clinician_designation',
