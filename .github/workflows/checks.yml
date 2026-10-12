@@ -5,8 +5,9 @@ name: Checks
 # sync with their source CSVs. Both are generated but committed, so they can
 # silently drift if someone edits a CSV and forgets to regenerate.
 #
-# list_tamanu_reports.md is guarded the same way: tamanu-dbt-* repos copy it out
-# of dbt_packages, so a report added or renamed here must ship an updated list.
+# list_tamanu_reports.md is NOT guarded here -- it's regenerated and committed
+# to main automatically by publish-artifacts.yml's list-reports job on every
+# release cut from main, so it can't drift for long.
 #
 # dbt-unit-tests runs the dbt unit tests against an ephemeral Postgres. They mock
 # every input, so they need a database connection but no Tamanu data -- no secrets,
@@ -61,18 +62,6 @@ jobs:
             exit 1
           fi
           echo "Generated macros are in sync."
-
-      - name: Fail if the report list drifts from the report configs
-        run: |
-          python scripts/list_tamanu_reports.py
-          if ! git diff --quiet -- list_tamanu_reports.md; then
-            echo "::error::list_tamanu_reports.md is out of sync with models/reports/config."
-            echo "Run the generator and commit the result:"
-            echo "  python scripts/list_tamanu_reports.py"
-            git diff -- list_tamanu_reports.md
-            exit 1
-          fi
-          echo "Report list is in sync."
 
   dbt-unit-tests:
     name: dbt unit tests

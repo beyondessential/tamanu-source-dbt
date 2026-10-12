@@ -49,8 +49,9 @@ Quick start:
 2. Click "Run workflow"
 3. Leave version empty for auto-detection or specify a version
 4. Review and merge the generated PR
+5. After merging, run locally: `python scripts/build_reporting_assets.py`
 
-The GitHub Actions workflow updates the version and refreshes source models.
+The GitHub Actions workflow updates the version and refreshes source models. After merging, you need to run the build script locally to prepare models and generate reporting assets (requires database connection).
 
 ## Refresh Tamanu source models
 To refresh the source models from the Tamanu repository, execute the following command:
@@ -60,9 +61,7 @@ This command pulls the source model information from the Tamanu repository based
 
 ## Build Reporting Assets
 
-`tamanu-dbt-*` deployment repos build their reporting bundle with this script, run from
-`dbt_packages/tamanu_source_dbt/scripts/`. Run it here only to check that the models
-build (requires a database connection):
+After upgrading the Tamanu version (via GitHub Actions), build the reporting assets:
 
 ```bash
 python scripts/build_reporting_assets.py
@@ -77,9 +76,7 @@ This script performs the following steps:
 6. Generate language-specific reports for all supported languages
 7. List all Tamanu reports
 
-The generated assets are saved in the `compiled/` folder, which is gitignored. Run
-`python scripts/compile_manifest.py` afterwards to list the reports a build produced.
-The documentation is versioned and placed in a subfolder:
+The generated assets are saved in the `compiled/` folder. The documentation is versioned and placed in a subfolder:
 - Dataset SQL scripts: `compiled/views/reporting_schema_build_script.sql`
 - Compiled report JSON files: `compiled/reports/`
 - Import script: `compiled/reports/importReports.js`
@@ -132,22 +129,46 @@ We will use semantic versioning `< major >`.`< minor >`.`< patch >`. This number
 
 ## Creating a release
 
-A release is a version stamp followed by a tag. No bundle is built or committed here:
-Canopy builds the reporting schema through `build-schema-image.yml`, and `tamanu-dbt-*`
-repos build their own bundle from the tag they pin in `packages.yml`.
+A release is a version bump **and** a compiled bundle, in one PR, followed by a tag.
+Both halves matter: publishing is driven by the tag, but it uploads the bundle committed
+under `compiled/v<version>/`. Tagging a version with no bundle behind it publishes
+nothing — the upload fails on a path that does not exist, or is skipped silently.
 
 Releases are usually cut from the maintenance branch for the version (`2.60`, `2.59`, …),
 not from `main`. `main` carries the next in-development version.
 
-1. Run the **Release** workflow (Actions → Release → Run workflow) with the branch to
-   release. Leave the version empty for the branch's current version if it is untagged
-   (such as the `vX.Y.0` that a Tamanu upgrade sets on `main`), otherwise the next patch.
-   It stamps `dbt_project.yml` and `pyproject.toml` and opens a `release: vX.Y.Z` PR
-   against that branch; if both already carry the version, it opens no PR.
-2. Merge the PR.
-3. Publish a GitHub release: tag `vX.Y.Z`, target the same branch, generate the notes.
-   Only the Maui team can create `v*` tags. Publishing a `vX.Y.0` release also runs
-   `create-version-branch.yml`.
+### The short way
+
+From the version branch you are releasing:
+
+```bash
+uv run --env-file .env python scripts/prepare_release.py
+```
+
+This works out the next patch version, cuts a `release/vX.Y.Z` branch, stamps
+`dbt_project.yml` and `pyproject.toml`, builds the reporting assets, diffs the result
+against the last released bundle, and drafts the commit message and PR body under
+`target/`. It stops before committing — add `--commit` to have the commit made — and
+never pushes or opens the PR.
+
+Before building anything it checks that dbt resolves to the release database matching the
+version being released. Building against the wrong database — a stale `.env` still
+pointing at another version, or a deployment replica — produces artefacts that look
+completely valid and are wrong for the branch. Use `--dry-run` to see what it would do,
+and `--no-db-check` only when preparing a release from an already-built bundle.
+
+### The steps it performs
+
+1. Bump the version in `dbt_project.yml` and `pyproject.toml`
+2. Build the bundle (see [Build Reporting Assets](#build-reporting-assets)); commit the
+   three aggregate artefacts under `compiled/v<version>/`. The per-report JSONs are
+   gitignored build output
+3. Open a PR against the version branch and merge it (merge commit, not squash)
+4. Then draft a GitHub release: choose the version branch, tag it `vX.Y.Z`, and publish
+
+Publishing the release is what triggers `publish-artifacts.yml`, which uploads the bundle
+to S3 and registers it with the meta-server. Never upload bundles by hand. If a release
+publishes nothing, check that `compiled/v<version>/` was committed before the tag was cut.
 
 ## Licence
 
