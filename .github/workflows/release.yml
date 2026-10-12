@@ -1,0 +1,106 @@
+name: Release
+
+# Stamps a release version into dbt_project.yml and pyproject.toml and opens a PR
+# for it. After merging, a Maui member publishes the GitHub release vX.Y.Z on the
+# same branch, so the tagged commit carries its own version stamp.
+#
+# The tag is left to a person on purpose: the "release tags" ruleset only lets the
+# Maui team create v* tags, and a release created with GITHUB_TOKEN would not fire
+# create-version-branch.yml. For the same reason, checks.yml does not run on the
+# PR this opens. It changes only the two version lines.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to release from (a version branch such as 2.64, or main)
+        required: true
+        type: string
+      version:
+        description: Version to release (X.Y.Z). Defaults to the next patch after the branch's current version.
+        required: false
+        type: string
+
+jobs:
+  stamp:
+    name: Stamp the version and open a PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Work out the version
+        id: version
+        # Via env, not interpolation: the inputs would otherwise run as shell.
+        env:
+          BRANCH: ${{ inputs.branch }}
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          current=$(sed -n 's/^version:[[:space:]]*//p' dbt_project.yml | tr -d "\"' ")
+          if [[ ! "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not read a X.Y.Z version from dbt_project.yml (got '$current')"
+            exit 1
+          fi
+
+          if [ -n "$REQUESTED" ]; then
+            next="${REQUESTED#v}"
+          else
+            IFS=. read -r major minor patch <<< "$current"
+            next="$major.$minor.$((patch + 1))"
+          fi
+
+          if [[ ! "$next" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$next' is not a X.Y.Z version"
+            exit 1
+          fi
+          if [ "$(printf '%s\n%s\n' "$current" "$next" | sort -V | tail -1)" != "$next" ] || [ "$current" = "$next" ]; then
+            echo "::error::$next is not higher than the branch's current version $current"
+            exit 1
+          fi
+          if [[ "$BRANCH" =~ ^[0-9]+\.[0-9]+$ ]] && [[ "$next" != "$BRANCH".* ]]; then
+            echo "::error::$next is not in the $BRANCH series"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$next" >/dev/null; then
+            echo "::error::Tag v$next already exists"
+            exit 1
+          fi
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp, push and open the PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ inputs.branch }}
+          CURRENT: ${{ steps.version.outputs.current }}
+          NEXT: ${{ steps.version.outputs.next }}
+        run: |
+          sed -i "s/^version:.*/version: $NEXT/" dbt_project.yml
+          sed -i "s/^version = \".*\"/version = \"$NEXT\"/" pyproject.toml
+          if git diff --quiet; then
+            echo "::error::Stamping changed nothing; check the version lines in both files"
+            exit 1
+          fi
+
+          head="bump/v$NEXT"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$head"
+          git commit -am "release: v$NEXT"
+          git push origin "$head"
+
+          gh pr create --base "$BASE" --head "$head" \
+            --title "release: v$NEXT" \
+            --body "Stamps \`$NEXT\` (from \`$CURRENT\`) into \`dbt_project.yml\` and \`pyproject.toml\`.
+
+          ## After merging
+          Publish a GitHub release: tag \`v$NEXT\`, target \`$BASE\`, and generate the notes.
+
+          ---
+          _Opened by the [Release workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._"
