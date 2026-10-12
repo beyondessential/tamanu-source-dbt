@@ -6,15 +6,19 @@ work out the next version, cut a `release/vX.Y.Z` branch off the version branch,
 both version stamps, build the reporting assets, then verify the result and draft the
 commit message and PR body from the commits since the last bundle.
 
-Stops before `git commit`, `git push` and `gh pr create`. Those stay manual: the push
-and the PR are the steps that are expensive to unwind, so a human reads the summary
-first. Pass --commit to have the commit made for you; the push is never automatic.
+Stops before `git commit`, `git push` and `gh pr create` by default. Those are the
+steps that are expensive to unwind, so a human reads the summary first unless told
+otherwise: --commit makes the release commit; --open-pr additionally pushes the branch
+and opens the PR with `gh pr create` (implies --commit).
 
 Usage:
     uv run --env-file .env python scripts/prepare_release.py
     uv run --env-file .env python scripts/prepare_release.py --dry-run
     uv run --env-file .env python scripts/prepare_release.py --version 2.54.35
     uv run --env-file .env python scripts/prepare_release.py --rebuild --commit
+    uv run --env-file .env python scripts/prepare_release.py --open-pr
+    uv run --env-file .env python scripts/prepare_release.py --open-pr \
+        --trailer "Co-Authored-By: Name <email>"
 
 The `uv run --env-file .env` prefix matters: a bare `dbt` picks up an unpinned version
 and never sees the env file, so it behaves differently from CI.
@@ -146,6 +150,22 @@ def git(*args, check=True):
     )
     if check and result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed:\n{result.stderr.strip()}")
+    return result.stdout.strip()
+
+
+def gh(*args, check=True):
+    """Run a `gh` command and return its stripped stdout. Mirrors `git()` above."""
+    result = subprocess.run(
+        ["gh", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=BASE_DIR,
+        check=False,
+    )
+    if check and result.returncode != 0:
+        raise RuntimeError(f"gh {' '.join(args)} failed:\n{result.stderr.strip()}")
     return result.stdout.strip()
 
 
@@ -413,6 +433,13 @@ def _render_change_list(commits, old_version, bullet="- "):
     return [f"{bullet}{sha} {subject}" for sha, subject in commits]
 
 
+def append_trailers(message, trailers):
+    """Append trailer lines after a blank line, the same convention as a hand-written commit."""
+    if not trailers:
+        return message
+    return message.rstrip("\n") + "\n\n" + "\n".join(trailers) + "\n"
+
+
 def render_commit_message(new_version, old_version, commits, diff_summary):
     """Draft the release commit message."""
     lines = [
@@ -586,7 +613,28 @@ def parse_args(argv=None):
         action="store_true",
         help="Stage the version files and bundle and make the release commit.",
     )
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--open-pr",
+        action="store_true",
+        help=(
+            "Push the release branch and open the PR with `gh pr create`. Implies "
+            "--commit."
+        ),
+    )
+    parser.add_argument(
+        "--trailer",
+        action="append",
+        default=[],
+        help=(
+            "Extra trailer line appended to the drafted commit message, e.g. a "
+            "Co-Authored-By line. Repeatable. The drafted PR body is not affected -- "
+            "it already carries its own attribution."
+        ),
+    )
+    args = parser.parse_args(argv)
+    if args.open_pr:
+        args.commit = True
+    return args
 
 
 def main(argv=None):
@@ -734,6 +782,8 @@ def main(argv=None):
         db_waived=args.no_db_check,
     )
 
+    commit_message = append_trailers(commit_message, args.trailer)
+
     out_dir = BASE_DIR / "target"
     out_dir.mkdir(exist_ok=True)
     message_path = out_dir / f"release-v{new_version}-commit-message.txt"
@@ -766,16 +816,32 @@ def main(argv=None):
         git("commit", "--only", "-F", str(message_path), "--", *changed)
         cprint(f"Committed: {git('log', '--format=%h %s', '-1')}", "success")
 
-    # ---- Hand back to the human ------------------------------------------------
-    cprint("\nPrepared. Review, then push and open the PR yourself:", "info")
-    if not args.commit:
-        print(f"  git commit -F {message_path.relative_to(BASE_DIR)}")
-    print(f"  git push -u origin {release_branch}")
-    print(
-        f'  gh pr create --base {base} '
-        f'--title "release: bump version to {new_version} and rebuild the reporting bundle" '
-        f"--body-file {body_path.relative_to(BASE_DIR)}"
-    )
+    pr_title = f"release: bump version to {new_version} and rebuild the reporting bundle"
+    pr_url = None
+    if args.open_pr:
+        git("push", "-u", "origin", release_branch)
+        cprint(f"Pushed {release_branch} to origin.", "success")
+        pr_url = gh(
+            "pr", "create",
+            "--base", base,
+            "--title", pr_title,
+            "--body-file", str(body_path),
+        )
+        cprint(f"Opened PR: {pr_url}", "success")
+
+    # ---- Hand back to the human -------------------------------------------------
+    if args.open_pr:
+        cprint(f"\nDone: committed, pushed {release_branch}, and opened {pr_url}", "success")
+    else:
+        cprint("\nPrepared. Review, then push and open the PR yourself:", "info")
+        if not args.commit:
+            print(f"  git commit -F {message_path.relative_to(BASE_DIR)}")
+        print(f"  git push -u origin {release_branch}")
+        print(
+            f'  gh pr create --base {base} '
+            f'--title "{pr_title}" '
+            f"--body-file {body_path.relative_to(BASE_DIR)}"
+        )
     return 0
 
 

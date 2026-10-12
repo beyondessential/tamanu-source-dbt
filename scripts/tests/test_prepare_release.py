@@ -4,26 +4,27 @@ Only the logic that does not touch git, dbt or the filesystem is covered here, s
 suite stays runnable in CI where neither a database nor a dbt install is available.
 """
 
-import pytest
-
 import prepare_release
+import pytest
 from prepare_release import (
+    _describe_diff,
     _render_change_list,
+    append_trailers,
     bump_patch,
-    compare_bundles,
     bundle_versions_from_paths,
+    compare_bundles,
     determine_base,
     host_matches_series,
     minor_series,
     normalise,
-    render_pr_body,
+    parse_args,
     parse_commit_log,
     parse_dbt_host,
     parse_version,
     read_dbt_project_version,
+    render_pr_body,
     replace_dbt_project_version,
     replace_pyproject_version,
-    _describe_diff,
 )
 
 
@@ -314,3 +315,44 @@ class TestDiffDescription:
         old = "create view v2.60.12 as select a from t"
         new = "create view v2.60.13 as select b from t"
         assert normalise(old, "2.60.12") != normalise(new, "2.60.13")
+
+
+class TestTrailers:
+    def test_no_trailers_returns_the_message_unchanged(self):
+        assert append_trailers("subject\n\nbody\n", []) == "subject\n\nbody\n"
+
+    def test_appends_after_a_blank_line(self):
+        result = append_trailers("subject\n\nbody", ["Co-Authored-By: A <a@example.com>"])
+        assert result == "subject\n\nbody\n\nCo-Authored-By: A <a@example.com>\n"
+
+    def test_multiple_trailers_stay_on_their_own_lines(self):
+        result = append_trailers("subject", ["Trailer-One: x", "Trailer-Two: y"])
+        assert result.endswith("Trailer-One: x\nTrailer-Two: y\n")
+
+    def test_does_not_duplicate_trailing_blank_lines(self):
+        # A message that already ends in several blank lines must not grow a gap before
+        # the trailer -- the same single blank line separates it either way.
+        result = append_trailers("subject\n\n\n", ["Trailer: x"])
+        assert result == "subject\n\nTrailer: x\n"
+
+
+class TestParseArgs:
+    def test_open_pr_implies_commit(self):
+        args = parse_args(["--open-pr"])
+        assert args.open_pr is True
+        assert args.commit is True
+
+    def test_commit_alone_does_not_imply_open_pr(self):
+        args = parse_args(["--commit"])
+        assert args.commit is True
+        assert args.open_pr is False
+
+    def test_trailer_is_repeatable(self):
+        args = parse_args(["--trailer", "A: 1", "--trailer", "B: 2"])
+        assert args.trailer == ["A: 1", "B: 2"]
+
+    def test_defaults_commit_and_open_pr_to_false(self):
+        args = parse_args([])
+        assert args.commit is False
+        assert args.open_pr is False
+        assert args.trailer == []
