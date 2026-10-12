@@ -194,3 +194,11 @@ one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
 clinician" card. Never NULL -- falls back to 'Not recorded'.
 {% enddocs %}
+
+{% docs metric__inpatient_admission__clinician_designation %}
+That clinician's designations (e.g. Dentist), alphabetical and comma-separated where they hold
+more than one (BL-018). Current designations: Tamanu keeps no history, so a clinician who
+changed role reads the new designation on earlier admissions too. Never NULL -- falls back to
+'Not recorded' where the clinician has none, or the admission has no clinician. Kept apart from
+`clinician` so a filter by name is unaffected; a consumer combines the two for display.
+{% enddocs %}
