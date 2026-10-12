@@ -168,22 +168,14 @@ uv run --env-file .env python scripts/generate_metric_definitions_macro.py
 
 ## Cutting a release
 
-```bash
-# from the version branch being released; --dry-run to preview
-uv run --env-file .env python scripts/prepare_release.py
-```
-
-Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against the last
-released bundle, and drafts the commit message and PR body under `target/`. It stops
-before the commit (`--commit` makes it) and never pushes or opens the PR.
-
-It refuses to build unless dbt resolves to the release database matching the version
-being released — building against a stale `.env` produces artefacts that look valid and
-are wrong for the branch.
-
-A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Tagging a version with no bundle behind it publishes nothing. See
+Run the **Release** workflow (Actions → Release) with the branch to release. It stamps
+the next version into `dbt_project.yml` and `pyproject.toml` and opens a PR. Merge it,
+then publish a GitHub release tagged `vX.Y.Z` on that branch. See
 [README](README.md#creating-a-release).
+
+No bundle is built or committed here. `compiled/` is gitignored: Canopy builds the
+reporting schema through `build-schema-image.yml`, and `tamanu-dbt-*` repos build their
+own bundle with `build_reporting_assets.py`.
 
 ---
 
