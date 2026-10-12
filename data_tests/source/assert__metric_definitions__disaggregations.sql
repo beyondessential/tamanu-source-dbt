@@ -155,6 +155,8 @@ where trim(d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
+        -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
+        'chief_complaint',
         -- death's primary cause from the death record, as recorded, with its reference-data
         -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
         'primary_cause',
