@@ -8,12 +8,12 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
-| **Status** | `implemented` |
+| **Status** | `review` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.57`) |
-| **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) |
+| **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) / [MAUI-6858](https://linear.app/bes/issue/MAUI-6858) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-31 |
+| **Last updated** | 2026-10-12 |
 
 Canonical definition for `ed_visit`: one row per ED attendance, spanning arrival in the ED
 to discharge from hospital at minute resolution.
@@ -65,7 +65,7 @@ attendance counts rather than distinct patients.
 
 ## Output schema
 
-D5 wide format, plus five disaggregation columns and five measure attributes.
+D5 wide format, plus seven disaggregation columns and six measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -88,6 +88,7 @@ D5 wide format, plus five disaggregation columns and five measure attributes.
 | `ed_start__hour` | integer | Local hour of arrival, 0–23 (BL-016). Always populated (AC-016) |
 | `is_admitted` | boolean | Went on to an inpatient admission (BL-005). Always populated (AC-010) |
 | `clinician` | text | The intake segment's own clinician, resolved to a name (BL-020). Always populated (AC-020) |
+| `chief_complaint` | text | The triage's chief complaint, resolved to its reference-data name, or `'Not recorded'` (BL-021). Always populated (AC-021) |
 
 ## Data tables
 
@@ -98,7 +99,7 @@ name points at dbt — and because it keeps a data table's whole configuration, 
 included, in one repo.
 
 `emergency_visit__standard.yml` is the one BES ships. It ranges `period_start` as a date;
-exposes `metric_id`, `facility_id`, `sex`, `triage_score`, `ed_start__hour` and `is_admitted`
+exposes `metric_id`, `facility_id`, `sex`, `triage_score`, `chief_complaint`, `ed_start__hour` and `is_admitted`
 as array filters; groups `principal_diagnosis__icd10_chapter` from `principal_diagnosis_code`
 using the `diagnosis__icd10_chapter` macro (defined here in `macros/` for the deployment layer
 to reuse, but invoked only there — the same division of labour as banding age), bands
@@ -112,7 +113,7 @@ dashboard. This model therefore carries no `data_table_*` meta.
 
 ## Business logic
 
-BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
+BL-003, BL-004, BL-005, BL-007, BL-010 through BL-018, BL-020 and BL-021 are implemented in
 `int__emergency_visits`, shared with `metric__emergency_stay`.
 
 - **BL-001 (registration):** every emitted `metric_id` is registered in
@@ -176,8 +177,9 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   carries an encounter id as its only identifier.
 
   `triage_score` comes from `bases/triages`, which is `classification: restricted` — but that
-  covers the whole triage record including chief-complaint text and practitioner id, whereas an
-  acuity category alone identifies nobody.
+  covers the whole triage record including practitioner id, whereas an acuity category alone
+  identifies nobody. `chief_complaint` (BL-021) is likewise a category from a reference-data
+  list, not free text.
 
   **The line this sets.** Adding a column that identifies the *patient* — patient id, birth date,
   diagnosis, exact arrival timestamp — requires revisiting the `is_sensitive` filter and the
@@ -275,6 +277,9 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
   answers is who received the patient in the emergency department. For an attendance that went
   on to an inpatient admission, the admitting clinician is `metric__inpatient_admission`'s own
   `clinician`, scoped to this same population by its `is_admitted_via_emergency`.
+- **BL-021 (chief complaint):** `chief_complaint` is the reference-data name of the encounter's
+  `triages.chief_complaint_id`, passed through ungrouped and coalesced to `'Not recorded'` where
+  there is no triage, no complaint or no resolving reference-data record.
 
 ## Acceptance criteria
 
@@ -289,7 +294,7 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 | AC-020 | `clinician` is `not_null` | BL-020 | `not_null` |
 | AC-007 | `facility_id` is `not_null` | BL-007 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | BL-011 | `not_null` |
-| AC-009 | The shared base resolves as specified: intake segment and concept 9203 only, `is_admitted` on concept 262, triage, diagnosis, disposition and every derived timing, including a second `is_primary` row not duplicating the attendance | BL-003–BL-005, BL-012–BL-018 | unit test `ac_009_int__emergency_visits_derivations` |
+| AC-009 | The shared base resolves as specified: intake segment and concept 9203 only, `is_admitted` on concept 262, triage, chief complaint, diagnosis, disposition and every derived timing, including a second `is_primary` row not duplicating the attendance | BL-003–BL-005, BL-012–BL-018, BL-021 | unit test `ac_009_int__emergency_visits_derivations` |
 | AC-010 | `is_admitted` is `not_null` | BL-005 | `not_null` |
 | AC-011 | `triage_score` is `not_null` | BL-012 | `not_null` |
 | AC-012 | `period_end`, where present, is at or after `period_start` | BL-002 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
@@ -298,6 +303,7 @@ BL-003, BL-004, BL-005, BL-007 and BL-010 through BL-018 are implemented in
 | AC-016 | `ed_start__hour` is `not_null` and between 0 and 23 | BL-016 | `not_null` + `dbt_expectations.expect_column_values_to_be_between` |
 | AC-018 | The D5 projection: `period_end` is the encounter end, the diagnosis code and name pass through ungrouped, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_018_metric__emergency_visit_projection` |
 | AC-019 | `waiting_time__minutes` is non-negative where present | BL-014 | `dbt_expectations.expect_column_values_to_be_between` |
+| AC-021 | `chief_complaint` is `not_null` | BL-021 | `not_null` |
 
 AC numbers are shared with `metric__emergency_stay` wherever a criterion covers the same clause.
 
@@ -305,7 +311,7 @@ AC numbers are shared with `metric__emergency_stay` wherever a criterion covers 
 
 One active row — `ed_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with
-`disaggregations: facility_id,sex,triage_score,ed_start__hour,is_admitted`.
+`disaggregations: facility_id,sex,triage_score,ed_start__hour,is_admitted,clinician,chief_complaint`.
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`, which
 keeps the registry and the model from drifting.
@@ -320,7 +326,8 @@ keeps the registry and the model from drifting.
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
 | `clinical__condition_occurrence` | `clinical/` | Principal diagnosis code and reference-data name (BL-013) |
 | `locations` | `bases/` | Facility of the intake segment's location (BL-007) |
-| `triages` | `bases/` | Acuity, and the wait and target verdict (BL-012, BL-014) |
+| `triages` | `bases/` | Acuity, chief complaint, and the wait and target verdict (BL-012, BL-014, BL-021) |
+| `reference_data` | `bases/` | Name of the chief complaint (BL-021) and the discharge disposition |
 | `ref__provider` | `ref/` | Display name of the intake segment's clinician (BL-020) |
 | `age_group__who_primary_classification` | `macros/` | Age banding — applied at the deployment layer, not by this model (BL-004, BL-019) |
 | `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping over `principal_diagnosis_code` — applied at the deployment layer, not by this model (BL-013, BL-019) |
@@ -369,5 +376,6 @@ them from configuration alone.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-12 | Maui team | Added `chief_complaint`, the triage's chief complaint resolved to a name (BL-021), for an ED presenting-complaint card (MAUI-6858) |
 | 2026-09-24 | Maui team | Added `clinician`, the intake segment's own clinician resolved to a name (BL-020), so an ED dashboard can rank attendances by clinician (MAUI-6907) |
 | 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |
