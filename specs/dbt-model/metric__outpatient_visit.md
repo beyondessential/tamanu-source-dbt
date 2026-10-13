@@ -82,6 +82,7 @@ D5 wide format, plus seven disaggregation columns and two measure attributes.
 | `admission_clinician_designation` | text | The admitting clinician's designations, comma-separated (BL-014). `not_null` (AC-016) |
 | `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
 | `opd_time__minutes` | numeric | Time in the outpatient department, minutes to 2 dp (BL-011). A measure, not a dimension. NULL while open |
+| `department` | text | Intake segment's own department, resolved to a name (BL-013). Never NULL |
 
 ## Data tables
 
@@ -281,6 +282,12 @@ This model therefore carries no `data_table_*` meta.
   `false`, never NULL (AC-012), covering both a clinician-recorded discharge and an encounter
   with no discharge record at all.
 
+- **BL-013 (department attribution):** `department` is the intake segment's own
+  `department_id`, resolved to a name through `departments` so a consumer can scope to one
+  department (e.g. Dental) via `metric_filters` on a readable value, the same convention
+  `clinician_name` (BL-008) already uses for the clinician rather than an opaque Tamanu id.
+  Never NULL -- falls back to `'Not recorded'`, the same array-filter-safety reasoning
+  `clinician_name` uses (MAUI-6909).
 - **BL-014 (clinician designations):** `clinician_designation` and
   `admission_clinician_designation` are the designations of the attending (BL-008) and admitting
   (BL-010) clinicians -- their `user_designations`, resolved through `reference_data` of type
@@ -310,13 +317,14 @@ This model therefore carries no `data_table_*` meta.
 | AC-012 | `is_auto_discharge` is `not_null` | BL-012 | `not_null` |
 | AC-013 | `opd_time__minutes`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
+| AC-015 | `department` is `not_null` | BL-013 | `not_null` (`ac_017_metric__outpatient_visit_department_not_null`) |
 | AC-016 | `clinician_designation` and `admission_clinician_designation` are `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none, no clinician and no admission read `'Not recorded'` | BL-014 | `not_null` (`ac_018_…`) + unit test `ac_014_metric__outpatient_visit_derivations` |
 
 ## Registry entry
 
 One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with `disaggregations:
-facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge`.
+facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge,department`.
 
 `age_years` and `opd_time__minutes` are absent: they are measures, not dimensions
 (BL-004, BL-011).
@@ -334,6 +342,7 @@ which keeps the registry and the model from drifting.
 | `locations` | `bases/` | Facility and location id of the intake segment's location (BL-006) |
 | `ref__provider` | `ref/` | Attending and admitting clinician display names (BL-008, BL-010) |
 | `discharges` | `bases/` | Discharge note, for the system-discharge flag (BL-012) |
+| `departments` | `bases/` | Department name of the intake segment's own department (BL-013) |
 | `user_designations`, `reference_data` | `bases/` | The attending and admitting clinicians' designations, via `user_designation_names()` (BL-014) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 

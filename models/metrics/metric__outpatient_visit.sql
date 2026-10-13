@@ -33,6 +33,11 @@ provider as (
     select * from {{ ref('ref__provider') }}
 ),
 
+-- BL-013: the intake segment's own department, resolved to a name for metric_filters scoping.
+departments as (
+    select * from {{ ref('departments') }}
+),
+
 -- BL-014: each user's current designations, one row per user, so the two joins below cannot
 -- fan a visit out where a clinician holds several.
 clinician_designations as (
@@ -51,7 +56,9 @@ opd_intake as (
         visit_detail_start_datetime,
         care_site_id,
         -- BL-008: the clinician recorded on the intake segment
-        provider_id
+        provider_id,
+        -- BL-013
+        department_id
     from visit_detail
     where preceding_visit_detail_id is null
         and visit_detail_concept_id = 9202 -- OMOP 'Outpatient Visit'
@@ -131,6 +138,8 @@ outpatient_visits as (
         -- predicate as macros/datasets/discharge_audit.sql BL-004, so the repo holds one
         -- definition of a system discharge.
         coalesce(dis.note like 'Automatically discharged%', false) as is_auto_discharge,
+        -- BL-013
+        coalesce(dept.name, 'Not recorded') as department,
         -- BL-011: intake to the departure resolved above, falling back to the encounter
         -- end. NULL while the encounter is open and nothing has ended the episode.
         case
@@ -170,6 +179,9 @@ outpatient_visits as (
         on clin_des.user_id = clin.provider_id
     left join clinician_designations adm_clin_des
         on adm_clin_des.user_id = adm_clin.provider_id
+    -- left: a visit with no department set still counts
+    left join departments dept
+        on dept.id = i.department_id
 )
 
 -- D5 wide format: value_boolean is unused. period_granularity is 'day' -- period_start and
@@ -214,5 +226,7 @@ select
     -- BL-011: minutes to two decimal places, a fixed scale so the value is stable to
     -- compare. Unbanded and unaveraged, for the same reason as age: those are presentation
     -- choices the consumer makes.
-    round(opd_time__seconds / 60.0, 2) as opd_time__minutes
+    round(opd_time__seconds / 60.0, 2) as opd_time__minutes,
+    -- BL-013
+    department
 from outpatient_visits
