@@ -40,7 +40,11 @@ unit_tests:
           union all
           select 'loc6b', 'L6B', 'Location 6B', null::int, null::varchar, 'fac6b', 'current'
 
+      - input: ref('departments')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
+
     expect:
       format: sql
       rows: |
-        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c6' as subject_id, '2026-01-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac6a' as facility_id, 'female' as sex, 'A06' as diagnosis_code, 'Two segment diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years
+        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c6' as subject_id, '2026-01-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac6a' as facility_id, 'female' as sex, 'A06' as diagnosis_code, 'Two segment diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years, 'Not recorded' as department

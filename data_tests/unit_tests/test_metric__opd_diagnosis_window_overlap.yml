@@ -70,11 +70,15 @@ unit_tests:
           union all
           select 'loc7b', 'L7B', 'Location 7B', null::int, null::varchar, 'fac7', 'current'
 
+      - input: ref('departments')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
+
     expect:
       format: sql
       rows: |
-        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c1' as subject_id, '2026-01-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'A01' as diagnosis_code, 'Pure outpatient diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years
+        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c1' as subject_id, '2026-01-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, 'A01' as diagnosis_code, 'Pure outpatient diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years, 'Not recorded' as department
         union all
-        select 'opd_diagnosis', null::text, 'c3', '2026-01-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac3a', 'female', 'A03', 'Spanning diagnosis', 'confirmed', true, 30
+        select 'opd_diagnosis', null::text, 'c3', '2026-01-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac3a', 'female', 'A03', 'Spanning diagnosis', 'confirmed', true, 30, 'Not recorded'
         union all
-        select 'opd_diagnosis', null::text, 'c7', '2026-03-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac7', 'female', 'A07', 'Admission-first diagnosis', 'confirmed', true, 30
+        select 'opd_diagnosis', null::text, 'c7', '2026-03-01'::date, null::date, 'day', 1::numeric, null::boolean, 'fac7', 'female', 'A07', 'Admission-first diagnosis', 'confirmed', true, 30, 'Not recorded'
