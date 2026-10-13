@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: metric__user_login
+    description: "{{ doc('metric__user_login') }}"
+    config:
+      tags:
+        - administration
+    # No data_table_* meta -- the Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: admin
+      pii: false
+      classification: internal
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__user_login_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+              - event_id
+              - designation
+              - facility_id
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        data_type: text
+        description: Either active_user or user_login, as registered in documentations/metrics/user.yml.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__user_login_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__user_login_metric_id_values
+              arguments:
+                values:
+                  - active_user
+                  - user_login
+          - relationships:
+              name: ac_003_metric__user_login_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: Always null; neither metric has variants.
+      - name: subject_id
+        data_type: character varying
+        description: The user's id. Count distinct values to count users.
+        data_tests:
+          - not_null:
+              name: ac_004_metric__user_login_subject_id_not_null
+      - name: event_id
+        data_type: text
+        description: The login attempt id for user_login. Null for active_user.
+      - name: period_start
+        data_type: timestamp
+        description: The login day for user_login. The day the model is read for active_user.
+        data_tests:
+          - not_null:
+              name: ac_005_metric__user_login_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: Equal to period_start.
+      - name: period_granularity
+        data_type: text
+        description: Always day.
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1.
+      - name: value_boolean
+        data_type: boolean
+        description: Always null.
+      - name: facility_id
+        data_type: character varying
+        description: A facility the user is allowed to access.
+      - name: role_id
+        data_type: character varying
+        description: The user's role id. Consumers use it to exclude super admins.
+      - name: visibility_status
+        data_type: character varying
+        description: The user's visibility status. Consumers use current for activated users.
+      - name: designation_id
+        data_type: character varying
+        description: The designation's reference data id.
+      - name: designation
+        data_type: text
+        description: The designation's name from reference data.
+        data_tests:
+          - not_null:
+              name: ac_006_metric__user_login_designation_not_null
