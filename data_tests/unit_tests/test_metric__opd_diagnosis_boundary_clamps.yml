@@ -42,9 +42,13 @@ unit_tests:
           union all
           select 'loc5', 'L5', 'Location 5', null::int, null::varchar, 'fac5', 'current'
 
+      - input: ref('departments')
+        format: sql
+        rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
+
     expect:
       format: sql
       rows: |
-        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c4' as subject_id, '2026-01-20'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac4' as facility_id, 'female' as sex, 'A04' as diagnosis_code, 'After close diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years
+        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c4' as subject_id, '2026-01-20'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac4' as facility_id, 'female' as sex, 'A04' as diagnosis_code, 'After close diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years, 'Not recorded' as department
         union all
-        select 'opd_diagnosis', null::text, 'c5', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac5', 'female', 'A05', 'Open encounter diagnosis', 'confirmed', true, 30
+        select 'opd_diagnosis', null::text, 'c5', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac5', 'female', 'A05', 'Open encounter diagnosis', 'confirmed', true, 30, 'Not recorded'
