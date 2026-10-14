@@ -15,8 +15,8 @@ models:
         data_type: uuid
         description: "{{ doc('generic__id') }} in user_login_attempts."
       - name: created_at
-        data_type: timestamp with time zone
-        description: "{{ doc('generic__created_at') }} in user_login_attempts."
+        data_type: timestamp without time zone
+        description: "{{ doc('generic__created_at') }} in user_login_attempts, converted to the deployment (central) timezone."
       - name: outcome
         data_type: text
         description: "{{ doc('user_login_attempts__outcome') }}"
