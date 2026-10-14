@@ -164,3 +164,8 @@ seeds:
 
 data_tests:
   +severity: warn
+  tamanu_source_dbt:
+    metrics:
+      # Metrics are views off analytics, so each test re-runs the whole metric (minutes on a
+      # full database). Run them where metrics are tables; force with --vars '{metric_data_tests: true}'.
+      +enabled: "{{ target.name.startswith('analytics') or var('metric_data_tests', false) }}"
