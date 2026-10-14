@@ -166,13 +166,6 @@ data_tests:
   +severity: warn
   tamanu_source_dbt:
     metrics:
-      # The metric data tests guard what Tupaia reads: the metric tables on the analytics
-      # replica. On every other target the metrics are views (see the metrics: block under
-      # models: above), so each test re-executes the whole metric over the full history --
-      # several of the metric__outpatient_visit / metric__opd_visit_department tests take
-      # 10-20 minutes each against a production-sized reporting database. Same target test
-      # as the metrics' own +materialized, so the tests run wherever the metrics are tables.
-      # Covers the generic tests declared in models/metrics/*.yml only; the singular
-      # data_tests/data_test__metric__*.sql tests and all unit tests are unaffected.
-      # Force them on another target with --vars '{metric_data_tests: true}'.
+      # Metrics are views off analytics, so each test re-runs the whole metric (minutes on a
+      # full database). Run them where metrics are tables; force with --vars '{metric_data_tests: true}'.
       +enabled: "{{ target.name.startswith('analytics') or var('metric_data_tests', false) }}"
