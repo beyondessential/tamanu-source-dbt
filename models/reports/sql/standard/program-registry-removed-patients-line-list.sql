@@ -15,7 +15,7 @@ select
     to_char({{ to_user_selected_timezone('deactivated_datetime') }}::date, '{{ var("date_format") }}') as "{{ translate_label('registryDeactivatedDate') }}",
     deactivated_by as "{{ translate_label('registryDeactivatedBy') }}"
 from {{ ref('ds__patient_program_registrations') }}
-where registration_status != 'active'
+where registration_status = 'inactive'
     and
     {{ to_user_selected_timezone('deactivated_datetime') }}
     >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
