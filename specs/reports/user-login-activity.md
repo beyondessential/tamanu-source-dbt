@@ -66,6 +66,9 @@ Facility, role, designation, date range.
 
 ## Notes
 
+- Central only (`dataSources: allFacilities`). A facility server logs a user in through the central server, which records the attempt. `user_login_attempts` syncs facility to central only, so a facility database holds almost none, and a report run with "This facility" showed no logins. The Facility filter still restricts to users allowed at a facility.
+- Login times are converted to the deployment timezone in the `user_login_attempts` base, so the day boundary follows the user-selected timezone, not UTC.
+
 - `user_login_attempts` has been recorded only since it was introduced (Tamanu migration `1757268197134`), so earlier logins are not visible and those users show as never logged in.
 - A user with no allowed facility, or no designation, still appears, with a blank cell.
 

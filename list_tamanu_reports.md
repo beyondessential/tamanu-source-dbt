@@ -782,6 +782,8 @@ This report lists every activated user (excluding the system user) with their ro
 
 Users who have never logged in are included with a blank last log in date. Use it to identify users who are not actively using Tamanu.
 
+This report reads login records held on the central server, so it is available for all facilities only. Logins made through a facility server are recorded centrally and are not copied back to the facility.
+
 **Filters**
 
 Facility, Role, Designation
