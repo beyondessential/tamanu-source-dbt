@@ -13,7 +13,7 @@ with base as (
         on dp.id = e.department_id
     join {{ ref('patients') }} p
         on p.id = e.patient_id
-    where not f.is_sensitive
+    where f.sensitive_network_id is null
         and e.end_datetime is not null
         and e.end_datetime >= '2024-01-01'::date
         and e.end_datetime <= '2024-01-31'::date

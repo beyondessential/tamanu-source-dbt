@@ -76,9 +76,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_standard'::text as id, 'Central Hospital'::text as name, false as is_sensitive
+          select 'fac_standard'::text as id, 'Central Hospital'::text as name, null::text as sensitive_network_id
           union all
-          select 'fac_sensitive'::text, 'Restricted Clinic'::text, true
+          select 'fac_sensitive'::text, 'Restricted Clinic'::text, 'sn_001'
 
       - input: ref('reference_data')
         format: sql

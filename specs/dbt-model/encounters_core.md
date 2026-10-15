@@ -12,10 +12,10 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-02 |
-| **Last updated** | 2026-09-02 |
+| **Last updated** | 2026-10-15 |
 
 Encounters resolved to their facility and partitioned by sensitivity — the
-`encounters -> locations -> facilities` join with `f.is_sensitive`, which is the most
+`encounters -> locations -> facilities` join with the sensitivity partition, which is the most
 repeated block in the repo.
 
 ## Purpose
@@ -95,8 +95,11 @@ diff, but it is a real cost rather than none.
 ## Business logic
 
 - **BL-001:** Facility scope is partitioned by the `is_sensitive` argument: the join to
-  `facilities` carries `and f.is_sensitive = <argument>`, so a caller passing `false`
-  sees only non-sensitive facilities and one passing `true` sees only sensitive ones.
+  `facilities` carries `and (f.sensitive_network_id is not null) = <argument>`, so a caller
+  passing `false` sees only non-sensitive facilities and one passing `true` sees only sensitive
+  ones. A facility is sensitive exactly when it belongs to a sensitive network (Tamanu 2.66
+  dropped the separate `facilities.is_sensitive` flag); the predicate is never null, so the
+  partition is exhaustive.
 - **BL-002:** The test patient is excluded upstream by the `encounters` base model and
   is deliberately **not** re-applied here. Re-applying it would imply the base model's
   guarantee is untrusted, and the two would then have to be kept in step.
@@ -168,7 +171,7 @@ maui-team#104 introduced.
 
 | ID | Criterion | Clause |
 |---|---|---|
-| AC-001 | With `is_sensitive=false`, no row resolves to a facility with `is_sensitive = true`, and vice versa. | BL-001 |
+| AC-001 | With `is_sensitive=false`, no row resolves to a facility with a `sensitive_network_id`, and vice versa. | BL-001 |
 | AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. Structurally guaranteed by the `encounters` base model, and **not assertable by a unit test**: a stub replaces that model including its filter, so a fixture supplying the test patient would prove nothing about production behaviour. | BL-002 |
 | AC-003 | Adopting the macro at a call site produces a compiled-SQL diff that is shape-only plus the superset columns — no changed join keyword, predicate or column expression. | BL-003, BL-004 |
 | AC-004 | Compiling a **dataset** caller of this macro yields SQL containing no `:` bind placeholder. Requires a dataset caller to exist; `admissions_dataset` is the first. Grepping for `parameter(` is necessary but not sufficient — `to_user_selected_timezone()` reaches the same hazard through a helper, so the check is on the compiled output, not the source. | BL-005 |
@@ -184,12 +187,12 @@ adoption belongs on its PR.
 Those fixtures carry a second, sensitive facility with an encounter on it, and an
 encounter whose `location_id` resolves to nothing. Both sit inside the default date window
 and reuse existing patients, so either surfacing fails `expect`. Without them the
-`and f.is_sensitive` predicate could be deleted outright and the tests still pass, which
+sensitivity predicate could be deleted outright and the tests still pass, which
 is what makes them assertions rather than decoration:
 
 | Mutation | Result |
 |---|---|
-| drop `and f.is_sensitive = {{ is_sensitive }}` | fails |
+| drop `and (f.sensitive_network_id is not null) = {{ is_sensitive }}` | fails |
 | `locations` inner join → `left join` | passes — the inner join to `facilities` still drops the row via the null `facility_id` |
 | both joins → `left join` | fails |
 
@@ -216,3 +219,4 @@ None outstanding.
 | 2026-09-02 | Created. Extracted from `encounter_invoice_audit_report`; adopted there first. |
 | 2026-09-05 | Adoption in `admissions_dataset` and `encounter_summary_report` completed and verified; the two questions tracking that work are closed. |
 | 2026-09-17 | Added `planned_location_id` / `planned_location_start_datetime` to the output superset (MAUI-6905), for the admissions line list report's planned-transfer columns. Passthrough only — no new business logic. |
+| 2026-10-15 | Tamanu 2.66 dropped `facilities.is_sensitive`: BL-001's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null. Same partition, no output change (MAUI-6163). |

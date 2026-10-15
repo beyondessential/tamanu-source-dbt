@@ -85,7 +85,7 @@ unit_tests:
         input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_1'::text as id, 'Hospital'::text as name, false as is_sensitive
+          select 'fac_1'::text as id, 'Hospital'::text as name, null::text as sensitive_network_id
 
     expect:
       format: sql

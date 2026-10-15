@@ -5,7 +5,7 @@ with base as (
         on lg.id = lb.location_group_id
     join {{ ref('facilities') }} f
         on f.id = lg.facility_id
-    where not f.is_sensitive
+    where f.sensitive_network_id is null
 ),
 
 dataset as (

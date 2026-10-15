@@ -11,7 +11,7 @@ with expected as (
     join {{ ref('patients') }} p on p.id = e.patient_id
     join {{ ref('locations') }} l on l.id = e.location_id
     join {{ ref('facilities') }} f on f.id = l.facility_id
-    where not f.is_sensitive
+    where f.sensitive_network_id is null
 ),
 
 actual as (

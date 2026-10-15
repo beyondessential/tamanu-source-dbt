@@ -202,7 +202,7 @@ attendances as (
         on dis.encounter_id = vd.visit_occurrence_id
     left join reference_data disposition
         on disposition.id = dis.disposition_id
-    -- BL-010: no facilities.is_sensitive filter, so this covers standard and sensitive
+    -- BL-010: no facility sensitivity filter, so this covers standard and sensitive
     -- facilities alike.
     where vd.preceding_visit_detail_id is null
         and vd.visit_detail_concept_id = 9203 -- OMOP 'Emergency Room Visit'

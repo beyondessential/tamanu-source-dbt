@@ -173,7 +173,7 @@ BL-003, BL-004, BL-005, BL-007, BL-010 through BL-018, BL-020 and BL-021 are imp
   Consumer-specific identifiers — a Tupaia entity code, a DHIS2 org unit — are resolved in the
   consumer layer.
 - **BL-010 (classification):** `pii: false`, `classification: internal`, with no
-  `facilities.is_sensitive` filter, so standard and sensitive facilities alike are covered. A row
+  facility sensitivity filter, so standard and sensitive facilities alike are covered. A row
   carries an encounter id as its only identifier.
 
   `triage_score` comes from `bases/triages`, which is `classification: restricted` — but that
@@ -182,7 +182,7 @@ BL-003, BL-004, BL-005, BL-007, BL-010 through BL-018, BL-020 and BL-021 are imp
   list, not free text.
 
   **The line this sets.** Adding a column that identifies the *patient* — patient id, birth date,
-  diagnosis, exact arrival timestamp — requires revisiting the `is_sensitive` filter and the
+  diagnosis, exact arrival timestamp — requires revisiting the facility sensitivity filter and the
   `meta` flags. `ds__encounters_emergency` carries such detail and is classified accordingly.
 - **BL-011 (per-attendance grain):** one row per attendance, `subject_id` = the encounter id,
   `value_numeric` = literal `1` because the row *is* the attendance. The visit occurrence id is used

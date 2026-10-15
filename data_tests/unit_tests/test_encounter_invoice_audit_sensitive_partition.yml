@@ -9,7 +9,7 @@ unit_tests:
 
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
       the two together pin both halves of the partition. Without this test, changing
-      `f.is_sensitive = {{ is_sensitive }}` to a constant `= false` would still pass
+      `(f.sensitive_network_id is not null) = {{ is_sensitive }}` to a constant `= false` would still pass
       every other test in the repo, because no other unit test targets a sensitive
       variant.
     overrides:
@@ -41,9 +41,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
           union all
-          select 'fac_002', 'Sensitive Clinic', true
+          select 'fac_002', 'Sensitive Clinic', 'sn_001'
 
       - input: ref('patients')
         format: sql

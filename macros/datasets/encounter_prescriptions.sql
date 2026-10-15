@@ -44,7 +44,7 @@ join {{ ref("prescriptions") }} pr on pr.id = ep.prescription_id
 join {{ ref("locations") }} l on l.id = e.location_id
 join {{ ref("facilities") }} f 
     on f.id = l.facility_id
-    and f.is_sensitive = {{ is_sensitive }}
+    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
 -- prescriber_id is nullable, so this must stay a left join or prescriptions

@@ -169,7 +169,7 @@ admissions as (
     left join principal_diagnoses pdx
         on pdx.visit_occurrence_id = adm.visit_occurrence_id
         and pdx.diagnosis_rank = 1
-    -- BL-010: no facilities.is_sensitive filter, so this covers standard and sensitive
+    -- BL-010: no facility sensitivity filter, so this covers standard and sensitive
     -- facilities alike.
     where adm.admission_rank = 1
 ),

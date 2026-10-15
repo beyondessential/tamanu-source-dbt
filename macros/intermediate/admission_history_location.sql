@@ -10,11 +10,9 @@
     join to facilities exists only to resolve the facility name; the predicate is what
     makes it a partition.
 
-    The coalesce is what makes it exhaustive. facilities.is_sensitive carries no not_null
-    test, and a bare `= true` / `= false` pair matches neither variant for a null, which
-    would drop that facility from all six reports rather than move it. A null reads as
-    non-sensitive, which is where such a facility's episodes appeared before the partition
-    existed.
+    The predicate is exhaustive by construction: `sensitive_network_id is not null` is
+    never null, so a bare `= true` / `= false` pair puts every facility in exactly one
+    variant.
 -#}
 
 with admission_location_log as (
@@ -114,7 +112,7 @@ left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
 join {{ ref('facilities') }} f
     on f.id = l.facility_id
-    and coalesce(f.is_sensitive, false) = {{ is_sensitive }}
+    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 window w as (
     partition by ll.encounter_id
     order by ll.start_datetime

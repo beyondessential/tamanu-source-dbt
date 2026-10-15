@@ -3,7 +3,7 @@
 {#-
     Encounters resolved to their facility, partitioned by sensitivity.
 
-    The encounters -> locations -> facilities join with `f.is_sensitive` is the most
+    The encounters -> locations -> facilities join with the `f.sensitive_network_id` partition is the most
     repeated block in the repo. Keeping it here is what stops the copies drifting.
 
     See specs/dbt-model/encounters_core.md for the BL clauses this macro implements.
@@ -85,7 +85,7 @@ join {{ ref('locations') }} l
 join {{ ref('facilities') }} f
     on f.id = l.facility_id
     -- BL-001: facility scope partitioned by the is_sensitive argument
-    and f.is_sensitive = {{ is_sensitive }}
+    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 {%- if predicates %}
 where {{ predicates | join('\n    and ') }}
 {%- endif %}

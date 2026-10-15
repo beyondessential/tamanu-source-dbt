@@ -44,9 +44,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_std'::text as id, 'Standard Hospital'::text as name, false as is_sensitive
+          select 'fac_std'::text as id, 'Standard Hospital'::text as name, null::text as sensitive_network_id
           union all
-          select 'fac_sen', 'Sensitive Hospital', true
+          select 'fac_sen', 'Sensitive Hospital', 'sn_001'
     expect:
       format: sql
       rows: |
@@ -136,9 +136,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_std'::text as id, 'Standard Hospital'::text as name, false as is_sensitive
+          select 'fac_std'::text as id, 'Standard Hospital'::text as name, null::text as sensitive_network_id
           union all
-          select 'fac_sen', 'Sensitive Hospital', true
+          select 'fac_sen', 'Sensitive Hospital', 'sn_001'
     expect:
       format: sql
       rows: |

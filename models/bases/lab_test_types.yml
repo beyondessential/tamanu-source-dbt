@@ -52,7 +52,7 @@ models:
         description: "{{ doc('lab_test_types__lab_test_category_id') }}"
       - name: is_sensitive
         data_type: boolean
-        description: "{{ doc('lab_test_types__is_sensitive') }}"
+        description: "{{ doc('lab_test_types__is_sensitive') }} {{ doc('lab_test_types__is_sensitive_reporting_note') }}"
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in lab_test_types."
