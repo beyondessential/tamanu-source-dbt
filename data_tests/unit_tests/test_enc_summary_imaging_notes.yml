@@ -84,7 +84,7 @@ unit_tests:
       - input: ref('triages')
         format: sql
         rows: |
-          select null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
+          select null::text as id, null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
           where false
 
       - input: ref('discharges')
@@ -114,7 +114,7 @@ unit_tests:
       - input: ref('vaccine_administrations')
         format: sql
         rows: |
-          select null::text as encounter_id, null::timestamp as datetime, null::text as scheduled_vaccine_id
+          select null::text as encounter_id, null::text as status, null::timestamp as datetime, null::text as scheduled_vaccine_id
           where false
 
       - input: ref('vaccine_schedules')

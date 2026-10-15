@@ -264,6 +264,35 @@ encounter_changes as (
     group by encounter_id
 ),
 
+{#- BL-021 (specs/reports/encounter-summary.md): one triage per encounter, the earliest by
+    (triage_datetime, id). Tamanu has no unique constraint on triages.encounter_id, so a
+    second triage would otherwise duplicate the encounter's row. Earliest mirrors the
+    discharges base model, which keeps the earliest discharge for the same reason. -#}
+encounter_triages as (
+    select
+        encounter_id,
+        score,
+        triage_datetime,
+        closed_datetime,
+        arrival_mode_id
+    from (
+        select
+            t.encounter_id,
+            t.score,
+            t.triage_datetime,
+            t.closed_datetime,
+            t.arrival_mode_id,
+            row_number() over (
+                partition by t.encounter_id
+                order by t.triage_datetime, t.id
+            ) as triage_rank
+        from {{ ref('triages') }} t
+        join encounters_in_scope eis
+            on eis.encounter_id = t.encounter_id
+    ) ranked
+    where triage_rank = 1
+),
+
 encounter_diagnoses as (
     select
         ed.encounter_id,
@@ -292,6 +321,8 @@ encounter_diagnoses as (
     group by ed.encounter_id
 ),
 
+-- BL-023 (specs/reports/encounter-summary.md): every prescription on the encounter,
+-- discontinued ones included and flagged as such
 encounter_prescriptions as (
     select
         ep.encounter_id,
@@ -333,6 +364,9 @@ encounter_vaccinations as (
         on sv.id = av.scheduled_vaccine_id
     join {{ ref('reference_data') }} v
         on v.id = sv.vaccine_id
+    -- BL-024 (specs/reports/encounter-summary.md): vaccines given in this encounter only;
+    -- the text carries no status, so a NOT_GIVEN record would otherwise read as given
+    where av.status = 'GIVEN'
     group by av.encounter_id
 ),
 
@@ -555,6 +589,7 @@ imaging_request_areas as (
     left join notes_current n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
+    -- BL-022 (specs/reports/encounter-summary.md): live imaging requests only
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
     group by ir.encounter_id, ira.imaging_request_id, ir.imaging_type
 ),
@@ -657,7 +692,7 @@ left join {{ ref('users') }} c
 -- BL-013: inner join -- an encounter with no resolved history row is not reported
 join encounter_changes ec
     on ec.encounter_id = eis.encounter_id
-left join {{ ref('triages') }} t
+left join encounter_triages t
     on t.encounter_id = eis.encounter_id
 left join {{ ref('discharges') }} d
     on d.encounter_id = eis.encounter_id
