@@ -1,0 +1,38 @@
+unit_tests:
+  - name: test_encounter_prescription_discharge_summary
+    model: encounter-prescription-discharge-summary
+    description: >
+      BL-001, BL-003, BL-004 and BL-005 of specs/reports/encounter-prescription-discharge-summary.md,
+      on the default window (2024-01-01 to 2024-01-31).
+
+      BL-001: rx_004 is not selected for discharge, so Paracetamol counts 20, not 120.
+      BL-003: rx_005 (2023-12-31) and rx_006 (2024-02-01) fall outside the window, so Ibuprofen
+      is absent.
+      BL-004: the output columns are the shared Medication / Code / Quantity labels.
+      BL-005: rx_001 and rx_002 are the same medication, so Amoxicillin is one row of 15.
+    overrides:
+      vars:
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode
+    given:
+      - input: ref('ds__encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_002', 'fac_001', 'med_001', 'Amoxicillin', 'AMX', 5, true, '2024-01-20 09:00:00'::timestamp
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+          union all
+          -- BL-001: not selected for discharge
+          select 'rx_004', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 100, false, '2024-01-11 09:00:00'::timestamp
+          union all
+          -- BL-003: before and after the window
+          select 'rx_005', 'fac_001', 'med_003', 'Ibuprofen', 'IBU', 7, true, '2023-12-31 09:00:00'::timestamp
+          union all
+          select 'rx_006', 'fac_001', 'med_003', 'Ibuprofen', 'IBU', 8, true, '2024-02-01 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
