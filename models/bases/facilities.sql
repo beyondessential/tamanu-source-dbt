@@ -10,6 +10,6 @@ select
     street_address,
     catchment_id,
     visibility_status,
-    is_sensitive
+    sensitive_network_id
 from {{ source('tamanu', 'facilities') }}
 where deleted_at is null

@@ -182,3 +182,15 @@ Time between triage and being seen (HH:MM:SS format)
 {% enddocs %}
 
 
+
+{% docs generic__lab_test_panels %}
+Names of the [panels](#!/source/source.tamanu.tamanu.lab_test_panels) on the lab request,
+alphabetical and comma-separated. From Tamanu 2.66 a request can hold several. Null when it
+holds none.
+{% enddocs %}
+
+{% docs generic__lab_test_own_panel_id %}
+The [panel](#!/source/source.tamanu.tamanu.lab_test_panels) this test belongs to, not its
+request's: from Tamanu 2.66 one request can hold several panels and individual tests. Null for a
+test ordered individually.
+{% enddocs %}

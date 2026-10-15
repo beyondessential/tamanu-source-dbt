@@ -4,8 +4,8 @@ models:
   - name: metric__ed_lab_order
     description: >-
       D5 metric view for the ed_lab_order indicator registered in
-      documentations/metrics/emergency.yml: ed_lab_order (MAUI-6907). One row per lab test panel
-      ordered, and one per lab test ordered outside a panel, while the patient was in the
+      documentations/metrics/emergency.yml: ed_lab_order (MAUI-6907). One row per panel request,
+      and one per lab test not attributed to a panel, while the patient was in the
       emergency department -- per-order-line (subject) grain, so a consumer aggregates at
       whatever grain it needs. A panel is one row however many tests it holds.
     config:
@@ -71,8 +71,8 @@ models:
       - name: subject_id
         data_type: character varying(255)
         description: >-
-          The order line's Tamanu id: the lab request id for a panel, the lab test id for a test
-          ordered outside a panel.
+          The order line's Tamanu id: the panel request id for a panel, the lab test id for a
+          test not attributed to a panel.
       - name: period_start
         data_type: timestamp
         description: >-

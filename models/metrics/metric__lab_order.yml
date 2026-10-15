@@ -4,8 +4,8 @@ models:
   - name: metric__lab_order
     description: >-
       D5 metric view for the lab_order indicator registered in documentations/metrics/lab.yml:
-      lab_order. One row per lab request raised from a panel, labelled with the panel however
-      many tests it holds, and one row per lab test on a request raised without one. The
+      lab_order. One row per panel request, labelled with the panel however many tests it
+      holds, and one row per lab test not attributed to a panel. The
       generic counterpart to metric__ed_lab_order, carrying the segment's OMOP Visit concept
       rather than scoping to a single setting.
     config:
@@ -14,7 +14,7 @@ models:
     meta:
       owner: bes-maui
       domain: clinical
-      # Per-order-line rows, but the subject is a request or test id with no patient
+      # Per-order-line rows, but the subject is a panel request or test id with no patient
       # identifier, name or birth date alongside it -- no patient is identifiable through a
       # row. Note lab_order is NOT filtered on lab_test_types.is_sensitive: suppressing a
       # sensitive test or panel is a deployment privacy decision taken at the data-table
@@ -76,8 +76,8 @@ models:
       - name: subject_id
         data_type: character varying(255)
         description: >-
-          The order line's id -- the lab_requests id for a panel line, the lab_tests id for a
-          single test. The two id spaces are disjoint, so this is unique across the union.
+          The order line's id -- the lab_test_panel_requests id for a panel line, the lab_tests
+          id for a single test. The two id spaces are disjoint, so this is unique across the union.
         data_tests:
           - not_null:
               name: ac_metric__lab_order_subject_id_not_null

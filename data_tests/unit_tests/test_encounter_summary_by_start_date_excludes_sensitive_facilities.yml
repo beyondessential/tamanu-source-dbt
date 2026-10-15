@@ -66,9 +66,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Public Hospital' as name, false as is_sensitive
+          select 'fac_001' as id, 'Public Hospital' as name, null::text as sensitive_network_id
           union all
-          select 'fac_002', 'Psychiatric Hospital', true
+          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
 
       - input: ref('reference_data')
         format: sql
@@ -133,14 +133,18 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as lab_test_panel_request_id, null::text as status
+          select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as status
           where false
 
       - input: ref('lab_test_panel_requests')
         format: sql
         rows: |
-          select null::text as id, null::text as lab_test_panel_id
+          select null::text as id, null::text as lab_test_panel_id, null::text as lab_request_id
           where false
+      - input: ref('int__lab_test_panel_attribution')
+        format: sql
+        rows: |
+          select null::text as lab_test_id, null::text as lab_request_id, null::text as lab_test_panel_request_id, null::text as lab_test_panel_id, null::text as panel_attribution where false
 
       - input: ref('lab_test_panels')
         format: sql
@@ -151,7 +155,7 @@ unit_tests:
       - input: ref('lab_tests')
         format: sql
         rows: |
-          select null::text as lab_request_id, null::text as lab_test_type_id
+          select null::text as id, null::text as lab_request_id, null::text as lab_test_type_id
           where false
 
       - input: ref('lab_test_types')

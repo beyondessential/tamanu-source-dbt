@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: int__lab_test_panel_attribution
+    description: >-
+      Each live lab test resolved to the panel request it belongs to, applying Tamanu 2.66's
+      inference for pre-2.66 requests (one panel request and no attributed test means every
+      test belongs to that panel). Shared by metric__lab_order, metric__ed_lab_order, the lab
+      tests datasets and the encounter summary, so they agree on which tests a panel covers.
+    columns:
+      - name: lab_test_id
+        description: The lab test. One row per live test.
+        data_tests:
+          - unique:
+              config:
+                severity: error
+          - not_null:
+              config:
+                severity: error
+      - name: lab_request_id
+        description: The test's lab request.
+        data_tests:
+          - not_null
+      - name: lab_test_panel_request_id
+        description: >-
+          The panel request the test belongs to, recorded on the test or inferred from a
+          pre-2.66 request's single panel request. Null for a test ordered individually.
+      - name: lab_test_panel_id
+        description: The panel of that panel request. Null when the test is individual.
+      - name: panel_attribution
+        description: >-
+          How the panel was resolved -- 'recorded' (the test names it), 'single_panel_request'
+          (inferred from a pre-2.66 request), or null (an individual test).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['recorded', 'single_panel_request']

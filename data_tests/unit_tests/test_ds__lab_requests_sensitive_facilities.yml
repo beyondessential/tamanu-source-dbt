@@ -10,9 +10,9 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as lab_test_priority_id, null::text as lab_test_category_id, null::text as lab_test_panel_request_id, null::text as lab_test_laboratory_id, null::text as requested_by_id, null::text as specimen_type_id, null::text as lab_sample_site_id, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as reason_for_cancellation, 'enc_001' as encounter_id, null::text as department_id
+          select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as lab_test_priority_id, null::text as lab_test_category_id, null::text as lab_test_laboratory_id, null::text as requested_by_id, null::text as specimen_type_id, null::text as lab_sample_site_id, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as reason_for_cancellation, 'enc_001' as encounter_id, null::text as department_id
           union all
-          select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::timestamp, null::text, null::text, 'enc_002', null::text
+          select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::text, null::text, null::text, null::text, null::text, null::text, null::timestamp, null::text, null::text, 'enc_002', null::text
 
       - input: ref('lab_tests')
         format: sql
@@ -50,9 +50,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+          select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
           union all
-          select 'fac_002', 'Psychiatric Hospital', true
+          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
 
       - input: ref('location_groups')
         format: sql
@@ -81,7 +81,7 @@ unit_tests:
       - input: ref('lab_test_panel_requests')
         format: sql
         rows: |
-          select null::text as id, null::text as lab_test_panel_id, null::text as encounter_id
+          select null::text as id, null::text as lab_test_panel_id, null::text as lab_request_id
           where false
 
       - input: ref('lab_test_panels')
@@ -105,9 +105,9 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as lab_test_priority_id, null::text as lab_test_category_id, null::text as lab_test_panel_request_id, null::text as lab_test_laboratory_id, null::text as requested_by_id, null::text as specimen_type_id, null::text as lab_sample_site_id, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as reason_for_cancellation, 'enc_001' as encounter_id, null::text as department_id
+          select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as lab_test_priority_id, null::text as lab_test_category_id, null::text as lab_test_laboratory_id, null::text as requested_by_id, null::text as specimen_type_id, null::text as lab_sample_site_id, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as reason_for_cancellation, 'enc_001' as encounter_id, null::text as department_id
           union all
-          select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::timestamp, null::text, null::text, 'enc_002', null::text
+          select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::text, null::text, null::text, null::text, null::text, null::text, null::timestamp, null::text, null::text, 'enc_002', null::text
 
       - input: ref('lab_tests')
         format: sql
@@ -145,9 +145,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive
+          select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
           union all
-          select 'fac_002', 'Psychiatric Hospital', true
+          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
 
       - input: ref('location_groups')
         format: sql
@@ -176,7 +176,7 @@ unit_tests:
       - input: ref('lab_test_panel_requests')
         format: sql
         rows: |
-          select null::text as id, null::text as lab_test_panel_id, null::text as encounter_id
+          select null::text as id, null::text as lab_test_panel_id, null::text as lab_request_id
           where false
 
       - input: ref('lab_test_panels')
@@ -189,3 +189,103 @@ unit_tests:
       format: sql
       rows: |
         select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 34 as age, 'male' as sex, null::text as village_id, null::text as village, 'fac_002' as facility_id, 'Psychiatric Hospital' as facility, null::text as department, null::text as department_id, 'loc_002' as location_id, 'Room 201' as location, null::text as location_group_id, null::text as location_group, null::text as laboratory_id, null::text as laboratory, 'LR002' as request_id, 'Published' as status, 'published' as status_id, '2024-05-16 14:00:00'::timestamp as requested_datetime, null::text as requested_by_id, null::text as requested_by, null::text as requesting_department_id, null::text as requesting_department, null::text as priority_id, null::text as priority, null::text as lab_test_category_id, null::text as lab_test_category, null::text as lab_test_panel, 'HIV Test' as tests, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as collected_by, null::text as specimen_type_id, null::text as specimen_type, null::text as site, null::timestamp as completed_datetime, null::text as reason_for_cancellation
+
+  - name: test_ds__lab_requests_panels
+    model: ds__lab_requests
+    description: >
+      Tamanu 2.66: a request can hold several panel requests. lr_001 holds two (Liver Function
+      Tests, Full Blood Count), so lab_test_panel lists both names, alphabetically. A panel
+      request whose panel does not resolve (ltpr_003) is left out rather than listed as NULL.
+      lr_002 (at the sensitive facility) is excluded as in the partition test above.
+    given:
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as lab_test_priority_id, null::text as lab_test_category_id, null::text as lab_test_laboratory_id, null::text as requested_by_id, null::text as specimen_type_id, null::text as lab_sample_site_id, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as reason_for_cancellation, 'enc_001' as encounter_id, null::text as department_id
+          union all
+          select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::text, null::text, null::text, null::text, null::text, null::text, null::timestamp, null::text, null::text, 'enc_002', null::text
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 'lt_001' as id, 'lr_001' as lab_request_id, 'ltt_001' as lab_test_type_id, null::timestamp as completed_datetime
+          union all
+          select 'lt_002', 'lr_002', 'ltt_002', null::timestamp
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select 'ltt_001' as id, 'Full Blood Count' as name, true as is_sensitive
+          union all
+          select 'ltt_002', 'HIV Test', false
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, 'loc_001' as location_id, null::text as department_id
+          union all
+          select 'enc_002', 'pat_001', 'loc_002', null::text
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, null::text as village_id
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 101' as name, 'fac_001' as facility_id, null::text as location_group_id
+          union all
+          select 'loc_002', 'Room 201', 'fac_002', null::text
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
+          union all
+          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name, null::text as code
+          where false
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name
+          where false
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select 'ltpr_001' as id, 'ltp_lft' as lab_test_panel_id, 'lr_001' as lab_request_id
+          union all
+          select 'ltpr_002', 'ltp_fbc', 'lr_001'
+          union all
+          select 'ltpr_003', 'ltp_missing', 'lr_001'
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select 'ltp_lft' as id, 'Liver Function Tests' as name
+          union all
+          select 'ltp_fbc', 'Full Blood Count'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 34 as age, 'male' as sex, null::text as village_id, null::text as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null::text as department, null::text as department_id, 'loc_001' as location_id, 'Room 101' as location, null::text as location_group_id, null::text as location_group, null::text as laboratory_id, null::text as laboratory, 'LR001' as request_id, 'Published' as status, 'published' as status_id, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as requested_by_id, null::text as requested_by, null::text as requesting_department_id, null::text as requesting_department, null::text as priority_id, null::text as priority, null::text as lab_test_category_id, null::text as lab_test_category, 'Full Blood Count, Liver Function Tests' as lab_test_panel, 'Full Blood Count' as tests, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as collected_by, null::text as specimen_type_id, null::text as specimen_type, null::text as site, null::timestamp as completed_datetime, null::text as reason_for_cancellation

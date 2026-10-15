@@ -1,9 +1,9 @@
 -- metric__lab_order -- D5 metric view for the lab_order indicator registered in
 -- documentations/metrics/lab.yml: lab_order (MAUI-6837).
 --
--- Per-order-line (subject) grain: one row per lab request raised from a panel, labelled with
--- the panel however many tests it holds, and one row per lab test on a request raised without
--- one. value_numeric 1, so a consumer aggregates at whatever grain it needs. The generic
+-- Per-order-line (subject) grain: one row per panel request, labelled with the panel however
+-- many tests it holds, and one row per lab test not attributed to a panel. From Tamanu 2.66 one
+-- request can hold several panels and individual tests side by side. value_numeric 1, so a consumer aggregates at whatever grain it needs. The generic
 -- counterpart to metric__ed_lab_order, carrying the segment's OMOP Visit concept rather than
 -- scoping to a single setting.
 --
@@ -30,6 +30,10 @@ lab_test_types as (
 
 lab_test_panel_requests as (
     select * from {{ ref('lab_test_panel_requests') }}
+),
+
+lab_test_panel_attribution as (
+    select * from {{ ref('int__lab_test_panel_attribution') }}
 ),
 
 lab_test_panels as (
@@ -69,20 +73,19 @@ live_requests as (
         -- several tests, so the test's own completed_datetime cannot describe it.
         coalesce(lr.status = 'published', false) as is_completed,
         lr.published_datetime,
-        lr.lab_test_category_id,
-        lr.lab_test_panel_request_id
+        lr.lab_test_category_id
     from lab_requests lr
     where lr.status is null
         or lr.status not in ('deleted', 'entered-in-error')
 ),
 
--- BL-002: a request raised from a panel is one order line, labelled with the panel, however
--- many tests it holds. Keyed on the request rather than the panel request: a panel spanning
--- several categories fans into one request each, and each carries its own status and
--- timestamps, so collapsing them would have no single value to report.
+-- BL-002: each panel request on a request is one order line, labelled with the panel, however
+-- many tests it holds. A panel request belongs to exactly one request (lab_request_id), so it
+-- carries that request's status and timestamps. Does not read lab_tests: a panel with no tests
+-- still yields its line.
 panel_orders as (
     select
-        r.lab_request_id as order_id,
+        ltpr.id::varchar as order_id,
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
@@ -93,17 +96,17 @@ panel_orders as (
         coalesce(ltp.code, 'Not recorded') as lab_order_code,
         coalesce(ltp.name, ltp.code, 'Not recorded') as lab_order
     from live_requests r
-    left join lab_test_panel_requests ltpr
-        on ltpr.id = r.lab_test_panel_request_id
+    join lab_test_panel_requests ltpr
+        on ltpr.lab_request_id = r.lab_request_id
     left join lab_test_panels ltp
         on ltp.id = ltpr.lab_test_panel_id
-    where r.lab_test_panel_request_id is not null
 ),
 
--- BL-003: a request raised without a panel is one order line per test on it
+-- BL-003: every test not attributed to a panel is one order line. Attribution, including the
+-- inference for pre-2.66 requests whose tests were never stamped, is int__lab_test_panel_attribution's.
 test_orders as (
     select
-        lt.id as order_id,
+        lt.id::varchar as order_id,
         r.visit_occurrence_id,
         r.requested_datetime,
         r.is_completed,
@@ -116,9 +119,11 @@ test_orders as (
     from live_requests r
     join lab_tests lt
         on lt.lab_request_id = r.lab_request_id
+    join lab_test_panel_attribution a
+        on a.lab_test_id = lt.id
     left join lab_test_types ltt
         on ltt.id = lt.lab_test_type_id
-    where r.lab_test_panel_request_id is null
+    where a.lab_test_panel_request_id is null
 ),
 
 orders as (

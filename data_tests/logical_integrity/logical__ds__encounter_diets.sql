@@ -5,7 +5,7 @@ with base as (
         on l.id = e.location_id
     join {{ ref('facilities') }} f
         on f.id = l.facility_id
-        and not f.is_sensitive
+        and f.sensitive_network_id is null
     where e.end_datetime is null
 ),
 

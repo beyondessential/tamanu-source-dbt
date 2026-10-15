@@ -35,7 +35,7 @@ c.record_id in (
         on lg2.id = c2.record_data ->> 'location_group_id'
     join {{ ref('facilities') }} f2
         on f2.id = lg2.facility_id
-        and f2.is_sensitive = {{ is_sensitive }}
+        and (f2.sensitive_network_id is not null) = {{ is_sensitive }}
     -- BL-030: widened a day at each end. modified_datetime is naive central time, so the
     -- final WHERE round-trips it back through the central zone, which is non-injective at
     -- that zone's DST fall-back -- an event in the repeated hour resolves to a different

@@ -18,7 +18,7 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'General Hospital' as name, false as is_sensitive
+          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
 
       - input: ref('patients')
         format: sql

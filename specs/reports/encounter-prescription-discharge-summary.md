@@ -87,7 +87,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
   medication for the whole selected range, matching the grain and grouping of
   `medication-dispensed-summary`.
 - **BL-009:** Facility scope is the sensitive-facility partition already built into
-  `ds__sensitive_encounter_prescriptions` (`facilities.is_sensitive = true`), not a parameter on
+  `ds__sensitive_encounter_prescriptions` (facilities with a `sensitive_network_id`), not a parameter on
   this report.
 
 ## Acceptance criteria
@@ -96,7 +96,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 |---|---|---|---|
 | AC-001 | Only prescriptions with `is_selected_for_discharge = true` are included | BL-001 | Manual run against a demo/replica snapshot |
 | AC-002 | Rows outside the selected date range (by `datetime`, viewer timezone) are excluded | BL-003 | Manual run against a demo/replica snapshot |
-| AC-003 | Sensitive variant only includes prescriptions at facilities with `is_sensitive = true` | BL-009 | Manual run against a demo/replica snapshot -- no automated test exists for this on `ds__sensitive_encounter_prescriptions` (only the non-sensitive dataset has a logical-integrity test) |
+| AC-003 | Sensitive variant only includes prescriptions at facilities with a `sensitive_network_id` | BL-009 | Manual run against a demo/replica snapshot -- no automated test exists for this on `ds__sensitive_encounter_prescriptions` (only the non-sensitive dataset has a logical-integrity test) |
 | AC-004 | One row per medication, summed quantity across all matching prescriptions in the selected range | BL-005 | Manual run against a demo/replica snapshot |
 
 ## Risks

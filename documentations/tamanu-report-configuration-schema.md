@@ -149,7 +149,7 @@ Provides autocomplete functionality using predefined API endpoints.
 - `invoiceProduct`, `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`
 - `labTestPanel`, `labTestPriority`, `labTestType`, `location`, `locationGroup`
 - `mammogramDiagImagingArea`, `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`
-- `medicationDispenseModifyReason`, `medicationNotGivenReason`, `medicationPresetLabel`, `medicationSet`, `medicationTemplate`
+- `medicationDispenseModifyReason`, `medicationNotDispensedReason`, `medicationNotGivenReason`, `medicationPresetLabel`, `medicationSet`, `medicationTemplate`
 - `mriImagingArea`, `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `noteType`
 - `nursingZone`, `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
 - `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`, `paymentMethod`, `pharmacyEncounterFee`

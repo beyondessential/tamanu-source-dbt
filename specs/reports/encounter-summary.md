@@ -129,8 +129,8 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   keeps same-second notes in the order they were entered. This is pre-existing and independent
   of BL-009, but BL-009 changes the plan, so leaving it would have let a report column
   reshuffle for no reason the reader could see. The same latent tie exists in the
-  diagnosis, prescription, vaccination, procedure and lab aggregates and is **not** fixed
-  here — see OQ-005.
+  diagnosis, prescription, vaccination and procedure aggregates and is **not** fixed
+  here — see OQ-005. (The lab aggregate's is fixed by BL-012.)
 - **BL-011:** Every note aggregate reads each note's current revision, as
   `notes__revision_rank` defines it. Tamanu never edits a note in place: an edit inserts a row
   whose `revised_by_id` points at the chain's root. The current revision is the latest by
@@ -138,6 +138,10 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   note in scope before any `note_type` filter, since a revision can change a note's type. This
   covers the encounter notes and both imaging aggregates, so an edited imaging note contributes
   only its current text.
+- **BL-012:** `lab_requests` lists what each live request holds, as Tamanu does: each panel
+  request by its panel's name, plus the tests `int__lab_test_panel_attribution` leaves without
+  a panel (Tamanu 2.66 lets one request hold both). Items order by `collected_datetime`, then
+  name, so a request's several items have a deterministic order.
 
 ## Output
 
@@ -207,13 +211,14 @@ not expected to agree and should not be reconciled.
 | AC-013 | An imaging request's notes reach its encounter through `imaging_requests`. | BL-009 | `test_enc_summary_imaging_notes` — fails when the imaging branch is removed, passes when the encounter branch is |
 | AC-014 | `notes` is no longer read in full. | BL-009 | `EXPLAIN (ANALYZE)` on the same fixture, best of 5 warm: 7d 1418→12ms, 1mo 984→49ms, 3mo 964→119ms, 12mo 1080→378ms. Under worst-case physical layout (`record_id` correlation −0.003) the 12-month case is ~9% slower and every narrower window is 2.6–41× faster. Not unit-testable; re-measure on a replica. |
 | AC-015 | Each note aggregate reads a note's current revision: an edit replaces the text it revised, a same-second edit resolves on `created_datetime`, and an edited imaging note contributes only its current text. | BL-010, BL-011 | `test_enc_summary_encounter_notes`, `test_enc_summary_imaging_notes` |
+| AC-016 | A pre-2.66 single-panel request lists only its panel; a request holding a panel and an individual test lists both, alphabetically; a cancelled request lists nothing. | BL-012 | `test_encounter_summary_lab_requests` |
 
 ## Open questions
 
 - **OQ-005** *(owner: Maui team; due: when the encounter summary is next profiled)* —
-  BL-010 gives the three note aggregates a deterministic tiebreaker. The diagnosis,
-  prescription, vaccination, procedure and lab aggregates have the same latent tie and did
-  not get one, because this change does not perturb their input order and widening the
+  BL-010 gives the three note aggregates a deterministic tiebreaker, and BL-012 the lab
+  aggregate. The diagnosis, prescription, vaccination and procedure aggregates have the same
+  latent tie and did not get one, because this change does not perturb their input order and widening the
   diff further was not worth it. They remain non-deterministic on tied timestamps.
 
 ## Change log
@@ -226,3 +231,4 @@ not expected to agree and should not be reconciled.
 | 2026-09-20 | BL-009: `notes_raw` split per `record_type` so the notes join can reach an index (MAUI-6917); BL-010: deterministic ordering for the three note aggregates. BL-008's claim to have fixed the planner's row estimate corrected — it fixed the scan only. Output unchanged. |
 | 2026-09-21 | Forward-ported BL-008/009/010 from `2.54` (#1382, #1391). Numbered to avoid BL-007 and AC-006, which `main` already used for the history-actor left join, so the two lines stayed mergeable. |
 | 2026-09-27 | BL-011: every note aggregate reads each note's current revision (`notes__revision_rank`), so an edited imaging note no longer contributes the text it replaced. BL-010: same-second notes order by `created_datetime`. |
+| 2026-10-15 | BL-012: `lab_requests` follows Tamanu 2.66's one-to-many panel structure — each panel request by name plus the tests not attributed to a panel — and orders ties by name (MAUI-6163). |

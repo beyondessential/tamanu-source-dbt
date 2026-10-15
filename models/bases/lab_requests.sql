@@ -8,7 +8,6 @@ select
     lr.requested_date::timestamp as requested_datetime,
     lr.lab_test_priority_id,
     lr.lab_test_category_id,
-    lr.lab_test_panel_request_id,
     lr.lab_test_laboratory_id,
     lr.requested_by_id,
     lr.specimen_attached as is_specimen_collected,

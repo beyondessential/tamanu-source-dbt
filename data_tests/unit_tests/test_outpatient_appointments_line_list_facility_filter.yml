@@ -115,9 +115,9 @@ unit_tests:
       - input: ref('facilities')
         format: sql
         rows: |
-          select 'fac_a'::text as id, 'Hospital A'::text as name, false as is_sensitive
+          select 'fac_a'::text as id, 'Hospital A'::text as name, null::text as sensitive_network_id
           union all
-          select 'fac_b'::text, 'Hospital B'::text, false
+          select 'fac_b'::text, 'Hospital B'::text, null
 
       - input: ref('patient_additional_data')
         format: sql

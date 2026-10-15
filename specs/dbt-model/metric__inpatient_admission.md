@@ -153,7 +153,7 @@ D5 wide format, plus eight disaggregation/measure columns.
   `admission_ward_id`, the Tamanu ids. Consumer-specific identifiers — a Tupaia entity code, a
   DHIS2 org unit or ward mapping — are resolved in the consumer layer.
 - **BL-010 (classification):** `pii: false`, `classification: internal`, with no
-  `facilities.is_sensitive` filter, so standard and sensitive facilities alike are covered. A
+  facility sensitivity filter, so standard and sensitive facilities alike are covered. A
   row carries an encounter id as its only identifier — no patient id, name, birth date or exact
   diagnosis text.
 - **BL-011 (per-admission grain):** one row per admission, `subject_id` = the encounter id,

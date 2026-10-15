@@ -52,7 +52,7 @@ encounter_details as (
     join {{ ref('locations') }} loc on loc.id = e.location_id
     join {{ ref('facilities') }} f on f.id = loc.facility_id
         -- BL-009: the standard and sensitive variants partition on this flag
-        and f.is_sensitive = {{ is_sensitive }}
+        and (f.sensitive_network_id is not null) = {{ is_sensitive }}
     left join {{ ref('departments') }} dept on dept.id = e.department_id
 ),
 
