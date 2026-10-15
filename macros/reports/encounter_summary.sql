@@ -15,6 +15,7 @@ select
     first_name as "{{ translate_label('patientFirstName') }}",
     last_name as "{{ translate_label('patientLastName') }}",
     to_char(date_of_birth, '{{ var("date_format") }}') as "{{ translate_label('patientDateOfBirth') }}",
+    -- BL-020: age in whole years at the encounter's start
     date_part('year', age(start_datetime, date_of_birth)) as "{{ translate_label('patientAge') }}",
     sex as "{{ translate_label('patientSex') }}",
     ethnicity as "{{ translate_label('patientEthnicity') }}",
@@ -24,6 +25,7 @@ select
     village as "{{ translate_label('patientVillage') }}",
     to_char({{ to_user_selected_timezone('start_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterStartDateTime') }}",
     to_char({{ to_user_selected_timezone('end_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('encounterEndDateTime') }}",
+    -- BL-020: calendar days in the viewer's timezone, at least 1; null while open
     case
         when end_datetime is not null then
             case
@@ -73,6 +75,7 @@ select
     procedures as "{{ translate_label('procedures') }}",
     lab_requests as "{{ translate_label('labRequests') }}",
     imaging_requests as "{{ translate_label('imagingRequests') }}",
+    -- BL-020: crop under Excel's 32,767-character cell limit, leaving room for the notice
     case
         when length(notes) > 32000
             then concat(

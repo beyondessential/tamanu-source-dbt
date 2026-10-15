@@ -42,6 +42,8 @@ join {{ ref("encounters") }} e on e.id = ep.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
 join {{ ref("prescriptions") }} pr on pr.id = ep.prescription_id
 join {{ ref("locations") }} l on l.id = e.location_id
+-- BL-009 (specs/reports/encounter-prescription-discharge-summary.md): the facility
+-- partition is applied here, so the sensitive report needs no parameter for it
 join {{ ref("facilities") }} f 
     on f.id = l.facility_id
     and (f.sensitive_network_id is not null) = {{ is_sensitive }}
