@@ -1,7 +1,13 @@
 unit_tests:
   - name: test_encounter_summary_start_excludes_sensitive
     model: encounter-summary-by-start-date
-    description: "Test that encounters at sensitive facilities are excluded from the non-sensitive by-start-date report"
+    description: >
+      Encounters at sensitive facilities are excluded from the non-sensitive by-start-date
+      report. The inverse is test_encounter_summary_start_sensitive_variant.
+
+      enc_002 is given an encounter_history row on purpose. The report inner-joins
+      encounter_changes, so an encounter with no history is dropped whatever its
+      facility -- without that row this test would pass vacuously.
     overrides:
       vars:
         timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
@@ -36,6 +42,8 @@ unit_tests:
         format: sql
         rows: |
           select 'enc_001' as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'clinic' as encounter_type
+          union all
+          select 'enc_002', '2024-01-11 14:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_002', 'loc_002', 'clinic'
 
       - input: ref('users')
         format: sql
@@ -182,24 +190,6 @@ unit_tests:
           select null::text as imaging_request_id, null::text as area_id
           where false
 
-      - input: ref('invoices')
-        format: sql
-        rows: |
-          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
-          where false
-
-      - input: ref('invoice_items')
-        format: sql
-        rows: |
-          select null::text as invoice_id, null::text as product_id
-          where false
-
-      - input: ref('invoice_products')
-        format: sql
-        rows: |
-          select null::text as id, null::text as category
-          where false
-
     expect:
       format: sql
       rows: |
@@ -248,6 +238,4 @@ unit_tests:
           null::text           as "Procedures",
           null::text           as "Lab requests",
           null::text           as "Imaging requests",
-          null::text           as "Notes",
-          null::text           as "invoiceFinalisedDateTime",
-          null::text           as "invoiceProductCategories"
+          null::text           as "Notes"

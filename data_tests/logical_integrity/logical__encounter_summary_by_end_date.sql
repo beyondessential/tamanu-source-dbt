@@ -1,10 +1,11 @@
 with base as (
     select count(distinct e.id) as total_encounters
     from {{ ref('encounters') }} e
+    -- Mirrors the report's history join. No join to users: the report left-joins the
+    -- history actor (BL-007 of specs/reports/encounter-summary.md), so an encounter
+    -- whose history rows carry no actor is still reported, and must still be counted.
     join {{ ref('encounter_history') }} eh
         on eh.encounter_id = e.id
-    join {{ ref('users') }} actor
-        on actor.id = eh.updated_by_id
     join {{ ref('locations') }} l
         on l.id = e.location_id
     join {{ ref('facilities') }} f

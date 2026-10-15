@@ -196,24 +196,6 @@ unit_tests:
           select null::text as imaging_request_id, null::text as area_id
           where false
 
-      - input: ref('invoices')
-        format: sql
-        rows: |
-          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
-          where false
-
-      - input: ref('invoice_items')
-        format: sql
-        rows: |
-          select null::text as invoice_id, null::text as product_id
-          where false
-
-      - input: ref('invoice_products')
-        format: sql
-        rows: |
-          select null::text as id, null::text as category
-          where false
-
     expect:
       format: sql
       rows: |
@@ -268,6 +250,4 @@ unit_tests:
             'Note type: nursing, Content: Revised text, Note date: 2024-01-17 15:00',
             chr(10),
             'Note type: nursing, Content: Final, Note date: 2024-01-19 08:00'
-          )                    as "Notes",
-          null::text           as "invoiceFinalisedDateTime",
-          null::text           as "invoiceProductCategories"
+          )                    as "Notes"

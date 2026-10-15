@@ -10,8 +10,9 @@ unit_tests:
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
       the two together pin both halves of the partition. Without this test, changing
       `(f.sensitive_network_id is not null) = {{ is_sensitive }}` to a constant `= false` would still pass
-      every other test in the repo, because no other unit test targets a sensitive
-      variant.
+      every other audit-encounter-invoice test, because they all run the standard variant.
+      test_encounter_summary_start_sensitive_variant asserts the same partition at the
+      encounter summary's call site.
     overrides:
       vars:
         timezone: Australia/Sydney
