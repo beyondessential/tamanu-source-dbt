@@ -355,27 +355,52 @@ encounter_procedures as (
     group by p.encounter_id
 ),
 
-encounter_lab_requests as (
+{#- BL-012 (specs/reports/encounter-summary.md): what each lab request on the encounter holds, as Tamanu lists it
+    (getLabRequestTestAndPanelNames): each panel by name, plus the tests not attributed to a
+    panel. From Tamanu 2.66 one request can hold several panels and individual tests, so both
+    branches can contribute to the same request; int__lab_test_panel_attribution decides which
+    tests a panel covers, including for pre-2.66 requests whose tests were never stamped. -#}
+encounter_lab_items as (
     select
         lr.encounter_id,
-        string_agg(
-            coalesce(ltp.name, ltt.name), '' || E'\n' || ''
-            order by lr.collected_datetime
-        ) as lab_requests
+        lr.collected_datetime,
+        ltp.name as item
     from {{ ref('lab_requests') }} lr
     join encounters_in_scope eis
         on eis.encounter_id = lr.encounter_id
-    left join {{ ref('lab_test_panel_requests') }} ltpr
-        on ltpr.id = lr.lab_test_panel_request_id
+    join {{ ref('lab_test_panel_requests') }} ltpr
+        on ltpr.lab_request_id = lr.id
     left join {{ ref('lab_test_panels') }} ltp
         on ltp.id = ltpr.lab_test_panel_id
-    left join {{ ref('lab_tests') }} lt
+    where lr.status not in ('cancelled', 'deleted', 'entered-in-error')
+
+    union all
+
+    select
+        lr.encounter_id,
+        lr.collected_datetime,
+        ltt.name as item
+    from {{ ref('lab_requests') }} lr
+    join encounters_in_scope eis
+        on eis.encounter_id = lr.encounter_id
+    join {{ ref('lab_tests') }} lt
         on lt.lab_request_id = lr.id
-        and lr.lab_test_panel_request_id is null
+    join {{ ref('int__lab_test_panel_attribution') }} lta
+        on lta.lab_test_id = lt.id
+        and lta.lab_test_panel_request_id is null
     left join {{ ref('lab_test_types') }} ltt
         on ltt.id = lt.lab_test_type_id
     where lr.status not in ('cancelled', 'deleted', 'entered-in-error')
-    group by lr.encounter_id
+),
+
+encounter_lab_requests as (
+    select
+        encounter_id,
+        -- item breaks ties within a request, which now routinely contributes several items
+        -- with one collected_datetime; alphabetical, as Tamanu lists them
+        string_agg(item, '' || E'\n' || '' order by collected_datetime, item) as lab_requests
+    from encounter_lab_items
+    group by encounter_id
 ),
 
 notes_raw as (

@@ -3,12 +3,13 @@ unit_tests:
     model: metric__ed_lab_order
     description: >
       BL-001 -- BL-007. e1 arrives in the ED (vd1a, concept 9203, 08:00) and is admitted at 12:00
-      (vd1b, 9201). lr1 is a Full Blood Count panel raised in the ED and published: its three
-      tests (t1-t3) are one row, keyed on the request, labelled with the panel. lr2 is raised
-      without a panel, so its two tests (t4, t5) are a row each, labelled with the test type;
+      (vd1b, 9201). lr1 holds a Full Blood Count panel request raised in the ED and published:
+      its three tests (t1-t3) are one row, keyed on the panel request, labelled with the panel.
+      lr2 holds no panel, so its two tests (t4, t5) are a row each, labelled with the test type;
       t9 on lr7 has a test type that does not resolve, so it falls back to 'Not recorded'. lr4
-      names a panel request that does not resolve: it is still one panel row, labelled 'Not
-      recorded', and is not split into its test t6. lr3 is a panel raised at 13:00 while the
+      holds a panel request whose panel does not resolve: it is still one panel row, labelled
+      'Not recorded', and is not split into its test t6. lr9 holds a panel request and an
+      individual test (Tamanu 2.66): one panel row plus one test row. lr3 is a panel raised at 13:00 while the
       patient boards, so its segment is the admission and it is not counted. lr6 is a panel with
       no status that predates every segment, so it clamps to the first (the ED) and counts as not
       completed. lr5 is entered in error, so its panel is withdrawn and excluded. e3's only
@@ -17,21 +18,23 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'lr1' as id, 'e1' as encounter_id, '2026-01-10 09:00:00'::timestamp as requested_datetime, 'published' as status, '2026-01-10 10:00:00'::timestamp as published_datetime, 'ltpr1' as lab_test_panel_request_id
+          select 'lr1' as id, 'e1' as encounter_id, '2026-01-10 09:00:00'::timestamp as requested_datetime, 'published' as status, '2026-01-10 10:00:00'::timestamp as published_datetime
           union all
-          select 'lr2', 'e1', '2026-01-10 09:10:00'::timestamp, 'results_pending', null::timestamp, null::text
+          select 'lr2', 'e1', '2026-01-10 09:10:00'::timestamp, 'results_pending', null::timestamp
           union all
-          select 'lr3', 'e1', '2026-01-10 13:00:00'::timestamp, 'published', '2026-01-10 14:00:00'::timestamp, 'ltpr3'
+          select 'lr3', 'e1', '2026-01-10 13:00:00'::timestamp, 'published', '2026-01-10 14:00:00'::timestamp
           union all
-          select 'lr4', 'e1', '2026-01-10 09:20:00'::timestamp, 'results_pending', null::timestamp, 'ltpr_gone'
+          select 'lr4', 'e1', '2026-01-10 09:20:00'::timestamp, 'results_pending', null::timestamp
           union all
-          select 'lr5', 'e1', '2026-01-10 09:30:00'::timestamp, 'entered-in-error', null::timestamp, 'ltpr5'
+          select 'lr5', 'e1', '2026-01-10 09:30:00'::timestamp, 'entered-in-error', null::timestamp
           union all
-          select 'lr6', 'e1', '2026-01-10 07:00:00'::timestamp, null::text, null::timestamp, 'ltpr6'
+          select 'lr6', 'e1', '2026-01-10 07:00:00'::timestamp, null::text, null::timestamp
           union all
-          select 'lr7', 'e1', '2026-01-10 09:40:00'::timestamp, 'published', '2026-01-10 11:00:00'::timestamp, null::text
+          select 'lr7', 'e1', '2026-01-10 09:40:00'::timestamp, 'published', '2026-01-10 11:00:00'::timestamp
           union all
-          select 'lr8', 'e3', '2026-01-12 09:00:00'::timestamp, 'published', '2026-01-12 10:00:00'::timestamp, 'ltpr8'
+          select 'lr8', 'e3', '2026-01-12 09:00:00'::timestamp, 'published', '2026-01-12 10:00:00'::timestamp
+          union all
+          select 'lr9', 'e1', '2026-01-10 09:50:00'::timestamp, 'results_pending', null::timestamp
 
       - input: ref('lab_tests')
         format: sql
@@ -55,6 +58,10 @@ unit_tests:
           select 't9', 'lr7', 'ltt_missing'
           union all
           select 't10', 'lr8', 'ltt_hb'
+          union all
+          select 't11', 'lr9', 'ltt_hb'
+          union all
+          select 't12', 'lr9', 'ltt_crp'
 
       - input: ref('lab_test_types')
         format: sql
@@ -72,15 +79,47 @@ unit_tests:
       - input: ref('lab_test_panel_requests')
         format: sql
         rows: |
-          select 'ltpr1' as id, 'ltp_fbc' as lab_test_panel_id
+          select 'ltpr1' as id, 'ltp_fbc' as lab_test_panel_id, 'lr1' as lab_request_id
           union all
-          select 'ltpr3', 'ltp_fbc'
+          select 'ltpr3', 'ltp_fbc', 'lr3'
           union all
-          select 'ltpr5', 'ltp_fbc'
+          select 'ltpr4', 'ltp_gone', 'lr4'
           union all
-          select 'ltpr6', 'ltp_fbc'
+          select 'ltpr5', 'ltp_fbc', 'lr5'
           union all
-          select 'ltpr8', 'ltp_fbc'
+          select 'ltpr6', 'ltp_fbc', 'lr6'
+          union all
+          select 'ltpr8', 'ltp_fbc', 'lr8'
+          union all
+          select 'ltpr9', 'ltp_fbc', 'lr9'
+
+      # Resolved as int__lab_test_panel_attribution would; its own rules are tested there.
+      - input: ref('int__lab_test_panel_attribution')
+        format: sql
+        rows: |
+          select 't1' as lab_test_id, 'lr1' as lab_request_id, 'ltpr1' as lab_test_panel_request_id, 'ltp_fbc' as lab_test_panel_id, 'recorded' as panel_attribution
+          union all
+          select 't2', 'lr1', 'ltpr1', 'ltp_fbc', 'recorded'
+          union all
+          select 't3', 'lr1', 'ltpr1', 'ltp_fbc', 'recorded'
+          union all
+          select 't4', 'lr2', null::text, null::text, null::text
+          union all
+          select 't5', 'lr2', null::text, null::text, null::text
+          union all
+          select 't6', 'lr4', 'ltpr4', 'ltp_gone', 'recorded'
+          union all
+          select 't7', 'lr3', 'ltpr3', 'ltp_fbc', 'recorded'
+          union all
+          select 't8', 'lr6', 'ltpr6', 'ltp_fbc', 'single_panel_request'
+          union all
+          select 't9', 'lr7', null::text, null::text, null::text
+          union all
+          select 't10', 'lr8', 'ltpr8', 'ltp_fbc', 'recorded'
+          union all
+          select 't11', 'lr9', 'ltpr9', 'ltp_fbc', 'recorded'
+          union all
+          select 't12', 'lr9', null::text, null::text, null::text
 
       - input: ref('lab_test_panels')
         format: sql
@@ -122,14 +161,18 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'ed_lab_order' as metric_id, null::text as variant_id, 'lr1' as subject_id, '2026-01-10 09:00:00'::timestamp as period_start, '2026-01-10 10:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, true as is_panel, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 35 as age_years, 'Emergency' as department
+        select 'ed_lab_order' as metric_id, null::text as variant_id, 'ltpr1' as subject_id, '2026-01-10 09:00:00'::timestamp as period_start, '2026-01-10 10:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'female' as sex, true as is_completed, true as is_panel, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 35 as age_years, 'Emergency' as department
         union all
         select 'ed_lab_order', null::text, 't4', '2026-01-10 09:10:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, false, 'UE', 'Urea and electrolytes', 35, 'Emergency'
         union all
         select 'ed_lab_order', null::text, 't5', '2026-01-10 09:10:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, false, 'CRP', 'C-reactive protein', 35, 'Emergency'
         union all
-        select 'ed_lab_order', null::text, 'lr4', '2026-01-10 09:20:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'Not recorded', 'Not recorded', 35, 'Emergency'
+        select 'ed_lab_order', null::text, 'ltpr4', '2026-01-10 09:20:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'Not recorded', 'Not recorded', 35, 'Emergency'
         union all
-        select 'ed_lab_order', null::text, 'lr6', '2026-01-10 07:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'FBC', 'Full Blood Count', 35, 'Emergency'
+        select 'ed_lab_order', null::text, 'ltpr6', '2026-01-10 07:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'FBC', 'Full Blood Count', 35, 'Emergency'
         union all
         select 'ed_lab_order', null::text, 't9', '2026-01-10 09:40:00'::timestamp, '2026-01-10 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', true, false, 'Not recorded', 'Not recorded', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 'ltpr9', '2026-01-10 09:50:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, true, 'FBC', 'Full Blood Count', 35, 'Emergency'
+        union all
+        select 'ed_lab_order', null::text, 't12', '2026-01-10 09:50:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'female', false, false, 'CRP', 'C-reactive protein', 35, 'Emergency'

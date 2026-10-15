@@ -14,9 +14,8 @@
 | **Linear issue** | MAUI-6837 |
 | **Created** | 2026-09-23 |
 
-Canonical definition for `lab_order`: one row per lab request raised from a panel, labelled
-with the panel however many tests it holds, and one row per lab test on a request raised
-without one. The generic counterpart to `metric__ed_lab_order`, carrying the segment's OMOP
+Canonical definition for `lab_order`: one row per panel request, labelled with the panel
+however many tests it holds, and one row per lab test not attributed to a panel. The generic counterpart to `metric__ed_lab_order`, carrying the segment's OMOP
 Visit concept rather than scoping to a single setting. **No outpatient or inpatient siblings** -- see BL-001.
 
 ## Purpose
@@ -27,10 +26,11 @@ Laboratory ordering activity, one row per order line.
 |---|---|---|
 | `lab_order` | count | Lab order lines placed (always 1 per row) |
 
-**The panel rule.** A request raised from a panel is one order line labelled with the panel,
-however many tests it holds -- a Full Blood Count is one order, not three. A request raised
-without a panel is one order line per test on it. Decision (Juliana, 2026-09-30), matching
-`metric__ed_lab_order`.
+**The panel rule.** A panel request is one order line labelled with the panel, however many
+tests it holds -- a Full Blood Count is one order, not three. A test not attributed to a panel
+is one order line of its own. From Tamanu 2.66 one request can hold several panel requests and
+individual tests side by side, so a request can yield several lines of both kinds. Decision
+(Juliana, 2026-09-30), matching `metric__ed_lab_order`.
 
 **What this grain costs.** A row can cover several tests, so three things the per-test
 predecessor carried are no longer expressible and are deliberately absent:
@@ -67,13 +67,11 @@ HMIS definition.
 double-count an order in any consumer that sums `value_numeric`, and would also catch an id
 appearing in both branches of the union.
 
-`subject_id` is the `lab_requests` id on a panel line and the `lab_tests` id on a single-test
-line. The two id spaces are disjoint, so it is unique across the union.
+`subject_id` is the `lab_test_panel_requests` id on a panel line and the `lab_tests` id on a
+single-test line. The two id spaces are disjoint, so it is unique across the union.
 
-**Panel lines are keyed on the request, not the panel request.** A panel spanning several
-categories fans into one `lab_requests` row per category, each with its own status and
-timestamps. Collapsing them onto the panel request would leave no single status or
-`requested_datetime` to report, so each request is its own line, all labelled with the panel.
+**Known gap.** A test stamped with a panel request that has since been deleted keeps that
+attribution, so it yields neither a panel line nor a test line. Not covered by a test.
 
 ## Output schema
 
@@ -83,7 +81,7 @@ D5 wide format, plus eleven disaggregation columns and one measure.
 |---|---|---|
 | `metric_id` | text | Always `lab_order`. FK -> `metric_definitions.metric_id` |
 | `variant_id` | text | NULL -- this is the standard definition |
-| `subject_id` | varchar(255) | `lab_requests.id` on a panel line, `lab_tests.id` on a single. `not_null` |
+| `subject_id` | varchar(255) | `lab_test_panel_requests.id` on a panel line, `lab_tests.id` on a single. `not_null` |
 | `period_start` | timestamp | Request placed (BL-002) |
 | `period_end` | timestamp | Request published. NULL until then (BL-006) |
 | `period_granularity` | text | Constant `'minute'` |
@@ -125,18 +123,15 @@ dbt's. This model therefore carries no `data_table_*` meta.
   and they are what emergency cards read. Orders placed in the emergency phase carry 9203
   here.
 
-- **BL-002 (the panel rule, and the reporting period):** a request raised from a panel is one
-  order line, labelled with the panel, however many tests it holds. `is_panel` is true on
-  those rows. `period_start` is `lab_requests.requested_datetime`; `period_end` is the
-  request's publication (BL-006). Both are request-level, which is coherent here because a
-  line never spans more than one request (see Grain).
+- **BL-002 (the panel rule, and the reporting period):** each panel request on a live request
+  is one order line, labelled with the panel, however many tests it holds; `is_panel` is true.
+  `period_start` and `period_end` are its request's `requested_datetime` and publication
+  (BL-006), coherent because a panel request belongs to exactly one request.
 
-- **BL-003 (single-test lines):** a request raised without a panel is one order line per
-  `lab_tests` row on it, labelled with the test type, `is_panel` false. A non-panel request
-  with no `lab_tests` rows contributes nothing. A panel request contributes its line whether or
-  not it holds any tests, since the panel branch does not read `lab_tests`, matching
-  `metric__ed_lab_order`. The two branches are unioned; their id spaces are
-  disjoint, so the grain assertion also guards the union.
+- **BL-003 (single-test lines):** each test that `int__lab_test_panel_attribution` leaves
+  without a panel -- applying Tamanu's rule that a pre-2.66 request with one panel request and
+  no attributed test holds only that panel -- is one order line, labelled with the test type,
+  `is_panel` false. A panel request yields its line even with no tests.
 
 - **BL-004 (order facts from `bases/`):** decision, Juliana, 2026-09-23. `clinical__` models
   hold what clinically happened; an order is an intent. An order that never produced anything
@@ -246,7 +241,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
 | AC | `facility_id`, `encounter_type`, `department` are `not_null` | BL-010 | `not_null` |
 | AC | `is_completed` and `is_panel` are `not_null` | BL-002, BL-003, BL-006 | `not_null` |
 | AC | `lab_order`, `lab_order_code`, `lab_test_category` are `not_null` | BL-007, BL-008 | `not_null` |
-| AC | A panel request with three tests yields ONE row labelled with the panel; a non-panel request with two tests yields one row each labelled with the test type | BL-002, BL-003 | dbt unit test `test_metric__lab_order_grain` |
+| AC | A panel request with three tests yields ONE row labelled with the panel; a request with no panel and two tests yields one row each labelled with the test type; a request with two panel requests and one individual test yields three rows | BL-002, BL-003 | dbt unit test `test_metric__lab_order_grain` |
 | AC | A cancelled request is included with `is_completed` false; deleted and entered-in-error are excluded | BL-005, BL-006 | dbt unit test `test_metric__lab_order_grain` |
 | AC | A request with no status is included, not dropped by the status filter, and reads `is_completed` false | BL-005, BL-006 | dbt unit test `test_metric__lab_order_edge_cases` |
 | AC | A panel request with no tests still yields its one line, labelled with the panel | BL-002, BL-003 | dbt unit test `test_metric__lab_order_edge_cases` |
@@ -273,10 +268,11 @@ by earlier metrics.
 
 | Ref | Layer | Role |
 |---|---|---|
-| `lab_requests` | `bases/` | The order: timestamps, status, category, panel link, encounter (BL-002, BL-003, BL-005, BL-006) |
+| `lab_requests` | `bases/` | The order: timestamps, status, category, encounter (BL-002, BL-003, BL-005, BL-006) |
 | `lab_tests` | `bases/` | The single-test lines (BL-003) |
 | `lab_test_types` | `bases/` | Test name and code on a single-test line (BL-007) |
-| `lab_test_panel_requests` | `bases/` | Links a panel request to its panel (BL-002, BL-007) |
+| `lab_test_panel_requests` | `bases/` | The panel lines: each panel request, its request and its panel (BL-002, BL-007) |
+| `int__lab_test_panel_attribution` | `intermediate/` | Which tests belong to a panel, so the rest become single-test lines (BL-003) |
 | `lab_test_panels` | `bases/` | Panel name and code on a panel line (BL-002, BL-007) |
 | `reference_data` | `bases/` | Category name for `lab_requests.lab_test_category_id` (BL-008) |
 | `departments` | `bases/` | Name of the resolved segment's `department_id` (BL-010) |
@@ -338,6 +334,7 @@ by earlier metrics.
 
 | Date | Change |
 |---|---|
+| 2026-10-15 | Tamanu 2.66: a request holds any number of panel requests. Panel lines are keyed on the panel request (`subject_id`), and single-test lines are the tests `int__lab_test_panel_attribution` leaves without a panel (MAUI-6163) |
 | 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution uses the shared `visit_detail__active_segment` macro, and columns match `metric__ed_lab_order`: no `request_status` or `lab_request_id`, `published_datetime` carried through both branches, `subject_grain` aligned with `ed_lab_order`, and the spec brought back into line with the code (MAUI-6837) |
 | 2026-09-28 | Aligned with the procedure and imaging families: `encounter_setting` in place of the raw OMOP concept, no per-setting siblings, and setting/department/facility attributed to the segment active at the order rather than the encounter as it now stands. (MAUI-6837) |

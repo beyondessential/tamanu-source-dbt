@@ -3,6 +3,7 @@ select
     lt.date::date as date,
     lt.result,
     lt.lab_request_id,
+    lt.lab_test_panel_request_id,
     lt.lab_test_type_id,
     lt.lab_test_method_id,
     lt.laboratory_officer,

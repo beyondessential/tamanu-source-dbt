@@ -1,0 +1,50 @@
+version: 2
+
+unit_tests:
+  - name: test_int__lab_test_panel_attribution_rules
+    model: int__lab_test_panel_attribution
+    description: >
+      Every branch of the Tamanu 2.66 attribution rule (getLabRequestTestAndPanelNames in
+      packages/utils/src/labTests.ts), one request per case:
+        lr_hist   pre-2.66 request: one panel request, no test attributed -> every test
+                  belongs to that panel ('single_panel_request')
+        lr_new    one panel request, one test stamped, one not -> the stamped test is
+                  'recorded', the unstamped one is individual (the inference does not apply
+                  once any test is attributed)
+        lr_multi  two panel requests, unstamped test -> individual (the inference needs
+                  exactly one panel request)
+        lr_none   no panel request -> individual
+        lr_share  one test type in two panels on one request is two test rows, each kept
+                  on its own panel
+    given:
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001'::uuid as id, 'panel_cbc'::text as lab_test_panel_id, 'lr_hist'::text as lab_request_id
+          union all select '00000000-0000-0000-0000-000000000002'::uuid, 'panel_lft', 'lr_new'
+          union all select '00000000-0000-0000-0000-000000000003'::uuid, 'panel_cbc', 'lr_multi'
+          union all select '00000000-0000-0000-0000-000000000004'::uuid, 'panel_lft', 'lr_multi'
+          union all select '00000000-0000-0000-0000-000000000005'::uuid, 'panel_cbc', 'lr_share'
+          union all select '00000000-0000-0000-0000-000000000006'::uuid, 'panel_rft', 'lr_share'
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select 'lt_hist_1'::text as id, 'lr_hist'::text as lab_request_id, null::uuid as lab_test_panel_request_id
+          union all select 'lt_hist_2', 'lr_hist', null::uuid
+          union all select 'lt_new_1', 'lr_new', '00000000-0000-0000-0000-000000000002'::uuid
+          union all select 'lt_new_2', 'lr_new', null::uuid
+          union all select 'lt_multi_1', 'lr_multi', null::uuid
+          union all select 'lt_none_1', 'lr_none', null::uuid
+          union all select 'lt_share_1', 'lr_share', '00000000-0000-0000-0000-000000000005'::uuid
+          union all select 'lt_share_2', 'lr_share', '00000000-0000-0000-0000-000000000006'::uuid
+    expect:
+      format: sql
+      rows: |
+        select 'lt_hist_1'::text as lab_test_id, 'lr_hist'::text as lab_request_id, '00000000-0000-0000-0000-000000000001'::uuid as lab_test_panel_request_id, 'panel_cbc'::text as lab_test_panel_id, 'single_panel_request'::text as panel_attribution
+        union all select 'lt_hist_2', 'lr_hist', '00000000-0000-0000-0000-000000000001'::uuid, 'panel_cbc', 'single_panel_request'
+        union all select 'lt_new_1', 'lr_new', '00000000-0000-0000-0000-000000000002'::uuid, 'panel_lft', 'recorded'
+        union all select 'lt_new_2', 'lr_new', null::uuid, null::text, null::text
+        union all select 'lt_multi_1', 'lr_multi', null::uuid, null::text, null::text
+        union all select 'lt_none_1', 'lr_none', null::uuid, null::text, null::text
+        union all select 'lt_share_1', 'lr_share', '00000000-0000-0000-0000-000000000005'::uuid, 'panel_cbc', 'recorded'
+        union all select 'lt_share_2', 'lr_share', '00000000-0000-0000-0000-000000000006'::uuid, 'panel_rft', 'recorded'
