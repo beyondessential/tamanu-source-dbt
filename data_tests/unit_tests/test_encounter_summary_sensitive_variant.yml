@@ -5,7 +5,7 @@ unit_tests:
       The inverse of test_encounter_summary_start_excludes_sensitive: the sensitive
       variant must return the sensitive facility's encounter and only that one.
       Without this, replacing (f.sensitive_network_id is not null) = {{ is_sensitive }} with a hardcoded
-      false passes every test in the project.
+      false passes every other encounter summary test, since they all run a standard variant.
 
       enc_002 is given an encounter_history row on purpose. The report inner-joins
       encounter_changes, so an encounter with no history is dropped whatever its
@@ -192,24 +192,6 @@ unit_tests:
           select null::text as imaging_request_id, null::text as area_id
           where false
 
-      - input: ref('invoices')
-        format: sql
-        rows: |
-          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
-          where false
-
-      - input: ref('invoice_items')
-        format: sql
-        rows: |
-          select null::text as invoice_id, null::text as product_id
-          where false
-
-      - input: ref('invoice_products')
-        format: sql
-        rows: |
-          select null::text as id, null::text as category
-          where false
-
     expect:
       format: sql
       rows: |
@@ -258,6 +240,4 @@ unit_tests:
           null::text           as "Procedures",
           null::text           as "Lab requests",
           null::text           as "Imaging requests",
-          null::text           as "Notes",
-          null::text           as "invoiceFinalisedDateTime",
-          null::text           as "invoiceProductCategories"
+          null::text           as "Notes"

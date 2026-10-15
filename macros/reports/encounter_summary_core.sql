@@ -22,10 +22,12 @@
 
     BL-005: the parameter() filters here make this report-layer, hence macros/reports/.
 
-    BL-006: seven outputs are already formatted in the viewer's timezone, applied inside
-    the CTEs -- the three discharge_*_datetime columns, the three *_datetimes arrays, and
-    the dates embedded in the procedures and notes text. A caller needing another format
-    for those must change the CTEs; there is no raw column to select.
+    BL-006: eight outputs are already formatted, applied inside the CTEs -- the three
+    discharge_*_datetime columns, the three *_datetimes arrays, and the dates embedded in
+    the procedures and notes text. Seven are also shifted to the viewer's timezone; the
+    procedures date is not, since procedures.date is a date with no time to shift. A
+    caller needing another format for those must change the CTEs; there is no raw column
+    to select.
 
     BL-008: the date range is filtered twice -- once exactly, on the timezone-converted
     column, and once on the stored character(19) column with the bounds widened two days
@@ -170,6 +172,7 @@ encounter_history_consolidated as (
     -- left join -- a history row with no actor is kept, with a null clinician name.
     left join {{ ref('users') }} actor
         on actor.id = eh.updated_by_id
+    -- BL-014: a history row whose department or location does not resolve is dropped
     join {{ ref('departments') }} d
         on d.id = eh.department_id
     join {{ ref('locations') }} l
@@ -193,6 +196,7 @@ encounter_changes as (
         ) filter (where change_type is null or 'location' = any(change_type)) as locations,
 
         -- Location group changes: tracks location group changes (only when group actually changes)
+        -- BL-017: a location change within the same group is not a new area
         array_agg(
             to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
@@ -249,10 +253,10 @@ encounter_changes as (
             order by datetime
         ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
 
-        -- Encountering clinician: actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
+        -- BL-018: encountering clinician is the actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
         min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician,
 
-        -- Discharge datetimes: the time the patient was last assigned to each dimension, falls back to encounter start time if never changed
+        -- BL-019: discharge datetimes are the time the patient was last assigned to each dimension, falling back to the creation row's time if never changed
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'department\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_department_datetime,
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_datetime,
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_group_datetime
@@ -283,6 +287,7 @@ encounter_diagnoses as (
         on eis.encounter_id = ed.encounter_id
     join {{ ref('reference_data') }} d
         on d.id = ed.diagnosis_id
+    -- BL-015: disproven and error diagnoses are left out
     where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
 ),
@@ -337,6 +342,7 @@ encounter_procedures as (
         string_agg(
             concat(
                 'Name: ', proc.name,
+                    -- BL-006: procedures.date is a date, so it is formatted but not timezone-shifted
                 ', Date: ', to_char(p.date, '{{ var("date_format") }}'),
                 ', Location: ', loc.name,
                 ', Notes: ', p.note,
@@ -495,6 +501,7 @@ encounter_notes_deduped as (
     from notes_current
     where
         record_type = 'Encounter'
+        -- BL-016: system notes are left out, after the revision ranking
         and note_type != 'system'
 ),
 
@@ -647,6 +654,7 @@ left join {{ ref('location_groups') }} lg
     on lg.id = l.location_group_id
 left join {{ ref('users') }} c
     on c.id = eis.clinician_id
+-- BL-013: inner join -- an encounter with no resolved history row is not reported
 join encounter_changes ec
     on ec.encounter_id = eis.encounter_id
 left join {{ ref('triages') }} t
