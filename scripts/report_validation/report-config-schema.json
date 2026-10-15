@@ -208,6 +208,7 @@
             "manufacturer",
             "medicalArea",
             "medicationDispenseModifyReason",
+            "medicationNotDispensedReason",
             "medicationNotGivenReason",
             "medicationPresetLabel",
             "medicationSet",
