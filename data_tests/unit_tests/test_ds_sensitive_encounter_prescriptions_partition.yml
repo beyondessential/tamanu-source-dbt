@@ -1,0 +1,62 @@
+unit_tests:
+  - name: test_ds_sensitive_encounter_prescriptions_partition
+    model: ds__sensitive_encounter_prescriptions
+    description: >
+      BL-009 of specs/reports/encounter-prescription-discharge-summary.md. The sensitive
+      dataset, and so the sensitive report, holds only prescriptions on encounters at a
+      facility with a sensitive_network_id. enc_001 is at a non-sensitive facility and
+      enc_002 at a sensitive one; only rx_002 is returned. Making the partition constant
+      false returns rx_001 instead.
+    given:
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'enc_001' as encounter_id, 'rx_001' as prescription_id, true as is_selected_for_discharge
+          union all
+          select 'enc_002', 'rx_002', true
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, 'loc_001' as location_id
+          union all
+          select 'enc_002', 'pat_001', 'loc_002'
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'Jane' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'female' as sex, null::text as village_id
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as id, '2024-01-05 09:00:00'::timestamp as datetime, 'med_001' as medication_id, null::text as prescriber_id, null::text as route, 10 as quantity, null::int as repeats, false as is_ongoing, false as is_prn, false as is_variable_dose, null::numeric as dose_amount, null::text as dosing_unit, null::text as dispensing_unit, null::numeric as unit_conversion, null::text as frequency, false as is_discontinued, null::text as discontinued_by_id, null::text as discontinuing_reason, null::timestamp as discontinued_datetime
+          union all
+          select 'rx_002', '2024-01-06 09:00:00'::timestamp, 'med_001', null, null, 5, null, false, false, false, null, null, null, null, null, false, null, null, null
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+          union all
+          select 'loc_002', 'fac_002'
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
+          union all
+          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as primary_contact_number, null::text as secondary_contact_number
+          where false
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'med_001' as id, 'Amoxicillin' as name, 'AMX' as code
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name
+          where false
+    expect:
+      format: dict
+      rows:
+        - {prescription_id: rx_002, encounter_id: enc_002, facility: Sensitive Clinic}

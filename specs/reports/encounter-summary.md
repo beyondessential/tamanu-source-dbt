@@ -27,6 +27,8 @@ of the body.
 One row per encounter in the requested sensitivity partition whose `date_field` falls in
 the report window. `date_field` is `start_datetime` or `end_datetime`; the `end_datetime`
 variant additionally requires a non-null `end_datetime`, so open encounters are absent.
+Every join that could fan out is held to one row per encounter: the discharge by the
+`discharges` base model, the triage by BL-021.
 
 ## Inputs
 
@@ -78,7 +80,7 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   zone is the `:timezone` bind, so no index — not even an expression index — can match
   it, and the planner has no statistics for the expression either. The bad row estimate
   that follows is the more expensive half: the scope CTE is materialised (it is
-  referenced ten times, so Postgres 12+ never inlines it) and every clinical aggregate
+  referenced twelve times, so Postgres 12+ never inlines it) and every clinical aggregate
   CTE downstream inherits the estimate as a hash join over a full table scan.
 
   **The candidate bounds fix the scan, not the estimate.** The exact predicates remain,
@@ -150,10 +152,11 @@ had since it was split into a core and a wrapper; recording them changed no outp
 - **BL-013:** An encounter with no consolidated history row — its history missing, or
   entirely unresolved (BL-014) — is **dropped** by the final select's inner join to
   `encounter_changes`, with no warning.
-- **BL-014:** A history row whose `department_id` or `location_id` does not resolve is
-  **dropped** by the consolidation's inner joins, so its change is absent from every
-  movement-history column (the actor join is the exception, BL-007). An encounter left with
-  no resolved row falls to BL-013.
+- **BL-014:** A history row whose department or location does not resolve — missing, or
+  soft-deleted, which counts as deleted — is **dropped** by the consolidation's inner joins
+  to the base models, so its change is absent from every movement-history column (the
+  actor join is the exception, BL-007). An encounter left with no resolved row falls to
+  BL-013, and the `logical__encounter_summary_by_*` checks drop the same rows.
 - **BL-015:** `diagnoses` and `diagnosis_codes` leave out diagnoses whose `certainty` is
   `disproven` or `error`, as Tamanu does. They order primary first, then by `datetime`.
 - **BL-016:** `notes` leaves out `system` notes. The filter runs after BL-011's revision
@@ -178,6 +181,21 @@ had since it was split into a core and a wrapper; recording them changed no outp
       separator must fit.
     - **Triage waiting time** is `hh:mm:ss` between triage and its close, and null unless
       the close is after the triage.
+
+### Aggregate scope
+
+- **BL-021:** The triage is the encounter's **earliest**, by `(triage_datetime, id)`. Tamanu
+  has no unique constraint on `triages.encounter_id`, so without this a second triage would
+  duplicate the encounter's row; earliest mirrors the `discharges` base model.
+- **BL-022:** `imaging_requests` lists only live requests: `cancelled`, `deleted` and
+  `entered_in_error` are left out (Tamanu's imaging statuses use underscores, unlike lab's).
+- **BL-023:** `medications` lists **every** prescription on the encounter in prescription
+  order, discontinued ones included, each with its discontinued flag and reason.
+- **BL-024:** `vaccinations` lists only `GIVEN` administrations, including those given
+  elsewhere, since the text carries no status. `NOT_GIVEN` and `RECORDED_IN_ERROR` are left
+  out, and so is `HISTORICAL`, which Tamanu assigns to a `NOT_GIVEN` record once the same
+  scheduled dose is later given (`patientVaccine.js`) — it is a superseded refusal, not a
+  past dose.
 
 ## Output
 
@@ -256,6 +274,10 @@ not expected to agree and should not be reconciled.
 | AC-022 | The clinician is the creation row's actor, not a later actor. | BL-018 | `test_encounter_summary_history_consolidation` (enc_001) — fails when any row's actor is taken |
 | AC-023 | A discharge time with no matching change is the creation row's time, and with changes is the last change's time. | BL-019 | `test_enc_summary_discharge_datetime_fallback`, `test_enc_summary_discharge_datetime_with_changes`. Removing the fallback fails most encounter summary fixtures, since most have no changes. |
 | AC-024 | Length of stay is at least 1 and null for an open encounter; age is taken at the start; notes are cropped at 32,000 characters. | BL-020 | Partly. Length of stay: `test_enc_summary_discharge_datetime_fallback` and three others fail at a floor of 0. Age: every fixture asserts a value, but none is built so that age at start and age at end differ. Crop: only the short side — `test_enc_summary_encounter_notes` fails if the threshold drops, but no fixture holds a note over 32,000 characters, so the crop itself is not asserted. |
+| AC-025 | An encounter with two triages is one row, carrying the earlier triage. | BL-021 | `test_encounter_summary_aggregate_scope` — fails without the dedup |
+| AC-026 | Cancelled, deleted and entered-in-error imaging requests are not listed. | BL-022 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
+| AC-027 | A discontinued prescription is listed, flagged, in prescription order. | BL-023 | `test_encounter_summary_aggregate_scope` |
+| AC-028 | Only `GIVEN` vaccines are listed. | BL-024 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
 
 ## Open questions
 
@@ -294,3 +316,4 @@ not expected to agree and should not be reconciled.
 | 2026-09-27 | BL-011: every note aggregate reads each note's current revision (`notes__revision_rank`), so an edited imaging note no longer contributes the text it replaced. BL-010: same-second notes order by `created_datetime`. |
 | 2026-10-15 | BL-012: `lab_requests` follows Tamanu 2.66's one-to-many panel structure — each panel request by name plus the tests not attributed to a panel — and orders ties by name (MAUI-6163). |
 | 2026-10-15 | MAUI-7011, from the 2.66 conformance review. BL-006 corrected: eight formatted outputs, not seven, and the procedures date is formatted but not shifted. BL-013–BL-020 record resolution and presentation rules that were tested but unwritten, with `test_encounter_summary_history_consolidation` added for the four no test asserted. AC-005 now cites the test names, and its `false`-direction fixture gives the sensitive encounter a history row so it no longer passes vacuously. OQ-005 now lists every non-deterministic ordering. The `logical__encounter_summary_by_*` checks no longer inner-join the history actor, which contradicted BL-007. Output unchanged. |
+| 2026-10-15 | MAUI-7011 follow-up. **Output changes:** `vaccinations` lists only `GIVEN` administrations (BL-024) — in the 2.66 release DB 519 of 1,057 records were `NOT_GIVEN` and read as given; and an encounter with several triages is one row (BL-021), which changes nothing where triages are already unique. BL-022 and BL-023 record existing imaging and medication behaviour. BL-014 states that soft-deleted departments and locations count as deleted, and the logical checks now drop those history rows too. BL-008's count of scope-CTE references corrected (now twelve). |
