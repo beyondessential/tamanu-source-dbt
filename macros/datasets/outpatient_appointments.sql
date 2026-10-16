@@ -81,12 +81,12 @@ appointment_creators as (
     -- change events by the appointments already in scope is the same move BL-030 makes in
     -- audit_outpatient_appointments. BL-031's note that the base model itself cannot be
     -- date-scoped still holds; this simply no longer depends on that model.
-    select distinct on (c.record_id)
-        c.record_id as appointment_id,
+    select distinct on (c.appointment_id)
+        c.appointment_id,
         c.updated_by_user_id as created_by_user_id
     from {{ ref('outpatient_appointments_change_events') }} c
-    join appointments_in_scope s on s.appointment_id = c.record_id
-    order by c.record_id, c.logged_at, c.record_updated_at, c.id
+    join appointments_in_scope s on s.appointment_id = c.appointment_id
+    order by c.appointment_id, c.logged_at, c.record_updated_at, c.changelog_id
 )
 
 select

@@ -142,7 +142,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   `:timezone` round trip, which can move the value by up to the zone offset in either
   direction, so the bare-column pair is always a strict superset of the exact one.
 - **BL-044:** `created_by` is the actor on the appointment's earliest surviving change
-  event, resolved with `distinct on (record_id)` over
+  event, resolved with `distinct on (appointment_id)` over
   `bases/outpatient_appointments_change_events` — the window-free projection BL-037 exists
   for — joined to `appointments_in_scope`.
 
@@ -152,7 +152,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   `WindowAgg`, so a one-month report windowed every appointment's entire history and
   carried each row's JSONB payload through the sort. The rewrite is an exact equivalence,
   on three counts: both read the same source rows under the same BL-037 filters; the
-  `order by` is the window's own `(logged_at, record_updated_at, id)`, so `distinct on`
+  `order by` is the window's own `(logged_at, record_updated_at, changelog_id)`, so `distinct on`
   selects the row where `row_number() = 1`; and at that row
   `first_value(updated_by_user_id)` is `updated_by_user_id`.
 

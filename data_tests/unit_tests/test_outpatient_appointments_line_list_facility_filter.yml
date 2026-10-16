@@ -63,8 +63,8 @@ unit_tests:
         format: sql
         rows: |
           select
-            'chg_001'::text as id,
-            'appt_a'::text as record_id,
+            'chg_001'::text as changelog_id,
+            'appt_a'::text as appointment_id,
             '2026-08-01 08:00:00'::timestamp as logged_at,
             '2026-08-01 08:00:00'::timestamp as record_updated_at,
             'usr_001'::text as updated_by_user_id,

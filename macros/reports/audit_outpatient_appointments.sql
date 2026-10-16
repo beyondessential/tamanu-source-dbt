@@ -27,8 +27,8 @@
 {%- set to_bound = "(" ~ parameter('toDate', default_value='2025-01-31', data_type='date') | trim ~ ")::date" -%}
 
 {%- set candidate_filter -%}
-c.record_id in (
-    select c2.record_id
+c.appointment_id in (
+    select c2.appointment_id
     from {{ ref('outpatient_appointments_change_events') }} c2
     -- BL-033: resolves the facility from the event's own location_group_id, not the
     -- appointment's current row. Mirrors the core's inner joins (BL-028), so this drops only

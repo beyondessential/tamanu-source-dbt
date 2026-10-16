@@ -5,8 +5,8 @@
 -- logged_at and record_updated_at are in the deployment's local time, as in every other
 -- change-log base (MAUI-6960).
 select
-    c.id,
-    c.record_id,
+    c.id as changelog_id,
+    c.record_id as appointment_id,
     c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     c.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
     c.updated_by_user_id,
