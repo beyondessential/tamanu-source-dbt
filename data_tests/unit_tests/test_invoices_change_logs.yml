@@ -9,14 +9,18 @@ unit_tests:
       invoices belonging to the test patient are excluded.
 
       record_updated_at is in the ordering key, so it is given explicitly even
-      though every row leaves it null.
+      though every row leaves it null. var('timezone') is pinned to UTC, so the
+      local-time logged_at equals the UTC input.
+    overrides:
+      vars:
+        timezone: UTC
     given:
       - input: source('logs__tamanu', 'changes')
         format: sql
         rows: |
           select
             '00000000-0000-0000-0000-000000000001'::uuid as id,
-            '2025-01-10 09:00:00'::timestamp as logged_at,
+            '2025-01-10 09:00:00+00'::timestamptz as logged_at,
             null::timestamp as record_updated_at,
             'user_001'::text as updated_by_user_id,
             '00000000-0000-0000-0000-000000000011'::text as record_id,
@@ -24,17 +28,17 @@ unit_tests:
             null::timestamp as record_deleted_at,
             '{"status": "in_progress"}'::jsonb as record_data
           union all
-          select '00000000-0000-0000-0000-000000000002'::uuid, '2025-01-15 14:00:00'::timestamp, null::timestamp, 'user_002'::text, '00000000-0000-0000-0000-000000000011'::text, 'invoices'::text, null::timestamp, '{"status": "finalised"}'::jsonb
+          select '00000000-0000-0000-0000-000000000002'::uuid, '2025-01-15 14:00:00+00'::timestamptz, null::timestamp, 'user_002'::text, '00000000-0000-0000-0000-000000000011'::text, 'invoices'::text, null::timestamp, '{"status": "finalised"}'::jsonb
           union all
-          select '00000000-0000-0000-0000-000000000003'::uuid, '2025-01-12 10:00:00'::timestamp, null::timestamp, 'user_003'::text, '00000000-0000-0000-0000-000000000022'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
+          select '00000000-0000-0000-0000-000000000003'::uuid, '2025-01-12 10:00:00+00'::timestamptz, null::timestamp, 'user_003'::text, '00000000-0000-0000-0000-000000000022'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
           union all
-          select '00000000-0000-0000-0000-000000000004'::uuid, '2025-01-11 08:00:00'::timestamp, null::timestamp, 'user_004'::text, '00000000-0000-0000-0000-000000000033'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
+          select '00000000-0000-0000-0000-000000000004'::uuid, '2025-01-11 08:00:00+00'::timestamptz, null::timestamp, 'user_004'::text, '00000000-0000-0000-0000-000000000033'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
           union all
-          select '00000000-0000-0000-0000-000000000005'::uuid, '2025-01-13 09:00:00'::timestamp, null::timestamp, 'user_005'::text, '00000000-0000-0000-0000-000000000044'::text, 'invoices'::text, '2025-01-14 00:00:00'::timestamp, '{"status": "in_progress"}'::jsonb
+          select '00000000-0000-0000-0000-000000000005'::uuid, '2025-01-13 09:00:00+00'::timestamptz, null::timestamp, 'user_005'::text, '00000000-0000-0000-0000-000000000044'::text, 'invoices'::text, '2025-01-14 00:00:00'::timestamp, '{"status": "in_progress"}'::jsonb
           union all
-          select '00000000-0000-0000-0000-000000000006'::uuid, '2025-01-14 09:00:00'::timestamp, null::timestamp, 'user_006'::text, '00000000-0000-0000-0000-000000000055'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
+          select '00000000-0000-0000-0000-000000000006'::uuid, '2025-01-14 09:00:00+00'::timestamptz, null::timestamp, 'user_006'::text, '00000000-0000-0000-0000-000000000055'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
           union all
-          select '00000000-0000-0000-0000-000000000007'::uuid, '2025-01-16 09:00:00'::timestamp, null::timestamp, 'user_007'::text, '00000000-0000-0000-0000-000000000066'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
+          select '00000000-0000-0000-0000-000000000007'::uuid, '2025-01-16 09:00:00+00'::timestamptz, null::timestamp, 'user_007'::text, '00000000-0000-0000-0000-000000000066'::text, 'invoices'::text, null::timestamp, '{"status": "in_progress"}'::jsonb
 
       - input: source('tamanu', 'invoices')
         format: sql
@@ -76,7 +80,7 @@ unit_tests:
       format: sql
       rows: |
         select
-          '00000000-0000-0000-0000-000000000001'::uuid as change_id,
+          '00000000-0000-0000-0000-000000000001'::uuid as changelog_id,
           '00000000-0000-0000-0000-000000000011'::uuid as invoice_id,
           '2025-01-10 09:00:00'::timestamp as logged_at,
           'user_001'::text as updated_by_user_id,

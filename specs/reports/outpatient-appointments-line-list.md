@@ -141,12 +141,8 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   a day past each exact bound, which an index can prune. The widening absorbs the
   `:timezone` round trip, which can move the value by up to the zone offset in either
   direction, so the bare-column pair is always a strict superset of the exact one.
-
-  `from_user_selected_timezone()` — the BL-039 technique — does not apply: it is only valid
-  against a `timestamptz` column, and `start_datetime` is a naive timestamp
-  (`a.start_time::timestamp` in the base model).
 - **BL-044:** `created_by` is the actor on the appointment's earliest surviving change
-  event, resolved with `distinct on (record_id)` over
+  event, resolved with `distinct on (appointment_id)` over
   `bases/outpatient_appointments_change_events` — the window-free projection BL-037 exists
   for — joined to `appointments_in_scope`.
 
@@ -156,7 +152,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   `WindowAgg`, so a one-month report windowed every appointment's entire history and
   carried each row's JSONB payload through the sort. The rewrite is an exact equivalence,
   on three counts: both read the same source rows under the same BL-037 filters; the
-  `order by` is the window's own `(logged_at, record_updated_at, id)`, so `distinct on`
+  `order by` is the window's own `(logged_at, record_updated_at, changelog_id)`, so `distinct on`
   selects the row where `row_number() = 1`; and at that row
   `first_value(updated_by_user_id)` is `updated_by_user_id`.
 
@@ -294,5 +290,6 @@ patients, patient_additional_data, users, reference_data ───────�
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-16 | Maui team | [MAUI-6960](https://linear.app/bes/issue/MAUI-6960): dropped BL-043's note on `from_user_selected_timezone`, which has been removed. `outpatient_appointments_change_events` now exposes local `logged_at`, so BL-044's `distinct on` orders by local time; the creator it picks is unchanged outside a DST fall-back hour. |
 | 2026-09-17 | Maui team | Added `appointmentId` as the first column and `appointmentCreatedDateTime` as the last (MAUI-6905). `created_datetime` is new in `bases/outpatient_appointments`, where `created_at` is converted from `timestamptz` to deployment-local wall clock, and is passed through the dataset's scope CTE. |
 | 2026-09-07 | Maui team | Initial spec, written alongside the performance rework: filter pushdown into the dataset's scope CTE (BL-042, BL-046), the window-free creator lookup (BL-044), the bare-column index-prunable bounds (BL-043), the shared report macro replacing two copies of the body (BL-047), and `facilityId` applied for the first time (BL-045). BL-041 records why this report keeps the house `<= toDate` form where the audit reports cast and add a day. |

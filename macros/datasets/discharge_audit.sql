@@ -26,11 +26,11 @@ with discharge_records as (
 change_log_summary as (
     select
         cl.discharge_id,
-        min(cl.changed_datetime) as recorded_datetime,
+        min(cl.logged_at) as recorded_datetime,
         -- BL-008: edits after the insert. The left join below leaves this null, not zero,
         -- where the change log does not cover the discharge at all
         count(*) - 1 as later_edit_count,
-        max(cl.changed_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
+        max(cl.updated_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
     from {{ ref('discharges_change_logs') }} cl
     group by cl.discharge_id
 ),

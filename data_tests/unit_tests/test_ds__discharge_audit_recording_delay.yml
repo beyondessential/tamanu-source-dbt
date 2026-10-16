@@ -18,7 +18,7 @@ unit_tests:
       - input: ref('discharges_change_logs')
         format: sql
         rows: |
-          select 'chg_001' as change_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2024-03-14 08:05:00'::timestamp as changed_datetime, 'usr_001' as changed_by_user_id, 1 as change_sequence
+          select 'chg_001' as changelog_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2024-03-14 08:05:00'::timestamp as logged_at, 'usr_001' as updated_by_user_id, 1 as change_sequence
           union all
           select 'chg_002', 'dis_001', 'enc_001', '2024-03-15 09:30:00'::timestamp, 'usr_002', 2
           union all
