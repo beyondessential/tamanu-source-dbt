@@ -98,8 +98,8 @@ a deleted or merged patient are out of scope.
 - **BL-001:** Grain is one row per non-deleted `discharges` record whose encounter is not
   deleted and whose patient is neither deleted, merged, nor the test patient. The `discharges`
   base model deduplicates to one row per encounter, keeping the earliest by `created_at`.
-- **BL-002:** `discharge_recorded_datetime` is the `logged_at` of the earliest
-  `logs.changes` entry for the discharge record. The earliest entry is treated as the
+- **BL-002:** `discharge_recorded_datetime` is the `logged_at` of the earliest (by UTC log
+  time) `logs.changes` entry for the discharge record. The earliest entry is treated as the
   insert. Where the discharge has no change log entry at all the column is null; there is
   no fallback, and `days_between_discharge_and_recording` is null with it. Where coverage
   is partial — the discharge was created before change
@@ -156,6 +156,7 @@ a deleted or merged patient are out of scope.
 | AC-006 | Auto-discharged rows are flagged, not dropped, and carry no recording user when the session had no audit user | BL-004, BL-005 | `test_ds__discharge_audit_recording_delay` |
 | AC-007 | The date range includes discharges recorded at any time of day on `toDate` | BL-007 | Manual run against a demo snapshot |
 | AC-008 | An encounter with several diagnoses still returns exactly one row, with primary and secondary diagnoses in their own columns | BL-010 | `test_ds__discharge_audit_recording_delay`, plus `unique` on `encounter_id` for the grain. `logical__ds__discharge_audit` asserts nothing about diagnoses. |
+| AC-009 | A discharge recorded and then edited inside a DST fall-back's repeated hour reports the recording, not the edit | BL-002 | `test_ds__discharge_audit_recorded_dst_fall_back` |
 
 Data tests run at `warn` severity project-wide (`data_tests: +severity: warn` in
 `dbt_project.yml`) and none of these override it, so a broken acceptance criterion surfaces as
@@ -198,3 +199,4 @@ _None._
 | 2026-08-21 | Maui team | Dropped the appended code from the diagnosis name columns (BL-012); the code already has its own column. `admissions.sql` unchanged, so the two datasets differ on this for now. |
 | 2026-08-21 | Maui team | Brought the spec back in line with the code where it had drifted: partial change log coverage (BL-002 and Risks), the `end_date` clamp inherited from the encounters base (BL-011), earliest-wins dedup in BL-001, the null-location blind spot shared by the dataset and AC-001's test, and the `warn` severity the acceptance tests run at. Documentation only, no code change. |
 | 2026-08-31 | Maui team | Removed `created_datetime` from the `discharges` base model and with it BL-002's fallback: `discharge_recorded_datetime` now comes from the change log alone and is null where the change log has no entry. AC-003 re-aimed at the invariant that still holds, its `not_null` tests dropped, `test_ds__discharge_audit_changelog_fallback` renamed to `test_ds__discharge_audit_no_changelog_coverage`, and the report notes updated. Consumers needing the clinician-entered discharge date join the encounters base for it, as `ds__discharge_audit` already does. |
+| 2026-10-16 | Maui team | [MAUI-7018](https://linear.app/bes/issue/MAUI-7018): BL-002's earliest entry is chosen by UTC log time (the base's `change_sequence`), so a recording followed by an edit inside a DST fall-back's repeated hour reports the recording (AC-009). Unchanged outside that hour. |

@@ -22,20 +22,22 @@ with appointment_changes as (
         (c.record_data ->> 'is_high_priority')::boolean as is_high_priority,
         c.record_data ->> 'status' as status,
         (c.record_data ->> 'schedule_id')::uuid as schedule_id,
+        -- History is ordered by the UTC sort keys: local logged_at repeats an hour at a DST
+        -- fall-back (MAUI-7018)
         -- BL-023: creator comes from the retained creation event
         first_value(c.updated_by_user_id) over (
             partition by c.appointment_id
-            order by c.logged_at, c.record_updated_at, c.changelog_id
+            order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
         ) as created_by_user_id,
         -- Use LAG to get the previous record state
         lag(c.record_data) over (
             partition by c.appointment_id
-            order by c.logged_at, c.record_updated_at, c.changelog_id
+            order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
         ) as previous_record_data,
         -- Track change sequence
         row_number() over (
             partition by c.appointment_id
-            order by c.logged_at, c.record_updated_at, c.changelog_id
+            order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
         ) as change_sequence
     from {{ ref('outpatient_appointments_change_events') }} c
     {%- if record_id_filter %}

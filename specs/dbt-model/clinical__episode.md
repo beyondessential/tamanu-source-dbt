@@ -119,7 +119,7 @@ the history is aggregated to one row per registration before it is joined.
   data-entry mistake rather than a clinical fact.
 - **BL-003:** `episode_start_datetime` is the registration `datetime`, and is never NULL.
 - **BL-004:** Only an `inactive` registration ends: `episode_end_datetime` is
-  `deactivated_datetime` when set, otherwise the `logged_at` of the earliest
+  `deactivated_datetime` when set, otherwise the `logged_at` of the earliest (by `logged_at_utc`)
   `int__registration_status_history` entry sourced from the change log in which the registration
   became `inactive`, with `episode_end_source` recording which of the two applied. The synthetic
   current-state row (BL-014) never qualifies, being stamped at the enrolment datetime where
@@ -162,10 +162,11 @@ through the clinical status list — and the moment a registration became `inact
 only from `bases/patient_program_registrations_change_logs`. Retention and loss-to-follow-up are
 questions about transitions rather than current state.
 
-- **BL-012:** One row per change-log entry per registration, ordered by `logged_at` and collapsed
-  to one where two entries share an instant. Entries are scoped to the registrations
-  `clinical__episode` models, so a recorded-in-error enrolment (BL-002) contributes no history and
-  every history row belongs to an episode (AC-014).
+- **BL-012:** One row per change-log entry per registration, ordered by `logged_at_utc` and
+  collapsed to one where two entries share that instant, with `logged_at` the same moment in
+  local time and the current-state row (BL-014) taking the `logged_at_utc` of its own stamp.
+  Entries are scoped to the registrations `clinical__episode` models, so a recorded-in-error
+  enrolment (BL-002) contributes no history and every history row belongs to an episode (AC-014).
 - **BL-013:** `registration_status` and `clinical_status_id` are the values as at that entry, read
   from the logged record snapshot.
 - **BL-014:** The current state also appears as the final row, so a status held now is visible in
@@ -246,7 +247,7 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-010 | Every `person_id` appears in `clinical__person` | BL-001 | dbt `relationships` |
 | AC-011 | Every non-null `care_site_id` appears in `ref__care_site` | BL-011 | `relationships` |
 | AC-012 | Row count equals the source count of non-`recordedInError`, non-deleted registrations held by a patient in `bases/patients` and belonging to a registry in `bases/program_registries` | BL-001, BL-002, BL-011 | singular test |
-| AC-013 | `(episode_id, logged_at, history_source)` is unique in the history | BL-012, BL-014 | singular test |
+| AC-013 | `(episode_id, logged_at_utc, history_source)` is unique in the history | BL-012, BL-014 | singular test |
 | AC-014 | Every history `episode_id` appears in `clinical__episode`, without exception | BL-012 | singular test |
 | AC-015 | Each registration's latest history row matches `clinical__episode`'s current status | BL-014 | singular test |
 | AC-016 | An `inactive` registration with no `deactivated_datetime` has an end iff a logged history entry putting it `inactive` exists — the synthetic current-state row does not qualify | BL-004, BL-006 | singular test |
@@ -256,6 +257,8 @@ BL-007. It is rebased so the enrolment facts have one definition.
 | AC-025 | `ds__patient_program_registrations` still emits the patient, contact and related-condition columns | BL-023 | covered by AC-017's column-list assertion, which names them |
 | AC-026 | `program_registry_id` is not null | BL-001, BL-026 | dbt `not_null` |
 | AC-027 | Every non-null `provider_id` and `deactivated_by_provider_id` appears in `ref__provider` | BL-011 | `relationships` |
+| AC-028 | Two changes an hour apart across a DST fall-back, sharing a local `logged_at`, are both kept in the history and numbered in UTC order | BL-012 | unit test |
+| AC-029 | An episode closed by two status changes inside a DST fall-back's repeated hour ends at the earlier by `logged_at_utc` | BL-004 | unit test |
 
 BL-026 is asserted by AC-023 (the two populations differ by exactly the recorded-in-error
 rows) together with AC-008 and AC-009, which pin the currently-at resolution it now owns.
@@ -328,4 +331,5 @@ to `clinical__episode` (the enrolment) — the same question, without a hierarch
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-16 | Maui team | [MAUI-7018](https://linear.app/bes/issue/MAUI-7018): BL-012 orders, deduplicates and keys the history on `logged_at_utc`, a sort-only column the change-log base now exposes, AC-013 is keyed on it, and BL-004 takes the earliest change by it, so two changes inside a DST fall-back's repeated hour keep their order (AC-028, AC-029). `logged_at` is unchanged. |
 | 2026-08-23 | Maui team | Initial spec. `clinical__episode` over program registries, with the episode end resolved through the change log rather than `deactivated_datetime` alone, and `int__program_enrolments` holding the enrolment resolution that `clinical__episode` and `ds__patient_program_registrations` share across their two populations — the dataset keeps enrolments recorded in error, which `program-registry-removed-patients-line-list` lists. Merged-away patients are excluded because a registration id embeds its patient id, so a merge cannot repoint it the way it repoints an encounter and the enrolment would otherwise get a `person_id` no `clinical__person` row answers to. `ref__care_site` gained a facility grain (its BL-007) so AC-011 can relate a registering facility without repointing the FK at `bases/facilities`, which D2 forbids. |

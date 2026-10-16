@@ -41,6 +41,7 @@ logged as (
         cl.patient_id as person_id,
         cl.program_registry_id,
         cl.logged_at,
+        cl.logged_at_utc,
         cl.registration_status,
         cl.clinical_status_id,
         cl.updated_by_user_id as changed_by_provider_id,
@@ -51,29 +52,32 @@ logged as (
 
 -- BL-012: one row per registration per logged moment. Two entries written at the same instant
 -- are one change as far as the history is concerned, which is what keeps AC-013 true within
--- the logged rows
+-- the logged rows. The instant is the UTC one: local logged_at repeats an hour at a DST
+-- fall-back, so it would merge two changes an hour apart and misorder the rest
 logged_deduplicated as (
-    select distinct on (episode_id, logged_at)
+    select distinct on (episode_id, logged_at_utc)
         episode_id,
         person_id,
         program_registry_id,
         logged_at,
+        logged_at_utc,
         registration_status,
         clinical_status_id,
         changed_by_provider_id,
         history_source
     from logged
-    order by episode_id, logged_at, changed_by_provider_id
+    order by episode_id, logged_at_utc, changed_by_provider_id
 ),
 
 last_logged as (
     select distinct on (episode_id)
         episode_id,
         logged_at as last_logged_at,
+        logged_at_utc as last_logged_at_utc,
         registration_status as last_logged_status,
         clinical_status_id as last_logged_clinical_status_id
     from logged_deduplicated
-    order by episode_id asc, logged_at desc
+    order by episode_id asc, logged_at_utc desc
 ),
 
 -- BL-014: current state, so a status held now is visible without joining back to
@@ -90,11 +94,18 @@ current_state as (
         r.patient_id as person_id,
         r.program_registry_id,
         greatest(r.datetime, coalesce(l.last_logged_at, r.datetime)) as logged_at,
+        -- the UTC sort key of whichever instant greatest() chose. The enrolment datetime is a
+        -- local wall-clock value, so it is converted through the deployment's timezone
+        case
+            when l.last_logged_at >= r.datetime then l.last_logged_at_utc
+            else (r.datetime at time zone '{{ var("timezone") }}') at time zone 'UTC'
+        end as logged_at_utc,
         r.registration_status,
         r.clinical_status_id,
         r.registered_by_id as changed_by_provider_id,
         'current' as history_source,
         l.last_logged_at,
+        l.last_logged_at_utc,
         -- the log's latest snapshot should already be current state, since the log is written
         -- on update. Where it is not, the table is what the registration says it is now
         (
@@ -118,6 +129,7 @@ retained_current_state as (
         person_id,
         program_registry_id,
         logged_at,
+        logged_at_utc,
         registration_status,
         clinical_status_id,
         changed_by_provider_id,
@@ -125,7 +137,7 @@ retained_current_state as (
     from current_state
     where diverges_from_log
         or last_logged_at is null
-        or logged_at != last_logged_at
+        or logged_at_utc != last_logged_at_utc
 ),
 
 combined as (
@@ -139,6 +151,8 @@ select
     person_id,
     program_registry_id,
     logged_at,
+    -- sort-only: order the history by this, not the local logged_at (BL-012)
+    logged_at_utc,
     registration_status,
     clinical_status_id,
     changed_by_provider_id,
@@ -147,6 +161,6 @@ select
     -- last word is what the registration says now (BL-014, AC-015)
     row_number() over (
         partition by episode_id
-        order by logged_at, case when history_source = 'current' then 1 else 0 end
+        order by logged_at_utc, case when history_source = 'current' then 1 else 0 end
     ) as change_number
 from combined

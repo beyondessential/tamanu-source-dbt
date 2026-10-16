@@ -40,11 +40,12 @@ numbered_changes as (
     select
         ce.*,
         -- BL-024: 1 for the first meaningful change, incrementing per appointment.
-        -- change_sequence breaks ties so the number is deterministic and matches the
-        -- extraction's own ordering.
+        -- change_sequence is the extraction's own ordering on the UTC sort keys: unique per
+        -- appointment, so the number is deterministic, and right at a DST fall-back, where
+        -- the local modified_datetime repeats an hour.
         row_number() over (
             partition by ce.appointment_id
-            order by ce.modified_datetime, ce.change_sequence
+            order by ce.change_sequence
         ) as change_number
     from change_evaluation ce
     where ce.is_meaningful_change = true

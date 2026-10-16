@@ -141,13 +141,14 @@ ac_018 as (
 
 -- AC-013: one history row per registration per logged moment per source (BL-012). A logged
 -- change and the synthetic current-state row share an instant where the log has lost an
--- entry, and history_source is what tells them apart (BL-014)
+-- entry, and history_source is what tells them apart (BL-014). Keyed on the UTC instant, since
+-- two changes an hour apart at a DST fall-back share a local logged_at
 ac_013 as (
     select
         episode_id,
         'AC-013' as failed_ac
     from history
-    group by episode_id, logged_at, history_source
+    group by episode_id, logged_at_utc, history_source
     having count(*) > 1
 ),
 

@@ -18,6 +18,9 @@ models:
       - name: logged_at
         data_type: timestamp
         description: "{{ doc('logs__changes__logged_at') }} in vaccine administrations history."
+      - name: logged_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at_utc') }}"
       - name: created_at
         data_type: timestamp
         description: "{{ doc('generic__created_at') }} in vaccine_administrations from history."

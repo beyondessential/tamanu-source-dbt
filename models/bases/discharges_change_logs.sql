@@ -7,6 +7,8 @@ select
     c.record_id as discharge_id,
     d.encounter_id,
     c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    c.logged_at at time zone 'UTC' as logged_at_utc,
     c.updated_by_user_id,
     c.record_data ->> 'note' as note,
     c.record_data ->> 'discharger_id' as discharger_id,
