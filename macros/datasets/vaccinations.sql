@@ -3,7 +3,7 @@
 with vaccine_administrations_metadata as (
     select
         id,
-        max(updated_at) as updated_at
+        max(record_updated_at) as updated_at
     from {{ ref("vaccine_administrations_change_logs") }}
     group by id
 ),
