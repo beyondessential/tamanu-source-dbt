@@ -2,6 +2,7 @@ with filtered_changes as (
     select
         av.changelog_id,
         av.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+        av.logged_at at time zone 'UTC' as logged_at_utc,
         av.updated_by_user_id,
         av.record_created_at at time zone '{{ var("timezone") }}' as record_created_at,
         av.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
@@ -14,6 +15,8 @@ with filtered_changes as (
 select
     fc.changelog_id,
     fc.logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    fc.logged_at_utc,
     fc.record_created_at as created_at,
     fc.record_updated_at as updated_at,
     fc.updated_by_user_id,

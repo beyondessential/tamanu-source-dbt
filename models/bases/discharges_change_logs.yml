@@ -29,6 +29,10 @@ models:
         data_type: timestamp
         description: "{{ doc('discharges_change_logs__logged_at') }}"
 
+      - name: logged_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at_utc') }}"
+
       - name: updated_by_user_id
         data_type: text
         description: "{{ doc('discharges_change_logs__updated_by_user_id') }}"

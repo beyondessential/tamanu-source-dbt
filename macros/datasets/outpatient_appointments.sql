@@ -72,7 +72,8 @@ appointment_creators as (
     -- outpatient_appointments_change_logs: same source rows (both read
     -- outpatient_appointments_change_events, which applies the BL-037 filters), same
     -- ordering, and at that row first_value(updated_by_user_id) is just
-    -- updated_by_user_id.
+    -- updated_by_user_id. Both order by the UTC sort keys, since local logged_at repeats an
+    -- hour at a DST fall-back (MAUI-7018).
     --
     -- Reading outpatient_appointments_change_logs instead would put row_number() / lag()
     -- between this scope filter and the change-log scan, and window functions are an
@@ -86,7 +87,7 @@ appointment_creators as (
         c.updated_by_user_id as created_by_user_id
     from {{ ref('outpatient_appointments_change_events') }} c
     join appointments_in_scope s on s.appointment_id = c.appointment_id
-    order by c.appointment_id, c.logged_at, c.record_updated_at, c.changelog_id
+    order by c.appointment_id, c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
 )
 
 select

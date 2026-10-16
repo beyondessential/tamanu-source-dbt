@@ -99,11 +99,10 @@ review obligation, not an automated one (DV-007).
   (`change_sequence = 1`) is excluded at report and dataset grain, but *retained* by the
   extraction macro because `outpatient_appointments_dataset` uses it to find the creator.
 - **BL-024:** `change_number` is `row_number()` per `appointment_id` ordered by
-  `(modified_datetime, change_sequence)`, over rows surviving BL-025, the creation
-  exclusion, BL-026 and BL-036 — all four are applied upstream of the numbering.
-  `change_sequence` is the tiebreaker: without it, events sharing a `modified_datetime`
-  would number arbitrarily and differ between the report, the dataset and successive
-  refreshes of the materialised table.
+  `change_sequence`, over rows surviving BL-025, the creation exclusion, BL-026 and BL-036,
+  all four applied upstream of the numbering. `change_sequence`, `lag()` and `first_value()`
+  order by `(logged_at_utc, record_updated_at_utc, changelog_id)`, which is unique per
+  appointment and is never the local `modified_datetime`.
 - **BL-025:** A change is meaningful when the status became `Cancelled`, or any of
   start/end datetime, clinician, location group, appointment type or priority differs from
   the preceding event. A non-cancelling status transition produces no row.
@@ -197,7 +196,8 @@ review obligation, not an automated one (DV-007).
   resolve while project config is rendered.
 - **BL-037:** `bases/outpatient_appointments_change_events` carries the change-log filters
   and no window functions, and exposes `logged_at` and `record_updated_at` in the
-  deployment's local time like every other change-log base, because both the report (by date) and the dataset (by tick) must
+  deployment's local time like every other change-log base, plus the sort-only
+  `logged_at_utc` and `record_updated_at_utc` that BL-024 orders by, because both the report (by date) and the dataset (by tick) must
   narrow the log *before* the windowed reconstruction. Filtering the windowed base cannot
   work: Postgres pushes neither a date nor a partition-key predicate below a `WindowAgg`,
   as measurement confirmed. A window-free base is what keeps the early filter possible while
@@ -225,6 +225,7 @@ shared-core refactor.
 | AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | holds by construction — the candidate filter and the final `WHERE` are one predicate on one value |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
 | AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
+| AC-038 | Two edits inside a DST fall-back's repeated hour number in the order they were made, each naming the value it replaced | BL-024 | **passed** — `test_audit_outpatient_appointments_dst_fall_back`, `test_outpatient_appointments_change_logs_dst_fall_back` |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-034 | The candidate filter is the final `WHERE`'s predicate on the same value | BL-039 | holds by construction; `EXPLAIN` on Samoa (MAUI-6960): 0.93 s warm, against 1.3 s for the earlier bare-column filter |
@@ -315,10 +316,6 @@ _None._
   every facility after sync. So the divergence BL-033 guards against is reachable via the API
   or via a user at another facility, and AC-032 and AC-036 specify behaviour rather than
   describe a common occurrence.
-- **Local `logged_at` repeats an hour at a DST fall-back.** The change history is ordered
-  by local `logged_at`, so two edits to one appointment inside the repeated hour can number
-  in the wrong order. Only `Australia/Sydney` (the demo) observes DST today; Fiji, Samoa and
-  Syria did before 2022, so their older history can contain such an hour.
 - **BL-029 changed meaning.** The date range now filters edit time where it previously
   filtered appointment start time. Saved parameter sets, scheduled exports and user habits
   built around the old behaviour return a different row set for the same inputs. The reading
@@ -352,6 +349,7 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-16 | Maui team | [MAUI-7018](https://linear.app/bes/issue/MAUI-7018): the change history is ordered by the sort-only UTC columns `outpatient_appointments_change_events` now exposes, and BL-024 numbers by `change_sequence` alone, so two edits inside a DST fall-back's repeated hour keep their order (AC-038). Retires the repeated-hour risk. Output is unchanged outside that hour. |
 | 2026-10-16 | Maui team | [MAUI-6960](https://linear.app/bes/issue/MAUI-6960): `outpatient_appointments_change_events` exposes `logged_at` and `record_updated_at` in local time, matching the other change-log bases. BL-039's candidate filter is now the final `WHERE`'s predicate on the same value, so it needs no widening (AC-034, AC-035), and `from_user_selected_timezone` is removed. BL-032's index wording corrected: `logged_at` has been BRIN-only since the baseline, not since `#10639`. |
 | 2026-09-02 | Maui team | BL-027 now states that blank in `prev_location_group` means unchanged *or* redacted by BL-033, with DV-012 recording that the two are indistinguishable. Deploying the partition needs `--full-refresh` on the analytics datasets. |
 | 2026-09-02 | Maui team | BL-029's reading confirmed on MAUI-6857 by its owner, closing the last open question. Neither Linear card states which timestamp the date range bounds, so the decision rests on MAUI-6183's stated purpose rather than a written requirement. |

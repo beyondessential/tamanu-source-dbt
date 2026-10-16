@@ -9,6 +9,10 @@ select
     c.record_id as appointment_id,
     c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     c.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
+    -- sort-only: local logged_at and record_updated_at repeat an hour at a DST fall-back, so
+    -- order history by these
+    c.logged_at at time zone 'UTC' as logged_at_utc,
+    c.record_updated_at at time zone 'UTC' as record_updated_at_utc,
     c.updated_by_user_id,
     c.updated_at_sync_tick,
     c.record_data

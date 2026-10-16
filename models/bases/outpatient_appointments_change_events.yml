@@ -31,9 +31,17 @@ models:
         data_type: timestamp
         description: "{{ doc('logs__changes__logged_at') }} In the deployment's local time."
 
+      - name: logged_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at_utc') }}"
+
       - name: record_updated_at
         data_type: timestamp
         description: "{{ doc('logs__changes__record_updated_at') }} In the deployment's local time."
+
+      - name: record_updated_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at_utc') }}"
 
       - name: updated_by_user_id
         data_type: text
