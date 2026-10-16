@@ -9,57 +9,62 @@
   intended cluster. It defaults to the demo cluster (-Context demo); pass -Context to
   target a different cluster.
 
-  Default mode is PLAN (read-only): resolves the pod, prints the current report state,
-  and shows what WOULD be applied. Nothing is written until you pass -Apply. There is no
-  native dry run on the importReport CLI, so this plan/apply split is the safety net.
+  Every run starts with a read-only PLAN: resolves the pod, prints the current report
+  state, and shows what WOULD be applied. It then asks you to type the namespace to apply;
+  press Enter instead to stop with nothing changed. -PlanOnly prints the plan and exits
+  without asking. There is no native dry run on the importReport CLI, so this
+  plan-then-confirm step is the safety net.
 
-  Reports to import: every *.json file in -ReportsDir.
-  Schema: optional. Pass -SchemaSql to apply a reporting-schema file first (CNPG socket
-  mode: exec into the rw Postgres service over its local socket with peer auth as the
-  superuser, SET ROLE to the app role, apply in one transaction). Omit -SchemaSql to skip
-  the schema step and only import reports. -SchemaSvc may list several services
-  (e.g. "central-db-rw,facility-1-db-rw").
+  Bundle: -Bundle points at a compiled bundle folder (e.g. compiled\v2.66.0). Its *.json
+  files are imported and its single reporting-schema-*.sql is applied first. -ReportsDir
+  and -SchemaSql override either half; -NoSchema skips the schema step.
 
-  Schema-only: pass -SchemaOnly (with -SchemaSql) to apply the schema and skip report
-  import entirely. -ReportsDir and the central pod are not needed in this mode.
+  Reports to import: every *.json file in -ReportsDir (or -Bundle).
+  Schema: optional. The reporting-schema file is applied first (CNPG socket mode: exec
+  into the rw Postgres service over its local socket with peer auth as the superuser,
+  SET ROLE to the app role, apply in one transaction). The schema goes to every *-db-rw
+  service in the namespace (central plus each facility), discovered automatically; pass
+  -SchemaSvc (e.g. "central-db-rw,facility-1-db-rw") to target specific services instead.
+
+  Schema-only: pass -SchemaSql without -ReportsDir or -Bundle to apply the schema and
+  skip report import entirely. The central pod is not needed in this mode.
 
 .EXAMPLE
-  .\import-reports-k8s.ps1 -Namespace tamanu-syria-demo -ReportsDir .\my-reports `
-    -SchemaSql .\reporting-schema-v2.54.0-msf.sql `
-    -SchemaSvc central-db-rw,facility-1-db-rw `
-    -Workdir /app/packages/central-server
-  # review the plan, then re-run with -Apply
+  # Schema + reports from a compiled bundle; review the plan, then type the namespace:
+  .\import-reports-k8s.ps1 tamanu-syria-demo -Bundle ..\..\compiled\v2.66.0
 
 .EXAMPLE
   # Reports only, schema already applied:
-  .\import-reports-k8s.ps1 -Namespace tamanu-syria-demo -ReportsDir .\my-reports `
-    -Workdir /app/packages/central-server -Apply
+  .\import-reports-k8s.ps1 tamanu-syria-demo -Bundle ..\..\compiled\v2.66.0 -NoSchema
 
 .EXAMPLE
   # Schema only, no report import:
-  .\import-reports-k8s.ps1 -Namespace tamanu-syria-demo `
-    -SchemaSql .\reporting-schema-v2.54.0-msf.sql `
-    -SchemaSvc central-db-rw,facility-1-db-rw -SchemaOnly
-  # review the plan, then re-run with -Apply
+  .\import-reports-k8s.ps1 tamanu-syria-demo -SchemaSql .\reporting-schema-v2.54.0-msf.sql
+
+.EXAMPLE
+  # Separate reports folder and schema file, plan only:
+  .\import-reports-k8s.ps1 tamanu-syria-demo -ReportsDir .\my-reports `
+    -SchemaSql .\reporting-schema-v2.54.0-msf.sql -PlanOnly
 #>
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $true)][string]$Namespace,
+  [Parameter(Position = 0)][string]$Namespace,
+  [string]$Bundle,
   [string]$ReportsDir,
   [string]$SchemaSql,
   [string]$Pod,
   [string]$Container,
   [string]$Selector = "app.kubernetes.io/name=central,app.kubernetes.io/component=api-server",
-  [string]$Workdir = ".",
-  [string]$SchemaSvc = "central-db-rw",
+  [string]$Workdir = "/app/packages/central-server",
+  [string]$SchemaSvc,
   [string]$DbSvc = "central-db-rw",
   [string]$DbName = "app",
   [string]$DbRole = "app",
   [string]$DbContainer = "postgres",
   [string]$Context = "demo",
-  [switch]$SchemaOnly,
-  [switch]$Apply
+  [switch]$NoSchema,
+  [switch]$PlanOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -71,15 +76,37 @@ function Assert-LastExit([string]$What) {
 }
 
 # ---- validate inputs --------------------------------------------------------------
-if ($SchemaOnly -and -not $SchemaSql) {
-  throw "ERROR: -SchemaOnly requires -SchemaSql (there is nothing to apply otherwise)"
+# Checked here rather than via Mandatory so a missing namespace errors out (as the Bash
+# script does) instead of stopping at an interactive prompt.
+if (-not $Namespace) { throw "ERROR: -Namespace is required" }
+if ($NoSchema -and $SchemaSql) {
+  throw "ERROR: -NoSchema and -SchemaSql contradict each other; pass one or neither"
 }
+# A bundle folder supplies whichever of reports / schema was not given explicitly.
+if ($Bundle) {
+  if (-not (Test-Path -LiteralPath $Bundle -PathType Container)) { throw "ERROR: bundle dir not found: $Bundle" }
+  if (-not $ReportsDir) { $ReportsDir = $Bundle }
+  if (-not $SchemaSql -and -not $NoSchema) {
+    $found = @(Get-ChildItem -LiteralPath $Bundle -Filter "reporting-schema-*.sql" -File)
+    if ($found.Count -eq 0) {
+      throw "ERROR: no reporting-schema-*.sql in $Bundle (pass -SchemaSql, or -NoSchema to skip it)"
+    }
+    if ($found.Count -gt 1) {
+      throw "ERROR: several reporting-schema-*.sql in $Bundle ($($found.Name -join ', ')); pass -SchemaSql"
+    }
+    $SchemaSql = Join-Path $Bundle $found[0].Name
+  }
+}
+if (-not $ReportsDir -and -not $SchemaSql) {
+  throw "ERROR: nothing to do - pass -Bundle, -ReportsDir or -SchemaSql"
+}
+# A schema file with no reports folder is a schema-only run.
+$SchemaOnly = -not $ReportsDir
 if ($SchemaSql -and -not (Test-Path -LiteralPath $SchemaSql)) {
   throw "ERROR: schema SQL not found: $SchemaSql"
 }
 $reports = @()
 if (-not $SchemaOnly) {
-  if (-not $ReportsDir) { throw "ERROR: -ReportsDir is required unless -SchemaOnly is set" }
   if (-not (Test-Path -LiteralPath $ReportsDir)) { throw "ERROR: reports dir not found: $ReportsDir" }
   $reports = @(Get-ChildItem -LiteralPath $ReportsDir -Filter *.json -File | Sort-Object Name)
   if ($reports.Count -eq 0) { throw "ERROR: no .json files in $ReportsDir" }
@@ -142,8 +169,26 @@ function Show-Snapshot {
   if ($LASTEXITCODE -ne 0) { Write-Host "  (snapshot unavailable)" }
 }
 
+# ---- resolve schema target services ----------------------------------------------
+# Without -SchemaSvc, target every CNPG rw service in the namespace (central-db-rw,
+# facility-N-db-rw, ...) so new facilities are picked up without editing the command.
+$svcs = @()
+$svcSource = "from -SchemaSvc"
+if ($SchemaSql) {
+  if ($SchemaSvc) {
+    $svcs = @($SchemaSvc.Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+  } else {
+    $svcSource = "auto-discovered"
+    $allSvcs = (kubectl get svc -n $Namespace -o "jsonpath={.items[*].metadata.name}")
+    Assert-LastExit "kubectl get svc -n $Namespace"
+    $svcs = @("$allSvcs".Split(" ") | Where-Object { $_ -match '-db-rw$' } | Sort-Object)
+    if ($svcs.Count -eq 0) {
+      throw "ERROR: no *-db-rw services found in namespace $Namespace (pass -SchemaSvc)"
+    }
+  }
+}
+
 # ---- PLAN -------------------------------------------------------------------------
-$svcs = $SchemaSvc.Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
 Write-Host "=================================================================="
 Write-Host " PLAN"
@@ -158,9 +203,13 @@ if ($SchemaOnly) {
 }
 if ($SchemaSql) {
   Write-Host "   schema SQL     : $SchemaSql"
-  Write-Host "   schema -> svc  : $($svcs -join ', ')  (db=$DbName role=$DbRole container=$DbContainer)"
+  Write-Host "   schema -> svc  : $($svcs -join ', ')  ($svcSource; db=$DbName role=$DbRole container=$DbContainer)"
 } else {
-  Write-Host "   schema SQL     : (skipped - none provided)"
+  if ($NoSchema) {
+    Write-Host "   schema SQL     : (skipped - -NoSchema)"
+  } else {
+    Write-Host "   schema SQL     : (skipped - none provided)"
+  }
 }
 Write-Host "   snapshot svc   : $DbSvc"
 if ($SchemaOnly) {
@@ -180,8 +229,8 @@ Write-Host " Current report state (before):"
 Show-Snapshot
 Write-Host "=================================================================="
 
-if (-not $Apply) {
-  Write-Host "PLAN ONLY. Re-run with -Apply to write. Nothing was changed."
+if ($PlanOnly) {
+  Write-Host "PLAN ONLY. Re-run without -PlanOnly to apply. Nothing was changed."
   exit 0
 }
 
@@ -195,7 +244,16 @@ if ($SchemaOnly) {
   Write-Host "About to import $($reports.Count) reports into '$Namespace' (no schema step)."
 }
 Write-Host "This writes to the live database(s) and has NO dry run."
-$confirm = Read-Host "Type the namespace to confirm"
+# No usable console (e.g. -NonInteractive) counts as pressing Enter: stop without writing.
+try {
+  $confirm = Read-Host "Type the namespace to apply (or press Enter to stop)"
+} catch {
+  $confirm = ""
+}
+if ([string]::IsNullOrWhiteSpace($confirm)) {
+  Write-Host "Stopped. Nothing was changed."
+  exit 0
+}
 if ($confirm -ne $Namespace) { throw "Confirmation did not match. Aborting." }
 
 # 1) Reporting schema FIRST (if provided), on each target service, as the app role.
