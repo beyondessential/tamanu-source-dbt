@@ -6,6 +6,8 @@
 @./.maui/knowledge/standards/tamanu-dbt-conventions.md
 @./.maui/knowledge/standards/parallel-agents.md
 @./.maui/knowledge/standards/sdd-conventions.md
+@./.maui/knowledge/standards/model-selection.md
+@./.maui/knowledge/standards/testing-conventions.md
 
 ---
 
@@ -238,7 +240,8 @@ For full step-by-step guides, see `.maui/knowledge/runbooks/`. Summary of when t
 parallel agents for each workflow:
 
 **Adding a new report pair (standard + sensitive):**
-Follow `.maui/knowledge/runbooks/new-report.md`. Before writing any SQL, search
+Use the `build-tamanu-report` skill (`tamanu` plugin), which replaced the old `new-report`
+runbook. Before writing any SQL, search
 `models/reports/sql/standard/` for the closest existing report to use as a template.
 Check translation coverage in parallel with finding the template.
 
