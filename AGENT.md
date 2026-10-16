@@ -6,6 +6,8 @@
 @./.maui/knowledge/standards/tamanu-dbt-conventions.md
 @./.maui/knowledge/standards/parallel-agents.md
 @./.maui/knowledge/standards/sdd-conventions.md
+@./.maui/knowledge/standards/model-selection.md
+@./.maui/knowledge/standards/testing-conventions.md
 
 ---
 
