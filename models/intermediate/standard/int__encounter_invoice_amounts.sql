@@ -21,7 +21,7 @@ invoice_finalised as (
     -- BL-015: most recent transition into finalised status per invoice
     select
         icl.invoice_id,
-        max(icl.logged_at at time zone '{{ var("timezone") }}') as finalised_at
+        max(icl.logged_at) as finalised_at
     from {{ ref('invoices_change_logs') }} icl
     where
         icl.status = 'finalised'

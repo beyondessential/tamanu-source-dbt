@@ -3,11 +3,11 @@
 -- Each row represents a change event on a discharge record, ordered by change_sequence
 
 select
-    c.id as change_id,
+    c.id as changelog_id,
     c.record_id as discharge_id,
     d.encounter_id,
-    c.logged_at at time zone '{{ var("timezone") }}' as changed_datetime,
-    c.updated_by_user_id as changed_by_user_id,
+    c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    c.updated_by_user_id,
     c.record_data ->> 'note' as note,
     c.record_data ->> 'discharger_id' as discharger_id,
     c.record_data ->> 'disposition_id' as disposition_id,

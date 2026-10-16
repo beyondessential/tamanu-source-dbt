@@ -33,10 +33,6 @@
     -- direction; correctness rests on the exact predicate, so the superset only has to be
     -- a superset.
     --
-    -- from_user_selected_timezone() is not usable here: it is only valid against a
-    -- timestamptz column, and start_datetime is a naive timestamp
-    -- (`a.start_time::timestamp` in the base model).
-    --
     -- The ::date cast keeps `:toDate + interval` out of interval parsing -- parameter()
     -- compiles to an untyped placeholder, the same trap BL-029 documents.
     a.start_datetime >= ({{ from_bound }})::date - interval '1 day'

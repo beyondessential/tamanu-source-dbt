@@ -63,10 +63,10 @@ unit_tests:
         format: sql
         rows: |
           select
-            'chg_001'::text as id,
-            'appt_a'::text as record_id,
-            '2026-08-01 08:00:00+00'::timestamptz as logged_at,
-            '2026-08-01 08:00:00+00'::timestamptz as record_updated_at,
+            'chg_001'::text as changelog_id,
+            'appt_a'::text as appointment_id,
+            '2026-08-01 08:00:00'::timestamp as logged_at,
+            '2026-08-01 08:00:00'::timestamp as record_updated_at,
             'usr_001'::text as updated_by_user_id,
             100::bigint as updated_at_sync_tick,
             '{}'::jsonb as record_data
@@ -74,8 +74,8 @@ unit_tests:
           select
             'chg_002'::text,
             'appt_b'::text,
-            '2026-08-02 08:00:00+00'::timestamptz,
-            '2026-08-02 08:00:00+00'::timestamptz,
+            '2026-08-02 08:00:00'::timestamp,
+            '2026-08-02 08:00:00'::timestamp,
             'usr_002'::text,
             200::bigint,
             '{}'::jsonb
