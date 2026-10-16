@@ -44,6 +44,7 @@ unit_tests:
         select
           '550e8400-e29b-41d4-a716-446655440001'::uuid as changelog_id,
           '2025-06-20 10:00:00'::timestamp as logged_at,
+          '2025-06-20 10:00:00'::timestamp as logged_at_utc,
           'user_001'::text as updated_by_user_id,
           'reg_001'::text as id,
           '2024-01-15 09:00:00'::timestamp as datetime,
@@ -57,10 +58,12 @@ unit_tests:
           null::text as village_id,
           null::text as deactivated_by_id,
           null::timestamp as deactivated_datetime,
-          '2024-01-15 09:00:00'::timestamp as record_updated_at
+          '2024-01-15 09:00:00'::timestamp as record_updated_at,
+          '2024-01-15 09:00:00'::timestamp as record_updated_at_utc
         union all
         select
           '550e8400-e29b-41d4-a716-446655440002'::uuid,
+          '2025-06-20 14:30:00'::timestamp,
           '2025-06-20 14:30:00'::timestamp,
           'user_002'::text,
           'reg_001'::text,
@@ -75,4 +78,5 @@ unit_tests:
           null::text,
           'cli_003'::text,
           '2024-01-16 15:00:00'::timestamp,
+          '2024-01-16 13:30:00'::timestamp,
           '2024-01-16 13:30:00'::timestamp

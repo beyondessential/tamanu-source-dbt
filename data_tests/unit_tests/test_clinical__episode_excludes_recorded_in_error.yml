@@ -18,7 +18,7 @@ unit_tests:
       - input: ref('int__registration_status_history')
         format: sql
         rows: |
-          select null::text as episode_id, null::timestamp as logged_at, null::text as registration_status, null::text as history_source
+          select null::text as episode_id, null::timestamp as logged_at, null::timestamp as logged_at_utc, null::text as registration_status, null::text as history_source
           where false
 
     expect:

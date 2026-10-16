@@ -29,6 +29,8 @@ unit_tests:
             'appt_moved'::text as appointment_id,
             '2026-09-01 08:00:00'::timestamp as logged_at,
             '2026-09-01 08:00:00'::timestamp as record_updated_at,
+            '2026-09-01 08:00:00'::timestamp as logged_at_utc,
+            '2026-09-01 08:00:00'::timestamp as record_updated_at_utc,
             'usr_001'::text as updated_by_user_id,
             100::bigint as updated_at_sync_tick,
             '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_standard","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb as record_data
@@ -37,6 +39,8 @@ unit_tests:
           select
             'chg_002'::text,
             'appt_moved'::text,
+            '2026-09-02 11:00:00'::timestamp,
+            '2026-09-02 11:00:00'::timestamp,
             '2026-09-02 11:00:00'::timestamp,
             '2026-09-02 11:00:00'::timestamp,
             'usr_002'::text,

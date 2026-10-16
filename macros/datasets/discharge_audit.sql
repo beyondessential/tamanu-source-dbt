@@ -22,11 +22,13 @@ with discharge_records as (
     from {{ ref('discharges') }} d
 ),
 
--- BL-002: the earliest change log entry for a discharge is its insert
+-- BL-002: the earliest change log entry for a discharge is its insert. change_sequence is
+-- numbered on the UTC log time, so it finds the earliest where the local logged_at repeats an
+-- hour at a DST fall-back
 change_log_summary as (
     select
         cl.discharge_id,
-        min(cl.logged_at) as recorded_datetime,
+        max(cl.logged_at) filter (where cl.change_sequence = 1) as recorded_datetime,
         -- BL-008: edits after the insert. The left join below leaves this null, not zero,
         -- where the change log does not cover the discharge at all
         count(*) - 1 as later_edit_count,

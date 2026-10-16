@@ -83,12 +83,13 @@ unit_tests:
           '00000000-0000-0000-0000-000000000001'::uuid as changelog_id,
           '00000000-0000-0000-0000-000000000011'::uuid as invoice_id,
           '2025-01-10 09:00:00'::timestamp as logged_at,
+          '2025-01-10 09:00:00'::timestamp as logged_at_utc,
           'user_001'::text as updated_by_user_id,
           'in_progress'::text as status,
           '00000000-0000-0000-0000-000000000111'::uuid as encounter_id,
           null::text as previous_status,
           1::bigint as change_sequence
         union all
-        select '00000000-0000-0000-0000-000000000002'::uuid, '00000000-0000-0000-0000-000000000011'::uuid, '2025-01-15 14:00:00'::timestamp, 'user_002'::text, 'finalised'::text, '00000000-0000-0000-0000-000000000111'::uuid, 'in_progress'::text, 2::bigint
+        select '00000000-0000-0000-0000-000000000002'::uuid, '00000000-0000-0000-0000-000000000011'::uuid, '2025-01-15 14:00:00'::timestamp, '2025-01-15 14:00:00'::timestamp, 'user_002'::text, 'finalised'::text, '00000000-0000-0000-0000-000000000111'::uuid, 'in_progress'::text, 2::bigint
         union all
-        select '00000000-0000-0000-0000-000000000003'::uuid, '00000000-0000-0000-0000-000000000022'::uuid, '2025-01-12 10:00:00'::timestamp, 'user_003'::text, 'in_progress'::text, '00000000-0000-0000-0000-000000000222'::uuid, null::text, 1::bigint
+        select '00000000-0000-0000-0000-000000000003'::uuid, '00000000-0000-0000-0000-000000000022'::uuid, '2025-01-12 10:00:00'::timestamp, '2025-01-12 10:00:00'::timestamp, 'user_003'::text, 'in_progress'::text, '00000000-0000-0000-0000-000000000222'::uuid, null::text, 1::bigint
