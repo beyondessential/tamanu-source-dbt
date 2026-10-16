@@ -130,10 +130,12 @@ review obligation, not an automated one (DV-007).
   `lag()`/`first_value()`/`change_sequence` need an appointment's entire history to be
   correct. Every candidate predicate is re-applied at the end, so correctness never depends
   on the early filter being exact.
-- **BL-039:** The candidate filter converts the bound rather than the column, via
-  `from_user_selected_timezone()`, so `logged_at` stays bare and prunable by its BRIN index
-  (BL-032). The bounds are widened a day at each end, which keeps the candidate set a
-  superset across DST boundaries; the final `WHERE` trims to the exact range.
+- **BL-039:** The candidate filter applies the final `WHERE`'s own predicate,
+  `to_user_selected_timezone(logged_at)` over `[fromDate, toDate + 1 day)`, to the same local
+  `logged_at` that `modified_datetime` carries, so it keeps exactly the rows the final `WHERE`
+  keeps and needs no widening. The scan reaches the change log through the
+  `(table_name, record_id)` index, which beats a bare-column filter on the `logged_at` BRIN
+  index (MAUI-6960).
 - **BL-031:** The windowed extraction is centralised in
   `outpatient_appointments_change_log_events(record_id_filter=none)`, called three ways:
   unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
@@ -145,8 +147,7 @@ review obligation, not an automated one (DV-007).
   so they cannot drift on business logic.
 - **BL-032:** The datasets build as `view` except on analytics targets, where they are
   incremental. The cursor is `updated_at_sync_tick` — the cursor Tamanu's own sync readers
-  use (no clock-skew risk) and the one `logs.changes` column still btree-indexed after
-  migration `#10639`, where `logged_at` is BRIN-only. A first build or `--full-refresh`
+  use (no clock-skew risk), and btree-indexed, where `logged_at` has only a BRIN index. A first build or `--full-refresh`
   computes full history; later runs reprocess appointments with a row at or past
   `max(updated_at_sync_tick)`. The comparison is `>=`, not `>`: a sync tick is shared by
   every row in that session, so a strict comparison would permanently skip rows landing on
@@ -195,7 +196,8 @@ review obligation, not an automated one (DV-007).
   replaced. Gated in the macro's `config()`, not `dbt_project.yml`, because `var()` does not
   resolve while project config is rendered.
 - **BL-037:** `bases/outpatient_appointments_change_events` carries the change-log filters
-  and no window functions, because both the report (by date) and the dataset (by tick) must
+  and no window functions, and exposes `logged_at` and `record_updated_at` in the
+  deployment's local time like every other change-log base, because both the report (by date) and the dataset (by tick) must
   narrow the log *before* the windowed reconstruction. Filtering the windowed base cannot
   work: Postgres pushes neither a date nor a partition-key predicate below a `WindowAgg`,
   as measurement confirmed. A window-free base is what keeps the early filter possible while
@@ -220,12 +222,12 @@ shared-core refactor.
 | AC-029 | Rows on the previous run's watermark tick are still picked up | BL-032 | **passed** — reprocessed; a strict `>` would have found no candidates |
 | AC-030 | Stale rows persist after a zero-row recompute or sensitivity flip until `--full-refresh` | BL-035 | not tested |
 | AC-031 | Every row returned has `modified_datetime` in `[fromDate, toDate + 1 day)` | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
-| AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | not tested — the compile branch is unreachable from dbt (DV-004) |
+| AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | holds by construction — the candidate filter and the final `WHERE` are one predicate on one value |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
 | AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
-| AC-034 | The bound is compared against a bare `logged_at`, leaving the BRIN index usable | BL-039 | not tested — needs `EXPLAIN` on a populated replica |
+| AC-034 | The candidate filter is the final `WHERE`'s predicate on the same value | BL-039 | holds by construction; `EXPLAIN` on Samoa (MAUI-6960): 0.93 s warm, against 1.3 s for the earlier bare-column filter |
 
 Performance (BL-030) was measured on a populated replica: cost was previously flat across a
 far wider date range because the window functions processed the whole history either way;
@@ -252,10 +254,9 @@ _None._
 ## Divergence from current code
 
 - **DV-004:** Coverage is four unit tests on the report; the base models and datasets have
-  none. Unit tests reach only the non-compile branch of `to_user_selected_timezone` /
-  `from_user_selected_timezone`, where both are near no-ops — the timezone conversion the
-  compiled report actually runs, and the equivalence between the candidate filter and the
-  final `WHERE` under it, cannot be exercised by dbt at all. *Resolution:* add the remaining
+  none. Unit tests reach only the non-compile branch of `to_user_selected_timezone`, where it
+  is a no-op — the timezone conversion the compiled report actually runs cannot be
+  exercised by dbt at all. *Resolution:* add the remaining
   singular tests; verify the compiled form against a replica.
 - **DV-012:** A redacted previous area is indistinguishable from an unchanged one. BL-033
   blanks `prev_location_group` when the previous area falls outside the partition, and BL-027
@@ -314,13 +315,10 @@ _None._
   every facility after sync. So the divergence BL-033 guards against is reachable via the API
   or via a user at another facility, and AC-032 and AC-036 specify behaviour rather than
   describe a common occurrence.
-- **The candidate filter and the final `WHERE` are not the same predicate.**
-  `modified_datetime` is naive central time, so the final `WHERE` round-trips it back through
-  the central zone — non-injective at that zone's DST fall-back, where an event in the
-  repeated hour resolves to a different instant than the candidate filter compared. Reachable
-  on the default `Australia/Sydney` whenever `:timezone` differs from it. BL-039's widened
-  bounds absorb it; without them the row is silently dropped, which is the one direction
-  BL-030's safety net cannot recover.
+- **Local `logged_at` repeats an hour at a DST fall-back.** The change history is ordered
+  by local `logged_at`, so two edits to one appointment inside the repeated hour can number
+  in the wrong order. Only `Australia/Sydney` (the demo) observes DST today; Fiji, Samoa and
+  Syria did before 2022, so their older history can contain such an hour.
 - **BL-029 changed meaning.** The date range now filters edit time where it previously
   filtered appointment start time. Saved parameter sets, scheduled exports and user habits
   built around the old behaviour return a different row set for the same inputs. The reading
@@ -354,6 +352,7 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-16 | Maui team | [MAUI-6960](https://linear.app/bes/issue/MAUI-6960): `outpatient_appointments_change_events` exposes `logged_at` and `record_updated_at` in local time, matching the other change-log bases. BL-039's candidate filter is now the final `WHERE`'s predicate on the same value, so it needs no widening (AC-034, AC-035), and `from_user_selected_timezone` is removed. BL-032's index wording corrected: `logged_at` has been BRIN-only since the baseline, not since `#10639`. |
 | 2026-09-02 | Maui team | BL-027 now states that blank in `prev_location_group` means unchanged *or* redacted by BL-033, with DV-012 recording that the two are indistinguishable. Deploying the partition needs `--full-refresh` on the analytics datasets. |
 | 2026-09-02 | Maui team | BL-029's reading confirmed on MAUI-6857 by its owner, closing the last open question. Neither Linear card states which timestamp the date range bounds, so the decision rests on MAUI-6183's stated purpose rather than a written requirement. |
 | 2026-09-02 | Maui team | Verified against Tamanu's source that `logged_at` is the edit time for every appointment entry: entries are authored once and copied verbatim, and the mobile exception cannot apply because appointments have no mobile representation. Retires DV-010. |

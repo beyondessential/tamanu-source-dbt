@@ -1,7 +1,7 @@
 select
-    c.id as change_id,
+    c.id as changelog_id,
     c.record_id::uuid as invoice_id,
-    c.logged_at,
+    c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
     c.updated_by_user_id,
     c.record_data ->> 'status' as status,
     i.encounter_id,

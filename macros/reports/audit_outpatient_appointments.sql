@@ -11,9 +11,11 @@
 -- predicate is re-applied in the final WHERE, so correctness never depends on the early
 -- filter being exact.
 --
--- BL-039: the bound is converted rather than the column, leaving logged_at bare and
--- BRIN-prunable -- it is BRIN-only after Tamanu migration #10639. The bounds are widened a
--- day at each end so the candidate set stays a superset across DST boundaries.
+-- BL-039: the candidate filter applies the same expression to the same value as the final
+-- WHERE -- logged_at, in local time, is modified_datetime -- so the candidate set is exactly
+-- the rows the final WHERE keeps and needs no widening. It reaches the change log through
+-- the changes_table_name_record_id index; a bare-column filter against the logged_at BRIN
+-- index measured slower (MAUI-6960).
 --
 -- Business logic lives in outpatient_appointments_audit_core() alongside the dataset; this
 -- macro only filters and formats.
@@ -36,13 +38,11 @@ c.record_id in (
     join {{ ref('facilities') }} f2
         on f2.id = lg2.facility_id
         and (f2.sensitive_network_id is not null) = {{ is_sensitive }}
-    -- BL-030: widened a day at each end. modified_datetime is naive central time, so the
-    -- final WHERE round-trips it back through the central zone, which is non-injective at
-    -- that zone's DST fall-back -- an event in the repeated hour resolves to a different
-    -- instant than the one the candidate filter compared. Widening keeps the candidate set a
-    -- strict superset whatever the two zones are, at the cost of one extra day of history.
-    where c2.logged_at >= {{ from_user_selected_timezone(from_bound) }} - interval '1 day'
-        and c2.logged_at < {{ from_user_selected_timezone(to_bound ~ " + interval '1 day'") }} + interval '1 day'
+    -- BL-039: the final WHERE's own predicate, on the same value
+    where {{ to_user_selected_timezone('c2.logged_at') }}
+            >= {{ from_bound }}
+        and {{ to_user_selected_timezone('c2.logged_at') }}
+            < {{ to_bound }} + interval '1 day'
         and case
             when {{ parameter('facilityId') }} is null then true
             else f2.id = {{ parameter('facilityId') }}

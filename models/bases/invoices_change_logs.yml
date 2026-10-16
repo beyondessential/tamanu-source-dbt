@@ -13,7 +13,7 @@ models:
       pii: false
       classification: restricted
     columns:
-      - name: change_id
+      - name: changelog_id
         data_type: uuid
         description: "{{ doc('logs__changes__id') }}"
 
@@ -22,8 +22,8 @@ models:
         description: "{{ doc('logs__changes__record_id') }} in invoices."
 
       - name: logged_at
-        data_type: timestamptz
-        description: "{{ doc('logs__changes__logged_at') }} in invoices history."
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at') }} in invoices history, in the deployment's local time."
 
       - name: updated_by_user_id
         data_type: text

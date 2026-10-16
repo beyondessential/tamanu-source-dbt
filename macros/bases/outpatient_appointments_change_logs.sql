@@ -7,7 +7,8 @@ with appointment_changes as (
     select
         c.id as change_id,
         c.record_id as appointment_id,
-        c.logged_at at time zone '{{ var("timezone") }}' as modified_datetime,
+        -- outpatient_appointments_change_events already exposes logged_at in local time
+        c.logged_at as modified_datetime,
         -- BL-032: incremental cursor -- monotonic and btree-indexed, unlike logged_at
         c.updated_at_sync_tick,
         c.updated_by_user_id as modified_by_user_id,
