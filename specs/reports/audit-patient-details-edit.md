@@ -96,13 +96,13 @@ One row per patient per minute of edit activity, across both `patients` and
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | Several edits to one patient inside the same minute return exactly one row | BL-001 | Manual run against a demo snapshot |
-| AC-002 | A `patient_additional_data` edit reports the patient's current name, date of birth, sex and village | BL-002 | Manual run against a demo snapshot |
-| AC-003 | The date range includes edits made at any time of day on `toDate` | BL-004 | Manual run against a demo snapshot |
-| AC-004 | A patient changed outside the candidate window (including its ±2/+3 day margin) is excluded from the report; one changed inside it is included and the row's values are unaffected by the candidate step | BL-013 | Manual run against a demo snapshot; `EXPLAIN` confirms the `(table_name, record_id)` index is used for candidates only |
+| AC-001 | Several edits to one patient inside the same minute return exactly one row | BL-001 | `test_audit_patient_details_edit_basic` |
+| AC-002 | A `patient_additional_data` edit reports the patient's current name, date of birth, sex and village | BL-002 | `test_audit_patient_details_edit_basic` |
+| AC-003 | The date range includes edits made at any time of day on `toDate` | BL-004 | `test_audit_patient_details_edit_basic` |
+| AC-004 | A patient changed outside the candidate window (including its ±2/+3 day margin) is excluded from the report; one changed inside it is included and the row's values are unaffected by the candidate step | BL-013 | `test_audit_patient_details_edit_basic` asserts the exclusion; `EXPLAIN` against a replica confirms the `(table_name, record_id)` index is used for candidates only |
 
 Data tests run at `warn` severity project-wide (`data_tests: +severity: warn` in
-`dbt_project.yml`); this report has none beyond the base and report-config validation scripts.
+`dbt_project.yml`); this report's only unit test is `test_audit_patient_details_edit_basic`.
 
 ## Risks
 
@@ -123,4 +123,4 @@ _None._
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): retrospective spec documenting the existing report, plus BL-013/BL-014 and AC-004 for the new candidate-scoping step (`patients_change_logs_core()`, `audit_patient_details_edit_report()`). Output unchanged. |
+| 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): retrospective spec documenting the existing report, plus BL-013/BL-014 and AC-004 for the new candidate-scoping step (`patients_change_logs_core()`, `audit_patient_details_edit_report()`). Output unchanged. Added `test_audit_patient_details_edit_basic`, the report's first unit test, covering AC-001 through AC-004's exclusion/inclusion behaviour. |

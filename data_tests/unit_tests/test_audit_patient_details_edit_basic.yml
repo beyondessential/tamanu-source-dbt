@@ -1,0 +1,59 @@
+unit_tests:
+  - name: test_audit_patient_details_edit_basic
+    model: audit-patient-details-edit
+    description: >
+      BL-001: two edits to the same patient inside one minute, with otherwise identical values,
+      collapse to a single row. BL-002: a patient_additional_data edit reports the patient's
+      current name/DOB/sex from ref('patients'), not any value of its own. BL-004: the date
+      range is exact -- a patient edited the day after toDate is excluded even though it falls
+      inside BL-013's wider candidate window, and a patient edited long before the candidate
+      window never reaches the final filter at all.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        date_format: YYYY-MM-DD
+        datetime_without_seconds_format: YYYY-MM-DD HH24:MI
+        fromDate: '2026-01-10'
+        # a day past the data under test: parameter()'s end-of-day binding for `toDate` is a
+        # production/Sequelize behaviour that unit tests don't get, so the bound here is really
+        # midnight -- see tamanu-dbt-conventions.md "Report parameter binding"
+        toDate: '2026-01-11'
+    given:
+      - input: ref('patients_change_logs')
+        format: sql
+        rows: |
+          select 'pat_001'::text as id, 'P001'::text as display_id, 'Alice'::text as first_name, 'Smith'::text as last_name, '1990-01-01'::date as date_of_birth, 'Female'::text as sex, null::text as village_id, 'usr_001'::text as updated_by_user_id, '2026-01-10 09:15:05'::timestamp as logged_at
+          union all
+          select 'pat_001', 'P001', 'Alice', 'Smith', '1990-01-01'::date, 'Female', null, 'usr_001', '2026-01-10 09:15:40'::timestamp
+          union all
+          select 'pat_002', 'P002', 'Bob', 'Jones', '1985-05-05'::date, 'Male', null, 'usr_001', '2026-01-11 10:00:00'::timestamp
+          union all
+          select 'pat_004', 'P004', 'Dana', 'White', '1975-03-03'::date, 'Female', null, 'usr_001', '2025-12-01 00:00:00'::timestamp
+
+      - input: ref('patient_additional_data_change_logs')
+        format: sql
+        rows: |
+          select 'pat_003'::text as patient_id, 'usr_001'::text as updated_by_user_id, '2026-01-10 14:00:00'::timestamp as logged_at
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_003'::text as id, 'P003'::text as display_id, 'Carol'::text as first_name, 'Brown'::text as last_name, '1992-07-07'::date as date_of_birth, 'female'::text as sex, null::text as village_id
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'usr_001'::text as id, 'Nurse A'::text as display_name, 'nursea@example.com'::text as email, 'nurse'::text as role
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'P001'::text as "Patient ID", 'Alice'::text as "First name", 'Smith'::text as "Last name", '1990-01-01'::text as "Date of birth", 'Female'::text as "Sex", null::text as "Village", 'Nurse A'::text as "Edited by user", 'nursea@example.com'::text as "User email", 'nurse'::text as "User role", '2026-01-10 09:15'::text as "Date and time edited"
+        union all
+        select 'P003', 'Carol', 'Brown', '1992-07-07', 'female', null, 'Nurse A', 'nursea@example.com', 'nurse', '2026-01-10 14:00'
