@@ -15,14 +15,14 @@ unit_tests:
           union all
           select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
 
-      - input: ref('discharges_change_logs')
+      - input: ref('discharges_change_events')
         format: sql
         rows: |
-          select 'chg_001' as changelog_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2024-03-14 08:05:00'::timestamp as logged_at, 'usr_001' as updated_by_user_id, 1 as change_sequence
+          select 'chg_001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2024-03-14 08:05:00'::timestamp as logged_at, '2024-03-14 08:05:00'::timestamp as record_updated_at, '2024-03-14 08:05:00'::timestamp as logged_at_utc, '2024-03-14 08:05:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{}'::jsonb as record_data
           union all
-          select 'chg_002', 'dis_001', 'enc_001', '2024-03-15 09:30:00'::timestamp, 'usr_002', 2
+          select 'chg_002', 'dis_001', 'enc_001', '2024-03-15 09:30:00'::timestamp, '2024-03-15 09:30:00'::timestamp, '2024-03-15 09:30:00'::timestamp, '2024-03-15 09:30:00'::timestamp, 'usr_002', '{}'::jsonb
           union all
-          select 'chg_003', 'dis_002', 'enc_002', '2024-03-11 22:00:00'::timestamp, '00000000-0000-0000-0000-000000000000', 1
+          select 'chg_003', 'dis_002', 'enc_002', '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '00000000-0000-0000-0000-000000000000', '{}'::jsonb
 
       - input: ref('encounters')
         format: sql

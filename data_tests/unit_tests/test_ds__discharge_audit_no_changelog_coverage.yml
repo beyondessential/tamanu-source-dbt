@@ -10,10 +10,10 @@ unit_tests:
         rows: |
           select 'dis_003' as id, null as note, 'enc_003' as encounter_id, null as discharged_by_id, null as disposition_id
 
-      - input: ref('discharges_change_logs')
+      - input: ref('discharges_change_events')
         format: sql
         rows: |
-          select null::text as changelog_id, null::text as discharge_id, null::text as encounter_id, null::timestamp as logged_at, null::text as updated_by_user_id, null::integer as change_sequence
+          select null::text as changelog_id, null::text as discharge_id, null::text as encounter_id, null::timestamp as logged_at, null::timestamp as record_updated_at, null::timestamp as logged_at_utc, null::timestamp as record_updated_at_utc, null::text as updated_by_user_id, null::jsonb as record_data
           where false
 
       - input: ref('encounters')
