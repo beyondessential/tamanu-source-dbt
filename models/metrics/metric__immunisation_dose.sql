@@ -12,6 +12,7 @@
 -- (clinical__drug_exposure vs clinical__observation) they take their identity from.
 --
 -- The registry carries the definition; this model is its implementation.
+-- See specs/dbt-model/metric__immunisation_dose.md for the BL clauses this model implements.
 
 with drug_exposure as (
     select * from {{ ref('clinical__drug_exposure') }}
@@ -36,7 +37,14 @@ doses as (
         va.dose_label,
         va.sex,
         va.patient_location_id,
-        va.age_months
+        va.age_months,
+        va.person_id,
+        va.vaccine_id,
+        va.vaccine_label,
+        va.vaccine_category,
+        va.location_group_id,
+        va.age_days,
+        va.age_years
     from drug_exposure de
     join vaccine_attributes va
         on va.administered_vaccine_id = de.drug_exposure_id
@@ -61,6 +69,8 @@ select
     -- with the denominator (target population) supplied downstream.
     1::numeric as value_numeric,
     null::boolean as value_boolean,
+    -- BL-004: the facility of the location the dose was recorded at, resolved in the shared
+    -- attributes model by inner join -- a dose given elsewhere has no location and is excluded.
     facility_id,
     sex,
     -- BL-005: the antigen the dose addresses. 'Not recorded' when disease is blank, same
@@ -77,5 +87,22 @@ select
     -- own record carries no village -- deliberately not coalesced to a placeholder text
     -- value, since this is an id column, not a label, and a consumer joining it to
     -- ref__location needs a real id or a real NULL, not a sentinel string.
-    patient_location_id
+    patient_location_id,
+    -- BL-009: the patient the dose was given to, so a consumer can count people (a distinct
+    -- count over this column) rather than doses. Never NULL -- the shared attributes model
+    -- inner-joins the patient.
+    person_id,
+    -- BL-010: the scheduled vaccine. vaccine_id is an id a consumer filters on, so it passes
+    -- through and stays NULL for an ad hoc dose; the label and category are display values,
+    -- so they take 'Not recorded' like dose_label (BL-007).
+    vaccine_id,
+    coalesce(vaccine_label, 'Not recorded') as vaccine_label,
+    coalesce(vaccine_category, 'Not recorded') as vaccine_category,
+    -- BL-011: the location group the dose was given in, as a Tamanu id, untranslated like
+    -- facility_id. NULL when the location belongs to no group.
+    location_group_id,
+    -- BL-012: age at the dose in whole days and whole completed years, unbanded. NULL with
+    -- no date of birth on record.
+    age_days,
+    age_years
 from doses

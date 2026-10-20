@@ -9,15 +9,15 @@ An attempt is a `clinical__observation` row of type `'vaccination not given'` --
 was recorded at.
 
 Sibling of `metric__immunisation_dose`: same disaggregation shape (antigen, dose position,
-facility, sex, EPI age cohort, patient village), plus why the dose was not given. A different
-`metric_id`, not a `status` disaggregation on the dose metric -- see that model's spec, Open
-questions, for why.
+facility, sex, EPI age cohort, patient village, vaccine, location group), plus why the dose
+was not given. A different `metric_id`, not a `status` disaggregation on the dose metric --
+see that model's spec, Open questions, for why.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations, and
 over any time grain from day upwards. Nothing is pre-aggregated, so no dimension has to be
 collapsed to get a total.
 
-See specs/dbt-model/metric__immunisation_refusal.md for BL-001..BL-009.
+See specs/dbt-model/metric__immunisation_refusal.md for BL-001..BL-011.
 {% enddocs %}
 
 {% docs metric__immunisation_refusal__metric_id %}
@@ -40,9 +40,9 @@ One row per attempt, so this is unique within the metric -- a patient with two v
 refused in the same encounter yields two rows, not one, since each is its own
 administered_vaccines record.
 
-It is an attempt id, not a patient id: the row carries no patient identifier, and a patient
-with several refused attempts appears once per attempt with no way to link them from here.
-That is what keeps this model unrestricted.
+It is an attempt id, not a patient id: a patient with several refused attempts appears once
+per attempt. The patient is carried separately in person_id, which is why this model is
+restricted (BL-011).
 {% enddocs %}
 
 {% docs metric__immunisation_refusal__period_start %}
@@ -107,4 +107,43 @@ than a sentinel string.
 Why the dose was not given -- bases/vaccine_administrations' coded not_given_reason_id
 (resolved to its reference_data name) when captured, else the free-text reason. 'Not
 recorded' when neither was captured.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__person_id %}
+The patient's Tamanu id -- the patient of the encounter the attempt was recorded in. Lets a
+consumer count people rather than attempts: a distinct count over this column. Never NULL.
+
+Restricted: carried for aggregation only. A Tupaia data table uses it inside `count_distinct`
+and never exposes it as a column, so no patient id reaches a dashboard.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__vaccine_id %}
+The scheduled vaccine's drug id (vaccine_schedules.vaccine_id, e.g. `drug-TCVTyphoid`) --
+the stable key a consumer filters one vaccine by. NULL for an ad hoc attempt with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__vaccine_label %}
+The scheduled vaccine's display label (vaccine_schedules.label, e.g. `BCG`, `Hepatitis B`).
+'Not recorded' for an ad hoc attempt with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__vaccine_category %}
+The schedule's category (vaccine_schedules.category, e.g. `Routine`, `Catchup`, `Campaign`), as
+the deployment configures it. 'Not recorded' for an ad hoc attempt with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__location_group_id %}
+The location group (area or site) of the location the attempt was recorded at, as a Tamanu id
+-- one level finer than facility_id, so a consumer can attribute a campaign site. NULL when the
+location belongs to no group.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__age_days %}
+The patient's age on the attempt date in whole days. NULL with no date of birth on record. A
+measure, unbanded -- a consumer bands it (e.g. days after birth for a birth dose).
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__age_years %}
+The patient's age on the attempt date in whole completed years. NULL with no date of birth on
+record. A measure, unbanded -- a consumer bands it.
 {% enddocs %}

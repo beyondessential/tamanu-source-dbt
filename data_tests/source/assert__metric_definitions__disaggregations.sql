@@ -136,6 +136,14 @@ where trim(d) not in (
         'patient_location_id',
         -- immunisation_refusal's reason a dose was not given
         'reason',
+        -- immunisation_dose's / _refusal's scheduled vaccine: its drug id, display label and
+        -- schedule category (Routine / Catchup / Campaign), from vaccine_schedules (MAUI-7034)
+        'vaccine_id',
+        'vaccine_label',
+        'vaccine_category',
+        -- immunisation_dose's / _refusal's location group (area or site) of the event's
+        -- location, one level finer than facility_id -- a campaign site (MAUI-7034)
+        'location_group_id',
         -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
         -- therapeutic-class reference mapping exists yet, the same reasoning
         -- diagnosis/diagnosis_code and procedure/procedure_code use.
