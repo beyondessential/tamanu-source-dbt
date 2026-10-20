@@ -42,8 +42,11 @@ metrics:
   - visit_detail_concept_name
   - sex
   - is_completed
+  - request_status
+  - cancellation_reason
   - is_panel
   - department
+  - location_group_name
   - lab_order
   - lab_order_code
   - lab_test_category
