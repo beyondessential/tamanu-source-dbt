@@ -192,7 +192,14 @@ select
     coalesce(cat.name, 'Not recorded') as lab_test_category,
     -- BL-011: age in whole years at the order, unbanded -- the classification is the
     -- consumer's
-    {{ age_years('o.requested_datetime::date', 'pr') }} as age_years
+    {{ age_years('o.requested_datetime::date', 'pr') }} as age_years,
+    -- BL-016: whole minutes from the request being placed to its publication, for a published
+    -- request. NULL while it is pending or cancelled, and NULL where the publication is
+    -- recorded before the request, which is a recording error and not a negative duration.
+    case
+        when o.is_completed and o.published_datetime >= o.requested_datetime
+            then round(extract(epoch from (o.published_datetime - o.requested_datetime)) / 60)
+    end::numeric as turnaround__minutes
 from orders o
 -- BL-010: inner join -- an order whose encounter resolves to no segment is excluded rather
 -- than attributed to a NULL facility. An encounter_type missing from map__omop_visit_type
