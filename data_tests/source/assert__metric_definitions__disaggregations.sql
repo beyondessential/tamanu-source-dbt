@@ -121,6 +121,9 @@ where trim(d) not in (
         -- applied downstream rather than registered here.
         'lab_order',
         'lab_order_code',
+        -- lab_order's request lifecycle status and, for a cancelled request, its reason, as recorded
+        'request_status',
+        'cancellation_reason',
         -- lab_test's request-level category (e.g. Haematology), as recorded
         'lab_test_category',
         -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
