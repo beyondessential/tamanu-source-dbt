@@ -232,3 +232,11 @@ models:
         description: >-
           Age in whole years at the order. Not banded -- the classification is the consumer's.
           A measure, not a dimension: absent from the registry's disaggregations.
+      - name: turnaround__minutes
+        data_type: numeric
+        description: >-
+          Whole minutes from the request being placed to its publication. NULL for a request that is
+          not published, and for one recorded as published before it was placed. A measure,
+          not a dimension: absent from the registry's disaggregations. A consumer sums it and
+          divides by the count of rows where it is not NULL, since an average taken per group
+          would be an average of averages.
