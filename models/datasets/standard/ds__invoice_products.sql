@@ -84,6 +84,7 @@ select
     ip.category,
     ip.source_record_id,
     paf.available_facilities,
+    pafi.available_facility_ids,
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
     {%- for row in price_lists %}
@@ -113,5 +114,6 @@ from {{ ref('invoice_products') }} ip
 left join price_pivot pp on pp.invoice_product_id = ip.id
 left join insurance_pivot insurp on insurp.invoice_product_id = ip.id
 left join product_available_facilities paf on paf.invoice_product_id = ip.id
+left join product_available_facility_ids pafi on pafi.invoice_product_id = ip.id
 left join {{ ref('lab_test_types') }} ltt on ltt.id = ip.source_record_id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = ip.source_record_id
