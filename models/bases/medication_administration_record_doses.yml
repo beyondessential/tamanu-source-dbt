@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: medication_administration_record_doses
+    description: >-
+      Medication doses recorded as given on the medication administration record: one row per live
+      dose of a GIVEN, non-error administration that was not removed, with the encounter the
+      prescription was written in. Doses of prescriptions with no encounter prescription are
+      excluded.
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      classification: restricted
+    columns:
+      - name: id
+        data_type: uuid
+        description: The dose id.
+      - name: mar_id
+        data_type: uuid
+        description: The medication administration record the dose belongs to.
+      - name: prescription_id
+        data_type: uuid
+        description: The prescription the administration was recorded against.
+      - name: encounter_id
+        data_type: uuid
+        description: The encounter the prescription was written in.
+      - name: given_at
+        data_type: timestamp
+        description: When the dose was given.
+      - name: dose_amount
+        data_type: numeric
+        description: The amount given, as Tamanu records it.
