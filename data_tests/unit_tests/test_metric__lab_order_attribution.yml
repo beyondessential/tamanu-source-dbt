@@ -15,17 +15,17 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 11:30:00'::timestamp as published_datetime, 'published' as status, 'cat1' as lab_test_category_id
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, '2026-03-01 11:30:00'::timestamp as published_datetime, 'published' as status, 'cat1' as lab_test_category_id, null::varchar as reason_for_cancellation
           union all
-          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', 'cat1'
+          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', 'cat1', null::varchar
           union all
-          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'cancelled', null::varchar
+          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'cancelled', null::varchar, 'clinical'
           union all
-          select 'r4', 'e1', '2026-03-01 11:00:00'::timestamp, null::timestamp, 'entered-in-error', 'cat1'
+          select 'r4', 'e1', '2026-03-01 11:00:00'::timestamp, null::timestamp, 'entered-in-error', 'cat1', null::varchar
           union all
-          select 'r5', 'e1', '2026-03-01 12:00:00'::timestamp, null::timestamp, 'deleted', 'cat1'
+          select 'r5', 'e1', '2026-03-01 12:00:00'::timestamp, null::timestamp, 'deleted', 'cat1', null::varchar
           union all
-          select 'r6', 'e1', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'results_pending', 'cat1'
+          select 'r6', 'e1', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'results_pending', 'cat1', null::varchar
 
       - input: ref('lab_tests')
         format: sql
@@ -120,10 +120,15 @@ unit_tests:
         rows: |
           select 'dept_dental' as id, 'DENTAL' as code, 'Dental' as name, 'fac1' as facility_id, 'current' as visibility_status
 
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg1' as id, 'LG1' as code, 'Clinic A' as name, 'fac1' as facility_id, 'current' as visibility_status
+
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          select 'loc1' as id, 'LOC1' as code, 'Clinic room' as name, null::int as max_occupancy, 'lg1' as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
 
       - input: ref('clinical__person')
         format: sql
@@ -133,19 +138,19 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, true as is_panel, 'Dental' as department, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 'Haematology' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, '2026-03-01 11:30:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'published' as request_status, 'Not specified' as cancellation_reason, true as is_panel, 'Dental' as department, 'Clinic A' as location_group_name, 'FBC' as lab_order_code, 'Full Blood Count' as lab_order, 'Haematology' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 't4', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Haematology', 30
+        select 'lab_order', null::text, 't4', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', false, 'Dental', 'Clinic A', 'HB', 'Haemoglobin', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 't5', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'WCC', 'White Cell Count', 'Haematology', 30
+        select 'lab_order', null::text, 't5', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', false, 'Dental', 'Clinic A', 'WCC', 'White Cell Count', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 't6', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't6', '2026-03-01 10:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'cancelled', 'clinical', false, 'Dental', 'Clinic A', 'HB', 'Haemoglobin', 'Not recorded', 30
         union all
-        select 'lab_order', null::text, 'p6a', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, true, 'Dental', 'FBC', 'Full Blood Count', 'Haematology', 30
+        select 'lab_order', null::text, 'p6a', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', true, 'Dental', 'Clinic A', 'FBC', 'Full Blood Count', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 'p6b', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, true, 'Dental', 'LFT', 'Liver Function Tests', 'Haematology', 30
+        select 'lab_order', null::text, 'p6b', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', true, 'Dental', 'Clinic A', 'LFT', 'Liver Function Tests', 'Haematology', 30
         union all
-        select 'lab_order', null::text, 't11', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'PLT', 'Platelets', 'Haematology', 30
+        select 'lab_order', null::text, 't11', '2026-03-01 13:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', false, 'Dental', 'Clinic A', 'PLT', 'Platelets', 'Haematology', 30
 
   - name: test_metric__lab_order_segment_attribution
     model: metric__lab_order
@@ -160,11 +165,11 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, 'results_pending' as status, null::varchar as lab_test_category_id
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, 'results_pending' as status, null::varchar as lab_test_category_id, null::varchar as reason_for_cancellation
           union all
-          select 'r2', 'e1', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar
+          select 'r2', 'e1', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, null::varchar
           union all
-          select 'r3', 'e1', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar
+          select 'r3', 'e1', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, null::varchar
 
       - input: ref('lab_tests')
         format: sql
@@ -218,6 +223,11 @@ unit_tests:
           union all
           select 'dept_ward', 'WARD', 'Ward', 'fac2', 'current'
 
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg1' as id, 'LG1' as code, 'Clinic A' as name, 'fac1' as facility_id, 'current' as visibility_status
+
       - input: ref('locations')
         format: sql
         rows: |
@@ -233,11 +243,11 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, false as is_panel, 'Dental' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, 'results_pending' as request_status, 'Not specified' as cancellation_reason, false as is_panel, 'Dental' as department, 'Not recorded' as location_group_name, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 9201, 'Inpatient Visit', 'female', false, false, 'Ward', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't2', '2026-03-01 16:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac2', 'admission', 9201, 'Inpatient Visit', 'female', false, 'results_pending', 'Not specified', false, 'Ward', 'Not recorded', 'HB', 'Haemoglobin', 'Not recorded', 30
         union all
-        select 'lab_order', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, false, 'Dental', 'HB', 'Haemoglobin', 'Not recorded', 30
+        select 'lab_order', null::text, 't3', '2026-03-01 06:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', false, 'Dental', 'Not recorded', 'HB', 'Haemoglobin', 'Not recorded', 30
 
   - name: test_metric__lab_order_edge_cases
     model: metric__lab_order
@@ -254,11 +264,11 @@ unit_tests:
       - input: ref('lab_requests')
         format: sql
         rows: |
-          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, null::varchar as status, null::varchar as lab_test_category_id
+          select 'r1' as id, 'e1' as encounter_id, '2026-03-01 08:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, null::varchar as status, null::varchar as lab_test_category_id, null::varchar as reason_for_cancellation
           union all
-          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar
+          select 'r2', 'e1', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'results_pending', null::varchar, null::varchar
           union all
-          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'published', null::varchar
+          select 'r3', 'e1', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'published', null::varchar, null::varchar
 
       # r3 deliberately has no row here: a panel request with no tests.
       - input: ref('lab_tests')
@@ -308,6 +318,11 @@ unit_tests:
         rows: |
           select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status where false
 
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg1' as id, 'LG1' as code, 'Clinic A' as name, 'fac1' as facility_id, 'current' as visibility_status
+
       - input: ref('locations')
         format: sql
         rows: |
@@ -321,8 +336,8 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, false as is_panel, 'Not recorded' as department, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
+        select 'lab_order' as metric_id, null::text as variant_id, 't1' as subject_id, '2026-03-01 08:00:00'::timestamp as period_start, null::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, false as is_completed, 'Not recorded' as request_status, 'Not specified' as cancellation_reason, false as is_panel, 'Not recorded' as department, 'Not recorded' as location_group_name, 'HB' as lab_order_code, 'Haemoglobin' as lab_order, 'Not recorded' as lab_test_category, 30 as age_years
         union all
-        select 'lab_order', null::text, 'p_r2', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, true, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 30
+        select 'lab_order', null::text, 'p_r2', '2026-03-01 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'results_pending', 'Not specified', true, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 30
         union all
-        select 'lab_order', null::text, 'p2', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', true, true, 'Not recorded', 'FBC', 'Full Blood Count', 'Not recorded', 30
+        select 'lab_order', null::text, 'p2', '2026-03-01 10:00:00'::timestamp, '2026-03-01 11:30:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', true, 'published', 'Not specified', true, 'Not recorded', 'Not recorded', 'FBC', 'Full Blood Count', 'Not recorded', 30
