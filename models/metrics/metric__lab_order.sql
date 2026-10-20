@@ -52,6 +52,10 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 departments as (
     select * from {{ ref('departments') }}
 ),
@@ -70,7 +74,10 @@ live_requests as (
         coalesce(lr.status = 'published', false) as is_completed,
         lr.published_datetime,
         lr.lab_test_category_id,
-        lr.lab_test_panel_request_id
+        lr.lab_test_panel_request_id,
+        -- BL-014: the request's lifecycle status and, for a cancelled one, the reason, as recorded
+        lr.status as request_status,
+        lr.reason_for_cancellation
     from lab_requests lr
     where lr.status is null
         or lr.status not in ('deleted', 'entered-in-error')
@@ -88,6 +95,8 @@ panel_orders as (
         r.is_completed,
         r.published_datetime,
         r.lab_test_category_id,
+        r.request_status,
+        r.reason_for_cancellation,
         true as is_panel,
         -- BL-007: emitted as recorded, coalesced so an array filter cannot drop the row
         coalesce(ltp.code, 'Not recorded') as lab_order_code,
@@ -109,6 +118,8 @@ test_orders as (
         r.is_completed,
         r.published_datetime,
         r.lab_test_category_id,
+        r.request_status,
+        r.reason_for_cancellation,
         false as is_panel,
         -- BL-007
         coalesce(ltt.code, 'Not recorded') as lab_order_code,
@@ -160,9 +171,19 @@ select
     vd.visit_detail_concept_name,
     pr.gender_source_value as sex,
     o.is_completed,
+    -- BL-014: the request's lifecycle status as recorded, so a cancelled line, a pending one and
+    -- a published one can be told apart. Coalesced so an array filter cannot drop a request
+    -- with no status.
+    coalesce(o.request_status, 'Not recorded') as request_status,
+    -- BL-014: why a cancelled request was cancelled. Coalesced for the same reason; only a
+    -- cancelled request is expected to carry one, so a consumer scopes to request_status first.
+    coalesce(o.reason_for_cancellation, 'Not specified') as cancellation_reason,
     -- BL-002: whether this line is a panel or a single test
     o.is_panel,
     coalesce(dept.name, 'Not recorded') as department,
+    -- BL-015: the area -- the location group of the segment's own location, not the encounter's
+    -- current one
+    coalesce(lg.name, 'Not recorded') as location_group_name,
     -- BL-007: the panel's identity for a panel line, the test type's for a single, as
     -- recorded and ungrouped
     o.lab_order_code,
@@ -185,6 +206,8 @@ join person pr
     on pr.person_id = vd.person_id
 join locations loc
     on loc.id = vd.care_site_id
+left join location_groups lg
+    on lg.id = loc.location_group_id
 left join departments dept
     on dept.id = vd.department_id
 left join reference_data cat
