@@ -77,7 +77,7 @@ timestamps. Collapsing them onto the panel request would leave no single status 
 
 ## Output schema
 
-D5 wide format, plus fourteen disaggregation columns and one measure.
+D5 wide format, plus fourteen disaggregation columns and two measures.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -104,6 +104,7 @@ D5 wide format, plus fourteen disaggregation columns and one measure.
 | `lab_order` | text | Panel name on a panel line, test type name on a single (BL-007). Never NULL |
 | `lab_test_category` | text | The request's category, as recorded (BL-008). Never NULL |
 | `age_years` | integer | Age in whole years at the order, unbanded (BL-011). A measure, not a dimension |
+| `turnaround__minutes` | numeric | Minutes from request to publication, for a published request; NULL otherwise (BL-016) |
 
 ## Data tables
 
@@ -245,6 +246,15 @@ dbt's. This model therefore carries no `data_table_*` meta.
   location (BL-010), not the encounter's current one, coalesced to `'Not recorded'`. It is the
   "area" the laboratory dashboard splits by (MAUI-7028).
 
+- **BL-016 (turnaround):** `turnaround__minutes` is the whole minutes from `period_start` to
+  `period_end`, for a request that reached `published`. This is request-level, which is the only
+  turnaround coherent at order-line grain (see Purpose: the per-test turnaround stays absent),
+  so every line of a request shares it. NULL while a request is pending or cancelled, and NULL
+  where the publication is recorded before the request -- a recording error, which the
+  `period_end_after_start` warning already surfaces, rather than a negative duration. A measure:
+  a consumer sums it and divides by the count of rows where it is not NULL, never averaging
+  per-group averages (MAUI-7028).
+
 - **BL-013 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
@@ -355,6 +365,7 @@ by earlier metrics.
 
 | Date | Change |
 |---|---|
+| 2026-10-20 | `turnaround__minutes` added, request to publication, for the Laboratory category summary (BL-016) (MAUI-7028) |
 | 2026-10-20 | `request_status`, `cancellation_reason` and `location_group_name` added for the Laboratory dashboard (BL-014, BL-015) (MAUI-7028) |
 | 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution uses the shared `visit_detail__active_segment` macro, and columns match `metric__ed_lab_order`: no `request_status` or `lab_request_id`, `published_datetime` carried through both branches, `subject_grain` aligned with `ed_lab_order`, and the spec brought back into line with the code (MAUI-6837) |
