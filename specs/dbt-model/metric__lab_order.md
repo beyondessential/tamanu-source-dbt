@@ -75,7 +75,7 @@ attribution, so it yields neither a panel line nor a test line. Not covered by a
 
 ## Output schema
 
-D5 wide format, plus eleven disaggregation columns and one measure.
+D5 wide format, plus fourteen disaggregation columns and one measure.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -93,8 +93,11 @@ D5 wide format, plus eleven disaggregation columns and one measure.
 | `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-013) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
 | `is_completed` | boolean | The request published (BL-006). Never NULL |
+| `request_status` | text | The request's lifecycle status as recorded (BL-014). Never NULL: `'Not recorded'` when absent |
+| `cancellation_reason` | text | Why a cancelled request was cancelled, as recorded (BL-014). Never NULL: `'Not specified'` when absent |
 | `is_panel` | boolean | Whether the line is a panel or a single test (BL-002, BL-003). Never NULL |
 | `department` | text | The resolved segment's own department, resolved to a name (BL-010). Never NULL |
+| `location_group_name` | text | The area: the location group of the resolved segment's own location (BL-015). Never NULL: `'Not recorded'` when absent |
 | `lab_order_code` | text | Panel code on a panel line, test type code on a single (BL-007). Never NULL |
 | `lab_order` | text | Panel name on a panel line, test type name on a single (BL-007). Never NULL |
 | `lab_test_category` | text | The request's category, as recorded (BL-008). Never NULL |
@@ -223,6 +226,20 @@ dbt's. This model therefore carries no `data_table_*` meta.
   available but is **not** applied here. Filtering it is a deployment privacy decision, not a
   definitional one, and the standard metric stays universal. A deployment that must suppress
   them does so at the data-table layer. Flagged rather than assumed -- see OQ-004.
+- **BL-014 (request status and cancellation reason):** `request_status` is
+  `lab_requests.status` as recorded and `cancellation_reason` is
+  `lab_requests.reason_for_cancellation`, both request-level, so every line of a request shares
+  them. Emitted raw: grouping statuses into the labels a card shows (requested, cancelled,
+  results pending, published) is the consumer's choice. Coalesced to `'Not recorded'` and
+  `'Not specified'` so an array filter cannot drop a row. Only a cancelled request is expected
+  to carry a reason. This reverses the omission in BL-006 and resolves OQ-011: `is_completed`
+  keeps its meaning, and a consumer needing delivered results, or a cancelled line told apart
+  from a pending one, reads `request_status` (MAUI-7028).
+
+- **BL-015 (area):** `location_group_name` is the location group of the same segment's own
+  location (BL-010), not the encounter's current one, coalesced to `'Not recorded'`. It is the
+  "area" the laboratory dashboard splits by (MAUI-7028).
+
 - **BL-013 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 
 ## Acceptance criteria
@@ -252,8 +269,8 @@ dbt's. This model therefore carries no `data_table_*` meta.
 
 One active row in `documentations/metrics/lab.yml` -- `lab_order`, `kind: metric`,
 `subject_grain: lab_order`, `status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id, encounter_type, visit_detail_concept_id, visit_detail_concept_name, sex, is_completed, is_panel,
-department, lab_order, lab_order_code, lab_test_category`.
+`disaggregations: facility_id, encounter_type, visit_detail_concept_id, visit_detail_concept_name, sex, is_completed,
+request_status, cancellation_reason, is_panel, department, location_group_name, lab_order, lab_order_code, lab_test_category`.
 
 Regenerate `macros/metric_definitions.sql` with
 `python scripts/generate_metric_definitions_macro.py` and commit it -- CI fails on drift.
@@ -324,7 +341,7 @@ by earlier metrics.
 - **OQ-006 (the intent rule's existing exceptions):** BL-004's principle is not applied to
   imaging requests or prescriptions, which sit in the clinical layer today. Either grandfathered
   and documented, or unwound.
-- **OQ-011 (withdrawn requests read as completed):** `is_completed` is the request reaching
+- **OQ-011 (withdrawn requests read as completed) -- resolved by BL-014:** `is_completed` is the request reaching
   `published`, so a request published and later invalidated still reads completed, and a
   cancelled line is indistinguishable from a pending one. The request's status is not emitted,
   matching `metric__ed_lab_order`, so a consumer has no way to exclude them. If a "delivered
@@ -334,6 +351,7 @@ by earlier metrics.
 
 | Date | Change |
 |---|---|
+| 2026-10-20 | `request_status`, `cancellation_reason` and `location_group_name` added for the Laboratory dashboard (BL-014, BL-015) (MAUI-7028) |
 | 2026-10-15 | Tamanu 2.66: a request holds any number of panel requests. Panel lines are keyed on the panel request (`subject_id`), and single-test lines are the tests `int__lab_test_panel_attribution` leaves without a panel (MAUI-6163) |
 | 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Renamed to `metric__lab_order` and moved to order-line grain: a panel is one row however many tests it holds, mirroring `metric__ed_lab_order` (Juliana). Completion becomes the request's publication, since a row can span several tests. `result`, `turnaround__minutes`, the per-test identity columns and `is_panel_request` dropped; `lab_order`, `lab_order_code` and `is_panel` added. Segment resolution uses the shared `visit_detail__active_segment` macro, and columns match `metric__ed_lab_order`: no `request_status` or `lab_request_id`, `published_datetime` carried through both branches, `subject_grain` aligned with `ed_lab_order`, and the spec brought back into line with the code (MAUI-6837) |
