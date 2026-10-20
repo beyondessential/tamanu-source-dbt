@@ -83,3 +83,88 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__medication_dispense.md
+- metric_id: prescription
+  kind: metric
+  name: Prescriptions
+  description: >-
+    Drug prescriptions written against an encounter, one row per encounter prescription, dated to the day the prescription was written.
+  numerator_description: >-
+    Encounter prescriptions, counted on the date each was written
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES composition over Tamanu's prescribing workflow; no external indicator anchor (AIHW/WHO/DHIS2) defines a prescription count. Dated to the day written, with the setting of the segment the patient was in at that moment, so the date and the place describe the same moment. The upstream of pharmacy_order: a prescription becomes a pharmacy order only when it is sent to pharmacy.
+  unit: count
+  subject_grain: encounter_prescription
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - visit_detail_concept_id
+  - visit_detail_concept_name
+  - sex
+  - drug_source_value
+  - drug_source_name
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__prescription.md
+- metric_id: medication_administration
+  kind: metric
+  name: Medication doses given
+  description: >-
+    Medication doses recorded as given on the medication administration record (MAR), one row per given dose, dated to the day it was given.
+  numerator_description: >-
+    MAR doses recorded as given, counted on the date each was given
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES composition over Tamanu's MAR; no external indicator anchor defines doses given as a standard count. The unit is the dose (medication_administration_record_doses), because one scheduled administration can be given in several doses. Doses removed in error, and administrations flagged as errors, are not counted. Dated to when the dose was given, with the setting of the segment the patient was in at that moment.
+  unit: count
+  subject_grain: medication_administration_dose
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - visit_detail_concept_id
+  - visit_detail_concept_name
+  - sex
+  - drug_source_value
+  - drug_source_name
+  - department
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__medication_administration.md
+- metric_id: prescription_discontinuation
+  kind: metric
+  name: Prescriptions discontinued
+  description: >-
+    Prescriptions discontinued by a clinician, one row per discontinued encounter prescription, dated to the day it was discontinued, with the reason recorded.
+  numerator_description: >-
+    Encounter prescriptions discontinued, counted on the date each was discontinued
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    BES composition over Tamanu's prescribing workflow; no external indicator anchor defines prescription discontinuation as a standard count. Dated to the discontinuation, with the setting of the segment the patient was in at that moment. The reason is carried as recorded, ungrouped, so a consumer ranks or groups it as it sees fit.
+  unit: count
+  subject_grain: encounter_prescription
+  disaggregations:
+  - facility_id
+  - encounter_type
+  - visit_detail_concept_id
+  - visit_detail_concept_name
+  - sex
+  - drug_source_value
+  - drug_source_name
+  - department
+  - discontinuing_reason
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__prescription_discontinuation.md
