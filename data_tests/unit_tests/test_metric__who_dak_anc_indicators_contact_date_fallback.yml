@@ -7,30 +7,45 @@ unit_tests:
       a contact on the day the form was started.
     given:
       - input: ref('program_data_elements')
-        rows:
-          - {id: pde-whodakanc-a7-de4, code: whodakanc-a7-de4}
+        format: sql
+        rows: |
+          select 'pde-whodakanc-a7-de4'::text as id, 'whodakanc-a7-de4'::text as code
       - input: ref('locations')
-        rows:
-          - {id: loc_1, facility_id: fac_1}
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'fac_1'::text as facility_id
       - input: ref('encounters')
-        rows:
-          - {id: enc_1, patient_id: pat_1, location_id: loc_1}
-          - {id: enc_2, patient_id: pat_2, location_id: loc_1}
-          - {id: enc_3, patient_id: pat_3, location_id: null}
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
+          union all
+          select 'enc_2', 'pat_2', 'loc_1'
+          union all
+          select 'enc_3', 'pat_3', null
       - input: ref('clinical__person')
-        rows:
-          - {person_id: pat_1, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
-          - {person_id: pat_2, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
-          - {person_id: pat_3, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+        format: sql
+        rows: |
+          select 'pat_1'::text as person_id, 1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
+          union all
+          select 'pat_2', 1990, 1, 1
+          union all
+          select 'pat_3', 1990, 1, 1
       - input: ref('survey_responses')
-        rows:
-          - {id: r_1, survey_id: program-whodakanc-registration, encounter_id: enc_1, start_datetime: '2026-04-01 09:00:00', end_datetime: '2026-04-01 09:05:00'}
-          - {id: r_2, survey_id: program-whodakanc-registration, encounter_id: enc_2, start_datetime: '2026-04-02 09:00:00', end_datetime: '2026-04-02 09:05:00'}
-          - {id: r_3, survey_id: program-whodakanc-registration, encounter_id: enc_3, start_datetime: '2026-04-03 09:00:00', end_datetime: null}
+        format: sql
+        rows: |
+          select
+            'r_1'::text as id, 'program-whodakanc-registration'::text as survey_id, 'enc_1'::text as encounter_id,
+            '2026-04-01 09:00:00'::timestamp as start_datetime, '2026-04-01 09:05:00'::timestamp as end_datetime
+          union all
+          select 'r_2', 'program-whodakanc-registration', 'enc_2', '2026-04-02 09:00:00'::timestamp, '2026-04-02 09:05:00'::timestamp
+          union all
+          select 'r_3', 'program-whodakanc-registration', 'enc_3', '2026-04-03 09:00:00'::timestamp, null::timestamp
       - input: ref('survey_response_answers')
-        rows:
-          - {id: a_1, response_id: r_1, data_element_id: pde-whodakanc-a7-de4, body: 'unknown'}
-          - {id: a_2, response_id: r_2, data_element_id: pde-whodakanc-a7-de4, body: '  '}
+        format: sql
+        rows: |
+          select 'a_1'::text as id, 'r_1'::text as response_id, 'pde-whodakanc-a7-de4'::text as data_element_id, 'unknown'::text as body
+          union all
+          select 'a_2', 'r_2', 'pde-whodakanc-a7-de4', '  '
     expect:
       rows:
         - {subject_id: 'pat_1;2026-04-01', period_start: '2026-04-01', period_end: '2026-04-01', facility_id: fac_1}
