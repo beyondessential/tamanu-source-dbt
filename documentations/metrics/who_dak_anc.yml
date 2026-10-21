@@ -40,6 +40,5 @@ metrics:
   - facility_id
   variant_of: null
   owner: bes-maui
-  # draft until the first deployment's data is validated and the spec is approved
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__who_dak_anc_indicators.md

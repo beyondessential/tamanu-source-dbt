@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definitions) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
-| **Status** | `review` |
+| **Status** | `approved` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
@@ -160,4 +160,4 @@ vars:
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-10-21 | Maui team | Initial spec. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |
+| 2026-10-21 | Maui team | Initial spec, approved. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |
