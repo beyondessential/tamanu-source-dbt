@@ -1,0 +1,38 @@
+unit_tests:
+  - name: test_metric__who_dak_anc_indicators_contact_date_fallback
+    model: metric__who_dak_anc_indicators
+    description: >
+      AC-008 (specs/dbt-model/metric__who_dak_anc_indicators.md). A Registration whose contact
+      date is malformed, one whose contact date is blank, and one with no answers at all are each
+      a contact on the day the form was started.
+    given:
+      - input: ref('program_data_elements')
+        rows:
+          - {id: pde-whodakanc-a7-de4, code: whodakanc-a7-de4}
+      - input: ref('locations')
+        rows:
+          - {id: loc_1, facility_id: fac_1}
+      - input: ref('encounters')
+        rows:
+          - {id: enc_1, patient_id: pat_1, location_id: loc_1}
+          - {id: enc_2, patient_id: pat_2, location_id: loc_1}
+          - {id: enc_3, patient_id: pat_3, location_id: null}
+      - input: ref('clinical__person')
+        rows:
+          - {person_id: pat_1, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+          - {person_id: pat_2, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+          - {person_id: pat_3, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+      - input: ref('survey_responses')
+        rows:
+          - {id: r_1, survey_id: program-whodakanc-registration, encounter_id: enc_1, start_datetime: '2026-04-01 09:00:00', end_datetime: '2026-04-01 09:05:00'}
+          - {id: r_2, survey_id: program-whodakanc-registration, encounter_id: enc_2, start_datetime: '2026-04-02 09:00:00', end_datetime: '2026-04-02 09:05:00'}
+          - {id: r_3, survey_id: program-whodakanc-registration, encounter_id: enc_3, start_datetime: '2026-04-03 09:00:00', end_datetime: null}
+      - input: ref('survey_response_answers')
+        rows:
+          - {id: a_1, response_id: r_1, data_element_id: pde-whodakanc-a7-de4, body: 'unknown'}
+          - {id: a_2, response_id: r_2, data_element_id: pde-whodakanc-a7-de4, body: '  '}
+    expect:
+      rows:
+        - {subject_id: 'pat_1;2026-04-01', period_start: '2026-04-01', period_end: '2026-04-01', facility_id: fac_1}
+        - {subject_id: 'pat_2;2026-04-02', period_start: '2026-04-02', period_end: '2026-04-02', facility_id: fac_1}
+        - {subject_id: 'pat_3;2026-04-03', period_start: '2026-04-03', period_end: '2026-04-03', facility_id: null}

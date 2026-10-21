@@ -1,0 +1,51 @@
+unit_tests:
+  - name: test_metric__who_dak_anc_indicators_native_contact
+    model: metric__who_dak_anc_indicators
+    description: >
+      AC-006 / AC-007 (specs/dbt-model/metric__who_dak_anc_indicators.md). pat_1 has two ANC
+      Registration submissions on 2026-03-04 on different encounters and a Profile submission
+      the same day on a third: one contact, dated by the recorded contact date, at the earlier
+      registration's facility, carrying the later registration's contact number and the
+      Profile's gestational age. pat_2's registration records a contact date a month before it
+      was entered, and her Profile form is from the entry day, so it does not attach.
+    given:
+      - input: ref('program_data_elements')
+        rows:
+          - {id: pde-whodakanc-a7-de4, code: whodakanc-a7-de4}
+          - {id: pde-whodakanc-a7-de12, code: whodakanc-a7-de12}
+          - {id: pde-whodakanc-b6-de17, code: whodakanc-b6-de17}
+      - input: ref('locations')
+        rows:
+          - {id: loc_1, facility_id: fac_1}
+          - {id: loc_2, facility_id: fac_2}
+      - input: ref('encounters')
+        rows:
+          - {id: enc_1, patient_id: pat_1, location_id: loc_1}
+          - {id: enc_2, patient_id: pat_1, location_id: loc_2}
+          - {id: enc_3, patient_id: pat_1, location_id: loc_2}
+          - {id: enc_4, patient_id: pat_2, location_id: loc_2}
+          - {id: enc_5, patient_id: pat_2, location_id: loc_2}
+      - input: ref('clinical__person')
+        rows:
+          - {person_id: pat_1, year_of_birth: 1996, month_of_birth: 6, day_of_birth: 1}
+          - {person_id: pat_2, year_of_birth: 2000, month_of_birth: 1, day_of_birth: 15}
+      - input: ref('survey_responses')
+        rows:
+          - {id: r_1, survey_id: program-whodakanc-registration, encounter_id: enc_1, start_datetime: '2026-03-04 09:00:00', end_datetime: '2026-03-04 09:10:00'}
+          - {id: r_2, survey_id: program-whodakanc-profile, encounter_id: enc_2, start_datetime: '2026-03-04 09:20:00', end_datetime: '2026-03-04 09:30:00'}
+          - {id: r_3, survey_id: program-whodakanc-registration, encounter_id: enc_3, start_datetime: '2026-03-04 14:00:00', end_datetime: '2026-03-04 14:05:00'}
+          - {id: r_4, survey_id: program-whodakanc-registration, encounter_id: enc_4, start_datetime: '2026-03-05 10:00:00', end_datetime: '2026-03-05 10:05:00'}
+          - {id: r_5, survey_id: program-whodakanc-profile, encounter_id: enc_5, start_datetime: '2026-03-05 10:10:00', end_datetime: '2026-03-05 10:15:00'}
+      - input: ref('survey_response_answers')
+        rows:
+          - {id: a_1, response_id: r_1, data_element_id: pde-whodakanc-a7-de4, body: '2026-03-04'}
+          - {id: a_2, response_id: r_1, data_element_id: pde-whodakanc-a7-de12, body: '2'}
+          - {id: a_3, response_id: r_2, data_element_id: pde-whodakanc-b6-de17, body: '20'}
+          - {id: a_4, response_id: r_3, data_element_id: pde-whodakanc-a7-de4, body: '2026-03-04 00:00:00'}
+          - {id: a_5, response_id: r_3, data_element_id: pde-whodakanc-a7-de12, body: '3'}
+          - {id: a_6, response_id: r_4, data_element_id: pde-whodakanc-a7-de4, body: '2026-02-10'}
+          - {id: a_7, response_id: r_5, data_element_id: pde-whodakanc-b6-de17, body: '30'}
+    expect:
+      rows:
+        - {subject_id: 'pat_1;2026-03-04', period_start: '2026-03-04', facility_id: fac_1, person_id: pat_1, age_years: 29, contact_number: 3, gestational_age_weeks: 20}
+        - {subject_id: 'pat_2;2026-02-10', period_start: '2026-02-10', facility_id: fac_2, person_id: pat_2, age_years: 26, contact_number: null, gestational_age_weeks: null}

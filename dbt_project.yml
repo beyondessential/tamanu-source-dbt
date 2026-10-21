@@ -25,6 +25,13 @@ vars:
     "3": 30
     "4": 60
     "5": 120
+  # A deployment's own antenatal forms, mapped to WHO DAK ANC data elements for
+  # metric__who_dak_anc_indicators. Keyed by survey id: is_contact marks a form whose
+  # submission is an antenatal contact, and data_elements maps a DAK element id (ANC.A7.DE4)
+  # to the local question's program data element code. Empty here, so a deployment that sets
+  # nothing reads only the who-dak-anc forms; a deployment overrides the whole map in its own
+  # dbt_project.yml.
+  who_dak_anc_local_surveys: {}
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
     - default
