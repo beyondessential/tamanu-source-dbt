@@ -44,6 +44,46 @@ metrics:
   status: draft
   spec_path: specs/dbt-model/metric__immunisation_dose.md
 
+- metric_id: immunisation_recipient
+  kind: metric
+  name: Immunisation recipients
+  description: >-
+    People who received each vaccine dose. One row per person per scheduled dose, at the first
+    record of that dose.
+  numerator_description: >-
+    Each person's first vaccine administration with status GIVEN per scheduled dose (vaccine and
+    dose position, or antigen for a dose with no schedule), counted on the date given
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    The WHO SMART Immunizations DAK (Annex C) and WUENIC coverage numerators are written as a
+    count of immunization events (doses), which equals "people who received the dose" only when
+    each dose is recorded once. Tamanu data carries repeat and duplicate records -- the same dose
+    entered at two sites on one day, or a second record weeks later -- so this is a BES
+    composition over that numerator: the same doses as immunisation_dose, keeping each person's
+    first record per scheduled dose. Use it for coverage (people over a target population) and
+    immunisation_dose for activity (doses given). Emitted by metric__immunisation_dose as a
+    subset of its rows.
+  unit: count
+  subject_grain: patient_dose
+  disaggregations:
+  - facility_id
+  - sex
+  - disease
+  - age_group__who_epi_schedule
+  - dose_label
+  - patient_location_id
+  - vaccine_id
+  - vaccine_label
+  - vaccine_category
+  - location_group_id
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__immunisation_dose.md
+
 - metric_id: immunisation_refusal
   kind: metric
   name: Immunisation refusals

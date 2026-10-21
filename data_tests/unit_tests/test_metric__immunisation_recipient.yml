@@ -1,0 +1,79 @@
+unit_tests:
+  - name: ac_018_metric__immunisation_dose_recipient
+    model: metric__immunisation_dose
+    description: >
+      BL-014: immunisation_recipient keeps each person's first record of each scheduled dose --
+      p1's later, second typhoid record (d2, another site) is dropped; p3's DTP Dose 1 and Dose 2
+      are both kept, being different doses; p4's two ad hoc doses with no vaccine_id are kept per
+      antigen. BL-015: on p2's same-day tie the lowest subject_id (d3) is kept. Every dose still
+      appears once as immunisation_dose.
+
+    given:
+      - input: ref('clinical__drug_exposure')
+        format: sql
+        rows: |
+          select 'd1' as drug_exposure_id, '2024-03-01'::date as drug_exposure_start_date, 'vaccination' as drug_exposure_type_source_value
+          union all
+          select 'd2', '2024-04-10'::date, 'vaccination'
+          union all
+          select 'd4', '2024-03-02'::date, 'vaccination'
+          union all
+          select 'd3', '2024-03-02'::date, 'vaccination'
+          union all
+          select 'd5', '2024-01-05'::date, 'vaccination'
+          union all
+          select 'd6', '2024-02-05'::date, 'vaccination'
+          union all
+          select 'd7', '2024-05-01'::date, 'vaccination'
+          union all
+          select 'd8', '2024-05-01'::date, 'vaccination'
+
+      - input: ref('int__vaccine_administration_attributes')
+        format: sql
+        rows: |
+          select 'd1' as administered_vaccine_id, 'fac_a' as facility_id, 'Typhoid' as disease, 'Dose 1' as dose_label, 'female' as sex, 'vil_1' as patient_location_id, 120 as age_months, 'p1' as person_id, 'drug-TCVTyphoid' as vaccine_id, 'TCV' as vaccine_label, 'Campaign' as vaccine_category, 'lg_1' as location_group_id, 3600 as age_days, 10 as age_years
+          union all
+          select 'd2', 'fac_b', 'Typhoid', 'Dose 1', 'female', 'vil_1', 121, 'p1', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3630, 10
+          union all
+          select 'd4', 'fac_b', 'Typhoid', 'Dose 1', 'female', 'vil_1', 130, 'p2', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3900, 10
+          union all
+          select 'd3', 'fac_a', 'Typhoid', 'Dose 1', 'female', 'vil_1', 130, 'p2', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3900, 10
+          union all
+          select 'd5', 'fac_a', 'DTP', 'Dose 1', 'female', 'vil_1', 2, 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 60, 0
+          union all
+          select 'd6', 'fac_a', 'DTP', 'Dose 2', 'female', 'vil_1', 3, 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 90, 0
+          union all
+          select 'd7', 'fac_a', 'Measles', null::text, 'female', 'vil_1', 70, 'p4', null::text, null::text, null::text, 'lg_1', 2100, 5
+          union all
+          select 'd8', 'fac_a', 'Rubella', null::text, 'female', 'vil_1', 70, 'p4', null::text, null::text, null::text, 'lg_1', 2100, 5
+
+    expect:
+      format: sql
+      rows: |
+        select 'immunisation_dose' as metric_id, null::text as variant_id, 'd1'::varchar as subject_id, '2024-03-01'::date as period_start, '2024-03-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_a' as facility_id, 'female' as sex, 'Typhoid' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id, 'p1' as person_id, 'drug-TCVTyphoid' as vaccine_id, 'TCV' as vaccine_label, 'Campaign' as vaccine_category, 'lg_1' as location_group_id, 3600 as age_days, 10 as age_years
+        union all
+        select 'immunisation_dose', null::text, 'd2'::varchar, '2024-04-10'::date, '2024-04-10'::date, 'day'::text, 1::numeric, null::boolean, 'fac_b', 'female', 'Typhoid', '5+ years', 'Dose 1', 'vil_1', 'p1', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3630, 10
+        union all
+        select 'immunisation_dose', null::text, 'd4'::varchar, '2024-03-02'::date, '2024-03-02'::date, 'day'::text, 1::numeric, null::boolean, 'fac_b', 'female', 'Typhoid', '5+ years', 'Dose 1', 'vil_1', 'p2', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3900, 10
+        union all
+        select 'immunisation_dose', null::text, 'd3'::varchar, '2024-03-02'::date, '2024-03-02'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Typhoid', '5+ years', 'Dose 1', 'vil_1', 'p2', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3900, 10
+        union all
+        select 'immunisation_dose', null::text, 'd5'::varchar, '2024-01-05'::date, '2024-01-05'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'DTP', '<1 year', 'Dose 1', 'vil_1', 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 60, 0
+        union all
+        select 'immunisation_dose', null::text, 'd6'::varchar, '2024-02-05'::date, '2024-02-05'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'DTP', '<1 year', 'Dose 2', 'vil_1', 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 90, 0
+        union all
+        select 'immunisation_dose', null::text, 'd7'::varchar, '2024-05-01'::date, '2024-05-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Measles', '5+ years', 'Not recorded', 'vil_1', 'p4', null::text, 'Not recorded', 'Not recorded', 'lg_1', 2100, 5
+        union all
+        select 'immunisation_dose', null::text, 'd8'::varchar, '2024-05-01'::date, '2024-05-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Rubella', '5+ years', 'Not recorded', 'vil_1', 'p4', null::text, 'Not recorded', 'Not recorded', 'lg_1', 2100, 5
+        union all
+        select 'immunisation_recipient', null::text, 'd1'::varchar, '2024-03-01'::date, '2024-03-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Typhoid', '5+ years', 'Dose 1', 'vil_1', 'p1', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3600, 10
+        union all
+        select 'immunisation_recipient', null::text, 'd3'::varchar, '2024-03-02'::date, '2024-03-02'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Typhoid', '5+ years', 'Dose 1', 'vil_1', 'p2', 'drug-TCVTyphoid', 'TCV', 'Campaign', 'lg_1', 3900, 10
+        union all
+        select 'immunisation_recipient', null::text, 'd5'::varchar, '2024-01-05'::date, '2024-01-05'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'DTP', '<1 year', 'Dose 1', 'vil_1', 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 60, 0
+        union all
+        select 'immunisation_recipient', null::text, 'd6'::varchar, '2024-02-05'::date, '2024-02-05'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'DTP', '<1 year', 'Dose 2', 'vil_1', 'p3', 'drug-DTP', 'DTP', 'Routine', 'lg_1', 90, 0
+        union all
+        select 'immunisation_recipient', null::text, 'd7'::varchar, '2024-05-01'::date, '2024-05-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Measles', '5+ years', 'Not recorded', 'vil_1', 'p4', null::text, 'Not recorded', 'Not recorded', 'lg_1', 2100, 5
+        union all
+        select 'immunisation_recipient', null::text, 'd8'::varchar, '2024-05-01'::date, '2024-05-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_a', 'female', 'Rubella', '5+ years', 'Not recorded', 'vil_1', 'p4', null::text, 'Not recorded', 'Not recorded', 'lg_1', 2100, 5
