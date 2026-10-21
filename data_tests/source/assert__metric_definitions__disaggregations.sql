@@ -114,6 +114,8 @@ where trim(d) not in (
         -- the same reasoning as diagnosis/diagnosis_code above.
         'procedure',
         'procedure_code',
+        -- pharmacy_order's whether-any-fill-recorded flag, the companion of its time-to-first-dispense
+        'has_dispense',
         -- procedure's completion flag
         'is_completed',
         -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
