@@ -1,5 +1,7 @@
 version: 2
 
+# See specs/dbt-model/metric__birth.md for the BL clauses this file implements.
+
 models:
   - name: metric__birth
     description: "{{ doc('metric__birth') }}"
@@ -178,3 +180,8 @@ models:
         data_type: integer
         description: "{{ doc('patient_birth_data__apgar_score_five_minutes') }}"
         # BL-014: a measure, not a dimension -- banding is the consumer's.
+      - name: patient_location_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__birth__patient_location_id') }}"
+        # BL-015: deliberately no not_null test -- NULL means the newborn's record carries no
+        # village, a real state rather than an anomaly.

@@ -1,7 +1,8 @@
 -- int__vaccine_administration_attributes -- one row per bases/vaccine_administrations row,
 -- any status, carrying every attribute both immunisation metrics disaggregate by: facility,
 -- antigen, schedule dose position, sex, EPI age-cohort input, and patient village. Also
--- resolves the not-given reason, populated only for a NOT_GIVEN row.
+-- resolves the not-given reason, populated only for a NOT_GIVEN row, and carries the
+-- patient, the scheduled vaccine, the location group and age at the event (MAUI-7034).
 --
 -- Shared base for metric__immunisation_dose (status = 'GIVEN') and
 -- metric__immunisation_refusal (status = 'NOT_GIVEN'). Each reads its own identity and date
@@ -15,6 +16,7 @@
 -- Ephemeral, so this is inlined into each consumer and materialises nothing.
 --
 -- Specs: specs/dbt-model/metric__immunisation_dose.md, specs/dbt-model/metric__immunisation_refusal.md
+-- See specs/dbt-model/metric__immunisation_dose.md for the BL clauses this model implements.
 
 with vaccine_administrations as (
     select * from {{ ref('vaccine_administrations') }}
@@ -28,8 +30,17 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- date_of_birth rebuilt once from clinical__person's parts, for all three ages below.
+-- month_of_birth/day_of_birth are extracted from the same date_of_birth column in
+-- clinical__person, so they're populated whenever year_of_birth is -- make_date never
+-- errors on a partial date. NULL year_of_birth -> NULL date_of_birth -> NULL ages.
 person as (
-    select * from {{ ref('clinical__person') }}
+    select
+        *,
+        case
+            when year_of_birth is not null then make_date(year_of_birth, month_of_birth, day_of_birth)
+        end as date_of_birth
+    from {{ ref('clinical__person') }}
 ),
 
 encounters as (
@@ -42,14 +53,17 @@ reference_data as (
 
 select
     av.id as administered_vaccine_id,
-    -- facility comes from the event's own recorded location, not resolved via the encounter's
-    -- segment -- a vaccination (or an attempt) can be given in a different room/location than
-    -- where the encounter's other activity was recorded. Inner join: a row recorded as given
-    -- elsewhere carries no location_id and is excluded rather than attributed to a NULL
-    -- facility, since it was not administered at one of this deployment's own facilities --
-    -- same convention every other metric__ model uses for a row whose location fails to
-    -- resolve.
+    -- BL-004: facility from the event's own recorded location -- a vaccination (or an attempt)
+    -- can be given in a different room than the encounter's other activity -- falling back to
+    -- the encounter's location when the event carries none. Older and migrated records often
+    -- hold no location on the event itself, only on the encounter; the event is kept either
+    -- way, given elsewhere or not (BL-014).
     loc.facility_id,
+    -- BL-014: where the facility came from, and whether the event was recorded as given
+    -- elsewhere (outside this deployment's service, e.g. overseas), so a consumer can exclude
+    -- or label those rather than the model dropping them.
+    case when av.location_id is not null then 'dose location' else 'encounter location' end as facility_source,
+    coalesce(av.is_given_elsewhere, false) as is_given_elsewhere,
     -- the antigen the event addresses -- no OMOP equivalent, read directly.
     av.disease,
     -- the schedule's dose position (e.g. 'Dose 1', or a due-time label like 'Birth'). Left
@@ -64,25 +78,36 @@ select
     case
         when av.status = 'NOT_GIVEN' then coalesce(rdr.name, av.reason)
     end as not_given_reason,
-    -- age in whole months at the event date -- null year_of_birth -> null age.
-    -- month_of_birth/day_of_birth are extracted from the same date_of_birth column in
-    -- clinical__person, so they're populated whenever year_of_birth is -- make_date never
-    -- errors on a partial date.
-    case
-        when pr.year_of_birth is not null then
-            (extract(year from age(
-                av.datetime::date,
-                make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
-            )) * 12 + extract(month from age(
-                av.datetime::date,
-                make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
-            )))::int
-    end as age_months
+    -- age in whole months at the event date -- NULL date_of_birth -> NULL age.
+    (
+        extract(year from age(av.datetime::date, pr.date_of_birth)) * 12
+        + extract(month from age(av.datetime::date, pr.date_of_birth))
+    )::int as age_months,
+    -- BL-009: the patient, so a consumer
+    -- can count people rather than events. The encounter's patient, which the inner join to
+    -- person below already requires to resolve.
+    e.patient_id as person_id,
+    -- BL-010: the scheduled vaccine -- its
+    -- drug id, its display label (e.g. 'BCG') and its schedule category (e.g. 'Routine',
+    -- 'Catchup', 'Campaign'). NULL for an ad hoc dose with no schedule, like dose_label.
+    vs.vaccine_id,
+    vs.label as vaccine_label,
+    vs.category as vaccine_category,
+    -- BL-011: the location group of the
+    -- location facility_id came from (BL-004), one level finer than facility_id -- a campaign
+    -- site. NULL when the location belongs to no group.
+    loc.location_group_id,
+    -- BL-012: age at the event date in
+    -- whole days and whole completed years, unbanded -- banding is the consumer's.
+    (av.datetime::date - pr.date_of_birth) as age_days,
+    extract(year from age(av.datetime::date, pr.date_of_birth))::int as age_years
 from vaccine_administrations av
 join encounters e
     on e.id = av.encounter_id
+-- BL-004: the event's own location, else its encounter's. Inner join -- the encounter always
+-- has a location, so this only drops an event whose location record is itself deleted.
 join locations loc
-    on loc.id = av.location_id
+    on loc.id = coalesce(av.location_id, e.location_id)
 left join vaccine_schedules vs
     on vs.id = av.scheduled_vaccine_id
 left join reference_data rdr
