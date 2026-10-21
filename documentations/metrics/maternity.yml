@@ -39,6 +39,7 @@ metrics:
   - attendant_at_birth
   - registered_birth_place
   - birth_type
+  - patient_location_id
   variant_of: null
   owner: bes-maui
   status: approved
@@ -71,6 +72,7 @@ metrics:
   - attendant_at_birth
   - registered_birth_place
   - birth_type
+  - patient_location_id
   variant_of: null
   owner: bes-maui
   status: approved
@@ -102,6 +104,7 @@ metrics:
   - attendant_at_birth
   - registered_birth_place
   - birth_type
+  - patient_location_id
   variant_of: null
   owner: bes-maui
   status: approved
@@ -133,6 +136,7 @@ metrics:
   - attendant_at_birth
   - registered_birth_place
   - birth_type
+  - patient_location_id
   variant_of: null
   owner: bes-maui
   status: approved
