@@ -11,11 +11,13 @@ Numerator-only: this counts doses, not coverage. A coverage percentage is a rati
 externally supplied population/target estimate, computed downstream (Tupaia), never in dbt.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, sex, disease/antigen, EPI age cohort, schedule dose position, patient village --
-and over any time grain from day upwards. Nothing is pre-aggregated, so no dimension has to
+facility, sex, disease/antigen, EPI age cohort, schedule dose position, patient village,
+vaccine id/label/category, location group -- and over any time grain from day upwards. Nothing is pre-aggregated, so no dimension has to
 be collapsed to get a total.
 
-See specs/dbt-model/metric__immunisation_dose.md for BL-001..BL-009.
+To count people rather than doses, take a distinct count over person_id.
+
+See specs/dbt-model/metric__immunisation_dose.md for BL-001..BL-013.
 {% enddocs %}
 
 {% docs metric__immunisation_dose__metric_id %}
@@ -37,9 +39,8 @@ administered_vaccines id for a vaccination row), matching the registry's subject
 One row per dose, so this is unique within the metric -- a patient given two vaccines in the
 same encounter yields two rows, not one, since each is its own administered_vaccines record.
 
-It is a dose id, not a patient id: the row carries no patient identifier, and a patient with
-several doses appears once per dose with no way to link them from here. That is what keeps
-this model unrestricted.
+It is a dose id, not a patient id: a patient with several doses appears once per dose. The
+patient is carried separately in person_id, which is why this model is restricted (BL-013).
 {% enddocs %}
 
 {% docs metric__immunisation_dose__period_start %}
@@ -111,4 +112,56 @@ Exists because a future coverage percentage will be computed against a populatio
 that is itself geographic (by village/catchment), not per-facility -- a child vaccinated at
 a different facility to where they live should still count toward their own village's
 coverage, not the administering facility's throughput.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__person_id %}
+The patient's Tamanu id -- the patient of the encounter the dose was recorded in. Lets a
+consumer count people rather than doses: a distinct count over this column. Never NULL.
+
+Restricted: carried for aggregation only. A Tupaia data table uses it inside `count_distinct`
+and never exposes it as a column, so no patient id reaches a dashboard.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__vaccine_id %}
+The scheduled vaccine's drug id (vaccine_schedules.vaccine_id, e.g. `drug-TCVTyphoid`) --
+the stable key a consumer filters one vaccine by. NULL for an ad hoc dose with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__vaccine_label %}
+The scheduled vaccine's display label (vaccine_schedules.label, e.g. `BCG`, `Hepatitis B`).
+'Not recorded' for an ad hoc dose with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__vaccine_category %}
+The schedule's category (vaccine_schedules.category, e.g. `Routine`, `Catchup`, `Campaign`), as
+the deployment configures it. 'Not recorded' for an ad hoc dose with no schedule.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__location_group_id %}
+The location group (area or site) of the location the dose was recorded at, as a Tamanu id
+-- one level finer than facility_id, so a consumer can attribute a campaign site. NULL when the
+location belongs to no group.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__age_days %}
+The patient's age on the dose date in whole days. NULL with no date of birth on record. A
+measure, unbanded -- a consumer bands it (e.g. days after birth for a birth dose).
+{% enddocs %}
+
+{% docs metric__immunisation_dose__age_years %}
+The patient's age on the dose date in whole completed years. NULL with no date of birth on
+record. A measure, unbanded -- a consumer bands it.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__facility_source %}
+Where facility_id and location_group_id came from: 'dose location' when the dose record carries
+its own location, 'encounter location' when it carries none and the encounter's location is used
+(BL-004). Older and migrated records often hold the location only on the encounter.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__is_given_elsewhere %}
+True when the dose was recorded as given elsewhere -- outside this deployment's service, often
+overseas or before the patient was registered -- false otherwise. These doses are counted; a card
+that wants only doses this service gave filters this to false. For such doses facility_id is
+where the dose was recorded, not where it was given.
 {% enddocs %}
