@@ -1,5 +1,7 @@
 version: 2
 
+# See specs/dbt-model/metric__immunisation_dose.md for the BL clauses this file implements.
+
 models:
   - name: metric__immunisation_dose
     description: "{{ doc('metric__immunisation_dose') }}"
@@ -13,11 +15,13 @@ models:
     meta:
       owner: bes-maui
       domain: clinical
-      # Per-dose rows, but the subject is a drug exposure id with no patient identifier,
-      # name or birth date alongside it -- no patient is identifiable through a row, so this
-      # stays unrestricted and covers standard and sensitive facilities alike.
+      # BL-013: restricted, like
+      # metric__birth and metric__death. A row now carries the patient's Tamanu id (person_id)
+      # beside the event date, age, village and vaccine, which in a small deployment can
+      # identify the patient. No direct identifier -- no name, MRN or date of birth -- so
+      # pii stays false. Consumers only ever aggregate person_id (a distinct count).
       pii: false
-      classification: internal
+      classification: restricted
     data_tests:
       # One row per dose. A duplicate would double-count a dose in any consumer that sums
       # value_numeric -- error even though the repo default is warn.
@@ -136,3 +140,54 @@ models:
         description: "{{ doc('metric__immunisation_dose__patient_location_id') }}"
         # BL-008: deliberately no not_null test -- NULL means the patient's own record
         # carries no village, which is a real and common state, not an anomaly.
+      - name: person_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_dose__person_id') }}"
+        # BL-009: only ever aggregated (a distinct count) by a consumer, never exposed.
+        data_tests:
+          - not_null:
+              name: ac_014_metric__immunisation_dose_person_id_not_null
+      - name: vaccine_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_dose__vaccine_id') }}"
+        # BL-010: deliberately no not_null test -- NULL for an ad hoc row with no schedule.
+      - name: vaccine_label
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_dose__vaccine_label') }}"
+        data_tests:
+          - not_null:
+              name: ac_015_metric__immunisation_dose_vaccine_label_not_null
+      - name: vaccine_category
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_dose__vaccine_category') }}"
+        data_tests:
+          - not_null:
+              name: ac_016_metric__immunisation_dose_vaccine_category_not_null
+      - name: location_group_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__immunisation_dose__location_group_id') }}"
+        # BL-011: deliberately no not_null test -- a location may belong to no group.
+      - name: age_days
+        data_type: integer
+        description: "{{ doc('metric__immunisation_dose__age_days') }}"
+        # BL-012: a measure, not a dimension -- banding is the consumer's.
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('metric__immunisation_dose__age_years') }}"
+        # BL-012: a measure, not a dimension -- banding is the consumer's.
+      - name: facility_source
+        data_type: text
+        description: "{{ doc('metric__immunisation_dose__facility_source') }}"
+        data_tests:
+          - not_null:
+              name: ac_017_metric__immunisation_dose_facility_source_not_null
+          - accepted_values:
+              name: ac_017_metric__immunisation_dose_facility_source_values
+              arguments:
+                values: ['dose location', 'encounter location']
+      - name: is_given_elsewhere
+        data_type: boolean
+        description: "{{ doc('metric__immunisation_dose__is_given_elsewhere') }}"
+        data_tests:
+          - not_null:
+              name: ac_018_metric__immunisation_dose_is_given_elsewhere_not_null

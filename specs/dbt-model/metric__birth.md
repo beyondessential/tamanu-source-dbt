@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.60`) |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
 | **Created** | 2026-08-26 |
-| **Last updated** | 2026-08-26 |
+| **Last updated** | 2026-10-20 |
 
 Canonical definition for `birth`, `low_birth_weight`, `preterm_birth` and `low_apgar_5min`: one
 row per live birth registered in Tamanu, at the newborn's `patient_id`.
@@ -82,7 +82,7 @@ uniqueness holds without a fan-out guard; AC-001 is the backstop if that assumpt
 
 ## Output schema
 
-D5 wide format, plus six disaggregation columns and four measure attributes.
+D5 wide format, plus seven disaggregation columns and four measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -103,6 +103,7 @@ D5 wide format, plus six disaggregation columns and four measure attributes.
 | `birth_weight` | numeric | Kilograms, 1 dp as recorded. A measure, not a dimension (BL-014) |
 | `gestational_age_estimate` | numeric | Completed weeks as recorded. A measure, not a dimension (BL-014) |
 | `apgar_score_five_minutes` | integer | As recorded. A measure, not a dimension (BL-014) |
+| `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu id into `ref__location` (BL-015). Nullable — not coalesced |
 
 ## Data tables
 
@@ -207,6 +208,11 @@ carries no `data_table_*` meta.
   disaggregations. Banding them (a low-birth-weight severity split, a gestational-age band, an
   Apgar band) is a deployment concern set in the data table, the same division of labour as
   `age_years` in `ed_visit` BL-019.
+- **BL-015 (newborn's village):** `patient_location_id` is the newborn's own
+  `clinical__person.location_id`, passed through as a Tamanu id and left NULL when the record
+  carries no village — the same column, rule and village list as
+  `metric__immunisation_dose`'s `patient_location_id`, so births and birth doses can be read by
+  village side by side.
 
 ## Acceptance criteria
 
@@ -225,7 +231,7 @@ carries no `data_table_*` meta.
 | AC-011 | Every `preterm_birth` row has `gestational_age_estimate < 37` | BL-006 | `dbt_utils.expression_is_true` |
 | AC-012 | Every `low_apgar_5min` row has `apgar_score_five_minutes < 7` | BL-007 | `dbt_utils.expression_is_true` |
 | AC-013 | Subset membership matches the source predicate over the included population, both directions: every qualifying `birth` has its subset row, and every subset row has a `birth` row whose source measure meets the threshold | BL-002, BL-005–BL-007, grain | singular test |
-| AC-014 | The D5 projection resolves as specified: both `period_start` fallbacks, `birth_time` ignored at day granularity, each threshold's boundary excluded, a NULL measure emitting no subset row, a facility-less birth keeping its row, a facility absent from `bases/facilities` keeping its id, and unrecorded disaggregations reading `'Not recorded'` | BL-003, BL-005–BL-007, BL-009, BL-010, BL-013 | unit test `ac_014_metric__birth_projection` |
+| AC-014 | The D5 projection resolves as specified: both `period_start` fallbacks, `birth_time` ignored at day granularity, each threshold's boundary excluded, a NULL measure emitting no subset row, a facility-less birth keeping its row, a facility absent from `bases/facilities` keeping its id, and unrecorded disaggregations reading `'Not recorded'`, and `patient_location_id` passing through including NULL | BL-003, BL-005–BL-007, BL-009, BL-010, BL-013, BL-015 | unit test `ac_014_metric__birth_projection` |
 | AC-015 | `birth_delivery_type`, `attendant_at_birth`, `registered_birth_place` and `birth_type` are each `not_null` | BL-009 | `not_null` × 4 |
 
 AC-010 through AC-012 assert the thresholds against whatever rows a deployment holds; AC-014
@@ -245,7 +251,7 @@ Four active rows in `documentations/metrics/maternity.yml` — `birth`, `low_bir
 `preterm_birth`, `low_apgar_5min` — each `kind: metric`, `subject_grain: patient`, `status:
 approved`, `spec_path` pointing here, `variant_of: null`.
 `disaggregations: facility_id,sex,birth_delivery_type,attendant_at_birth,registered_birth_place,
-birth_type` on every row (identical across the four, since they share a base).
+birth_type,patient_location_id` on every row (identical across the four, since they share a base).
 
 Every disaggregation must be added to the allowlist in
 `data_tests/source/assert__metric_definitions__disaggregations.sql`.
@@ -256,7 +262,7 @@ Every disaggregation must be added to the allowlist in
 |---|---|---|
 | `patient_birth_data` | `bases/` | Birth record: delivery type, attendant, place, weight, gestational age, Apgar (BL-002–BL-010) |
 | `patients` | `bases/` | Inclusion filter and date of birth for the reporting-period fallback (BL-002, BL-003) |
-| `clinical__person` | `clinical/` | Sex (BL-004) |
+| `clinical__person` | `clinical/` | Sex (BL-004), village (BL-015) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
@@ -296,6 +302,7 @@ Every disaggregation must be added to the allowlist in
 | `ds__births` | Report-layer birth line list at the same grain, with PII (mother/father, village) |
 | `age_group__aihw_maternal_age`, `diagnosis__icd10_obstetric_block` | Maternity macros carried on this branch line. Neither is called by this model; both are available to a consumer's data table — to band maternal age once the mother link is resolved (OQ-001), or to group obstetric diagnoses |
 | MAUI-6838 | Tupaia maternity and newborn dashboard: standard metric and visuals |
+| MAUI-7034 | Adds `patient_location_id` (BL-015), for Tuvalu's live-births-vs-birth-doses card by village |
 
 ## Change log
 
@@ -303,3 +310,4 @@ Every disaggregation must be added to the allowlist in
 |---|---|---|
 | 2026-08-26 | Maui team | Initial draft |
 | 2026-08-30 | Maui team | BL-009: the four disaggregations coalesce to `'Not recorded'` (new AC-015) — a raw NULL was droppable by Tupaia's array filter. BL-010: `facility_id` carried as recorded rather than left-joined to `bases/facilities`, which turned a soft-deleted facility into an apparent home birth. BL-012: corrected the `pii: false` justification — the newborn's date of birth *is* emitted as `period_start`. AC-013 restated as a source-anchored, falsifiable check. Registry `subject_grain` corrected to `patient` |
+| 2026-10-20 | Maui team | BL-015: `patient_location_id`, the newborn's village, added as a disaggregation (MAUI-7034), matching `metric__immunisation_dose`'s. AC-014 extended to cover it |

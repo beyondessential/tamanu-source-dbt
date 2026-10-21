@@ -35,10 +35,16 @@ metrics:
   - age_group__who_epi_schedule
   - dose_label
   - patient_location_id
+  - vaccine_id
+  - vaccine_label
+  - vaccine_category
+  - location_group_id
+  - facility_source
+  - is_given_elsewhere
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: null
+  spec_path: specs/dbt-model/metric__immunisation_dose.md
 
 - metric_id: immunisation_refusal
   kind: metric
@@ -69,7 +75,13 @@ metrics:
   - dose_label
   - patient_location_id
   - reason
+  - vaccine_id
+  - vaccine_label
+  - vaccine_category
+  - location_group_id
+  - facility_source
+  - is_given_elsewhere
   variant_of: null
   owner: bes-maui
   status: draft
-  spec_path: null
+  spec_path: specs/dbt-model/metric__immunisation_refusal.md
