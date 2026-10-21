@@ -147,3 +147,16 @@ measure, unbanded -- a consumer bands it (e.g. days after birth for a birth dose
 The patient's age on the attempt date in whole completed years. NULL with no date of birth on
 record. A measure, unbanded -- a consumer bands it.
 {% enddocs %}
+
+{% docs metric__immunisation_refusal__facility_source %}
+Where facility_id and location_group_id came from: 'dose location' when the attempt record carries
+its own location, 'encounter location' when it carries none and the encounter's location is used
+(BL-004). Older and migrated records often hold the location only on the encounter.
+{% enddocs %}
+
+{% docs metric__immunisation_refusal__is_given_elsewhere %}
+True when the attempt was recorded as given elsewhere -- outside this deployment's service, often
+overseas or before the patient was registered -- false otherwise. These attempts are counted; a card
+that wants only attempts this service gave filters this to false. For such attempts facility_id is
+where the attempt was recorded, not where it was given.
+{% enddocs %}

@@ -160,3 +160,16 @@ measure, unbanded -- a consumer bands it (e.g. days after birth for a birth dose
 The patient's age on the dose date in whole completed years. NULL with no date of birth on
 record. A measure, unbanded -- a consumer bands it.
 {% enddocs %}
+
+{% docs metric__immunisation_dose__facility_source %}
+Where facility_id and location_group_id came from: 'dose location' when the dose record carries
+its own location, 'encounter location' when it carries none and the encounter's location is used
+(BL-004). Older and migrated records often hold the location only on the encounter.
+{% enddocs %}
+
+{% docs metric__immunisation_dose__is_given_elsewhere %}
+True when the dose was recorded as given elsewhere -- outside this deployment's service, often
+overseas or before the patient was registered -- false otherwise. These doses are counted; a card
+that wants only doses this service gave filters this to false. For such doses facility_id is
+where the dose was recorded, not where it was given.
+{% enddocs %}

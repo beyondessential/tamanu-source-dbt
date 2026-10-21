@@ -51,7 +51,9 @@ refusals as (
         va.vaccine_category,
         va.location_group_id,
         va.age_days,
-        va.age_years
+        va.age_years,
+        va.facility_source,
+        va.is_given_elsewhere
     from observation ob
     join vaccine_attributes va
         on va.administered_vaccine_id = ob.observation_id
@@ -75,7 +77,7 @@ select
     -- consumer summing it is correct at every grain.
     1::numeric as value_numeric,
     null::boolean as value_boolean,
-    -- BL-004: the facility of the location the attempt was recorded at, as
+    -- BL-004: the facility of the attempt's own location, else its encounter's, as
     -- metric__immunisation_dose BL-004.
     facility_id,
     sex,
@@ -93,13 +95,15 @@ select
     -- BL-009: why the dose was not given. 'Not recorded' when neither a coded reason nor
     -- free-text reason was captured.
     coalesce(not_given_reason, 'Not recorded') as reason,
-    -- BL-010: the same patient, scheduled-vaccine, location-group and age fields as
-    -- metric__immunisation_dose BL-009 to BL-012, so the two still read side by side.
+    -- BL-010: the same patient, scheduled-vaccine, location-group, age and source fields as
+    -- metric__immunisation_dose BL-009 to BL-012 and BL-016, so the two still read side by side.
     person_id,
     vaccine_id,
     coalesce(vaccine_label, 'Not recorded') as vaccine_label,
     coalesce(vaccine_category, 'Not recorded') as vaccine_category,
     location_group_id,
     age_days,
-    age_years
+    age_years,
+    facility_source,
+    is_given_elsewhere
 from refusals

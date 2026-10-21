@@ -53,14 +53,17 @@ reference_data as (
 
 select
     av.id as administered_vaccine_id,
-    -- facility comes from the event's own recorded location, not resolved via the encounter's
-    -- segment -- a vaccination (or an attempt) can be given in a different room/location than
-    -- where the encounter's other activity was recorded. Inner join: a row recorded as given
-    -- elsewhere carries no location_id and is excluded rather than attributed to a NULL
-    -- facility, since it was not administered at one of this deployment's own facilities --
-    -- same convention every other metric__ model uses for a row whose location fails to
-    -- resolve.
+    -- BL-004: facility from the event's own recorded location -- a vaccination (or an attempt)
+    -- can be given in a different room than the encounter's other activity -- falling back to
+    -- the encounter's location when the event carries none. Older and migrated records often
+    -- hold no location on the event itself, only on the encounter; the event is kept either
+    -- way, given elsewhere or not (BL-016).
     loc.facility_id,
+    -- BL-016: where the facility came from, and whether the event was recorded as given
+    -- elsewhere (outside this deployment's service, e.g. overseas), so a consumer can exclude
+    -- or label those rather than the model dropping them.
+    case when av.location_id is not null then 'dose location' else 'encounter location' end as facility_source,
+    coalesce(av.is_given_elsewhere, false) as is_given_elsewhere,
     -- the antigen the event addresses -- no OMOP equivalent, read directly.
     av.disease,
     -- the schedule's dose position (e.g. 'Dose 1', or a due-time label like 'Birth'). Left
@@ -91,8 +94,8 @@ select
     vs.label as vaccine_label,
     vs.category as vaccine_category,
     -- BL-011: the location group of the
-    -- event's location, one level finer than facility_id -- a campaign site. NULL when the
-    -- location belongs to no group.
+    -- location facility_id came from (BL-004), one level finer than facility_id -- a campaign
+    -- site. NULL when the location belongs to no group.
     loc.location_group_id,
     -- BL-012: age at the event date in
     -- whole days and whole completed years, unbanded -- banding is the consumer's.
@@ -101,8 +104,10 @@ select
 from vaccine_administrations av
 join encounters e
     on e.id = av.encounter_id
+-- BL-004: the event's own location, else its encounter's. Inner join -- the encounter always
+-- has a location, so this only drops an event whose location record is itself deleted.
 join locations loc
-    on loc.id = av.location_id
+    on loc.id = coalesce(av.location_id, e.location_id)
 left join vaccine_schedules vs
     on vs.id = av.scheduled_vaccine_id
 left join reference_data rdr

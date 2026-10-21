@@ -45,7 +45,9 @@ doses as (
         va.vaccine_category,
         va.location_group_id,
         va.age_days,
-        va.age_years
+        va.age_years,
+        va.facility_source,
+        va.is_given_elsewhere
     from drug_exposure de
     join vaccine_attributes va
         on va.administered_vaccine_id = de.drug_exposure_id
@@ -70,8 +72,8 @@ projected as (
         -- with the denominator (target population) supplied downstream.
         1::numeric as value_numeric,
         null::boolean as value_boolean,
-        -- BL-004: the facility of the location the dose was recorded at, resolved in the shared
-        -- attributes model by inner join -- a dose given elsewhere has no location and is excluded.
+        -- BL-004: the facility of the dose's own location, else its encounter's -- every dose is
+        -- kept, including one recorded as given elsewhere (BL-016).
         facility_id,
         sex,
         -- BL-005: the antigen the dose addresses. 'Not recorded' when disease is blank, same
@@ -105,7 +107,11 @@ projected as (
         -- BL-012: age at the dose in whole days and whole completed years, unbanded. NULL with
         -- no date of birth on record.
         age_days,
-        age_years
+        age_years,
+        -- BL-016: where facility_id came from, and whether the dose was recorded as given
+        -- elsewhere, so a card can exclude or label those doses.
+        facility_source,
+        is_given_elsewhere
     from doses
 ),
 
@@ -144,7 +150,9 @@ ranked as (
     vaccine_category,
     location_group_id,
     age_days,
-    age_years
+    age_years,
+    facility_source,
+    is_given_elsewhere
 {%- endset %}
 
 select

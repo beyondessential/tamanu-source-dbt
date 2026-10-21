@@ -39,6 +39,8 @@ metrics:
   - vaccine_label
   - vaccine_category
   - location_group_id
+  - facility_source
+  - is_given_elsewhere
   variant_of: null
   owner: bes-maui
   status: draft
@@ -79,6 +81,8 @@ metrics:
   - vaccine_label
   - vaccine_category
   - location_group_id
+  - facility_source
+  - is_given_elsewhere
   variant_of: null
   owner: bes-maui
   status: draft
@@ -117,6 +121,8 @@ metrics:
   - vaccine_label
   - vaccine_category
   - location_group_id
+  - facility_source
+  - is_given_elsewhere
   variant_of: null
   owner: bes-maui
   status: draft

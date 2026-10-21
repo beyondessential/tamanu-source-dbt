@@ -188,3 +188,19 @@ models:
         data_type: integer
         description: "{{ doc('metric__immunisation_dose__age_years') }}"
         # BL-012: a measure, not a dimension -- banding is the consumer's.
+      - name: facility_source
+        data_type: text
+        description: "{{ doc('metric__immunisation_dose__facility_source') }}"
+        data_tests:
+          - not_null:
+              name: ac_019_metric__immunisation_dose_facility_source_not_null
+          - accepted_values:
+              name: ac_019_metric__immunisation_dose_facility_source_values
+              arguments:
+                values: ['dose location', 'encounter location']
+      - name: is_given_elsewhere
+        data_type: boolean
+        description: "{{ doc('metric__immunisation_dose__is_given_elsewhere') }}"
+        data_tests:
+          - not_null:
+              name: ac_020_metric__immunisation_dose_is_given_elsewhere_not_null

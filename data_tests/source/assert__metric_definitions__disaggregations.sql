@@ -144,6 +144,10 @@ where trim(d) not in (
         -- immunisation_dose's / _refusal's location group (area or site) of the event's
         -- location, one level finer than facility_id -- a campaign site (MAUI-7034)
         'location_group_id',
+        -- immunisation_dose's / _refusal's given-elsewhere flag: recorded as given outside this
+        -- deployment's service, counted but flagged so a consumer can exclude it (MAUI-7034).
+        -- facility_source, alongside it, is already allowed (death's).
+        'is_given_elsewhere',
         -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
         -- therapeutic-class reference mapping exists yet, the same reasoning
         -- diagnosis/diagnosis_code and procedure/procedure_code use.

@@ -63,8 +63,8 @@ Configured in `tupaia-data-product` at `tamanu/data_tables/`; no `data_table_*` 
 - **BL-002 (reporting period):** `period_start` and `period_end` are both the attempt date, at
   `'day'` granularity.
 - **BL-003 (count):** `value_numeric` is `1` per row.
-- **BL-004 (facility):** as `metric__immunisation_dose` BL-004 — the facility of the attempt's
-  recorded location, inner-joined.
+- **BL-004 (facility):** as `metric__immunisation_dose` BL-004 — the attempt's own location, else
+  its encounter's; none is excluded for want of a location of its own.
 - **BL-005 (antigen):** as `metric__immunisation_dose` BL-005.
 - **BL-006 (EPI age cohort):** as `metric__immunisation_dose` BL-006.
 - **BL-007 (dose position):** as `metric__immunisation_dose` BL-007.
@@ -72,8 +72,9 @@ Configured in `tupaia-data-product` at `tamanu/data_tables/`; no `data_table_*` 
 - **BL-009 (reason):** `reason` is the coded not-given reason's reference-data name, falling back
   to the free-text reason, then `'Not recorded'`.
 - **BL-010 (patient, vaccine, location group, raw age):** `person_id`, `vaccine_id`,
-  `vaccine_label`, `vaccine_category`, `location_group_id`, `age_days` and `age_years` are defined
-  as in `metric__immunisation_dose` BL-009 to BL-012, so the two metrics still read side by side.
+  `vaccine_label`, `vaccine_category`, `location_group_id`, `age_days`, `age_years`,
+  `facility_source` and `is_given_elsewhere` are defined as in `metric__immunisation_dose` BL-009 to
+  BL-012 and BL-016, so the two metrics still read side by side.
 - **BL-011 (classification):** `classification: restricted` and `pii: false`, for the same reason
   as `metric__immunisation_dose` BL-013.
 
@@ -90,6 +91,8 @@ Configured in `tupaia-data-product` at `tamanu/data_tables/`; no `data_table_*` 
 | AC-015 | `person_id` is `not_null` | BL-010 | `not_null` |
 | AC-016 | `vaccine_label` is `not_null` | BL-010 | `not_null` |
 | AC-017 | `vaccine_category` is `not_null` | BL-010 | `not_null` |
+| AC-018 | `facility_source` is `not_null` and one of `'dose location'`, `'encounter location'` | BL-010 | `not_null` + `accepted_values` |
+| AC-019 | `is_given_elsewhere` is `not_null` | BL-010 | `not_null` |
 
 ## Registry entry
 
@@ -109,3 +112,4 @@ Configured in `tupaia-data-product` at `tamanu/data_tables/`; no `data_table_*` 
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-20 | Maui team | Spec written for the model shipped in MAUI-6808, recording BL-001 to BL-009 as implemented. Added BL-010 and BL-011 (MAUI-7034): the patient, scheduled-vaccine, location-group and raw-age fields, and `classification: restricted`; AC-015 to AC-017 and AC-009 extended |
+| 2026-10-21 | Maui team | BL-004 follows the dose model's rewrite (location falls back to the encounter's, nothing excluded for want of one) and BL-010 adds `facility_source` and `is_given_elsewhere` (MAUI-7034). AC-018 and AC-019 added |
