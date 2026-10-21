@@ -9,8 +9,8 @@
 #
 # birth / low_birth_weight / preterm_birth / low_apgar_5min are implemented in this repo
 # (models/metrics/metric__birth.sql), deployment-neutral -- patient_birth_data is present on
-# every deployment. antenatal_booking is defined here but implemented in deployment repos --
-# see its spec. Antenatal contacts are who_dak_anc_contact, in who_dak_anc.yml.
+# every deployment. Antenatal care is who_dak_anc_contact, in who_dak_anc.yml -- a booking
+# is the first antenatal contact, so it has no separate metric_id of its own.
 
 metrics:
 - metric_id: birth
@@ -141,31 +141,3 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__birth.md
-- metric_id: antenatal_booking
-  kind: metric
-  name: Antenatal bookings
-  description: >-
-    A pregnancy's first antenatal registration/booking assessment (the WHO ANC1 concept).
-    Registered centrally; implemented only where a deployment captures a booking assessment
-    without a per-visit contact log -- see the spec's "Why a separate metric, not a variant
-    of who_dak_anc_contact".
-  numerator_description: null
-  denominator_description: null
-  data_source: tamanu
-  definition_source: WHO_CORE_100
-  definition_source_code: null
-  definition_rationale: >-
-    Antenatal care coverage (first visit) is a WHO Global Reference List of 100 Core Health
-    Indicators entry, following WHO recommendations on antenatal care for a positive
-    pregnancy experience (2016) -- the first antenatal contact/booking visit, counted here as
-    booking assessments rather than a population-based coverage percentage.
-  unit: count
-  subject_grain: episode
-  disaggregations:
-  - facility_id
-  variant_of: null
-  owner: bes-maui
-  # draft until an implementation lands and its spec is approved -- the definition is
-  # registered here first so a deployment's relationships test has a target to point at.
-  status: draft
-  spec_path: specs/dbt-model/metric__antenatal_booking.md

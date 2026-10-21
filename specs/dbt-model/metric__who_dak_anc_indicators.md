@@ -97,7 +97,10 @@ vars:
   `data_elements` entry mapping a DAK element id to the local question's data element code, and a
   mapped answer is read exactly as a native answer to that element.
 - **BL-004:** A contact form is the native ANC Registration form
-  (`program-whodakanc-registration`) or a mapped survey with `is_contact: true`.
+  (`program-whodakanc-registration`) or a mapped survey with `is_contact: true`. A pregnancy's
+  first contact is its booking assessment — the WHO ANC1 concept — recorded on whichever form the
+  deployment flags as a contact form first in the pregnancy, so there is no separate booking
+  metric_id.
 - **BL-005:** A contact is a patient with at least one contact-form submission on a day, so two
   contact forms for the same patient on the same day are one contact.
 - **BL-006:** A contact's day is its contact form's `ANC.A7.DE4` *Contact date*, falling back to the
@@ -150,7 +153,6 @@ vars:
 |---|---|
 | `documentations/metrics/who_dak_anc.yml` | The registered definitions |
 | `metric__who_dak_hiv_indicators` | The same pattern over the HIV DAK |
-| `metric__antenatal_booking` | Booking-only capture, a different subject grain |
 | `metric__birth` | Same dashboard group |
 | `tupaia-data-product` `tamanu/who-dak/anc/` | The forms, and `dak-conformance.md` for what they carry |
 
@@ -158,4 +160,4 @@ vars:
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-10-21 | Maui team | Initial spec. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` definition (MAUI-6838). |
+| 2026-10-21 | Maui team | Initial spec. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |
