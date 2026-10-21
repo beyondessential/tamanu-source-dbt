@@ -19,40 +19,65 @@ unit_tests:
               ANC.B6.DE17: LocalGestation
     given:
       - input: ref('program_data_elements')
-        rows:
-          - {id: pde-LocalChartDate, code: LocalChartDate}
-          - {id: pde-LocalGestation, code: LocalGestation}
-          - {id: pde-whodakanc-b6-de17, code: whodakanc-b6-de17}
+        format: sql
+        rows: |
+          select 'pde-LocalChartDate'::text as id, 'LocalChartDate'::text as code
+          union all
+          select 'pde-LocalGestation', 'LocalGestation'
+          union all
+          select 'pde-whodakanc-b6-de17', 'whodakanc-b6-de17'
       - input: ref('locations')
-        rows:
-          - {id: loc_1, facility_id: fac_1}
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'fac_1'::text as facility_id
       - input: ref('encounters')
-        rows:
-          - {id: enc_1, patient_id: pat_1, location_id: loc_1}
-          - {id: enc_2, patient_id: pat_1, location_id: loc_1}
-          - {id: enc_3, patient_id: pat_2, location_id: loc_1}
-          - {id: enc_4, patient_id: pat_3, location_id: loc_1}
-          - {id: enc_5, patient_id: pat_4, location_id: loc_1}
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
+          union all
+          select 'enc_2', 'pat_1', 'loc_1'
+          union all
+          select 'enc_3', 'pat_2', 'loc_1'
+          union all
+          select 'enc_4', 'pat_3', 'loc_1'
+          union all
+          select 'enc_5', 'pat_4', 'loc_1'
       - input: ref('clinical__person')
-        rows:
-          - {person_id: pat_1, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
-          - {person_id: pat_2, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
-          - {person_id: pat_3, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
-          - {person_id: pat_4, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+        format: sql
+        rows: |
+          select 'pat_1'::text as person_id, 1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
+          union all
+          select 'pat_2', 1990, 1, 1
+          union all
+          select 'pat_3', 1990, 1, 1
+          union all
+          select 'pat_4', 1990, 1, 1
       - input: ref('survey_responses')
-        rows:
-          - {id: r_1, survey_id: program-local-antenatalchart, encounter_id: enc_1, start_datetime: '2026-05-07 09:00:00', end_datetime: '2026-05-07 09:05:00'}
-          - {id: r_2, survey_id: program-local-booking, encounter_id: enc_2, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
-          - {id: r_3, survey_id: program-local-booking, encounter_id: enc_3, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
-          - {id: r_4, survey_id: program-whodakanc-profile, encounter_id: enc_4, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
-          - {id: r_5, survey_id: program-unmapped, encounter_id: enc_5, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
+        format: sql
+        rows: |
+          select
+            'r_1'::text as id, 'program-local-antenatalchart'::text as survey_id, 'enc_1'::text as encounter_id,
+            '2026-05-07 09:00:00'::timestamp as start_datetime, '2026-05-07 09:05:00'::timestamp as end_datetime
+          union all
+          select 'r_2', 'program-local-booking', 'enc_2', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+          union all
+          select 'r_3', 'program-local-booking', 'enc_3', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+          union all
+          select 'r_4', 'program-whodakanc-profile', 'enc_4', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+          union all
+          select 'r_5', 'program-unmapped', 'enc_5', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
       - input: ref('survey_response_answers')
-        rows:
-          - {id: a_1, response_id: r_1, data_element_id: pde-LocalChartDate, body: '2026-05-06'}
-          - {id: a_2, response_id: r_2, data_element_id: pde-LocalGestation, body: '24.5'}
-          - {id: a_3, response_id: r_3, data_element_id: pde-LocalGestation, body: '18'}
-          - {id: a_4, response_id: r_4, data_element_id: pde-whodakanc-b6-de17, body: '12'}
-          - {id: a_5, response_id: r_5, data_element_id: pde-LocalChartDate, body: '2026-05-06'}
+        format: sql
+        rows: |
+          select 'a_1'::text as id, 'r_1'::text as response_id, 'pde-LocalChartDate'::text as data_element_id, '2026-05-06'::text as body
+          union all
+          select 'a_2', 'r_2', 'pde-LocalGestation', '24.5'
+          union all
+          select 'a_3', 'r_3', 'pde-LocalGestation', '18'
+          union all
+          select 'a_4', 'r_4', 'pde-whodakanc-b6-de17', '12'
+          union all
+          select 'a_5', 'r_5', 'pde-LocalChartDate', '2026-05-06'
     expect:
       rows:
         - {subject_id: 'pat_1;2026-05-06', period_start: '2026-05-06', facility_id: fac_1, person_id: pat_1, gestational_age_weeks: 24.5}
