@@ -126,7 +126,7 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'pharmacy_order' as metric_id, null::text as variant_id, 'pop1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'General OPD' as department, true, 30.0
+        select 'pharmacy_order' as metric_id, null::text as variant_id, 'pop1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'General OPD' as department, true as has_dispense, 30.0::numeric as minutes_to_first_dispense
         union all
         select 'pharmacy_order', null::text, 'pop2', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'AMOX', 'Amoxicillin', 45, 'Dental', false, null::numeric
         union all
