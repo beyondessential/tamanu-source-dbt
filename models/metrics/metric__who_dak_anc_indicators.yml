@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: metric__who_dak_anc_indicators
+    description: "{{ doc('metric__who_dak_anc_indicators') }}"
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta -- the Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
+    # adds a file there rather than forking the metric.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # BL-013: a row identifies a pregnant woman by person_id, date and facility
+      pii: true
+      classification: restricted
+    data_tests:
+      # AC-001 (BL-005): one row per contact. A duplicate would count a contact twice in any
+      # consumer summing value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__who_dak_anc_indicators_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-005 (BL-006): a contact is a point event
+      - dbt_utils.expression_is_true:
+          name: ac_005_metric__who_dak_anc_indicators_period_end_equals_start
+          arguments:
+            expression: "period_end = period_start"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__who_dak_anc_indicators__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__who_dak_anc_indicators_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__who_dak_anc_indicators_metric_id_values
+              arguments:
+                values:
+                  - who_dak_anc_contact
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_003_metric__who_dak_anc_indicators_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__who_dak_anc_indicators__variant_id') }}"
+      - name: subject_id
+        data_type: character varying
+        description: "{{ doc('metric__who_dak_anc_indicators__subject_id') }}"
+        data_tests:
+          - not_null
+      - name: period_start
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__period_start') }}"
+        data_tests:
+          - not_null
+      - name: period_end
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__period_end') }}"
+        data_tests:
+          - not_null
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__who_dak_anc_indicators__period_granularity') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__who_dak_anc_indicators__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__who_dak_anc_indicators_value_numeric_not_null
+          # BL-012: one contact per row. A value other than 1 would mean the model had
+          # silently re-aggregated.
+          - accepted_values:
+              name: ac_004_metric__who_dak_anc_indicators_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('metric__who_dak_anc_indicators__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying
+        description: "{{ doc('metric__who_dak_anc_indicators__facility_id') }}"
+        # BL-010: nullable. A contact on an encounter with no location still counts, so a
+        # national total is not understated to protect a facility one.
+      - name: person_id
+        data_type: character varying
+        description: "{{ doc('metric__who_dak_anc_indicators__person_id') }}"
+        data_tests:
+          - not_null
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('metric__who_dak_anc_indicators__age_years') }}"
+      - name: contact_number
+        data_type: integer
+        description: "{{ doc('metric__who_dak_anc_indicators__contact_number') }}"
+      - name: gestational_age_weeks
+        data_type: numeric
+        description: "{{ doc('metric__who_dak_anc_indicators__gestational_age_weeks') }}"
