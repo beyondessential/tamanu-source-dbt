@@ -13,8 +13,7 @@ unit_tests:
       vaccine_id passes through, NULL for an ad hoc dose; vaccine_label and vaccine_category
       fall back to 'Not recorded'. BL-011: location_group_id passes through, NULL when the
       location has no group. BL-012: age_days and age_years pass through unbanded, NULL with
-      no date of birth. BL-014: each dose here is its person's only record of that dose, so each
-      also appears once as an immunisation_recipient row. BL-004/BL-016: dose_2,
+      no date of birth. BL-004/BL-014: dose_2,
       placed by its encounter's location and recorded as given elsewhere, is still counted, with
       facility_source and is_given_elsewhere passed through.
 
@@ -47,7 +46,3 @@ unit_tests:
         select 'immunisation_dose' as metric_id, null::text as variant_id, 'dose_1'::varchar as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 'Measles' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id, 'pat_1' as person_id, 'drug-MR' as vaccine_id, 'MR' as vaccine_label, 'Routine' as vaccine_category, 'lg_1' as location_group_id, 1830 as age_days, 5 as age_years, 'dose location' as facility_source, false as is_given_elsewhere
         union all
         select 'immunisation_dose', null::text, 'dose_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text, 'pat_2', null::text, 'Not recorded', 'Not recorded', null::text, null::int, null::int, 'encounter location', true
-        union all
-        select 'immunisation_recipient', null::text, 'dose_1'::varchar, '2024-06-01'::date, '2024-06-01'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'female', 'Measles', '5+ years', 'Dose 1', 'vil_1', 'pat_1', 'drug-MR', 'MR', 'Routine', 'lg_1', 1830, 5, 'dose location', false
-        union all
-        select 'immunisation_recipient', null::text, 'dose_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text, 'pat_2', null::text, 'Not recorded', 'Not recorded', null::text, null::int, null::int, 'encounter location', true

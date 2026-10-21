@@ -96,7 +96,7 @@ select
     -- free-text reason was captured.
     coalesce(not_given_reason, 'Not recorded') as reason,
     -- BL-010: the same patient, scheduled-vaccine, location-group, age and source fields as
-    -- metric__immunisation_dose BL-009 to BL-012 and BL-016, so the two still read side by side.
+    -- metric__immunisation_dose BL-009 to BL-012 and BL-014, so the two still read side by side.
     person_id,
     vaccine_id,
     coalesce(vaccine_label, 'Not recorded') as vaccine_label,

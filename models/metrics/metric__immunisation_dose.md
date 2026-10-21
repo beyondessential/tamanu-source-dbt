@@ -15,22 +15,14 @@ facility, sex, disease/antigen, EPI age cohort, schedule dose position, patient 
 vaccine id/label/category, location group -- and over any time grain from day upwards. Nothing is pre-aggregated, so no dimension has to
 be collapsed to get a total.
 
-To count people rather than doses, filter to metric_id immunisation_recipient (each person's
-first record of each dose), or take a distinct count over person_id.
+To count people rather than doses, take a distinct count over person_id.
 
 See specs/dbt-model/metric__immunisation_dose.md for BL-001..BL-013.
 {% enddocs %}
 
 {% docs metric__immunisation_dose__metric_id %}
-The registered indicator identifier, one of:
-
-- `immunisation_dose` -- every vaccine dose given, one row per dose record.
-- `immunisation_recipient` -- people who received each dose: the subset of those rows that is
-  each person's first record of each scheduled dose (vaccine and dose position, or antigen for a
-  dose with no schedule). Use it for coverage; a repeat or duplicate record of the same dose is
-  not counted again.
-
-A card filters to one -- summing both counts a dose twice.
+The registered indicator identifier: always 'immunisation_dose'. Joins to the canonical
+registry in documentations/metrics/*.yml, which carries its definition, source and rationale.
 {% enddocs %}
 
 {% docs metric__immunisation_dose__variant_id %}

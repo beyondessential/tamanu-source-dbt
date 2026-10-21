@@ -57,9 +57,9 @@ select
     -- can be given in a different room than the encounter's other activity -- falling back to
     -- the encounter's location when the event carries none. Older and migrated records often
     -- hold no location on the event itself, only on the encounter; the event is kept either
-    -- way, given elsewhere or not (BL-016).
+    -- way, given elsewhere or not (BL-014).
     loc.facility_id,
-    -- BL-016: where the facility came from, and whether the event was recorded as given
+    -- BL-014: where the facility came from, and whether the event was recorded as given
     -- elsewhere (outside this deployment's service, e.g. overseas), so a consumer can exclude
     -- or label those rather than the model dropping them.
     case when av.location_id is not null then 'dose location' else 'encounter location' end as facility_source,

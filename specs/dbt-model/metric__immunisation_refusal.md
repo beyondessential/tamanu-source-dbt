@@ -74,7 +74,7 @@ Configured in `tupaia-data-product` at `tamanu/data_tables/`; no `data_table_*` 
 - **BL-010 (patient, vaccine, location group, raw age):** `person_id`, `vaccine_id`,
   `vaccine_label`, `vaccine_category`, `location_group_id`, `age_days`, `age_years`,
   `facility_source` and `is_given_elsewhere` are defined as in `metric__immunisation_dose` BL-009 to
-  BL-012 and BL-016, so the two metrics still read side by side.
+  BL-012 and BL-014, so the two metrics still read side by side.
 - **BL-011 (classification):** `classification: restricted` and `pii: false`, for the same reason
   as `metric__immunisation_dose` BL-013.
 

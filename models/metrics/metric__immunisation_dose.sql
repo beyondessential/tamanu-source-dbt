@@ -1,6 +1,5 @@
--- metric__immunisation_dose -- D5 metric view for the immunisation indicators registered in
--- documentations/metrics/*.yml: immunisation_dose (every dose given) and immunisation_recipient
--- (each person's first record of each dose -- people who received it, BL-014).
+-- metric__immunisation_dose -- D5 metric view for the immunisation dose indicator registered
+-- in documentations/metrics/*.yml: immunisation_dose.
 --
 -- Per-dose (subject) grain: one row per vaccine dose given, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs -- any subset of the disaggregations, and any time
@@ -51,119 +50,65 @@ doses as (
     from drug_exposure de
     join vaccine_attributes va
         on va.administered_vaccine_id = de.drug_exposure_id
-),
+)
 
 -- D5 wide format: value_boolean is unused by this metric. period_granularity is 'day' -- a
 -- dose is recorded against a calendar date, not a timestamp (BL-002).
 --
 -- facility_id and patient_location_id are emitted as Tamanu ids, untranslated -- translating
 -- them to a consumer's own identifiers is a consumer-layer concern.
-projected as (
-    select
-        null::text as variant_id,
-        drug_exposure_id::varchar as subject_id,
-        -- BL-002: a dose is a single-day point event -- period_start and period_end are the
-        -- same date, since there is no span to measure.
-        drug_exposure_start_date as period_start,
-        drug_exposure_start_date as period_end,
-        'day'::text as period_granularity,
-        -- BL-003: one dose per row, so the count contribution is always 1. Additive, so a
-        -- consumer summing it is correct at every grain -- the numerator of a coverage ratio,
-        -- with the denominator (target population) supplied downstream.
-        1::numeric as value_numeric,
-        null::boolean as value_boolean,
-        -- BL-004: the facility of the dose's own location, else its encounter's -- every dose is
-        -- kept, including one recorded as given elsewhere (BL-016).
-        facility_id,
-        sex,
-        -- BL-005: the antigen the dose addresses. 'Not recorded' when disease is blank, same
-        -- fallback convention this metric family uses for its other disaggregations.
-        coalesce(disease, 'Not recorded') as disease,
-        -- BL-006: EPI age cohort, banded in-model -- unlike the unbanded age_years measure other
-        -- metric__ models emit, the coverage ratio this numerator feeds is itself age-cohort
-        -- specific (e.g. "doses given to children under 1 year"), so the band is part of the
-        -- definition here, not a downstream presentation choice.
-        {{ age_group__who_epi_schedule('age_months') }} as age_group__who_epi_schedule,
-        -- BL-007: 'Not recorded' when the dose carries no schedule (ad hoc/catch-up).
-        coalesce(dose_label, 'Not recorded') as dose_label,
-        -- BL-008: the patient's home village, not the event's facility. NULL when the patient's
-        -- own record carries no village -- deliberately not coalesced to a placeholder text
-        -- value, since this is an id column, not a label, and a consumer joining it to
-        -- ref__location needs a real id or a real NULL, not a sentinel string.
-        patient_location_id,
-        -- BL-009: the patient the dose was given to, so a consumer can count people (a distinct
-        -- count over this column) rather than doses. Never NULL -- the shared attributes model
-        -- inner-joins the patient.
-        person_id,
-        -- BL-010: the scheduled vaccine. vaccine_id is an id a consumer filters on, so it passes
-        -- through and stays NULL for an ad hoc dose; the label and category are display values,
-        -- so they take 'Not recorded' like dose_label (BL-007).
-        vaccine_id,
-        coalesce(vaccine_label, 'Not recorded') as vaccine_label,
-        coalesce(vaccine_category, 'Not recorded') as vaccine_category,
-        -- BL-011: the location group the dose was given in, as a Tamanu id, untranslated like
-        -- facility_id. NULL when the location belongs to no group.
-        location_group_id,
-        -- BL-012: age at the dose in whole days and whole completed years, unbanded. NULL with
-        -- no date of birth on record.
-        age_days,
-        age_years,
-        -- BL-016: where facility_id came from, and whether the dose was recorded as given
-        -- elsewhere, so a card can exclude or label those doses.
-        facility_source,
-        is_given_elsewhere
-    from doses
-),
-
--- BL-014: immunisation_recipient is the subset of these rows that is each person's first
--- record of each scheduled dose -- vaccine_id with dose_label, or the antigen for an ad hoc
--- dose with no vaccine_id -- so a sum counts people who received the dose, not dose records.
--- BL-015: the earliest dose date wins; on a tie, the lowest subject_id, so the pick is stable
--- from one build to the next.
-ranked as (
-    select
-        *,
-        row_number() over (
-            partition by person_id, coalesce(vaccine_id, disease), dose_label
-            order by period_start, subject_id
-        ) as dose_record_number
-    from projected
-)
-
-{% set columns -%}
-    variant_id,
-    subject_id,
-    period_start,
-    period_end,
-    period_granularity,
-    value_numeric,
-    value_boolean,
-    facility_id,
-    sex,
-    disease,
-    age_group__who_epi_schedule,
-    dose_label,
-    patient_location_id,
-    person_id,
-    vaccine_id,
-    vaccine_label,
-    vaccine_category,
-    location_group_id,
-    age_days,
-    age_years,
-    facility_source,
-    is_given_elsewhere
-{%- endset %}
-
 select
     'immunisation_dose'::text as metric_id,
-    {{ columns }}
-from ranked
-
-union all
-
-select
-    'immunisation_recipient'::text as metric_id,
-    {{ columns }}
-from ranked
-where dose_record_number = 1
+    null::text as variant_id,
+    drug_exposure_id::varchar as subject_id,
+    -- BL-002: a dose is a single-day point event -- period_start and period_end are the
+    -- same date, since there is no span to measure.
+    drug_exposure_start_date as period_start,
+    drug_exposure_start_date as period_end,
+    'day'::text as period_granularity,
+    -- BL-003: one dose per row, so the count contribution is always 1. Additive, so a
+    -- consumer summing it is correct at every grain -- the numerator of a coverage ratio,
+    -- with the denominator (target population) supplied downstream.
+    1::numeric as value_numeric,
+    null::boolean as value_boolean,
+    -- BL-004: the facility of the dose's own location, else its encounter's -- every dose is
+    -- kept, including one recorded as given elsewhere (BL-014).
+    facility_id,
+    sex,
+    -- BL-005: the antigen the dose addresses. 'Not recorded' when disease is blank, same
+    -- fallback convention this metric family uses for its other disaggregations.
+    coalesce(disease, 'Not recorded') as disease,
+    -- BL-006: EPI age cohort, banded in-model -- unlike the unbanded age_years measure other
+    -- metric__ models emit, the coverage ratio this numerator feeds is itself age-cohort
+    -- specific (e.g. "doses given to children under 1 year"), so the band is part of the
+    -- definition here, not a downstream presentation choice.
+    {{ age_group__who_epi_schedule('age_months') }} as age_group__who_epi_schedule,
+    -- BL-007: 'Not recorded' when the dose carries no schedule (ad hoc/catch-up).
+    coalesce(dose_label, 'Not recorded') as dose_label,
+    -- BL-008: the patient's home village, not the event's facility. NULL when the patient's
+    -- own record carries no village -- deliberately not coalesced to a placeholder text
+    -- value, since this is an id column, not a label, and a consumer joining it to
+    -- ref__location needs a real id or a real NULL, not a sentinel string.
+    patient_location_id,
+    -- BL-009: the patient the dose was given to, so a consumer can count people (a distinct
+    -- count over this column) rather than doses. Never NULL -- the shared attributes model
+    -- inner-joins the patient.
+    person_id,
+    -- BL-010: the scheduled vaccine. vaccine_id is an id a consumer filters on, so it passes
+    -- through and stays NULL for an ad hoc dose; the label and category are display values,
+    -- so they take 'Not recorded' like dose_label (BL-007).
+    vaccine_id,
+    coalesce(vaccine_label, 'Not recorded') as vaccine_label,
+    coalesce(vaccine_category, 'Not recorded') as vaccine_category,
+    -- BL-011: the location group the dose was given in, as a Tamanu id, untranslated like
+    -- facility_id. NULL when the location belongs to no group.
+    location_group_id,
+    -- BL-012: age at the dose in whole days and whole completed years, unbanded. NULL with
+    -- no date of birth on record.
+    age_days,
+    age_years,
+    -- BL-014: where facility_id came from, and whether the dose was recorded as given
+    -- elsewhere, so a card can exclude or label those doses.
+    facility_source,
+    is_given_elsewhere
+from doses

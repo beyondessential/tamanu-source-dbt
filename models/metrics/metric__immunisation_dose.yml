@@ -33,18 +33,6 @@ models:
               - subject_id
           config:
             severity: error
-      # BL-014: immunisation_recipient is one row per person per scheduled dose -- the same
-      # partition the model ranks by, so a second record of a dose never reaches it.
-      - dbt_utils.unique_combination_of_columns:
-          name: ac_017_metric__immunisation_dose_recipient_grain
-          arguments:
-            combination_of_columns:
-              - person_id
-              - coalesce(vaccine_id, disease)
-              - dose_label
-          config:
-            severity: error
-            where: "metric_id = 'immunisation_recipient'"
       # A dose is a single-day point event: period_end always equals period_start.
       - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
           name: ac_009_metric__immunisation_dose_period_end_at_or_after_start
@@ -64,7 +52,6 @@ models:
               arguments:
                 values:
                   - immunisation_dose
-                  - immunisation_recipient
           # Definition <-> implementation link: every metric__ view asserts its ids are
           # registered in the canonical registry.
           - relationships:
@@ -193,9 +180,9 @@ models:
         description: "{{ doc('metric__immunisation_dose__facility_source') }}"
         data_tests:
           - not_null:
-              name: ac_019_metric__immunisation_dose_facility_source_not_null
+              name: ac_017_metric__immunisation_dose_facility_source_not_null
           - accepted_values:
-              name: ac_019_metric__immunisation_dose_facility_source_values
+              name: ac_017_metric__immunisation_dose_facility_source_values
               arguments:
                 values: ['dose location', 'encounter location']
       - name: is_given_elsewhere
@@ -203,4 +190,4 @@ models:
         description: "{{ doc('metric__immunisation_dose__is_given_elsewhere') }}"
         data_tests:
           - not_null:
-              name: ac_020_metric__immunisation_dose_is_given_elsewhere_not_null
+              name: ac_018_metric__immunisation_dose_is_given_elsewhere_not_null
