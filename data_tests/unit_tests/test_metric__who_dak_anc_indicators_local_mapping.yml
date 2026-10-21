@@ -1,0 +1,58 @@
+unit_tests:
+  - name: test_metric__who_dak_anc_indicators_local_mapping
+    model: metric__who_dak_anc_indicators
+    description: >
+      AC-009 (specs/dbt-model/metric__who_dak_anc_indicators.md). A local antenatal chart mapped
+      as a contact form is a contact on its mapped contact date, carrying gestational age from a
+      mapped local booking form the same day. A mapped form without is_contact, a native
+      non-contact form, and an unmapped survey carrying a mapped question code each yield
+      nothing on their own.
+    overrides:
+      vars:
+        who_dak_anc_local_surveys:
+          program-local-antenatalchart:
+            is_contact: true
+            data_elements:
+              ANC.A7.DE4: LocalChartDate
+          program-local-booking:
+            data_elements:
+              ANC.B6.DE17: LocalGestation
+    given:
+      - input: ref('program_data_elements')
+        rows:
+          - {id: pde-LocalChartDate, code: LocalChartDate}
+          - {id: pde-LocalGestation, code: LocalGestation}
+          - {id: pde-whodakanc-b6-de17, code: whodakanc-b6-de17}
+      - input: ref('locations')
+        rows:
+          - {id: loc_1, facility_id: fac_1}
+      - input: ref('encounters')
+        rows:
+          - {id: enc_1, patient_id: pat_1, location_id: loc_1}
+          - {id: enc_2, patient_id: pat_1, location_id: loc_1}
+          - {id: enc_3, patient_id: pat_2, location_id: loc_1}
+          - {id: enc_4, patient_id: pat_3, location_id: loc_1}
+          - {id: enc_5, patient_id: pat_4, location_id: loc_1}
+      - input: ref('clinical__person')
+        rows:
+          - {person_id: pat_1, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+          - {person_id: pat_2, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+          - {person_id: pat_3, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+          - {person_id: pat_4, year_of_birth: 1990, month_of_birth: 1, day_of_birth: 1}
+      - input: ref('survey_responses')
+        rows:
+          - {id: r_1, survey_id: program-local-antenatalchart, encounter_id: enc_1, start_datetime: '2026-05-07 09:00:00', end_datetime: '2026-05-07 09:05:00'}
+          - {id: r_2, survey_id: program-local-booking, encounter_id: enc_2, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
+          - {id: r_3, survey_id: program-local-booking, encounter_id: enc_3, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
+          - {id: r_4, survey_id: program-whodakanc-profile, encounter_id: enc_4, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
+          - {id: r_5, survey_id: program-unmapped, encounter_id: enc_5, start_datetime: '2026-05-06 08:00:00', end_datetime: '2026-05-06 08:30:00'}
+      - input: ref('survey_response_answers')
+        rows:
+          - {id: a_1, response_id: r_1, data_element_id: pde-LocalChartDate, body: '2026-05-06'}
+          - {id: a_2, response_id: r_2, data_element_id: pde-LocalGestation, body: '24.5'}
+          - {id: a_3, response_id: r_3, data_element_id: pde-LocalGestation, body: '18'}
+          - {id: a_4, response_id: r_4, data_element_id: pde-whodakanc-b6-de17, body: '12'}
+          - {id: a_5, response_id: r_5, data_element_id: pde-LocalChartDate, body: '2026-05-06'}
+    expect:
+      rows:
+        - {subject_id: 'pat_1;2026-05-06', period_start: '2026-05-06', facility_id: fac_1, person_id: pat_1, gestational_age_weeks: 24.5}
