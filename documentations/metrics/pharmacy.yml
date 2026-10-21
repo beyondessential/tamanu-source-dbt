@@ -40,6 +40,7 @@ metrics:
   - visit_detail_concept_name
   - sex
   - is_completed
+  - has_dispense
   - drug_source_value
   - drug_source_name
   - department
