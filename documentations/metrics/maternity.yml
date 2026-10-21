@@ -9,8 +9,8 @@
 #
 # birth / low_birth_weight / preterm_birth / low_apgar_5min are implemented in this repo
 # (models/metrics/metric__birth.sql), deployment-neutral -- patient_birth_data is present on
-# every deployment. antenatal_contact and antenatal_booking are defined here but implemented
-# in deployment repos, because Tamanu holds no portable antenatal base -- see their specs.
+# every deployment. antenatal_booking is defined here but implemented in deployment repos --
+# see its spec. Antenatal contacts are who_dak_anc_contact, in who_dak_anc.yml.
 
 metrics:
 - metric_id: birth
@@ -141,36 +141,6 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__birth.md
-- metric_id: antenatal_contact
-  kind: metric
-  name: Antenatal contacts
-  description: >-
-    Antenatal care contacts -- a scheduled or opportunistic visit during pregnancy at which a
-    health worker assesses the mother and fetus. Registered centrally; implemented only where
-    a deployment captures a genuine per-visit antenatal chart.
-  numerator_description: null
-  denominator_description: null
-  data_source: tamanu
-  definition_source: WHO_CORE_100
-  definition_source_code: null
-  definition_rationale: >-
-    Antenatal care coverage is a WHO Global Reference List of 100 Core Health Indicators
-    entry; the contact concept follows WHO recommendations on antenatal care for a positive
-    pregnancy experience (2016) -- the ANC contact schedule, minimum eight contacts. This
-    metric counts raw contacts; it does not compute ANC4+/ANC8+ coverage status, a downstream
-    aggregation. Coverage against a population denominator is not materialised, the same
-    numerator-only pattern as immunisation_dose (MAUI-6808) -- Tamanu holds no
-    expected-pregnancies denominator.
-  unit: count
-  subject_grain: visit
-  disaggregations:
-  - facility_id
-  variant_of: null
-  owner: bes-maui
-  # draft until an implementation lands and its spec is approved -- the definition is
-  # registered here first so a deployment's relationships test has a target to point at.
-  status: draft
-  spec_path: specs/dbt-model/metric__antenatal_contact.md
 - metric_id: antenatal_booking
   kind: metric
   name: Antenatal bookings
@@ -178,7 +148,7 @@ metrics:
     A pregnancy's first antenatal registration/booking assessment (the WHO ANC1 concept).
     Registered centrally; implemented only where a deployment captures a booking assessment
     without a per-visit contact log -- see the spec's "Why a separate metric, not a variant
-    of antenatal_contact".
+    of who_dak_anc_contact".
   numerator_description: null
   denominator_description: null
   data_source: tamanu
@@ -195,7 +165,7 @@ metrics:
   - facility_id
   variant_of: null
   owner: bes-maui
-  # draft until an implementation lands and its spec is approved -- same reasoning as
-  # antenatal_contact above.
+  # draft until an implementation lands and its spec is approved -- the definition is
+  # registered here first so a deployment's relationships test has a target to point at.
   status: draft
   spec_path: specs/dbt-model/metric__antenatal_booking.md

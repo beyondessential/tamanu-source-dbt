@@ -48,10 +48,9 @@ always known; here each subset depends on a measure (`birth_weight`, `gestationa
 "not low birth weight" and "weight not recorded" into one `false` — silently inflating the
 denominator of any rate a consumer formed from it.
 
-**What this model does not cover.** Antenatal care. Tamanu holds no deployment-neutral base for
-it, so `metric__antenatal_contact` and `metric__antenatal_booking` are defined canonically but
-implemented per deployment, against whichever antenatal form that deployment records. A
-deployment that records no antenatal data has neither metric available.
+**What this model does not cover.** Antenatal care: contacts are `who_dak_anc_contact` in
+`metric__who_dak_anc_indicators`, read from the WHO DAK ANC forms or a deployment's own forms
+mapped to them, and bookings are `metric__antenatal_booking`, implemented per deployment.
 
 ## Definition sources
 
@@ -296,7 +295,7 @@ Every disaggregation must be added to the allowlist in
 
 | Artefact | Relationship |
 |---|---|
-| `metric__antenatal_contact` | Antenatal contact definition — no shared base, different subject grain, implemented per deployment |
+| `metric__who_dak_anc_indicators` | Antenatal contacts, from WHO DAK ANC elements — different subject grain |
 | `metric__antenatal_booking` | Antenatal booking definition — no shared base, different subject grain, implemented per deployment |
 | `int__patient_birth_measurements` | Same base (`patient_birth_data`), projects the OMOP MEASUREMENT domain instead of the D5 metric shape |
 | `ds__births` | Report-layer birth line list at the same grain, with PII (mother/father, village) |
@@ -311,3 +310,4 @@ Every disaggregation must be added to the allowlist in
 | 2026-08-26 | Maui team | Initial draft |
 | 2026-08-30 | Maui team | BL-009: the four disaggregations coalesce to `'Not recorded'` (new AC-015) — a raw NULL was droppable by Tupaia's array filter. BL-010: `facility_id` carried as recorded rather than left-joined to `bases/facilities`, which turned a soft-deleted facility into an apparent home birth. BL-012: corrected the `pii: false` justification — the newborn's date of birth *is* emitted as `period_start`. AC-013 restated as a source-anchored, falsifiable check. Registry `subject_grain` corrected to `patient` |
 | 2026-10-20 | Maui team | BL-015: `patient_location_id`, the newborn's village, added as a disaggregation (MAUI-7034), matching `metric__immunisation_dose`'s. AC-014 extended to cover it |
+| 2026-10-21 | Maui team | Antenatal contacts cross-referenced to `metric__who_dak_anc_indicators` (MAUI-6838) |

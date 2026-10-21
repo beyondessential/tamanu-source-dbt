@@ -16,7 +16,7 @@
 | **Last updated** | 2026-08-26 |
 
 Canonical definition for `antenatal_booking`: one row per pregnancy's first antenatal
-registration/booking assessment. Distinct from `antenatal_contact` — see § Why a separate metric.
+registration/booking assessment. Distinct from `who_dak_anc_contact` — see § Why a separate metric.
 
 ## Purpose
 
@@ -32,17 +32,16 @@ contact log.
 deployment's implementation of this definition.
 
 **Implemented where a deployment records a booking assessment but no per-visit contact log.**
-Tamanu holds no deployment-neutral base for antenatal care — the reasoning is set out in
-`metric__antenatal_contact.md` § Why the definition is canonical but the implementation is not,
-and applies identically here.
+A booking form carries no per-contact date, so it maps to no WHO DAK ANC contact form, and each
+implementation lives in the deployment repo that holds the form.
 
-## Why a separate metric, not a variant of `antenatal_contact`
+## Why a separate metric, not a variant of `who_dak_anc_contact`
 
 `variant_of` in this registry records a deployment-specific *implementation* of the same
 definition — same population, same grain, different columns. A booking assessment is not that.
 
 A form completed once per pregnancy, with no per-contact date, cannot implement
-`antenatal_contact`'s definition at all: counting its responses answers a different clinical
+`who_dak_anc_contact`'s definition at all: counting its responses answers a different clinical
 question — was this pregnancy booked into care — from counting per-visit charts, which answers
 how many contacts the pregnancy received. Sharing one `metric_id` would either report bookings as
 contacts or contacts as bookings, in a registry whose whole purpose is that a `metric_id` means
@@ -85,7 +84,7 @@ An implementation may add columns; every implementation must emit at least:
   pass at `error` severity. An implementation holds that test at `warn` until the registry row
   has shipped in a `tamanu-source-dbt` release the deployment has pinned, per the registry
   checklist.
-- **BL-002 (no rate stored):** counts only, on the same basis as `antenatal_contact` BL-002.
+- **BL-002 (no rate stored):** counts only, on the same basis as `metric__who_dak_anc_indicators` BL-012.
 - **BL-003 (reporting period):** `period_start` is the date of the booking assessment at `'day'`
   granularity, and `period_end` equals it — a booking is a point event. Pregnancy dates the form
   may carry (last menstrual period, estimated delivery date) are attributes of the pregnancy, not
@@ -130,7 +129,7 @@ approved.
 
 | Artefact | Relationship |
 |---|---|
-| `metric__antenatal_contact` | Sibling definition for per-visit capture — different subject grain, not a variant of this metric |
+| `metric__who_dak_anc_indicators` | `who_dak_anc_contact`, the per-visit contact count — different subject grain, not a variant of this metric |
 | `metric__birth` | Same dashboard group; deployment-neutral, unlike this metric |
 | MAUI-6838 | Tupaia maternity and newborn dashboard: standard metric and visuals |
 
@@ -139,3 +138,4 @@ approved.
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-26 | Maui team | Initial draft |
+| 2026-10-21 | Maui team | Sibling contact definition is `who_dak_anc_contact` (MAUI-6838) |
