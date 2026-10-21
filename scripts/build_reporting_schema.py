@@ -29,6 +29,7 @@ SCRIPTS_DIR = (
 VERSION = get_deployment_version()
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
+PACKAGE_PROJECT = Path(__file__).resolve().parent.parent / "dbt_project.yml"
 PROFILES_PATH = Path("config") / "profiles.yml"
 TARGET = os.environ.get("TAMANU_DBT_TARGET", "").strip() or "replica"
 
@@ -36,6 +37,24 @@ CALLBACK_URL = os.environ.get("SCHEMA_CALLBACK_URL", "").strip()
 CALLBACK_ATTEMPTS = 5
 CALLBACK_BACKOFF_SECONDS = 2
 CALLBACK_TIMEOUT_SECONDS = 60
+
+
+def check_version_line():
+    """Refuse a TAMANU_VERSION on another minor line than the package's models.
+
+    Raises:
+        RuntimeError: Where the major.minor of the two differ.
+    """
+    requested = os.environ.get("TAMANU_VERSION", "").strip().lstrip("v")
+    if not requested:
+        return
+
+    package = str(yaml.safe_load(PACKAGE_PROJECT.read_text(encoding="utf-8"))["version"])
+    if requested.split(".")[:2] != package.split(".")[:2]:
+        raise RuntimeError(
+            f"TAMANU_VERSION {requested} is not on the line of the pinned tamanu-source-dbt "
+            f"{package}; pin a {'.'.join(requested.split('.')[:2])}.x release to build for it"
+        )
 
 
 def write_profile():
@@ -134,6 +153,8 @@ def main():
     # The checkout's dbt_project.yml version trails the replica's, so a delivery must name its own.
     if CALLBACK_URL and not os.environ.get("TAMANU_VERSION", "").strip():
         raise RuntimeError("TAMANU_VERSION names the version to build for, and is unset")
+
+    check_version_line()
 
     # Only where pgro supplies the credentials: a local run keeps its own profile.
     if os.environ.get("TAMANU_DL_DB_URL", "").strip():
