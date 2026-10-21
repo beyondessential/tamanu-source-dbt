@@ -56,6 +56,27 @@ models:
         data_tests:
           - not_null:
               name: ac_003_metric__prescription_discontinuation_period_start_not_null
+      - name: subject_id
+        data_type: character varying
+        description: >-
+          The id of the event the row counts. Unique per metric_id.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_discontinuation_subject_id_not_null
+      - name: period_granularity
+        data_type: text
+        description: >-
+          Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_discontinuation_period_granularity_not_null
+      - name: value_numeric
+        data_type: numeric
+        description: >-
+          Always 1, so a consumer sums it to count events at any grain.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_discontinuation_value_numeric_not_null
       - name: facility_id
         data_type: character varying(255)
         description: >-
