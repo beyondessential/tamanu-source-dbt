@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definitions) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
@@ -35,6 +35,9 @@ A deployment reaches these definitions by either of two routes, and the metric r
 
 **Who reads it.** Tupaia "Maternity and newborn" dashboard cards, via a data table in
 `tupaia-data-product`.
+
+A pregnancy's first contact is its booking assessment — the WHO ANC1 concept — so booking
+counts have no separate `metric_id`.
 
 ## Grain
 
@@ -97,10 +100,7 @@ vars:
   `data_elements` entry mapping a DAK element id to the local question's data element code, and a
   mapped answer is read exactly as a native answer to that element.
 - **BL-004:** A contact form is the native ANC Registration form
-  (`program-whodakanc-registration`) or a mapped survey with `is_contact: true`. A pregnancy's
-  first contact is its booking assessment — the WHO ANC1 concept — recorded on whichever form the
-  deployment flags as a contact form first in the pregnancy, so there is no separate booking
-  metric_id.
+  (`program-whodakanc-registration`) or a mapped survey with `is_contact: true`.
 - **BL-005:** A contact is a patient with at least one contact-form submission on a day, so two
   contact forms for the same patient on the same day are one contact.
 - **BL-006:** A contact's day is its contact form's `ANC.A7.DE4` *Contact date*, falling back to the
