@@ -27,6 +27,20 @@ pharmacy_orders as (
     select * from {{ ref('pharmacy_orders') }}
 ),
 
+medication_dispenses as (
+    select * from {{ ref('medication_dispenses') }}
+),
+
+-- BL-012: the first time each drug line was handed over, so the time from order to dispense is
+-- measured to the first fill rather than to the last of several partial fills.
+first_dispense as (
+    select
+        pharmacy_order_prescription_id,
+        min(dispensed_at) as first_dispensed_at
+    from medication_dispenses
+    group by pharmacy_order_prescription_id
+),
+
 -- BL-001: drug identity is resolved from prescriptions/reference_data directly, not from
 -- clinical__drug_exposure. That model's prescription branch keys drug_exposure_id off
 -- encounter_prescriptions.id, a different id space from pharmacy_order_prescriptions'
@@ -74,10 +88,13 @@ drug_lines as (
         po.encounter_id as visit_occurrence_id,
         po.datetime as ordered_datetime,
         pop.is_completed,
-        coalesce(pop.prescription_id, pop.ongoing_prescription_id) as prescription_id
+        coalesce(pop.prescription_id, pop.ongoing_prescription_id) as prescription_id,
+        fd.first_dispensed_at
     from pharmacy_order_prescriptions pop
     join pharmacy_orders po
         on po.id = pop.pharmacy_order_id
+    left join first_dispense fd
+        on fd.pharmacy_order_prescription_id = pop.id
 ),
 
 -- BL-008: the segment active at the order's own time, with the first-segment clamp
@@ -98,6 +115,11 @@ orders as (
         vd.visit_detail_concept_name,
         -- BL-006
         d.is_completed,
+        -- BL-012: whether any fill has been recorded, and the minutes from the order to the first
+        -- one. NULL, not zero, for a line with no fill: a line nobody has dispensed has no wait to
+        -- average, and a zero would pull a mean down.
+        (d.first_dispensed_at is not null) as has_dispense,
+        round(extract(epoch from (d.first_dispensed_at - d.ordered_datetime)) / 60, 1) as minutes_to_first_dispense,
         pr.gender_source_value as sex,
         -- BL-004: a drug line whose prescription or medication reference does not resolve
         -- keeps its row on the 'Not recorded' fallback rather than disappearing
@@ -152,5 +174,7 @@ select
     drug_source_value,
     drug_source_name,
     age_years,
-    department
+    department,
+    has_dispense,
+    minutes_to_first_dispense
 from orders
