@@ -59,6 +59,7 @@ allows a diagnosis to overlap both.
 | `diagnosis_certainty` | text | The diagnosis's certainty as recorded. Never NULL |
 | `is_primary` | boolean | Whether this is the encounter's principal diagnosis. NULL where unranked |
 | `age_years` | integer | Age in whole years at the diagnosis, unbanded |
+| `department` | text | The qualifying segment's own department, resolved to a name (BL-008). Never NULL |
 
 ## Data tables
 
@@ -118,6 +119,13 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
   means the encounter did not rank its diagnoses.
 - **BL-007 (age is the consumer's to band):** `age_years` is unbanded, absent from the
   registry's disaggregations.
+- **BL-008 (department attribution):** `department` is the same qualifying segment's own
+  `department_id` that BL-004 resolves `facility_id` from, resolved to a name through
+  `departments` so a consumer can scope to one department (e.g. Dental) via `metric_filters`
+  on a readable value, the same convention diagnosis identity (BL-006) already uses rather
+  than an opaque Tamanu id. Never NULL -- falls back to `'Not recorded'`, so a
+  `metric_filters` scope to one department does not silently drop a diagnosis whose segment
+  carries no department (MAUI-6909).
 
 ## Acceptance criteria
 
@@ -136,11 +144,12 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
 | AC-011 | `diagnosis` is `not_null` | BL-006 | `not_null` |
 | AC-012 | `diagnosis_code` is `not_null` | BL-006 | `not_null` |
 | AC-013 | `diagnosis_certainty` is `not_null` | BL-006 | `not_null` |
+| AC-014 | `department` is `not_null` | BL-008 | `not_null` |
 
 ## Registry entry
 
 `opd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: draft`,
-`disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary`.
+`disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary,department`.
 No vocabulary change needed -- all admitted via `metric__encounter_diagnosis`'s own
 registration.
 
@@ -153,6 +162,7 @@ registration.
 | `clinical__visit_detail` | `clinical/` | Outpatient scope and facility (BL-003, BL-004) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
 | `locations` | `bases/` | Facility id of the qualifying segment's care site (BL-004) |
+| `departments` | `bases/` | Department name of the qualifying segment's own department (BL-008) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers

@@ -224,3 +224,20 @@ consumer scopes to one department by metric_filters on a readable value (BL-013)
 expose this as an array filter and Tupaia's array filter drops NULL rows, which would silently
 disappear the visit from a metric_filters scope.
 {% enddocs %}
+
+{% docs metric__outpatient_visit__clinician_designation %}
+The designations of the clinician on the intake segment (`clinician_id`), e.g. Dentist, from
+`user_designations` -- alphabetical and comma-separated where they hold more than one.
+
+These are the clinician's current designations: Tamanu keeps no designation history, so a
+clinician who changed role reads the new designation on earlier visits too. 'Not recorded' where
+the clinician has none, or the visit has no clinician -- never NULL, for the same reason as
+`clinician_name`. Kept apart from `clinician_name` so a filter by name is unaffected; a consumer
+combines the two for display.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__admission_clinician_designation %}
+The designations of the admitting clinician (`admission_clinician_id`), as
+`clinician_designation` reads them for the attending clinician. 'Not recorded' for a visit that
+was never admitted, as well as for an admitting clinician with none.
+{% enddocs %}
