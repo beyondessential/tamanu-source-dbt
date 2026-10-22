@@ -141,12 +141,10 @@ where trim(d) not in (
         'vaccine_id',
         'vaccine_label',
         'vaccine_category',
-        -- immunisation_dose's / _refusal's location group (area or site) of the event's
-        -- location, one level finer than facility_id -- a campaign site (MAUI-7034)
-        'location_group_id',
         -- immunisation_dose's / _refusal's given-elsewhere flag: recorded as given outside this
         -- deployment's service, counted but flagged so a consumer can exclude it (MAUI-7034).
-        -- facility_source, alongside it, is already allowed (death's).
+        -- facility_source and location_group_id, alongside it, are already allowed (death's;
+        -- encounter's).
         'is_given_elsewhere',
         -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
         -- therapeutic-class reference mapping exists yet, the same reasoning
@@ -169,6 +167,13 @@ where trim(d) not in (
         'clinician',
         -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
         'chief_complaint',
+        -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
+        -- opd_visit, and the admitting clinician's on opd_visit (MAUI-6906)
+        'clinician_designation',
+        'admission_clinician_designation',
+        -- encounter's location group (area), id and name (MAUI-6906)
+        'location_group_id',
+        'location_group_name',
         -- death's primary cause from the death record, as recorded, with its reference-data
         -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
         'primary_cause',
