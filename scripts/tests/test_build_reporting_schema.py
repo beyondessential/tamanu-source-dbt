@@ -114,6 +114,40 @@ def test_a_local_run_without_a_version_still_builds(monkeypatch, tmp_path):
     build_reporting_schema.main()
 
 
+# check_version_line
+
+
+@pytest.fixture
+def _pinned(monkeypatch, tmp_path):
+    project = tmp_path / "dbt_project.yml"
+    project.write_text("name: tamanu_source_dbt\nversion: 2.60.37\n", encoding="utf-8")
+    monkeypatch.setattr(build_reporting_schema, "PACKAGE_PROJECT", project)
+
+
+def test_a_version_on_another_line_is_refused_before_building(monkeypatch, _pinned):
+    monkeypatch.setenv("TAMANU_VERSION", "2.63.0")
+    monkeypatch.setattr(build_reporting_schema, "build", _refuse)
+
+    with pytest.raises(RuntimeError, match="2.63.0 is not on the line of the pinned tamanu-source-dbt 2.60.37"):
+        build_reporting_schema.main()
+
+
+@pytest.mark.parametrize("requested", ["2.60.40", "v2.60.1", "2.60.37"])
+def test_a_version_on_the_pinned_line_builds(monkeypatch, tmp_path, _pinned, requested):
+    monkeypatch.setenv("TAMANU_VERSION", requested)
+    monkeypatch.delenv("TAMANU_DL_DB_URL", raising=False)
+    monkeypatch.setattr(build_reporting_schema, "CALLBACK_URL", "")
+    built = tmp_path / "schema.sql"
+    built.write_text("create schema reporting;", encoding="utf-8")
+    monkeypatch.setattr(build_reporting_schema, "build", lambda: str(built))
+
+    build_reporting_schema.main()
+
+
+def test_the_package_s_own_project_is_what_is_pinned():
+    assert build_reporting_schema.PACKAGE_PROJECT.parent.joinpath("scripts", "build_reporting_schema.py").exists()
+
+
 # write_profile
 
 
