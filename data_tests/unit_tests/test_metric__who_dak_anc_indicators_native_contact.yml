@@ -1,0 +1,77 @@
+unit_tests:
+  - name: test_metric__who_dak_anc_indicators_native_contact
+    model: metric__who_dak_anc_indicators
+    description: >
+      AC-006 / AC-007 (specs/dbt-model/metric__who_dak_anc_indicators.md). pat_1 has two ANC
+      Registration submissions on 2026-03-04 on different encounters and a Profile submission
+      the same day on a third: one contact, dated by the recorded contact date, at the earlier
+      registration's facility, carrying the later registration's contact number and the
+      Profile's gestational age. pat_2's registration records a contact date a month before it
+      was entered, and her Profile form is from the entry day, so it does not attach.
+    given:
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-whodakanc-a7-de4'::text as id, 'whodakanc-a7-de4'::text as code
+          union all
+          select 'pde-whodakanc-a7-de12', 'whodakanc-a7-de12'
+          union all
+          select 'pde-whodakanc-b6-de17', 'whodakanc-b6-de17'
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'fac_1'::text as facility_id
+          union all
+          select 'loc_2', 'fac_2'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
+          union all
+          select 'enc_2', 'pat_1', 'loc_2'
+          union all
+          select 'enc_3', 'pat_1', 'loc_2'
+          union all
+          select 'enc_4', 'pat_2', 'loc_2'
+          union all
+          select 'enc_5', 'pat_2', 'loc_2'
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_1'::text as person_id, 1996::int as year_of_birth, 6::int as month_of_birth, 1::int as day_of_birth
+          union all
+          select 'pat_2', 2000, 1, 15
+      - input: ref('survey_responses')
+        format: sql
+        rows: |
+          select
+            'r_1'::text as id, 'program-whodakanc-registration'::text as survey_id, 'enc_1'::text as encounter_id,
+            '2026-03-04 09:00:00'::timestamp as start_datetime, '2026-03-04 09:10:00'::timestamp as end_datetime
+          union all
+          select 'r_2', 'program-whodakanc-profile', 'enc_2', '2026-03-04 09:20:00'::timestamp, '2026-03-04 09:30:00'::timestamp
+          union all
+          select 'r_3', 'program-whodakanc-registration', 'enc_3', '2026-03-04 14:00:00'::timestamp, '2026-03-04 14:05:00'::timestamp
+          union all
+          select 'r_4', 'program-whodakanc-registration', 'enc_4', '2026-03-05 10:00:00'::timestamp, '2026-03-05 10:05:00'::timestamp
+          union all
+          select 'r_5', 'program-whodakanc-profile', 'enc_5', '2026-03-05 10:10:00'::timestamp, '2026-03-05 10:15:00'::timestamp
+      - input: ref('survey_response_answers')
+        format: sql
+        rows: |
+          select 'a_1'::text as id, 'r_1'::text as response_id, 'pde-whodakanc-a7-de4'::text as data_element_id, '2026-03-04'::text as body
+          union all
+          select 'a_2', 'r_1', 'pde-whodakanc-a7-de12', '2'
+          union all
+          select 'a_3', 'r_2', 'pde-whodakanc-b6-de17', '20'
+          union all
+          select 'a_4', 'r_3', 'pde-whodakanc-a7-de4', '2026-03-04 00:00:00'
+          union all
+          select 'a_5', 'r_3', 'pde-whodakanc-a7-de12', '3'
+          union all
+          select 'a_6', 'r_4', 'pde-whodakanc-a7-de4', '2026-02-10'
+          union all
+          select 'a_7', 'r_5', 'pde-whodakanc-b6-de17', '30'
+    expect:
+      rows:
+        - {subject_id: 'pat_1;2026-03-04', period_start: '2026-03-04', facility_id: fac_1, person_id: pat_1, age_years: 29, contact_number: 3, gestational_age_weeks: 20}
+        - {subject_id: 'pat_2;2026-02-10', period_start: '2026-02-10', facility_id: fac_2, person_id: pat_2, age_years: 26, contact_number: null, gestational_age_weeks: null}
