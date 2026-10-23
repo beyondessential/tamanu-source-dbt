@@ -1,0 +1,44 @@
+# WHO SMART guidelines antenatal care Digital Adaptation Kit indicators (MAUI-6838).
+#
+# The DAK (2021) gives every data element a portable id in Web Annex A and defines its indicators
+# in Web Annex C, ANC.IND.1 onwards, in terms of those elements. Registered here are the counts
+# metric__who_dak_anc_indicators computes from DAK elements, whether a deployment captures them on
+# the generated who-dak-anc forms or maps its own forms to them. `definition_source_code` carries
+# Annex C's indicator code on a row that implements an Annex C indicator, and is NULL on a count
+# that underlies one, such as the contact count.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: who_dak_anc_contact
+  kind: metric
+  name: Antenatal care contacts
+  description: >-
+    Antenatal care contacts -- a pregnant woman seen for antenatal care on a day, recorded on the
+    WHO DAK ANC Registration form or a local form mapped to it.
+  numerator_description: >-
+    COUNT of (woman, day) pairs with at least one antenatal contact form, dated by the form's
+    Contact date (ANC.A7.DE4) or, where that is blank, by its submission.
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_ANC
+  definition_source_code: null
+  definition_rationale: >-
+    WHO SMART guidelines antenatal care DAK (2021), data element ANC.A7.DE4 Contact date, following
+    WHO recommendations on antenatal care for a positive pregnancy experience (2016). A contact
+    count is not itself an Annex C indicator; it is what ANC.IND.4 and ANC.IND.5 (at least four and
+    eight contacts) count per pregnancy. Numerator only -- coverage needs an expected-pregnancies
+    estimate Tamanu does not hold, so it is formed downstream.
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_anc_indicators.md
