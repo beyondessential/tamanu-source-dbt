@@ -36,8 +36,8 @@ recorded as (
     select
         patient_id,
         submitted_datetime,
-        'pmtct',
-        key_population_pmtct_json
+        'pmtct' as source_element,
+        key_population_pmtct_json as value
     from answers
     where key_population_pmtct_json is not null
 ),

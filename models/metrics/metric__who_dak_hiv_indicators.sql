@@ -83,8 +83,8 @@ events as (
     -- positive result: a test in the numerator must be one the denominator counted, or the
     -- positivity rate it feeds can exceed 100% (BL-028)
     select
-        'who_dak_hiv_hts_test_positive',
-        'test',
+        'who_dak_hiv_hts_test_positive' as metric_id,
+        'test' as subject_grain,
         a.response_id,
         a.hiv_test_result_returned_date,
         a.*
@@ -97,8 +97,8 @@ events as (
 
     -- HTS.3 clients tested (denominator)
     select
-        'who_dak_hiv_hts_client_tested',
-        'patient',
+        'who_dak_hiv_hts_client_tested' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.hiv_test_result_returned_date,
         a.*
@@ -110,8 +110,8 @@ events as (
 
     -- HTS.3 clients testing positive (numerator). Subset of the denominator, per BL-028
     select
-        'who_dak_hiv_hts_client_positive',
-        'patient',
+        'who_dak_hiv_hts_client_positive' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.hiv_test_result_returned_date,
         a.*
@@ -125,8 +125,8 @@ events as (
     -- ART.4 new ART patients. The initiation date is the event, so a form recorded late still
     -- counts in the month treatment began (BL-011)
     select
-        'who_dak_hiv_art_initiated',
-        'patient',
+        'who_dak_hiv_art_initiated' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.art_start_date,
         a.*
@@ -139,8 +139,8 @@ events as (
 
     -- ART.5 initiations with a baseline CD4 count (denominator)
     select
-        'who_dak_hiv_art_cd4_at_initiation',
-        'patient',
+        'who_dak_hiv_art_cd4_at_initiation' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.art_start_date,
         a.*
@@ -155,8 +155,8 @@ events as (
 
     -- ART.5 late ART initiation (numerator): a baseline CD4 under 200 cells/mm3
     select
-        'who_dak_hiv_art_late_initiation',
-        'patient',
+        'who_dak_hiv_art_late_initiation' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.art_start_date,
         a.*
@@ -173,8 +173,8 @@ events as (
     -- Annex C measures the six months against the reporting period end, which for a monthly
     -- period is the end of the sample's own month (BL-012)
     select
-        'who_dak_hiv_art_routine_viral_load',
-        'patient',
+        'who_dak_hiv_art_routine_viral_load' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.viral_load_sample_date,
         a.*
@@ -189,8 +189,8 @@ events as (
 
     -- ART.3 virological suppression (numerator): under 1000 copies/mL
     select
-        'who_dak_hiv_art_viral_suppression',
-        'patient',
+        'who_dak_hiv_art_viral_suppression' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.viral_load_sample_date,
         a.*
@@ -206,8 +206,8 @@ events as (
 
     -- DSD.3 clients assessed as eligible for a DSD ART model (denominator)
     select
-        'who_dak_hiv_dsd_eligible',
-        'patient',
+        'who_dak_hiv_dsd_eligible' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.dsd_eligibility_assessed_date,
         a.*
@@ -227,8 +227,8 @@ events as (
     -- instead, which makes the pair a coverage figure: of those assessed eligible this month,
     -- how many are enrolled (BL-014)
     select
-        'who_dak_hiv_dsd_enrolled',
-        'patient',
+        'who_dak_hiv_dsd_enrolled' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.dsd_eligibility_assessed_date,
         a.*
@@ -245,8 +245,8 @@ events as (
     -- regimen substitution for toxicity on any line. Annex C sums the two, so a client with
     -- both in one month is still one client -- the reduction below sees to that (BL-023)
     select
-        'who_dak_hiv_art_toxicity',
-        'patient',
+        'who_dak_hiv_art_toxicity' as metric_id,
+        'patient' as subject_grain,
         a.patient_id,
         a.art_stopped_date,
         a.*
@@ -269,8 +269,8 @@ events as (
         union all
 
         select
-            'who_dak_hiv_art_toxicity',
-            'patient',
+            'who_dak_hiv_art_toxicity' as metric_id,
+            'patient' as subject_grain,
             a.patient_id,
             a.substitution_{{ line }}_line_date,
             a.*
@@ -313,9 +313,9 @@ month_end_events as (
     -- reports this at 12, 24, 36, 48 and 60 months; months_on_dsd is emitted so a consumer
     -- bands it rather than the model carrying five near-identical metrics (BL-025)
     select
-        'who_dak_hiv_dsd_retention_eligible',
-        'patient',
-        cm.patient_id,
+        'who_dak_hiv_dsd_retention_eligible' as metric_id,
+        'patient' as subject_grain,
+        cm.patient_id as subject_id,
         cm.month_start,
         cm.month_end,
         cm.patient_id,
@@ -333,9 +333,9 @@ month_end_events as (
 
     -- DSD.4 clients still enrolled in the model (numerator)
     select
-        'who_dak_hiv_dsd_retained',
-        'patient',
-        cm.patient_id,
+        'who_dak_hiv_dsd_retained' as metric_id,
+        'patient' as subject_grain,
+        cm.patient_id as subject_id,
         cm.month_start,
         cm.month_end,
         cm.patient_id,
@@ -357,9 +357,9 @@ month_end_events as (
     -- populations double-counts a client in two of them, which is what Annex C's own
     -- disaggregation does (BL-022)
     select
-        'who_dak_hiv_art_on_art_key_population',
-        'patient',
-        cm.patient_id || ';' || kp.key_population,
+        'who_dak_hiv_art_on_art_key_population' as metric_id,
+        'patient' as subject_grain,
+        cm.patient_id || ';' || kp.key_population as subject_id,
         cm.month_start,
         cm.month_end,
         cm.patient_id,
