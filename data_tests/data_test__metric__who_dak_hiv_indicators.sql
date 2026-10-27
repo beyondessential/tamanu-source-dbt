@@ -21,7 +21,7 @@ pairs as (
         ('who_dak_hiv_dsd_enrolled', 'who_dak_hiv_dsd_eligible'),
         ('who_dak_hiv_dsd_retained', 'who_dak_hiv_dsd_retention_eligible'),
         ('who_dak_hiv_art_toxicity', 'who_dak_hiv_art_on_art')
-    ) as t (numerator_metric_id, denominator_metric_id)
+    ) t (numerator_metric_id, denominator_metric_id)
 ),
 
 ac_021 as (
@@ -39,4 +39,9 @@ ac_021 as (
     where d.subject_id is null
 )
 
-select metric_id, subject_id, period_start, failed_ac from ac_021
+select
+    metric_id,
+    subject_id,
+    period_start,
+    failed_ac
+from ac_021

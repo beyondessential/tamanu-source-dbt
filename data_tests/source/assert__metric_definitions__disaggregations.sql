@@ -1,9 +1,9 @@
 select
     md.metric_id,
-    trim(d) as offending_disaggregation
+    trim(md.d) as offending_disaggregation
 from {{ ref('metric_definitions') }} md
-cross join lateral unnest(string_to_array(md.disaggregations, ',')) as t(d)
-where trim(d) not in (
+cross join lateral unnest(string_to_array(md.disaggregations, ',')) t (d)
+where trim(md.d) not in (
         'age_group',
         'age_group__who_primary_classification',
         'sex',

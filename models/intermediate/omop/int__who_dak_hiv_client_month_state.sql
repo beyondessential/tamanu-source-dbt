@@ -48,9 +48,9 @@ months as (
     select
         month_start::date as month_start,
         (month_start + interval '1 month' - interval '1 day')::date as month_end
-    from bounds b
-    cross join lateral generate_series(b.first_month, b.last_month, interval '1 month') month_start
-    where b.first_month <= b.last_month
+    from bounds
+    cross join lateral generate_series(first_month, last_month, interval '1 month') month_start
+    where first_month <= last_month
 ),
 
 -- BL-019: one row per recorded value per attribute, so each attribute can be carried forward on
@@ -70,7 +70,7 @@ state_events as (
         patient_id,
         submitted_datetime,
         facility_id,
-        'art_start_date',
+        'art_start_date' as attribute,
         art_start_date::text
     from answers
     where art_start_date is not null
@@ -79,7 +79,7 @@ state_events as (
         patient_id,
         submitted_datetime,
         facility_id,
-        'dsd_enrolled',
+        'dsd_enrolled' as attribute,
         dsd_enrolled::text
     from answers
     where dsd_enrolled is not null
@@ -88,7 +88,7 @@ state_events as (
         patient_id,
         submitted_datetime,
         facility_id,
-        'dsd_start_date',
+        'dsd_start_date' as attribute,
         dsd_start_date::text
     from answers
     where dsd_start_date is not null
@@ -99,7 +99,7 @@ state_events as (
         patient_id,
         submitted_datetime,
         facility_id,
-        'art_stopped_date',
+        'art_stopped_date' as attribute,
         art_stopped_date::text
     from answers
     where art_stopped_date is not null
