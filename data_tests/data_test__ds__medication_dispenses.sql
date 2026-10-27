@@ -65,9 +65,9 @@ ac_008_encounter_facility_unresolved as (
     join reference_data m
         on m.id = md.medication_id
     where not exists (
-        select 1 from dispenses d
-        where d.id = md.id
-    )
+            select 1 from dispenses d
+            where d.id = md.id
+        )
 )
 
 select * from ac_007_order_facility_differs

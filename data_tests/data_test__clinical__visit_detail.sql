@@ -54,6 +54,12 @@ ac_013 as (
         )
 )
 
-select visit_occurrence_id, failed_ac from ac_011
+select
+    visit_occurrence_id,
+    failed_ac
+from ac_011
 union all
-select visit_occurrence_id, failed_ac from ac_013
+select
+    visit_occurrence_id,
+    failed_ac
+from ac_013

@@ -88,5 +88,14 @@ ac_023 as (
     where counts.episodes + counts.recorded_in_error != counts.dataset_rows
 )
 
-select failed_ac, expected_columns, actual_columns from ac_017
-union all select failed_ac, expected_columns, actual_columns from ac_023
+select
+    failed_ac,
+    expected_columns,
+    actual_columns
+from ac_017
+union all
+select
+    failed_ac,
+    expected_columns,
+    actual_columns
+from ac_023

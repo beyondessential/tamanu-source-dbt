@@ -30,6 +30,12 @@ ac_007 as (
 -- by construction today. They exist to fail if a later edit introduces an
 -- independent payment expression or a filter -- a green run here says the SQL
 -- still has that shape, not that the data reconciles.
-select cost_id, failed_ac from ac_005
+select
+    cost_id,
+    failed_ac
+from ac_005
 union all
-select cost_id, failed_ac from ac_007
+select
+    cost_id,
+    failed_ac
+from ac_007

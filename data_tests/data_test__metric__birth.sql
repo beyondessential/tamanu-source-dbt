@@ -25,25 +25,33 @@ population as (
 -- Which subset each included birth qualifies for, re-derived from the source measures rather
 -- than from the model, so the check is independent of how the model builds the subsets.
 expected as (
-    select subject_id, 'low_birth_weight' as metric_id
+    select
+        subject_id,
+        'low_birth_weight' as metric_id
     from population
     where birth_weight is not null and birth_weight < 2.5
 
     union all
 
-    select subject_id, 'preterm_birth'
+    select
+        subject_id,
+        'preterm_birth' as metric_id
     from population
     where gestational_age_estimate is not null and gestational_age_estimate < 37
 
     union all
 
-    select subject_id, 'low_apgar_5min'
+    select
+        subject_id,
+        'low_apgar_5min' as metric_id
     from population
     where apgar_score_five_minutes is not null and apgar_score_five_minutes < 7
 ),
 
 actual as (
-    select subject_id, metric_id
+    select
+        subject_id,
+        metric_id
     from birth
     where metric_id != 'birth'
 ),
@@ -65,8 +73,9 @@ ac_013 as (
             when a.subject_id is null
                 then 'AC-013 (qualifying birth missing from subset)'
             when not exists (
-                select 1 from population pop where pop.subject_id = a.subject_id
-            ) then 'AC-013 (subset row has no birth row)'
+                    select 1 from population pop
+                    where pop.subject_id = a.subject_id
+                ) then 'AC-013 (subset row has no birth row)'
             else 'AC-013 (subset row not qualified by the source measure)'
         end as failed_ac
     from expected e

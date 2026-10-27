@@ -66,7 +66,22 @@ ac_013 as (
         and e.episode_id is null
 )
 
-select condition_occurrence_id, failed_ac from ac_009
-union all select condition_occurrence_id, failed_ac from ac_011
-union all select condition_occurrence_id, failed_ac from ac_012
-union all select condition_occurrence_id, failed_ac from ac_013
+select
+    condition_occurrence_id,
+    failed_ac
+from ac_009
+union all
+select
+    condition_occurrence_id,
+    failed_ac
+from ac_011
+union all
+select
+    condition_occurrence_id,
+    failed_ac
+from ac_012
+union all
+select
+    condition_occurrence_id,
+    failed_ac
+from ac_013

@@ -14,7 +14,10 @@ ac_004 as (
     from person
     where birth_datetime is not null
         and birth_datetime::date
-            != make_date(year_of_birth, month_of_birth, day_of_birth)
+        != make_date(year_of_birth, month_of_birth, day_of_birth)
 )
 
-select person_id, failed_ac from ac_004
+select
+    person_id,
+    failed_ac
+from ac_004
