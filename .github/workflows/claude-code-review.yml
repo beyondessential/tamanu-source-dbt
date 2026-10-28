@@ -42,7 +42,7 @@ jobs:
         id: maui-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.MAUI_APP_ID }}
+          client-id: ${{ secrets.MAUI_APP_CLIENT_ID }}
           private-key: ${{ secrets.MAUI_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: maui-team
