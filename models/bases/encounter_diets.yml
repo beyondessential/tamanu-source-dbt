@@ -20,3 +20,6 @@ models:
       - name: diet_id
         data_type: character varying(255)
         description: "{{ doc('encounter_diets__diet_id') }}"
+      - name: created_datetime
+        data_type: timestamp
+        description: "{{ doc('encounter_diets__created_datetime') }}"
