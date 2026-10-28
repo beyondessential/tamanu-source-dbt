@@ -147,22 +147,24 @@ bundle rather than a seed table:
 
 ## Running commands
 
-Run project commands through `uv run --env-file .env <cmd>` — `uv` syncs the virtualenv
-from `pyproject.toml` and `--env-file .env` loads the DB credentials plus `DBT_PROFILES_DIR`
-(so no `--profiles-dir` flag is needed). Run `uv run --env-file .env dbt deps` once first.
-See README § Local development. There is no session-start hook or manual `venv` activation.
+Run project commands through the secrets runner, `uv run python .maui/scripts/with_secrets.py
+-- <cmd>`. It loads the DB credentials plus `DBT_PROFILES_DIR` from the sources in
+`secret-sources.ini` for that command only (so no `--profiles-dir` flag is needed). Run
+`dbt deps` through it once first. If it reports a locked vault, ask the developer to export
+`BW_SESSION`; never unlock it yourself. Where a developer still keeps a `.env`, the legacy
+`uv run --env-file .env <cmd>` works the same way. See README § Local development.
 
 ## Pre-commit checklist
 
 ```bash
-uv run --env-file .env sqlfluff fix .
-uv run --env-file .env dbt test
-uv run --env-file .env python scripts/validate_report_configs.py
-uv run --env-file .env python scripts/check_translations.py
+uv run python .maui/scripts/with_secrets.py -- sqlfluff fix .
+uv run python .maui/scripts/with_secrets.py -- dbt test
+uv run python .maui/scripts/with_secrets.py -- python scripts/validate_report_configs.py
+uv run python .maui/scripts/with_secrets.py -- python scripts/check_translations.py
 # if csv/report_translations_standard.csv changed:
-uv run --env-file .env python scripts/generate_translation_macro.py
+uv run python .maui/scripts/with_secrets.py -- python scripts/generate_translation_macro.py
 # if csv/metric_definitions.csv changed:
-uv run --env-file .env python scripts/generate_metric_definitions_macro.py
+uv run python .maui/scripts/with_secrets.py -- python scripts/generate_metric_definitions_macro.py
 ```
 
 ---
@@ -171,6 +173,8 @@ uv run --env-file .env python scripts/generate_metric_definitions_macro.py
 
 ```bash
 # from the version branch being released; --dry-run to preview
+uv run python .maui/scripts/with_secrets.py -- python scripts/prepare_release.py
+# a version branch without its own secret-sources.ini yet: its .env
 uv run --env-file .env python scripts/prepare_release.py
 ```
 
@@ -179,8 +183,9 @@ released bundle, and drafts the commit message and PR body under `target/`. It s
 before the commit (`--commit` makes it) and never pushes or opens the PR.
 
 It refuses to build unless dbt resolves to the release database matching the version
-being released — building against a stale `.env` produces artefacts that look valid and
-are wrong for the branch.
+being released — building against a stale `.env`, or a branch whose `secret-sources.ini`
+names another version's release server, produces artefacts that look valid and are wrong
+for the branch.
 
 A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
 Tagging a version with no bundle behind it publishes nothing. See
