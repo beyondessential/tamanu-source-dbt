@@ -1,7 +1,8 @@
 select
     ed.id,
     ed.encounter_id,
-    ed.diet_id
+    ed.diet_id,
+    ed.created_at at time zone '{{ var("timezone") }}' as created_datetime
 from {{ source('tamanu', 'encounter_diets') }} ed
 join {{ source('tamanu', 'encounters') }} e on e.id = ed.encounter_id
 where ed.deleted_at is null
