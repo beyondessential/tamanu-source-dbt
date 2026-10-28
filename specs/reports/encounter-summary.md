@@ -163,6 +163,9 @@ those metrics where the two scope encounters differently:
   The metrics apply no sensitivity partition.
 - The metrics take the facility from the qualifying segment's location. The report takes it
   from the encounter.
+- An encounter with no `encounter_history` rows, such as a migrated encounter loaded without
+  them, is absent from the report. The metrics classify it from the encounter's own
+  `encounter_type`.
 
 ## Output
 
