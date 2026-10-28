@@ -1,0 +1,81 @@
+unit_tests:
+  - name: test_ds__encounter_diets_age_bands
+    model: ds__encounter_diets
+    description: >
+      MAUI-7060. Age is shown in days, weeks, months or years by band. The weeks band
+      (8 days to under 1 month) is whole days / 7, so it runs on Postgres 16, which
+      rejects extract(week from <interval>). Covers each band, the 4-week upper edge
+      of the weeks band, and the exclusion of a closed encounter.
+    overrides:
+      vars:
+        test_current_date: '2024-03-20'
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_days' as id, 'pat_days' as patient_id, 'loc_001' as location_id, '2024-03-18 09:00:00'::timestamp as start_datetime, null::timestamp as end_datetime
+          union all
+          select 'enc_weeks', 'pat_weeks', 'loc_001', '2024-03-18 09:00:00'::timestamp, null::timestamp
+          union all
+          select 'enc_weeks_edge', 'pat_weeks_edge', 'loc_001', '2024-03-18 09:00:00'::timestamp, null::timestamp
+          union all
+          select 'enc_months', 'pat_months', 'loc_001', '2024-03-18 09:00:00'::timestamp, null::timestamp
+          union all
+          select 'enc_years', 'pat_years', 'loc_001', '2024-03-18 09:00:00'::timestamp, null::timestamp
+          union all
+          select 'enc_closed', 'pat_weeks', 'loc_001', '2024-03-01 09:00:00'::timestamp, '2024-03-02 09:00:00'::timestamp
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_days' as id, 'P001' as display_id, 'Ana' as first_name, 'Days' as last_name, '2024-03-15'::date as date_of_birth
+          union all
+          select 'pat_weeks', 'P002', 'Ben', 'Weeks', '2024-03-03'::date
+          union all
+          select 'pat_weeks_edge', 'P003', 'Cal', 'Edge', '2024-02-21'::date
+          union all
+          select 'pat_months', 'P004', 'Dee', 'Months', '2023-11-20'::date
+          union all
+          select 'pat_years', 'P005', 'Eli', 'Years', '1990-01-01'::date
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Bed 1' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+
+      # Both sensitivity columns, so the fixture fits branches that filter on either
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, false as is_sensitive, null::text as sensitive_network_id
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001' as id, 'Paediatric Ward' as name
+
+      - input: ref('encounter_diets')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as diet_id
+          where false
+
+      - input: ref('patient_allergies')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as allergy_id
+          where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+    expect:
+      rows:
+        - {encounter_id: enc_days, age: 5 days}
+        - {encounter_id: enc_weeks, age: 2 weeks}
+        - {encounter_id: enc_weeks_edge, age: 4 weeks}
+        - {encounter_id: enc_months, age: 4 months}
+        - {encounter_id: enc_years, age: 34 years}
