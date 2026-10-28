@@ -174,7 +174,7 @@ uv run python .maui/scripts/with_secrets.py -- python scripts/generate_metric_de
 ```bash
 # from the version branch being released; --dry-run to preview
 uv run python .maui/scripts/with_secrets.py -- python scripts/prepare_release.py
-# a version branch without its own secret-sources.ini yet: its .env
+# a version branch that doesn't carry secret-sources.ini yet: its .env
 uv run --env-file .env python scripts/prepare_release.py
 ```
 
@@ -182,9 +182,11 @@ Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against th
 released bundle, and drafts the commit message and PR body under `target/`. It stops
 before the commit (`--commit` makes it) and never pushes or opens the PR.
 
-It refuses to build unless dbt resolves to the release database matching the version
-being released — building against a stale `.env`, or a branch whose `secret-sources.ini`
-names another version's release server, produces artefacts that look valid and are wrong
+The runner picks the release database from `version:` in `dbt_project.yml`
+(`tamanu-release-2-64` on `2.64`), so it follows the branch you are on. Never set
+`MAUI_RELEASE_SERIES` for a release. It refuses to build unless dbt resolves to the release
+database matching the version being released — building against a stale `.env`, or with
+`MAUI_RELEASE_SERIES` pointing elsewhere, produces artefacts that look valid and are wrong
 for the branch.
 
 A release is a version bump **and** the bundle committed under `compiled/v<version>/`.

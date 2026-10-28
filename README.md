@@ -27,9 +27,11 @@ uv run python .maui/scripts/with_secrets.py -- sqlfluff lint models
 
 [`secret-sources.ini`](secret-sources.ini) says where each value comes from:
 
-- **Release database** (`TAMANU_RL_*`, the `reporting_release` and `analytics` targets): this
-  branch's release server on the `main` Kubernetes cluster. That's `tamanu-main` here, and each
-  version branch names its own (`tamanu-release-2-64` on `2.64`).
+- **Release database** (`TAMANU_RL_*`, the `reporting_release` and `analytics` targets): the
+  release server on the `main` Kubernetes cluster for the version being worked on. The series
+  comes from `version:` in `dbt_project.yml`, the same one `prepare_release.py` checks:
+  `tamanu-release-2-66` on `main`, `tamanu-release-2-64` on `2.64`. To build against another
+  version deliberately, set `MAUI_RELEASE_SERIES=2.64` for the run.
 - **Demo database** (`TAMANU_DEMO_*`): the `tamanu-source-dbt.env` Bitwarden note.
 - **`DBT_PROFILES_DIR=config`**, so dbt finds `config/profiles.yml` without a `--profiles-dir` flag.
 
@@ -151,7 +153,7 @@ From the version branch you are releasing:
 
 ```bash
 uv run python .maui/scripts/with_secrets.py -- python scripts/prepare_release.py
-# a version branch without its own secret-sources.ini yet: its .env
+# a version branch that doesn't carry secret-sources.ini yet: its .env
 uv run --env-file .env python scripts/prepare_release.py
 ```
 
@@ -163,9 +165,9 @@ never pushes or opens the PR.
 
 Before building anything it checks that dbt resolves to the release database matching the
 version being released. Building against the wrong database — a stale `.env` still
-pointing at another version, a `secret-sources.ini` naming another version's release server,
-or a deployment replica — produces artefacts that look
-completely valid and are wrong for the branch. Use `--dry-run` to see what it would do,
+pointing at another version, a leftover `MAUI_RELEASE_SERIES` in your shell, or a
+deployment replica — produces artefacts that look completely valid and are wrong for the
+branch. Use `--dry-run` to see what it would do,
 and `--no-db-check` only when preparing a release from an already-built bundle.
 
 ### The steps it performs
