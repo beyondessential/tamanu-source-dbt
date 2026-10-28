@@ -137,6 +137,24 @@ with encounters_in_scope as (
 ),
 
 
+{#- BL-014: the scope's encounter_history rows, read once and shared by
+    encounter_history_consolidated and encounter_type_groups. encounter_history has no
+    index on encounter_id, so each separate read is a full scan of the table. -#}
+history_in_scope as (
+    select
+        eh.id,
+        eh.encounter_id,
+        eh.datetime,
+        eh.change_type,
+        eh.updated_by_id,
+        eh.department_id,
+        eh.location_id,
+        eh.encounter_type
+    from {{ ref('encounter_history') }} eh
+    join encounters_in_scope eis
+        on eis.encounter_id = eh.encounter_id
+),
+
 {#- Not shared with admissions_dataset's identically named CTE: they differ in drive
     direction, history scope, join strictness, which actor they resolve and both
     row_number() derivations. Enumerated in specs/dbt-model/ds__admissions.md. -#}
@@ -162,9 +180,7 @@ encounter_history_consolidated as (
             partition by eh.encounter_id
             order by eh.datetime
         ) as prev_location_group_id
-    from {{ ref('encounter_history') }} eh
-    join encounters_in_scope eis
-        on eis.encounter_id = eh.encounter_id
+    from history_in_scope eh
     -- BL-007 (specs/reports/encounter-summary.md): eh.updated_by_id is nullable at
     -- source, unlike department_id / location_id / examiner_id, so the actor join is a
     -- left join -- a history row with no actor is kept, with a null clinician name.
@@ -258,6 +274,21 @@ encounter_changes as (
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_group_datetime
     from encounter_history_consolidated
     group by encounter_id
+),
+
+{# BL-012: outpatient and emergency come from the visit concept of the encounter's first
+   history row, ordered as clinical__visit_detail orders its segments, and inpatient from
+   any admission row. Read from history_in_scope, not encounter_history_consolidated,
+   whose department and location joins can drop the first row and change the answer. #}
+encounter_type_groups as (
+    select
+        eh.encounter_id,
+        (array_agg(vm.concept_id order by eh.datetime, eh.id::varchar))[1] as first_visit_concept_id,
+        coalesce(bool_or(vm.concept_id = 9201), false) as is_admitted
+    from history_in_scope eh
+    left join {{ ref('map__omop_visit_type') }} vm
+        on vm.local_code = eh.encounter_type
+    group by eh.encounter_id
 ),
 
 encounter_diagnoses as (
@@ -624,6 +655,8 @@ left join {{ ref('users') }} c
     on c.id = eis.clinician_id
 join encounter_changes ec
     on ec.encounter_id = eis.encounter_id
+left join encounter_type_groups etg
+    on etg.encounter_id = eis.encounter_id
 left join {{ ref('triages') }} t
     on t.encounter_id = eis.encounter_id
 left join {{ ref('discharges') }} d
@@ -669,6 +702,16 @@ where
     and case
         when {{ parameter('locationGroupId') }} is null then true
         else {{ parameter('locationGroupId') }} = any(ec.location_group_ids::text [])
+    end
+    -- BL-013: an encounter is kept when it belongs to the selected group
+    and case
+        when {{ parameter('encounterTypeGroup') }} is null then true
+        when {{ parameter('encounterTypeGroup') }} = 'outpatient'
+            then etg.first_visit_concept_id = 9202 -- OMOP 'Outpatient Visit'
+        when {{ parameter('encounterTypeGroup') }} = 'emergency'
+            then etg.first_visit_concept_id = 9203 -- OMOP 'Emergency Room Visit'
+        when {{ parameter('encounterTypeGroup') }} = 'inpatient'
+            then etg.is_admitted
     end
 
 {% endmacro %}

@@ -36,7 +36,8 @@ variant additionally requires a non-null `end_datetime`, so open encounters are 
 | `is_sensitive` | Facility partition. `false` = non-sensitive facilities only |
 
 Parameters: `fromDate`, `toDate`, `facilityId`, `patientBillingTypeId`,
-`supervisingClinicianId`, `departmentId`, `locationGroupId`.
+`supervisingClinicianId`, `departmentId`, `locationGroupId`, `encounterTypeGroup`
+(one of `outpatient`, `emergency`, `inpatient`).
 
 ## The core's output contract
 
@@ -138,6 +139,30 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   note in scope before any `note_type` filter, since a revision can change a note's type. This
   covers the encounter notes and both imaging aggregates, so an edited imaging note contributes
   only its current text.
+- **BL-012:** An encounter is `outpatient` or `emergency` when its first `encounter_history`
+  row, by `datetime` then `id`, maps to visit concept 9202 or 9203 in `map__omop_visit_type`,
+  and `inpatient` when any of its rows maps to 9201. An encounter can be both `emergency` and
+  `inpatient`, and a `surveyResponse` encounter is in no group.
+- **BL-013:** `encounterTypeGroup` keeps an encounter that belongs to the selected group. With
+  nothing selected, no encounter is filtered out.
+- **BL-014:** `encounter_history` is read once per run, in `history_in_scope`, which both the
+  history consolidation and BL-012's classification read from. The table has no index on
+  `encounter_id`, so every separate read is a full scan.
+
+## Relationship to the visit metrics
+
+BL-012 makes the filter classify an encounter exactly as `metric__outpatient_visit`,
+`metric__emergency_visit` and `metric__inpatient_admission` do, which are the sources of the
+Tupaia outpatient, emergency and inpatient counts. A filtered row count still differs from
+those metrics where the two scope encounters differently:
+
+- The report window filters on the encounter's `date_field`. `metric__inpatient_admission` is
+  dated by the start of the admission segment, so an encounter admitted after the day it
+  started falls in different periods.
+- The standard report excludes sensitive facilities and the sensitive one includes only them.
+  The metrics apply no sensitivity partition.
+- The metrics take the facility from the qualifying segment's location. The report takes it
+  from the encounter.
 
 ## Output
 
@@ -207,6 +232,11 @@ not expected to agree and should not be reconciled.
 | AC-013 | An imaging request's notes reach its encounter through `imaging_requests`. | BL-009 | `test_enc_summary_imaging_notes` — fails when the imaging branch is removed, passes when the encounter branch is |
 | AC-014 | `notes` is no longer read in full. | BL-009 | `EXPLAIN (ANALYZE)` on the same fixture, best of 5 warm: 7d 1418→12ms, 1mo 984→49ms, 3mo 964→119ms, 12mo 1080→378ms. Under worst-case physical layout (`record_id` correlation −0.003) the 12-month case is ~9% slower and every narrower window is 2.6–41× faster. Not unit-testable; re-measure on a replica. |
 | AC-015 | Each note aggregate reads a note's current revision: an edit replaces the text it revised, a same-second edit resolves on `created_datetime`, and an edited imaging note contributes only its current text. | BL-010, BL-011 | `test_enc_summary_encounter_notes`, `test_enc_summary_imaging_notes` |
+| AC-016 | `emergency` keeps an encounter that started as an emergency type, including one later admitted, and drops one that started in clinic and ended as an emergency. A same-datetime tie resolves on the history `id`. | BL-012, BL-013 | `test_encounter_summary_encounter_type_filter_emergency` |
+| AC-017 | `inpatient` keeps any encounter with an admission row. | BL-012, BL-013 | `test_encounter_summary_encounter_type_filter_inpatient` |
+| AC-018 | `outpatient` keeps an encounter that started as an outpatient type, whatever its type at discharge. | BL-012, BL-013 | `test_encounter_summary_encounter_type_filter_outpatient` |
+| AC-019 | With no group selected every encounter is returned, including one in no group. | BL-013 | `test_encounter_summary_encounter_type_filter_unset` |
+| AC-020 | With no group selected the output is unchanged by BL-012–BL-014, and the plan reads `encounter_history` once with or without a group selected. | BL-013, BL-014 | Row-level `except all` both directions against the release database, both date fields, 7-day, 3-month and full windows, every group; `EXPLAIN (ANALYZE)` counts the `encounter_history` scans. Recorded on the PR. |
 
 ## Open questions
 
@@ -226,3 +256,4 @@ not expected to agree and should not be reconciled.
 | 2026-09-20 | BL-009: `notes_raw` split per `record_type` so the notes join can reach an index (MAUI-6917); BL-010: deterministic ordering for the three note aggregates. BL-008's claim to have fixed the planner's row estimate corrected — it fixed the scan only. Output unchanged. |
 | 2026-09-21 | Forward-ported BL-008/009/010 from `2.54` (#1382, #1391). Numbered to avoid BL-007 and AC-006, which `main` already used for the history-actor left join, so the two lines stayed mergeable. |
 | 2026-09-27 | BL-011: every note aggregate reads each note's current revision (`notes__revision_rank`), so an edited imaging note no longer contributes the text it replaced. BL-010: same-second notes order by `created_datetime`. |
+| 2026-10-28 | BL-012/BL-013: `encounterTypeGroup` filter, classified as the visit metrics behind the Tupaia counts classify an encounter rather than by its type at discharge (MAUI-7063). BL-014: `encounter_history` read once and shared. |
