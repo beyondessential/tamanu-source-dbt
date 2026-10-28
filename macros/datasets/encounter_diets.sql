@@ -33,16 +33,18 @@ select
     concat(p.first_name, ' ', p.last_name) as patient_name,
     e.start_datetime,
     case
-        when age(current_date, p.date_of_birth) < interval '8 days'
-            then concat(extract(day from age(current_date, p.date_of_birth)), ' days')
-        when age(current_date, p.date_of_birth) >= interval '8 days'
-            and age(current_date, p.date_of_birth) < interval '1 month'
-            then concat(extract(week from age(current_date, p.date_of_birth)), ' weeks')
-        when age(current_date, p.date_of_birth) >= interval '1 month'
-            and age(current_date, p.date_of_birth) < interval '2 years'
-            then concat(extract(month from age(current_date, p.date_of_birth)), ' months')
-        when age(current_date, p.date_of_birth) >= interval '2 years'
-            then concat(extract(year from age(current_date, p.date_of_birth)), ' years')
+        when age({{ get_current_date() }}, p.date_of_birth) < interval '8 days'
+            then concat(extract(day from age({{ get_current_date() }}, p.date_of_birth)), ' days')
+        when age({{ get_current_date() }}, p.date_of_birth) >= interval '8 days'
+            and age({{ get_current_date() }}, p.date_of_birth) < interval '1 month'
+            -- whole days / 7, not extract(week from <interval>): Postgres 16 rejects the
+            -- week unit on an interval, though 18 accepts it (MAUI-7060)
+            then concat(({{ get_current_date() }} - p.date_of_birth) / 7, ' weeks')
+        when age({{ get_current_date() }}, p.date_of_birth) >= interval '1 month'
+            and age({{ get_current_date() }}, p.date_of_birth) < interval '2 years'
+            then concat(extract(month from age({{ get_current_date() }}, p.date_of_birth)), ' months')
+        when age({{ get_current_date() }}, p.date_of_birth) >= interval '2 years'
+            then concat(extract(year from age({{ get_current_date() }}, p.date_of_birth)), ' years')
     end as age,
     l.id as location_id,
     l.name as location,
