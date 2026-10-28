@@ -1,0 +1,273 @@
+unit_tests:
+  - name: test_encounter_summary_encounter_type_filter_emergency
+    model: encounter-summary-by-start-date
+    description: >
+      BL-012, BL-013. Emergency keeps an encounter whose first history row is an emergency
+      type, whatever its type at discharge. enc_002 was admitted from triage and is kept.
+      enc_003 started in clinic and moved to emergency, so it is dropped although its
+      current type is emergency. enc_005's two rows share a datetime and resolve on the
+      history id, as clinical__visit_detail resolves them, so it starts as emergency.
+    overrides:
+      vars: &vars_emergency
+        timezone: UTC
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        encounterTypeGroup: emergency
+    given: &given
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            f.*,
+            to_char(f.start_datetime, 'YYYY-MM-DD HH24:MI:SS') as start_date_iso,
+            to_char(f.end_datetime, 'YYYY-MM-DD HH24:MI:SS') as end_date_iso
+          from (
+            -- outpatient throughout
+            select 'enc_001' as id, 'pat_001' as patient_id, '2024-01-10 09:00:00'::timestamp as start_datetime, '2024-01-10 11:00:00'::timestamp as end_datetime, 'loc_001' as location_id, 'dept_001' as department_id, 'cli_001' as clinician_id, null::text as patient_billing_type_id, null::text as reason_for_encounter, 'clinic' as encounter_type, null::text as planned_location_id, null::timestamp as planned_location_start_datetime
+            -- triage, then admitted
+            union all select 'enc_002', 'pat_002', '2024-01-11 08:00:00'::timestamp, '2024-01-13 10:00:00'::timestamp, 'loc_001', 'dept_001', 'cli_001', null, null, 'admission', null, null
+            -- clinic, then moved to emergency
+            union all select 'enc_003', 'pat_003', '2024-01-12 09:00:00'::timestamp, '2024-01-12 15:00:00'::timestamp, 'loc_001', 'dept_001', 'cli_001', null, null, 'emergency', null, null
+            -- survey response: in no group
+            union all select 'enc_004', 'pat_004', '2024-01-13 09:00:00'::timestamp, '2024-01-13 09:30:00'::timestamp, 'loc_001', 'dept_001', 'cli_001', null, null, 'surveyResponse', null, null
+            -- emergency and clinic rows at the same instant
+            union all select 'enc_005', 'pat_005', '2024-01-14 09:00:00'::timestamp, '2024-01-14 12:00:00'::timestamp, 'loc_001', 'dept_001', 'cli_001', null, null, 'clinic', null, null
+          ) f
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'Ana' as first_name, 'One' as last_name, '1990-01-01'::date as date_of_birth, 'female' as sex, null::text as village_id
+          union all select 'pat_002', 'P002', 'Ben', 'Two', '1990-01-01'::date, 'male', null
+          union all select 'pat_003', 'P003', 'Cal', 'Three', '1990-01-01'::date, 'male', null
+          union all select 'pat_004', 'P004', 'Dee', 'Four', '1990-01-01'::date, 'female', null
+          union all select 'pat_005', 'P005', 'Eve', 'Five', '1990-01-01'::date, 'female', null
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_101' as id, 'enc_001' as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'clinic' as encounter_type
+          union all select 'eh_201', 'enc_002', '2024-01-11 08:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'triage'
+          union all select 'eh_202', 'enc_002', '2024-01-11 12:00:00'::timestamp, array['encounter_type']::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'admission'
+          union all select 'eh_301', 'enc_003', '2024-01-12 09:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'clinic'
+          union all select 'eh_302', 'enc_003', '2024-01-12 10:00:00'::timestamp, array['encounter_type']::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'emergency'
+          union all select 'eh_401', 'enc_004', '2024-01-13 09:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'surveyResponse'
+          -- clinic listed first: only the id tie-break puts eh_501 ahead
+          union all select 'eh_502', 'enc_005', '2024-01-14 09:00:00'::timestamp, array['encounter_type']::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'clinic'
+          union all select 'eh_501', 'enc_005', '2024-01-14 09:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_001', 'emergency'
+
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'admission' as local_code, 9201 as concept_id
+          union all select 'clinic', 9202
+          union all select 'imaging', 9202
+          union all select 'vaccination', 9202
+          union all select 'emergency', 9203
+          union all select 'observation', 9203
+          union all select 'triage', 9203
+          union all select 'surveyResponse', 0
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr. Sam Rivera' as display_name
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'General' as name
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 1' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001' as id, 'Main Wing' as name
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Public Hospital' as name, false as is_sensitive
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name, null::text as code
+          where false
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as ethnicity_id, null::text as division_id, null::text as subdivision_id
+          where false
+
+      - input: ref('triages')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
+          where false
+
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as disposition_id
+          where false
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::text as certainty, null::timestamp as datetime
+          where false
+
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as prescription_id
+          where false
+
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select null::text as id, null::boolean as is_discontinued, null::text as discontinuing_reason, null::timestamp as datetime, null::text as medication_id
+          where false
+
+      - input: ref('vaccine_administrations')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::timestamp as datetime, null::text as scheduled_vaccine_id
+          where false
+
+      - input: ref('vaccine_schedules')
+        format: sql
+        rows: |
+          select null::text as id, null::text as label, null::text as dose_label, null::text as vaccine_id
+          where false
+
+      - input: ref('procedures')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::date as date, null::text as procedure_type_id, null::text as location_id, null::text as note, null::text as completed_note
+          where false
+
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as lab_test_panel_request_id, null::text as status
+          where false
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as lab_test_panel_id
+          where false
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select null::text as lab_request_id, null::text as lab_test_type_id
+          where false
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('notes')
+        format: sql
+        rows: |
+          select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::timestamp as created_datetime, null::text as visibility_status
+          where false
+
+      - input: ref('imaging_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::text as imaging_type, null::text as status
+          where false
+
+      - input: ref('imaging_request_areas')
+        format: sql
+        rows: |
+          select null::text as imaging_request_id, null::text as area_id
+          where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
+          where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::text as product_id
+          where false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select null::text as id, null::text as category
+          where false
+
+
+    expect:
+      rows:
+        - {"Patient ID": P002, "Emergency encounter type": Triage, "Inpatient encounter type": Hospital admission, "Outpatient encounter type": null}
+        - {"Patient ID": P005, "Emergency encounter type": Emergency short stay, "Inpatient encounter type": null, "Outpatient encounter type": Clinic}
+
+  - name: test_encounter_summary_encounter_type_filter_inpatient
+    model: encounter-summary-by-start-date
+    description: >
+      BL-012, BL-013. Inpatient keeps any encounter with an admission row, so enc_002 is
+      kept here as well as under Emergency.
+    overrides:
+      vars:
+        <<: *vars_emergency
+        encounterTypeGroup: inpatient
+    given: *given
+    expect:
+      rows:
+        - {"Patient ID": P002, "Emergency encounter type": Triage, "Inpatient encounter type": Hospital admission, "Outpatient encounter type": null}
+
+  - name: test_encounter_summary_encounter_type_filter_outpatient
+    model: encounter-summary-by-start-date
+    description: >
+      BL-012, BL-013. Outpatient keeps an encounter whose first history row is an
+      outpatient type, so enc_003 is kept although it ended as an emergency.
+    overrides:
+      vars:
+        <<: *vars_emergency
+        encounterTypeGroup: outpatient
+    given: *given
+    expect:
+      rows:
+        - {"Patient ID": P001, "Emergency encounter type": null, "Inpatient encounter type": null, "Outpatient encounter type": Clinic}
+        - {"Patient ID": P003, "Emergency encounter type": Emergency short stay, "Inpatient encounter type": null, "Outpatient encounter type": Clinic}
+
+  - name: test_encounter_summary_encounter_type_filter_unset
+    model: encounter-summary-by-start-date
+    description: >
+      BL-013. With no group selected every encounter is returned, including enc_004,
+      which belongs to no group.
+    overrides:
+      vars:
+        <<: *vars_emergency
+        encounterTypeGroup: ''
+    given: *given
+    expect:
+      rows:
+        - {"Patient ID": P001}
+        - {"Patient ID": P002}
+        - {"Patient ID": P003}
+        - {"Patient ID": P004}
+        - {"Patient ID": P005}
