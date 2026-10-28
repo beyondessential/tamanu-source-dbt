@@ -38,7 +38,8 @@ Every join that could fan out is held to one row per encounter: the discharge by
 | `is_sensitive` | Facility partition. `false` = non-sensitive facilities only |
 
 Parameters: `fromDate`, `toDate`, `facilityId`, `patientBillingTypeId`,
-`supervisingClinicianId`, `departmentId`, `locationGroupId`.
+`supervisingClinicianId`, `departmentId`, `locationGroupId`, `encounterTypeGroup`
+(one of `outpatient`, `emergency`, `inpatient`).
 
 ## The core's output contract
 
@@ -197,6 +198,35 @@ had since it was split into a core and a wrapper; recording them changed no outp
   scheduled dose is later given (`patientVaccine.js`) — it is a superseded refusal, not a
   past dose.
 
+### Encounter type group filter
+
+- **BL-025:** An encounter is `outpatient` or `emergency` when its first `encounter_history`
+  row, by `datetime` then `id`, maps to visit concept 9202 or 9203 in `map__omop_visit_type`,
+  and `inpatient` when any of its rows maps to 9201. An encounter can be both `emergency` and
+  `inpatient`, and a `surveyResponse` encounter is in no group.
+- **BL-026:** `encounterTypeGroup` keeps an encounter that belongs to the selected group. With
+  nothing selected, no encounter is filtered out.
+- **BL-027:** `encounter_history` is read once per run, in `history_in_scope`, which both the
+  history consolidation and BL-025's classification read from.
+
+## Relationship to the visit metrics
+
+BL-025 makes the filter classify an encounter exactly as `metric__outpatient_visit`,
+`metric__emergency_visit` and `metric__inpatient_admission` do, which are the sources of the
+Tupaia outpatient, emergency and inpatient counts. A filtered row count still differs from
+those metrics where the two scope encounters differently:
+
+- The report window filters on the encounter's `date_field`. `metric__inpatient_admission` is
+  dated by the start of the admission segment, so an encounter admitted after the day it
+  started falls in different periods.
+- The standard report excludes sensitive facilities and the sensitive one includes only them.
+  The metrics apply no sensitivity partition.
+- The metrics take the facility from the qualifying segment's location. The report takes it
+  from the encounter.
+- An encounter with no `encounter_history` rows, such as a migrated encounter loaded without
+  them, is absent from the report. The metrics classify it from the encounter's own
+  `encounter_type`.
+
 ## Output
 
 Patient: `display_id`, `first_name`, `last_name`, `date_of_birth`, `sex`, `ethnicity`,
@@ -278,6 +308,11 @@ not expected to agree and should not be reconciled.
 | AC-026 | Cancelled, deleted and entered-in-error imaging requests are not listed. | BL-022 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
 | AC-027 | A discontinued prescription is listed, flagged, in prescription order. | BL-023 | `test_encounter_summary_aggregate_scope` |
 | AC-028 | Only `GIVEN` vaccines are listed. | BL-024 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
+| AC-029 | `emergency` keeps an encounter that started as an emergency type, including one later admitted, and drops one that started in clinic and ended as an emergency. A same-datetime tie resolves on the history `id`. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_emergency` |
+| AC-030 | `inpatient` keeps any encounter with an admission row. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_inpatient` |
+| AC-031 | `outpatient` keeps an encounter that started as an outpatient type, whatever its type at discharge. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_outpatient` |
+| AC-032 | With no group selected every encounter is returned, including one in no group. | BL-026 | `test_encounter_summary_encounter_type_filter_unset` |
+| AC-033 | With no group selected the output is unchanged by BL-025–BL-027, and the plan reads `encounter_history` once with or without a group selected. | BL-026, BL-027 | Row-level `except all` both directions against the release database, both date fields, 7-day, 3-month and full windows, every group; `EXPLAIN (ANALYZE)` counts the `encounter_history` scans. Recorded on the PR. |
 
 ## Open questions
 
@@ -317,3 +352,4 @@ not expected to agree and should not be reconciled.
 | 2026-10-15 | BL-012: `lab_requests` follows Tamanu 2.66's one-to-many panel structure — each panel request by name plus the tests not attributed to a panel — and orders ties by name (MAUI-6163). |
 | 2026-10-15 | MAUI-7011, from the 2.66 conformance review. BL-006 corrected: eight formatted outputs, not seven, and the procedures date is formatted but not shifted. BL-013–BL-020 record resolution and presentation rules that were tested but unwritten, with `test_encounter_summary_history_consolidation` added for the four no test asserted. AC-005 now cites the test names, and its `false`-direction fixture gives the sensitive encounter a history row so it no longer passes vacuously. OQ-005 now lists every non-deterministic ordering. The `logical__encounter_summary_by_*` checks no longer inner-join the history actor, which contradicted BL-007. Output unchanged. |
 | 2026-10-15 | MAUI-7011 follow-up. **Output changes:** `vaccinations` lists only `GIVEN` administrations (BL-024) — in the 2.66 release DB 519 of 1,057 records were `NOT_GIVEN` and read as given; and an encounter with several triages is one row (BL-021), which changes nothing where triages are already unique. BL-022 and BL-023 record existing imaging and medication behaviour. BL-014 states that soft-deleted departments and locations count as deleted, and the logical checks now drop those history rows too. BL-008's count of scope-CTE references corrected (now twelve). |
+| 2026-10-28 | BL-025/BL-026: `encounterTypeGroup` filter, classified as the visit metrics behind the Tupaia counts classify an encounter rather than by its type at discharge (MAUI-7063). BL-027: `encounter_history` read once and shared. Numbered to avoid BL-012–BL-024 and AC-016–AC-028, already used by `main`. |
