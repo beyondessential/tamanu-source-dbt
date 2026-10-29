@@ -15,11 +15,9 @@ models/reports/sql/sensitive/sensitive-audit-outpatient-appointments.sql
 models/datasets/standard/ds__outpatient_appointments_audit.sql
 models/datasets/sensitive/ds__sensitive_outpatient_appointments_audit.sql
 
-# The compiled encounter_summary report exceeds sqlfluff's sqlparse token limit
-# (10000) and crashes during parsing. The underlying SQL runs fine under dbt;
-# this is a sqlfluff/sqlparse limitation, not a defect in the model. The
-# by-start-date variants crossed the same limit once the encounterTypeGroup
-# filter (MAUI-7063) added history_in_scope and encounter_type_groups.
+# The compiled encounter_summary reports exceed sqlfluff's sqlparse token limit
+# (10000) and crash during parsing. The underlying SQL runs fine under dbt;
+# this is a sqlfluff/sqlparse limitation, not a defect in the models.
 models/reports/sql/standard/encounter-summary-by-end-date.sql
 models/reports/sql/sensitive/sensitive-encounter-summary-by-end-date.sql
 models/reports/sql/standard/encounter-summary-by-start-date.sql
