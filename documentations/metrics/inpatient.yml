@@ -45,7 +45,7 @@ metrics:
   - clinician_designation
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__inpatient_admission.md
 
 - metric_id: inpatient_separation
@@ -92,5 +92,5 @@ metrics:
   - is_same_day
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__inpatient_admission.md

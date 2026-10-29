@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
-| **Status** | `review` (BL-001–BL-024 implemented; pending model output review before the registry status moves to `approved`) |
+| **Status** | `approved` (BL-001–BL-024 implemented and reviewed; registry status `approved`) |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear** | MAUI-7069 (separations and AIHW length of stay) |
@@ -273,7 +273,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 ## Registry entry
 
 Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: count`,
-`subject_grain: visit`, `status: draft`, `spec_path` pointing here, with
+`subject_grain: visit`, `status: approved`, `spec_path` pointing here, with
 `disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician,clinician_designation`:
 
 - `inpatient_admission` — as registered.
@@ -305,9 +305,6 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | Consumer | Reads |
 |---|---|
 | `tupaia-data-product` inpatient data tables (`inpatient_admission__standard`, `__maternity`, `__clinician`, `__clinician_name`) | `inpatient_admission`; its length-of-stay and discharge-disposition cards move to `inpatient_separation` once BL-019–BL-024 land |
-
-Update `documentations/metrics/inpatient.yml` `status` from `draft` to `approved` once the
-model output has been reviewed against the registered shape.
 
 **What a consumer must do:**
 
