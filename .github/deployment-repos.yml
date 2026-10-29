@@ -12,5 +12,7 @@ repos:
   - beyondessential/tamanu-dbt-msf-ethiopia
   - beyondessential/tamanu-dbt-nauru
   - beyondessential/tamanu-dbt-palau
+  - beyondessential/tamanu-dbt-queenofsheba
   - beyondessential/tamanu-dbt-samoa
+  - beyondessential/tamanu-dbt-tokelau
   - beyondessential/tamanu-dbt-tuvalu
