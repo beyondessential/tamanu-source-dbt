@@ -52,19 +52,31 @@ unit_tests:
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-03-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          select 'eh_001' as id, 'enc_001' as encounter_id, '2024-03-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
           union all
           -- BL-017 / BL-018: a move within lg_001, by a different actor
-          select 'enc_001', '2024-03-15 11:00:00'::timestamp, array['location'], 'cli_002', 'cli_001', 'dept_001', 'loc_002', 'admission'
+          select 'eh_002', 'enc_001', '2024-03-15 11:00:00'::timestamp, array['location'], 'cli_002', 'cli_001', 'dept_001', 'loc_002', 'admission'
           union all
           -- BL-014: dept_missing does not resolve, so this change is dropped
-          select 'enc_001', '2024-03-15 12:00:00'::timestamp, array['department'], 'cli_001', 'cli_001', 'dept_missing', 'loc_001', 'admission'
+          select 'eh_003', 'enc_001', '2024-03-15 12:00:00'::timestamp, array['department'], 'cli_001', 'cli_001', 'dept_missing', 'loc_001', 'admission'
           union all
           -- BL-014: loc_missing does not resolve, so this change is dropped
-          select 'enc_001', '2024-03-15 13:00:00'::timestamp, array['location'], 'cli_001', 'cli_001', 'dept_001', 'loc_missing', 'admission'
+          select 'eh_004', 'enc_001', '2024-03-15 13:00:00'::timestamp, array['location'], 'cli_001', 'cli_001', 'dept_001', 'loc_missing', 'admission'
           union all
           -- BL-013: enc_003's only history row does not resolve, so it has no history
-          select 'enc_003', '2024-03-17 09:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_missing', 'clinic'
+          select 'eh_005', 'enc_003', '2024-03-17 09:00:00'::timestamp, null::text[], 'cli_001', 'cli_001', 'dept_001', 'loc_missing', 'clinic'
+
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'admission' as local_code, 9201 as concept_id
+          union all select 'clinic', 9202
+          union all select 'imaging', 9202
+          union all select 'vaccination', 9202
+          union all select 'emergency', 9203
+          union all select 'observation', 9203
+          union all select 'triage', 9203
+          union all select 'surveyResponse', 0
 
       - input: ref('users')
         format: sql
