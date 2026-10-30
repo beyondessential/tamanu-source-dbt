@@ -44,5 +44,51 @@ metrics:
   - clinician
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
+  spec_path: specs/dbt-model/metric__inpatient_admission.md
+
+- metric_id: inpatient_separation
+  kind: metric
+  name: Inpatient separations
+  description: >-
+    Separations -- AIHW "hospitalisations" -- from a Tamanu hospital stay, dated by
+    discharge. Average length of stay is sum(patient_days) / separations for the overall
+    average, or the same ratio over rows where is_same_day is false for the overnight-only
+    average, excluding any row where patient_days is -1 (a corrupt admission/separation
+    period, not a valid stay).
+  numerator_description: >-
+    Closed admissions (an admission with a discharge from hospital), counted on the date the
+    encounter ended
+  denominator_description: null
+  data_source: tamanu
+  definition_source: AIHW
+  definition_source_code: '270045'
+  definition_rationale: >-
+    Follows AIHW METeOR "Number of patient days" (270045): the separation date minus the
+    admission date in whole days, minimum 1, so a same-day stay counts as one day rather than
+    a fraction, or -1 where the recorded separation date is earlier than the recorded
+    admission date -- a corrupt period a consumer excludes from the average rather than this
+    model dropping the row (see the spec's OQ-005). Average length of stay (sum(patient_days)
+    / separations) matches AIHW's published definition; length_of_stay__minutes (elapsed time)
+    remains available as the BES composition for a consumer that prefers it. Leave days and
+    the exclusion of unqualified newborns, hospital boarders and posthumous organ procurement
+    are not applied -- Tamanu records none of them (see the spec's DV-002, DV-003). One Tamanu
+    encounter is one episode of admitted care, so a care-type change mid-stay does not produce
+    a statistical separation (DV-004).
+  unit: count
+  subject_grain: visit
+  disaggregations:
+  - facility_id
+  - sex
+  - admission_ward_id
+  - admission_source
+  - is_admitted_via_emergency
+  - principal_diagnosis__icd10_chapter
+  - discharge_disposition
+  - is_readmission_within_30_days
+  - clinician
+  - is_same_day
+  variant_of: null
+  owner: bes-maui
+  status: approved
   spec_path: specs/dbt-model/metric__inpatient_admission.md
