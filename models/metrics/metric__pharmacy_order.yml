@@ -43,7 +43,7 @@ models:
       # Every drug line resolves to a segment, patient and location, so the row count matches
       # the source. A shortfall is drug lines the inner joins dropped -- most likely an
       # encounter type missing from map__omop_visit_type.
-      # BL-013: dbt_utils.equal_rowcount's default fail_calc sums diff_count with no fallback for
+      # BL-012: dbt_utils.equal_rowcount's default fail_calc sums diff_count with no fallback for
       # a deployment where both sides are legitimately empty (e.g. no pharmacy orders at all) --
       # SUM over zero rows is NULL, not 0, which dbt cannot record as a test's failure count and
       # errors the whole build. The outer coalesce makes "both sides empty" a normal pass.
