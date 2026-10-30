@@ -20,7 +20,7 @@ only) are alternative definitions of length of stay -- a consumer picks one. Ave
 stay is sum(patient_days) / sum(value_numeric) over inpatient_separation rows at the consumer's
 grain.
 
-See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-017, BL-019..BL-024.
+See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-024.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__variant_id %}
@@ -197,6 +197,14 @@ one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 {% docs metric__inpatient_admission__clinician %}
 The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
 clinician" card. Never NULL -- falls back to 'Not recorded'.
+{% enddocs %}
+
+{% docs metric__inpatient_admission__clinician_designation %}
+That clinician's designations (e.g. Dentist), alphabetical and comma-separated where they hold
+more than one (BL-018). Current designations: Tamanu keeps no history, so a clinician who
+changed role reads the new designation on earlier admissions too. Never NULL -- falls back to
+'Not recorded' where the clinician has none, or the admission has no clinician. Kept apart from
+`clinician` so a filter by name is unaffected; a consumer combines the two for display.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__patient_days %}
