@@ -21,7 +21,8 @@ from .report_utils import (
 )
 from .survey_utils import (
     SURVEYS_DIR,
-    create_survey_model,
-    generate_survey_doc,
+    render_survey_doc,
+    render_survey_model,
+    write_survey_files,
 )
 from .system_utils import cprint, execute_command, execute_command_with_output

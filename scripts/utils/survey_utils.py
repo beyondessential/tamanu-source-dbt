@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from .dbt_utils import get_dbt_target_arg
@@ -21,93 +22,86 @@ RESERVED_COLUMNS = {
 }
 
 
-def get_surveys_from_deployment():
+SURVEY_DOCS_MARKER = "SURVEY_DOCS_JSON:"
+
+
+def get_survey_docs_from_deployment():
     """
-    Get all surveys from the database using dbt using the get_surveys_list macro.
+    Get every current survey and its question columns from the database in a
+    single dbt call, using the get_all_survey_docs macro. One call rather than
+    one per survey: each dbt invocation pays its own startup, parse and
+    connection, which is what made generation take minutes.
+
     Returns:
-        list: List of tuples containing (id, code, name) for each survey. Empty
-            where the deployment genuinely has no surveys.
+        list: (survey_id, survey_name, columns) for each survey, where columns
+            is a list of (id, code, name) tuples in question order -- empty
+            for a survey with no questions. Empty where the deployment
+            genuinely has no surveys.
     Raises:
-        RuntimeError: Where the dbt call itself failed, so a database that could
-            not be read is not mistaken for a deployment with no surveys.
+        RuntimeError: Where the dbt call itself failed, or its output carried
+            no payload, so a database that could not be read is not mistaken
+            for a deployment with no surveys or questions (#896).
     """
-    surveys = []
-    cmd = f"dbt run-operation get_surveys_list --profiles-dir config{get_dbt_target_arg()}"
+    cmd = f"dbt run-operation get_all_survey_docs --profiles-dir config{get_dbt_target_arg()}"
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
         if not result or result.returncode != 0:
             if result:
-                cprint(f"Error running dbt command {cmd}:\n {result.stderr}", "error")
-            raise RuntimeError("Failed to list the deployment's surveys -- see error logged above")
+                # dbt reports its own errors on stdout, not stderr.
+                cprint(f"Error running dbt command {cmd}:\n {result.stdout}{result.stderr}", "error")
+            raise RuntimeError("Failed to read the deployment's surveys -- see error logged above")
 
+        payload = None
         for line in (result.stdout + result.stderr).split("\n"):
-            if "SURVEY_DATA:" in line:
-                parts = line.split("SURVEY_DATA:")[1].split("|")
-                if len(parts) == 2:
-                    surveys.append(tuple(part.strip() for part in parts))
+            if SURVEY_DOCS_MARKER in line:
+                payload = json.loads(line.split(SURVEY_DOCS_MARKER, 1)[1])
+                break
+        if payload is None:
+            raise RuntimeError(
+                f"dbt ran but logged no {SURVEY_DOCS_MARKER} payload for the deployment's surveys"
+            )
 
-        return surveys
+        columns_by_survey = {}
+        for survey_id, column_id, code, name in payload["columns"]:
+            columns_by_survey.setdefault(survey_id, []).append((column_id, code, name))
+
+        return [
+            (survey_id, survey_name, columns_by_survey.get(survey_id, []))
+            for survey_id, survey_name in payload["surveys"]
+        ]
 
     except RuntimeError:
         raise
     except Exception as e:
         cprint(f"Error getting surveys from dbt: {e}", "error")
-        raise RuntimeError(f"Failed to list the deployment's surveys: {e}") from e
+        raise RuntimeError(f"Failed to read the deployment's surveys: {e}") from e
 
 
-def get_survey_columns_from_deployment(survey_id):
+def render_survey_model(survey_id):
     """
-    Get survey column information from the database using dbt using the get_survey_docs macro.
+    Render the model SQL for a survey, built on the existing get_survey macro.
     Args:
         survey_id (str): The survey identifier
-
     Returns:
-        list | None: List of tuples containing (id, code, name) for each survey
-            question when the dbt call succeeds -- empty when the survey
-            genuinely has no questions. None when the dbt call itself failed;
-            callers must not treat that the same as "no questions" (see #896).
+        str: The model file content
     """
-    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config{get_dbt_target_arg()}'
-
-    try:
-        result = execute_command_with_output(cmd, cwd=BASE_DIR)
-
-        if not result or result.returncode != 0:
-            if result:
-                cprint(f"Error running dbt command: {result.stderr}", "error")
-            return None
-
-        columns = []
-        for line in (result.stdout + result.stderr).split("\n"):
-            if "COLUMN_DATA:" in line:
-                parts = line.split("COLUMN_DATA:")[1].split("|")
-                if len(parts) == 3:
-                    columns.append(tuple(part.strip() for part in parts))
-
-        return columns
-
-    except Exception as e:
-        cprint(f"Error getting survey columns from dbt: {e}", "error")
-        return None
+    return f"({{{{ get_survey('{survey_id}') }}}})"
 
 
-def generate_survey_doc(survey_id, survey_name, columns):
+def render_survey_doc(survey_id, survey_name, columns):
     """
-    Create a YML documentation file and MD documentation file for a survey.
+    Render the MD and YML documentation for a survey.
     Args:
         survey_id (str): The survey identifier
         survey_name (str): The survey name
         columns (list): List of (id, code, name) tuples for the survey's questions,
-            from get_survey_columns_from_deployment. Callers must skip generation
+            from get_survey_docs_from_deployment. Callers must skip generation
             entirely for a survey with no questions -- see generate_survey_models.main().
     Returns:
-        str: Path to the created documentation file
+        tuple[str, str]: The MD and YML file content
     """
-    ensure_directory_exists(str(SURVEYS_DIR))
-
     survey_id = survey_id.replace("-", "_")
 
-    doc = ""
     yml = f"""version: 2
 
 models:
@@ -127,49 +121,79 @@ models:
       - name: result_text
         description: '{{{{ doc("survey_responses__result_text") }}}}'"""
 
-    doc_parts = []  
-    yml_parts = []  
-    for id, code, name in columns:  
+    doc_parts = []
+    yml_parts = []
+    for id, code, name in columns:
         doc_id = id.replace("-", "_")
         prefixed_doc_id = f"{survey_id}__{doc_id}"
-        
+
         column_name = f"{code}_answer" if code in RESERVED_COLUMNS else code
 
         doc_parts.append(f"""{{% docs {prefixed_doc_id} %}}\n{name.replace('"', "'")}\n{{% enddocs %}}""")
         yml_parts.append(f"""\n      - name: {column_name}\n        description: '{{{{ doc("{prefixed_doc_id}") }}}}'""")
 
-    # Assuming 'doc' was initialized as an empty string  
-    doc = "\n\n".join(doc_parts)  
-    # 'yml' is appended to  
-    yml += "".join(yml_parts)  
+    doc = "\n\n".join(doc_parts)
+    yml += "".join(yml_parts)
 
-    md_file = SURVEYS_DIR / f"{survey_id}.md"
-    write_file(str(md_file), doc.strip() + "\n")
-    cprint(f"Created MD docs: {md_file}", "success")
-
-    yml_file = SURVEYS_DIR / f"{survey_id}.yml"
-    write_file(str(yml_file), yml.strip() + "\n")
-    cprint(f"Created DBT docs: {yml_file}", "success")
-
-    return str(yml_file)
+    return doc.strip() + "\n", yml.strip() + "\n"
 
 
-def create_survey_model(survey_id):
+def write_survey_files(survey_id, survey_name, columns):
     """
-    Create an individual survey model file using the existing get_survey macro.
+    Write a survey's model, MD and YML files, skipping any whose content on
+    disk already matches -- so an unchanged survey is never rewritten, and the
+    diff after a run holds only the surveys whose questions actually changed.
     Args:
         survey_id (str): The survey identifier
+        survey_name (str): The survey name
+        columns (list): List of (id, code, name) tuples for the survey's questions
+    Returns:
+        list[str]: Paths of the files that were written
     """
     ensure_directory_exists(str(SURVEYS_DIR))
 
-    model = f"{survey_id.replace('-', '_')}.sql"
-    path = SURVEYS_DIR / model
+    normalised_id = survey_id.replace("-", "_")
+    md, yml = render_survey_doc(survey_id, survey_name, columns)
+    contents = {
+        "sql": render_survey_model(survey_id),
+        "md": md,
+        "yml": yml,
+    }
 
-    content = f"({{{{ get_survey('{survey_id}') }}}})"
+    written = []
+    for suffix, content in contents.items():
+        path = SURVEYS_DIR / f"{normalised_id}.{suffix}"
+        # newline="" so a CRLF file on disk reads back as CRLF and is
+        # rewritten as LF, rather than being normalised away and kept.
+        if path.exists():
+            with open(path, "r", encoding="utf-8", newline="") as f:
+                if f.read() == content:
+                    continue
+        write_file(str(path), content)
+        written.append(str(path))
+    return written
 
-    write_file(str(path), content)
-    cprint(f"Created model: {path}", "success")
-    return str(path)
+
+def find_orphaned_survey_models(survey_ids):
+    """
+    Find generated survey models in models/surveys/ for surveys that are no
+    longer current (retired or deleted). These are reported, not removed: a
+    retired survey still holds responses, and a report may still select from
+    its model.
+    Args:
+        survey_ids (iterable[str]): Identifiers of every current survey
+    Returns:
+        list[str]: Paths of generated model files with no current survey
+    """
+    if not SURVEYS_DIR.exists():
+        return []
+    current = {survey_id.replace("-", "_") for survey_id in survey_ids}
+    return sorted(
+        str(path)
+        for path in SURVEYS_DIR.glob("*.sql")
+        if path.stem not in current
+        and path.read_text(encoding="utf-8").startswith("({{ get_survey('")
+    )
 
 
 def remove_survey_files(survey_id):

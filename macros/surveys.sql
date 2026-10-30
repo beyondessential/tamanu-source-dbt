@@ -1,16 +1,20 @@
-{% macro get_survey_columns(survey_id) %}
+{#- With a survey_id, that survey's question columns (used by get_survey).
+    Without one, every survey's, led by survey_id -- one query for the lot, so
+    the model generator needs a single dbt call rather than one per survey. -#}
+{% macro get_survey_columns(survey_id=none) %}
     SELECT 
+        {% if survey_id is none %}ssc.survey_id,{% endif %}
         pde.id, 
         replace(pde.code,'-','_') as code,
         pde.name 
     FROM {{ source('tamanu', 'survey_screen_components') }} ssc
     JOIN {{ source('tamanu', 'program_data_elements') }} pde
     ON ssc.data_element_id = pde.id
-    WHERE ssc.survey_id = '{{ survey_id }}'
-    AND ssc.deleted_at IS null
+    WHERE ssc.deleted_at IS null
+    {% if survey_id is not none %}AND ssc.survey_id = '{{ survey_id }}'{% endif %}
     AND pde.type != 'Instruction'
     AND pde.deleted_at IS NULL
-    ORDER BY ssc.screen_index, ssc.component_index
+    ORDER BY {% if survey_id is none %}ssc.survey_id, {% endif %}ssc.screen_index, ssc.component_index
 {% endmacro %}
 
 {% macro get_survey(survey_id) %}
@@ -38,32 +42,31 @@
     GROUP BY sra.response_id, sr.encounter_id, sr.start_datetime, sr.end_datetime, sr.result_text, e.patient_id
 {% endmacro %}
 
-{% macro get_surveys_list() %}
-    {% set query %}
+{#- Every current survey and all of their question columns, logged as one
+    JSON payload for scripts/generate_survey_models.py. JSON rather than
+    delimited lines so a name holding '|' or a line break survives intact. -#}
+{% macro get_all_survey_docs() %}
+    {% set surveys_query %}
         SELECT 
             id,
             name
         FROM {{ source('tamanu', 'surveys') }}
         WHERE deleted_at IS NULL
         AND visibility_status = 'current'
+        ORDER BY id
     {% endset %}
-    
-    {% set results = run_query(query) %}
-    
-    {% if execute %}
-        {% for row in results %}
-            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=true) }}
-        {% endfor %}
-    {% endif %}
-{% endmacro %} 
 
-{% macro get_survey_docs(survey_id) %}
-    {%- set query = get_survey_columns(survey_id) -%}
-    {% set results = run_query(query) %}
-    
     {% if execute %}
-        {% for row in results %}
-            {{ log("COLUMN_DATA:" ~ row[0] ~ "|" ~ row[1] ~ "|" ~ row[2], info=true) }}
+        {% set surveys = [] %}
+        {% for row in run_query(surveys_query) %}
+            {% do surveys.append([row[0], row[1]]) %}
         {% endfor %}
+
+        {% set columns = [] %}
+        {% for row in run_query(get_survey_columns()) %}
+            {% do columns.append([row[0], row[1], row[2], row[3]]) %}
+        {% endfor %}
+
+        {{ log("SURVEY_DOCS_JSON:" ~ tojson({"surveys": surveys, "columns": columns}), info=true) }}
     {% endif %}
 {% endmacro %}
