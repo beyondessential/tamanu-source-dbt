@@ -10,6 +10,9 @@ unit_tests:
       in the base. BL-016: is_readmission_within_30_days passes through unchanged -- it is
       computed in the base, not recomputed here. The inclusion rule and the derived timings are
       covered by ac_009_int__inpatient_admission_derivations against int__inpatient_admission.
+      BL-019: inp_1 is closed, so it also emits an inpatient_separation row, with patient_days
+      and is_same_day NULL on both inpatient_admission rows; patient_days/is_same_day
+      correctness is covered by ac_023_metric__inpatient_admission_patient_days.
 
     given:
       - input: ref('int__inpatient_admission')
@@ -24,6 +27,9 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'inpatient_admission' as metric_id, null::text as variant_id, 'inp_1'::varchar as subject_id, '2024-06-01 10:00'::timestamp as period_start, '2024-06-05 12:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 33 as age_years, 'dept_med' as admission_ward_id, 'General practitioner referral' as admission_source, false as is_admitted_via_emergency, 'I Certain infectious and parasitic diseases' as principal_diagnosis__icd10_chapter, 'Home' as discharge_disposition, 5880.00::numeric as length_of_stay__minutes, false as is_readmission_within_30_days, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation
+        select 'inpatient_admission' as metric_id, null::text as variant_id, 'inp_1'::varchar as subject_id, '2024-06-01 10:00'::timestamp as period_start, '2024-06-05 12:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 33 as age_years, 'dept_med' as admission_ward_id, 'General practitioner referral' as admission_source, false as is_admitted_via_emergency, 'I Certain infectious and parasitic diseases' as principal_diagnosis__icd10_chapter, 'Home' as discharge_disposition, 5880.00::numeric as length_of_stay__minutes, false as is_readmission_within_30_days, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation, null::integer as patient_days, null::boolean as is_same_day
         union all
-        select 'inpatient_admission', null::text, 'inp_3'::varchar, '2024-06-03 14:00'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 33, null::text, 'Not recorded', false, 'Not recorded', 'Not recorded', null::numeric, true, 'Not recorded', 'Not recorded'
+        select 'inpatient_admission', null::text, 'inp_3'::varchar, '2024-06-03 14:00'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 33, null::text, 'Not recorded', false, 'Not recorded', 'Not recorded', null::numeric, true, 'Not recorded', 'Not recorded', null::integer, null::boolean
+        union all
+        -- BL-019: inp_1 is closed, so it also emits an inpatient_separation row.
+        select 'inpatient_separation', null::text, 'inp_1'::varchar, '2024-06-05 12:00'::timestamp, '2024-06-05 12:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 33, 'dept_med', 'General practitioner referral', false, 'I Certain infectious and parasitic diseases', 'Home', 5880.00::numeric, false, 'Dr Ana', 'Dentist, Medical Officer', 4::integer, false
