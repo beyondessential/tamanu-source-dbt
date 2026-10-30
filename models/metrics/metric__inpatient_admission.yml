@@ -51,6 +51,7 @@ models:
               arguments:
                 values:
                   - inpatient_admission
+                  - inpatient_separation
           # Definition <-> implementation link: every metric__ view asserts its ids are
           # registered in the canonical registry.
           - relationships:
@@ -186,3 +187,13 @@ models:
         data_tests:
           - not_null:
               name: ac_019_metric__inpatient_admission_clinician_designation_not_null
+      - name: patient_days
+        data_type: integer
+        description: "{{ doc('metric__inpatient_admission__patient_days') }}"
+        # BL-021: populated only on inpatient_separation, NULL on inpatient_admission --
+        # covered by the singular test's AC-022, not a column-grain generic test.
+      - name: is_same_day
+        data_type: boolean
+        description: "{{ doc('metric__inpatient_admission__is_same_day') }}"
+        # BL-022: populated only on inpatient_separation, NULL on inpatient_admission --
+        # covered by the singular test's AC-022, not a column-grain generic test.
