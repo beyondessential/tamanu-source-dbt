@@ -1,7 +1,7 @@
 -- metric__inpatient_admission -- D5 metric view for the inpatient admission and separation
 -- indicators registered in documentations/metrics/*.yml: inpatient_admission,
 -- inpatient_separation.
--- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-017, BL-019..BL-024).
+-- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-024).
 --
 -- Per-admission (subject) grain: one row per hospital admission or separation, value_numeric
 -- 1, so a consumer aggregates at whatever grain it needs -- any subset of the
@@ -50,7 +50,9 @@ common as (
         -- BL-016
         is_readmission_within_30_days,
         -- BL-017
-        clinician
+        clinician,
+        -- BL-018
+        clinician_designation
     from inpatient_admission
 )
 
@@ -88,8 +90,8 @@ select
     discharge_disposition,
     length_of_stay__minutes,
     is_readmission_within_30_days,
-    -- BL-017
     clinician,
+    clinician_designation,
     null::integer as patient_days,
     null::boolean as is_same_day
 from common
@@ -119,6 +121,7 @@ select
     length_of_stay__minutes,
     is_readmission_within_30_days,
     clinician,
+    clinician_designation,
     -- BL-021: whole days between the admission and separation dates, minimum 1 (AIHW METeOR
     -- 270045), both dates taken from the naive local timestamps. A separation date earlier
     -- than the admission date is corrupt data (OQ-005) -- the -1 sentinel surfaces it rather

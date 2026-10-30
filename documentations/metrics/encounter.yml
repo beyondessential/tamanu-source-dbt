@@ -13,7 +13,8 @@ metrics:
   name: Encounters
   description: >-
     Encounters of every type, one row per encounter, with the facility, encounter type,
-    department and clinician on the encounter record.
+    department and clinician on the encounter record, the clinician's designations and the
+    location's group.
   numerator_description: >-
     Encounters, counted once each on the date the encounter started
   denominator_description: null
@@ -37,6 +38,9 @@ metrics:
   - visit_concept_name
   - department
   - clinician
+  - clinician_designation
+  - location_group_id
+  - location_group_name
   - sex
   variant_of: null
   owner: bes-maui
