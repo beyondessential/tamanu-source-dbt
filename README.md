@@ -15,21 +15,31 @@ To use these AI rules with Cline or Cursor, you need to create a symbolic link t
 ## Local development
 
 Python and dbt dependencies are managed with [uv](https://docs.astral.sh/uv/) from
-`pyproject.toml`. Run project commands through `uv run` — it syncs the virtualenv
-automatically — and pass `--env-file .env` to load the database credentials and
-`DBT_PROFILES_DIR`:
+`pyproject.toml`. Database credentials aren't kept on disk: run project commands through the
+secrets runner, which loads them when the command runs and passes them only to that command:
 
 ```bash
-cp .env.example .env                    # then fill in real values
-uv run --env-file .env dbt deps         # one-time: install dbt packages (from hub.getdbt.com)
-uv run --env-file .env dbt build        # build + test
-uv run --env-file .env sqlfluff lint models
+uv run python .maui/scripts/with_secrets.py --check                  # what resolves, and from where (names only)
+uv run python .maui/scripts/with_secrets.py -- dbt deps              # one-time: install dbt packages
+uv run python .maui/scripts/with_secrets.py -- dbt build             # build + test
+uv run python .maui/scripts/with_secrets.py -- sqlfluff lint models
 ```
 
-`.env` (copied from `.env.example`) provides the DB connection vars plus
-`DBT_PROFILES_DIR=config`, so dbt finds `config/profiles.yml` without a `--profiles-dir`
-flag. Run `dbt deps` once before building or linting. There is no session-start hook or
-manual `venv` activation — `uv run` handles the environment.
+[`secret-sources.ini`](secret-sources.ini) says where each value comes from:
+
+- **Release database** (`TAMANU_RL_*`, the `reporting_release` and `analytics` targets): the
+  release server on the `main` Kubernetes cluster for the version being worked on. The series
+  comes from `version:` in `dbt_project.yml`, the same one `prepare_release.py` checks:
+  `tamanu-release-2-66` on `main`, `tamanu-release-2-64` on `2.64`. To build against another
+  version deliberately, set `MAUI_RELEASE_SERIES=2.64` for the run.
+- **Demo database** (`TAMANU_DEMO_*`): the generic `tamanu-playground-demo` server on the `demo`
+  Kubernetes cluster, database name included — no Bitwarden needed for either target.
+- **`DBT_PROFILES_DIR=config`**, so dbt finds `config/profiles.yml` without a `--profiles-dir` flag.
+
+One-time setup (kubectl contexts) is in
+`.maui/knowledge/standards/secrets-conventions.md`. Run `dbt deps` once before building or
+linting. There is no session-start hook or manual `venv` activation — the runner puts `.venv`
+first on `PATH`. A `.env` used with `uv run --env-file .env <cmd>` still works while you migrate.
 
 ## SQL linting
 
