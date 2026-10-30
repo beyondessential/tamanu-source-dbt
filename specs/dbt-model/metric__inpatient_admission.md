@@ -102,6 +102,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | `length_of_stay__minutes` | numeric | Admission to hospital discharge, in minutes (BL-015). NULL while the encounter is open. A measure, not a dimension |
 | `is_readmission_within_30_days` | boolean | True where the same patient's immediately preceding admission discharged no more than 30 days before this one started (BL-016). Always populated (AC-017) |
 | `clinician` | text | The admission segment's own clinician, resolved to a name (BL-017). Never NULL |
+| `clinician_designation` | text | That clinician's designations, comma-separated (BL-018). Never NULL |
 | `patient_days` | integer | AIHW patient days (BL-021). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 | `is_same_day` | boolean | Admitted and separated on the same date (BL-022). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 
@@ -207,9 +208,15 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 - **BL-017 (clinician attribution):** `clinician` is the admission segment's own
   `provider_id`, resolved to a name through `ref__provider` for an "admissions by clinician"
   card. Never NULL -- falls back to `'Not recorded'`, the same convention `admission_source`
-  (BL-012) and `discharge_disposition` (BL-014) use (MAUI-6909). This branch has not yet
-  received the `clinician_designation` column (BL-018 upstream, MAUI-6906) -- `inpatient_separation`
-  carries only `clinician` until that lands here.
+  (BL-012) and `discharge_disposition` (BL-014) use (MAUI-6909).
+- **BL-018 (clinician designation):** `clinician_designation` is the designations of that same
+  clinician -- their `user_designations`, resolved through `reference_data` of type `designation`
+  by the shared `user_designation_names()` macro, alphabetical and joined with `', '`. The macro
+  collapses designations to one row per user before the join, so a clinician with several cannot
+  fan an admission out. These are the clinician's current designations: Tamanu keeps no history.
+  Never NULL -- `'Not recorded'` where the clinician has none or there is no clinician. Kept
+  apart from `clinician` so a filter by name is unaffected; a consumer combines the two for
+  display (MAUI-6906).
 - **BL-019 (separations):** the model emits one `inpatient_separation` row for each
   `inpatient_admission` row whose `period_end` is not NULL, with `value_numeric` = `1`.
 - **BL-020 (separation reporting period):** on an `inpatient_separation` row, `period_start` and
@@ -256,6 +263,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | AC-016 | The D5 projection over the shared base: `period_end` is the encounter end, the diagnosis code is grouped to its chapter here, an open encounter yields NULL `period_end` | BL-002, BL-011, BL-013 | unit test `ac_016_metric__inpatient_admission_projection` |
 | AC-017 | `is_readmission_within_30_days` is `not_null` | BL-016 | `not_null` |
 | AC-018 | `clinician` is `not_null` | BL-017 | `not_null` |
+| AC-019 | `clinician_designation` is `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none and no clinician read `'Not recorded'` | BL-018 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
 | AC-020 | The `inpatient_separation` rows are exactly the `inpatient_admission` rows with a `period_end`, one each, by `subject_id` | BL-019, BL-024 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
 | AC-021 | On `inpatient_separation`, `period_start` = `period_end` and is `not_null` | BL-020 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
 | AC-022 | `patient_days` and `is_same_day` are populated on every `inpatient_separation` row, with `patient_days` either `-1` (corrupt period) or `≥ 1`, and both are NULL on every `inpatient_admission` row | BL-021, BL-022 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
@@ -266,9 +274,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 
 Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: count`,
 `subject_grain: visit`, `status: approved`, `spec_path` pointing here, with
-`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician` --
-no `clinician_designation` here, since this branch has not received that column (BL-018 upstream,
-MAUI-6906):
+`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician,clinician_designation`:
 
 - `inpatient_admission` — as registered.
 - `inpatient_separation` — `definition_source: AIHW`, `definition_source_code: '270045'`, its
@@ -291,6 +297,7 @@ MAUI-6906):
 | `reference_data` | `bases/` | Referral source and disposition names (BL-012, BL-014) |
 | `diagnosis__icd10_chapter` | `macros/` | ICD-10 chapter grouping (BL-013) |
 | `ref__provider` | `ref/` | Clinician name of the admission segment's own provider (BL-017) |
+| `user_designations`, `reference_data` | `bases/` | That clinician's designations, via `user_designation_names()` (BL-018) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
