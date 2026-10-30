@@ -32,10 +32,11 @@ uv run python .maui/scripts/with_secrets.py -- sqlfluff lint models
   comes from `version:` in `dbt_project.yml`, the same one `prepare_release.py` checks:
   `tamanu-release-2-66` on `main`, `tamanu-release-2-64` on `2.64`. To build against another
   version deliberately, set `MAUI_RELEASE_SERIES=2.64` for the run.
-- **Demo database** (`TAMANU_DEMO_*`): the `tamanu-source-dbt.env` Bitwarden note.
+- **Demo database** (`TAMANU_DEMO_*`): the generic `tamanu-playground-demo` server on the `demo`
+  Kubernetes cluster, database name included — no Bitwarden needed for either target.
 - **`DBT_PROFILES_DIR=config`**, so dbt finds `config/profiles.yml` without a `--profiles-dir` flag.
 
-One-time setup (Bitwarden CLI, kubectl contexts) is in
+One-time setup (kubectl contexts) is in
 `.maui/knowledge/standards/secrets-conventions.md`. Run `dbt deps` once before building or
 linting. There is no session-start hook or manual `venv` activation — the runner puts `.venv`
 first on `PATH`. A `.env` used with `uv run --env-file .env <cmd>` still works while you migrate.
