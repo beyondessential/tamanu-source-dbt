@@ -150,9 +150,11 @@ bundle rather than a seed table:
 Run project commands through the secrets runner, `uv run python .maui/scripts/with_secrets.py
 -- <cmd>`. It loads the DB credentials plus `DBT_PROFILES_DIR` from the sources in
 `secret-sources.ini` for that command only (so no `--profiles-dir` flag is needed). Run
-`dbt deps` through it once first. If it reports a locked vault, ask the developer to export
-`BW_SESSION`; never unlock it yourself. Where a developer still keeps a `.env`, the legacy
-`uv run --env-file .env <cmd>` works the same way. See README § Local development.
+`dbt deps` through it once first. If it reports a locked vault, ask the developer to run the
+command themselves in an interactive terminal; never unlock it yourself, and never suggest
+exporting `BW_SESSION` — that hands out standing whole-vault access the script is built to
+avoid. Where a developer still keeps a `.env`, the legacy `uv run --env-file .env <cmd>` works
+the same way. See README § Local development.
 
 ## Pre-commit checklist
 
