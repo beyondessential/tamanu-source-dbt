@@ -4,24 +4,31 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `metric__inpatient_admission` (1 registered indicator) |
+| **Name** | `metric__inpatient_admission` (2 registered indicators) |
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
-| **Status** | `implemented` |
+| **Status** | `approved` (BL-001–BL-024 implemented and reviewed; registry status `approved`) |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
+| **Linear** | MAUI-7069 (separations and AIHW length of stay) |
 
-Canonical definition for `inpatient_admission`: one row per hospital admission, spanning
-becoming an inpatient to discharge from hospital, at minute resolution.
+Canonical definition for `inpatient_admission` and `inpatient_separation`: one row per hospital
+admission, and one per separation (a finished stay), at minute resolution.
 
 ## Purpose
 
-Inpatient (ward) activity at a Tamanu facility, one row per admission.
+Inpatient (ward) activity at a Tamanu facility: admissions, and separations with their length of
+stay in AIHW patient days.
 
 | `metric_id` | Unit | Measures |
 |---|---|---|
-| `inpatient_admission` | count | Inpatient admissions (always 1 per row; grouping on `period_start` counts admissions, grouping on `period_end` counts discharges over the same rows — there is no separate discharge `metric_id`) |
+| `inpatient_admission` | count | Inpatient admissions, dated by when the patient became an inpatient (always 1 per row) |
+| `inpatient_separation` | count | Separations — AIHW "hospitalisations" — dated by separation, carrying `patient_days` (always 1 per row). Average length of stay is formed from it by the consumer (BL-023) |
+
+`length_of_stay__minutes` (BES, elapsed time) and `patient_days` (AIHW) are alternative
+definitions of length of stay. Both are emitted, and each deployment's consumer chooses which
+one it presents.
 
 **Clinical context.** An admission is counted whether the encounter started that way or became
 one later. A direct admission's first segment is already typed as inpatient (concept 9201). An
@@ -50,10 +57,13 @@ expected to reconcile row-for-row.
 | `period_end` | AIHW | [270025](https://meteor.aihw.gov.au/content/270025) | Episode of admitted patient care — separation date |
 | `is_admitted_via_emergency` / `admission_source` | AIHW | [269976](https://meteor.aihw.gov.au/content/269976) | Episode of admitted patient care — admission mode. Diverges — DV-001 |
 | `discharge_disposition` | AIHW | [722644](https://meteor.aihw.gov.au/content/722644) | Episode of admitted patient care — mode of separation |
+| `patient_days` | AIHW | [270045](https://meteor.aihw.gov.au/content/270045) | Number of patient days |
+| Average length of stay | AIHW | [Length of stay](https://www.aihw.gov.au/hospitals/topics/admitted-patient-care/length-of-stay) | Total patient days ÷ hospitalisations, for separations in the period |
 
 AIHW's admission/separation concepts are per-episode-of-care (a stay under one care type);
 Tamanu's inpatient encounter is not subdivided by care type, so one encounter is one episode
-here. `length_of_stay__minutes` is a BES composition over the admission/separation dates.
+here (DV-004). `length_of_stay__minutes` is a BES composition over the admission/separation
+dates; `patient_days` is the AIHW measure.
 
 ## Grain
 
@@ -68,15 +78,16 @@ model unrestricted (BL-010).
 
 ## Output schema
 
-D5 wide format, plus eight disaggregation/measure columns.
+D5 wide format, plus the disaggregation/measure columns below. Every column is on both
+`metric_id`s unless noted.
 
 | Column | Type | Notes |
 |---|---|---|
-| `metric_id` | text | Always `inpatient_admission`. FK → `metric_definitions.metric_id` (AC-003) |
+| `metric_id` | text | `inpatient_admission` or `inpatient_separation`. FK → `metric_definitions.metric_id` (AC-003) |
 | `variant_id` | text | NULL — this is the standard definition |
 | `subject_id` | varchar(255) | Encounter id (BL-011). `not_null` (AC-008) |
-| `period_start` | timestamp | Became an inpatient (BL-002) |
-| `period_end` | timestamp | Encounter end — hospital discharge. NULL while the encounter is open (BL-002) |
+| `period_start` | timestamp | `inpatient_admission`: became an inpatient (BL-002). `inpatient_separation`: separation (BL-020) |
+| `period_end` | timestamp | Encounter end — hospital discharge. NULL while the encounter is open (BL-002). Never NULL on `inpatient_separation` |
 | `period_granularity` | text | Constant `'minute'` |
 | `value_numeric` | numeric | Always `1` (AC-006). Additive, so a data table sums it |
 | `value_boolean` | boolean | NULL — this metric's value is the count in `value_numeric` |
@@ -92,6 +103,8 @@ D5 wide format, plus eight disaggregation/measure columns.
 | `is_readmission_within_30_days` | boolean | True where the same patient's immediately preceding admission discharged no more than 30 days before this one started (BL-016). Always populated (AC-017) |
 | `clinician` | text | The admission segment's own clinician, resolved to a name (BL-017). Never NULL |
 | `clinician_designation` | text | That clinician's designations, comma-separated (BL-018). Never NULL |
+| `patient_days` | integer | AIHW patient days (BL-021). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
+| `is_same_day` | boolean | Admitted and separated on the same date (BL-022). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 
 ## Business logic
 
@@ -106,8 +119,7 @@ D5 wide format, plus eight disaggregation/measure columns.
 
   Every admission is emitted as it happens; the model reads no clock, and a consumer needing
   whole periods applies its own date filter. Grouping on `period_start` bucketed to a period
-  gives admissions in that period; grouping on `period_end` gives discharges — both are the
-  same rows, so there is no separate `metric_id` for discharges.
+  gives admissions in that period. Separations in a period are `inpatient_separation` (BL-019).
 - **BL-003 (inclusion + admission attribution):** an admission is the **earliest** segment of an
   encounter (by `visit_detail_start_datetime`, `visit_detail_id` breaking a tie) whose
   `visit_detail_concept_id = 9201` (Inpatient Visit).
@@ -205,13 +217,36 @@ D5 wide format, plus eight disaggregation/measure columns.
   Never NULL -- `'Not recorded'` where the clinician has none or there is no clinician. Kept
   apart from `clinician` so a filter by name is unaffected; a consumer combines the two for
   display (MAUI-6906).
+- **BL-019 (separations):** the model emits one `inpatient_separation` row for each
+  `inpatient_admission` row whose `period_end` is not NULL, with `value_numeric` = `1`.
+- **BL-020 (separation reporting period):** on an `inpatient_separation` row, `period_start` and
+  `period_end` are both the separation datetime, the admission row's `period_end`.
+- **BL-021 (patient days):** `patient_days` is the separation date minus the admission date in
+  whole days, with a minimum of `1`, both dates taken from the naive local timestamps -- or `-1`
+  where the separation date is earlier than the admission date (a corrupt period, OQ-005).
+- **BL-022 (same-day):** `is_same_day` is true where the admission date and the separation date
+  are equal.
+- **BL-023 (average length of stay is the consumer's):** average length of stay is
+  `sum(patient_days) / sum(value_numeric)` over `inpatient_separation` rows at the consumer's
+  grain, excluding any row where `patient_days = -1` (OQ-005); the overnight average is the same
+  over rows where `is_same_day` is false.
+- **BL-024 (separation disaggregations):** an `inpatient_separation` row carries the same
+  `subject_id`, facility, ward, demographic, clinical and clinician columns as its admission row.
+
+## Divergences from AIHW
+
+| ID | AIHW rule | Here |
+|---|---|---|
+| DV-002 | Leave days are excluded from patient days | Tamanu records no leave of absence, so `patient_days` includes any leave |
+| DV-003 | Patient days of unqualified newborns, hospital boarders and posthumous organ procurement are excluded | Tamanu has no flag for any of the three, so none is excluded |
+| DV-004 | An episode of admitted care ends on a change of care type (statistical separation) | One encounter is one episode; a care-type change within an encounter does not separate |
 
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | One row per `(metric_id, subject_id)` | grain, BL-011 | `dbt_utils.unique_combination_of_columns` (`error`) |
-| AC-002 | `metric_id` is `not_null` and always `inpatient_admission` | BL-001 | `not_null` + `accepted_values` |
+| AC-002 | `metric_id` is `not_null` and one of `inpatient_admission`, `inpatient_separation` | BL-001, BL-019 | `not_null` + `accepted_values` |
 | AC-003 | Every `metric_id` exists in `metric_definitions.metric_id` | BL-001 | `relationships` (`error`) |
 | AC-004 | `period_start` is `not_null` | BL-002 | `not_null` |
 | AC-005 | `period_granularity` is `not_null` and always `'minute'` | BL-002 | `not_null` + `accepted_values` |
@@ -229,12 +264,23 @@ D5 wide format, plus eight disaggregation/measure columns.
 | AC-017 | `is_readmission_within_30_days` is `not_null` | BL-016 | `not_null` |
 | AC-018 | `clinician` is `not_null` | BL-017 | `not_null` |
 | AC-019 | `clinician_designation` is `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none and no clinician read `'Not recorded'` | BL-018 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
+| AC-020 | The `inpatient_separation` rows are exactly the `inpatient_admission` rows with a `period_end`, one each, by `subject_id` | BL-019, BL-024 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
+| AC-021 | On `inpatient_separation`, `period_start` = `period_end` and is `not_null` | BL-020 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
+| AC-022 | `patient_days` and `is_same_day` are populated on every `inpatient_separation` row, with `patient_days` either `-1` (corrupt period) or `≥ 1`, and both are NULL on every `inpatient_admission` row | BL-021, BL-022 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) |
+| AC-023 | Patient days follow METeOR 270045: a stay admitted and separated on one date is 1 day and same-day; an overnight stay under 24 hours crossing midnight is 1 day and not same-day; a stay admitted day 1 and separated day 4 is 3 days; a separation date earlier than the admission date reads `-1` | BL-021, BL-022 | unit test `ac_023_metric__inpatient_admission_patient_days` |
+| AC-024 | An open admission emits an `inpatient_admission` row and no `inpatient_separation` row | BL-019 | unit test `ac_023_metric__inpatient_admission_patient_days` |
 
 ## Registry entry
 
-One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`,
-`status: draft`, `spec_path` pointing here, with
-`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician,clinician_designation`.
+Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: count`,
+`subject_grain: visit`, `status: approved`, `spec_path` pointing here, with
+`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,clinician,clinician_designation`:
+
+- `inpatient_admission` — as registered.
+- `inpatient_separation` — `definition_source: AIHW`, `definition_source_code: '270045'`, its
+  numerator described as separations counted on the separation date, and its description naming
+  average length of stay as `sum(patient_days)` over separations (BL-023), linking the AIHW
+  length-of-stay page. `is_same_day` is added to its disaggregations.
 
 ## Dependencies
 
@@ -256,9 +302,9 @@ One active row — `inpatient_admission`, `kind: metric`, `subject_grain: visit`
 
 ## Consumers
 
-None registered yet — see § Purpose. Once a Tupaia data table or Tamanu report is built over
-this view, add it here, and update `documentations/metrics/inpatient.yml` `status` from
-`draft` to `approved` once the model output has been reviewed against the registered shape.
+| Consumer | Reads |
+|---|---|
+| `tupaia-data-product` inpatient data tables (`inpatient_admission__standard`, `__maternity`, `__clinician`, `__clinician_name`) | `inpatient_admission`; its length-of-stay and discharge-disposition cards move to `inpatient_separation` once BL-019–BL-024 land |
 
 **What a consumer must do:**
 
@@ -292,3 +338,10 @@ this view, add it here, and update `documentations/metrics/inpatient.yml` `statu
 | OQ-002 | Bed occupancy / census (`data-staging`'s `ds__inpatient_census`, `fct_bed_occupancy`) is a point-in-time snapshot, not a per-event grain — it does not fit the D5 metric shape used here and would need a date-spine model. Deferred out of scope for this spec. | bes-maui | TBD |
 | OQ-003 | Which Tupaia dashboard or Tamanu report is the first consumer, and does it need `admission_ward_id` resolved to a name at the data-table layer (as `principal_diagnosis__icd10_chapter` etc. are)? | bes-maui | TBD |
 | OQ-004 | `is_readmission_within_30_days` (BL-016) counts a readmission to *any* facility in the deployment, not just the discharging one — a patient discharged from one facility and admitted to another 10 days later still counts. Revisit if a consumer specifically wants same-facility-only. | bes-maui | TBD |
+| OQ-005 | On release 2.54's data, 502 closed admissions have a recorded discharge earlier than the recorded admission (already flagged by AC-012/AC-015 as WARN). BL-021 reads these as `patient_days = -1` rather than excluding the row, so a consumer must filter `patient_days = -1` out of its average length of stay (BL-023) rather than this being handled upstream. Revisit whether the row should be excluded entirely once the source data issue is understood, and whether `-1` needs promoting to a registered disaggregation of its own. | bes-maui | TBD |
+
+## Change log
+
+| Date | Change |
+|---|---|
+| 2026-10-29 | BL-019–BL-024: `inpatient_separation` metric_id with AIHW patient days and same-day flag, so average length of stay follows the AIHW definition; BL-002 points separations at it. DV-002–DV-004 record the AIHW rules Tamanu data cannot follow (MAUI-7069). |

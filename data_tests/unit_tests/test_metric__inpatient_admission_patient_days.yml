@@ -1,0 +1,47 @@
+unit_tests:
+  - name: ac_023_metric__inpatient_admission_patient_days
+    model: metric__inpatient_admission
+    description: >
+      BL-021/BL-022/AC-023: patient days follow METeOR 270045. inp_sameday is admitted and
+      separated on one calendar date -- 1 patient day, same-day. inp_overnight crosses
+      midnight in under 24 hours -- the dates differ, so 1 patient day but not same-day.
+      inp_multiday spans three nights -- 3 patient days, not same-day. inp_corrupt has a
+      recorded separation date earlier than its recorded admission date -- patient_days reads
+      the -1 sentinel rather than a floored 1 (OQ-005). AC-024: inp_open has no visit_end, so
+      it emits only its inpatient_admission row and no inpatient_separation row.
+
+    given:
+      - input: ref('int__inpatient_admission')
+        format: sql
+        rows: |
+          select 'inp_sameday' as visit_occurrence_id, '2024-06-01 08:00'::timestamp as admission_start__datetime, '2024-06-01 18:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_1' as admission_ward_id, 'male' as sex, 40 as age_years, 'Not recorded' as clinician, 'Not recorded' as clinician_designation, false as is_admitted_via_emergency, 'Not recorded' as admission_source, 600.00::numeric as length_of_stay__minutes, null::text as principal_diagnosis_code, 'Not recorded' as discharge_disposition, false as is_readmission_within_30_days
+          union all
+          select 'inp_overnight', '2024-06-01 23:00'::timestamp, '2024-06-02 01:00'::timestamp, 'fac_1', 'dept_1', 'male', 40, 'Not recorded', 'Not recorded', false, 'Not recorded', 120.00::numeric, null::text, 'Not recorded', false
+          union all
+          select 'inp_multiday', '2024-06-01 09:00'::timestamp, '2024-06-04 09:00'::timestamp, 'fac_1', 'dept_1', 'male', 40, 'Not recorded', 'Not recorded', false, 'Not recorded', 4320.00::numeric, null::text, 'Not recorded', false
+          union all
+          select 'inp_corrupt', '2024-06-10 09:00'::timestamp, '2024-06-05 09:00'::timestamp, 'fac_1', 'dept_1', 'male', 40, 'Not recorded', 'Not recorded', false, 'Not recorded', -7200.00::numeric, null::text, 'Not recorded', false
+          union all
+          select 'inp_open', '2024-06-05 10:00'::timestamp, null::timestamp, 'fac_1', 'dept_1', 'male', 40, 'Not recorded', 'Not recorded', false, 'Not recorded', null::numeric, null::text, 'Not recorded', false
+
+    expect:
+      format: sql
+      rows: |
+        select 'inpatient_admission' as metric_id, null::text as variant_id, 'inp_sameday'::varchar as subject_id, '2024-06-01 08:00'::timestamp as period_start, '2024-06-01 18:00'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 40 as age_years, 'dept_1' as admission_ward_id, 'Not recorded' as admission_source, false as is_admitted_via_emergency, 'Not recorded' as principal_diagnosis__icd10_chapter, 'Not recorded' as discharge_disposition, 600.00::numeric as length_of_stay__minutes, false as is_readmission_within_30_days, 'Not recorded' as clinician, 'Not recorded' as clinician_designation, null::integer as patient_days, null::boolean as is_same_day
+        union all
+        select 'inpatient_separation', null::text, 'inp_sameday'::varchar, '2024-06-01 18:00'::timestamp, '2024-06-01 18:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', 600.00::numeric, false, 'Not recorded', 'Not recorded', 1::integer, true
+        union all
+        select 'inpatient_admission', null::text, 'inp_overnight'::varchar, '2024-06-01 23:00'::timestamp, '2024-06-02 01:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', 120.00::numeric, false, 'Not recorded', 'Not recorded', null::integer, null::boolean
+        union all
+        select 'inpatient_separation', null::text, 'inp_overnight'::varchar, '2024-06-02 01:00'::timestamp, '2024-06-02 01:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', 120.00::numeric, false, 'Not recorded', 'Not recorded', 1::integer, false
+        union all
+        select 'inpatient_admission', null::text, 'inp_multiday'::varchar, '2024-06-01 09:00'::timestamp, '2024-06-04 09:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', 4320.00::numeric, false, 'Not recorded', 'Not recorded', null::integer, null::boolean
+        union all
+        select 'inpatient_separation', null::text, 'inp_multiday'::varchar, '2024-06-04 09:00'::timestamp, '2024-06-04 09:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', 4320.00::numeric, false, 'Not recorded', 'Not recorded', 3::integer, false
+        union all
+        select 'inpatient_admission', null::text, 'inp_corrupt'::varchar, '2024-06-10 09:00'::timestamp, '2024-06-05 09:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', -7200.00::numeric, false, 'Not recorded', 'Not recorded', null::integer, null::boolean
+        union all
+        -- OQ-005: a separation date earlier than the admission date reads the -1 sentinel.
+        select 'inpatient_separation', null::text, 'inp_corrupt'::varchar, '2024-06-05 09:00'::timestamp, '2024-06-05 09:00'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', -7200.00::numeric, false, 'Not recorded', 'Not recorded', -1::integer, false
+        union all
+        select 'inpatient_admission', null::text, 'inp_open'::varchar, '2024-06-05 10:00'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'male', 40, 'dept_1', 'Not recorded', false, 'Not recorded', 'Not recorded', null::numeric, false, 'Not recorded', 'Not recorded', null::integer, null::boolean
