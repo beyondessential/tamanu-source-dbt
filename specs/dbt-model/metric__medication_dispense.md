@@ -80,6 +80,7 @@ so this model carries no `data_table_*` meta.
 - **BL-008 (registration and count):** `metric_id` is the constant `'medication_dispense'` and `value_numeric` the constant `1`, so a consumer sums it to count dispenses at any grain.
 - **BL-009 (quantity):** `quantity` is the dispense's own recorded quantity.
 - **BL-010 (indexes):** where the model is materialised as a table, it carries a btree index on `(visit_detail_concept_id, period_start)` and one on `period_start`.
+- **BL-011 (empty-deployment rowcount):** AC-006's `fail_calc` is overridden to `coalesce(sum(coalesce(diff_count, 0)), 0)`. `dbt_utils.equal_rowcount`'s default `fail_calc` sums `diff_count` with no fallback for the result having no rows at all, which happens when both this model and `medication_dispenses` are empty (a deployment with no pharmacy orders, hence no dispenses, e.g. Tuvalu, Samoa, Kiribati) -- `SUM` over zero rows is `NULL`, not `0`, which dbt cannot record as an integer failure count and errors the whole `dbt build` run rather than passing or warning normally (MAUI-7078). Same bug and same fix as `metric__pharmacy_order`'s AC-007 (BL-012/BL-013 there).
 
 ## Acceptance criteria
 
@@ -90,7 +91,7 @@ so this model carries no `data_table_*` meta.
 | AC-003 | `period_start`, `period_granularity`, `value_numeric`, `facility_id`, `encounter_type`, `visit_detail_concept_id`, `visit_detail_concept_name`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-002, BL-004 -- BL-008 | `not_null` |
 | AC-004 | `visit_detail_concept_id` is one of 9201, 9202, 9203, 0 | BL-005 | `accepted_values` |
 | AC-005 | A drug line dispensed twice has a row on each dispense's own date, a substituted drug reports the dispensed medication, an unresolved medication falls back to `'Not recorded'`, a dispense takes the concept, name and facility of the segment active when it was dispensed (an ED-ordered line dispensed after admission is 9201, at the ward's facility rather than the ED's or the order's own), a dispense predating its segments clamps to the first, a dispense whose encounter has no segment is dropped, a dispense whose segment's location does not resolve is dropped, and a dispense whose segment's department does not resolve falls back to `'Not recorded'` | BL-001 -- BL-007, BL-009 | unit test `ac_005_metric__medication_dispense_segment` |
-| AC-006 | Every dispense in `medication_dispenses` has a row, so a dispense dropped for want of a segment, patient or location is surfaced | BL-001, BL-003, BL-004 | `dbt_utils.equal_rowcount` against `medication_dispenses` (`warn`) |
+| AC-006 | Every dispense in `medication_dispenses` has a row, so a dispense dropped for want of a segment, patient or location is surfaced. A deployment where both sides are empty passes (0 dropped), rather than erroring the build | BL-001, BL-003, BL-004, BL-011 | `dbt_utils.equal_rowcount` against `medication_dispenses` (`warn`) |
 
 ## Registry entry
 
@@ -129,4 +130,5 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_dispense`, `k
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-30 | Maui team | AC-006's `fail_calc` coalesced to 0 so a deployment with no dispenses passes instead of erroring the build (BL-011, MAUI-7078) |
 | 2026-10-02 | Maui team | Initial draft (MAUI-6907) |
