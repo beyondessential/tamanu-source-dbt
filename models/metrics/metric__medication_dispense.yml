@@ -34,10 +34,18 @@ models:
       # AC-006: every dispense resolves to a segment, patient and location, so the row count
       # matches the source. A shortfall is dispenses the inner joins dropped -- most likely an
       # encounter with no segment, or a segment whose care_site_id does not resolve to a location.
+      # BL-011: dbt_utils.equal_rowcount's default fail_calc sums diff_count with no fallback for
+      # a deployment where both sides are legitimately empty (e.g. no pharmacy orders, hence no
+      # dispenses) -- SUM over zero rows is NULL, not 0, which dbt cannot record as a test's
+      # failure count and errors the whole build. The outer coalesce makes "both sides empty" a
+      # normal pass. Same bug and same fix as ac_metric__pharmacy_order_every_drug_line
+      # (metric__pharmacy_order.yml, BL-012/013).
       - dbt_utils.equal_rowcount:
           name: ac_006_metric__medication_dispense_every_dispense
           arguments:
             compare_model: ref('medication_dispenses')
+          config:
+            fail_calc: coalesce(sum(coalesce(diff_count, 0)), 0)
     columns:
       - name: metric_id
         data_type: text
