@@ -196,5 +196,20 @@ where trim(t.d) not in (
         'invoice_status',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
-        'department_id'
+        'department_id',
+        -- active_user's and user_login's user columns: the user's designation as id and
+        -- readable label, their role, and their visibility status, so a consumer can restrict
+        -- to activated, non-admin users.
+        'designation_id',
+        'designation',
+        'role_id',
+        'visibility_status',
+        -- hiv_viral_load's test type and the result's suppression status
+        'test_type',
+        'suppression_status',
+        -- sti_*_screening_coverage's flag: whether the key population patient was tested.
+        'tested',
+        -- inpatient_separation's same-day flag: admitted and discharged on the same day, so
+        -- an overnight-only average length of stay can exclude those stays.
+        'is_same_day'
     )
