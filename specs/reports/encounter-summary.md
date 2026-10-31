@@ -27,6 +27,8 @@ of the body.
 One row per encounter in the requested sensitivity partition whose `date_field` falls in
 the report window. `date_field` is `start_datetime` or `end_datetime`; the `end_datetime`
 variant additionally requires a non-null `end_datetime`, so open encounters are absent.
+Every join that could fan out is held to one row per encounter: the discharge by the
+`discharges` base model, the triage by BL-021.
 
 ## Inputs
 
@@ -36,7 +38,8 @@ variant additionally requires a non-null `end_datetime`, so open encounters are 
 | `is_sensitive` | Facility partition. `false` = non-sensitive facilities only |
 
 Parameters: `fromDate`, `toDate`, `facilityId`, `patientBillingTypeId`,
-`supervisingClinicianId`, `departmentId`, `locationGroupId`.
+`supervisingClinicianId`, `departmentId`, `locationGroupId`, `encounterTypeGroup`
+(one of `outpatient`, `emergency`, `inpatient`).
 
 ## The core's output contract
 
@@ -57,12 +60,11 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   they cannot be applied before it, and a caller filtering the same way needs them.
 - **BL-005:** The `parameter()` filters live in the core — in the scope CTE and the outer
   `where`. The core is therefore report-layer, and lives under `macros/reports/`.
-- **BL-006:** Seven outputs leave the core already formatted, in the viewer's timezone,
-  applied inside the CTEs: `discharge_department_datetime`,
-  `discharge_location_datetime`, `discharge_location_group_datetime`; the
-  `department_datetimes`, `location_datetimes` and `location_group_datetimes` arrays; and
-  the dates embedded in the `procedures` and `notes` text. A caller needing a different
-  format for any of these has no raw column to select, and must change the CTEs.
+- **BL-006:** Eight outputs leave the core already formatted inside the CTEs, so a caller
+  needing another format has no raw column to select and must change the CTEs: the three
+  `discharge_*_datetime` columns, the three `*_datetimes` arrays, and the dates embedded in
+  the `procedures` and `notes` text. All but the procedures date are also shifted to the
+  viewer's timezone; `procedures.date` is a `date`, so it is formatted as stored.
 - **BL-007:** The history consolidation **left**-joins `users` on
   `encounter_history.updated_by_id`, which is nullable at source unlike `department_id`,
   `location_id` and `examiner_id`, so a history row with no actor is kept and its
@@ -79,7 +81,7 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   zone is the `:timezone` bind, so no index — not even an expression index — can match
   it, and the planner has no statistics for the expression either. The bad row estimate
   that follows is the more expensive half: the scope CTE is materialised (it is
-  referenced ten times, so Postgres 12+ never inlines it) and every clinical aggregate
+  referenced twelve times, so Postgres 12+ never inlines it) and every clinical aggregate
   CTE downstream inherits the estimate as a hash join over a full table scan.
 
   **The candidate bounds fix the scan, not the estimate.** The exact predicates remain,
@@ -143,6 +145,88 @@ text. Each caller applies its own `translate_label`, `to_char` and timezone shif
   a panel (Tamanu 2.66 lets one request hold both). Items order by `collected_datetime`, then
   name, so a request's several items have a deterministic order.
 
+### Resolution rules
+
+These were tested before they were written down. They describe behaviour the report has
+had since it was split into a core and a wrapper; recording them changed no output.
+
+- **BL-013:** An encounter with no consolidated history row — its history missing, or
+  entirely unresolved (BL-014) — is **dropped** by the final select's inner join to
+  `encounter_changes`, with no warning.
+- **BL-014:** A history row whose department or location does not resolve — missing, or
+  soft-deleted, which counts as deleted — is **dropped** by the consolidation's inner joins
+  to the base models, so its change is absent from every movement-history column (the
+  actor join is the exception, BL-007). An encounter left with no resolved row falls to
+  BL-013, and the `logical__encounter_summary_by_*` checks drop the same rows.
+- **BL-015:** `diagnoses` and `diagnosis_codes` leave out diagnoses whose `certainty` is
+  `disproven` or `error`, as Tamanu does. They order primary first, then by `datetime`.
+- **BL-016:** `notes` leaves out `system` notes. The filter runs after BL-011's revision
+  ranking, so a note whose current revision is a system note is left out entirely.
+- **BL-017:** The location-group history records a group only when it **changes** from
+  the previous history row's (`lag()` by `datetime`), plus the creation row, so a move
+  between two rooms of one ward is not a new area. The same rule drives `location_groups`,
+  `location_group_datetimes`, `location_group_ids` and `discharge_location_group_datetime`.
+- **BL-018:** `encountering_clinician` is the actor of the encounter's **creation** row
+  (null `change_type`, earliest `datetime`), not `examiner_id`, which is
+  `supervising_clinician`; a creation row with no actor gives null (BL-007).
+- **BL-019:** Each `discharge_*_datetime` is the `datetime` of the last history row that
+  changed that dimension. With no such change it **falls back** to the creation row's
+  `datetime`, the time the patient was first assigned, not to null.
+- **BL-020:** The wrapper applies four presentation rules of its own:
+    - **Length of stay** is the number of calendar days between start and end, taken in
+      the viewer's timezone, and **at least 1**: a same-day encounter is 1 day, not 0. It
+      is null for an open encounter.
+    - **Age** is whole years at the encounter's **start**, not at the run date.
+    - **Notes** longer than 32,000 characters are cropped to 32,000 and prefixed with a
+      notice that the cell was cropped. 32,767 is Excel's cell limit, and the notice and
+      separator must fit.
+    - **Triage waiting time** is `hh:mm:ss` between triage and its close, and null unless
+      the close is after the triage.
+
+### Aggregate scope
+
+- **BL-021:** The triage is the encounter's **earliest**, by `(triage_datetime, id)`. Tamanu
+  has no unique constraint on `triages.encounter_id`, so without this a second triage would
+  duplicate the encounter's row; earliest mirrors the `discharges` base model.
+- **BL-022:** `imaging_requests` lists only live requests: `cancelled`, `deleted` and
+  `entered_in_error` are left out (Tamanu's imaging statuses use underscores, unlike lab's).
+- **BL-023:** `medications` lists **every** prescription on the encounter in prescription
+  order, discontinued ones included, each with its discontinued flag and reason.
+- **BL-024:** `vaccinations` lists only `GIVEN` administrations, including those given
+  elsewhere, since the text carries no status. `NOT_GIVEN` and `RECORDED_IN_ERROR` are left
+  out, and so is `HISTORICAL`, which Tamanu assigns to a `NOT_GIVEN` record once the same
+  scheduled dose is later given (`patientVaccine.js`) — it is a superseded refusal, not a
+  past dose.
+
+### Encounter type group filter
+
+- **BL-025:** An encounter is `outpatient` or `emergency` when its first `encounter_history`
+  row, by `datetime` then `id`, maps to visit concept 9202 or 9203 in `map__omop_visit_type`,
+  and `inpatient` when any of its rows maps to 9201. An encounter can be both `emergency` and
+  `inpatient`, and a `surveyResponse` encounter is in no group.
+- **BL-026:** `encounterTypeGroup` keeps an encounter that belongs to the selected group. With
+  nothing selected, no encounter is filtered out.
+- **BL-027:** `encounter_history` is read once per run, in `history_in_scope`, which both the
+  history consolidation and BL-025's classification read from.
+
+## Relationship to the visit metrics
+
+BL-025 makes the filter classify an encounter exactly as `metric__outpatient_visit`,
+`metric__emergency_visit` and `metric__inpatient_admission` do, which are the sources of the
+Tupaia outpatient, emergency and inpatient counts. A filtered row count still differs from
+those metrics where the two scope encounters differently:
+
+- The report window filters on the encounter's `date_field`. `metric__inpatient_admission` is
+  dated by the start of the admission segment, so an encounter admitted after the day it
+  started falls in different periods.
+- The standard report excludes sensitive facilities and the sensitive one includes only them.
+  The metrics apply no sensitivity partition.
+- The metrics take the facility from the qualifying segment's location. The report takes it
+  from the encounter.
+- An encounter with no `encounter_history` rows, such as a migrated encounter loaded without
+  them, is absent from the report. The metrics classify it from the encounter's own
+  `encounter_type`.
+
 ## Output
 
 Patient: `display_id`, `first_name`, `last_name`, `date_of_birth`, `sex`, `ethnicity`,
@@ -200,7 +284,7 @@ not expected to agree and should not be reconciled.
 | AC-002 | The core emits `encounter_id` and `patient_id`. | BL-001 | Structural — the four report models drop both columns, so no report-level test can assert it. A caller selecting from the core is the only observer. |
 | AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
 | AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
-| AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_by_start_date_excludes_sensitive_facilities` |
+| AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_start_excludes_sensitive` (the `false` direction) and `test_encounter_summary_start_sensitive_variant` (the `true` direction). Both give the other facility's encounter an `encounter_history` row, so it reaches the partition rather than being dropped by BL-013; each fails when the partition predicate in `encounters_core` is removed. |
 | AC-006 | An encounter whose every history row has a null actor still appears, with a null clinician. | BL-007 | `test_encounter_summary_null_actor_history` (enc_001) |
 | AC-007 | Adding the candidate bounds changes no row, for any date field, window or viewer timezone. | BL-008 | 96 scenarios (6 windows × 8 timezones × 2 date fields, including both DST transitions and the UTC+14/UTC-11 pair) compared by `except` both directions on a 300k-row fixture; zero divergences. Recorded on the PR — the compile-only branch is unreachable from dbt, so no unit test can assert it. |
 | AC-008 | An encounter whose recorded end precedes its own start is still returned by the by-end-date report. | BL-008 | `test_enc_summary_end_before_start` — verified to fail when the `start_date` arm of the disjunction is removed |
@@ -212,14 +296,48 @@ not expected to agree and should not be reconciled.
 | AC-014 | `notes` is no longer read in full. | BL-009 | `EXPLAIN (ANALYZE)` on the same fixture, best of 5 warm: 7d 1418→12ms, 1mo 984→49ms, 3mo 964→119ms, 12mo 1080→378ms. Under worst-case physical layout (`record_id` correlation −0.003) the 12-month case is ~9% slower and every narrower window is 2.6–41× faster. Not unit-testable; re-measure on a replica. |
 | AC-015 | Each note aggregate reads a note's current revision: an edit replaces the text it revised, a same-second edit resolves on `created_datetime`, and an edited imaging note contributes only its current text. | BL-010, BL-011 | `test_enc_summary_encounter_notes`, `test_enc_summary_imaging_notes` |
 | AC-016 | A pre-2.66 single-panel request lists only its panel; a request holding a panel and an individual test lists both, alphabetically; a cancelled request lists nothing. | BL-012 | `test_encounter_summary_lab_requests` |
+| AC-017 | An encounter with no history row, or whose only row does not resolve, is not reported. | BL-013 | `test_encounter_summary_history_consolidation` (enc_002, enc_003) — fails when `encounter_changes` is left-joined |
+| AC-018 | A history change to a department or location that does not resolve leaves no trace in the movement history or discharge times. | BL-014 | `test_encounter_summary_history_consolidation` (enc_001) — fails when the history's `departments` / `locations` joins are left joins |
+| AC-019 | `disproven` and `error` diagnoses are left out; the rest order primary first, then by time. | BL-015 | `test_encounter_summary_excludes_disproven_and_error_diagnoses` — fails when the certainty filter is removed |
+| AC-020 | A `system` note does not appear in `notes`. | BL-016 | `test_enc_summary_encounter_notes` — fails when the filter is removed |
+| AC-021 | A move between two locations of one group adds a location but not an area, and leaves the area's discharge time at the creation row. | BL-017 | `test_encounter_summary_history_consolidation` (enc_001) — fails when the dedup is removed |
+| AC-022 | The clinician is the creation row's actor, not a later actor. | BL-018 | `test_encounter_summary_history_consolidation` (enc_001) — fails when any row's actor is taken |
+| AC-023 | A discharge time with no matching change is the creation row's time, and with changes is the last change's time. | BL-019 | `test_enc_summary_discharge_datetime_fallback`, `test_enc_summary_discharge_datetime_with_changes`. Removing the fallback fails most encounter summary fixtures, since most have no changes. |
+| AC-024 | Length of stay is at least 1 and null for an open encounter; age is taken at the start; notes are cropped at 32,000 characters. | BL-020 | Partly. Length of stay: `test_enc_summary_discharge_datetime_fallback` and three others fail at a floor of 0. Age: every fixture asserts a value, but none is built so that age at start and age at end differ. Crop: only the short side — `test_enc_summary_encounter_notes` fails if the threshold drops, but no fixture holds a note over 32,000 characters, so the crop itself is not asserted. |
+| AC-025 | An encounter with two triages is one row, carrying the earlier triage. | BL-021 | `test_encounter_summary_aggregate_scope` — fails without the dedup |
+| AC-026 | Cancelled, deleted and entered-in-error imaging requests are not listed. | BL-022 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
+| AC-027 | A discontinued prescription is listed, flagged, in prescription order. | BL-023 | `test_encounter_summary_aggregate_scope` |
+| AC-028 | Only `GIVEN` vaccines are listed. | BL-024 | `test_encounter_summary_aggregate_scope` — fails without the status filter |
+| AC-029 | `emergency` keeps an encounter that started as an emergency type, including one later admitted, and drops one that started in clinic and ended as an emergency. A same-datetime tie resolves on the history `id`. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_emergency` |
+| AC-030 | `inpatient` keeps any encounter with an admission row. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_inpatient` |
+| AC-031 | `outpatient` keeps an encounter that started as an outpatient type, whatever its type at discharge. | BL-025, BL-026 | `test_encounter_summary_encounter_type_filter_outpatient` |
+| AC-032 | With no group selected every encounter is returned, including one in no group. | BL-026 | `test_encounter_summary_encounter_type_filter_unset` |
+| AC-033 | With no group selected the output is unchanged by BL-025–BL-027, and the plan reads `encounter_history` once with or without a group selected. | BL-026, BL-027 | Row-level `except all` both directions against the release database, both date fields, 7-day, 3-month and full windows, every group; `EXPLAIN (ANALYZE)` counts the `encounter_history` scans. Recorded on the PR. |
 
 ## Open questions
 
 - **OQ-005** *(owner: Maui team; due: when the encounter summary is next profiled)* —
-  BL-010 gives the three note aggregates a deterministic tiebreaker, and BL-012 the lab
-  aggregate. The diagnosis, prescription, vaccination and procedure aggregates have the same
-  latent tie and did not get one, because this change does not perturb their input order and widening the
-  diff further was not worth it. They remain non-deterministic on tied timestamps.
+  Several orderings are not deterministic. BL-010 gives the three note aggregates a
+  tiebreaker, and BL-012 the lab aggregate. The rest are unchanged:
+    - `encounter_imaging_requests` has **no** `order by` at all. Requests on one encounter
+      concatenate in whatever order the plan produces, so the column can differ between runs
+      with no change to the data. This is the most exposed.
+    - The `procedures` aggregate orders by `procedures.date`, a `date`. Two procedures on the
+      same day tie, which is the ordinary case, not an edge case.
+    - The diagnosis, prescription and vaccination aggregates order by a timestamp alone, so
+      they tie only on same-second rows.
+    - The history aggregates in `encounter_changes` (the movement-history strings, their
+      `*_datetimes` and id arrays, and the encounter-type progressions) order by `datetime`
+      alone. A same-second pair of history rows can swap. The `lag()` and `row_number()` in
+      `encounter_history_consolidated` order the same way, so the same tie can also change
+      the location-group dedup (BL-017).
+    - The wrapper's `order by <date_field> desc` has no tiebreak, so encounters sharing a
+      timestamp come out in any order.
+
+  None of these was fixed when BL-010 and BL-012 were, because those changes did not
+  perturb these inputs and widening the diff was not worth it. Each fix is a deterministic
+  `order by` tiebreak (for example `id`). It changes no row's content, but it can change
+  the order within a cell, so it is a visible change and wants its own PR.
 
 ## Change log
 
@@ -232,3 +350,6 @@ not expected to agree and should not be reconciled.
 | 2026-09-21 | Forward-ported BL-008/009/010 from `2.54` (#1382, #1391). Numbered to avoid BL-007 and AC-006, which `main` already used for the history-actor left join, so the two lines stayed mergeable. |
 | 2026-09-27 | BL-011: every note aggregate reads each note's current revision (`notes__revision_rank`), so an edited imaging note no longer contributes the text it replaced. BL-010: same-second notes order by `created_datetime`. |
 | 2026-10-15 | BL-012: `lab_requests` follows Tamanu 2.66's one-to-many panel structure — each panel request by name plus the tests not attributed to a panel — and orders ties by name (MAUI-6163). |
+| 2026-10-15 | MAUI-7011, from the 2.66 conformance review. BL-006 corrected: eight formatted outputs, not seven, and the procedures date is formatted but not shifted. BL-013–BL-020 record resolution and presentation rules that were tested but unwritten, with `test_encounter_summary_history_consolidation` added for the four no test asserted. AC-005 now cites the test names, and its `false`-direction fixture gives the sensitive encounter a history row so it no longer passes vacuously. OQ-005 now lists every non-deterministic ordering. The `logical__encounter_summary_by_*` checks no longer inner-join the history actor, which contradicted BL-007. Output unchanged. |
+| 2026-10-15 | MAUI-7011 follow-up. **Output changes:** `vaccinations` lists only `GIVEN` administrations (BL-024) — in the 2.66 release DB 519 of 1,057 records were `NOT_GIVEN` and read as given; and an encounter with several triages is one row (BL-021), which changes nothing where triages are already unique. BL-022 and BL-023 record existing imaging and medication behaviour. BL-014 states that soft-deleted departments and locations count as deleted, and the logical checks now drop those history rows too. BL-008's count of scope-CTE references corrected (now twelve). |
+| 2026-10-28 | BL-025/BL-026: `encounterTypeGroup` filter, classified as the visit metrics behind the Tupaia counts classify an encounter rather than by its type at discharge (MAUI-7063). BL-027: `encounter_history` read once and shared. Numbered to avoid BL-012–BL-024 and AC-016–AC-028, already used by `main`. |

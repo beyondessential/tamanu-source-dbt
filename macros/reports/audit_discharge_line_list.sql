@@ -1,10 +1,29 @@
 {% macro audit_discharge_line_list_report(is_sensitive=false) %}
 
-{% set dataset = 'ds__sensitive_discharge_audit' if is_sensitive else 'ds__discharge_audit' %}
-
 -- Discharge Audit Line List
 -- One row per discharged encounter, filtered on when the discharge was recorded in
 -- Tamanu rather than the discharge date entered on the form.
+--
+-- BL-013: candidate discharges are those with a logged change between fromDate less two days
+-- and toDate plus three days, deployment-local time -- read from the thin, window-free
+-- discharges_change_events base so the predicate reaches the (table_name, record_id) index
+-- rather than forcing discharge_audit_dataset's change-log aggregation to run over the whole
+-- change log. The window is widened because the candidate compares deployment time while
+-- BL-007's exact filter compares the viewer's selected timezone, up to 26 hours apart. BL-007
+-- re-applies the exact filter below, so correctness never depends on the candidate step being
+-- exact.
+
+{%- set from_bound = date_param_bound('fromDate', default_value='2024-01-01') -%}
+{%- set to_bound = date_param_bound('toDate', default_value='2024-01-31') -%}
+
+{%- set candidate_filter -%}
+c.discharge_id in (
+    select c2.discharge_id
+    from {{ ref('discharges_change_events') }} c2
+    where c2.logged_at >= {{ candidate_window_from(from_bound) }}
+        and c2.logged_at < {{ candidate_window_to(to_bound) }}
+)
+{%- endset %}
 
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
@@ -30,7 +49,9 @@ select
     primary_diagnoses_codes as "{{ translate_label('diagnosesPrimaryCodes') }}",
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}",
     secondary_diagnoses_codes as "{{ translate_label('diagnosesSecondaryCodes') }}"
-from {{ ref(dataset) }}
+from (
+    {{ discharge_audit_dataset(is_sensitive=is_sensitive, record_id_filter=candidate_filter) }}
+) audit
 where
     -- BL-007: the date range filters on when the discharge was recorded, not on the
     -- discharge date entered on the form. getReportQueryReplacements binds :fromDate to the

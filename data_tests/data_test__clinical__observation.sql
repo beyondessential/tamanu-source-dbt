@@ -17,4 +17,7 @@ ac_008 as (
         and observation_type_source_value != 'vaccination not given'
 )
 
-select observation_id, failed_ac from ac_008
+select
+    observation_id,
+    failed_ac
+from ac_008

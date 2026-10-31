@@ -1,9 +1,9 @@
 select
     md.metric_id,
-    trim(d) as offending_disaggregation
+    trim(t.d) as offending_disaggregation
 from {{ ref('metric_definitions') }} md
-cross join lateral unnest(string_to_array(md.disaggregations, ',')) as t(d)
-where trim(d) not in (
+cross join lateral unnest(string_to_array(md.disaggregations, ',')) t (d)
+where trim(t.d) not in (
         'age_group',
         'age_group__who_primary_classification',
         'sex',
@@ -114,6 +114,8 @@ where trim(d) not in (
         -- the same reasoning as diagnosis/diagnosis_code above.
         'procedure',
         'procedure_code',
+        -- pharmacy_order's whether-any-fill-recorded flag, the companion of its time-to-first-dispense
+        'has_dispense',
         -- procedure's completion flag
         'is_completed',
         -- lab_test's test identity, as code and as readable label. Emitted ungrouped: test
@@ -121,6 +123,11 @@ where trim(d) not in (
         -- applied downstream rather than registered here.
         'lab_order',
         'lab_order_code',
+        -- lab_order's request lifecycle status and, for a cancelled request, its reason, as recorded
+        'request_status',
+        'cancellation_reason',
+        -- prescription_discontinuation's recorded reason, as recorded and ungrouped
+        'discontinuing_reason',
         -- lab_test's request-level category (e.g. Haematology), as recorded
         'lab_test_category',
         -- lab_test's panel flag: whether the test arrived as part of a bundled panel order, so
@@ -136,6 +143,16 @@ where trim(d) not in (
         'patient_location_id',
         -- immunisation_refusal's reason a dose was not given
         'reason',
+        -- immunisation_dose's / _refusal's scheduled vaccine: its drug id, display label and
+        -- schedule category (Routine / Catchup / Campaign), from vaccine_schedules (MAUI-7034)
+        'vaccine_id',
+        'vaccine_label',
+        'vaccine_category',
+        -- immunisation_dose's / _refusal's given-elsewhere flag: recorded as given outside this
+        -- deployment's service, counted but flagged so a consumer can exclude it (MAUI-7034).
+        -- facility_source and location_group_id, alongside it, are already allowed (death's;
+        -- encounter's).
+        'is_given_elsewhere',
         -- pharmacy_order's ordered drug, as code and as readable label. Emitted ungrouped: no
         -- therapeutic-class reference mapping exists yet, the same reasoning
         -- diagnosis/diagnosis_code and procedure/procedure_code use.
@@ -179,5 +196,20 @@ where trim(d) not in (
         'invoice_status',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
-        'department_id'
+        'department_id',
+        -- active_user's and user_login's user columns: the user's designation as id and
+        -- readable label, their role, and their visibility status, so a consumer can restrict
+        -- to activated, non-admin users.
+        'designation_id',
+        'designation',
+        'role_id',
+        'visibility_status',
+        -- hiv_viral_load's test type and the result's suppression status
+        'test_type',
+        'suppression_status',
+        -- sti_*_screening_coverage's flag: whether the key population patient was tested.
+        'tested',
+        -- inpatient_separation's same-day flag: admitted and discharged on the same day, so
+        -- an overnight-only average length of stay can exclude those stays.
+        'is_same_day'
     )

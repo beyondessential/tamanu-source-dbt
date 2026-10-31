@@ -48,8 +48,17 @@ ac_005 as (
         and insurance_coverage > discounted_total
 )
 
-select id, failed_ac from ac_003
+select
+    id,
+    failed_ac
+from ac_003
 union all
-select id, failed_ac from ac_004
+select
+    id,
+    failed_ac
+from ac_004
 union all
-select id, failed_ac from ac_005
+select
+    id,
+    failed_ac
+from ac_005

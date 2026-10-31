@@ -22,6 +22,16 @@ history as (
     select * from {{ ref('int__registration_status_history') }}
 ),
 
+-- latest history row per episode, for AC-015's comparison against the episode's current state
+latest_history as (
+    select distinct on (episode_id)
+        episode_id,
+        registration_status,
+        clinical_status_id
+    from history
+    order by episode_id asc, change_number desc
+),
+
 -- the only kind of history entry that may close an episode: a logged transition to inactive.
 -- The synthetic current-state row is stamped at the enrolment datetime where nothing was
 -- logged, so drawing an end from it would close the episode at its own start (BL-004, BL-006)
@@ -141,13 +151,14 @@ ac_018 as (
 
 -- AC-013: one history row per registration per logged moment per source (BL-012). A logged
 -- change and the synthetic current-state row share an instant where the log has lost an
--- entry, and history_source is what tells them apart (BL-014)
+-- entry, and history_source is what tells them apart (BL-014). Keyed on the UTC instant, since
+-- two changes an hour apart at a DST fall-back share a local logged_at
 ac_013 as (
     select
         episode_id,
         'AC-013' as failed_ac
     from history
-    group by episode_id, logged_at, history_source
+    group by episode_id, logged_at_utc, history_source
     having count(*) > 1
 ),
 
@@ -170,14 +181,7 @@ ac_015 as (
         e.episode_id,
         'AC-015' as failed_ac
     from episode e
-    join (
-        select distinct on (episode_id)
-            episode_id,
-            registration_status,
-            clinical_status_id
-        from history
-        order by episode_id, change_number desc
-    ) latest on latest.episode_id = e.episode_id
+    join latest_history latest on latest.episode_id = e.episode_id
     where latest.registration_status is distinct from e.registration_status
         or latest.clinical_status_id is distinct from e.clinical_status_id
 ),
@@ -194,14 +198,57 @@ ac_009 as (
     where coalesce(e.currently_at_type, '') != coalesce(pr.currently_at_type, '')
 )
 
-select episode_id, failed_ac from ac_005
-union all select episode_id, failed_ac from ac_006
-union all select episode_id, failed_ac from ac_007
-union all select episode_id, failed_ac from ac_008
-union all select episode_id, failed_ac from ac_009
-union all select episode_id, failed_ac from ac_012
-union all select episode_id, failed_ac from ac_013
-union all select episode_id, failed_ac from ac_014
-union all select episode_id, failed_ac from ac_015
-union all select episode_id, failed_ac from ac_016
-union all select episode_id, failed_ac from ac_018
+select
+    episode_id,
+    failed_ac
+from ac_005
+union all
+select
+    episode_id,
+    failed_ac
+from ac_006
+union all
+select
+    episode_id,
+    failed_ac
+from ac_007
+union all
+select
+    episode_id,
+    failed_ac
+from ac_008
+union all
+select
+    episode_id,
+    failed_ac
+from ac_009
+union all
+select
+    episode_id,
+    failed_ac
+from ac_012
+union all
+select
+    episode_id,
+    failed_ac
+from ac_013
+union all
+select
+    episode_id,
+    failed_ac
+from ac_014
+union all
+select
+    episode_id,
+    failed_ac
+from ac_015
+union all
+select
+    episode_id,
+    failed_ac
+from ac_016
+union all
+select
+    episode_id,
+    failed_ac
+from ac_018

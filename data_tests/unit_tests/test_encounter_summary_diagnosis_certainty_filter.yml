@@ -46,6 +46,7 @@ unit_tests:
         format: sql
         rows: |
           select
+            'eh_001' as id,
             'enc_001' as encounter_id,
             '2024-01-15 10:00:00'::timestamp as datetime,
             null::text[] as change_type,
@@ -54,6 +55,18 @@ unit_tests:
             'dept_001' as department_id,
             'loc_001' as location_id,
             'clinic' as encounter_type
+
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'admission' as local_code, 9201 as concept_id
+          union all select 'clinic', 9202
+          union all select 'imaging', 9202
+          union all select 'vaccination', 9202
+          union all select 'emergency', 9203
+          union all select 'observation', 9203
+          union all select 'triage', 9203
+          union all select 'surveyResponse', 0
 
       - input: ref('users')
         format: sql
@@ -111,7 +124,7 @@ unit_tests:
       - input: ref('triages')
         format: sql
         rows: |
-          select null::text as encounter_id, null::int as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id where false
+          select null::text as id, null::text as encounter_id, null::int as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id where false
 
       - input: ref('discharges')
         format: sql
@@ -142,7 +155,7 @@ unit_tests:
       - input: ref('vaccine_administrations')
         format: sql
         rows: |
-          select null::text as encounter_id, null::text as scheduled_vaccine_id, null::timestamp as datetime where false
+          select null::text as encounter_id, null::text as status, null::text as scheduled_vaccine_id, null::timestamp as datetime where false
 
       - input: ref('vaccine_schedules')
         format: sql

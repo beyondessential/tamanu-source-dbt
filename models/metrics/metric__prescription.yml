@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: metric__prescription
+    description: >-
+      D5 metric view for the prescription indicator registered in
+      documentations/metrics/pharmacy.yml: prescription. Drug prescriptions written against an encounter, one row per encounter prescription, dated to the day the prescription was written. Facility, department and setting are
+      those of the encounter segment active when the event happened.
+    config:
+      tags:
+        - clinical
+    # No data_table_* meta. The Tupaia data tables over this model are configured in
+    # tupaia-data-product at tamanu/data_tables/, one file per data table.
+    meta:
+      owner: bes-maui
+      domain: clinical
+      # Per-event rows carrying sex and age alongside a record id -- no patient name or exact
+      # birth date, the same pair the pharmacy order metrics carry while staying internal.
+      pii: false
+      classification: internal
+    data_tests:
+      # AC-001: one row per event. A duplicate would double-count in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__prescription_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      # AC-006: every encounter prescription resolves to a segment, patient and location, so the
+      # row count matches the source. A shortfall is prescriptions the inner joins dropped.
+      - dbt_utils.equal_rowcount:
+          name: ac_006_metric__prescription_every_event
+          arguments:
+            compare_model: ref('encounter_prescriptions')
+          config:
+            severity: warn
+    columns:
+      - name: metric_id
+        data_type: text
+        description: >-
+          The registered indicator identifier. Always 'prescription'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__prescription_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__prescription_metric_id_values
+              arguments:
+                values:
+                  - prescription
+          - relationships:
+              name: ac_002_metric__prescription_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: period_start
+        data_type: date
+        description: >-
+          the date the prescription was written (`prescriptions.datetime`).
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_period_start_not_null
+      - name: subject_id
+        data_type: character varying
+        description: >-
+          The id of the event the row counts. Unique per metric_id.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_subject_id_not_null
+      - name: period_granularity
+        data_type: text
+        description: >-
+          Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_period_granularity_not_null
+      - name: value_numeric
+        data_type: numeric
+        description: >-
+          Always 1, so a consumer sums it to count events at any grain.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_value_numeric_not_null
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The Tamanu facility id the event is attributed to, from the patient's location when it happened.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_facility_id_not_null
+      - name: encounter_type
+        data_type: character varying(255)
+        description: >-
+          The segment's own encounter_type when the event happened -- finer than visit_detail_concept_id.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_encounter_type_not_null
+      - name: visit_detail_concept_id
+        data_type: integer
+        description: >-
+          The OMOP Visit concept of the segment active when the event happened: 9201 Inpatient
+          Visit, 9202 Outpatient Visit, 9203 Emergency Room Visit or 0 No matching concept. A
+          consumer scopes a setting on this id.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_visit_detail_concept_id_not_null
+          - accepted_values:
+              name: ac_004_metric__prescription_visit_detail_concept_id_values
+              arguments:
+                values: [9201, 9202, 9203, 0]
+                quote: false
+      - name: visit_detail_concept_name
+        data_type: text
+        description: >-
+          The OMOP name of visit_detail_concept_id, the label to show.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_visit_detail_concept_name_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: >-
+          The patient's sex.
+      - name: drug_source_value
+        data_type: text
+        description: >-
+          The code of the prescribed medication. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_drug_source_value_not_null
+      - name: drug_source_name
+        data_type: text
+        description: >-
+          The name of the prescribed medication, the label to rank by. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_drug_source_name_not_null
+      - name: age_years
+        data_type: integer
+        description: >-
+          Age in whole years on the day of the event. Not banded -- the consumer's data table bands it.
+      - name: department
+        data_type: text
+        description: >-
+          The department the patient was under when the event happened. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_003_metric__prescription_department_not_null

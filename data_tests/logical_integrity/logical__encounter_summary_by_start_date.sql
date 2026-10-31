@@ -1,10 +1,18 @@
 with base as (
     select count(distinct e.id) as total_encounters
     from {{ ref('encounters') }} e
+    -- Mirrors the report's history join. No join to users: the report left-joins the
+    -- history actor (BL-007 of specs/reports/encounter-summary.md), so an encounter
+    -- whose history rows carry no actor is still reported, and must still be counted.
     join {{ ref('encounter_history') }} eh
         on eh.encounter_id = e.id
-    join {{ ref('users') }} actor
-        on actor.id = eh.updated_by_id
+    -- BL-014: a history row counts only if its department and location resolve. The base
+    -- models drop soft-deleted rows, which are treated as deleted, so an encounter whose
+    -- every history row points at one is not reported and is not counted (BL-013).
+    join {{ ref('departments') }} eh_dp
+        on eh_dp.id = eh.department_id
+    join {{ ref('locations') }} eh_l
+        on eh_l.id = eh.location_id
     join {{ ref('locations') }} l
         on l.id = e.location_id
     join {{ ref('facilities') }} f

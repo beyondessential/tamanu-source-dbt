@@ -99,5 +99,6 @@ Sequential number of this change for the appointment.
 - 1 = initial creation event
 - 2+ = subsequent modifications
 
-Uses ROW_NUMBER() partitioned by appointment_id and ordered by logged_at.
+Uses ROW_NUMBER() partitioned by appointment_id and ordered by the change's UTC log time, so it
+stays in order across a daylight-saving fall-back where the local modified_datetime repeats an hour.
 {% enddocs %}

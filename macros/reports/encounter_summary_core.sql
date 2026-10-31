@@ -22,10 +22,12 @@
 
     BL-005: the parameter() filters here make this report-layer, hence macros/reports/.
 
-    BL-006: seven outputs are already formatted in the viewer's timezone, applied inside
-    the CTEs -- the three discharge_*_datetime columns, the three *_datetimes arrays, and
-    the dates embedded in the procedures and notes text. A caller needing another format
-    for those must change the CTEs; there is no raw column to select.
+    BL-006: eight outputs are already formatted, applied inside the CTEs -- the three
+    discharge_*_datetime columns, the three *_datetimes arrays, and the dates embedded in
+    the procedures and notes text. Seven are also shifted to the viewer's timezone; the
+    procedures date is not, since procedures.date is a date with no time to shift. A
+    caller needing another format for those must change the CTEs; there is no raw column
+    to select.
 
     BL-008: the date range is filtered twice -- once exactly, on the timezone-converted
     column, and once on the stored character(19) column with the bounds widened two days
@@ -137,6 +139,23 @@ with encounters_in_scope as (
 ),
 
 
+{#- BL-027: the scope's encounter_history rows, read once and shared by
+    encounter_history_consolidated and encounter_type_groups. -#}
+history_in_scope as (
+    select
+        eh.id,
+        eh.encounter_id,
+        eh.datetime,
+        eh.change_type,
+        eh.updated_by_id,
+        eh.department_id,
+        eh.location_id,
+        eh.encounter_type
+    from {{ ref('encounter_history') }} eh
+    join encounters_in_scope eis
+        on eis.encounter_id = eh.encounter_id
+),
+
 {#- Not shared with admissions_dataset's identically named CTE: they differ in drive
     direction, history scope, join strictness, which actor they resolve and both
     row_number() derivations. Enumerated in specs/dbt-model/ds__admissions.md. -#}
@@ -162,14 +181,13 @@ encounter_history_consolidated as (
             partition by eh.encounter_id
             order by eh.datetime
         ) as prev_location_group_id
-    from {{ ref('encounter_history') }} eh
-    join encounters_in_scope eis
-        on eis.encounter_id = eh.encounter_id
+    from history_in_scope eh
     -- BL-007 (specs/reports/encounter-summary.md): eh.updated_by_id is nullable at
     -- source, unlike department_id / location_id / examiner_id, so the actor join is a
     -- left join -- a history row with no actor is kept, with a null clinician name.
     left join {{ ref('users') }} actor
         on actor.id = eh.updated_by_id
+    -- BL-014: a history row whose department or location does not resolve is dropped
     join {{ ref('departments') }} d
         on d.id = eh.department_id
     join {{ ref('locations') }} l
@@ -193,6 +211,7 @@ encounter_changes as (
         ) filter (where change_type is null or 'location' = any(change_type)) as locations,
 
         -- Location group changes: tracks location group changes (only when group actually changes)
+        -- BL-017: a location change within the same group is not a new area
         array_agg(
             to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("datetime_format") }}')
             order by datetime
@@ -249,15 +268,59 @@ encounter_changes as (
             order by datetime
         ) filter (where change_type is null or 'encounter_type' = any(change_type)) as encounter_type_outpatient,
 
-        -- Encountering clinician: actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
+        -- BL-018: encountering clinician is the actor who created the initial encounter record (change_sequence = 1 ensures the creation row is used)
         min(updated_by_name) filter (where change_type is null and change_sequence = 1) as encountering_clinician,
 
-        -- Discharge datetimes: the time the patient was last assigned to each dimension, falls back to encounter start time if never changed
+        -- BL-019: discharge datetimes are the time the patient was last assigned to each dimension, falling back to the creation row's time if never changed
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'department\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_department_datetime,
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type)), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_datetime,
         to_char({{ to_user_selected_timezone('coalesce(max(datetime) filter (where \'location\' = any(change_type) and location_group_id is distinct from prev_location_group_id), min(datetime) filter (where change_type is null))') }}, '{{ var("datetime_format") }}') as discharge_location_group_datetime
     from encounter_history_consolidated
     group by encounter_id
+),
+
+{#- BL-021 (specs/reports/encounter-summary.md): one triage per encounter, the earliest by
+    (triage_datetime, id). Tamanu has no unique constraint on triages.encounter_id, so a
+    second triage would otherwise duplicate the encounter's row. Earliest mirrors the
+    discharges base model, which keeps the earliest discharge for the same reason. -#}
+encounter_triages as (
+    select
+        encounter_id,
+        score,
+        triage_datetime,
+        closed_datetime,
+        arrival_mode_id
+    from (
+        select
+            t.encounter_id,
+            t.score,
+            t.triage_datetime,
+            t.closed_datetime,
+            t.arrival_mode_id,
+            row_number() over (
+                partition by t.encounter_id
+                order by t.triage_datetime, t.id
+            ) as triage_rank
+        from {{ ref('triages') }} t
+        join encounters_in_scope eis
+            on eis.encounter_id = t.encounter_id
+    ) ranked
+    where triage_rank = 1
+),
+
+{# BL-025: outpatient and emergency come from the visit concept of the encounter's first
+   history row, ordered as clinical__visit_detail orders its segments, and inpatient from
+   any admission row. Read from history_in_scope, not encounter_history_consolidated,
+   whose department and location joins can drop the first row and change the answer. #}
+encounter_type_groups as (
+    select
+        eh.encounter_id,
+        (array_agg(vm.concept_id order by eh.datetime, eh.id::varchar))[1] as first_visit_concept_id,
+        coalesce(bool_or(vm.concept_id = 9201), false) as is_admitted
+    from history_in_scope eh
+    left join {{ ref('map__omop_visit_type') }} vm
+        on vm.local_code = eh.encounter_type
+    group by eh.encounter_id
 ),
 
 encounter_diagnoses as (
@@ -283,10 +346,13 @@ encounter_diagnoses as (
         on eis.encounter_id = ed.encounter_id
     join {{ ref('reference_data') }} d
         on d.id = ed.diagnosis_id
+    -- BL-015: disproven and error diagnoses are left out
     where ed.certainty not in ('disproven', 'error')
     group by ed.encounter_id
 ),
 
+-- BL-023 (specs/reports/encounter-summary.md): every prescription on the encounter,
+-- discontinued ones included and flagged as such
 encounter_prescriptions as (
     select
         ep.encounter_id,
@@ -328,6 +394,9 @@ encounter_vaccinations as (
         on sv.id = av.scheduled_vaccine_id
     join {{ ref('reference_data') }} v
         on v.id = sv.vaccine_id
+    -- BL-024 (specs/reports/encounter-summary.md): vaccines given in this encounter only;
+    -- the text carries no status, so a NOT_GIVEN record would otherwise read as given
+    where av.status = 'GIVEN'
     group by av.encounter_id
 ),
 
@@ -337,6 +406,7 @@ encounter_procedures as (
         string_agg(
             concat(
                 'Name: ', proc.name,
+                    -- BL-006: procedures.date is a date, so it is formatted but not timezone-shifted
                 ', Date: ', to_char(p.date, '{{ var("date_format") }}'),
                 ', Location: ', loc.name,
                 ', Notes: ', p.note,
@@ -495,6 +565,7 @@ encounter_notes_deduped as (
     from notes_current
     where
         record_type = 'Encounter'
+        -- BL-016: system notes are left out, after the revision ranking
         and note_type != 'system'
 ),
 
@@ -548,6 +619,7 @@ imaging_request_areas as (
     left join notes_current n
         on n.record_id = ir.id
         and n.record_type = 'ImagingRequest'
+    -- BL-022 (specs/reports/encounter-summary.md): live imaging requests only
     where ir.status not in ('cancelled', 'deleted', 'entered_in_error')
     group by ir.encounter_id, ira.imaging_request_id, ir.imaging_type
 ),
@@ -647,10 +719,13 @@ left join {{ ref('location_groups') }} lg
     on lg.id = l.location_group_id
 left join {{ ref('users') }} c
     on c.id = eis.clinician_id
+-- BL-013: inner join -- an encounter with no resolved history row is not reported
 join encounter_changes ec
     on ec.encounter_id = eis.encounter_id
-left join {{ ref('triages') }} t
+left join encounter_triages t
     on t.encounter_id = eis.encounter_id
+left join encounter_type_groups etg
+    on etg.encounter_id = eis.encounter_id
 left join {{ ref('discharges') }} d
     on d.encounter_id = eis.encounter_id
 left join {{ ref('patient_additional_data') }} pad
@@ -694,6 +769,16 @@ where
     and case
         when {{ parameter('locationGroupId') }} is null then true
         else {{ parameter('locationGroupId') }} = any(ec.location_group_ids::text [])
+    end
+    -- BL-026: an encounter is kept when it belongs to the selected group
+    and case
+        when {{ parameter('encounterTypeGroup') }} is null then true
+        when {{ parameter('encounterTypeGroup') }} = 'outpatient'
+            then etg.first_visit_concept_id = 9202 -- OMOP 'Outpatient Visit'
+        when {{ parameter('encounterTypeGroup') }} = 'emergency'
+            then etg.first_visit_concept_id = 9203 -- OMOP 'Emergency Room Visit'
+        when {{ parameter('encounterTypeGroup') }} = 'inpatient'
+            then etg.is_admitted
     end
 
 {% endmacro %}

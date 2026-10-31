@@ -2,9 +2,11 @@ with filtered_changes as (
     select
         av.changelog_id,
         av.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+        av.logged_at at time zone 'UTC' as logged_at_utc,
         av.updated_by_user_id,
         av.record_created_at at time zone '{{ var("timezone") }}' as record_created_at,
         av.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
+        av.record_updated_at at time zone 'UTC' as record_updated_at_utc,
         av.record_id,
         av.record_data
     from ({{ base_history_from_log('administered_vaccines') }}) av
@@ -14,8 +16,12 @@ with filtered_changes as (
 select
     fc.changelog_id,
     fc.logged_at,
-    fc.record_created_at as created_at,
-    fc.record_updated_at as updated_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    fc.logged_at_utc,
+    fc.record_created_at,
+    fc.record_updated_at,
+    -- sort-only: local record_updated_at repeats an hour at a DST fall-back, so order history by this
+    fc.record_updated_at_utc,
     fc.updated_by_user_id,
     fc.record_id as id,
     (fc.record_data ->> 'date')::timestamp as datetime,

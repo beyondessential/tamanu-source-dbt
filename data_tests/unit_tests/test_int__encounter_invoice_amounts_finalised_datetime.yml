@@ -5,10 +5,9 @@ unit_tests:
       invoice_finalised_datetime is the most recent transition into finalised
       status from logs.changes, in deployment-local time. A re-finalisation
       (previous_status already finalised) is excluded. An invoice that never
-      finalises shows null. This test pins var('timezone') to UTC so the
-      finalised-timestamp assertion is deterministic across engines; the actual
-      deployment-local shift (at time zone) is exercised against real Postgres by
-      dbt build, not here.
+      finalises shows null. invoices_change_logs already exposes logged_at in
+      deployment-local time, so this model takes it as given; the conversion is
+      covered by test_invoices_change_logs_window_functions.
     overrides:
       vars:
         timezone: UTC
@@ -52,17 +51,16 @@ unit_tests:
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001'::text as invoice_id, '2024-01-14 10:00:00+00'::timestamptz as logged_at, 'in_progress' as status, null::text as previous_status
+          select '00000000-0000-0000-0000-000000000001'::text as invoice_id, '2024-01-14 10:00:00'::timestamp as logged_at, 'in_progress' as status, null::text as previous_status
           union all
-          -- First finalisation at 03:00 UTC; with timezone pinned to UTC the
-          -- local-time conversion is a no-op, so the expected value is 03:00
-          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-15 03:00:00+00'::timestamptz, 'finalised', 'in_progress'
+          -- First finalisation at 03:00 local time
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-15 03:00:00'::timestamp, 'finalised', 'in_progress'
           union all
           -- Re-finalisation: previous_status = 'finalised' so excluded
-          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-16 01:00:00+00'::timestamptz, 'finalised', 'finalised'
+          select '00000000-0000-0000-0000-000000000001'::text, '2024-01-16 01:00:00'::timestamp, 'finalised', 'finalised'
           union all
           -- enc_002 invoice: never reaches finalised
-          select '00000000-0000-0000-0000-000000000002'::text, '2024-01-20 10:00:00+00'::timestamptz, 'in_progress', null::text
+          select '00000000-0000-0000-0000-000000000002'::text, '2024-01-20 10:00:00'::timestamp, 'in_progress', null::text
 
       - input: ref('invoice_items')
         format: sql

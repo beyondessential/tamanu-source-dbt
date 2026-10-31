@@ -16,7 +16,7 @@ unit_tests:
       - input: ref('int__registration_status_history')
         format: sql
         rows: |
-          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'current' as history_source
+          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, '2024-01-10 09:00:00'::timestamp as logged_at_utc, 'inactive' as registration_status, 'current' as history_source
 
     expect:
       format: sql

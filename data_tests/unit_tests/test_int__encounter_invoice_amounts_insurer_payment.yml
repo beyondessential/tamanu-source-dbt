@@ -45,7 +45,7 @@ unit_tests:
       - input: ref('invoices_change_logs')
         format: sql
         rows: |
-          select null::text as invoice_id, null::timestamptz as logged_at, null::text as status, null::text as previous_status where false
+          select null::text as invoice_id, null::timestamp as logged_at, null::text as status, null::text as previous_status where false
 
       - input: ref('invoice_items')
         format: sql

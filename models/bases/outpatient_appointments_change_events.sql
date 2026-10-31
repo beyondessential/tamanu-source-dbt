@@ -2,11 +2,17 @@
 -- functions, so consumers can filter it and have the predicate reach the scan. The windowed
 -- reconstruction lives in outpatient_appointments_change_log_events(), which cannot be
 -- filtered that way.
+-- logged_at and record_updated_at are in the deployment's local time, as in every other
+-- change-log base (MAUI-6960).
 select
-    c.id,
-    c.record_id,
-    c.logged_at,
-    c.record_updated_at,
+    c.id as changelog_id,
+    c.record_id as appointment_id,
+    c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    c.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
+    -- sort-only: local logged_at and record_updated_at repeat an hour at a DST fall-back, so
+    -- order history by these
+    c.logged_at at time zone 'UTC' as logged_at_utc,
+    c.record_updated_at at time zone 'UTC' as record_updated_at_utc,
     c.updated_by_user_id,
     c.updated_at_sync_tick,
     c.record_data

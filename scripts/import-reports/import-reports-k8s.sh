@@ -10,63 +10,70 @@
 # intended cluster. It defaults to the demo cluster (--context demo); pass --context to
 # target a different cluster.
 #
-# Default mode is PLAN (read-only): resolves the pod, prints the current report state,
-# and shows what WOULD be applied. Nothing is written until you pass --apply. There is no
-# native dry run on the importReport CLI, so this plan/apply split is the safety net.
+# Every run starts with a read-only PLAN: resolves the pod, prints the current report
+# state, and shows what WOULD be applied. It then asks you to type the namespace to apply;
+# press Enter instead to stop with nothing changed. --plan-only prints the plan and exits
+# without asking. There is no native dry run on the importReport CLI, so this
+# plan-then-confirm step is the safety net.
 #
-#   Reports to import: every *.json file in --reports-dir.
-#   Schema: optional. Pass --schema-sql to apply a reporting-schema file first (CNPG socket
-#   mode: exec into the rw Postgres service over its local socket with peer auth as the
-#   superuser, SET ROLE to the app role, apply in one transaction). Omit --schema-sql to
-#   skip the schema step and only import reports. --schema-svc may list several services
-#   (e.g. "central-db-rw,facility-1-db-rw").
+#   Bundle: --bundle points at a compiled bundle folder (e.g. compiled/v2.66.0). Its *.json
+#   files are imported and its single reporting-schema-*.sql is applied first.
+#   --reports-dir and --schema-sql override either half; --no-schema skips the schema step.
 #
-#   Schema-only: pass --schema-only (with --schema-sql) to apply the schema and skip report
-#   import entirely. --reports-dir and the central pod are not needed in this mode.
+#   Reports to import: every *.json file in --reports-dir (or --bundle).
+#   Schema: optional. The reporting-schema file is applied first (CNPG socket mode: exec
+#   into the rw Postgres service over its local socket with peer auth as the superuser,
+#   SET ROLE to the app role, apply in one transaction). The schema goes to every *-db-rw
+#   service in the namespace (central plus each facility), discovered automatically; pass
+#   --schema-svc (e.g. "central-db-rw,facility-1-db-rw") to target specific services instead.
+#
+#   Schema-only: pass --schema-sql without --reports-dir or --bundle to apply the schema and
+#   skip report import entirely. The central pod is not needed in this mode.
 #
 # EXAMPLES
-#   # Schema + reports, review the plan, then re-run with --apply:
-#   ./import-reports-k8s.sh --namespace tamanu-syria-demo --reports-dir ./my-reports \
-#     --schema-sql ./reporting-schema-v2.54.0-msf.sql \
-#     --schema-svc central-db-rw,facility-1-db-rw \
-#     --workdir /app/packages/central-server
+#   # Schema + reports from a compiled bundle; review the plan, then type the namespace:
+#   ./import-reports-k8s.sh tamanu-syria-demo --bundle ../../compiled/v2.66.0
 #
 #   # Reports only, schema already applied:
-#   ./import-reports-k8s.sh --namespace tamanu-syria-demo --reports-dir ./my-reports \
-#     --workdir /app/packages/central-server --apply
+#   ./import-reports-k8s.sh tamanu-syria-demo --bundle ../../compiled/v2.66.0 --no-schema
 #
 #   # Schema only, no report import:
-#   ./import-reports-k8s.sh --namespace tamanu-syria-demo \
-#     --schema-sql ./reporting-schema-v2.54.0-msf.sql \
-#     --schema-svc central-db-rw,facility-1-db-rw --schema-only
+#   ./import-reports-k8s.sh tamanu-syria-demo --schema-sql ./reporting-schema-v2.54.0-msf.sql
+#
+#   # Separate reports folder and schema file, plan only:
+#   ./import-reports-k8s.sh tamanu-syria-demo --reports-dir ./my-reports \
+#     --schema-sql ./reporting-schema-v2.54.0-msf.sql --plan-only
 
 set -euo pipefail
 
 usage() {
   cat <<'EOF'
 import-reports-k8s.sh — import Tamanu reports (and optionally a reporting schema)
-into a central server on K8s. Defaults to a read-only PLAN; nothing is written
-until you pass --apply. macOS/Linux counterpart of import-reports-k8s.ps1.
+into a central server on K8s. Prints a read-only PLAN, then asks you to type the
+namespace before writing anything. macOS/Linux counterpart of import-reports-k8s.ps1.
 
 Usage:
-  import-reports-k8s.sh --namespace NS [options] [--apply]
+  import-reports-k8s.sh NS [options]
+  import-reports-k8s.sh --namespace NS [options]
 
 Options:
-  --namespace NS       (required) target K8s namespace
-  --reports-dir DIR    folder of *.json reports (required unless --schema-only)
-  --schema-sql FILE    reporting-schema .sql to apply first (omit to skip schema)
-  --schema-svc LIST    comma-separated *-db-rw services for schema (default: central-db-rw)
-  --schema-only        apply schema only, skip report import (requires --schema-sql)
+  --namespace NS       (required; or pass NS as the first argument) target K8s namespace
+  --bundle DIR         compiled bundle folder: imports its *.json and applies its reporting-schema-*.sql
+  --reports-dir DIR    folder of *.json reports (overrides the bundle's)
+  --schema-sql FILE    reporting-schema .sql to apply first (overrides the bundle's);
+                       without --reports-dir/--bundle this is a schema-only run
+  --no-schema          skip the schema step (e.g. --bundle with the schema already applied)
+  --schema-svc LIST    comma-separated *-db-rw services for schema (default: all *-db-rw in the namespace)
   --pod NAME           override the central pod (default: resolve by --selector)
   --container NAME     container name for multi-container pods
   --selector SEL       label selector to find the central pod
-  --workdir DIR        working dir in the pod for the central-server CLI (default: .)
+  --workdir DIR        working dir in the pod for the central-server CLI (default: /app/packages/central-server)
   --db-svc SVC         service used for the before/after snapshot (default: central-db-rw)
   --db-name NAME       database name (default: app)
   --db-role ROLE       role the schema is applied as via SET ROLE (default: app)
   --db-container NAME  Postgres container in the CNPG pod (default: postgres)
   --context NAME       kubectl context to switch to first (default: demo)
-  --apply              actually write (prompts for namespace confirmation)
+  --plan-only          print the plan and exit without the apply prompt
   -h, --help           show this help
 
 See scripts/import-reports/README.md for details and examples.
@@ -76,25 +83,27 @@ EOF
 
 # ---- defaults (mirror the PowerShell param block) ---------------------------------
 NAMESPACE=""
+BUNDLE=""
 REPORTS_DIR=""
 SCHEMA_SQL=""
 POD=""
 CONTAINER=""
 SELECTOR="app.kubernetes.io/name=central,app.kubernetes.io/component=api-server"
-WORKDIR="."
-SCHEMA_SVC="central-db-rw"
+WORKDIR="/app/packages/central-server"
+SCHEMA_SVC=""
 DB_SVC="central-db-rw"
 DB_NAME="app"
 DB_ROLE="app"
 DB_CONTAINER="postgres"
 CONTEXT="demo"
-SCHEMA_ONLY=false
-APPLY=false
+NO_SCHEMA=false
+PLAN_ONLY=false
 
 # ---- parse args -------------------------------------------------------------------
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --namespace)     NAMESPACE="$2"; shift 2 ;;
+    --bundle)        BUNDLE="$2"; shift 2 ;;
     --reports-dir)   REPORTS_DIR="$2"; shift 2 ;;
     --schema-sql)    SCHEMA_SQL="$2"; shift 2 ;;
     --pod)           POD="$2"; shift 2 ;;
@@ -107,10 +116,14 @@ while [[ $# -gt 0 ]]; do
     --db-role)       DB_ROLE="$2"; shift 2 ;;
     --db-container)  DB_CONTAINER="$2"; shift 2 ;;
     --context)       CONTEXT="$2"; shift 2 ;;
-    --schema-only)   SCHEMA_ONLY=true; shift ;;
-    --apply)         APPLY=true; shift ;;
+    --no-schema)     NO_SCHEMA=true; shift ;;
+    --plan-only)     PLAN_ONLY=true; shift ;;
     -h|--help)       usage 0 ;;
-    *) echo "ERROR: unknown argument: $1" >&2; usage 1 ;;
+    -*) echo "ERROR: unknown argument: $1" >&2; usage 1 ;;
+    *)
+      # A bare word is the namespace (once only).
+      [[ -z "$NAMESPACE" ]] || { echo "ERROR: unexpected argument: $1" >&2; usage 1; }
+      NAMESPACE="$1"; shift ;;
   esac
 done
 
@@ -121,10 +134,36 @@ cexec=()
 [[ -n "$CONTAINER" ]] && cexec=(-c "$CONTAINER")
 
 # ---- validate inputs --------------------------------------------------------------
-if $SCHEMA_ONLY && [[ -z "$SCHEMA_SQL" ]]; then
-  echo "ERROR: --schema-only requires --schema-sql (there is nothing to apply otherwise)" >&2
+if $NO_SCHEMA && [[ -n "$SCHEMA_SQL" ]]; then
+  echo "ERROR: --no-schema and --schema-sql contradict each other; pass one or neither" >&2
   exit 1
 fi
+# A bundle folder supplies whichever of reports / schema was not given explicitly.
+if [[ -n "$BUNDLE" ]]; then
+  [[ -d "$BUNDLE" ]] || { echo "ERROR: bundle dir not found: $BUNDLE" >&2; exit 1; }
+  [[ -n "$REPORTS_DIR" ]] || REPORTS_DIR="$BUNDLE"
+  if [[ -z "$SCHEMA_SQL" ]] && ! $NO_SCHEMA; then
+    shopt -s nullglob
+    found=("$BUNDLE"/reporting-schema-*.sql)
+    shopt -u nullglob
+    if [[ ${#found[@]} -eq 0 ]]; then
+      echo "ERROR: no reporting-schema-*.sql in $BUNDLE (pass --schema-sql, or --no-schema to skip it)" >&2
+      exit 1
+    fi
+    if [[ ${#found[@]} -gt 1 ]]; then
+      echo "ERROR: several reporting-schema-*.sql in $BUNDLE (${found[*]}); pass --schema-sql" >&2
+      exit 1
+    fi
+    SCHEMA_SQL="${found[0]}"
+  fi
+fi
+if [[ -z "$REPORTS_DIR" && -z "$SCHEMA_SQL" ]]; then
+  echo "ERROR: nothing to do - pass --bundle, --reports-dir or --schema-sql" >&2
+  exit 1
+fi
+# A schema file with no reports folder is a schema-only run.
+SCHEMA_ONLY=false
+[[ -n "$REPORTS_DIR" ]] || SCHEMA_ONLY=true
 if [[ -n "$SCHEMA_SQL" && ! -f "$SCHEMA_SQL" ]]; then
   echo "ERROR: schema SQL not found: $SCHEMA_SQL" >&2
   exit 1
@@ -132,7 +171,6 @@ fi
 
 reports=()
 if ! $SCHEMA_ONLY; then
-  [[ -n "$REPORTS_DIR" ]] || { echo "ERROR: --reports-dir is required unless --schema-only is set" >&2; exit 1; }
   [[ -d "$REPORTS_DIR" ]] || { echo "ERROR: reports dir not found: $REPORTS_DIR" >&2; exit 1; }
   # Collect *.json sorted by name (nullglob so a no-match glob yields nothing).
   shopt -s nullglob
@@ -205,15 +243,38 @@ show_snapshot() {
     || echo "  (snapshot unavailable)"
 }
 
-# ---- PLAN -------------------------------------------------------------------------
-# Split SCHEMA_SVC on commas, trim, drop empties.
+# ---- resolve schema target services ----------------------------------------------
+# Without --schema-svc, target every CNPG rw service in the namespace (central-db-rw,
+# facility-N-db-rw, ...) so new facilities are picked up without editing the command.
 svcs=()
-IFS=',' read -ra _raw_svcs <<< "$SCHEMA_SVC"
-for s in "${_raw_svcs[@]}"; do
-  s="$(echo "$s" | tr -d '[:space:]')"
-  [[ -n "$s" ]] && svcs+=("$s")
+svc_source="from --schema-svc"
+if [[ -n "$SCHEMA_SQL" ]]; then
+  if [[ -n "$SCHEMA_SVC" ]]; then
+    # Split SCHEMA_SVC on commas, trim, drop empties.
+    IFS=',' read -ra _raw_svcs <<< "$SCHEMA_SVC"
+    for s in "${_raw_svcs[@]}"; do
+      s="$(echo "$s" | tr -d '[:space:]')"
+      [[ -n "$s" ]] && svcs+=("$s")
+    done
+  else
+    svc_source="auto-discovered"
+    all_svcs="$(kubectl get svc -n "$NAMESPACE" -o "jsonpath={.items[*].metadata.name}")"
+    while IFS= read -r s; do
+      [[ -n "$s" ]] && svcs+=("$s")
+    done < <(tr ' ' '\n' <<< "$all_svcs" | grep -E -- '-db-rw$' | LC_ALL=C sort || true)
+    if [[ ${#svcs[@]} -eq 0 ]]; then
+      echo "ERROR: no *-db-rw services found in namespace $NAMESPACE (pass --schema-svc)" >&2
+      exit 1
+    fi
+  fi
+fi
+# Join with ", " (IFS only uses its first character, so it cannot do this itself).
+svcs_joined=""
+for s in "${svcs[@]+"${svcs[@]}"}"; do
+  svcs_joined="${svcs_joined:+$svcs_joined, }$s"
 done
-svcs_joined="$(IFS=', '; echo "${svcs[*]}")"
+
+# ---- PLAN -------------------------------------------------------------------------
 
 echo "=================================================================="
 echo " PLAN"
@@ -228,9 +289,13 @@ else
 fi
 if [[ -n "$SCHEMA_SQL" ]]; then
   echo "   schema SQL     : $SCHEMA_SQL"
-  echo "   schema -> svc  : $svcs_joined  (db=$DB_NAME role=$DB_ROLE container=$DB_CONTAINER)"
+  echo "   schema -> svc  : $svcs_joined  ($svc_source; db=$DB_NAME role=$DB_ROLE container=$DB_CONTAINER)"
 else
-  echo "   schema SQL     : (skipped - none provided)"
+  if $NO_SCHEMA; then
+    echo "   schema SQL     : (skipped - --no-schema)"
+  else
+    echo "   schema SQL     : (skipped - none provided)"
+  fi
 fi
 echo "   snapshot svc   : $DB_SVC"
 if $SCHEMA_ONLY; then
@@ -250,8 +315,8 @@ echo " Current report state (before):"
 show_snapshot
 echo "=================================================================="
 
-if ! $APPLY; then
-  echo "PLAN ONLY. Re-run with --apply to write. Nothing was changed."
+if $PLAN_ONLY; then
+  echo "PLAN ONLY. Re-run without --plan-only to apply. Nothing was changed."
   exit 0
 fi
 
@@ -265,7 +330,12 @@ else
   echo "About to import ${#reports[@]} reports into '$NAMESPACE' (no schema step)."
 fi
 echo "This writes to the live database(s) and has NO dry run."
-read -r -p "Type the namespace to confirm: " confirm
+# EOF (no terminal) counts as pressing Enter: stop without writing.
+read -r -p "Type the namespace to apply (or press Enter to stop): " confirm || confirm=""
+if [[ -z "${confirm// }" ]]; then
+  echo "Stopped. Nothing was changed."
+  exit 0
+fi
 [[ "$confirm" == "$NAMESPACE" ]] || { echo "Confirmation did not match. Aborting." >&2; exit 1; }
 
 # 1) Reporting schema FIRST (if provided), on each target service, as the app role.

@@ -1,11 +1,5 @@
 {
   "extraKnownMarketplaces": {
-    "maui-team": {
-      "source": {
-        "source": "directory",
-        "path": "./.maui"
-      }
-    },
     "bes": {
       "source": {
         "source": "github",
@@ -15,7 +9,30 @@
   },
   "enabledPlugins": {
     "tamanu@bes": true,
-    "maui-internal@maui-team": true,
     "bes-skills@bes": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path'); case \"$f\" in *.sql) sqlfluff lint \"$f\" || true;; esac; grep -lU $'\\r' \"$f\" && echo 'WARNING: CRLF line endings in '$f"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*linear.*__(create|update|save).*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"decision\":\"ask\",\"reason\":\"Linear write requires user approval\"}'"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -42,7 +42,19 @@ unit_tests:
       - input: ref('encounter_history')
         format: sql
         rows: |
-          select 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+          select 'eh_001' as id, 'enc_001' as encounter_id, '2024-01-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'admission' as local_code, 9201 as concept_id
+          union all select 'clinic', 9202
+          union all select 'imaging', 9202
+          union all select 'vaccination', 9202
+          union all select 'emergency', 9203
+          union all select 'observation', 9203
+          union all select 'triage', 9203
+          union all select 'surveyResponse', 0
 
       - input: ref('users')
         format: sql
@@ -84,7 +96,7 @@ unit_tests:
       - input: ref('triages')
         format: sql
         rows: |
-          select null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
+          select null::text as id, null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
           where false
 
       - input: ref('discharges')
@@ -114,7 +126,7 @@ unit_tests:
       - input: ref('vaccine_administrations')
         format: sql
         rows: |
-          select null::text as encounter_id, null::timestamp as datetime, null::text as scheduled_vaccine_id
+          select null::text as encounter_id, null::text as status, null::timestamp as datetime, null::text as scheduled_vaccine_id
           where false
 
       - input: ref('vaccine_schedules')
@@ -187,24 +199,6 @@ unit_tests:
           select null::text as imaging_request_id, null::text as area_id
           where false
 
-      - input: ref('invoices')
-        format: sql
-        rows: |
-          select null::text as id, null::text as encounter_id, null::text as status, null::timestamp as datetime
-          where false
-
-      - input: ref('invoice_items')
-        format: sql
-        rows: |
-          select null::text as invoice_id, null::text as product_id
-          where false
-
-      - input: ref('invoice_products')
-        format: sql
-        rows: |
-          select null::text as id, null::text as category
-          where false
-
     expect:
       format: sql
       rows: |
@@ -254,6 +248,4 @@ unit_tests:
           null::text           as "Lab requests",
           'X-Ray, Areas to be imaged: Right knee, Notes: Check for dislocation'
                                as "Imaging requests",
-          null::text           as "Notes",
-          null::text           as "invoiceFinalisedDateTime",
-          null::text           as "invoiceProductCategories"
+          null::text           as "Notes"

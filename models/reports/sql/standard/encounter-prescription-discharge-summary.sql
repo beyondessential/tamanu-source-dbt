@@ -1,8 +1,10 @@
+-- See specs/reports/encounter-prescription-discharge-summary.md for the BL clauses this report implements.
 -- BL-001: Source rows are prescriptions from ds__encounter_prescriptions marked as selected
 -- for pharmacy discharge -- the pre-dispensing-module proxy for "sent to / dispensed by
 -- pharmacy", used by deployments that have not gone live on the pharmacy dispensing module.
 -- BL-002: No date cutoff -- this report is ongoing, for deployments that have never migrated
 -- to the pharmacy dispensing module.
+-- BL-004: column labels shared with medication-dispensed-summary and prescription-line-list
 select
     ep.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
     ep.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
@@ -20,10 +22,12 @@ where
         when {{ parameter('medicationId') }} is null then true
         else ep.medication_id = {{ parameter('medicationId') }}
     end
+    -- BL-003: date range on the prescription's datetime, in the viewer's timezone
     and
     {{ to_user_selected_timezone('ep.datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}
     and
     {{ to_user_selected_timezone('ep.datetime') }}
     <= {{ parameter('toDate', default_value='2024-01-31', data_type='timestamp') }}
+-- BL-005: one row per medication for the whole selected range
 group by ep.medication_id, ep.medication, ep.medication_code

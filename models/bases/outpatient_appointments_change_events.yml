@@ -19,23 +19,38 @@ models:
       pii: false
       classification: restricted
     columns:
-      - name: id
+      - name: changelog_id
+        data_type: uuid
         description: "{{ doc('logs__changes__id') }}"
 
-      - name: record_id
-        description: "{{ doc('logs__changes__record_id') }}"
+      - name: appointment_id
+        data_type: text
+        description: "{{ doc('logs__changes__record_id') }} in appointments."
 
       - name: logged_at
-        description: "{{ doc('logs__changes__logged_at') }}"
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at') }} In the deployment's local time."
+
+      - name: logged_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__logged_at_utc') }}"
 
       - name: record_updated_at
-        description: "{{ doc('logs__changes__record_updated_at') }}"
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at') }} In the deployment's local time."
+
+      - name: record_updated_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at_utc') }}"
 
       - name: updated_by_user_id
+        data_type: text
         description: "{{ doc('logs__changes__updated_by_user_id') }}"
 
       - name: updated_at_sync_tick
+        data_type: bigint
         description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."
 
       - name: record_data
+        data_type: jsonb
         description: "{{ doc('logs__changes__record_data') }}"

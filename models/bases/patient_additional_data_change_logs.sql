@@ -6,6 +6,8 @@ with filtered_changes as (
 select
     fc.changelog_id,
     fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    fc.logged_at at time zone 'UTC' as logged_at_utc,
     fc.updated_by_user_id,
     fc.record_id as patient_id,
     fc.record_data ->> 'title' as title,

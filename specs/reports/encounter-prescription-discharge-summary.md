@@ -94,10 +94,11 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | Only prescriptions with `is_selected_for_discharge = true` are included | BL-001 | Manual run against a demo/replica snapshot |
-| AC-002 | Rows outside the selected date range (by `datetime`, viewer timezone) are excluded | BL-003 | Manual run against a demo/replica snapshot |
-| AC-003 | Sensitive variant only includes prescriptions at facilities with a `sensitive_network_id` | BL-009 | Manual run against a demo/replica snapshot -- no automated test exists for this on `ds__sensitive_encounter_prescriptions` (only the non-sensitive dataset has a logical-integrity test) |
-| AC-004 | One row per medication, summed quantity across all matching prescriptions in the selected range | BL-005 | Manual run against a demo/replica snapshot |
+| AC-001 | Only prescriptions with `is_selected_for_discharge = true` are included | BL-001 | `test_encounter_prescription_discharge_summary` — fails when the filter is removed |
+| AC-002 | Rows outside the selected date range (by `datetime`, viewer timezone) are excluded | BL-003 | `test_encounter_prescription_discharge_summary` — fails when the lower bound is removed. The fixture uses UTC, so the timezone shift itself is not exercised |
+| AC-003 | Sensitive variant only includes prescriptions at facilities with a `sensitive_network_id` | BL-009 | `test_ds_sensitive_encounter_prescriptions_partition` — fails when the partition is a constant `false` |
+| AC-004 | One row per medication, summed quantity across all matching prescriptions in the selected range | BL-005 | `test_encounter_prescription_discharge_summary` — fails when grouped per prescription |
+| AC-005 | Output columns are labelled with the shared `encounterPrescription*` keys | BL-004 | `test_encounter_prescription_discharge_summary` asserts the default labels `Medication`, `Code`, `Quantity` |
 
 ## Risks
 
@@ -121,3 +122,4 @@ _None._
 |---|---|---|
 | 2026-08-25 | Maui team | Initial spec and implementation, standard + sensitive pair, for Fiji (still on encounter prescriptions, never migrated to the pharmacy dispensing module). |
 | 2026-08-25 | Maui team | Briefly changed output shape to match `msf-medication-dispensed-summary-historical` (date breakdown, distinct patient count, doses); reverted the same day once the actual requester ask was confirmed as item code, item name, and a single aggregate quantity for the period, with no date breakdown -- matching `medication-dispensed-summary`'s shape instead. Removed the now-unused `prescriptionDrug`, `prescriptionPatientCount`, `prescriptionNumberOfDoses` labels from `csv/report_translations_standard.csv`. |
+| 2026-10-15 | Maui team | MAUI-7011: every AC is now asserted by a unit test (AC-005 added for BL-004), each confirmed to fail when its clause is broken. BL-003, BL-004, BL-005 and BL-009 gained code anchors. |

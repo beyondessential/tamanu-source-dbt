@@ -1,4 +1,4 @@
-{% macro discharge_audit_dataset(is_sensitive=false) %}
+{% macro discharge_audit_dataset(is_sensitive=false, record_id_filter=none) %}
 
 -- Discharge Audit Dataset
 -- One row per discharge record, which is one row per discharged encounter.
@@ -8,6 +8,11 @@
 --   discharge_recorded_datetime  - when the discharge was actually recorded in Tamanu
 --
 -- The gap between them is the discharge-recording backlog.
+--
+-- BL-013: record_id_filter (on the change-log extraction's `discharge_id`) narrows the
+-- change-log read to candidate discharges, for the audit report's candidate-scoping step. Left
+-- none by ds__discharge_audit / ds__sensitive_discharge_audit, which need every discharge's
+-- full history.
 
 -- BL-001: the discharges base is already one row per encounter with deleted discharges,
 -- deleted encounters and the test patient removed
@@ -22,16 +27,20 @@ with discharge_records as (
     from {{ ref('discharges') }} d
 ),
 
--- BL-002: the earliest change log entry for a discharge is its insert
+-- BL-002: the earliest change log entry for a discharge is its insert. change_sequence is
+-- numbered on the UTC log time, so it finds the earliest where the local logged_at repeats an
+-- hour at a DST fall-back
 change_log_summary as (
     select
         cl.discharge_id,
-        min(cl.changed_datetime) as recorded_datetime,
+        max(cl.logged_at) filter (where cl.change_sequence = 1) as recorded_datetime,
         -- BL-008: edits after the insert. The left join below leaves this null, not zero,
         -- where the change log does not cover the discharge at all
         count(*) - 1 as later_edit_count,
-        max(cl.changed_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
-    from {{ ref('discharges_change_logs') }} cl
+        max(cl.updated_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
+    from (
+        {{ discharges_change_log_events(record_id_filter=record_id_filter) }}
+    ) cl
     group by cl.discharge_id
 ),
 

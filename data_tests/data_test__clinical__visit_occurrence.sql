@@ -24,4 +24,7 @@ ac_011 as (
     where vo.visit_occurrence_id is null
 )
 
-select encounter_id, failed_ac from ac_011
+select
+    encounter_id,
+    failed_ac
+from ac_011

@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `audit-discharge-line-list` |
-| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` base model |
+| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` / `discharges_change_events` base models |
 | **Layer** | `base`, `ds`, `report` |
 | **Materialisation** | base `view`, dataset `view`, report `view` |
 | **Status** | `implemented` |
@@ -59,7 +59,8 @@ a deleted or merged patient are out of scope.
 | Reference | Why we need it |
 |---|---|
 | `ref('discharges')` | The discharge record: disposition, discharging clinician, note, creation time |
-| `ref('discharges_change_logs')` | Recording timestamp, recording user, later-edit count |
+| `ref('discharges_change_logs')` (via `discharges_change_log_events()`) | Recording timestamp, recording user, later-edit count |
+| `ref('discharges_change_events')` | Thin, window-free change-log projection the report's candidate step scans directly (BL-013) |
 | `ref('encounters')` | Encounter dates and type |
 | `ref('locations')`, `ref('facilities')`, `ref('departments')` | Where the encounter sat, and the sensitive-facility partition |
 | `ref('patients')`, `ref('reference_data')`, `ref('users')` | Demographics, village, disposition and diagnosis labels, user display names |
@@ -98,8 +99,8 @@ a deleted or merged patient are out of scope.
 - **BL-001:** Grain is one row per non-deleted `discharges` record whose encounter is not
   deleted and whose patient is neither deleted, merged, nor the test patient. The `discharges`
   base model deduplicates to one row per encounter, keeping the earliest by `created_at`.
-- **BL-002:** `discharge_recorded_datetime` is the `logged_at` of the earliest
-  `logs.changes` entry for the discharge record. The earliest entry is treated as the
+- **BL-002:** `discharge_recorded_datetime` is the `logged_at` of the earliest (by UTC log
+  time) `logs.changes` entry for the discharge record. The earliest entry is treated as the
   insert. Where the discharge has no change log entry at all the column is null; there is
   no fallback, and `days_between_discharge_and_recording` is null with it. Where coverage
   is partial — the discharge was created before change
@@ -143,6 +144,21 @@ a deleted or merged patient are out of scope.
   beside it. Splitting name from code is the point of having four columns rather than two.
   `macros/datasets/admissions.sql` still appends the code to its own diagnosis names, so the
   two datasets differ on this until it is changed there too.
+- **BL-013:** The report scopes `discharge_audit_dataset`'s change-log aggregation to
+  candidate discharges — those with a change logged between `fromDate` less two days and
+  `toDate` plus three days, deployment-local time, found by scanning
+  `discharges_change_events` directly — before it runs, reaching `logs.changes` through the
+  `(table_name, record_id)` index rather than a full scan. The window is widened because the
+  candidate compares deployment time while BL-007's filter compares the viewer's selected
+  timezone, up to 26 hours apart, and BL-007's exact filter trims the result to the range
+  afterwards, so correctness never depends on the candidate step being exact.
+  `ds__discharge_audit` and `ds__sensitive_discharge_audit` call the same dataset macro
+  unfiltered, so other consumers keep reading every discharge's full history.
+- **BL-014:** `discharges_change_log_events()` holds the change-log extraction's
+  `row_number()`, partitioned by `discharge_id` and ordered by the UTC sort keys, reading from
+  `discharges_change_events` — a thin projection carrying only the source filters, since
+  Postgres pushes neither a date nor a `record_id` predicate below a window function. The
+  `discharges_change_logs` base model calls it unfiltered.
 
 ## Acceptance criteria
 
@@ -152,10 +168,12 @@ a deleted or merged patient are out of scope.
 | AC-002 | Exactly one row per `encounter_id` | BL-001 | `unique` on `encounter_id`, `logical__ds__discharge_audit` |
 | AC-003 | `discharge_recorded_datetime` is populated for every discharge the change log covers, and null only where the change log has no entry for it | BL-002 | `logical__ds__discharge_audit`, `test_ds__discharge_audit_no_changelog_coverage` |
 | AC-004 | A discharge whose entered date precedes its recorded date by several days returns the expected positive `days_between_discharge_and_recording` | BL-002, BL-003 | `test_ds__discharge_audit_recording_delay` |
-| AC-005 | A UTC change log timestamp near local midnight lands on the correct local date | BL-003 | `test_discharges_change_logs_timezone` |
+| AC-005 | A UTC change log timestamp near local midnight lands on the correct local date | BL-003 | `test_discharges_change_events_timezone` |
 | AC-006 | Auto-discharged rows are flagged, not dropped, and carry no recording user when the session had no audit user | BL-004, BL-005 | `test_ds__discharge_audit_recording_delay` |
 | AC-007 | The date range includes discharges recorded at any time of day on `toDate` | BL-007 | Manual run against a demo snapshot |
 | AC-008 | An encounter with several diagnoses still returns exactly one row, with primary and secondary diagnoses in their own columns | BL-010 | `test_ds__discharge_audit_recording_delay`, plus `unique` on `encounter_id` for the grain. `logical__ds__discharge_audit` asserts nothing about diagnoses. |
+| AC-009 | A discharge recorded and then edited inside a DST fall-back's repeated hour reports the recording, not the edit | BL-002 | `test_ds__discharge_audit_recorded_dst_fall_back` |
+| AC-010 | A discharge changed outside the candidate window (including its ±2/+3 day margin) is excluded from the report; one changed inside it is included and the row's values are unaffected by the candidate step | BL-013 | Manual run against a demo snapshot; `EXPLAIN` confirms the `(table_name, record_id)` index is used for candidates only |
 
 Data tests run at `warn` severity project-wide (`data_tests: +severity: warn` in
 `dbt_project.yml`) and none of these override it, so a broken acceptance criterion surfaces as
@@ -164,10 +182,14 @@ a warning rather than failing the run. The unit tests are unaffected and do fail
 ## Risks
 
 - **Report runtime.** Reports run in production as views over the compiled bundle, so the
-  whole `ref()` chain is re-evaluated per run. `logs.changes` is the largest table in a
-  mature deployment and there is no guarantee of a useful index on `table_name`. Test on a
-  Kiribati replica snapshot before shipping. If it is slow, apply the narrower-window
-  parallel intermediate pattern.
+  whole `ref()` chain is re-evaluated per run. BL-013 scopes the change-log read to candidate
+  discharges so this no longer forces a full `logs.changes` scan on every run, but
+  `discharge_records` and `encounter_details` still read the full `discharges` and `encounters`
+  tables unfiltered — fine at their size, but worth revisiting if either grows enough to matter.
+- **Candidate scan cost.** The candidate step itself still reads `discharges_change_events`'
+  full history for the `discharges` table before narrowing to the date range — the saving is in
+  not running the change-log aggregation over the whole history, not in avoiding the candidate
+  scan entirely. Same residual cost as the identity-audit pattern this follows.
 - **Change log coverage.** Anything discharged before the change log trigger was installed
   has no change log entry, so the recorded date and time, the recording delay, the recording
   user and the edit count are all blank for those rows. The report notes say so. Filtering
@@ -198,3 +220,5 @@ _None._
 | 2026-08-21 | Maui team | Dropped the appended code from the diagnosis name columns (BL-012); the code already has its own column. `admissions.sql` unchanged, so the two datasets differ on this for now. |
 | 2026-08-21 | Maui team | Brought the spec back in line with the code where it had drifted: partial change log coverage (BL-002 and Risks), the `end_date` clamp inherited from the encounters base (BL-011), earliest-wins dedup in BL-001, the null-location blind spot shared by the dataset and AC-001's test, and the `warn` severity the acceptance tests run at. Documentation only, no code change. |
 | 2026-08-31 | Maui team | Removed `created_datetime` from the `discharges` base model and with it BL-002's fallback: `discharge_recorded_datetime` now comes from the change log alone and is null where the change log has no entry. AC-003 re-aimed at the invariant that still holds, its `not_null` tests dropped, `test_ds__discharge_audit_changelog_fallback` renamed to `test_ds__discharge_audit_no_changelog_coverage`, and the report notes updated. Consumers needing the clinician-entered discharge date join the encounters base for it, as `ds__discharge_audit` already does. |
+| 2026-10-16 | Maui team | [MAUI-7018](https://linear.app/bes/issue/MAUI-7018): BL-002's earliest entry is chosen by UTC log time (the base's `change_sequence`), so a recording followed by an edit inside a DST fall-back's repeated hour reports the recording (AC-009). Unchanged outside that hour. |
+| 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): added BL-013/BL-014 and AC-010. The report now scopes the change-log read to candidate discharges before `discharge_audit_dataset` aggregates it, via the new `discharges_change_events` thin base and `discharges_change_log_events()` extraction macro. Output unchanged; `ds__discharge_audit` and `ds__sensitive_discharge_audit` are unaffected. |

@@ -43,10 +43,16 @@ models:
       # Every drug line resolves to a segment, patient and location, so the row count matches
       # the source. A shortfall is drug lines the inner joins dropped -- most likely an
       # encounter type missing from map__omop_visit_type.
+      # BL-013: dbt_utils.equal_rowcount's default fail_calc sums diff_count with no fallback for
+      # a deployment where both sides are legitimately empty (e.g. no pharmacy orders at all) --
+      # SUM over zero rows is NULL, not 0, which dbt cannot record as a test's failure count and
+      # errors the whole build. The outer coalesce makes "both sides empty" a normal pass.
       - dbt_utils.equal_rowcount:
           name: ac_metric__pharmacy_order_every_drug_line
           arguments:
             compare_model: ref('pharmacy_order_prescriptions')
+          config:
+            fail_calc: coalesce(sum(coalesce(diff_count, 0)), 0)
       - dbt_expectations.expect_column_values_to_be_null:
           name: ac_metric__pharmacy_order_period_end_null
           arguments:
@@ -203,3 +209,19 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__pharmacy_order_department_not_null
+      - name: has_dispense
+        data_type: boolean
+        description: >-
+          Whether any fill has been recorded against the drug line. Not the same as is_completed,
+          which is the line's own fully-dispensed flag: a line can be marked completed with no fill
+          on record, or have a first fill and not yet be complete. Never NULL. The companion flag a
+          mean of minutes_to_first_dispense is formed over.
+        data_tests:
+          - not_null:
+              name: ac_metric__pharmacy_order_has_dispense_not_null
+      - name: minutes_to_first_dispense
+        data_type: numeric
+        description: >-
+          Minutes from the order being placed to the first fill, to one decimal place. A measure,
+          not a dimension. NULL where no fill is recorded -- a line nobody has dispensed has no wait
+          to average. Can be negative where the first fill is dated before the order.

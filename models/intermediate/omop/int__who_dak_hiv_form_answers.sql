@@ -89,8 +89,7 @@ pivoted as (
         a.response_id,
     {%- for column, code in elements.items() %}
         max(case when a.data_element_id = 'pde-{{ code }}' then nullif(trim(a.body), '') end)
-            as {{ column }}_raw{{ "," if not loop.last }}
-    
+            as {{ column }}_raw{{ "," if not loop.last }}  -- noqa: LT02
     {%- endfor %}
     from answers a
     where a.data_element_id in (
@@ -149,9 +148,8 @@ typed as (
         case
             when lower(v.{{ column }}_raw) in ('yes', 'true') then true
             when lower(v.{{ column }}_raw) in ('no', 'false') then false
-        end as {{ column }}{{ "," if not loop.last }}
-
-    {% endfor %}
+        end as {{ column }}{{ "," if not loop.last }}  -- noqa: LT02
+    {%- endfor %}
 
     from dak_responses r
     join pivoted v on v.response_id = r.response_id

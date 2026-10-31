@@ -18,12 +18,18 @@ models:
       - name: logged_at
         data_type: timestamp
         description: "{{ doc('logs__changes__logged_at') }} in vaccine administrations history."
-      - name: created_at
+      - name: logged_at_utc
         data_type: timestamp
-        description: "{{ doc('generic__created_at') }} in vaccine_administrations from history."
-      - name: updated_at
+        description: "{{ doc('logs__changes__logged_at_utc') }}"
+      - name: record_created_at
         data_type: timestamp
-        description: "{{ doc('generic__updated_at') }} in vaccine_administrations from history."
+        description: "{{ doc('logs__changes__record_created_at') }}, in the deployment's local time."
+      - name: record_updated_at
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at') }}, in the deployment's local time."
+      - name: record_updated_at_utc
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at_utc') }}"
       - name: updated_by_user_id
         data_type: text
         description: "{{ doc('logs__changes__updated_by_user_id') }} in vaccine administrations history."

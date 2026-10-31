@@ -44,6 +44,7 @@ unit_tests:
         select
           '550e8400-e29b-41d4-a716-446655440001'::uuid as changelog_id,
           '2025-06-20 10:00:00'::timestamp as logged_at,
+          '2025-06-20 10:00:00'::timestamp as logged_at_utc,
           'user_001'::text as updated_by_user_id,
           'cond_001'::text as id,
           '2024-01-15 09:00:00'::timestamp as datetime,
@@ -57,6 +58,7 @@ unit_tests:
         union all
         select
           '550e8400-e29b-41d4-a716-446655440002'::uuid,
+          '2025-06-20 14:30:00'::timestamp,
           '2025-06-20 14:30:00'::timestamp,
           'user_002'::text,
           'cond_001'::text,

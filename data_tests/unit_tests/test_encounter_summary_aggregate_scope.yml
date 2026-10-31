@@ -1,0 +1,276 @@
+unit_tests:
+  - name: test_encounter_summary_aggregate_scope
+    model: encounter-summary-by-start-date
+    description: >
+      BL-021 to BL-024, on enc_001 (enc_002 is outside the window).
+
+      BL-021: enc_001 has two triages. Only the earlier one, score 2, is reported, and the
+      encounter stays one row. Without the dedup the encounter appears twice.
+
+      BL-022: enc_001 has an imaging request in each status the report drops (cancelled,
+      deleted, entered_in_error) and one pending X-ray. Only the X-ray is listed.
+
+      BL-023: enc_001 has an active and a discontinued prescription. Both are listed, in
+      prescription order, with the discontinued flag and reason.
+
+      BL-024: enc_001 has a GIVEN BCG and a Hep B record in each other status. Only BCG is
+      listed.
+    overrides:
+      vars:
+        timezone: UTC  # note: unit tests cannot exercise cross-timezone conversion — to_user_selected_timezone resolves to a no-op type cast in test/run mode (only :timezone bind parameter in compiled SQL exercises the conversion)
+        datetime_format: YYYY-MM-DD HH24:MI
+        date_format: YYYY-MM-DD
+        fromDate: '2024-03-01'
+        toDate: '2024-03-31'
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            -- BL-008: the report filters on the stored ISO-9075 columns as well as the
+            -- converted timestamps, so the fixture derives them from the timestamps it
+            -- already declares. Deriving rather than restating them is what keeps the two
+            -- representations of an instant from drifting apart as the fixture is edited.
+            f.*,
+            to_char(f.start_datetime, 'YYYY-MM-DD HH24:MI:SS') as start_date_iso,
+            to_char(f.end_datetime, 'YYYY-MM-DD HH24:MI:SS') as end_date_iso
+          from (
+            select 'enc_001' as id, 'pat_001' as patient_id, '2024-03-15 10:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'loc_001' as location_id, 'dept_001' as department_id, 'cli_001' as clinician_id, null::text as patient_billing_type_id, null::text as reason_for_encounter, 'clinic' as encounter_type, null::text as planned_location_id, null::timestamp as planned_location_start_datetime
+            union all
+            select 'enc_002', 'pat_001', '2024-02-10 14:00:00'::timestamp, null::timestamp, 'loc_001', 'dept_001', 'cli_001', null::text, null::text, 'clinic', null::text, null::timestamp
+          ) f
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'Kevin' as first_name, 'Lee' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex, null::text as village_id
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_001' as id, 'enc_001' as encounter_id, '2024-03-15 10:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'admission' as encounter_type
+
+      - input: ref('map__omop_visit_type')
+        format: sql
+        rows: |
+          select 'admission' as local_code, 9201 as concept_id
+          union all select 'clinic', 9202
+          union all select 'imaging', 9202
+          union all select 'vaccination', 9202
+          union all select 'emergency', 9203
+          union all select 'observation', 9203
+          union all select 'triage', 9203
+          union all select 'surveyResponse', 0
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr. Jane Smith' as display_name
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'General Medicine' as name
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 5' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_001' as id, 'General Wing' as name
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Regional Hospital' as name, null::text as sensitive_network_id
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'div_001' as id, 'Central Division' as name, null::text as code
+          union all
+          select 'med_001', 'Amoxicillin', 'AMX'
+          union all
+          select 'med_002', 'Paracetamol', 'PCM'
+          union all
+          select 'vax_001', 'BCG', 'BCG'
+          union all
+          select 'vax_002', 'Hep B', 'HEPB'
+          union all
+          select 'subdiv_001', 'Naitasiri', null::text
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select 'pat_001' as patient_id, null::text as ethnicity_id, 'div_001' as division_id, 'subdiv_001' as subdivision_id
+
+      - input: ref('triages')
+        format: sql
+        rows: |
+          -- BL-021: the later triage is dropped
+          select 'tri_002' as id, 'enc_001' as encounter_id, '4' as score, '2024-03-15 10:30:00'::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
+          union all
+          select 'tri_001', 'enc_001', '2', '2024-03-15 10:05:00'::timestamp, '2024-03-15 10:20:00'::timestamp, null::text
+
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as disposition_id
+          where false
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::text as certainty, null::timestamp as datetime
+          where false
+
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'enc_001' as encounter_id, 'rx_001' as prescription_id
+          union all
+          select 'enc_001', 'rx_002'
+
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as id, false as is_discontinued, null::text as discontinuing_reason, '2024-03-15 11:00:00'::timestamp as datetime, 'med_001' as medication_id
+          union all
+          -- BL-023: discontinued, still listed
+          select 'rx_002', true, 'Allergy', '2024-03-15 12:00:00'::timestamp, 'med_002'
+
+      - input: ref('vaccine_administrations')
+        format: sql
+        rows: |
+          select 'enc_001' as encounter_id, 'GIVEN' as status, '2024-03-15 11:00:00'::timestamp as datetime, 'sv_001' as scheduled_vaccine_id
+          union all
+          -- BL-024: each of these is dropped
+          select 'enc_001', 'NOT_GIVEN', '2024-03-15 11:05:00'::timestamp, 'sv_002'
+          union all
+          select 'enc_001', 'RECORDED_IN_ERROR', '2024-03-15 11:10:00'::timestamp, 'sv_002'
+          union all
+          select 'enc_001', 'HISTORICAL', '2024-03-15 11:15:00'::timestamp, 'sv_002'
+
+      - input: ref('vaccine_schedules')
+        format: sql
+        rows: |
+          select 'sv_001' as id, 'Birth' as label, 'Dose 1' as dose_label, 'vax_001' as vaccine_id
+          union all
+          select 'sv_002', '6 weeks', 'Dose 1', 'vax_002'
+
+      - input: ref('procedures')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::date as date, null::text as procedure_type_id, null::text as location_id, null::text as note, null::text as completed_note
+          where false
+
+      - input: ref('lab_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as status
+          where false
+
+      - input: ref('lab_test_panel_requests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as lab_test_panel_id, null::text as lab_request_id
+          where false
+      - input: ref('int__lab_test_panel_attribution')
+        format: sql
+        rows: |
+          select null::text as lab_test_id, null::text as lab_request_id, null::text as lab_test_panel_request_id, null::text as lab_test_panel_id, null::text as panel_attribution where false
+
+      - input: ref('lab_test_panels')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('lab_tests')
+        format: sql
+        rows: |
+          select null::text as id, null::text as lab_request_id, null::text as lab_test_type_id
+          where false
+
+      - input: ref('lab_test_types')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+
+      - input: ref('notes')
+        format: sql
+        rows: |
+          select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::timestamp as created_datetime, null::text as visibility_status
+          where false
+
+      - input: ref('imaging_requests')
+        format: sql
+        rows: |
+          select 'ir_001' as id, 'enc_001' as encounter_id, 'xRay' as imaging_type, 'pending' as status
+          union all
+          -- BL-022: each of these is dropped
+          select 'ir_002', 'enc_001', 'ctScan', 'cancelled'
+          union all
+          select 'ir_003', 'enc_001', 'mri', 'deleted'
+          union all
+          select 'ir_004', 'enc_001', 'ultrasound', 'entered_in_error'
+
+      - input: ref('imaging_request_areas')
+        format: sql
+        rows: |
+          select null::text as imaging_request_id, null::text as area_id
+          where false
+
+    expect:
+      format: sql
+      rows: |
+        select
+          'P001'               as "Patient ID",
+          'Kevin'              as "First name",
+          'Lee'                as "Last name",
+          '1990-01-01'         as "Date of birth",
+          34                   as "Age",
+          'male'               as "Sex",
+          null::text           as "Ethnicity",
+          null::text           as "Billing type",
+          'Naitasiri'           as "Sub-division",
+          'Central Division'           as "Division",
+          null::text           as "Village",
+          '2024-03-15 10:00'   as "Encounter start date and time",
+          null::text           as "Encounter end date and time",
+          null::integer        as "Length of stay (days)",
+          'Regional Hospital'  as "Facility",
+          null::text           as "Emergency encounter type",
+          'Hospital admission' as "Inpatient encounter type",
+          null::text           as "Outpatient encounter type",
+          null::text           as "Discharge disposition",
+          '2'                  as "Triage category",
+          null::text           as "Arrival mode",
+          '00:15:00'           as "Time seen following triage/Waiting time (hh:mm:ss)",
+          'Dr. Jane Smith'     as "Clinician",
+          'Dr. Jane Smith'     as "Supervising clinician",
+          'General Medicine'   as "Discharging department",
+          '2024-03-15 10:00'   as "Time assigned to Discharging department",
+          'General Wing'       as "Discharging area",
+          '2024-03-15 10:00'   as "Time assigned to Discharging area",
+          'Room 5'             as "Discharging location",
+          '2024-03-15 10:00'   as "Time assigned to Discharging location",
+          'General Medicine'   as "Department history",
+          '2024-03-15 10:00'   as "Department history date and times",
+          'General Wing'       as "Area history",
+          '2024-03-15 10:00'   as "Area history date and times",
+          'Room 5'             as "Location history",
+          '2024-03-15 10:00'   as "Location history date and times",
+          null::text           as "Reason for encounter",
+          null::text           as "Diagnoses",
+          null::text           as "Diagnosis codes",
+          E'Name: Amoxicillin, Discontinued: false, Discontinuing reason: \nName: Paracetamol, Discontinued: true, Discontinuing reason: Allergy' as "Medications",
+          'BCG, Label: Birth, Schedule: Dose 1' as "Vaccinations",
+          null::text           as "Procedures",
+          null::text           as "Lab requests",
+          'X-Ray, Areas to be imaged: , Notes: ' as "Imaging requests",
+          null::text           as "Notes"

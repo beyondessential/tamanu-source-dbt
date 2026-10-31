@@ -179,20 +179,29 @@ maui-team#104 introduced.
 
 AC-001, AC-003 and AC-005 are asserted at the `encounter_invoice_audit` call site by
 `test_encounter_invoice_audit_aggregation` and
-`test_encounter_invoice_audit_cancelled_invoice_products`, which stub `ref('encounters')`,
+`test_encounter_invoice_audit_cancelled_products`, which stub `ref('encounters')`,
 `ref('locations')` and `ref('facilities')` directly and so exercise this macro
 end-to-end. AC-003 is checked per adoption by a compiled-SQL diff; the evidence for each
 adoption belongs on its PR.
 
-Those fixtures carry a second, sensitive facility with an encounter on it, and an
-encounter whose `location_id` resolves to nothing. Both sit inside the default date window
-and reuse existing patients, so either surfacing fails `expect`. Without them the
-sensitivity predicate could be deleted outright and the tests still pass, which
-is what makes them assertions rather than decoration:
+`test_encounter_invoice_audit_aggregation` carries a second, sensitive facility with an
+encounter on it, and an encounter whose `location_id` resolves to nothing.
+`test_encounter_invoice_audit_cancelled_products` carries neither — it has one
+non-sensitive facility — so it contributes no partition or BL-006 evidence. Both planted
+encounters sit inside the default date window and reuse existing patients, so either
+surfacing fails `expect`. Without them the sensitivity predicate could be deleted outright
+and the tests still pass, which is what makes them assertions rather than decoration.
+
+Those tests run the standard variant, so they only prove the `false` direction of AC-001.
+The `true` direction is proved by `test_encounter_invoice_audit_sensitive_partition`,
+which runs `sensitive-audit-encounter-invoice` over the same two facilities and expects
+only the sensitive one's encounter. `test_encounter_summary_start_sensitive_variant` asserts
+the same at the `encounter_summary_core` call site.
 
 | Mutation | Result |
 |---|---|
 | drop `and (f.sensitive_network_id is not null) = {{ is_sensitive }}` | fails |
+| `= {{ is_sensitive }}` → constant `= false` | fails — but only `test_encounter_invoice_audit_sensitive_partition` and `test_encounter_summary_start_sensitive_variant`; every standard-variant test passes, since `false` is what they pass anyway |
 | `locations` inner join → `left join` | passes — the inner join to `facilities` still drops the row via the null `facility_id` |
 | both joins → `left join` | fails |
 
@@ -204,9 +213,10 @@ load-bearing.
 
 | Caller | Adopted | Notes |
 |---|---|---|
-| `encounter_invoice_audit_report` | yes | First adoption — the only call site with unit-test coverage. |
-| `admissions_dataset` | not yet | Will pass `encounter_type='admission'` and alias `encounter_id` back to `id`, `facility` to `facility_name`. |
-| `encounter_summary_report` | not yet | Will pass a `date_field`-driven range. |
+| `encounter_invoice_audit_report` | yes | First adoption. Passes `localise_timestamps=true`. |
+| `admissions_dataset` | yes | Passes `encounter_type='admission'`, and aliases `encounter_id` back to `id`, `facility` to `facility_name`. |
+| `encounter_summary_core` | yes | Passes a `date_field`-driven range. Adopted in `encounter_summary_report`, and moved to the core when that report was split. |
+| `medication_dispenses_dataset` | yes | Facility partition only — no `extra_predicates`. |
 
 ## Open questions
 
@@ -220,3 +230,4 @@ None outstanding.
 | 2026-09-05 | Adoption in `admissions_dataset` and `encounter_summary_report` completed and verified; the two questions tracking that work are closed. |
 | 2026-09-17 | Added `planned_location_id` / `planned_location_start_datetime` to the output superset (MAUI-6905), for the admissions line list report's planned-transfer columns. Passthrough only — no new business logic. |
 | 2026-10-15 | Tamanu 2.66 dropped `facilities.is_sensitive`: BL-001's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null. Same partition, no output change (MAUI-6163). |
+| 2026-10-15 | MAUI-7011: callers table brought up to date (all four adopted, `medication_dispenses_dataset` added); AC-001 evidence corrected — only the aggregation fixture carries the sensitive facility, and the `true` direction is proved by the two sensitive-variant tests, now named; mutation table gains the constant `= false` row. |

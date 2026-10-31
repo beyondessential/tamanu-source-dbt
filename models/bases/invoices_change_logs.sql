@@ -1,7 +1,9 @@
 select
-    c.id as change_id,
+    c.id as changelog_id,
     c.record_id::uuid as invoice_id,
-    c.logged_at,
+    c.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    c.logged_at at time zone 'UTC' as logged_at_utc,
     c.updated_by_user_id,
     c.record_data ->> 'status' as status,
     i.encounter_id,
