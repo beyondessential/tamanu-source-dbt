@@ -48,6 +48,7 @@ select
     end as age,
     l.id as location_id,
     l.name as location,
+    f.id as facility_id,
     lg.id as location_group_id,
     lg.name as location_group,
     d.diets,

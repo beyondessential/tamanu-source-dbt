@@ -98,6 +98,12 @@ select
     end as "{{ translate_label('hospitalBedOccupancyPercent') }}"
 from location_summary ls
 where
+    -- BL-015: facility scope (specs/reports/hospital-admissions-summaries.md)
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else ls.facility_id = {{ parameter('facilityId') }}
+    end
+    and
     case
         when {{ parameter('locationId') }} is null then true
         else ls.location_id = {{ parameter('locationId') }}

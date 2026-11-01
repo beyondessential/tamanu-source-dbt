@@ -66,6 +66,9 @@ models:
       - name: clinician
         data_type: character varying(255)
         description: "{{ doc('generic__user') }} who booked the location."
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} where the appointment will take place."
       - name: location_group_id
         data_type: character varying(255)
         description: "{{ doc('appointments__location_group_id') }}"

@@ -50,6 +50,12 @@ join {{ ref(episodes) }} adh
 -- its end. The `having` below already restricts this report to months an episode started
 -- or ended in, and dropping future months would lose a future-dated admission entirely.
 where
+    -- BL-015: facility scope (specs/reports/hospital-admissions-summaries.md)
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else adh.facility_id = {{ parameter('facilityId') }}
+    end
+    and
     case
         when {{ parameter('departmentId') }} is null then true
         else adh.department_id = {{ parameter('departmentId') }}
