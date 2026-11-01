@@ -11,6 +11,8 @@ CLAUDE.md
 
 # Environment and config
 .env
+.env.*
+!.env.example
 .user.yml
 local_config/
 
