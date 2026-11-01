@@ -23,6 +23,11 @@ where
     <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
     case
+        when {{ parameter('facilityId') }} is null then true
+        else facility_id = {{ parameter('facilityId') }}
+    end
+    and
+    case
         when {{ parameter('departmentId') }} is null then true
         else department_id = {{ parameter('departmentId') }}
     end

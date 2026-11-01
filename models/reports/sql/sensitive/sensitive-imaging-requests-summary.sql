@@ -28,6 +28,12 @@ left join {{ ref('ds__sensitive_imaging_requests') }} ir
 where ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and (ir.department_id is not null or ir.imaging_type is not null)
     and (
+        case
+            when {{ parameter('facilityId') }} is null then true
+            else ir.facility_id = {{ parameter('facilityId') }}
+        end
+    )
+    and (
         {{ parameter('department') }} is null or ir.department_id = {{ parameter('department') }}
     )
     and (

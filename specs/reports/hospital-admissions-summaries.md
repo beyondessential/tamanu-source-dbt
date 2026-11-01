@@ -38,7 +38,7 @@ encounter in one location (or one department).
 `ref('encounter_history')`, `ref('encounters')`, `ref('patients')`, `ref('locations')`,
 `ref('location_groups')`, `ref('departments')`, `ref('facilities')`.
 
-Parameters: `fromDate`, `toDate`, plus `locationGroupId` (`-by-area`, `-by-location`) or
+Parameters: `fromDate`, `toDate`, `facilityId`, plus `locationGroupId` (`-by-area`, `-by-location`) or
 `departmentId` (`-by-department`).
 
 ## Output
@@ -234,6 +234,7 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   into somewhere the patient was admitted to directly with no transfer out anywhere to
   match it. This is the dominant shape in practice: such rows are far more common than the
   transferred-in-then-converted case the `admission` rule exists for.
+- **BL-015:** When `facilityId` is set, each report keeps only that facility's episodes. When it is unset, every facility in the report's sensitivity partition is kept.
 
 ## Divergences
 
@@ -308,11 +309,13 @@ None outstanding.
 | AC-020 | That episode is flagged as an admission even where the run opened with a transfer in. | BL-014 | `test_int__admission_history_location_phases`, `..._department_phases` |
 | AC-021 | A history row naming the location or department already held does not flag the episode as a transfer in. | BL-014 | `test_int__admission_history_location_phases`, `..._department_phases` |
 | AC-022 | A genuine move still yields two episodes, the first with `transfer_out` set. | BL-014 | `test_int__admission_history_location_phases`, `..._department_phases` |
+| AC-023 | Setting `facilityId` removes every other facility's rows. | BL-015 | `test_hospital_admissions_by_department_facility_filter`, `..._by_area_facility_filter`, `..._by_location_facility_filter` |
 
 ## Change log
 
 | Date | Change |
 |---|---|
+| 2026-11-02 | The reports apply the `facilityId` parameter they already declared (BL-015). |
 | 2026-10-15 | Tamanu 2.66 dropped the nullable `facilities.is_sensitive`: BL-012's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null, so the `coalesce` is gone. Same partition (MAUI-6163). |
 | 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. `transfer_in` is taken from the episode's opening row rather than aggregated over it, so a history row naming the location or department already held no longer reports a transfer nobody made; `admission` is still aggregated. BL-006's transfer identity restated as a checkable invariant. BL-014 additionally records what the collapse does to an encounter re-typed away from `admission` and back in the same place. |
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting, beyond BL-007's patient-day floor — which follows the AIHW definition and stops an inverted episode subtracting days from a month. |
