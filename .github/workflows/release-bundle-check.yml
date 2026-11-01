@@ -14,8 +14,7 @@ name: Release bundle check
 # INLINED DELIBERATELY. This repo is public and maui-team is private, and GitHub
 # does not let a public repo call a reusable workflow in a private repo - the
 # call fails at resolution with "workflow was not found", before any job runs.
-# claude-code-review.yml and publish-artifacts.yml are inlined for the same
-# reason.
+# publish-artifacts.yml is inlined for the same reason.
 #
 # This wrapper DELIBERATELY DIVERGES from .maui/.github/workflows/release-bundle-check.yml:
 # that reusable workflow fetches the script with a second checkout of maui-team@main,
