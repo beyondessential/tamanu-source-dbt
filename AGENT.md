@@ -90,6 +90,8 @@ Column descriptions are defined once in `models/sources/<table>.md` and reused t
 
 Generic doc blocks (e.g. `generic__id`, `generic__visibility_status`) are in `models/sources/generic.md`.
 
+`models/sources/` and `models/logs/` are copied from Tamanu's `database/model/` and cleared by `scripts/refresh_tamanu_source.py` on every upgrade, so never add a doc block there. A block for a column a base model derives goes in `models/bases/<model>.md`, or `models/bases/generic.md` when several bases share it.
+
 Never write inline descriptions in `.yml` files when a `{{ doc() }}` reference exists — always prefer the reusable doc block.
 
 ## Reports
