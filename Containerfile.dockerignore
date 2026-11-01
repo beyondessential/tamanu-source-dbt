@@ -1,2 +1,6 @@
 .git
 compiled
+.env*
+logs
+target
+local_config
