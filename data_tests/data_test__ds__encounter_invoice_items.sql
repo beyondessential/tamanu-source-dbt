@@ -18,14 +18,14 @@ item_agg as (
     group by invoice_id
 ),
 
--- AC-003: per-invoice sum of line discounted_total reconciles to invoice_total (BL-001/003).
+-- AC-003: per-invoice sum of line discounted_total reconciles to invoice_total plus item_adjustment (BL-001/003).
 ac_003 as (
     select
         ia.invoice_id::varchar as id,
         'AC-003' as failed_ac
     from item_agg ia
     join invoices inv on inv.invoice_id = ia.invoice_id
-    where ia.items_total is distinct from round(inv.invoice_total, 2)
+    where ia.items_total is distinct from round(inv.invoice_total + coalesce(inv.item_adjustment, 0), 2)
 ),
 
 -- AC-004: per-invoice sum of line insurance_coverage reconciles to invoice coverage (BL-004).
