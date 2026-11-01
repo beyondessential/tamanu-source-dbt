@@ -197,9 +197,9 @@ Tagging a version with no bundle behind it publishes nothing. See
 
 ## Tamanu minor-version upgrades
 
-A MAUI card titled "Upgrade data models to latest available version v<major>.<minor>", the
-bot PR "Upgrade Tamanu version to <major>.<minor>.0", or a `feature/tamanu-upgrade-v<major>.<minor>`
-branch is worked with the `tamanu-upgrade` skill (`maui-internal` plugin), not by hand. It does
+A MAUI card titled "Upgrade data models to latest available version v<major>.<minor>", a PR
+whose title contains "Upgrade Tamanu version to <major>.<minor>" (the bot adds a conventional
+commit prefix), or a `feature/tamanu-upgrade-v<major>.<minor>` branch is worked with the `tamanu-upgrade` skill (`maui-internal` plugin), not by hand. It does
 not apply to a patch version.
 
 ---
