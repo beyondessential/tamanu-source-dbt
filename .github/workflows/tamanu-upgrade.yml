@@ -171,7 +171,7 @@ jobs:
           - Updated dbt_project.yml to version $DBT_VERSION
           - Refreshed Tamanu source tables from release/$RELEASE_VERSION
 
-          Related: MAUI-6163
+          Related: MAUI-7024
 
           Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 

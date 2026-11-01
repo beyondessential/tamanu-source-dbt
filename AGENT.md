@@ -195,6 +195,13 @@ A release is a version bump **and** the bundle committed under `compiled/v<versi
 Tagging a version with no bundle behind it publishes nothing. See
 [README](README.md#creating-a-release).
 
+## Tamanu minor-version upgrades
+
+A MAUI card titled "Upgrade data models to latest available version v<major>.<minor>", the
+bot PR "Upgrade Tamanu version to <major>.<minor>.0", or a `feature/tamanu-upgrade-v<major>.<minor>`
+branch is worked with the `tamanu-upgrade` skill (`maui-internal` plugin), not by hand. It does
+not apply to a patch version.
+
 ---
 
 ## Codebase navigation
