@@ -136,6 +136,14 @@ unit_tests:
           union all
           select 'loc_ung', null::text, 5::integer
 
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_grp'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'enc_orphan', '2024-01-01 00:00:00', null
+          union all
+          select 'enc_ung', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |

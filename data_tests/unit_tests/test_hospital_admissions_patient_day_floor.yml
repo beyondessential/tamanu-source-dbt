@@ -47,6 +47,12 @@ unit_tests:
         rows: |
           select 'loc_001'::text as id, 'lg_001'::text as location_group_id, 10::integer as max_occupancy
 
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'ep_inverted'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'ep_normal', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |

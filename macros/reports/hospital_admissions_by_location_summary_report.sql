@@ -55,6 +55,8 @@ location_summary as (
         and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
     join {{ ref('locations') }} l on l.id = alh.location_id
     where rm.month <= current_date
+        -- BL-016: only the encounters that can fall in the month spine (specs/reports/hospital-admissions-summaries.md)
+        and alh.encounter_id = any({{ hospital_admissions_candidate_encounters() }})
     group by
         rm.month,
         alh.facility_id,

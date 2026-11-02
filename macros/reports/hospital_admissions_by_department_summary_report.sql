@@ -60,6 +60,8 @@ where
         when {{ parameter('departmentId') }} is null then true
         else adh.department_id = {{ parameter('departmentId') }}
     end
+    -- BL-016: only the encounters that can fall in the month spine (specs/reports/hospital-admissions-summaries.md)
+    and adh.encounter_id = any({{ hospital_admissions_candidate_encounters() }})
 group by
     rm.month,
     adh.facility_id,
