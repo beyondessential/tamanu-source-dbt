@@ -4,24 +4,26 @@
     predicate `<episodes>.encounter_id = any({{ hospital_admissions_candidate_encounters() }})`.
     See specs/reports/hospital-admissions-summaries.md BL-016.
 
-    The admission history intermediates number, group and `lead()` every encounter's
+    Why: the admission history intermediates number, group and `lead()` every encounter's
     history before the report sees a row, and Postgres cannot push a date range on an
-    episode below those windows. It can push a predicate on `encounter_id`, which is the
-    partition key of every one of them, so narrowing the encounters narrows the work.
-    The array is an uncorrelated subquery, which the planner evaluates once as an initial
-    plan and treats as a constant.
+    episode below those windows. It can push a predicate on `encounter_id`, the partition
+    key of every window, so narrowing the encounters narrows the work. The array is an
+    uncorrelated subquery, evaluated once and treated as a constant.
 
-    Row-selecting only: the reports re-apply the exact month logic on the episodes, so this
-    set may be wider than needed and may never be narrower. An encounter qualifies when its
-    stored start and end dates, widened by the project's candidate window (candidate_window_from
-    and candidate_window_to), overlap the month spine. The widening covers the gap between those stored dates and the timezone-converted dates
-    the reports compare, which can be 26 hours apart. An encounter that records its end
-    before its start has its end replaced by its start in the base model, so the start
-    date is admitted on its own as well, as encounter_summary_core does.
+    Which encounters: those whose stored start and end dates, widened by the project's
+    candidate window (`candidate_window_from` / `candidate_window_to`), overlap the month
+    spine. The widening covers the gap between the stored dates and the timezone-converted
+    dates the reports compare, which can be 26 hours apart. The start date is also admitted
+    on its own, because the base model replaces an end that precedes its start with the
+    start (as `encounter_summary_core` does).
 
-    The bounds are compared against the stored character(19) columns, cast to
-    character(19) so the comparison keeps the index-compatible operators.
+    This is a pre-filter only. The reports re-apply the exact month logic to the episodes,
+    so the set may be wider than needed and must never be narrower.
+
+    The bounds are cast to `character(19)` to match the stored columns, which keeps the
+    comparison on index-compatible operators.
 -#}
+{#- month spine: the first day of the first reporting month to the first day after the last -#}
 {%- set from_bound = parameter('fromDate', default_value='2024-01-01', data_type='text') -%}
 {%- set to_bound = parameter('toDate', default_value='2024-01-01', data_type='text') -%}
 {%- set spine_from = "concat(left(" ~ from_bound ~ ", 7), '-01')::date" -%}
