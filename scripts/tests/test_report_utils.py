@@ -2,13 +2,20 @@ import pytest
 
 from utils.report_utils import (
     ReportingSchemaDependencyError,
+    effective_dependencies,
     order_models_for_schema,
+    reporting_schema_nodes,
 )
 
 
-def _node(name, deps=(), tags=()):
+def _node(name, deps=(), tags=(), materialized="view"):
     """Build the slice of a manifest node the ordering reads."""
-    return {"name": name, "tags": list(tags), "depends_on": {"nodes": list(deps)}}
+    return {
+        "name": name,
+        "tags": list(tags),
+        "depends_on": {"nodes": list(deps)},
+        "config": {"materialized": materialized},
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -175,3 +182,85 @@ def test_a_manifest_with_nothing_to_build_fails(monkeypatch, tmp_path):
 
     with pytest.raises(RuntimeError, match="No models found"):
         report_utils.generate_reporting_schema_script()
+
+
+# ---------------------------------------------------------------------------
+# reporting_schema_nodes -- which models get a view
+# ---------------------------------------------------------------------------
+
+
+def _manifest(**nodes):
+    return {"nodes": {f"model.p.{name}": node for name, node in nodes.items()}}
+
+
+def _ids(*names):
+    return [f"model.p.{name}" for name in names]
+
+
+def test_an_ephemeral_model_gets_no_view():
+    manifest = _manifest(
+        base=_node("base"),
+        shared=_node("shared", _ids("base"), materialized="ephemeral"),
+        dataset=_node("dataset", _ids("shared")),
+    )
+
+    assert reporting_schema_nodes(manifest, False) == _ids("base", "dataset")
+
+
+def test_a_view_reading_through_an_ephemeral_model_follows_what_it_reads():
+    manifest = _manifest(
+        base=_node("base"),
+        shared=_node("shared", _ids("base"), materialized="ephemeral"),
+        dataset=_node("dataset", _ids("shared")),
+    )
+    nodes = reporting_schema_nodes(manifest, False)
+
+    assert order_models_for_schema(manifest, list(reversed(nodes))) == _ids("base", "dataset")
+
+
+def test_ephemeral_models_are_resolved_through_a_chain():
+    manifest = _manifest(
+        base=_node("base"),
+        inner=_node("inner", _ids("base"), materialized="ephemeral"),
+        outer=_node("outer", _ids("inner"), materialized="ephemeral"),
+        dataset=_node("dataset", _ids("outer")),
+    )
+
+    assert effective_dependencies(manifest, "model.p.dataset") == _ids("base")
+
+
+def test_a_dependency_reached_twice_through_ephemeral_models_is_listed_once():
+    manifest = _manifest(
+        base=_node("base"),
+        left=_node("left", _ids("base"), materialized="ephemeral"),
+        right=_node("right", _ids("base"), materialized="ephemeral"),
+        dataset=_node("dataset", _ids("left", "right")),
+    )
+
+    assert effective_dependencies(manifest, "model.p.dataset") == _ids("base")
+
+
+def test_sources_stay_dependencies():
+    manifest = _manifest(base=_node("base", ["source.p.tamanu.patients"]))
+
+    assert effective_dependencies(manifest, "model.p.base") == ["source.p.tamanu.patients"]
+
+
+def test_a_restricted_ephemeral_model_gets_no_view_with_a_sensitive_facility():
+    manifest = _manifest(
+        episodes=_node("episodes", tags=["restricted"], materialized="ephemeral"),
+        dataset=_node("dataset", _ids("episodes"), tags=["restricted"]),
+    )
+
+    assert reporting_schema_nodes(manifest, False) == []
+    assert reporting_schema_nodes(manifest, True) == _ids("dataset")
+
+
+def test_reports_and_internal_models_get_no_view():
+    manifest = _manifest(
+        registry=_node("registry", tags=["internal"]),
+        report=_node("report", tags=["reports"]),
+        base=_node("base"),
+    )
+
+    assert reporting_schema_nodes(manifest, False) == _ids("base")
