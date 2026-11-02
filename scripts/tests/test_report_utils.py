@@ -2,8 +2,26 @@ import pytest
 
 from utils.report_utils import (
     ReportingSchemaDependencyError,
+    is_skipped_report,
     order_models_for_schema,
 )
+
+
+# ---------------------------------------------------------------------------
+# is_skipped_report
+# ---------------------------------------------------------------------------
+
+
+def test_invoice_products_summary_is_not_built_in_the_standard_project():
+    assert is_skipped_report("invoice-products-summary", "tamanu_source_dbt")
+
+
+def test_invoice_products_summary_is_built_in_a_deployment_project():
+    assert not is_skipped_report("invoice-products-summary", "tamanu_dbt_samoa")
+
+
+def test_other_reports_are_built_in_the_standard_project():
+    assert not is_skipped_report("admissions-line-list", "tamanu_source_dbt")
 
 
 def _node(name, deps=(), tags=()):

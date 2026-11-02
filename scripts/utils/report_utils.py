@@ -21,6 +21,27 @@ DBT_PACKAGE_DIR = os.path.join(BASE_DIR, "dbt_packages", "tamanu_source_dbt")
 VERSION_DIR = os.path.join(BASE_DIR, "compiled", f"v{VERSION}")
 
 
+# Reports that are not compiled into this package's own bundle. Their SQL reads deployment
+# data at compile time, so a bundle built here would carry one database's values.
+# A deployment repo building the package's reports still compiles them.
+STANDARD_PROJECT_NAME = "tamanu_source_dbt"
+NOT_BUILT_IN_STANDARD = frozenset({"invoice-products-summary"})
+
+
+def is_skipped_report(report_name, project_name):
+    """
+    Says whether a report is left out of the compiled bundle for the given project.
+
+    Args:
+        report_name (str): The report model name.
+        project_name (str): The dbt project the build is running in.
+
+    Returns:
+        bool: True when the project is this package and the report is not built here.
+    """
+    return project_name == STANDARD_PROJECT_NAME and report_name in NOT_BUILT_IN_STANDARD
+
+
 def compile_report(database, sql_file, config_file, output_file):
     """
     Compiles a report by processing the SQL and config files and generating a JSON output.
@@ -77,6 +98,7 @@ def generate_project_reports(language):
             has_sensitive_facility
             or "restricted" not in manifest["nodes"][key].get("tags", [])
         )
+        and not is_skipped_report(manifest["nodes"][key]["name"], PROJECT_NAME)
     ]
 
     if not nodes:
