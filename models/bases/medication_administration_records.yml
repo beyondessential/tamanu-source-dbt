@@ -1,0 +1,46 @@
+version: 2
+models:
+  - name: medication_administration_records
+    description: '{{ doc("table__medication_administration_records") }}'
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      classification: restricted
+    columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in medication_administration_records."
+      - name: prescription_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_records__prescription_id') }}"
+      - name: status
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_records__status') }}"
+      - name: due_datetime
+        data_type: timestamp
+        description: "{{ doc('medication_administration_records__due_at') }}"
+      - name: recorded_datetime
+        data_type: timestamp
+        description: "{{ doc('medication_administration_records__recorded_at') }}"
+      - name: recorded_by_user_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_records__recorded_by_user_id') }}"
+      - name: reason_not_given_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_records__reason_not_given_id') }}"
+      - name: changing_status_reason
+        data_type: text
+        description: "{{ doc('medication_administration_records__changing_status_reason') }}"
+      - name: is_auto_generated
+        data_type: boolean
+        description: "{{ doc('medication_administration_records__is_auto_generated') }}"
+      - name: is_error
+        data_type: boolean
+        description: "{{ doc('medication_administration_records__is_error') }}"
+      - name: error_notes
+        data_type: text
+        description: "{{ doc('medication_administration_records__error_notes') }}"
