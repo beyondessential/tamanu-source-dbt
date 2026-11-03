@@ -1,10 +1,11 @@
--- See specs/dbt-model/ds__prescription_administrations.md for BL-003..BL-008.
+-- See specs/dbt-model/ds__prescription_administrations.md for BL-003..BL-008, BL-011.
 {% macro prescription_administrations_dataset(is_sensitive=false) %}
 
 select
     ep.encounter_id,
     ep.prescription_id,
     mar.id as administration_id,
+    dose.id as administration_dose_id,
     pr.datetime,
     p.id as patient_id,
     p.display_id,
@@ -32,9 +33,13 @@ select
     pr.notes as prescription_notes,
     mar.status as administration_status,
     mar.due_datetime as administration_due_datetime,
-    -- BL-005: when the status was recorded; null for a scheduled dose
-    mar.recorded_datetime as administered_datetime,
-    mar.recorded_by_user_id as administered_by_id,
+    mar.recorded_datetime as administration_recorded_datetime,
+    dose.dose_index as administration_dose_index,
+    dose.dose_amount as administered_dose_amount,
+    -- BL-005: when the dose was given; null when no dose was given
+    dose.given_datetime as administered_datetime,
+    -- BL-011: who gave the dose
+    dose.given_by_user_id as administered_by_id,
     administrator.display_name as administered_by,
     mar.changing_status_reason as administration_notes
 from {{ ref('encounter_prescriptions') }} ep
@@ -58,6 +63,9 @@ left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id
 left join {{ ref('medication_administration_records') }} mar
     on mar.prescription_id = pr.id
     and mar.is_error is not true
-left join {{ ref('users') }} administrator on administrator.id = mar.recorded_by_user_id
+-- BL-005: one row per dose given; a MAR record with no dose (not given, or
+-- not yet recorded) keeps one row with the dose columns null
+left join {{ ref('medication_administration_record_doses') }} dose on dose.mar_id = mar.id
+left join {{ ref('users') }} administrator on administrator.id = dose.given_by_user_id
 
 {% endmacro %}

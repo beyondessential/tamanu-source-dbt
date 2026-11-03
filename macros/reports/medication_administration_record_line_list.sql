@@ -57,6 +57,6 @@ where
         else location_id = {{ parameter('locationId') }}
     end
 -- BL-009
-order by datetime desc, prescription_id, administration_due_datetime, administered_datetime
+order by datetime desc, prescription_id, administration_due_datetime, administration_dose_index
 
 {% endmacro %}

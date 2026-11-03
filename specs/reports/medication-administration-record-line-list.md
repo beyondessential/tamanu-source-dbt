@@ -24,7 +24,7 @@
 
 ## Grain
 
-One row per prescription per medication administration record (MAR), from the dataset (see `specs/dbt-model/ds__prescription_administrations.md`). A prescription with no MAR record is one row with blank administration columns.
+One row per prescription per medication administration record (MAR) per dose given, from the dataset (see `specs/dbt-model/ds__prescription_administrations.md`). A MAR record with no dose given, or a prescription with no MAR record, is one row with those columns blank.
 
 ## Inputs
 
@@ -56,9 +56,9 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 - **BL-004:** Facility, department and location filters are optional.
 - **BL-005:** Prescribed by is blank when no prescriber was recorded.
 - **BL-006:** Dose is the prescription's dose amount and dosing unit, or `Variable` for a variable-dose prescription.
-- **BL-007:** Administration columns come from the MAR record and are blank for a prescription with none. MAR records marked as entered in error are excluded by the dataset.
+- **BL-007:** Administration status comes from the MAR record, and Administered date and time and Administered by from the dose given (its given time and who gave it), blank where there is no MAR record or no dose. MAR records marked as entered in error are excluded by the dataset.
 - **BL-008:** Notes joins the prescription note and the administration status-change note with ` | `, omitting blanks.
-- **BL-009:** Ordered by prescription date descending, then prescription, scheduled time and administration time, so the order is stable.
+- **BL-009:** Ordered by prescription date descending, then prescription, scheduled time and dose number, so the order is stable.
 - **BL-010:** Administration status is `Given`, `Not given`, or `Not recorded` for a MAR record whose status is not yet set (a scheduled dose). The MAR has no "refused" status; refusal is recorded as not given with a reason.
 - **BL-011:** Department and location are the encounter's current values, not the values at administration time, because the MAR does not record where a dose was given.
 
@@ -67,7 +67,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
 | AC-001 | Selecting two drugs returns rows for exactly those drugs; selecting none returns all medications | BL-001, BL-003 | Manual check on a demo server |
-| AC-002 | A prescription with no MAR record appears once with blank administration columns | BL-007 | Manual check |
+| AC-002 | A prescription with no MAR record appears once with blank administration columns; a MAR record with two doses gives two rows | BL-007 | Dataset unit test `test_ds__prescription_administrations_grain` |
 | AC-003 | Standard and sensitive variants return disjoint rows | dataset BL-007 | Manual check |
 | AC-004 | Configs validate and every label resolves | all | `validate_report_configs.py`, `check_translations.py` |
 
@@ -81,7 +81,6 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 | ID | Question | Owner | Due |
 |---|---|---|---|
 | OQ-001 | Is the encounter's current department/location acceptable in place of the location at administration (BL-011)? | Maui team | |
-| OQ-002 | Should "Administered date and time" be the dose `given_time` from `medication_administration_record_doses` instead of the MAR recorded time? | Maui team | |
 
 ## Change log
 

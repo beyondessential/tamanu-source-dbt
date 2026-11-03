@@ -1,0 +1,37 @@
+version: 2
+models:
+  - name: medication_administration_record_doses
+    description: '{{ doc("table__medication_administration_record_doses") }}'
+    config:
+      tags:
+        - clinical
+    meta:
+      owner: bes-maui
+      domain: clinical
+      pii: false
+      classification: restricted
+    columns:
+      - name: id
+        data_type: uuid
+        description: "{{ doc('generic__id') }} in medication_administration_record_doses."
+      - name: mar_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_record_doses__mar_id') }}"
+      - name: dose_index
+        data_type: integer
+        description: "{{ doc('medication_administration_record_doses__dose_index') }}"
+      - name: dose_amount
+        data_type: numeric
+        description: "{{ doc('medication_administration_record_doses__dose_amount') }}"
+      - name: given_datetime
+        data_type: timestamp
+        description: "{{ doc('medication_administration_record_doses__given_time') }}"
+      - name: given_by_user_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_record_doses__given_by_user_id') }}"
+      - name: recorded_by_user_id
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_record_doses__recorded_by_user_id') }}"
+      - name: reason_for_change
+        data_type: character varying(255)
+        description: "{{ doc('medication_administration_record_doses__reason_for_change') }}"
