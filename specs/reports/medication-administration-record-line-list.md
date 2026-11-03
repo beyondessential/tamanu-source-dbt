@@ -60,7 +60,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 - **BL-008:** Notes joins the prescription note and the administration status-change note with ` | `, omitting blanks.
 - **BL-009:** Ordered by prescription date descending, then prescription, scheduled time and dose number, so the order is stable.
 - **BL-010:** Administration status is `Given`, `Not given`, or `Not recorded` for a MAR record whose status is not yet set (a scheduled dose). The MAR has no "refused" status; refusal is recorded as not given with a reason.
-- **BL-011:** Department and location are the encounter's current values, not the values at administration time, because the MAR does not record where a dose was given.
+- **BL-011:** Department and location are where the patient was when the dose was given, else when it was due, else when prescribed (dataset BL-006).
 
 ## Acceptance criteria
 
@@ -75,12 +75,6 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 
 - `isMulti` is a Tamanu web prop passed through by the report form rather than a declared report option (see `documentations/tamanu-report-configuration-schema.md`). A Tamanu frontend change could drop it and turn the field back into a single select; the SQL still works with one value.
 - With no medication selected and a long date range, the report lists every prescription; the 7-day default keeps the first run bounded.
-
-## Open questions
-
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | Is the encounter's current department/location acceptable in place of the location at administration (BL-011)? | Maui team | |
 
 ## Change log
 

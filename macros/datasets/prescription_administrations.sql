@@ -1,6 +1,23 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-003..BL-008, BL-011.
 {% macro prescription_administrations_dataset(is_sensitive=false) %}
 
+-- BL-006: each encounter history entry's department and location hold from its
+-- own time until the next entry's. Built in one pass rather than a per-row
+-- lookup, because encounter_history has no index on encounter_id. Ties on
+-- datetime are broken by id so the windows never overlap
+with encounter_history_windows as (
+    select
+        eh.encounter_id,
+        eh.department_id,
+        eh.location_id,
+        eh.datetime as valid_from,
+        lead(eh.datetime) over (
+            partition by eh.encounter_id
+            order by eh.datetime, eh.id
+        ) as valid_to
+    from {{ ref('encounter_history') }} eh
+)
+
 select
     ep.encounter_id,
     ep.prescription_id,
@@ -14,11 +31,11 @@ select
     p.date_of_birth,
     p.sex,
     e.encounter_type,
-    -- BL-006: the encounter's current department and location
-    e.department_id,
+    -- BL-006: department and location in effect at the administration
+    coalesce(eh_at.department_id, e.department_id) as department_id,
     d.name as department,
-    e.location_id,
-    l.name as location,
+    coalesce(eh_at.location_id, e.location_id) as location_id,
+    l_at.name as location,
     l.facility_id,
     f.name as facility,
     pr.medication_id,
@@ -52,7 +69,6 @@ join {{ ref('locations') }} l on l.id = e.location_id
 join {{ ref('facilities') }} f
     on f.id = l.facility_id
     and f.is_sensitive = {{ is_sensitive }}
-left join {{ ref('departments') }} d on d.id = e.department_id
 -- BL-008: prescriber_id is nullable, so this must stay a left join or prescriptions
 -- recorded without a prescriber would drop out of the dataset entirely
 left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id
@@ -67,5 +83,17 @@ left join {{ ref('medication_administration_records') }} mar
 -- not yet recorded) keeps one row with the dose columns null
 left join {{ ref('medication_administration_record_doses') }} dose on dose.mar_id = mar.id
 left join {{ ref('users') }} administrator on administrator.id = dose.given_by_user_id
+-- BL-006: the encounter history window in effect when the dose was given, or
+-- when it was due, or when prescribed. Falls back to the encounter's current
+-- department and location when no entry precedes that time
+left join encounter_history_windows eh_at
+    on eh_at.encounter_id = ep.encounter_id
+    and eh_at.valid_from <= coalesce(dose.given_datetime, mar.due_datetime, pr.datetime)
+    and (
+        eh_at.valid_to is null
+        or eh_at.valid_to > coalesce(dose.given_datetime, mar.due_datetime, pr.datetime)
+    )
+left join {{ ref('departments') }} d on d.id = coalesce(eh_at.department_id, e.department_id)
+left join {{ ref('locations') }} l_at on l_at.id = coalesce(eh_at.location_id, e.location_id)
 
 {% endmacro %}

@@ -8,7 +8,9 @@ unit_tests:
       with two doses yields one row per dose, each with its own given time and the user who gave
       it (rx_two); a MAR record with no dose yields one row with null dose columns (rx_ng).
       AC-003 / BL-007: a prescription at a sensitive facility is excluded from the standard
-      dataset (rx_sens).
+      dataset (rx_sens). AC-007 / BL-006: enc_1 moved from Emergency (Ward 1) to ICU (Ward 3) at
+      10:15 on 2 April, between rx_two's two doses, and its current ward is Ward 3; each row
+      shows the ward in effect at its dose, due time or prescription time.
     given:
       - input: ref('encounter_prescriptions')
         format: sql
@@ -22,7 +24,7 @@ unit_tests:
       - input: ref('encounters')
         format: sql
         rows: |
-          select 'enc_1' as id, 'pat_1' as patient_id, 'loc_1' as location_id, 'dep_1' as department_id, 'admission' as encounter_type
+          select 'enc_1' as id, 'pat_1' as patient_id, 'loc_3' as location_id, 'dep_2' as department_id, 'admission' as encounter_type
           union all select 'enc_2', 'pat_1', 'loc_2', null::text, 'admission'
 
       - input: ref('patients')
@@ -50,6 +52,7 @@ unit_tests:
         rows: |
           select 'loc_1' as id, 'Ward 1' as name, 'fac_1' as facility_id
           union all select 'loc_2', 'Ward 2', 'fac_2'
+          union all select 'loc_3', 'Ward 3', 'fac_1'
 
       - input: ref('facilities')
         format: sql
@@ -61,6 +64,13 @@ unit_tests:
         format: sql
         rows: |
           select 'dep_1' as id, 'Emergency' as name
+          union all select 'dep_2', 'ICU'
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_1' as id, 'enc_1' as encounter_id, '2026-03-31 08:00:00'::timestamp as datetime, 'dep_1' as department_id, 'loc_1' as location_id
+          union all select 'eh_2', 'enc_1', '2026-04-02 10:15:00'::timestamp, 'dep_2', 'loc_3'
 
       - input: ref('users')
         format: sql
@@ -90,5 +100,5 @@ unit_tests:
         select 'enc_1' as encounter_id, 'rx_none' as prescription_id, null::text as administration_id, null::text as administration_dose_id, '2026-04-01 09:00:00'::timestamp as datetime, 'pat_1' as patient_id, 'P001' as display_id, 'Jane' as first_name, 'Doe' as last_name, '1980-01-01'::date as date_of_birth, 'female' as sex, 'admission' as encounter_type, 'dep_1' as department_id, 'Emergency' as department, 'loc_1' as location_id, 'Ward 1' as location, 'fac_1' as facility_id, 'Hospital' as facility, 'drug-Inj900' as medication_id, 'Inj900' as medication_code, 'Alteplase 50mg Injection' as medication, null::text as prescriber_id, null::text as prescriber, false as is_variable_dose, 50::numeric as dose_amount, 'mg' as dosing_unit, 'IV' as route, null::text as prescription_notes, null::text as administration_status, null::timestamp as administration_due_datetime, null::timestamp as administration_recorded_datetime, null::integer as administration_dose_index, null::numeric as administered_dose_amount, null::timestamp as administered_datetime, null::text as administered_by_id, null::text as administered_by, null::text as administration_notes
         union all select 'enc_1', 'rx_err', null::text, null::text, '2026-04-01 09:05:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj900', 'Inj900', 'Alteplase 50mg Injection', null::text, null::text, false, 50::numeric, 'mg', 'IV', null::text, null::text, null::timestamp, null::timestamp, null::integer, null::numeric, null::timestamp, null::text, null::text, null::text
         union all select 'enc_1', 'rx_two', 'mar_two', 'dose_a', '2026-04-02 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, 1, 20::numeric, '2026-04-02 10:00:00'::timestamp, 'u_nurse1', 'Nurse One', null::text
-        union all select 'enc_1', 'rx_two', 'mar_two', 'dose_b', '2026-04-02 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, 2, 20::numeric, '2026-04-02 10:30:00'::timestamp, 'u_nurse2', 'Nurse Two', null::text
-        union all select 'enc_1', 'rx_ng', 'mar_ng', null::text, '2026-04-03 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'NOT_GIVEN', '2026-04-03 10:00:00'::timestamp, '2026-04-03 10:05:00'::timestamp, null::integer, null::numeric, null::timestamp, null::text, null::text, null::text
+        union all select 'enc_1', 'rx_two', 'mar_two', 'dose_b', '2026-04-02 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_2', 'ICU', 'loc_3', 'Ward 3', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, 2, 20::numeric, '2026-04-02 10:30:00'::timestamp, 'u_nurse2', 'Nurse Two', null::text
+        union all select 'enc_1', 'rx_ng', 'mar_ng', null::text, '2026-04-03 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_2', 'ICU', 'loc_3', 'Ward 3', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'NOT_GIVEN', '2026-04-03 10:00:00'::timestamp, '2026-04-03 10:05:00'::timestamp, null::integer, null::numeric, null::timestamp, null::text, null::text, null::text

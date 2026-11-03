@@ -40,6 +40,7 @@ A prescription is reached through `encounter_prescriptions`, so a prescription s
 | Reference | Why we need it |
 |---|---|
 | `{{ ref('encounter_prescriptions') }}` | Anchors each prescription to an encounter |
+| `{{ ref('encounter_history') }}` | Department and location in effect at the administration |
 | `{{ ref('encounters') }}`, `{{ ref('patients') }}` | Encounter type, department, location, patient demographics |
 | `{{ ref('prescriptions') }}` | Dose, route, prescriber, notes |
 | `{{ ref('medication_administration_records') }}` | New base: administration status and schedule |
@@ -56,6 +57,7 @@ A prescription is reached through `encounter_prescriptions`, so a prescription s
 | `medication_administration_record_doses` (source) | `id`, `mar_id`, `dose_index`, `dose_amount`, `given_time`, `given_by_user_id`, `recorded_by_user_id`, `reason_for_change`, `is_removed`, `deleted_at` |
 | `prescriptions` (base) | `id`, `datetime`, `medication_id`, `prescriber_id`, `is_variable_dose`, `dose_amount`, `dosing_unit`, `route`, `notes` (new) |
 | `encounters` | `id`, `patient_id`, `encounter_type`, `department_id`, `location_id` |
+| `encounter_history` | `encounter_id`, `datetime`, `department_id`, `location_id` |
 
 ### Freshness expectations
 
@@ -83,7 +85,7 @@ Both datasets expose the same columns. Types and descriptions are in the model `
 - **BL-003:** The dataset keeps prescriptions without any MAR record, by left-joining the base.
 - **BL-004:** MAR records with `is_error = true` are not joined; they were entered in error. A prescription whose only records are errors therefore appears as a prescription with no administration.
 - **BL-005:** The dataset has one row per dose given, and `administered_datetime` is the dose's `given_time`. A MAR record with no dose keeps one row with the dose columns null.
-- **BL-006:** `department` and `location` are the encounter's current department and location. Neither the MAR record nor the dose records where a dose was given.
+- **BL-006:** `department` and `location` are those of the encounter history entry in effect when the dose was given, else when it was due, else when prescribed; the encounter's current values when no entry precedes that time. Facility and the sensitive split stay on the encounter's current location.
 - **BL-007:** The standard dataset includes only facilities with `is_sensitive = false`, the sensitive dataset only `is_sensitive = true`, by the location's facility.
 - **BL-008:** `prescriber` is null when the prescription has no prescriber (left join).
 - **BL-009:** The prescriptions base now exposes `notes`.
@@ -100,6 +102,7 @@ Both datasets expose the same columns. Types and descriptions are in the model `
 | AC-004 | Both datasets compile and run against the release database | all | `dbt compile` + read-only smoke run |
 | AC-005 | A MAR record with two doses yields two rows, each with its own `given_time` and giver; a MAR record with no dose yields one row with null dose columns | BL-005, BL-011 | Unit test `test_ds__prescription_administrations_grain` |
 | AC-006 | A removed dose is excluded from the doses base | BL-010 | Unit test `test_medication_administration_record_doses_excludes_removed` |
+| AC-007 | A patient transferred between two doses shows the first dose's ward and the second dose's new ward, and a prescription before the transfer shows the original ward, even though the encounter's current ward is the new one | BL-006 | Unit test `test_ds__prescription_administrations_grain` |
 
 ## Lineage
 

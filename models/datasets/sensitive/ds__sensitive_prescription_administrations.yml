@@ -51,16 +51,16 @@ models:
         description: "{{ doc('encounters__encounter_type') }}"
       - name: department_id
         data_type: character varying(255)
-        description: "{{ doc('encounters__department_id') }}"
+        description: Department in effect when the dose was given (or, with no dose, when it was due or prescribed), from encounter history; the encounter's current value when no history entry precedes that time.
       - name: department
         data_type: character varying(255)
-        description: Name of the encounter's current department.
+        description: Name of the department in `department_id`.
       - name: location_id
         data_type: character varying(255)
-        description: "{{ doc('encounters__location_id') }}"
+        description: Location in effect when the dose was given (or, with no dose, when it was due or prescribed), from encounter history; the encounter's current value when no history entry precedes that time.
       - name: location
         data_type: character varying(255)
-        description: Name of the encounter's current location.
+        description: Name of the location in `location_id`.
       - name: facility_id
         data_type: character varying(255)
         description: "{{ doc('generic__facility_id') }} of the encounter's location."
