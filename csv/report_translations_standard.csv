@@ -287,7 +287,7 @@ report.reporting.paymentReceivedBy,Tamanu user name
 report.reporting.plannedLocation,Planned location
 report.reporting.plannedLocationStartDateTime,Planned location start date and time
 report.reporting.prescriptionAdministeredBy,Administered by
-report.reporting.prescriptionAdministeredDate,Administered date and time
+report.reporting.prescriptionAdministeredDateTime,Administered date and time
 report.reporting.prescriptionAdministrationStatus,Administration status
 report.reporting.prescriptionDate,Prescription date
 report.reporting.prescriptionDispensingUnit,Dispensing unit

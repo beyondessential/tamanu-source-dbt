@@ -20,7 +20,7 @@ select
     end as "{{ translate_label('prescriptionDose') }}",
     route as "{{ translate_label('prescriptionRoute') }}",
     -- BL-007: administration columns are NULL for a prescription never administered
-    to_char({{ to_user_selected_timezone('administered_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('prescriptionAdministeredDate') }}",
+    to_char({{ to_user_selected_timezone('administered_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('prescriptionAdministeredDateTime') }}",
     administered_by as "{{ translate_label('prescriptionAdministeredBy') }}",
     -- BL-010
     case
