@@ -469,6 +469,21 @@ Facility, Area, Clinician, Booking type, Status
 
 ---
 
+### Medication administration record line list *(sensitive version available)*
+
+**Report Description**
+
+This report lists every prescription created in the selected date range for the selected medications (all medications when none are selected). For each prescription it shows the prescriber, dose and route and, from the medication administration record, its status (Given, Not given, or Not recorded for a scheduled dose with no status yet) and, for each dose given, when it was given and by whom. One line per dose given; an administration with no dose given, or a prescription with no administration record, still appears once with those columns blank. Administration records marked as entered in error are excluded. The date range applies to the prescription date. Department and location are where the patient was when the dose was given (or, with no dose, when it was due or prescribed).
+
+**Filters**
+
+Facility, Medication, Department, Location
+
+**Default date range**: 7days
+
+
+---
+
 ### Medication dispensed summary *(sensitive version available)*
 
 **Report Description**
@@ -659,6 +674,27 @@ This report generates a summary of the number of patients that have been registe
 This report generates a list of all patients that have been registered, including date of registration and which user completed the registration. Patients are listed in chronological order by date of administration. The report also includes key demographic information for each patient. 
 
 **Default date range**: 7days
+
+
+---
+
+### Task followup register *(sensitive version available)*
+
+**Report Description**
+
+This report lists tasks assigned to a designation, so the staff holding that designation can review what was done and follow up what was not. Each row is one task. Leave 'Designation' blank to see every designation's tasks, or set it to (for example) Physiotherapist for that designation's register alone.
+Tamanu places no encounter-type restriction on tasks, so a task raised during an emergency, clinic or triage encounter is included alongside inpatient admissions. Use 'Encounter type' to narrow the register -- select 'Hospital admission' on its own for an inpatient-only view. Leaving it blank returns every type, so a missed task is never hidden by the encounter it was raised under.
+Tasks are selected by when they fell due, so a task that came due within the date range appears whether or not the encounter started in it.
+Task status maps Tamanu's three stored statuses onto four outcomes: 'Completed'; 'Outstanding' for a task still to do; 'Missed' for a repeating task the system marked not completed because it went more than two days past due; and 'Not completed' for a task a clinician marked not completed, with their reason shown alongside.
+Only tasks assigned to at least one designation are included -- an unassigned task belongs to nobody to follow up. Medication due tasks are excluded, as they exist only to drive the ward dashboard. Deleted tasks are excluded.
+'Length of stay' is the span between the encounter starting and ending, so it reads as a length of stay for an admission and as the encounter's duration for a shorter encounter type.
+'Notes recorded by designation' is Yes when someone currently holding one of the task's designations authored a note on that encounter, or a note was recorded on their behalf. It reflects designations as they stand now, not as they stood when the note was written.
+
+**Filters**
+
+Designation, Encounter type, Facility, Area, Patient, Task status
+
+**Default date range**: 30days
 
 
 ---

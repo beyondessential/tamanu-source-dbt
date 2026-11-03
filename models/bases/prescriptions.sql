@@ -6,6 +6,7 @@ select
     p.medication_id,
     p.prescriber_id,
     p.indication,
+    p.notes,
     p.route,
     p.quantity,
     p.repeats,

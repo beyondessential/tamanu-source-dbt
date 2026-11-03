@@ -286,14 +286,21 @@ report.reporting.paymentReceiptNumber,Receipt number
 report.reporting.paymentReceivedBy,Tamanu user name
 report.reporting.plannedLocation,Planned location
 report.reporting.plannedLocationStartDateTime,Planned location start date and time
+report.reporting.prescriptionAdministeredBy,Administered by
+report.reporting.prescriptionAdministeredDateTime,Administered date and time
+report.reporting.prescriptionAdministrationStatus,Administration status
 report.reporting.prescriptionDate,Prescription date
 report.reporting.prescriptionDispensingUnit,Dispensing unit
+report.reporting.prescriptionDose,Dose
 report.reporting.prescriptionDoseAmount,Dose amount
 report.reporting.prescriptionDosingUnit,Dosing unit
+report.reporting.prescriptionEncounterType,Encounter type
 report.reporting.prescriptionFrequency,Frequency
 report.reporting.prescriptionIsOngoing,Is ongoing
 report.reporting.prescriptionIsPRN,Is PRN
 report.reporting.prescriptionIsVariableDose,Is variable dose
+report.reporting.prescriptionPrescribedDate,Prescribed date
+report.reporting.prescriptionPrescriber,Prescribed by
 report.reporting.prescriptionRepeats,Repeats
 report.reporting.prescriptionRoute,Route
 report.reporting.prescriptionSelectedForDischarge,Prescription selected for discharge
