@@ -479,7 +479,7 @@ This report lists every prescription created in the selected date range for the 
 
 Facility, Medication, Department, Location
 
-**Default date range**: 30days
+**Default date range**: 7days
 
 
 ---

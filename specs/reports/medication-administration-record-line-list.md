@@ -32,7 +32,7 @@ One row per prescription per medication administration record (MAR), from the da
 
 | Name | Field | Filters on |
 |---|---|---|
-| `fromDate` / `toDate` | date range (default 30 days) | Prescription date |
+| `fromDate` / `toDate` | date range (default 7 days) | Prescription date |
 | `facilityId` | `FacilityField` | Encounter location's facility |
 | `medicationId` | `ParameterSuggesterSelectField`, `drug`, `isMulti` | Prescribed medication, any number of drugs |
 | `departmentId` | autocomplete `department` | Encounter department |
@@ -74,7 +74,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 ## Risks
 
 - `isMulti` is a Tamanu web prop passed through by the report form rather than a declared report option (see `documentations/tamanu-report-configuration-schema.md`). A Tamanu frontend change could drop it and turn the field back into a single select; the SQL still works with one value.
-- With no medication selected and a long date range, the report lists every prescription; the 30-day default keeps the first run bounded.
+- With no medication selected and a long date range, the report lists every prescription; the 7-day default keeps the first run bounded.
 
 ## Open questions
 
