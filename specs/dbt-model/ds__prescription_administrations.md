@@ -8,7 +8,7 @@
 | **Type** | dbt model |
 | **Layer** | `base` + `ds` |
 | **Materialisation** | `view` |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-7084](https://linear.app/bes/issue/MAUI-7084/tamanu-report-new-thrombolytic-administration-tenecteplase-alteplase) |
 | **Repo** | `tamanu-source-dbt` |

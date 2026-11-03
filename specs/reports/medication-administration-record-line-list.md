@@ -8,7 +8,7 @@
 | **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, sharing `macros/reports/medication_administration_record_line_list.sql` and reading `ds__prescription_administrations` / `ds__sensitive_prescription_administrations` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-7084](https://linear.app/bes/issue/MAUI-7084/tamanu-report-new-thrombolytic-administration-tenecteplase-alteplase) |
 | **Repo** | `tamanu-source-dbt` |
