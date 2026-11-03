@@ -57,7 +57,7 @@ Facility, Department, Encounter type, Discharge type
 
 **Report Description**
 
-Audit report for reviewing invoices against encounters. The date range filters on encounter start date, so each row represents an encounter that started within the range. Use the 'Include in-progress encounters' filter (defaults to Yes) to include non-discharged encounters; included rows appear with an empty encounter end date. Test patients and sensitive facilities are excluded.
+Audit report for reviewing invoices against encounters. The date range filters on encounter start date, so each row represents an encounter that started within the range. Use the 'Include in-progress encounters' filter (defaults to Yes) to include non-discharged encounters; included rows appear with an empty encounter end date. Test patients are excluded.
 
 Columns included:
 - Patient identification (ID, name, date of birth, age, sex, billing type).
@@ -205,7 +205,7 @@ Facility, Drug
 
 **Report Description**
 
-This report generates a list of all patients that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter end date and time. Sensitive facilities and test patients are excluded.
+This report generates a list of all patients that have had an encounter ended within the specified report parameters. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter end date and time. Test patients are excluded. When filtering by encounter type, Outpatient and Emergency are decided by the type the encounter started as, and Inpatient includes any encounter that was admitted, so an emergency encounter that was admitted is counted under both Emergency and Inpatient.
 
 The below information is included for each encounter:
 - Encounter start and end dates and times with length of stay.
@@ -228,7 +228,7 @@ All clinical data is listed chronologically within each cell. The below is a sum
 
 **Filters**
 
-Facility, Department, Area, Patient billing type, Supervising clinician
+Facility, Department, Area, Patient billing type, Supervising clinician, Encounter type
 
 **Default date range**: 7days
 
@@ -239,7 +239,7 @@ Facility, Department, Area, Patient billing type, Supervising clinician
 
 **Report Description**
 
-This report generates a list of all patients that have had an encounter started within the specified report parameters, including encounters that have not yet been discharged. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. Sensitive facilities and test patients are excluded.
+This report generates a list of all patients that have had an encounter started within the specified report parameters, including encounters that have not yet been discharged. Each row in the report represents an encounter, including details of the patient and their encounter. Patients are listed in order of the most recent encounter start date and time. Test patients are excluded. When filtering by encounter type, Outpatient and Emergency are decided by the type the encounter started as, and Inpatient includes any encounter that was admitted, so an emergency encounter that was admitted is counted under both Emergency and Inpatient.
 
 The below information is included for each encounter:
 - Encounter start and end dates and times with length of stay.
@@ -262,7 +262,7 @@ All clinical data is listed chronologically within each cell. The below is a sum
 
 **Filters**
 
-Facility, Department, Area, Patient billing type, Supervising clinician
+Facility, Department, Area, Patient billing type, Supervising clinician, Encounter type
 
 **Default date range**: 7days
 
@@ -400,7 +400,11 @@ Village, Doctor/Nurse
 
 **Report Description**
 
-This report provides a summary of all invoice products, including their insurable status, category, pricing and charging type across all price lists, and insurance coverage across all insurance plans.
+This report provides a summary of all invoice products, including their insurable status, category, pricing and charging type across all price lists, and insurance coverage across all insurance plans. When a facility is selected, only products available at that facility are listed, and price and charging values are shown only for the price lists that apply to that facility.
+
+**Filters**
+
+Facility
 
 **Default date range**: allTime
 
