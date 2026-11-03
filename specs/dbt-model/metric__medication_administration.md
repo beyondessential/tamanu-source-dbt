@@ -79,6 +79,7 @@ so this model carries no `data_table_*` meta.
 | AC-002 | `metric_id` is always `medication_administration` and registered in `metric_definitions` | BL-008 | `not_null` + `accepted_values` + `relationships` |
 | AC-003 | `period_start`, `facility_id`, `encounter_type`, `visit_detail_concept_id`, `visit_detail_concept_name`, `drug_source_value`, `drug_source_name` and `department` are `not_null` | BL-002, BL-004 -- BL-007 | `not_null` |
 | AC-004 | `visit_detail_concept_id` is one of 9201, 9202, 9203, 0 | BL-005 | `accepted_values` |
+| AC-005 | Only doses on a given, non-error administration with a given time count, and a dose whose prescription has no encounter link is dropped | BL-001 | `unit_test` (`ac_005_metric__medication_administration_given_only`) |
 
 ## Registry entry
 
@@ -89,6 +90,7 @@ Registered in `documentations/metrics/pharmacy.yml` as `medication_administratio
 
 | Model | Why |
 |---|---|
+| `medication_administration_record_doses`, `medication_administration_records`, `encounter_prescriptions`, `prescriptions` | The given doses and the encounter they belong to (BL-001) |
 | `clinical__visit_detail` | The segment and its OMOP Visit concept (BL-003, BL-005) |
 | `clinical__person` | Sex and birth date |
 | `locations`, `departments`, `reference_data` | Facility, department and medication resolution |

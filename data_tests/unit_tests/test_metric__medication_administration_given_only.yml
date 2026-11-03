@@ -1,0 +1,93 @@
+unit_tests:
+  - name: ac_005_metric__medication_administration_given_only
+    model: metric__medication_administration
+    description: >
+      BL-001. e1 is one inpatient segment. d1 is a dose on a given administration and counts. d2
+      is on a given administration whose status is stored upper-case, so it counts too. d3 is on a
+      not-given administration, d4 on a given administration flagged as an error, and d5 has no
+      given time, so none of them count. d6's prescription is linked to no encounter, so it is
+      dropped. d7 is on a second prescription of the same encounter and counts.
+    given:
+      - input: ref('medication_administration_record_doses')
+        format: sql
+        rows: |
+          select 'd1' as id, 'mar1' as mar_id, 1 as dose_index, 5::numeric as dose_amount, '2026-01-10 09:00:00'::timestamp as given_datetime, 'u1' as given_by_user_id, 'u1' as recorded_by_user_id, null::text as reason_for_change
+          union all
+          select 'd2', 'mar2', 1, 5::numeric, '2026-01-10 10:00:00'::timestamp, 'u1', 'u1', null::text
+          union all
+          select 'd3', 'mar3', 1, 5::numeric, '2026-01-10 11:00:00'::timestamp, 'u1', 'u1', null::text
+          union all
+          select 'd4', 'mar4', 1, 5::numeric, '2026-01-10 12:00:00'::timestamp, 'u1', 'u1', null::text
+          union all
+          select 'd5', 'mar5', 1, 5::numeric, null::timestamp, 'u1', 'u1', null::text
+          union all
+          select 'd6', 'mar6', 1, 5::numeric, '2026-01-10 13:00:00'::timestamp, 'u1', 'u1', null::text
+          union all
+          select 'd7', 'mar7', 1, 5::numeric, '2026-01-10 14:00:00'::timestamp, 'u1', 'u1', null::text
+
+      - input: ref('medication_administration_records')
+        format: sql
+        rows: |
+          select 'mar1' as id, 'rx1' as prescription_id, 'GIVEN' as status, false as is_error
+          union all
+          select 'mar2', 'rx1', 'given', null::boolean
+          union all
+          select 'mar3', 'rx1', 'NOT_GIVEN', false
+          union all
+          select 'mar4', 'rx1', 'GIVEN', true
+          union all
+          select 'mar5', 'rx1', 'GIVEN', false
+          union all
+          select 'mar6', 'rx_unlinked', 'GIVEN', false
+          union all
+          select 'mar7', 'rx2', 'GIVEN', false
+
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'rx1' as id, 'med_para' as medication_id
+          union all
+          select 'rx_unlinked', 'med_para'
+          union all
+          select 'rx2', 'med_para'
+
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep1' as id, 'e1' as encounter_id, 'rx1' as prescription_id, false as is_selected_for_discharge
+          union all
+          select 'ep2', 'e1', 'rx2', false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'med_para' as id, 'PARA' as code, 'Paracetamol' as name
+
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'vd1' as visit_detail_id, 'e1' as visit_occurrence_id, 'p1' as person_id, '2026-01-10 08:00:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id, 'Inpatient Visit' as visit_detail_concept_name, 'admission' as visit_detail_source_value, 'loc_ward' as care_site_id, 'dept_med' as department_id
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'p1' as person_id, 'male' as gender_source_value, 1980 as year_of_birth, 1 as month_of_birth, 20 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ward' as id, 'fac1' as facility_id
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_med' as id, 'Medical' as name
+
+    expect:
+      format: sql
+      rows: |
+        select 'medication_administration' as metric_id, null::text as variant_id, 'd1' as subject_id, '2026-01-10'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'admission' as encounter_type, 9201 as visit_detail_concept_id, 'Inpatient Visit' as visit_detail_concept_name, 'male' as sex, 'PARA' as drug_source_value, 'Paracetamol' as drug_source_name, 45 as age_years, 'Medical' as department
+        union all
+        select 'medication_administration', null::text, 'd2', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'male', 'PARA', 'Paracetamol', 45, 'Medical'
+        union all
+        select 'medication_administration', null::text, 'd7', '2026-01-10'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'male', 'PARA', 'Paracetamol', 45, 'Medical'

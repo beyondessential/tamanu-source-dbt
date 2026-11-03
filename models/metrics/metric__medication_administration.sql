@@ -23,6 +23,14 @@ with medication_administration_record_doses as (
     select * from {{ ref('medication_administration_record_doses') }}
 ),
 
+medication_administration_records as (
+    select * from {{ ref('medication_administration_records') }}
+),
+
+encounter_prescriptions as (
+    select * from {{ ref('encounter_prescriptions') }}
+),
+
 prescriptions as (
     select * from {{ ref('prescriptions') }}
 ),
@@ -49,17 +57,26 @@ departments as (
 ),
 
 -- BL-001: one row per dose recorded as given. bases/medication_administration_record_doses
--- keeps only live doses of a GIVEN, non-error administration that were not removed, and
--- carries the encounter the prescription was written in.
+-- carries every live dose that was not removed; a dose counts as given only on a GIVEN
+-- administration that was not flagged as an error and has a given time. Compared
+-- case-insensitively: the source documents GIVEN but the data carries 'given'. The encounter
+-- comes from the prescription's encounter link.
 events as (
     select
         d.id as event_id,
-        d.encounter_id as visit_occurrence_id,
-        d.given_at as event_datetime,
+        ep.encounter_id as visit_occurrence_id,
+        d.given_datetime as event_datetime,
         p.medication_id
     from medication_administration_record_doses d
+    join medication_administration_records mar
+        on mar.id = d.mar_id
     join prescriptions p
-        on p.id = d.prescription_id
+        on p.id = mar.prescription_id
+    join encounter_prescriptions ep
+        on ep.prescription_id = p.id
+    where lower(mar.status::text) = 'given'
+        and coalesce(mar.is_error, false) = false
+        and d.given_datetime is not null
 ),
 
 -- BL-003: the segment active at the event's own time, with the first-segment clamp
