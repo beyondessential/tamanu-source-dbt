@@ -52,7 +52,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 
 - **BL-001:** The report covers every medication; it hard-codes no drug list.
 - **BL-002:** The date range filters on the prescription date: every prescription exists, not all are administered.
-- **BL-003:** The medication filter is a multi-select over all drugs (`isMulti`) and is optional; when empty, every medication is returned. The selection reaches SQL as a list, so the empty check uses `coalesce(...)`.
+- **BL-003:** The medication filter is a multi-select over all drugs (`isMulti`) and is optional; when empty, every medication is returned. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor, which stays valid when empty.
 - **BL-004:** Facility, department and location filters are optional.
 - **BL-005:** Prescribed by is blank when no prescriber was recorded.
 - **BL-006:** Dose is the prescription's dose amount and dosing unit, or `Variable` for a variable-dose prescription.
