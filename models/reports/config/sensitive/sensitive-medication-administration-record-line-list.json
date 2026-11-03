@@ -1,0 +1,51 @@
+{
+  "query": "replace this",
+  "name": "Sensitive medication administration record line list",
+  "status": "published",
+  "notes": "This report lists every prescription created in the selected date range for the selected medications (all medications when none are selected) at sensitive facilities. For each prescription it shows the prescriber, dose and route and, where recorded on the medication administration record, who recorded the administration, when, and its status (Given, Not given, or Not recorded for a scheduled dose with no status yet). One line per prescription per administration record; a prescription that has no administration record still appears, with the administration columns blank. Administration records marked as entered in error are excluded. The date range applies to the prescription date. Department and location are the patient's current encounter department and location.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Medication",
+        "name": "medicationId",
+        "suggesterEndpoint": "drug",
+        "isMulti": true
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Department",
+        "name": "departmentId",
+        "suggesterEndpoint": "department",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      },
+      {
+        "parameterField": "ParameterAutocompleteField",
+        "label": "Location",
+        "name": "locationId",
+        "suggesterEndpoint": "location",
+        "suggesterOptions": {
+          "baseQueryParameters": {
+            "filterByFacility": true
+          }
+        }
+      }
+    ]
+  }
+}
