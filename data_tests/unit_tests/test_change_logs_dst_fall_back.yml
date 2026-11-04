@@ -3,15 +3,15 @@ unit_tests:
   # 02:00-03:00 local. A change at 15:40 UTC is 02:40 AEDT and a later one at 16:20 UTC is
   # 02:20 AEST, so the local logged_at puts the later change first. Every fixture below uses that
   # pair (MAUI-7018).
-  - name: test_discharges_change_logs_logged_at_utc_dst_fall_back
-    model: discharges_change_logs
+  - name: test_discharges_change_history_logged_at_utc_dst_fall_back
+    model: discharges_change_history
     description: >
       The sort-only logged_at_utc keeps the true order of two changes inside a DST fall-back's
       repeated hour, where the local logged_at reverses it. logged_at itself stays local, and
       change_sequence, numbered inside the extraction on the UTC sort keys, agrees with
       logged_at_utc.
     given:
-      - input: ref('discharges_change_events')
+      - input: ref('discharges_change_logs')
         format: sql
         rows: |
           select '00000000-0000-0000-0000-000000000001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
@@ -25,15 +25,15 @@ unit_tests:
         union all
         select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', 'Home with follow up', 'cli_001', 'disp_001', 2
 
-  - name: test_outpatient_appointments_change_logs_dst_fall_back
-    model: outpatient_appointments_change_logs
+  - name: test_outpatient_appointments_change_history_dst_fall_back
+    model: outpatient_appointments_change_history
     description: >
       BL-024. The extraction's row_number(), lag() and first_value() order by the UTC sort keys,
       so two edits inside a DST fall-back's repeated hour keep their order: the 02:40 AEDT edit is
       change 2 and the 02:20 AEST edit after it is change 3, taking its previous status from
       change 2. Ordered by the local modified_datetime the two would swap.
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           select
@@ -88,7 +88,7 @@ unit_tests:
     description: >
       BL-024. change_number follows change_sequence alone, so two edits inside a DST fall-back's
       repeated hour number in the order they happened and each names the clinician it replaced.
-      The rows are as outpatient_appointments_change_events would expose them on a Sydney
+      The rows are as outpatient_appointments_change_logs would expose them on a Sydney
       deployment.
     overrides:
       vars:
@@ -98,7 +98,7 @@ unit_tests:
         fromDate: '2026-04-05'
         toDate: '2026-04-05'
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation (BL-023 excludes it, but it is the lag() baseline)
@@ -245,7 +245,7 @@ unit_tests:
             null::integer as nth_weekday,
             null::uuid as schedule_id
 
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           select
@@ -412,7 +412,7 @@ unit_tests:
           union all
           select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
 
-      - input: ref('discharges_change_events')
+      - input: ref('discharges_change_logs')
         format: sql
         rows: |
           select 'chg_001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{}'::jsonb as record_data

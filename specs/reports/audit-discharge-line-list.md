@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `audit-discharge-line-list` |
-| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` / `discharges_change_events` base models |
+| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` / `discharges_change_history` base models |
 | **Layer** | `base`, `ds`, `report` |
 | **Materialisation** | base `view`, dataset `view`, report `view` |
 | **Status** | `implemented` |
@@ -59,8 +59,8 @@ a deleted or merged patient are out of scope.
 | Reference | Why we need it |
 |---|---|
 | `ref('discharges')` | The discharge record: disposition, discharging clinician, note, creation time |
-| `ref('discharges_change_logs')` (via `discharges_change_log_events()`) | Recording timestamp, recording user, later-edit count |
-| `ref('discharges_change_events')` | Thin, window-free change-log projection the report's candidate step scans directly (BL-013) |
+| `ref('discharges_change_logs')` (via `discharges_change_history()`) | Recording timestamp, recording user, later-edit count (BL-014) |
+| `ref('discharges_change_logs')` | Thin, window-free change-log projection the report's candidate step scans directly (BL-013) |
 | `ref('encounters')` | Encounter dates and type |
 | `ref('locations')`, `ref('facilities')`, `ref('departments')` | Where the encounter sat, and the sensitive-facility partition |
 | `ref('patients')`, `ref('reference_data')`, `ref('users')` | Demographics, village, disposition and diagnosis labels, user display names |
@@ -147,18 +147,18 @@ a deleted or merged patient are out of scope.
 - **BL-013:** The report scopes `discharge_audit_dataset`'s change-log aggregation to
   candidate discharges — those with a change logged between `fromDate` less two days and
   `toDate` plus three days, deployment-local time, found by scanning
-  `discharges_change_events` directly — before it runs, reaching `logs.changes` through the
+  `discharges_change_logs` directly — before it runs, reaching `logs.changes` through the
   `(table_name, record_id)` index rather than a full scan. The window is widened because the
   candidate compares deployment time while BL-007's filter compares the viewer's selected
   timezone, up to 26 hours apart, and BL-007's exact filter trims the result to the range
   afterwards, so correctness never depends on the candidate step being exact.
   `ds__discharge_audit` and `ds__sensitive_discharge_audit` call the same dataset macro
   unfiltered, so other consumers keep reading every discharge's full history.
-- **BL-014:** `discharges_change_log_events()` holds the change-log extraction's
+- **BL-014:** `discharges_change_history()` holds the change-log extraction's
   `row_number()`, partitioned by `discharge_id` and ordered by the UTC sort keys, reading from
-  `discharges_change_events` — a thin projection carrying only the source filters, since
+  `discharges_change_logs` — a thin projection carrying only the source filters, since
   Postgres pushes neither a date nor a `record_id` predicate below a window function. The
-  `discharges_change_logs` base model calls it unfiltered.
+  `discharges_change_history` base model publishes it unfiltered.
 
 ## Acceptance criteria
 
@@ -168,7 +168,7 @@ a deleted or merged patient are out of scope.
 | AC-002 | Exactly one row per `encounter_id` | BL-001 | `unique` on `encounter_id`, `logical__ds__discharge_audit` |
 | AC-003 | `discharge_recorded_datetime` is populated for every discharge the change log covers, and null only where the change log has no entry for it | BL-002 | `logical__ds__discharge_audit`, `test_ds__discharge_audit_no_changelog_coverage` |
 | AC-004 | A discharge whose entered date precedes its recorded date by several days returns the expected positive `days_between_discharge_and_recording` | BL-002, BL-003 | `test_ds__discharge_audit_recording_delay` |
-| AC-005 | A UTC change log timestamp near local midnight lands on the correct local date | BL-003 | `test_discharges_change_events_timezone` |
+| AC-005 | A UTC change log timestamp near local midnight lands on the correct local date | BL-003 | `test_discharges_change_logs_timezone` |
 | AC-006 | Auto-discharged rows are flagged, not dropped, and carry no recording user when the session had no audit user | BL-004, BL-005 | `test_ds__discharge_audit_recording_delay` |
 | AC-007 | The date range includes discharges recorded at any time of day on `toDate` | BL-007 | Manual run against a demo snapshot |
 | AC-008 | An encounter with several diagnoses still returns exactly one row, with primary and secondary diagnoses in their own columns | BL-010 | `test_ds__discharge_audit_recording_delay`, plus `unique` on `encounter_id` for the grain. `logical__ds__discharge_audit` asserts nothing about diagnoses. |
@@ -186,7 +186,7 @@ a warning rather than failing the run. The unit tests are unaffected and do fail
   discharges so this no longer forces a full `logs.changes` scan on every run, but
   `discharge_records` and `encounter_details` still read the full `discharges` and `encounters`
   tables unfiltered — fine at their size, but worth revisiting if either grows enough to matter.
-- **Candidate scan cost.** The candidate step itself still reads `discharges_change_events`'
+- **Candidate scan cost.** The candidate step itself still reads `discharges_change_logs`'
   full history for the `discharges` table before narrowing to the date range — the saving is in
   not running the change-log aggregation over the whole history, not in avoiding the candidate
   scan entirely. Same residual cost as the identity-audit pattern this follows.

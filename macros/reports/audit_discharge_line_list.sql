@@ -6,7 +6,7 @@
 --
 -- BL-013: candidate discharges are those with a logged change between fromDate less two days
 -- and toDate plus three days, deployment-local time -- read from the thin, window-free
--- discharges_change_events base so the predicate reaches the (table_name, record_id) index
+-- discharges_change_logs base so the predicate reaches the (table_name, record_id) index
 -- rather than forcing discharge_audit_dataset's change-log aggregation to run over the whole
 -- change log. The window is widened because the candidate compares deployment time while
 -- BL-007's exact filter compares the viewer's selected timezone, up to 26 hours apart. BL-007
@@ -19,7 +19,7 @@
 {%- set candidate_filter -%}
 c.discharge_id in (
     select c2.discharge_id
-    from {{ ref('discharges_change_events') }} c2
+    from {{ ref('discharges_change_logs') }} c2
     where c2.logged_at >= {{ candidate_window_from(from_bound) }}
         and c2.logged_at < {{ candidate_window_to(to_bound) }}
 )

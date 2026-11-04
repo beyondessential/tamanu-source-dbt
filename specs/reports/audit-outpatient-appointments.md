@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `audit-outpatient-appointments` |
-| **Type** | Tamanu report (shared macro + standard/sensitive wrappers), the `ds__outpatient_appointments_audit` dataset, and two base models |
+| **Type** | Tamanu report (shared macro + standard/sensitive wrappers), the `ds__outpatient_appointments_audit` dataset, and the `outpatient_appointments_change_logs` / `outpatient_appointments_change_history` base models |
 | **Layer** | `base`, `ds`, `report` |
 | **Materialisation** | base `view`; dataset `view`, or `incremental` on analytics targets; report `view` |
 | **Status** | `implemented` |
@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6857](https://linear.app/bes/issue/MAUI-6857/audit-outpatient-appointments-report-times-out-full-change-log-scan) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-29 |
-| **Last updated** | 2026-09-02 |
+| **Last updated** | 2026-11-04 |
 
 ## Purpose
 
@@ -47,7 +47,7 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 | Reference | Why |
 |---|---|
-| `ref('outpatient_appointments_change_events')` ×2 (candidate filter, extraction) | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
+| `ref('outpatient_appointments_change_logs')` ×2 (candidate filter, extraction) | The change history, window-function-free so it can be filtered with pushdown (BL-037) |
 | `ref('outpatient_appointments')` | Appointment population (BL-036) and the schedule's `cancelled_at_date` (BL-026) |
 | `ref('patients')` | Demographics |
 | `ref('users')` ×4 (clinician, prev_clinician, creator, modifier) | Display names |
@@ -92,7 +92,7 @@ rather than fails on a clause with no anchor. Keeping a clause true to its code 
 review obligation, not an automated one (DV-007).
 
 - **BL-023:** One row per meaningful change event, from
-  `bases/outpatient_appointments_change_events` — which excludes rows whose appointment
+  `bases/outpatient_appointments_change_logs` — which excludes rows whose appointment
   was already flagged deleted when that row was written (`record_deleted_at`, not a
   property of the change row itself), rows with no `appointment_type_id`, and the test
   patient. The creation event
@@ -136,14 +136,13 @@ review obligation, not an automated one (DV-007).
   `(table_name, record_id)` index, which beats a bare-column filter on the `logged_at` BRIN
   index (MAUI-6960).
 - **BL-031:** The windowed extraction is centralised in
-  `outpatient_appointments_change_log_events(record_id_filter=none)`, called three ways:
-  unfiltered as the base model (also feeding `outpatient_appointments_dataset`'s creator
-  lookup), filtered by the report (BL-030), and filtered by the incremental dataset
-  (BL-032). Filtering narrows *which* appointments are included, never how much of an
-  included appointment's history is seen. Everything downstream of the extraction —
-  meaningfulness, numbering, the joins and the `prev_*` resolution — is shared too, in
-  `outpatient_appointments_audit_core()`; the report and dataset differ only in projection,
-  so they cannot drift on business logic.
+  `outpatient_appointments_change_history(record_id_filter=none)`, called through
+  `outpatient_appointments_audit_core()`: filtered by the report (BL-030) and filtered by the
+  incremental dataset (BL-032). Filtering narrows *which* appointments are included, never
+  how much of an included appointment's history is seen. Everything downstream of the
+  extraction — meaningfulness, numbering, the joins and the `prev_*` resolution — is shared
+  too, in `outpatient_appointments_audit_core()`; the report and dataset differ only in
+  projection, so they cannot drift on business logic.
 - **BL-032:** The datasets build as `view` except on analytics targets, where they are
   incremental. The cursor is `updated_at_sync_tick` — the cursor Tamanu's own sync readers
   use (no clock-skew risk), and btree-indexed, where `logged_at` has only a BRIN index. A first build or `--full-refresh`
@@ -173,7 +172,7 @@ review obligation, not an automated one (DV-007).
      flipping is the sharpest case: rows stay in the standard dataset indefinitely.
   3. A hard delete from `logs.changes` is undetectable, writing no new tick.
   4. **A soft-delete is invisible to candidate detection.** The candidate CTE reads
-     `outpatient_appointments_change_events`, which filters `record_deleted_at is null`, so
+     `outpatient_appointments_change_logs`, which filters `record_deleted_at is null`, so
      the row recording a deletion is never seen and the appointment never becomes a
      candidate. BL-036 therefore does not propagate to an incremental table: the dataset can
      retain rows for appointments the report excludes.
@@ -194,7 +193,7 @@ review obligation, not an automated one (DV-007).
   every run would rescan the whole change log to emit nothing — worse than the view it
   replaced. Gated in the macro's `config()`, not `dbt_project.yml`, because `var()` does not
   resolve while project config is rendered.
-- **BL-037:** `bases/outpatient_appointments_change_events` carries the change-log filters
+- **BL-037:** `bases/outpatient_appointments_change_logs` carries the change-log filters
   and no window functions, and exposes `logged_at` and `record_updated_at` in the
   deployment's local time like every other change-log base, plus the sort-only
   `logged_at_utc` and `record_updated_at_utc` that BL-024 orders by, because both the report (by date) and the dataset (by tick) must
@@ -225,7 +224,7 @@ shared-core refactor.
 | AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | holds by construction — the candidate filter and the final `WHERE` are one predicate on one value |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
 | AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
-| AC-038 | Two edits inside a DST fall-back's repeated hour number in the order they were made, each naming the value it replaced | BL-024 | **passed** — `test_audit_outpatient_appointments_dst_fall_back`, `test_outpatient_appointments_change_logs_dst_fall_back` |
+| AC-038 | Two edits inside a DST fall-back's repeated hour number in the order they were made, each naming the value it replaced | BL-024 | **passed** — `test_audit_outpatient_appointments_dst_fall_back`, `test_outpatient_appointments_change_history_dst_fall_back` |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-034 | The candidate filter is the final `WHERE`'s predicate on the same value | BL-039 | holds by construction; `EXPLAIN` on Samoa (MAUI-6960): 0.93 s warm, against 1.3 s for the earlier bare-column filter |
@@ -237,14 +236,14 @@ it now scales with the range requested.
 ## Lineage
 
 ```
-logs.changes ──► outpatient_appointments_change_events (thin base, BL-037)
+logs.changes ──► outpatient_appointments_change_logs (thin base, BL-037)
                           │
-                          ├──► outpatient_appointments_change_log_events()  (windowed, BL-031)
-                          │         ├─ unfiltered ──► outpatient_appointments_change_logs (base)
-                          │         │                      └──► ds__outpatient_appointments (creator lookup)
+                          ├──► outpatient_appointments_change_history()  (windowed, BL-031)
+                          │         ├─ unfiltered ──► outpatient_appointments_change_history (base)
                           │         ├─ report filter (BL-030) ──► audit-outpatient-appointments (+sensitive)
                           │         └─ tick filter (BL-032) ───► ds__outpatient_appointments_audit (+sensitive)
                           │                                            └──► analytics / Tupaia
+                          ├──► ds__outpatient_appointments (creator lookup, BL-044 of the line list)
                           └──► candidate-id filters (report: + location_groups, facilities)
 ```
 
@@ -266,7 +265,7 @@ _None._
   decide whether the report should show a redaction marker instead, which needs a
   `translate_label` key and so a product call, not just a modelling one.
 - **DV-008:** This change adds two upstream dependencies the dataset did not previously have
-  — `outpatient_appointments_change_events` and `outpatient_appointments`. An analytics build
+  — `outpatient_appointments_change_logs` and `outpatient_appointments`. An analytics build
   must include them, or the dataset fails outright. *Resolution:* confirm the analytics
   pipeline selects the model with its upstream chain rather than in isolation.
 - **DV-007:** `check_spec_anchors.py` is not run by CI — `.github/workflows/checks.yml`

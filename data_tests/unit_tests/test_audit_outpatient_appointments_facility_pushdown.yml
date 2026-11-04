@@ -22,7 +22,7 @@ unit_tests:
         toDate: '2026-09-02'
         facilityId: fac_b
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation at fac_a (BL-023 excludes it from output, but it is the lag() baseline)

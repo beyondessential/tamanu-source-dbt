@@ -18,10 +18,10 @@ models:
       classification: restricted
     columns:
       - name: change_id
-        description: "{{ doc('outpatient_appointments_change_logs__change_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__change_id') }}"
 
       - name: appointment_id
-        description: "{{ doc('outpatient_appointments_change_logs__appointment_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__appointment_id') }}"
 
       - name: change_number
         description: >
@@ -30,10 +30,10 @@ models:
           `change_sequence`, which numbers every logged change including the initial
           creation:
 
-          {{ doc('outpatient_appointments_change_logs__change_sequence') }}
+          {{ doc('outpatient_appointments_change_history__change_sequence') }}
 
       - name: patient_id
-        description: "{{ doc('outpatient_appointments_change_logs__patient_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__patient_id') }}"
 
       - name: display_id
         description: "{{ doc('patients__display_id') }}"
@@ -48,56 +48,56 @@ models:
         description: "{{ doc('patients__date_of_birth') }}"
 
       - name: appointment_start_datetime
-        description: "{{ doc('outpatient_appointments_change_logs__start_datetime') }}"
+        description: "{{ doc('outpatient_appointments_change_history__start_datetime') }}"
 
       - name: appointment_end_datetime
-        description: "{{ doc('outpatient_appointments_change_logs__end_datetime') }}"
+        description: "{{ doc('outpatient_appointments_change_history__end_datetime') }}"
 
       - name: appointment_type
         description: "Current {{ doc('reference_data__name') }} for appointment type"
 
       - name: appointment_type_id
-        description: "{{ doc('outpatient_appointments_change_logs__appointment_type_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__appointment_type_id') }}"
 
       - name: clinician
         description: "Current {{ doc('users__display_name') }} for clinician"
 
       - name: clinician_id
-        description: "{{ doc('outpatient_appointments_change_logs__clinician_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__clinician_id') }}"
 
       - name: location_group
         description: "Current {{ doc('location_groups__name') }} for area"
 
       - name: location_group_id
-        description: "{{ doc('outpatient_appointments_change_logs__location_group_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__location_group_id') }}"
 
       - name: priority
-        description: "Current {{ doc('outpatient_appointments_change_logs__is_high_priority') }} formatted as Yes/No"
+        description: "Current {{ doc('outpatient_appointments_change_history__is_high_priority') }} formatted as Yes/No"
 
       - name: schedule_id
-        description: "{{ doc('outpatient_appointments_change_logs__schedule_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__schedule_id') }}"
 
       - name: is_repeating
         description: >
           Whether the appointment is part of a repeating schedule. Values: Yes (non-null),
           No (null).
 
-          {{ doc('outpatient_appointments_change_logs__schedule_id') }}
+          {{ doc('outpatient_appointments_change_history__schedule_id') }}
 
       - name: created_by
         description: "{{ doc('users__display_name') }} who created the appointment"
 
       - name: created_by_user_id
-        description: "{{ doc('outpatient_appointments_change_logs__created_by_user_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__created_by_user_id') }}"
 
       - name: modified_by
         description: "{{ doc('users__display_name') }} who modified the appointment"
 
       - name: modified_by_user_id
-        description: "{{ doc('outpatient_appointments_change_logs__modified_by_user_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__modified_by_user_id') }}"
 
       - name: modified_datetime
-        description: "{{ doc('outpatient_appointments_change_logs__modified_datetime') }}"
+        description: "{{ doc('outpatient_appointments_change_history__modified_datetime') }}"
 
       - name: updated_at_sync_tick
         description: >
@@ -109,34 +109,34 @@ models:
         description: >
           Whether the current status is 'Cancelled'. Values: Yes/No.
 
-          {{ doc('outpatient_appointments_change_logs__status') }}
+          {{ doc('outpatient_appointments_change_history__status') }}
 
       - name: prev_start_datetime
-        description: "{{ doc('outpatient_appointments_change_logs__prev_start_datetime') }}"
+        description: "{{ doc('outpatient_appointments_change_history__prev_start_datetime') }}"
 
       - name: prev_end_datetime
-        description: "{{ doc('outpatient_appointments_change_logs__prev_end_datetime') }}"
+        description: "{{ doc('outpatient_appointments_change_history__prev_end_datetime') }}"
 
       - name: prev_appointment_type
         description: "Previous {{ doc('reference_data__name') }} for appointment type"
 
       - name: prev_appointment_type_id
-        description: "{{ doc('outpatient_appointments_change_logs__prev_appointment_type_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__prev_appointment_type_id') }}"
 
       - name: prev_clinician
         description: "Previous {{ doc('users__display_name') }} for clinician"
 
       - name: prev_clinician_id
-        description: "{{ doc('outpatient_appointments_change_logs__prev_clinician_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__prev_clinician_id') }}"
 
       - name: prev_location_group
         description: "Previous {{ doc('location_groups__name') }} for area"
 
       - name: prev_location_group_id
-        description: "{{ doc('outpatient_appointments_change_logs__prev_location_group_id') }}"
+        description: "{{ doc('outpatient_appointments_change_history__prev_location_group_id') }}"
 
       - name: prev_priority
-        description: "Previous {{ doc('outpatient_appointments_change_logs__prev_is_high_priority') }} formatted as Yes/No"
+        description: "Previous {{ doc('outpatient_appointments_change_history__prev_is_high_priority') }} formatted as Yes/No"
 
       - name: facility_id
         description: "{{ doc('generic__id') }} in facilities (for filtering)"

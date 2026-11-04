@@ -1,11 +1,11 @@
-{% docs discharges_change_logs__change_sequence %}
+{% docs discharges_change_history__change_sequence %}
 Sequential number of this change for the discharge record. 1 is the entry that created the record, which is the moment the discharge was recorded in Tamanu.
 {% enddocs %}
 
-{% docs discharges_change_logs__logged_at %}
+{% docs discharges_change_history__logged_at %}
 When the change was recorded on the central server, in the deployment's local time.
 {% enddocs %}
 
-{% docs discharges_change_logs__updated_by_user_id %}
+{% docs discharges_change_history__updated_by_user_id %}
 The user session that made the change. Defaults to the nil UUID when no audit user was set on the session, in which case no user can be attributed.
 {% enddocs %}

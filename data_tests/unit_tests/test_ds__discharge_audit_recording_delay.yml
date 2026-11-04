@@ -15,7 +15,7 @@ unit_tests:
           union all
           select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
 
-      - input: ref('discharges_change_events')
+      - input: ref('discharges_change_logs')
         format: sql
         rows: |
           select 'chg_001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2024-03-14 08:05:00'::timestamp as logged_at, '2024-03-14 08:05:00'::timestamp as record_updated_at, '2024-03-14 08:05:00'::timestamp as logged_at_utc, '2024-03-14 08:05:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{}'::jsonb as record_data

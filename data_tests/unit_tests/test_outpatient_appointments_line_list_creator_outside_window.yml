@@ -7,11 +7,10 @@ unit_tests:
       appointments already in scope -- scoped by appointment, never by date -- so an
       appointment booked months in advance still reports who booked it.
 
-      This is the regression guard for the rewrite away from
-      outpatient_appointments_change_logs. That model's row_number() / lag() sat between
-      the report's filters and the change-log scan, and window functions are an
-      optimisation fence, so the old path windowed every appointment's whole history on
-      every run. Getting the same answer here without them is what makes the swap safe.
+      This is the regression guard for resolving the creator without the windowed change
+      history: its row_number() / lag() would sit between the report's filters and the
+      change-log scan, and window functions are an optimisation fence, so it would window
+      every appointment's whole history on every run.
 
       The later modification event must not win: `Alice Admin` created the appointment in
       January, `Bob Admin` edited it in September, and the report shows Alice.
@@ -44,7 +43,7 @@ unit_tests:
             null::integer as nth_weekday,
             null::uuid as schedule_id
 
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation, eight months before the report window
