@@ -1,6 +1,13 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='patients'
+) }}
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
         and record_id != '{{ var("test_patient") }}'
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patients') }})
+        {%- endif %}
 )
 
 select
@@ -20,5 +27,6 @@ select
     (fc.record_data ->> 'date_of_birth')::date as date_of_birth,
     (fc.record_data ->> 'date_of_death')::timestamp as date_of_death,
     fc.record_data ->> 'village_id' as village_id,
-    (fc.record_data ->> 'created_at')::date as registration_date
+    (fc.record_data ->> 'created_at')::date as registration_date,
+    fc.updated_at_sync_tick
 from filtered_changes fc

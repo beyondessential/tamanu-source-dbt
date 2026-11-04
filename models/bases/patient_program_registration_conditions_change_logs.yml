@@ -51,3 +51,6 @@ models:
       - name: deleted_by_id
         data_type: text
         description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id') }} from history."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."
