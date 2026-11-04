@@ -473,6 +473,21 @@ Facility, Area, Clinician, Booking type, Status
 
 ---
 
+### Medication administration record line list *(sensitive version available)*
+
+**Report Description**
+
+This report lists every prescription created in the selected date range for the selected medications (all medications when none are selected). For each prescription it shows the prescriber, dose and route and, from the medication administration record, its status (Given, Not given, or Not recorded for a scheduled dose with no status yet) and, for each dose given, when it was given and by whom. One line per dose given; an administration with no dose given, or a prescription with no administration record, still appears once with those columns blank. Administration records marked as entered in error are excluded. The date range applies to the prescription date. Department and location are where the patient was when the dose was given (or, with no dose, when it was due or prescribed).
+
+**Filters**
+
+Facility, Medication, Department, Location
+
+**Default date range**: 7days
+
+
+---
+
 ### Medication dispensed summary *(sensitive version available)*
 
 **Report Description**
