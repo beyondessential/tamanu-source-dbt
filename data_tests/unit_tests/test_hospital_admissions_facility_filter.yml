@@ -34,6 +34,12 @@ unit_tests:
             'enc_002', 'dep_med', 'General Medicine', 'fac_002', 'North Clinic',
             '2024-01-10 09:00:00'::timestamp, '2024-01-12 09:00:00'::timestamp,
             2, true, true, false, false, false
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'enc_002', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |
@@ -90,6 +96,12 @@ unit_tests:
           select 'loc_001'::text as id, 'Room 1'::text as name, 'lg_001'::text as location_group_id, 'fac_001'::text as facility_id, 10::integer as max_occupancy
           union all
           select 'loc_002', 'Room 2', 'lg_002', 'fac_002', 10
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'enc_002', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |
@@ -148,6 +160,12 @@ unit_tests:
           select 'loc_001'::text as id, 'Room 1'::text as name, 'lg_001'::text as location_group_id, 'fac_001'::text as facility_id, 10::integer as max_occupancy
           union all
           select 'loc_002', 'Room 2', 'lg_002', 'fac_002', 10
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'enc_002', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |

@@ -69,6 +69,8 @@ area_summary as (
     -- area capacity to divide by, so its bed occupancy reports N/A per BL-008.
     left join area_capacity lg on lg.location_group_id = alh.location_group_id
     where rm.month <= current_date
+        -- BL-016: only the encounters that can fall in the month spine (specs/reports/hospital-admissions-summaries.md)
+        and alh.encounter_id = any({{ hospital_admissions_candidate_encounters() }})
     group by
         rm.month,
         alh.facility_id,

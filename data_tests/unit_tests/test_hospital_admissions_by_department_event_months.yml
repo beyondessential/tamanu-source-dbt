@@ -45,6 +45,10 @@ unit_tests:
             '2024-02-05 14:00:00'::timestamp, '2024-02-10 11:00:00'::timestamp,
             5, false, true, true, false, false
 
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
     expect:
       format: sql
       rows: |

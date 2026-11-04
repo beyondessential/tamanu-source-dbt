@@ -53,6 +53,14 @@ unit_tests:
             '2024-02-15 09:00:00'::timestamp, null::timestamp,
             30, true, false, false, false, false
 
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'ep_long'::text as id, '2024-01-01 00:00:00'::character(19) as start_date_iso, null::character(19) as end_date_iso
+          union all
+          select 'ep_open', '2024-01-01 00:00:00', null
+          union all
+          select 'ep_short', '2024-01-01 00:00:00', null
     expect:
       format: sql
       rows: |
