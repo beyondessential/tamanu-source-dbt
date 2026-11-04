@@ -42,10 +42,10 @@ logins as (
         max(created_at) as last_login,
         count(*) filter (
             where
-                {{ to_user_selected_timezone('created_at') }}::date
-                >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
-                and {{ to_user_selected_timezone('created_at') }}::date
-                <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
+            {{ to_user_selected_timezone('created_at') }}::date
+            >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+            and {{ to_user_selected_timezone('created_at') }}::date
+            <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
         ) as login_count
     from {{ ref('user_login_attempts') }}
     where outcome = 'succeeded'
