@@ -1,7 +1,6 @@
 {{ incremental_config_for_analytics(
     unique_key='id',
-    source_table='administered_vaccines',
-    encounter_id_column='encounter_id'
+    source_table='administered_vaccines'
 ) }}
 with filtered_changes as (
     select

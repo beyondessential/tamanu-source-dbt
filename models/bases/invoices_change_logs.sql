@@ -1,8 +1,7 @@
 {{ incremental_config_for_analytics(
     unique_key='invoice_id',
     source_table='invoices',
-    key_type='uuid',
-    encounter_id_column='encounter_id'
+    key_type='uuid'
 ) }}
 select
     c.id as changelog_id,
