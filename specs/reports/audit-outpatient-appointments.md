@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `audit-outpatient-appointments` |
-| **Type** | Tamanu report (shared macro + standard/sensitive wrappers), the `ds__outpatient_appointments_audit` dataset, and the `outpatient_appointments_change_logs` / `outpatient_appointments_change_history` base models |
+| **Type** | Tamanu report (shared macro + standard/sensitive wrappers), the `ds__outpatient_appointments_audit` dataset, and the `outpatient_appointments_change_logs` base model |
 | **Layer** | `base`, `ds`, `report` |
 | **Materialisation** | base `view`; dataset `view`, or `incremental` on analytics targets; report `view` |
 | **Status** | `implemented` |
@@ -224,7 +224,7 @@ shared-core refactor.
 | AC-035 | An event logged in the central zone's ambiguous DST hour is returned when `:timezone` differs from central | BL-039 | holds by construction — the candidate filter and the final `WHERE` are one predicate on one value |
 | AC-036 | A standard row whose previous area sits in a sensitive facility returns that area blank, not named | BL-033 | **passed** — `test_audit_outpatient_appointments_sensitive_prev_area` |
 | AC-037 | The partition is symmetric: a sensitive row whose previous area sits in a standard facility also returns it blank | BL-033 | **passed** — `test_audit_outpatient_appointments_prev_area_symmetric` |
-| AC-038 | Two edits inside a DST fall-back's repeated hour number in the order they were made, each naming the value it replaced | BL-024 | **passed** — `test_audit_outpatient_appointments_dst_fall_back`, `test_outpatient_appointments_change_history_dst_fall_back` |
+| AC-038 | Two edits inside a DST fall-back's repeated hour number in the order they were made, each naming the value it replaced | BL-024 | **passed** — `test_audit_outpatient_appointments_dst_fall_back` |
 | AC-032 | With `facilityId` set, an appointment whose events span two facilities returns the event at that facility, with the `change_number` it has unfiltered | BL-033 | **passed** — `test_audit_outpatient_appointments_facility_pushdown` |
 | AC-033 | An edit made today to an appointment scheduled months out appears; a months-old edit to an appointment scheduled today does not | BL-029 | **passed** — `test_audit_outpatient_appointments_filters_on_edit_time` |
 | AC-034 | The candidate filter is the final `WHERE`'s predicate on the same value | BL-039 | holds by construction; `EXPLAIN` on Samoa (MAUI-6960): 0.93 s warm, against 1.3 s for the earlier bare-column filter |
@@ -239,7 +239,6 @@ it now scales with the range requested.
 logs.changes ──► outpatient_appointments_change_logs (thin base, BL-037)
                           │
                           ├──► outpatient_appointments_change_history()  (windowed, BL-031)
-                          │         ├─ unfiltered ──► outpatient_appointments_change_history (base)
                           │         ├─ report filter (BL-030) ──► audit-outpatient-appointments (+sensitive)
                           │         └─ tick filter (BL-032) ───► ds__outpatient_appointments_audit (+sensitive)
                           │                                            └──► analytics / Tupaia
@@ -253,7 +252,7 @@ _None._
 
 ## Divergence from current code
 
-- **DV-004:** Coverage is four unit tests on the report; the base models and datasets have
+- **DV-004:** Coverage is four unit tests on the report; the base model and datasets have
   none. Unit tests reach only the non-compile branch of `to_user_selected_timezone`, where it
   is a no-op — the timezone conversion the compiled report actually runs cannot be
   exercised by dbt at all. *Resolution:* add the remaining

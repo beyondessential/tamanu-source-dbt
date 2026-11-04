@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `audit-discharge-line-list` |
-| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` / `discharges_change_history` base models |
+| **Type** | Tamanu report (shared macro in `macros/reports/`, standard + sensitive wrappers in `models/reports/`), plus the `ds__discharge_audit` dataset and the `discharges_change_logs` base model |
 | **Layer** | `base`, `ds`, `report` |
 | **Materialisation** | base `view`, dataset `view`, report `view` |
 | **Status** | `implemented` |
@@ -157,8 +157,7 @@ a deleted or merged patient are out of scope.
 - **BL-014:** `discharges_change_history()` holds the change-log extraction's
   `row_number()`, partitioned by `discharge_id` and ordered by the UTC sort keys, reading from
   `discharges_change_logs` — a thin projection carrying only the source filters, since
-  Postgres pushes neither a date nor a `record_id` predicate below a window function. The
-  `discharges_change_history` base model publishes it unfiltered.
+  Postgres pushes neither a date nor a `record_id` predicate below a window function.
 
 ## Acceptance criteria
 
