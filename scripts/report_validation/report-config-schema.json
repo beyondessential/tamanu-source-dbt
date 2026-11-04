@@ -301,10 +301,31 @@
             "additionalProperties": false
           },
           "minItems": 1
+        },
+        "isMulti": {
+          "type": "boolean",
+          "description": "ParameterSuggesterSelectField only: render a multi-select over the suggester's full list. The value reaches SQL as a list, so bind it with in (...) and guard the empty case with coalesce(...)"
         }
       },
       "additionalProperties": false,
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "parameterField": {
+                "const": "ParameterSuggesterSelectField"
+              }
+            }
+          },
+          "then": {
+            "required": ["suggesterEndpoint"]
+          },
+          "else": {
+            "not": {
+              "required": ["isMulti"]
+            }
+          }
+        },
         {
           "if": {
             "properties": {
