@@ -60,8 +60,8 @@ metric_rows as (
         s.role_id,
         s.visibility_status,
         la.id::text as event_id,
-        -- BL-004: login day, in the deployment timezone.
-        date_trunc('day', la.created_at at time zone '{{ var("timezone") }}') as period_start,
+        -- BL-004: login day, in the deployment timezone (the base already converts created_at).
+        date_trunc('day', la.created_at) as period_start,
         s.designation_id,
         s.designation,
         s.facility_id
