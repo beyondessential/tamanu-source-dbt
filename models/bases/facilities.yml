@@ -47,3 +47,6 @@ models:
       - name: sensitive_network_id
         data_type: character varying
         description: "{{ doc('facilities__sensitive_network_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

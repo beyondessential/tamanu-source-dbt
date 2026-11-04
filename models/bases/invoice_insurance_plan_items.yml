@@ -23,3 +23,6 @@ models:
       - name: coverage_value
         data_type: numeric
         description: "{{ doc('invoice_insurance_plan_items__coverage_value') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

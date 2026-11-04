@@ -1,3 +1,8 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='facilities',
+    source_type='table'
+) }}
 select
     id,
     code,
@@ -10,6 +15,10 @@ select
     street_address,
     catchment_id,
     visibility_status,
-    sensitive_network_id
+    sensitive_network_id,
+    updated_at_sync_tick
 from {{ source('tamanu', 'facilities') }}
 where deleted_at is null
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
