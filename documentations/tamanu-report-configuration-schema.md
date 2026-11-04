@@ -213,7 +213,35 @@ Allows users to select a single option from a predefined list.
 **Required Properties:**
 - `options` (array): List of available options with the same structure as ParameterMultiselectField
 
-### 5. Specialised Field Types
+### 5. ParameterSuggesterSelectField
+
+A select populated with the suggester endpoint's full list (`suggestions/<endpoint>/all`). With `isMulti` it becomes a multi-select, so users can pick any number of values without a hard-coded `options` list.
+
+```json
+{
+  "parameterField": "ParameterSuggesterSelectField",
+  "label": "Medication",
+  "name": "medicationId",
+  "suggesterEndpoint": "drug",
+  "isMulti": true
+}
+```
+
+**Required Properties:**
+- `suggesterEndpoint` (string): Must be an endpoint that serves a full list: a reference-data type (e.g. `drug`, `village`) or one of `labTestPanel`, `labTestType`, `locationGroup`, `invoiceInsurancePlan`. Search-only endpoints such as `practitioner`, `department` or `location` don't work here.
+
+**Optional Properties:**
+- `isMulti` (boolean): Render a multi-select. The selected values reach SQL as a list; bind them with `in (...)` and guard the empty case with `coalesce(...)`, since a bare `is null` breaks once more than one value is selected:
+
+```sql
+and case when coalesce({{ parameter('medicationId') }}) is null then true
+    else medication_id in ({{ parameter('medicationId') }})
+end
+```
+
+`isMulti` is a prop the Tamanu report form passes through to its select component rather than a declared report option (verified in Tamanu `release/2.60` and `main`), so re-test it after Tamanu upgrades.
+
+### 6. Specialised Field Types
 
 The following field types are available for specific use cases and don't require additional configuration beyond the base parameter properties:
 
@@ -227,7 +255,6 @@ The following field types are available for specific use cases and don't require
 - **`LabTestLaboratoryField`** - For lab test laboratory selection
 - **`LabTestTypeField`** - For lab test type selection
 - **`LocationField`** - For location selection
-- **`ParameterSuggesterSelectField`** - For suggester-based select fields
 - **`PatientField`** - For patient selection
 - **`PractitionerField`** - For practitioner selection
 - **`VaccineCategoryField`** - For vaccine category selection
@@ -252,7 +279,8 @@ The schema enforces the following validation rules:
 4. **Name Pattern**: Parameter names must match the pattern `^[a-zA-Z][a-zA-Z0-9_]*$`
 5. **Unique Data Sources**: The `dataSources` array cannot contain duplicate values
 6. **Conditional Requirements**: 
-   - `ParameterAutocompleteField` requires `suggesterEndpoint`
+   - `ParameterAutocompleteField` and `ParameterSuggesterSelectField` require `suggesterEndpoint`
+   - `isMulti` is only allowed on `ParameterSuggesterSelectField`
    - `ParameterMultiselectField` and `ParameterSelectField` require `options` array
 7. **No Additional Properties**: Parameter objects cannot contain properties not defined in the schema
 8. **Minimum Array Length**: `dataSources` and `options` arrays must contain at least one item
