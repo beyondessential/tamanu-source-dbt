@@ -1,3 +1,8 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='discharges',
+    source_type='table'
+) }}
 {#- One row per encounter: the earliest discharge recorded against it.
 
     Deduped with `not exists` rather than `distinct on (d.encounter_id)`. DISTINCT ON is a
@@ -11,7 +16,8 @@ select
     d.note,
     d.encounter_id,
     d.discharger_id as discharged_by_id,
-    d.disposition_id
+    d.disposition_id,
+    d.updated_at_sync_tick
 from {{ source('tamanu', 'discharges') }} d
 join {{ source('tamanu', 'encounters') }} e on e.id = d.encounter_id
 where d.deleted_at is null
@@ -24,3 +30,6 @@ where d.deleted_at is null
             and d2.deleted_at is null
             and (d2.created_at, d2.id) < (d.created_at, d.id)
     )
+    {%- if is_incremental() %}
+    and d.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

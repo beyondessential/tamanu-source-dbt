@@ -20,3 +20,6 @@ models:
       - name: invoice_insurance_plan_id
         data_type: text
         description: "{{ doc('invoices_invoice_insurance_plans__invoice_insurance_plan_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

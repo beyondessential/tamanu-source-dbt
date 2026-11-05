@@ -38,3 +38,6 @@ models:
       - name: deleted_by_id
         data_type: character varying(255)
         description: "{{ doc('patient_program_registration_conditions__deletion_clinician_id')}}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

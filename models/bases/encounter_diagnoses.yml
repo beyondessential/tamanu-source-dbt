@@ -36,3 +36,6 @@ models:
       - name: diagnosed_by_id
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__clinician_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

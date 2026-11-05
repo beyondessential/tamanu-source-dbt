@@ -36,3 +36,6 @@ models:
       - name: is_completed
         data_type: boolean
         description: "{{ doc('pharmacy_order_prescriptions__is_completed') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

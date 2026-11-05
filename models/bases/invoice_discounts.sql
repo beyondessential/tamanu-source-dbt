@@ -1,3 +1,8 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='invoice_discounts',
+    source_type='table'
+) }}
 select
     id.id,
     id.invoice_id,
@@ -5,7 +10,8 @@ select
     id.reason,
     id.is_manual,
     id.applied_by_user_id,
-    id.applied_time
+    id.applied_time,
+    id.updated_at_sync_tick
 from {{ source('tamanu', 'invoice_discounts') }} id
 join {{ source('tamanu', 'invoices') }} i on i.id = id.invoice_id
 join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id
@@ -14,3 +20,6 @@ where
     and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and id.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

@@ -1,3 +1,8 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='prescriptions',
+    source_type='table'
+) }}
 select
     p.id,
     p.date::timestamp as datetime,
@@ -25,7 +30,8 @@ select
     p.discontinued as is_discontinued,
     p.discontinuing_clinician_id as discontinued_by_id,
     p.discontinuing_reason,
-    p.discontinued_date::timestamp as discontinued_datetime
+    p.discontinued_date::timestamp as discontinued_datetime,
+    p.updated_at_sync_tick
 from {{ source('tamanu', 'prescriptions') }} p
 -- a prescription belongs to a live patient other than the test patient through an encounter
 -- prescription or through a patient ongoing prescription -- the one an ongoing medication added
@@ -51,3 +57,6 @@ where p.deleted_at is null
                 and pop.patient_id != '{{ var("test_patient") }}'
         )
     )
+    {%- if is_incremental() %}
+    and p.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

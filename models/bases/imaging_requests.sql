@@ -1,3 +1,8 @@
+{{ incremental_config_for_analytics(
+    unique_key='id',
+    source_table='imaging_requests',
+    source_type='table'
+) }}
 select
     ir.id,
     ir.display_id,
@@ -10,9 +15,13 @@ select
     ir.completed_by_id,
     ir.location_id,
     ir.location_group_id,
-    ir.reason_for_cancellation
+    ir.reason_for_cancellation,
+    ir.updated_at_sync_tick
 from {{ source('tamanu', 'imaging_requests') }} ir
 join {{ source('tamanu', 'encounters') }} e on e.id = ir.encounter_id
 where ir.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and ir.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

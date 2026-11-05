@@ -47,3 +47,6 @@ models:
       - name: reason_for_cancellation
         data_type: character varying(1024)
         description: "{{ doc('imaging_requests__reason_for_cancellation') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
