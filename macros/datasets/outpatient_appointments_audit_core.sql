@@ -21,7 +21,7 @@ with change_evaluation as (
             else false
         end as is_meaningful_change
     from (
-        {{ outpatient_appointments_change_log_events(record_id_filter=record_id_filter) }}
+        {{ outpatient_appointments_change_history(record_id_filter=record_id_filter) }}
     ) cl
     -- BL-036: restricts the audit to the population bases/outpatient_appointments defines,
     -- and supplies cancelled_at_date for BL-026 without reading the source table

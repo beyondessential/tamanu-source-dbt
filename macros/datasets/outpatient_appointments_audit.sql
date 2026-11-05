@@ -29,7 +29,7 @@
 {%- set candidate_filter -%}
 c.appointment_id in (
     select distinct c2.appointment_id
-    from {{ ref('outpatient_appointments_change_events') }} c2
+    from {{ ref('outpatient_appointments_change_logs') }} c2
     where c2.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 )
 {%- endset %}

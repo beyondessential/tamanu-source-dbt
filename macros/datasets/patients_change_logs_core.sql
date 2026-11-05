@@ -1,8 +1,8 @@
 {% macro patients_change_logs_core(candidate_patient_ids=none) %}
 -- BL-013: shared patient-edit history aggregation (see
 -- specs/reports/audit-patient-details-edit.md). candidate_patient_ids is a subquery of
--- candidate patient ids (not a full predicate -- unlike discharges_change_log_events()'s and
--- outpatient_appointments_change_log_events()'s record_id_filter, which splice in a complete
+-- candidate patient ids (not a full predicate -- unlike discharges_change_history()'s and
+-- outpatient_appointments_change_history()'s record_id_filter, which splice in a complete
 -- boolean expression, this is spliced inside an `in (...)` the macro supplies itself, since the
 -- two source tables key on different columns: `lcp.id in (candidate_patient_ids)` and
 -- `lcpad.patient_id in (candidate_patient_ids)`). It runs before the grouping below, which --

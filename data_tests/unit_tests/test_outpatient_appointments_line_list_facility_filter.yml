@@ -59,7 +59,7 @@ unit_tests:
             null::integer,
             null::uuid
 
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           select

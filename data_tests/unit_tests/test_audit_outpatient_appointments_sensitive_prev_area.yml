@@ -19,7 +19,7 @@ unit_tests:
         fromDate: '2026-09-01'
         toDate: '2026-09-02'
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation, in the sensitive facility (BL-023 excludes it, but it is the lag() baseline)

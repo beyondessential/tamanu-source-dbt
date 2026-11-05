@@ -13,7 +13,7 @@
 | **Linear issue** | _none yet — this spec was written alongside the performance rework_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-07 |
-| **Last updated** | 2026-09-07 |
+| **Last updated** | 2026-11-04 |
 
 ## Purpose
 
@@ -58,7 +58,7 @@ dataset models, the report's predicate text for the report.
 |---|---|
 | `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040), and the appointment's own id and creation timestamp |
 | `ref('location_groups')`, `ref('facilities')` | Area and facility names, and the sensitivity partition (BL-045) |
-| `ref('outpatient_appointments_change_events')` | The creation event, for `created_by` (BL-044) |
+| `ref('outpatient_appointments_change_logs')` | The creation event, for `created_by` (BL-044) |
 | `ref('patients')`, `ref('patient_additional_data')` | Demographics and contact number |
 | `ref('users')` ×2 (clinician, creator) | Display names |
 | `ref('reference_data')` ×3 (billing type, village, appointment type) | Resolved names |
@@ -143,21 +143,18 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   direction, so the bare-column pair is always a strict superset of the exact one.
 - **BL-044:** `created_by` is the actor on the appointment's earliest surviving change
   event, resolved with `distinct on (appointment_id)` over
-  `bases/outpatient_appointments_change_events` — the window-free projection BL-037 exists
+  `bases/outpatient_appointments_change_logs` — the window-free projection BL-037 exists
   for — joined to `appointments_in_scope`.
 
-  This replaced a read of `outpatient_appointments_change_logs` filtered on
-  `change_sequence = 1`. That put `row_number()` and `lag(record_data)` between the
+  It does not use `outpatient_appointments_change_history()` filtered on
+  `change_sequence = 1`: that would put `row_number()` and `lag(record_data)` between the
   report's filters and the change-log scan, and Postgres pushes no predicate below a
-  `WindowAgg`, so a one-month report windowed every appointment's entire history and
-  carried each row's JSONB payload through the sort. The rewrite is an exact equivalence,
-  on three counts: both read the same source rows under the same BL-037 filters; the
+  `WindowAgg`, so a one-month report would window every appointment's entire history and
+  carry each row's JSONB payload through the sort. The two give the same result, on three
+  counts: both read the same source rows under the same BL-037 filters; the
   `order by` is the window's own `(logged_at_utc, record_updated_at_utc, changelog_id)`, so `distinct on`
   selects the row where `row_number() = 1`; and at that row
   `first_value(updated_by_user_id)` is `updated_by_user_id`.
-
-  BL-031's statement that the base model itself cannot be date-scoped still holds — this
-  removes the line list's dependence on that model rather than changing it.
 - **BL-045:** Facility scope is the `is_sensitive` partition plus the optional `facilityId`
   parameter, both applied in the scope CTE. Area and facility are inner joins, so an
   appointment whose `location_group_id` is null or dangling produces no row at all; the
@@ -207,7 +204,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
 appointments ──► outpatient_appointments (base, BL-040) ──┐
 location_groups, facilities ──────────────────────────────┤
                                                           ├──► appointments_in_scope (BL-042, BL-045)
-logs.changes ──► outpatient_appointments_change_events ───┘         │
+logs.changes ──► outpatient_appointments_change_logs ─────┘         │
                  (thin base, BL-037)                                │
                         └──► distinct on (BL-044) ──► appointment_creators
                                                                      │
@@ -245,10 +242,10 @@ patients, patient_additional_data, users, reference_data ───────�
   meaninglessly in Excel and cannot answer "which appointments repeat" without string
   matching. Pre-existing and preserved deliberately — changing it is a product decision
   needing a `translate_label` key. *Resolution:* raise separately if users ask.
-- **DV-004:** The dataset gained two columns (`facility_id`, `facility`) and one upstream
-  dependency it did not have before (`outpatient_appointments_change_events` is now read
-  directly rather than through `outpatient_appointments_change_logs`). An analytics build
-  must select the model with its upstream chain rather than in isolation. *Resolution:*
+- **DV-004:** The dataset has two columns (`facility_id`, `facility`) and an upstream
+  dependency on the thin `outpatient_appointments_change_logs` base, which BL-044 reads
+  directly. An analytics build must select the model with its upstream chain rather than in
+  isolation. *Resolution:*
   confirm the analytics pipeline does, as the audit report's DV-008 asks for the same
   model.
 - **DV-005:** `check_spec_anchors.py` is not run by CI (`.github/workflows/checks.yml` does
@@ -266,8 +263,8 @@ patients, patient_additional_data, users, reference_data ───────�
 ## Risks
 
 - **The BL-044 equivalence rests on the two paths reading the same rows.** If
-  `bases/outpatient_appointments_change_events` and
-  `outpatient_appointments_change_log_events()` ever diverge in their source filters, the
+  `bases/outpatient_appointments_change_logs` and
+  `outpatient_appointments_change_history()` ever diverge in their source filters, the
   creator resolved here diverges from the one the audit report reports, silently. They read
   the same base today precisely because BL-037 put the filters in one place; a change to
   either must keep them together.

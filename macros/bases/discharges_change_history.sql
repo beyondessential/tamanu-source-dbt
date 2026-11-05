@@ -1,6 +1,5 @@
-{% macro discharges_change_log_events(record_id_filter=none) %}
+{% macro discharges_change_history(record_id_filter=none) %}
 -- BL-013/BL-014: shared change-log extraction (see specs/reports/audit-discharge-line-list.md).
--- Two callers: the base model (unfiltered) and the audit report's candidate-scoped read.
 -- record_id_filter narrows WHICH discharges are included, never how much of an included
 -- discharge's history is seen -- change_sequence needs each discharge's full history to stay
 -- correct.
@@ -20,7 +19,7 @@ select
         partition by c.discharge_id
         order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
     ) as change_sequence
-from {{ ref('discharges_change_events') }} c
+from {{ ref('discharges_change_logs') }} c
 {%- if record_id_filter %}
 where {{ record_id_filter }}
 {%- endif %}

@@ -3,92 +3,70 @@ unit_tests:
   # 02:00-03:00 local. A change at 15:40 UTC is 02:40 AEDT and a later one at 16:20 UTC is
   # 02:20 AEST, so the local logged_at puts the later change first. Every fixture below uses that
   # pair (MAUI-7018).
-  - name: test_discharges_change_logs_logged_at_utc_dst_fall_back
+  - name: test_discharges_change_logs_dst_fall_back
     model: discharges_change_logs
     description: >
-      The sort-only logged_at_utc keeps the true order of two changes inside a DST fall-back's
-      repeated hour, where the local logged_at reverses it. logged_at itself stays local, and
-      change_sequence, numbered inside the extraction on the UTC sort keys, agrees with
-      logged_at_utc.
+      Two changes inside a DST fall-back's repeated hour convert to local logged_at values that
+      reverse their order, while the sort-only logged_at_utc and record_updated_at_utc keep the
+      true order that discharges_change_history() numbers them by.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
     given:
-      - input: ref('discharges_change_events')
+      - input: source('logs__tamanu', 'changes')
         format: sql
         rows: |
-          select '00000000-0000-0000-0000-000000000001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
+          select '00000000-0000-0000-0000-000000000001' as id, 'discharges' as table_name, 'dis_001' as record_id, '2026-04-04 15:40:00+00'::timestamptz as logged_at, '2026-04-04 15:40:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_001' as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
           union all
-          select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+          select '00000000-0000-0000-0000-000000000002', 'discharges', 'dis_001', '2026-04-04 16:20:00+00'::timestamptz, '2026-04-04 16:20:00+00'::timestamptz, null::timestamptz, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+
+      - input: source('tamanu', 'discharges')
+        format: sql
+        rows: |
+          select 'dis_001' as id, 'enc_001' as encounter_id, null::timestamptz as deleted_at
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
 
     expect:
       format: sql
       rows: |
-        select '00000000-0000-0000-0000-000000000001' as changelog_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, 'usr_001' as updated_by_user_id, 'Home' as note, 'cli_001' as discharger_id, 'disp_001' as disposition_id, 1 as change_sequence
+        select '00000000-0000-0000-0000-000000000001' as changelog_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001' as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
         union all
-        select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', 'Home with follow up', 'cli_001', 'disp_001', 2
+        select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
 
   - name: test_outpatient_appointments_change_logs_dst_fall_back
     model: outpatient_appointments_change_logs
     description: >
-      BL-024. The extraction's row_number(), lag() and first_value() order by the UTC sort keys,
-      so two edits inside a DST fall-back's repeated hour keep their order: the 02:40 AEDT edit is
-      change 2 and the 02:20 AEST edit after it is change 3, taking its previous status from
-      change 2. Ordered by the local modified_datetime the two would swap.
+      BL-024. Two edits inside a DST fall-back's repeated hour convert to local logged_at values
+      that reverse their order, while the sort-only logged_at_utc and record_updated_at_utc keep
+      the true order that outpatient_appointments_change_history() windows over.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: source('logs__tamanu', 'changes')
         format: sql
         rows: |
-          select
-            'chg_001'::text as changelog_id,
-            'appt_a'::text as appointment_id,
-            '2026-04-05 01:50:00'::timestamp as logged_at,
-            '2026-04-05 01:50:00'::timestamp as record_updated_at,
-            '2026-04-04 14:50:00'::timestamp as logged_at_utc,
-            '2026-04-04 14:50:00'::timestamp as record_updated_at_utc,
-            'usr_001'::text as updated_by_user_id,
-            100::bigint as updated_at_sync_tick,
-            '{"patient_id":"pat_001","status":"Confirmed"}'::jsonb as record_data
+          select 'chg_002' as id, 'appointments' as table_name, 'appt_a' as record_id, '2026-04-04 15:40:00+00'::timestamptz as logged_at, '2026-04-04 15:40:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_002' as updated_by_user_id, 200::bigint as updated_at_sync_tick, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Arrived"}'::jsonb as record_data
           union all
-          select 'chg_002', 'appt_a', '2026-04-05 02:40:00', '2026-04-05 02:40:00', '2026-04-04 15:40:00', '2026-04-04 15:40:00', 'usr_002', 200, '{"patient_id":"pat_001","status":"Arrived"}'
-          union all
-          select 'chg_003', 'appt_a', '2026-04-05 02:20:00', '2026-04-05 02:20:00', '2026-04-04 16:20:00', '2026-04-04 16:20:00', 'usr_003', 300, '{"patient_id":"pat_001","status":"Seen"}'
+          select 'chg_003', 'appointments', 'appt_a', '2026-04-04 16:20:00+00'::timestamptz, '2026-04-04 16:20:00+00'::timestamptz, null::timestamptz, 'usr_003', 300, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Seen"}'::jsonb
 
     expect:
       format: sql
       rows: |
-        select
-          'chg_001'::text as change_id,
-          'appt_a'::text as appointment_id,
-          '2026-04-05 01:50:00'::timestamp as modified_datetime,
-          100::bigint as updated_at_sync_tick,
-          'usr_001'::text as modified_by_user_id,
-          'usr_001'::text as created_by_user_id,
-          'pat_001'::text as patient_id,
-          null::timestamp as start_datetime,
-          null::timestamp as end_datetime,
-          null::text as clinician_id,
-          null::text as location_group_id,
-          null::text as appointment_type_id,
-          null::boolean as is_high_priority,
-          'Confirmed'::text as status,
-          null::uuid as schedule_id,
-          null::timestamp as prev_start_datetime,
-          null::timestamp as prev_end_datetime,
-          null::text as prev_clinician_id,
-          null::text as prev_location_group_id,
-          null::text as prev_appointment_type_id,
-          null::boolean as prev_is_high_priority,
-          null::text as prev_status,
-          1::bigint as change_sequence
+        select 'chg_002' as changelog_id, 'appt_a' as appointment_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_002' as updated_by_user_id, 200::bigint as updated_at_sync_tick, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Arrived"}'::jsonb as record_data
         union all
-        select 'chg_002', 'appt_a', '2026-04-05 02:40:00', 200, 'usr_002', 'usr_001', 'pat_001', null, null, null, null, null, null, 'Arrived', null, null, null, null, null, null, null, 'Confirmed', 2
-        union all
-        select 'chg_003', 'appt_a', '2026-04-05 02:20:00', 300, 'usr_003', 'usr_001', 'pat_001', null, null, null, null, null, null, 'Seen', null, null, null, null, null, null, null, 'Arrived', 3
+        select 'chg_003', 'appt_a', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_003', 300, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Seen"}'::jsonb
 
   - name: test_audit_outpatient_appointments_dst_fall_back
     model: audit-outpatient-appointments
     description: >
       BL-024. change_number follows change_sequence alone, so two edits inside a DST fall-back's
       repeated hour number in the order they happened and each names the clinician it replaced.
-      The rows are as outpatient_appointments_change_events would expose them on a Sydney
+      The rows are as outpatient_appointments_change_logs would expose them on a Sydney
       deployment.
     overrides:
       vars:
@@ -98,7 +76,7 @@ unit_tests:
         fromDate: '2026-04-05'
         toDate: '2026-04-05'
     given:
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation (BL-023 excludes it, but it is the lag() baseline)
@@ -245,7 +223,7 @@ unit_tests:
             null::integer as nth_weekday,
             null::uuid as schedule_id
 
-      - input: ref('outpatient_appointments_change_events')
+      - input: ref('outpatient_appointments_change_logs')
         format: sql
         rows: |
           select
@@ -412,7 +390,7 @@ unit_tests:
           union all
           select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
 
-      - input: ref('discharges_change_events')
+      - input: ref('discharges_change_logs')
         format: sql
         rows: |
           select 'chg_001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{}'::jsonb as record_data

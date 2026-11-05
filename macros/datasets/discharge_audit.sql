@@ -39,7 +39,7 @@ change_log_summary as (
         count(*) - 1 as later_edit_count,
         max(cl.updated_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
     from (
-        {{ discharges_change_log_events(record_id_filter=record_id_filter) }}
+        {{ discharges_change_history(record_id_filter=record_id_filter) }}
     ) cl
     group by cl.discharge_id
 ),
