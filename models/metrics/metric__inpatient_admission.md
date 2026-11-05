@@ -194,6 +194,16 @@ NULL rows, so the model coalesces to false where there is no previous admission,
 one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 {% enddocs %}
 
+{% docs metric__inpatient_admission__is_readmission_within_14_days %}
+True where the immediately preceding admission for the same patient discharged no more than 14
+days before this one started.
+
+The same rule as is_readmission_within_30_days over a shorter window, for a consumer whose
+readmission measure is 14 days. A flag rather than the gap itself, for the same reason: the gap
+in time, read against period_start, would point at the patient's previous admission. Never
+NULL, and false in the same cases.
+{% enddocs %}
+
 {% docs metric__inpatient_admission__clinician %}
 The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
 clinician" card. Never NULL -- falls back to 'Not recorded'.
