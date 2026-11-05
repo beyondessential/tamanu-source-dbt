@@ -219,5 +219,11 @@ select
         admission_start__datetime >= previous_discharge__datetime
         and admission_start__datetime - previous_discharge__datetime <= interval '30 days',
         false
-    ) as is_readmission_within_30_days
+    ) as is_readmission_within_30_days,
+    -- BL-025: the same rule as BL-016 over a 14-day window.
+    coalesce(
+        admission_start__datetime >= previous_discharge__datetime
+        and admission_start__datetime - previous_discharge__datetime <= interval '14 days',
+        false
+    ) as is_readmission_within_14_days
 from admissions_with_readmission
