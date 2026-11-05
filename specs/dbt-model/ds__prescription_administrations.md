@@ -86,7 +86,7 @@ Both datasets expose the same columns. Types and descriptions are in the model `
 - **BL-004:** MAR records with `is_error = true` are not joined; they were entered in error. A prescription whose only records are errors therefore appears as a prescription with no administration.
 - **BL-005:** The dataset has one row per dose given, and `administered_datetime` is the dose's `given_time`. A MAR record with no dose keeps one row with the dose columns null.
 - **BL-006:** `department` and `location` are those of the encounter history entry in effect when the dose was given, else when it was due, else when prescribed; the encounter's current values when no entry precedes that time. Facility and the sensitive split stay on the encounter's current location.
-- **BL-007:** The standard dataset includes only facilities with `is_sensitive = false`, the sensitive dataset only `is_sensitive = true`, by the location's facility.
+- **BL-007:** The standard dataset includes only facilities with no sensitive network (`sensitive_network_id is null`), the sensitive dataset only facilities with one, by the location's facility.
 - **BL-008:** `prescriber` is null when the prescription has no prescriber (left join).
 - **BL-009:** The prescriptions base now exposes `notes`.
 - **BL-010:** The doses base excludes soft-deleted doses, doses marked removed (`is_removed`), doses whose MAR record or prescription is soft-deleted, and doses of the test patient.
