@@ -26,3 +26,6 @@ models:
       - name: care_plan_id
         data_type: character varying(255)
         description: "{{ doc('patient_care_plans__care_plan_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

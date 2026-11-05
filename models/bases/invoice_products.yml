@@ -29,3 +29,6 @@ models:
       - name: visibility_status
         data_type: character varying(255)
         description: "{{ doc('generic__visibility_status') }} in invoice_products."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

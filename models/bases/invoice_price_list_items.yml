@@ -29,3 +29,6 @@ models:
       - name: is_fixed_price
         data_type: boolean
         description: "{{ doc('invoice_price_list_items__is_fixed_price') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
