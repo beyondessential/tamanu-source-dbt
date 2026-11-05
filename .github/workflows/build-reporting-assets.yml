@@ -3,8 +3,8 @@ name: Build Reporting Assets
 # Manually triggered for a specific tag.
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
 # branch doesn't exist yet), migrates an empty database with the Tamanu central image of
-# that minor, provisions it with the programs a release deployment gets, runs
-# build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
+# that minor, runs build_reporting_assets.py, then attaches the compiled assets to the
+# GitHub release.
 
 on:
   workflow_dispatch:
@@ -65,40 +65,21 @@ jobs:
         with:
           ref: ${{ steps.version.outputs.ref }}
 
-      # An empty database rather than a deployment's: the standard bundle follows the
-      # version's table shape, which the migrations alone produce.
+      # An empty database rather than a deployment's: the standard bundle compiles from the
+      # version's table shape, which the migrations alone produce, and reads no data.
       - name: Prepare the Tamanu database
         env:
           IMAGE: ${{ steps.version.outputs.image }}
         run: |
           # The version check reads local_system_facts before the migrations create it.
-          tamanu() {
-            docker run -i --rm --network host --entrypoint bash \
-              -e NODE_CONFIG='{"db":{"skipVersionCompatibilityCheck":true}}' \
-              -e CONFIG_SYNC_DB_HOST=127.0.0.1 \
-              -e CONFIG_SYNC_DB_PORT=5432 \
-              -e CONFIG_SYNC_DB_NAME=app \
-              -e CONFIG_SYNC_DB_USERNAME=app \
-              -e CONFIG_SYNC_DB_PASSWORD=app \
-              "$IMAGE" -c "$1"
-          }
-
-          tamanu 'exec /entrypoint upgrade' </dev/null
-
-          # The S3 reference data workbook follows main, so an older minor rejects it;
-          # the image's own export matches its version.
-          tamanu 'cat > /tmp/provisioning.json5 && exec /entrypoint provision /tmp/provisioning.json5' <<'EOF'
-          {
-            referenceData: [
-              { file: '/app/packages/central-server/exported-refdata-all-table.xlsx' },
-            ],
-            programs: [
-              { url: 'https://bes-tamanu-dev-referencedata.s3.ap-southeast-2.amazonaws.com/programs/vitals.xlsx' },
-              { url: 'https://bes-tamanu-dev-referencedata.s3.ap-southeast-2.amazonaws.com/programs/ncd-primary-screening.xlsx' },
-              { url: 'https://bes-tamanu-dev-referencedata.s3.ap-southeast-2.amazonaws.com/programs/immunisation.xlsx' },
-            ],
-          }
-          EOF
+          docker run --rm --network host \
+            -e NODE_CONFIG='{"db":{"skipVersionCompatibilityCheck":true}}' \
+            -e CONFIG_SYNC_DB_HOST=127.0.0.1 \
+            -e CONFIG_SYNC_DB_PORT=5432 \
+            -e CONFIG_SYNC_DB_NAME=app \
+            -e CONFIG_SYNC_DB_USERNAME=app \
+            -e CONFIG_SYNC_DB_PASSWORD=app \
+            "$IMAGE" upgrade
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
