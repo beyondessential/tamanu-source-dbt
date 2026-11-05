@@ -66,3 +66,6 @@ models:
       - name: record_updated_at_utc
         data_type: timestamp
         description: "{{ doc('logs__changes__record_updated_at_utc') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."

@@ -80,3 +80,6 @@ models:
       - name: registration_date
         data_type: date
         description: "{{ doc('generic__created_at') }} in patients history which is used as a best estimate of registration date."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."

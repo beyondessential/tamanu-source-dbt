@@ -1,3 +1,7 @@
+{{ incremental_config_for_analytics(
+    unique_key='discharge_id',
+    source_table='discharges'
+) }}
 -- BL-014: thin projection of the discharge change log -- source filters, no window functions,
 -- so consumers can filter it and have the predicate reach the (table_name, record_id) index.
 -- The windowed change history is built in discharges_change_history(), which cannot be
@@ -13,7 +17,8 @@ select
     c.logged_at at time zone 'UTC' as logged_at_utc,
     c.record_updated_at at time zone 'UTC' as record_updated_at_utc,
     c.updated_by_user_id,
-    c.record_data
+    c.record_data,
+    c.updated_at_sync_tick
 from {{ source('logs__tamanu', 'changes') }} c
 join {{ source('tamanu', 'discharges') }} d
     on d.id = c.record_id
@@ -25,3 +30,6 @@ join {{ source('tamanu', 'encounters') }} e
 where
     c.table_name = 'discharges'
     and c.record_deleted_at is null
+    {%- if is_incremental() %}
+    and c.record_id in ({{ changed_since_last_run('discharges') }})
+    {%- endif %}

@@ -1,6 +1,13 @@
+{{ incremental_config_for_analytics(
+    unique_key='patient_id',
+    source_table='patient_additional_data'
+) }}
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}
         and record_id != '{{ var("test_patient") }}' -- noqa: ST10
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patient_additional_data') }})
+        {%- endif %}
 )
 
 select
@@ -45,5 +52,6 @@ select
     fc.record_data ->> 'father_id' as father_id,
     fc.record_data ->> 'registered_by_id' as registered_by_id,
     fc.record_data -> 'updated_at_by_field' as updated_by_field,
-    (fc.record_data ->> 'created_at')::date as registration_date
+    (fc.record_data ->> 'created_at')::date as registration_date,
+    fc.updated_at_sync_tick
 from filtered_changes fc

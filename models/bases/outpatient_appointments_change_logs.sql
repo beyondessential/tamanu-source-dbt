@@ -1,3 +1,7 @@
+{{ incremental_config_for_analytics(
+    unique_key='appointment_id',
+    source_table='appointments'
+) }}
 -- BL-037: thin projection of the appointment change log -- source filters, no window
 -- functions, so consumers can filter it and have the predicate reach the scan. The windowed
 -- change history is built in outpatient_appointments_change_history(), which cannot be
@@ -23,3 +27,6 @@ where c.table_name = 'appointments'
     and c.record_deleted_at is null
     and (c.record_data ->> 'appointment_type_id') is not null
     and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and c.record_id in ({{ changed_since_last_run('appointments') }})
+    {%- endif %}
