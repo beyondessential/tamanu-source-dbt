@@ -17,7 +17,8 @@ on:
 jobs:
   build:
     name: Build and publish reporting assets
-    runs-on: ubuntu-latest
+    # A release branch's images are built for arm64 alone.
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
 
@@ -58,7 +59,16 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
-          echo "image=ghcr.io/beyondessential/tamanu-central:v$MINOR_VERSION" >> "$GITHUB_OUTPUT"
+
+          # A minor still in release candidates has no version tag yet, so take its
+          # release branch's latest image.
+          IMAGE="ghcr.io/beyondessential/tamanu-central:v$MINOR_VERSION"
+          if ! docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            SHA="$(gh api "repos/beyondessential/tamanu/commits/release/$MINOR_VERSION" --jq .sha)"
+            IMAGE="ghcr.io/beyondessential/tamanu-central:sha-$SHA"
+          fi
+          echo "Using $IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v5
