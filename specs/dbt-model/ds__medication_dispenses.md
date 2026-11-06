@@ -62,7 +62,7 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 | AC-004 | The same holds for `ds__sensitive_medication_dispenses`, which keeps only sensitive-facility dispenses. | BL-001, BL-002, BL-004 |
 | AC-005 | A dispense whose prescription is absent from the `prescriptions` base does not appear. | BL-005 |
 
-AC-001, AC-002 and AC-005 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base.
+AC-001, AC-002 and AC-005 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base.
 
 ## Change log
 
