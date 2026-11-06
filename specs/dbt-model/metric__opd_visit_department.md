@@ -191,7 +191,7 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
 | AC-014 | `is_auto_discharge` is `not_null` | -- | `not_null` |
 | AC-015 | `segment_time__minutes`, where present, is `>= 0` | BL-004 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-016 | `department` is `not_null` | BL-005 | `not_null` |
-| AC-017 | Segment fan-out behaves as specified: multiple departments across a visit's history, a revisited department producing multiple rows (not collapsed), the synthesized-single-segment case, a NULL segment department, population parity with `opd_visit`, and an open final segment | BL-001..BL-005 | `unit_test` (`data_tests/unit_tests/metric__opd_visit_department.yml`) |
+| AC-017 | Segment fan-out behaves as specified: multiple departments across a visit's history, a revisited department producing multiple rows (not collapsed), the synthesized-single-segment case, a NULL segment department, population parity with `opd_visit`, and an open final segment | BL-001..BL-005 | `unit_test` (`tests/unit_tests/metric__opd_visit_department.yml`) |
 | AC-018 | `segment_id` is `not_null` | grain | `not_null` |
 
 ## Registry entry
