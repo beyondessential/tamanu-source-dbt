@@ -21,4 +21,6 @@ models:
       - name: updated_datetime
         data_type: timestamp
         description: "{{ doc('generic__updated_at') }} in the lab_requests table."
-
+      - name: deleted_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__deleted_at') }} in the lab_requests table, from its latest logged change. NULL when the record is not deleted, or was restored."
