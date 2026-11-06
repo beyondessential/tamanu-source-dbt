@@ -1,12 +1,19 @@
 name: Build Reporting Assets
 
-# Manually triggered for a specific tag.
+# Runs when a release is published, for the release's tag, and can be started by hand
+# for a tag to rebuild it.
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
 # branch doesn't exist yet), migrates an empty database with the Tamanu central image of
 # that minor, provisions it with that image's default reference data, runs
-# build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
+# build_reporting_assets.py, attaches the compiled assets to the GitHub release, then
+# publishes them to S3 through publish-artifacts.yml.
+#
+# The workflow file that runs for a release is the one at the release's tag, so a change
+# to it reaches a release only when it is on the branch before the tag is cut.
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -16,7 +23,9 @@ on:
 
 jobs:
   build:
-    name: Build and publish reporting assets
+    name: Build reporting assets
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     # A release branch's images are built for arm64 alone.
     runs-on: ubuntu-24.04-arm
     permissions:
@@ -41,7 +50,7 @@ jobs:
       - name: Determine version and branch
         id: version
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${TAG#v}"
@@ -146,6 +155,13 @@ jobs:
           TAMANU_RL_DB_DATABASE: app
         run: python scripts/build_reporting_assets.py
 
+      - name: Upload the bundle for publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporting-assets
+          path: compiled/v${{ steps.version.outputs.version }}/
+          if-no-files-found: error
+
       - name: Attach compiled assets to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -153,3 +169,16 @@ jobs:
           gh release upload "${{ steps.version.outputs.tag }}" \
             compiled/v${{ steps.version.outputs.version }}/* \
             --clobber
+
+  publish:
+    name: Publish reporting assets
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish-artifacts.yml
+    with:
+      tag: ${{ needs.build.outputs.tag }}
+      bundle-artifact: reporting-assets
+    secrets: inherit
+
