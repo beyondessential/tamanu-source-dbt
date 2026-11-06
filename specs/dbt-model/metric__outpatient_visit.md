@@ -316,7 +316,7 @@ This model therefore carries no `data_table_*` meta.
 | AC-011 | `is_admitted` is `not_null` | BL-009 | `not_null` |
 | AC-012 | `is_auto_discharge` is `not_null` | BL-012 | `not_null` |
 | AC-013 | `opd_time__minutes`, where present, is `>= 0` | BL-011 | `dbt_expectations.expect_column_values_to_be_between` |
-| AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`data_tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
+| AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 | AC-015 | `department` is `not_null` | BL-013 | `not_null` (`ac_017_metric__outpatient_visit_department_not_null`) |
 | AC-016 | `clinician_designation` and `admission_clinician_designation` are `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none, no clinician and no admission read `'Not recorded'` | BL-014 | `not_null` (`ac_018_…`) + unit test `ac_014_metric__outpatient_visit_derivations` |
 

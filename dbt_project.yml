@@ -34,7 +34,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - data_tests
+  - tests
 seed-paths:
   - seeds
 macro-paths:
@@ -132,6 +132,14 @@ models:
         sensitive:
           +tags:
             - restricted
+
+# Reports are disabled on an analytics target, so the unit tests that mock them are too.
+# Every unit test that targets a report lives under tests/unit_tests/reports/.
+unit_tests:
+  tamanu_source_dbt:
+    unit_tests:
+      reports:
+        +enabled: "{{ not target.name.startswith('analytics') }}"
 
 data_tests:
   +severity: warn
