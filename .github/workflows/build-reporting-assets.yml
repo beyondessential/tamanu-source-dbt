@@ -146,10 +146,16 @@ jobs:
           TAMANU_RL_DB_DATABASE: app
         run: python scripts/build_reporting_assets.py
 
+      # Publish Artifacts waits for reporting-assets-complete, which is removed before
+      # the upload and attached after it, so it never publishes a partial or stale set.
       - name: Attach compiled assets to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          gh release upload "${{ steps.version.outputs.tag }}" \
+          gh release delete-asset "$TAG" reporting-assets-complete --yes || true
+          gh release upload "$TAG" \
             compiled/v${{ steps.version.outputs.version }}/* \
             --clobber
+          echo "$TAG" > reporting-assets-complete
+          gh release upload "$TAG" reporting-assets-complete --clobber
