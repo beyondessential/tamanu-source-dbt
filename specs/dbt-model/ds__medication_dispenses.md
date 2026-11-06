@@ -66,7 +66,7 @@ One row per non-deleted `medication_dispenses` row that the `medication_dispense
 | AC-007 | Every dispense's pharmacy order names the same facility as its encounter, at `warn` severity. A failure lists dispenses whose order facility differs; they are reported by the encounter's facility. | BL-006 |
 | AC-008 | Every dispense the base keeps, whose prescription the `prescriptions` base keeps and whose drug resolves, appears in one variant, at `warn` severity. A failure lists dispenses dropped from both because their encounter's location or facility does not resolve. | BL-006 |
 
-AC-001, AC-002, AC-005, AC-006 and AC-008 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 and AC-006 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `data_tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base, and AC-007 the singular test `data_test__ds__medication_dispenses`, which also checks AC-008 against data.
+AC-001, AC-002, AC-005, AC-006 and AC-008 are covered by `test_ds__medication_dispenses_dispensed_drug`, and AC-004 and AC-006 by `test_ds__sensitive_medication_dispenses_dispensed_drug` (both in `tests/unit_tests/test_ds__medication_dispenses_dispensed_drug.yml`). AC-003 is the `ac_003_ds__medication_dispenses_medication_id_not_null` data test on the `medication_dispenses` base, and AC-007 the singular test `data_test__ds__medication_dispenses`, which also checks AC-008 against data.
 
 ## Change log
 
