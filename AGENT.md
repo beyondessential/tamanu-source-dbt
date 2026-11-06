@@ -177,8 +177,9 @@ being released — building against a stale `.env` produces artefacts that look 
 are wrong for the branch.
 
 A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Tagging a version with no bundle behind it publishes nothing. See
-[README](README.md#creating-a-release).
+Publishing the release also needs the **Build Reporting Assets** workflow run for the tag:
+standard publish uploads the bundle that workflow attaches to the release, and waits for
+it. See [README](README.md#creating-a-release).
 
 ---
 

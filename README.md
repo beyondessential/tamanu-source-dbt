@@ -167,5 +167,9 @@ and `--no-db-check` only when preparing a release from an already-built bundle.
 4. Then draft a GitHub release: choose the version branch, tag it `vX.Y.Z`, and publish
 
 Publishing the release is what triggers `publish-artifacts.yml`, which uploads the bundle
-to S3 and registers it with the meta-server. Never upload bundles by hand. If a release
-publishes nothing, check that `compiled/v<version>/` was committed before the tag was cut.
+to S3 and registers it with the meta-server. Never upload bundles by hand. For this repo
+the uploaded bundle is the one the **Build Reporting Assets** workflow attaches to the
+release, so run that workflow with the release tag. Publish waits up to about 45 minutes
+for it to finish, then fails, and can be re-run once the build is done. Deployment repos
+publish their committed `compiled/v<version>/`, so if one publishes nothing, check that
+folder was committed before the tag was cut.
