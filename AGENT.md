@@ -192,8 +192,8 @@ database matching the version being released — building against a stale `.env`
 for the branch.
 
 A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Tagging a version with no bundle behind it publishes nothing. See
-[README](README.md#creating-a-release).
+Publishing the release builds the bundle in CI (`release-reporting-assets.yml`) and
+publishes that build to S3. See [README](README.md#creating-a-release).
 
 ---
 
