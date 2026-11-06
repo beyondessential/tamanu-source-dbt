@@ -4,7 +4,8 @@ name: Build Reporting Assets
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
 # branch doesn't exist yet), migrates an empty database with the Tamanu central image of
 # that minor, provisions it with that image's default reference data, runs
-# build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
+# build_reporting_assets.py, then attaches the compiled assets to the GitHub release and
+# publishes them to S3 and the meta-server.
 
 on:
   workflow_dispatch:
@@ -21,6 +22,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
+      id-token: write
 
     services:
       postgres:
@@ -127,3 +129,46 @@ jobs:
           gh release upload "${{ steps.version.outputs.tag }}" \
             compiled/v${{ steps.version.outputs.version }}/* \
             --clobber
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: arn:aws:iam::491618206332:role/gha-s3-tamanu-translations
+          role-session-name: TamanuDbt-standard
+          audience: sts.amazonaws.com
+
+      # Same layout and meta-server registration as publish-artifacts.yml's standard path.
+      - name: Publish to S3 and meta-server
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          META_CERT: ${{ secrets.META_CERT }}
+          META_KEY: ${{ secrets.META_KEY }}
+          META_URL: ${{ vars.META_URL }}
+        run: |
+          set -euo pipefail
+          VX=${VERSION%.*}.x
+          BUCKET=s3://bes-data-tamanu-translations
+          BASE_URL="https://tamanu-translations.data.bes.au/$VX"
+
+          for file in "compiled/v$VERSION"/*; do
+            renamed=$(basename "$file")
+            renamed="${renamed//v$VERSION/v$VX}"
+            case "$renamed" in
+              reporting-schema-*|reporting-docs-*) aws s3 cp "$file" "$BUCKET/$VX/$renamed" ;;
+              *) aws s3 cp "$file" "$BUCKET/$VX/reporting-standard/$renamed" ;;
+            esac
+          done
+
+          echo "$META_CERT" > meta.crt
+          echo "$META_KEY" > meta.key
+          trap 'rm -f meta.crt meta.key' EXIT
+          curl -fsS "$META_URL/artifacts/$VX/reporting-schema/any" \
+            --cert meta.crt --key meta.key \
+            --data-binary "$BASE_URL/reporting-schema-v$VX-standard.sql"
+          curl -fsS "$META_URL/artifacts/$VX/reporting-docs/any" \
+            --cert meta.crt --key meta.key \
+            --data-binary "$BASE_URL/reporting-docs-v$VX-standard.html"
+          curl -fsS "$META_URL/artifacts/$VX/reporting-standard/any" \
+            --cert meta.crt --key meta.key \
+            --data-binary "$BASE_URL/reporting-standard/"
