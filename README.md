@@ -166,11 +166,11 @@ and `--no-db-check` only when preparing a release from an already-built bundle.
 3. Open a PR against the version branch and merge it (merge commit, not squash)
 4. Then draft a GitHub release: choose the version branch, tag it `vX.Y.Z`, and publish
 
-Publishing the release triggers `build-reporting-assets.yml`, which builds the bundle for
-the release tag, attaches it to the release and calls `publish-artifacts.yml` to upload it
-to S3 and register it with the meta-server. The bundle that is published is the one built
-there, not the committed `compiled/v<version>/` folder. Never upload bundles by hand. If a
-release publishes nothing, check the Build Reporting Assets run for the tag. It can be
-started again by hand with the tag. The workflow file that runs is the one at the release
-tag, so a change to it reaches a release only when it is on the branch before the tag is
-cut.
+Publishing the release triggers `release-reporting-assets.yml`, which builds the bundle for
+the release tag, attaches it to the release, uploads it to S3 and registers it with the
+meta-server. The bundle that is published is the one built there, not the committed
+`compiled/v<version>/` folder. Never upload bundles by hand. If a release publishes
+nothing, check the Release Reporting Assets run for the tag. It can be started again by
+hand with the tag. The workflow file that runs is the one at the release tag, so a change
+to it reaches a release only when it is on the branch before the tag is cut.
+`tamanu-dbt-*` repos publish through `publish-artifacts.yml` and are unchanged.
