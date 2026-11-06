@@ -2,12 +2,9 @@ name: Build Reporting Assets
 
 # Manually triggered for a specific tag.
 # Checks out the X.Y maintenance branch matching the release (falls back to main if the
-# branch doesn't exist yet), connects to the release database in k8s, runs
+# branch doesn't exist yet), migrates an empty database with the Tamanu central image of
+# that minor, provisions it with that image's default reference data, runs
 # build_reporting_assets.py, then attaches the compiled assets to the GitHub release.
-#
-# Requires:
-#   vars.TS_OAUTH_CLIENT_ID, vars.TS_TAGS, vars.TS_K8S_OPERATOR_HOSTNAME — Tailscale access
-#   GITHUB_TOKEN with contents:write (granted automatically by GHA)
 
 on:
   workflow_dispatch:
@@ -20,10 +17,25 @@ on:
 jobs:
   build:
     name: Build and publish reporting assets
-    runs-on: ubuntu-latest
+    # A release branch's images are built for arm64 alone.
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
-      id-token: write # for Tailscale OIDC authentication
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Determine version and branch
@@ -47,24 +59,44 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
-          echo "namespace=tamanu-release-${MINOR_VERSION//./-}" >> "$GITHUB_OUTPUT"
+
+          # A minor still in release candidates has no version tag yet, so take its
+          # release branch's latest image.
+          IMAGE="ghcr.io/beyondessential/tamanu-central:v$MINOR_VERSION"
+          if ! docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            SHA="$(gh api "repos/beyondessential/tamanu/commits/release/$MINOR_VERSION" --jq .sha)"
+            IMAGE="ghcr.io/beyondessential/tamanu-central:sha-$SHA"
+          fi
+          echo "Using $IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v5
         with:
           ref: ${{ steps.version.outputs.ref }}
 
-      - name: Connect to Tailscale
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
-          audience: api.tailscale.com/${{ vars.TS_OAUTH_CLIENT_ID }}
-          tags: '${{ vars.TS_TAGS }}'
-
-      - name: Configure kubeconfig
+      # A fresh database rather than a release deployment's. ds__invoice_products and its
+      # report pivot on the price lists and insurance plans present at compile time, which
+      # the image's default reference data supplies as a release deployment's does.
+      - name: Prepare the Tamanu database
+        env:
+          IMAGE: ${{ steps.version.outputs.image }}
         run: |
-          sudo tailscale set --operator=$USER
-          tailscale configure kubeconfig ${{ vars.TS_K8S_OPERATOR_HOSTNAME }}
+          # The version check reads local_system_facts before the migrations create it.
+          tamanu() {
+            docker run -i --rm --network host --entrypoint bash \
+              -e NODE_CONFIG='{"db":{"skipVersionCompatibilityCheck":true}}' \
+              -e CONFIG_SYNC_DB_HOST=127.0.0.1 \
+              -e CONFIG_SYNC_DB_PORT=5432 \
+              -e CONFIG_SYNC_DB_NAME=app \
+              -e CONFIG_SYNC_DB_USERNAME=app \
+              -e CONFIG_SYNC_DB_PASSWORD=app \
+              "$IMAGE" -c "$1"
+          }
+
+          tamanu 'exec /entrypoint upgrade' </dev/null
+          echo '{ referenceData: [{ defaultSpreadsheet: true }] }' \
+            | tamanu 'cat > /tmp/provisioning.json5 && exec /entrypoint provision /tmp/provisioning.json5'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -80,52 +112,13 @@ jobs:
         run: uv pip install --system -e .
 
       - name: Build reporting assets
-        run: |
-          NS="${{ steps.version.outputs.namespace }}"
-
-          pgpass=$(kubectl get -n "$NS" secrets central-db-app -o jsonpath='{.data.password}' | base64 -d)
-          echo "::add-mask::$pgpass"
-
-          primary=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=central-db,role=primary -o jsonpath='{.items[0].metadata.name}')
-          if [ -z "$primary" ]; then
-            echo "::error::No primary pod found for central-db in namespace $NS"
-            exit 1
-          fi
-          # Pinned to the primary pod (not service/central-db-rw) so reads are guaranteed
-          # to hit the writeable instance; trade-off is no failover during the build.
-          echo "Port-forwarding to primary pod: $primary"
-          kubectl port-forward -n "$NS" "pod/$primary" 5432:5432 >/tmp/pf.log 2>&1 &
-          pf_pid=$!
-          function cleanup() { kill "$pf_pid" 2>/dev/null || true; }
-          trap cleanup EXIT
-
-          for i in $(seq 1 30); do
-            if pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
-              echo "Port-forward ready"
-              break
-            fi
-            if ! kill -0 "$pf_pid" 2>/dev/null; then
-              echo "::error::Port-forward process died"
-              echo "--- kubectl port-forward output ---"
-              cat /tmp/pf.log
-              exit 1
-            fi
-            sleep 1
-          done
-
-          if ! pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null; then
-            echo "::error::Port-forward not ready after 30s"
-            echo "--- kubectl port-forward output ---"
-            cat /tmp/pf.log
-            exit 1
-          fi
-
-          TAMANU_RL_DB_URL=127.0.0.1 \
-          TAMANU_RL_DB_PORT=5432 \
-          TAMANU_RL_DB_USER=app \
-          TAMANU_RL_DB_PASSWORD="$pgpass" \
-          TAMANU_RL_DB_DATABASE=app \
-          python scripts/build_reporting_assets.py
+        env:
+          TAMANU_RL_DB_URL: 127.0.0.1
+          TAMANU_RL_DB_PORT: 5432
+          TAMANU_RL_DB_USER: app
+          TAMANU_RL_DB_PASSWORD: app
+          TAMANU_RL_DB_DATABASE: app
+        run: python scripts/build_reporting_assets.py
 
       - name: Attach compiled assets to release
         env:
