@@ -75,6 +75,32 @@ jobs:
         with:
           ref: ${{ steps.version.outputs.ref }}
 
+      # The build reads its version from the checkout, so stamp the entered version
+      # into both files. The change stays in the runner and is never committed.
+      - name: Set version in dbt_project.yml and pyproject.toml
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version '$VERSION' is not X.Y.Z"
+            exit 1
+          fi
+
+          # The checkout must sit on the minor being released.
+          CHECKOUT_MINOR="$(sed -nE 's/^version: *"?([0-9]+\.[0-9]+)\..*/\1/p' dbt_project.yml)"
+          if [ "$CHECKOUT_MINOR" != "${VERSION%.*}" ]; then
+            echo "::error::Checked-out branch is at $CHECKOUT_MINOR, not ${VERSION%.*}"
+            exit 1
+          fi
+
+          sed -i -E "s/^version: .*/version: $VERSION/" dbt_project.yml
+          # The project version is the first top-level version key, inside [project].
+          sed -i -E "/^\[project\]/,/^\[/ s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+
+          grep -qx "version: $VERSION" dbt_project.yml
+          grep -qx "version = \"$VERSION\"" pyproject.toml
+          grep -n '^version' dbt_project.yml pyproject.toml
+
       # A fresh database rather than a release deployment's. ds__invoice_products and its
       # report pivot on the price lists and insurance plans present at compile time, which
       # the image's default reference data supplies as a release deployment's does.
