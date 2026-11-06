@@ -254,7 +254,7 @@ approved`, `spec_path` pointing here, `variant_of: null`.
 birth_type,patient_location_id` on every row (identical across the four, since they share a base).
 
 Every disaggregation must be added to the allowlist in
-`data_tests/source/assert__metric_definitions__disaggregations.sql`.
+`tests/data_tests/source/assert__metric_definitions__disaggregations.sql`.
 
 ## Dependencies
 
