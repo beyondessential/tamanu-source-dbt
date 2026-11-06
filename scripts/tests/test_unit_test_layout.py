@@ -1,7 +1,7 @@
 """Guards where unit tests live.
 
 An analytics target disables the report models, and dbt fails to parse a unit test whose model is
-disabled. dbt_project.yml disables data_tests/unit_tests/reports/ on analytics targets, so every
+disabled. dbt_project.yml disables tests/unit_tests/reports/ on analytics targets, so every
 unit test that targets a report must sit there and no other unit test may.
 """
 
@@ -10,7 +10,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-UNIT_TESTS = ROOT / "data_tests" / "unit_tests"
+UNIT_TESTS = ROOT / "tests" / "unit_tests"
 REPORTS = UNIT_TESTS / "reports"
 
 
@@ -37,7 +37,7 @@ def test_a_report_unit_test_lives_under_reports():
         if unit_test.get("model") in reports and REPORTS not in path.parents
     ]
 
-    assert not misplaced, "report unit tests outside data_tests/unit_tests/reports/:\n" + "\n".join(misplaced)
+    assert not misplaced, "report unit tests outside tests/unit_tests/reports/:\n" + "\n".join(misplaced)
 
 
 def test_only_report_unit_tests_live_under_reports():
@@ -48,4 +48,4 @@ def test_only_report_unit_tests_live_under_reports():
         if unit_test.get("model") not in reports and REPORTS in path.parents
     ]
 
-    assert not misplaced, "non-report unit tests under data_tests/unit_tests/reports/:\n" + "\n".join(misplaced)
+    assert not misplaced, "non-report unit tests under tests/unit_tests/reports/:\n" + "\n".join(misplaced)
