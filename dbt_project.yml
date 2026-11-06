@@ -168,6 +168,12 @@ seeds:
     cohort_definitions:
       +enabled: false
 
+# Unit tests mock report models, which an analytics target disables, so parsing them there
+# fails in the package and in every deployment that consumes it. They run on every other target.
+unit_tests:
+  tamanu_source_dbt:
+    +enabled: "{{ not target.name.startswith('analytics') }}"
+
 data_tests:
   +severity: warn
   tamanu_source_dbt:
