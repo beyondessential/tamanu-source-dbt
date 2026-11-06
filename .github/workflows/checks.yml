@@ -6,7 +6,7 @@ name: Checks
 # silently drift if someone edits a CSV and forgets to regenerate.
 #
 # list_tamanu_reports.md is NOT guarded here -- it's regenerated and committed
-# to main automatically by publish-artifacts.yml's list-reports job on every
+# to main automatically by release-reporting-assets.yml's list-reports job on every
 # release cut from main, so it can't drift for long.
 
 on:
