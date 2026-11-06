@@ -9,7 +9,10 @@ unit_tests:
       blank. BL-006: age_months is banded into EPI months-based cohorts. BL-007: dose_label
       falls back to 'Not recorded' when blank. BL-008: patient_location_id passes through
       unchanged, including NULL when not recorded. BL-009: reason falls back to 'Not
-      recorded' when neither a coded nor free-text reason was captured.
+      recorded' when neither a coded nor free-text reason was captured. BL-010: the patient,
+      scheduled-vaccine, location-group and age fields pass through as in
+      metric__immunisation_dose, with vaccine_label and vaccine_category falling back to
+      'Not recorded'.
 
     given:
       - input: ref('clinical__observation')
@@ -29,14 +32,14 @@ unit_tests:
       - input: ref('int__vaccine_administration_attributes')
         format: sql
         rows: |
-          select 'ng_1' as administered_vaccine_id, 'fac_1' as facility_id, 'Measles' as disease, 'Dose 1' as dose_label, 'female' as sex, 'vil_1' as patient_location_id, 'Parent declined' as not_given_reason, 60 as age_months
+          select 'ng_1' as administered_vaccine_id, 'fac_1' as facility_id, 'Measles' as disease, 'Dose 1' as dose_label, 'female' as sex, 'vil_1' as patient_location_id, 'Parent declined' as not_given_reason, 60 as age_months, 'pat_1' as person_id, 'drug-MR' as vaccine_id, 'MR' as vaccine_label, 'Routine' as vaccine_category, 'lg_1' as location_group_id, 1830 as age_days, 5 as age_years, 'dose location' as facility_source, false as is_given_elsewhere
           union all
           -- blank disease/dose_label/reason -> 'Not recorded'. no village on record -> NULL passes through.
-          select 'ng_2', 'fac_1', null::text, null::text, 'male', null::text, null::text, 12
+          select 'ng_2', 'fac_1', null::text, null::text, 'male', null::text, null::text, 12, 'pat_2', null::text, null::text, null::text, null::text, null::int, null::int, 'encounter location', false
 
     expect:
       format: sql
       rows: |
-        select 'immunisation_refusal' as metric_id, null::text as variant_id, 'ng_1'::varchar as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 'Measles' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id, 'Parent declined' as reason
+        select 'immunisation_refusal' as metric_id, null::text as variant_id, 'ng_1'::varchar as subject_id, '2024-06-01'::date as period_start, '2024-06-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 'Measles' as disease, '5+ years' as age_group__who_epi_schedule, 'Dose 1' as dose_label, 'vil_1' as patient_location_id, 'Parent declined' as reason, 'pat_1' as person_id, 'drug-MR' as vaccine_id, 'MR' as vaccine_label, 'Routine' as vaccine_category, 'lg_1' as location_group_id, 1830 as age_days, 5 as age_years, 'dose location' as facility_source, false as is_given_elsewhere
         union all
-        select 'immunisation_refusal', null::text, 'ng_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text, 'Not recorded'
+        select 'immunisation_refusal', null::text, 'ng_2'::varchar, '2023-01-15'::date, '2023-01-15'::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'male', 'Not recorded', '12-23 months', 'Not recorded', null::text, 'Not recorded', 'pat_2', null::text, 'Not recorded', 'Not recorded', null::text, null::int, null::int, 'encounter location', false

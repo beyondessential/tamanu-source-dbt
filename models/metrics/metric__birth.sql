@@ -1,7 +1,8 @@
 -- metric__birth -- D5 metric view for the four maternity/newborn indicators registered in
 -- documentations/metrics/maternity.yml: birth, low_birth_weight, preterm_birth,
 -- low_apgar_5min (MAUI-6838).
--- Spec: specs/dbt-model/metric__birth.md (BL-001..BL-014).
+-- Spec: specs/dbt-model/metric__birth.md (BL-001..BL-015).
+-- See specs/dbt-model/metric__birth.md for the BL clauses this model implements.
 --
 -- Per-birth (subject) grain: one row per registered live birth, per metric_id, value_numeric
 -- 1, so a consumer aggregates at whatever grain it needs (BL-013). low_birth_weight,
@@ -53,6 +54,8 @@ births as (
         ) as period_start,
         pbd.birth_facility_id as facility_id,
         per.gender_source_value as sex,
+        -- BL-015: the newborn's own home village, from their clinical__person record.
+        per.location_id as patient_location_id,
         pbd.birth_delivery_type,
         pbd.attendant_at_birth,
         pbd.registered_birth_place,
@@ -132,5 +135,9 @@ select
     -- BL-014: measures, not dimensions -- continuous, so banding is the consumer's.
     birth_weight,
     gestational_age_estimate,
-    apgar_score_five_minutes
+    apgar_score_five_minutes,
+    -- BL-015: the newborn's home village as a Tamanu id, untranslated like facility_id and
+    -- deliberately not coalesced -- NULL means the record carries no village, the same rule as
+    -- metric__immunisation_dose's patient_location_id, so the two join to one village list.
+    patient_location_id
 from metric_rows
