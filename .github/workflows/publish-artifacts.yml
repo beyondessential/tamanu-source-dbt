@@ -150,6 +150,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # Standard publishes the bundle that Build Reporting Assets attached to the
+      # release, replacing the committed compiled/ folder. Waits until the release
+      # carries a settled set of assets, so a run started before the build finished
+      # picks up its result.
+      - name: Fetch the built reporting assets
+        if: needs.setup.outputs.deployment == 'standard'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+
+          PREVIOUS=-1
+          ASSETS=0
+          for attempt in $(seq 1 90); do
+            ASSETS="$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets | length')"
+            # The upload attaches files one by one, so a count that has held
+            # steady across two polls means it has finished.
+            if [ "$ASSETS" != "0" ] && [ "$ASSETS" = "$PREVIOUS" ]; then
+              break
+            fi
+            PREVIOUS="$ASSETS"
+            echo "Waiting for Build Reporting Assets ($ASSETS assets on $TAG), attempt $attempt"
+            sleep 30
+          done
+
+          if [ "$ASSETS" = "0" ] || [ "$ASSETS" != "$PREVIOUS" ]; then
+            echo "::error::No built reporting assets on release $TAG. Run Build Reporting Assets for it, then re-run this workflow."
+            exit 1
+          fi
+
+          rm -rf "compiled/v$VERSION"
+          gh release download "$TAG" --repo "$REPO" --dir "compiled/v$VERSION"
+          ls -l "compiled/v$VERSION"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
