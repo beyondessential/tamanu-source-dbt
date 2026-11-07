@@ -25,7 +25,8 @@ Both take the same options and behave identically.
 - Access to the central-server pod (report import) and the CNPG `*-db-rw`
   services (schema apply + snapshot).
 - The reporting-schema `.sql` file and/or the compiled report `.json` files you
-  want to import. Compiled reports are produced by the build in `compiled/reports/`.
+  want to import. A release's bundle is attached to its GitHub release as assets, and a local build writes
+  the same files under `compiled/`, with the compiled reports in `compiled/reports/`.
 
 ## Safety model: plan first, then apply
 
