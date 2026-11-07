@@ -154,16 +154,16 @@ jobs:
 
           # Register canonical artifacts with meta-server: standard only
           if [ "$DEPLOYMENT" = "standard" ]; then
-            curl -v "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
+            curl -fv "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-schema-v$VX-$DEPLOYMENT.sql"
 
-            curl -v "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
+            curl -fv "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-docs-v$VX-$DEPLOYMENT.html"
           fi
 
           # Register reports folder with meta-server: all repos
-          curl -v "$META_URL/artifacts/$S3_DIR/$REPORTS_FOLDER/any" \
+          curl -fv "$META_URL/artifacts/$S3_DIR/$REPORTS_FOLDER/any" \
             --cert meta.crt --key meta.key \
             --data-binary "$BASE_URL/$REPORTS_FOLDER/"
