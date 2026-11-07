@@ -173,27 +173,13 @@ uv run python .maui/scripts/with_secrets.py -- python scripts/generate_metric_de
 
 ## Cutting a release
 
-```bash
-# from the version branch being released; --dry-run to preview
-uv run python .maui/scripts/with_secrets.py -- python scripts/prepare_release.py
-# a version branch that doesn't carry secret-sources.ini yet: its .env
-uv run --env-file .env python scripts/prepare_release.py
-```
+Publishing a GitHub release for a `vX.Y.Z` tag, cut from the version branch, runs
+`release-reporting-assets.yml`. It stamps the tag's version into `dbt_project.yml` and
+`pyproject.toml` on the runner, builds the bundle, attaches it to the release and publishes it
+to S3. Nothing is committed for a release: no version bump and no bundle. The branch's
+`dbt_project.yml` must be on the same minor as the tag, or the build stops.
 
-Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against the last
-released bundle, and drafts the commit message and PR body under `target/`. It stops
-before the commit (`--commit` makes it) and never pushes or opens the PR.
-
-The runner picks the release database from `version:` in `dbt_project.yml`
-(`tamanu-release-2-64` on `2.64`), so it follows the branch you are on. Never set
-`MAUI_RELEASE_SERIES` for a release. It refuses to build unless dbt resolves to the release
-database matching the version being released — building against a stale `.env`, or with
-`MAUI_RELEASE_SERIES` pointing elsewhere, produces artefacts that look valid and are wrong
-for the branch.
-
-A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Publishing the release builds the bundle in CI (`release-reporting-assets.yml`) and
-publishes that build to S3. See [README](README.md#creating-a-release).
+`compiled/` is untracked build output. See [README](README.md#creating-a-release).
 
 ---
 
