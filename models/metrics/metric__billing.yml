@@ -6,15 +6,15 @@ models:
     config:
       tags:
         - billing
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table.
-    meta:
-      owner: bes-maui
-      domain: billing
-      # BL-016: invoice and payment ids only, with no patient identifier or attribute, so this
-      # stays unrestricted and covers standard and sensitive facilities alike.
-      pii: false
-      classification: internal
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: billing
+        # BL-016: invoice and payment ids only, with no patient identifier or attribute, so this
+        # stays unrestricted and covers standard and sensitive facilities alike.
+        pii: false
+        classification: internal
     data_tests:
       # A duplicate row would double-count an amount in any consumer that sums value_numeric.
       - dbt_utils.unique_combination_of_columns:

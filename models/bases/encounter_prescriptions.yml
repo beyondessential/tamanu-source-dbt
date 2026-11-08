@@ -5,11 +5,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: id
         data_type: uuid
