@@ -2,6 +2,25 @@ name: tamanu_source_dbt
 version: 2.67.0
 config-version: 2
 profile: tamanu_source_dbt
+# dbt enforces this on every project that installs this package, so it states what the package's
+# YAML needs, not this repo's own pin (pyproject.toml). 1.10.8 is the first dbt that reads generic
+# test parameters nested under `arguments:` by default. The cap keeps out dbt Fusion (2.x).
+require-dbt-version: [">=1.10.8", "<2.0.0"]
+
+# Every dbt deprecation is an error here, so a change that brings one back fails `dbt parse` in
+# CI (checks.yml). dbt reads `flags` from the root project only, so deployment repos installing
+# this package are unaffected.
+flags:
+  warn_error_options:
+    error:
+      - Deprecations
+    # models/sources/ is copied from tamanu's database/model/public/, where some generic test
+    # parameters still sit outside `arguments:`. That one deprecation stays a warning until tamanu
+    # nests them; remove both entries once a refresh brings the fix in. The end-of-run summary
+    # would otherwise still fail on it, and every other deprecation already fails on its own event.
+    warn:
+      - MissingArgumentsPropertyInGenericTestDeprecation
+      - DeprecationsSummary
 
 vars:
   has_sensitive_facility: false
