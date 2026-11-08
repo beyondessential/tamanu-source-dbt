@@ -8,12 +8,12 @@
 #}
 {% test facility_crosswalk_coverage(model, column_name, unmapped_facility_ids=[], ignore_ids=[]) %}
 with facilities as (
-    select id as facility_id
+    select id::text as facility_id
     from {{ ref('facilities') }}
 ),
 
 crosswalk as (
-    select distinct {{ column_name }} as facility_id
+    select distinct {{ column_name }}::text as facility_id
     from {{ model }}
     where {{ column_name }} is not null
 )
@@ -42,7 +42,10 @@ where facilities.facility_id is null
 {% endtest %}
 
 {% macro _facility_crosswalk_id_list(ids) -%}
+    {%- if ids is string -%}
+        {%- set ids = [ids] -%}
+    {%- endif -%}
     {%- for id in ids -%}
-        '{{ id | replace("'", "''") }}'{{ ', ' if not loop.last }}
+        '{{ dbt.escape_single_quotes(id) }}'{{ ', ' if not loop.last }}
     {%- endfor -%}
 {%- endmacro %}
