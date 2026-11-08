@@ -29,7 +29,7 @@ models:
       - name: certainty
         data_type: character varying
         description: "{{ doc('encounter_diagnoses__certainty') }}"
-        tests:
+        data_tests:
           - dbt_utils.not_accepted_values:
               arguments:
                 values: ['disproven', 'error']
