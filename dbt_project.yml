@@ -6,6 +6,14 @@ profile: tamanu_source_dbt
 # for every deployment repo and data-lake, not this repo's own pin (pyproject.toml).
 require-dbt-version: [">=1.10.0", "<1.13.0"]
 
+# Every dbt deprecation is an error here, so a change that brings one back fails `dbt parse` in
+# CI (checks.yml). dbt reads `flags` from the root project only, so deployment repos installing
+# this package are unaffected.
+flags:
+  warn_error_options:
+    error:
+      - Deprecations
+
 vars:
   has_sensitive_facility: false
   # reference_data id of the deployment's home country. Used by the

@@ -117,5 +117,10 @@ jobs:
       - name: Install dbt packages
         run: dbt deps
 
+      - name: Fail on dbt deprecations
+        # dbt_project.yml promotes every deprecation to an error, and some are only raised
+        # during a full parse.
+        run: dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release
+
       - name: Run dbt unit tests
         run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
