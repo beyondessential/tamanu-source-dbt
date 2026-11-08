@@ -149,7 +149,7 @@ Tupaia data tables over this view are configured in `tupaia-data-product` at
 age_group__who_epi_schedule, dose_label, patient_location_id, vaccine_id, vaccine_label,
 vaccine_category, location_group_id, facility_source, is_given_elsewhere`. `person_id`,
 `age_days` and `age_years` are not disaggregations — an aggregation key and two measures. Every disaggregation is on the allowlist in
-`tests/data_tests/source/assert__metric_definitions__disaggregations.sql`.
+`tests/data_tests/source_asserts/assert__metric_definitions__disaggregations.sql`.
 
 ## Dependencies
 
