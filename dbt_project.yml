@@ -14,6 +14,13 @@ flags:
   warn_error_options:
     error:
       - Deprecations
+    # models/sources/ is copied from tamanu's database/model/public/, where some generic test
+    # parameters still sit outside `arguments:`. That one deprecation stays a warning until tamanu
+    # nests them; remove both entries once a refresh brings the fix in. The end-of-run summary
+    # would otherwise still fail on it, and every other deprecation already fails on its own event.
+    warn:
+      - MissingArgumentsPropertyInGenericTestDeprecation
+      - DeprecationsSummary
 
 vars:
   has_sensitive_facility: false
