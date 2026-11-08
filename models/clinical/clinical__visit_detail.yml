@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     data_tests:
       # AC-006: a segment's end must not precede its start (BL-002). or_equal
       # permits zero-length segments (end == start); NULL end (open final

@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: patient_id
         data_type: character varying(255)
@@ -18,10 +18,11 @@ models:
       - name: display_id
         data_type: character varying(255)
         description: "{{ doc('patients__display_id') }}"
-        meta:
-          metrics:
-            total_patients_count:
-              type: count
+        config:
+          meta:
+            metrics:
+              total_patients_count:
+                type: count
       - name: first_name
         data_type: character varying(255)
         description: "{{ doc('patients__first_name') }}"

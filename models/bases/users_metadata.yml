@@ -6,11 +6,11 @@ models:
       tags:
         - administration
         - log
-    meta:
-      owner: bes-maui
-      domain: admin
-      pii: false
-      classification: confidential
+      meta:
+        owner: bes-maui
+        domain: admin
+        pii: false
+        classification: confidential
     columns:
       - name: id
         data_type: character varying(255)
