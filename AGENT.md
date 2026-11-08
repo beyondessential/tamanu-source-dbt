@@ -161,22 +161,13 @@ uv run --env-file .env python scripts/generate_metric_definitions_macro.py
 
 ## Cutting a release
 
-```bash
-# from the version branch being released; --dry-run to preview
-uv run --env-file .env python scripts/prepare_release.py
-```
+Publishing a GitHub release for a `vX.Y.Z` tag, cut from the version branch, runs
+`release-reporting-assets.yml`. It stamps the tag's version into `dbt_project.yml` and
+`pyproject.toml` on the runner, builds the bundle, attaches it to the release and publishes it
+to S3. Nothing is committed for a release: no version bump and no bundle. The branch's
+`dbt_project.yml` must be on the same minor as the tag, or the build stops.
 
-Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against the last
-released bundle, and drafts the commit message and PR body under `target/`. It stops
-before the commit (`--commit` makes it) and never pushes or opens the PR.
-
-It refuses to build unless dbt resolves to the release database matching the version
-being released — building against a stale `.env` produces artefacts that look valid and
-are wrong for the branch.
-
-A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Tagging a version with no bundle behind it publishes nothing. See
-[README](README.md#creating-a-release).
+`compiled/` is untracked build output. See [README](README.md#creating-a-release).
 
 ---
 
