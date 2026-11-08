@@ -11,17 +11,17 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
-    # metric__encounter_diagnosis uses.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier, name
-      # or birth date alongside it -- no patient is identifiable through a row, the same
-      # reasoning metric__encounter_diagnosis uses.
-      pii: false
-      classification: internal
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
+      # metric__encounter_diagnosis uses.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier, name
+        # or birth date alongside it -- no patient is identifiable through a row, the same
+        # reasoning metric__encounter_diagnosis uses.
+        pii: false
+        classification: internal
     data_tests:
       # One row per diagnosis. A duplicate would double-count it in any consumer that sums
       # value_numeric -- error even though the repo default is warn.

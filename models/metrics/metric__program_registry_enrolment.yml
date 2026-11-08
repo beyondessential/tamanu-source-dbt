@@ -6,25 +6,25 @@ models:
     config:
       tags:
         - clinical
-    # BL-013: no data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment
-    # that bands a value differently adds a file there rather than forking the metric.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # BL-011: unlike the emergency metrics, a row here is patient-identifiable. subject_id
-      # is clinical__episode's episode_id, which is the composite `<patient id>;<registry id>`
-      # -- the patient's own id, in the clear. Registry membership is also the sensitive fact
-      # itself: that a patient is in an HIV register is the diagnosis. Restricted, and a
-      # consumer's data table must set its permission groups deliberately.
-      #
-      # This is the classification, not a shipping gate: the `restricted` *tag* is gated on
-      # has_sensitive_facility, a deployment feature rather than a statement about PII, and
-      # tagging this would withhold the metric from deployments without sensitive facilities.
-      # The shipped schema already holds patient-identifiable relations by design -- see
-      # BL-011 in the spec.
-      pii: true
-      classification: restricted
+      # BL-013: no data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table, so a deployment
+      # that bands a value differently adds a file there rather than forking the metric.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-011: unlike the emergency metrics, a row here is patient-identifiable. subject_id
+        # is clinical__episode's episode_id, which is the composite `<patient id>;<registry id>`
+        # -- the patient's own id, in the clear. Registry membership is also the sensitive fact
+        # itself: that a patient is in an HIV register is the diagnosis. Restricted, and a
+        # consumer's data table must set its permission groups deliberately.
+        #
+        # This is the classification, not a shipping gate: the `restricted` *tag* is gated on
+        # has_sensitive_facility, a deployment feature rather than a statement about PII, and
+        # tagging this would withhold the metric from deployments without sensitive facilities.
+        # The shipped schema already holds patient-identifiable relations by design -- see
+        # BL-011 in the spec.
+        pii: true
+        classification: restricted
     data_tests:
       # AC-001 (BL-003): one row per enrolment. A duplicate would double-count a patient in
       # any consumer that sums value_numeric -- error even though the repo default is warn.

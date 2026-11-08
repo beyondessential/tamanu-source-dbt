@@ -14,9 +14,9 @@ models:
     config:
       tags:
         - reference
-    meta:
-      owner: bes-maui
-      domain: reference
+      meta:
+        owner: bes-maui
+        domain: reference
     columns:
       - name: lab_test_type_id
         data_type: text
