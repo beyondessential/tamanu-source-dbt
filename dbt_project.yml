@@ -202,3 +202,16 @@ data_tests:
       # Metrics are views off analytics, so each test re-runs the whole metric (minutes on a
       # full database). Run them where metrics are tables; force with --vars '{metric_data_tests: true}'.
       +enabled: "{{ target.name.startswith('analytics') or var('metric_data_tests', false) }}"
+    # Singular tests are tagged by kind, so each kind runs on its own with
+    # `dbt test --select tag:<tag>`. A singular test's path follows its folder under test-paths,
+    # so this `data_tests` is tests/data_tests/, not the resource type above.
+    data_tests:
+      model_invariants:
+        +tags:
+          - model_invariant
+      logical_integrity:
+        +tags:
+          - logical_integrity
+      source:
+        +tags:
+          - source_assert
