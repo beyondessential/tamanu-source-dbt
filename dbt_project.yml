@@ -2,6 +2,25 @@ name: tamanu_source_dbt
 version: 2.67.0
 config-version: 2
 profile: tamanu_source_dbt
+# dbt enforces this on every project that installs this package, so it states what the package's
+# YAML needs, not this repo's own pin (pyproject.toml). 1.10.8 is the first dbt that reads generic
+# test parameters nested under `arguments:` by default. The cap keeps out dbt Fusion (2.x).
+require-dbt-version: [">=1.10.8", "<2.0.0"]
+
+# Every dbt deprecation is an error here, so a change that brings one back fails `dbt parse` in
+# CI (checks.yml). dbt reads `flags` from the root project only, so deployment repos installing
+# this package are unaffected.
+flags:
+  warn_error_options:
+    error:
+      - Deprecations
+    # models/sources/ is copied from tamanu's database/model/public/, where some generic test
+    # parameters still sit outside `arguments:`. That one deprecation stays a warning until tamanu
+    # nests them; remove both entries once a refresh brings the fix in. The end-of-run summary
+    # would otherwise still fail on it, and every other deprecation already fails on its own event.
+    warn:
+      - MissingArgumentsPropertyInGenericTestDeprecation
+      - DeprecationsSummary
 
 vars:
   has_sensitive_facility: false
@@ -45,7 +64,7 @@ model-paths:
 analysis-paths:
   - analyses
 test-paths:
-  - data_tests
+  - tests
 seed-paths:
   - seeds
 macro-paths:
@@ -168,6 +187,14 @@ seeds:
     cohort_definitions:
       +enabled: false
 
+# Reports are disabled on an analytics target, so the unit tests that mock them are too.
+# Every unit test that targets a report lives under tests/unit_tests/reports/.
+unit_tests:
+  tamanu_source_dbt:
+    unit_tests:
+      reports:
+        +enabled: "{{ not target.name.startswith('analytics') }}"
+
 data_tests:
   +severity: warn
   tamanu_source_dbt:
@@ -175,3 +202,17 @@ data_tests:
       # Metrics are views off analytics, so each test re-runs the whole metric (minutes on a
       # full database). Run them where metrics are tables; force with --vars '{metric_data_tests: true}'.
       +enabled: "{{ target.name.startswith('analytics') or var('metric_data_tests', false) }}"
+    # Each kind of singular test has its own folder and is tagged with the folder's name, so it
+    # runs on its own with `dbt test --select tag:<folder>`. A singular test's path follows its
+    # folder under test-paths, so this `data_tests` is tests/data_tests/, not the resource type
+    # above. scripts/tests/test_data_test_layout.py keeps every singular test in a tagged folder.
+    data_tests:
+      model_invariants:
+        +tags:
+          - model_invariants
+      logical_integrity:
+        +tags:
+          - logical_integrity
+      source_asserts:
+        +tags:
+          - source_asserts

@@ -6,11 +6,11 @@ models:
       tags:
         - clinical
         - log
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        classification: restricted
     columns:
       - name: changelog_id
         data_type: uuid

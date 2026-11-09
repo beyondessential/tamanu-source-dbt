@@ -7,11 +7,11 @@ models:
       tags:
         - administration
         - log
-    meta:
-      owner: bes-maui
-      domain: admin
-      pii: false
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: admin
+        pii: false
+        classification: restricted
     columns:
       - name: changelog_id
         data_type: uuid

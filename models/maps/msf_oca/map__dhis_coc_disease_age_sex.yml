@@ -7,7 +7,7 @@ models:
       groups × 3 sex. Shared verbatim with the other MSF OCA NCD deployment
       (UIDs are global to the MSF OCA DHIS2 instance). Joined to
       metric__ncd_indicators on (dhis_ncd_category, age_group, sex).
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
@@ -19,20 +19,20 @@ models:
     columns:
       - name: id
         description: DHIS2 category-option-combo UID.
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: dhis_ncd_category
         description: >
           NCD disease category — asthma, copd, diabetes_i, diabetes_ii,
           epilepsy, hypertension, cvd, other_ncd.
-        tests:
+        data_tests:
           - not_null
       - name: age_group
         description: 'NCD age group — <5 years, 5-14 years, 15-49 years, 50+ years, Unknown age.'
-        tests:
+        data_tests:
           - not_null
       - name: sex
         description: 'Sex — Female, Male, Other/Unknown.'
-        tests:
+        data_tests:
           - not_null
