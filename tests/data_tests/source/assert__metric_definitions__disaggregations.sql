@@ -200,9 +200,11 @@ where trim(d) not in (
         -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
         -- the reporting category of the screening's diagnosis, whether the screening selected
         -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
-        -- procedure was recorded on.
+        -- procedure was recorded on, and whether a First Surgical Procedure followed the
+        -- screening (a surgical patient).
         'country_id',
         'reporting_category',
         'is_selected_for_surgery',
-        'procedure_sequence'
+        'procedure_sequence',
+        'has_first_surgical_procedure'
     )
