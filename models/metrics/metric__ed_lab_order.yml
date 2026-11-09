@@ -11,15 +11,15 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # Per-subject rows carrying sex/age alongside a record id -- no patient name or exact
-      # birth date, the same pair the other ED metrics carry while staying internal.
-      pii: false
-      classification: internal
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # Per-subject rows carrying sex/age alongside a record id -- no patient name or exact
+        # birth date, the same pair the other ED metrics carry while staying internal.
+        pii: false
+        classification: internal
     data_tests:
       # AC-001: one row per subject. A duplicate would double-count in any consumer that sums
       # value_numeric -- error even though the repo default is warn.
