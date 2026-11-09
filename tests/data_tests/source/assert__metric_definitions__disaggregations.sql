@@ -189,5 +189,13 @@ where trim(d) not in (
         'invoice_status',
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
-        'department_id'
+        'department_id',
+        -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
+        -- the reporting category of the screening's diagnosis, whether the screening selected
+        -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
+        -- procedure was recorded on.
+        'country_id',
+        'reporting_category',
+        'is_selected_for_surgery',
+        'procedure_sequence'
     )
