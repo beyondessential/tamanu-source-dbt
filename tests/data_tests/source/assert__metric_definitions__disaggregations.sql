@@ -191,10 +191,12 @@ where trim(d) not in (
         -- the reporting category of the screening's diagnosis, whether the screening selected
         -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
         -- procedure was recorded on, and whether a First Surgical Procedure followed the
-        -- screening (a surgical patient).
+        -- screening (a surgical patient), and the screening's Type of consult (Surgical or
+        -- Allied Health).
         'country_id',
         'reporting_category',
         'is_selected_for_surgery',
         'procedure_sequence',
-        'has_first_surgical_procedure'
+        'has_first_surgical_procedure',
+        'consult_type'
     )
