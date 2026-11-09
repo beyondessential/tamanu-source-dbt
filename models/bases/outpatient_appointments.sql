@@ -1,3 +1,8 @@
+{{ incremental_config(
+    key='id',
+    source='appointments',
+    source_type='table'
+) }}
 select
     a.id,
     a.created_at at time zone '{{ var("timezone") }}' as created_datetime,
@@ -21,9 +26,13 @@ select
     s.occurrence_count,
     s.is_fully_generated,
     s.generated_until_date,
-    s.cancelled_at_date
+    s.cancelled_at_date,
+    a.updated_at_sync_tick
 from {{ source('tamanu', 'appointments') }} a
 left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = a.schedule_id
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
     and a.appointment_type_id notnull
+    {%- if is_incremental() %}
+    and a.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

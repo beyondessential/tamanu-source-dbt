@@ -32,3 +32,6 @@ models:
       - name: encounter_id
         data_type: character varying(255)
         description: "{{ doc('invoices__encounter_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

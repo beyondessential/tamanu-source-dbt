@@ -30,3 +30,6 @@ models:
       - name: datetime
         data_type: timestamp
         description: "{{ doc('generic__datetime') }} in pharmacy_orders."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
