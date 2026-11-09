@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='patient_program_registration_conditions'
+{{ incremental_config(
+    key='id',
+    source='patient_program_registration_conditions'
 ) }}
 with filtered_changes as (
     {{ base_history_from_log('patient_program_registration_conditions') }}

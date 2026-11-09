@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='discharges',
+{{ incremental_config(
+    key='id',
+    source='discharges',
     source_type='table'
 ) }}
 {#- One row per encounter: the earliest discharge recorded against it.

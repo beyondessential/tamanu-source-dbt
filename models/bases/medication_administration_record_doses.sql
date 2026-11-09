@@ -1,7 +1,7 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-010.
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='medication_administration_record_doses',
+{{ incremental_config(
+    key='id',
+    source='medication_administration_record_doses',
     source_type='table'
 ) }}
 select

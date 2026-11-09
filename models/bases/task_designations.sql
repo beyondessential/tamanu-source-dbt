@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='task_designations',
+{{ incremental_config(
+    key='id',
+    source='task_designations',
     source_type='table'
 ) }}
 select

@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='appointment_id',
-    source_table='appointments'
+{{ incremental_config(
+    key='appointment_id',
+    source='appointments'
 ) }}
 -- BL-037: thin projection of the appointment change log -- source filters, no window
 -- functions, so consumers can filter it and have the predicate reach the scan. The windowed

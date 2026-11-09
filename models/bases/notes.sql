@@ -1,7 +1,7 @@
 -- May include notes for the test patient.
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='notes',
+{{ incremental_config(
+    key='id',
+    source='notes',
     source_type='table'
 ) }}
 select

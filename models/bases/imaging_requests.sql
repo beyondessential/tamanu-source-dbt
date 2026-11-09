@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='imaging_requests',
+{{ incremental_config(
+    key='id',
+    source='imaging_requests',
     source_type='table'
 ) }}
 select

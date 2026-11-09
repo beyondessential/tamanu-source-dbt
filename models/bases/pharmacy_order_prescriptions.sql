@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='pharmacy_order_prescriptions',
+{{ incremental_config(
+    key='id',
+    source='pharmacy_order_prescriptions',
     source_type='table'
 ) }}
 select
