@@ -1,0 +1,76 @@
+# Interplast surgical trip metrics: screening consultations and surgical procedures.
+#
+# Implemented in tamanu-dbt-interplast (metric__interplast_surgical_activity), which holds the
+# Interplast survey models these read; spec_path is relative to that repo.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: interplast_consultation
+  kind: metric
+  name: Interplast — patients consulted
+  description: >-
+    Patients seen at an Interplast Initial Screening Clinic. One row per patient per consult date.
+    is_selected_for_surgery marks the patients the screening selected for surgery, so a consumer
+    counts patients selected for surgery by filtering this metric rather than reading a separate
+    one.
+  numerator_description: >-
+    Initial Screening Clinics, one per patient per consult date (the latest submitted where a
+    patient has several on one date), counted on the Consult date, or the submission date where
+    that is blank
+  denominator_description: null
+  data_source: tamanu
+  definition_source: INTERPLAST
+  definition_source_code: null
+  definition_rationale: >-
+    Interplast trip Summary Report operational definition. Interplast counts the patients its
+    visiting surgical teams screen on each trip to a country; no external body registers an
+    equivalent indicator for visiting reconstructive-surgery programmes.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - country_id
+  - sex
+  - reporting_category
+  - is_selected_for_surgery
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__interplast_surgical_activity.md
+- metric_id: interplast_surgical_procedure
+  kind: metric
+  name: Interplast — procedures performed
+  description: >-
+    Surgical procedures performed on an Interplast trip, from the First, Second and Third Surgical
+    Procedure forms. One row per procedure form, so a patient with several procedures counts
+    several times. reporting_category is that of the Initial Screening Clinic the procedure
+    followed.
+  numerator_description: >-
+    First, Second and Third Surgical Procedure forms (the latest submitted of each per screening),
+    counted on the Procedure date, or the submission date where that is blank
+  denominator_description: null
+  data_source: tamanu
+  definition_source: INTERPLAST
+  definition_source_code: null
+  definition_rationale: >-
+    Interplast trip Summary Report operational definition. Interplast records each procedure on its
+    own surgical procedure forms, so this counts those forms rather than being a variant of the
+    standard procedure metric, which reads Tamanu procedure records.
+  unit: count
+  subject_grain: procedure
+  disaggregations:
+  - facility_id
+  - country_id
+  - sex
+  - reporting_category
+  - procedure_sequence
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__interplast_surgical_activity.md
