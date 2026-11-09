@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path'); case \"$f\" in *.sql) sqlfluff lint \"$f\" || true;; esac; grep -lU $'\\r' \"$f\" && echo 'WARNING: CRLF line endings in '$f"
+            "command": "f=$(grep -o '\"file_path\" *: *\"[^\"]*\"' | head -n 1 | sed -e 's/^\"file_path\" *: *\"//' -e 's/\"$//' -e 's#[\\]#/#g' -e 's#//*#/#g'); [ -f \"$f\" ] || exit 0; case \"$f\" in *.sql) sqlfluff lint \"$f\" || true;; esac; if grep -qU $'\\r' \"$f\"; then echo \"CRLF line endings in $f: convert it to LF\" >&2; exit 2; fi"
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"decision\":\"ask\",\"reason\":\"Linear write requires user approval\"}'"
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"Linear write requires user approval\"}}'"
           }
         ]
       }
