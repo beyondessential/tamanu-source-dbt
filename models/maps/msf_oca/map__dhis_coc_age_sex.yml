@@ -7,7 +7,7 @@ models:
       deployments (UIDs global to the MSF OCA DHIS2 instance). Disabled in this
       repo; enabled per deployment in the deployment's own dbt_project.yml.
       Joined on (age_group, sex).
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
@@ -18,14 +18,14 @@ models:
     columns:
       - name: id
         description: DHIS2 category-option-combo UID.
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: age_group
         description: 'Age group -- <5 years, 5-14 years, 15-49 years, 50+ years, Unknown age.'
-        tests:
+        data_tests:
           - not_null
       - name: sex
         description: 'Sex -- Female, Male, Other/Unknown.'
-        tests:
+        data_tests:
           - not_null

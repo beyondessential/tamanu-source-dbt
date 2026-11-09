@@ -5,12 +5,12 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      tier: silver
-      pii: false
-      classification: internal
+      meta:
+        owner: bes-maui
+        domain: clinical
+        tier: silver
+        pii: false
+        classification: internal
     columns:
       - name: id
         data_type: uuid

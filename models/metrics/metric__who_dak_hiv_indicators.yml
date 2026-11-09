@@ -6,17 +6,17 @@ models:
     config:
       tags:
         - clinical
-    # BL-016: no data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
-    # adds a file there rather than forking the metric.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # BL-014: a row is patient-identifiable -- subject_id is the patient id on every
-      # client-grained indicator -- and HIV status is the sensitive fact itself. Same
-      # classification as metric__program_registry_enrolment, and for the same reason.
-      pii: true
-      classification: restricted
+      # BL-016: no data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
+      # adds a file there rather than forking the metric.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-014: a row is patient-identifiable -- subject_id is the patient id on every
+        # client-grained indicator -- and HIV status is the sensitive fact itself. Same
+        # classification as metric__program_registry_enrolment, and for the same reason.
+        pii: true
+        classification: restricted
     data_tests:
       # AC-001 (BL-007): one row per indicator per subject per month. A duplicate would count
       # a client twice in a month, which is exactly what Annex C's "COUNT of clients" forbids

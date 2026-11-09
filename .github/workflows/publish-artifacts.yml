@@ -1,7 +1,7 @@
 name: Publish Artifacts
 
-# Runs directly in this repo on release, and is also callable as a reusable
-# workflow from any tamanu-dbt-* deployment repo.
+# A reusable workflow, called from a tamanu-dbt-* deployment repo's release workflow.
+# This repo publishes through release-reporting-assets.yml.
 #
 # Deployment name is derived from the calling repository name:
 #   tamanu-source-dbt  → standard
@@ -11,14 +11,8 @@ name: Publish Artifacts
 #   standard:   M.m.x/<artifact>-vM.m.x-standard.<ext>   (canonical artifacts)
 #               M.m.x/reporting-standard/                  (reports)
 #   deployment: M.m.x/<deployment>/reporting-<deployment>/ (reports only)
-#
-# list-reports only runs for the standard repo on its latest release, and only
-# when that release was cut from main; it regenerates list_tamanu_reports.md
-# and commits the result straight back to main.
 
 on:
-  release:
-    types: [published]
   workflow_call:
 
 jobs:
@@ -80,54 +74,6 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
               fh.write(f"is_latest={'true' if is_latest else 'false'}\n")
           PYEOF
-
-  # -------------------------------------------------------------------------
-  # Only runs for the standard (tamanu-source-dbt) repo on its latest release,
-  # and only when that release was cut from main (not a maintenance branch) --
-  # the regenerated list is committed straight back to main below.
-  # -------------------------------------------------------------------------
-  list-reports:
-    name: List Tamanu Reports
-    needs: setup
-    if: >-
-      needs.setup.outputs.is_latest == 'true' &&
-      needs.setup.outputs.deployment == 'standard' &&
-      github.event.release.target_commitish == 'main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          ref: main
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install boto3 pandas PyYAML
-
-      - name: List Tamanu Reports
-        run: python scripts/list_tamanu_reports.py
-
-      - name: Commit updated report list
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet -- list_tamanu_reports.md; then
-            echo "list_tamanu_reports.md already up to date"
-          else
-            git add list_tamanu_reports.md
-            git commit -m "chore: update list_tamanu_reports.md [skip ci]"
-            git push origin HEAD:main
-          fi
 
   # -------------------------------------------------------------------------
   # Runs for every release in every repo.
@@ -208,16 +154,16 @@ jobs:
 
           # Register canonical artifacts with meta-server: standard only
           if [ "$DEPLOYMENT" = "standard" ]; then
-            curl -v "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
+            curl -fv "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-schema-v$VX-$DEPLOYMENT.sql"
 
-            curl -v "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
+            curl -fv "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
               --cert meta.crt --key meta.key \
               --data-binary "$BASE_URL/reporting-docs-v$VX-$DEPLOYMENT.html"
           fi
 
           # Register reports folder with meta-server: all repos
-          curl -v "$META_URL/artifacts/$S3_DIR/$REPORTS_FOLDER/any" \
+          curl -fv "$META_URL/artifacts/$S3_DIR/$REPORTS_FOLDER/any" \
             --cert meta.crt --key meta.key \
             --data-binary "$BASE_URL/$REPORTS_FOLDER/"

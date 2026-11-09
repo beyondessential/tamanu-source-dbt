@@ -32,7 +32,7 @@ where the package's own translations apply, which is the package repo.
 ## Scope
 
 Applies to every unit test shipped in `tamanu-source-dbt`, all of which live under
-`data_tests/unit_tests/`. Does not apply to data tests, which remain deployment-relevant
+`tests/unit_tests/`. Does not apply to data tests, which remain deployment-relevant
 and continue to run everywhere.
 
 ## Constraints
@@ -114,7 +114,7 @@ Ordered — each step depends on the one before.
 
 | ID | Divergence | Resolution |
 |---|---|---|
-| DV-001 | `data_tests/unit_tests/` fixtures name the patient identifier column through `var('patient_display_id_label', 'Patient ID')` on `2.57`, `2.60`, `2.61`, `2.62` and `2.63` | Restore the literal standard label on each |
+| DV-001 | `tests/unit_tests/` fixtures name the patient identifier column through `var('patient_display_id_label', 'Patient ID')` on `2.57`, `2.60`, `2.61`, `2.62` and `2.63` | Restore the literal standard label on each |
 | DV-002 | `AGENT.md` § Translation system prescribes that parameterisation as the pattern for any fixture asserting a translated column, on the same five branches, and names Nauru's `MRID` as a `default` override when it is an `en` column value | Restate as the constraint on each |
 | DV-003 | `.github/workflows/checks.yml` runs pytest and the generated-macro drift guard only, so no dbt unit test runs in CI | Add the job in step 1 |
 | DV-004 | Deployment repos select the package's unit tests, which fail wherever the deployment localises an asserted column | Add the exclusion in step 2 |

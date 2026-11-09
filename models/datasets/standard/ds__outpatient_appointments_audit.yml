@@ -11,11 +11,11 @@ models:
         - dataset
         - clinical
         - audit
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: change_id
         description: "{{ doc('outpatient_appointments_change_history__change_id') }}"
