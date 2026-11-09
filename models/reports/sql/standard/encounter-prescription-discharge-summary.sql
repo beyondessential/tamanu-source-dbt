@@ -18,10 +18,14 @@ where
         else ep.facility_id = {{ parameter('facilityId') }}
     end
     and
-    case
-        when {{ parameter('medicationId') }} is null then true
-        else ep.medication_id = {{ parameter('medicationId') }}
-    end
+    -- BL-010 (see specs/reports/encounter-prescription-discharge-summary.md): multi-select over all drugs.
+    -- Nothing selected means every medication. The form sends an
+    -- empty selection as [], which expands to nothing, so the list goes through an array
+    -- constructor: array[]::text[] is valid where coalesce() and in () are not.
+    (
+        cardinality(array_remove(array[{{ parameter('medicationId') }}]::text[], null)) = 0
+        or ep.medication_id = any(array[{{ parameter('medicationId') }}]::text[])
+    )
     -- BL-003: date range on the prescription's datetime, in the viewer's timezone
     and
     {{ to_user_selected_timezone('ep.datetime') }}
