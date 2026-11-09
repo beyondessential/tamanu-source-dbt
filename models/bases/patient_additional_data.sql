@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='patient_id',
-    source_table='patient_additional_data',
+{{ incremental_config(
+    key='patient_id',
+    source='patient_additional_data',
     source_type='table'
 ) }}
 select

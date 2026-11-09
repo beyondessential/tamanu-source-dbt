@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='patient_id',
-    source_table='patient_additional_data'
+{{ incremental_config(
+    key='patient_id',
+    source='patient_additional_data'
 ) }}
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}

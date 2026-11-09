@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='user_designations',
+{{ incremental_config(
+    key='id',
+    source='user_designations',
     source_type='table'
 ) }}
 select

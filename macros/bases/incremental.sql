@@ -4,18 +4,19 @@
 -- full refresh removes them.
 
 
--- source_table: Tamanu table whose changed records are this model's keys
+-- key:          column that identifies a row (dbt's unique_key)
+-- source:       Tamanu table whose changed records are this model's keys
 -- source_type:  where those changes are found: 'logs' (logs.changes) or 'table' (own tick)
 -- key_type:     cast for record_id (text) when the key isn't text, e.g. 'uuid'
-{%- macro incremental_config_for_analytics(unique_key, source_table=none, source_type='logs', key_type=none) -%}
+{%- macro incremental_config(key, source=none, source_type='logs', key_type=none) -%}
     {%- set analytics = target.name.startswith('analytics') -%}
     {{- config(
         materialized=('incremental' if analytics else 'view'),
         incremental_strategy='delete+upsert',
-        unique_key=unique_key,
+        unique_key=key,
         on_schema_change='fail',
-        indexes=([{'columns': [unique_key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
-        delete_upsert_source_table=source_table,
+        indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
+        delete_upsert_source=source,
         delete_upsert_source_type=source_type,
         delete_upsert_key_type=key_type
     ) -}}
@@ -27,7 +28,7 @@
 {% macro get_incremental_delete_upsert_sql(arg_dict) -%}
     {%- set target_relation = arg_dict['target_relation'] -%}
     {%- set key = arg_dict['unique_key'] -%}
-    {%- set source_table = config.get('delete_upsert_source_table') -%}
+    {%- set source_table = config.get('delete_upsert_source') -%}
     {%- set columns = get_quoted_csv(arg_dict['dest_columns'] | map(attribute='name')) -%}
 
     delete from {{ target_relation }}

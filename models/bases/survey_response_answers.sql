@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='survey_response_answers',
+{{ incremental_config(
+    key='id',
+    source='survey_response_answers',
     source_type='table'
 ) }}
 select

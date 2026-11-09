@@ -1,6 +1,6 @@
-{{ incremental_config_for_analytics(
-    unique_key='id',
-    source_table='program_registry_clinical_statuses',
+{{ incremental_config(
+    key='id',
+    source='program_registry_clinical_statuses',
     source_type='table'
 ) }}
 select
