@@ -196,5 +196,13 @@ where trim(d) not in (
         'manner_of_death',
         -- death's facility source: whether the facility came from the death record or from the
         -- encounter the patient died in (MAUI-6906).
-        'facility_source'
+        'facility_source',
+        -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
+        -- the reporting category of the screening's diagnosis, whether the screening selected
+        -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
+        -- procedure was recorded on.
+        'country_id',
+        'reporting_category',
+        'is_selected_for_surgery',
+        'procedure_sequence'
     )
