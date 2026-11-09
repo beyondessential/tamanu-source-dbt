@@ -211,5 +211,13 @@ where trim(t.d) not in (
         'tested',
         -- inpatient_separation's same-day flag: admitted and discharged on the same day, so
         -- an overnight-only average length of stay can exclude those stays.
-        'is_same_day'
+        'is_same_day',
+        -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
+        -- the reporting category of the screening's diagnosis, whether the screening selected
+        -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
+        -- procedure was recorded on.
+        'country_id',
+        'reporting_category',
+        'is_selected_for_surgery',
+        'procedure_sequence'
     )
