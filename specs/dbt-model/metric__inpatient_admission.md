@@ -24,7 +24,7 @@ stay in AIHW patient days.
 | `metric_id` | Unit | Measures |
 |---|---|---|
 | `inpatient_admission` | count | Inpatient admissions, dated by when the patient became an inpatient (always 1 per row) |
-| `inpatient_separation` | count | Separations — AIHW "hospitalisations" — dated by separation, carrying `patient_days` (always 1 per row). Average length of stay is formed from it by the consumer (BL-023) |
+| `inpatient_separation` | count | Separations — AIHW "hospitalisations" — dated by separation (always 1 per row), each carrying its `patient_days`. Average length of stay is formed from it by the consumer (BL-023) |
 
 `length_of_stay__minutes` (BES, elapsed time) and `patient_days` (AIHW) are alternative
 definitions of length of stay. Both are emitted, and each deployment's consumer chooses which
