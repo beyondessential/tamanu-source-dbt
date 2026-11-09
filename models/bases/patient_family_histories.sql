@@ -1,3 +1,8 @@
+{{ incremental_config(
+    key='id',
+    source='patient_family_histories',
+    source_type='table'
+) }}
 select
     id,
     recorded_date::timestamp as recorded_datetime,
@@ -5,7 +10,11 @@ select
     practitioner_id as clinician_id,
     diagnosis_id,
     relationship,
-    note
+    note,
+    updated_at_sync_tick
 from {{ source('tamanu', 'patient_family_histories') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

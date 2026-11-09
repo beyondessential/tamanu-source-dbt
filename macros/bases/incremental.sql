@@ -6,8 +6,9 @@
 
 -- key:          column that identifies a row (dbt's unique_key)
 -- source:       Tamanu table whose changed records are this model's keys
+-- source_type:  where those changes are found: 'logs' (logs.changes) or 'table' (own tick)
 -- key_type:     cast for record_id (text) when the key isn't text, e.g. 'uuid'
-{%- macro incremental_config(key, source=none, key_type=none) -%}
+{%- macro incremental_config(key, source=none, source_type='logs', key_type=none) -%}
     {%- set analytics = target.name.startswith('analytics') -%}
     {{- config(
         materialized=('incremental' if analytics else 'view'),
@@ -15,7 +16,7 @@
         unique_key=key,
         on_schema_change='sync_all_columns',
         indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
-        incremental={'source': source, 'key_type': key_type}
+        incremental={'source': source, 'source_type': source_type, 'key_type': key_type}
     ) -}}
 {%- endmacro %}
 
@@ -34,7 +35,12 @@
         select {{ key }} from {{ arg_dict['temp_relation'] }}
         {%- if source_table %}
         union
-        {{ changed_since_last_run(source_table, key_type=options.get('key_type')) }}
+        {{ changed_since_last_run(
+            source_table,
+            source_type=options.get('source_type'),
+            key=key,
+            key_type=options.get('key_type')
+        ) }}
         {%- endif %}
     );
 
@@ -44,11 +50,24 @@
 {%- endmacro %}
 
 
--- Records with a change-log row since the last run, soft deletes included. >= not >: rows
--- from one sync session share a tick, and rereading it is harmless.
-{% macro changed_since_last_run(table_name, key_type=none) -%}
+-- Records of table_name changed since the last run, soft deletes included: from logs.changes,
+-- or from the table's own tick. key is the column to return in 'table' mode.
+{% macro changed_since_last_run(table_name, source_type='logs', key='id', key_type=none) -%}
+    {%- if source_type == 'table' %}
+    select t.{{ key }}
+    from {{ source('tamanu', table_name) }} t
+    where t.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- else %}
     select c.record_id{% if key_type %}::{{ key_type }}{% endif %}
     from {{ source('logs__tamanu', 'changes') }} c
     where c.table_name = '{{ table_name }}'
-        and c.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), -1) from {{ this }})
+        and c.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
+{%- endmacro %}
+
+
+-- The highest tick already loaded, -1 when empty. Compare with >= not >: rows from one sync
+-- session share a tick, and rereading it is harmless.
+{% macro last_sync_tick() -%}
+    (select coalesce(max(updated_at_sync_tick), -1) from {{ this }})
 {%- endmacro %}

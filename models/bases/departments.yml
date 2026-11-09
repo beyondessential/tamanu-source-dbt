@@ -26,3 +26,6 @@ models:
       - name: visibility_status
         data_type: text
         description: "{{ doc('generic__visibility_status') }} in departments."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

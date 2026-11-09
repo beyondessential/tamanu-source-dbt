@@ -35,3 +35,6 @@ models:
       - name: reason_for_change
         data_type: character varying(255)
         description: "{{ doc('medication_administration_record_doses__reason_for_change') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

@@ -1,3 +1,8 @@
+{{ incremental_config(
+    key='id',
+    source='tasks',
+    source_type='table'
+) }}
 select
     id,
     encounter_id,
@@ -23,6 +28,10 @@ select
     frequency_value,
     frequency_unit,
     duration_value,
-    duration_unit
+    duration_unit,
+    updated_at_sync_tick
 from {{ source('tamanu', 'tasks') }}
 where deleted_at is null
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

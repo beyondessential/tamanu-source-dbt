@@ -1,3 +1,8 @@
+{{ incremental_config(
+    key='id',
+    source='users',
+    source_type='table'
+) }}
 select
     id,
     display_id,
@@ -5,6 +10,10 @@ select
     email,
     phone_number,
     role,
-    visibility_status
+    visibility_status,
+    updated_at_sync_tick
 from {{ source('tamanu', 'users') }}
 where deleted_at is null
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
