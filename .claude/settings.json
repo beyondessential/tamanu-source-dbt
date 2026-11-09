@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(grep -o '\"file_path\" *: *\"[^\"]*\"' | head -n 1 | sed -e 's/^\"file_path\" *: *\"//' -e 's/\"$//' -e 's#[\\]#/#g' -e 's#//*#/#g'); [ -f \"$f\" ] || exit 0; case \"$f\" in *.sql) sqlfluff lint \"$f\" || true;; esac; if grep -qU $'\\r' \"$f\"; then echo \"CRLF line endings in $f: convert it to LF\" >&2; exit 2; fi"
+            "command": "f=$(grep -o '\"file_path\" *: *\"[^\"]*\"' | head -n 1 | sed -e 's/^\"file_path\" *: *\"//' -e 's/\"$//' -e 's#[\\]#/#g' -e 's#//*#/#g'); [ -f \"$f\" ] || exit 0; case \"$f\" in *.sql) sqlfluff lint \"$f\" || true;; esac; if grep -qU \"$(printf '\\r')\" \"$f\"; then echo \"CRLF line endings in $f: convert it to LF\" >&2; exit 2; fi"
           }
         ]
       }
