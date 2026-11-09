@@ -15,8 +15,7 @@
         unique_key=key,
         on_schema_change='fail',
         indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
-        delete_upsert_source=source,
-        delete_upsert_key_type=key_type
+        incremental={'source': source, 'key_type': key_type}
     ) -}}
 {%- endmacro %}
 
@@ -26,7 +25,8 @@
 {% macro get_incremental_delete_upsert_sql(arg_dict) -%}
     {%- set target_relation = arg_dict['target_relation'] -%}
     {%- set key = arg_dict['unique_key'] -%}
-    {%- set source_table = config.get('delete_upsert_source') -%}
+    {%- set options = config.get('incremental') or {} -%}
+    {%- set source_table = options.get('source') -%}
     {%- set columns = get_quoted_csv(arg_dict['dest_columns'] | map(attribute='name')) -%}
 
     delete from {{ target_relation }}
@@ -34,7 +34,7 @@
         select {{ key }} from {{ arg_dict['temp_relation'] }}
         {%- if source_table %}
         union
-        {{ changed_since_last_run(source_table, key_type=config.get('delete_upsert_key_type')) }}
+        {{ changed_since_last_run(source_table, key_type=options.get('key_type')) }}
         {%- endif %}
     );
 
