@@ -1,3 +1,8 @@
+{{ incremental_config(
+    key='id',
+    source='logs__tamanu.accesses',
+    source_type='table'
+) }}
 select
     id,
     user_id,
@@ -9,7 +14,11 @@ select
     is_mobile,
     version,
     front_end_context,
-    back_end_context
+    back_end_context,
+    updated_at_sync_tick
 from {{ source("logs__tamanu", "accesses") }}
 where deleted_at is null
     and record_type = 'Patient'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

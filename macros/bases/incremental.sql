@@ -5,7 +5,8 @@
 
 
 -- key:          column that identifies a row (dbt's unique_key)
--- source:       Tamanu table whose changed records are this model's keys
+-- source:       Tamanu table whose changed records are this model's keys; another source
+--               schema as 'schema.table', e.g. 'logs__tamanu.accesses' (table mode only)
 -- source_type:  where those changes are found: 'logs' (logs.changes) or 'table' (own tick)
 -- key_type:     cast for record_id (text) when the key isn't text, e.g. 'uuid'
 {%- macro incremental_config(key, source=none, source_type='logs', key_type=none) -%}
@@ -54,8 +55,9 @@
 -- or from the table's own tick. key is the column to return in 'table' mode.
 {% macro changed_since_last_run(table_name, source_type='logs', key='id', key_type=none) -%}
     {%- if source_type == 'table' %}
+    {%- set parts = table_name.split('.') %}
     select t.{{ key }}
-    from {{ source('tamanu', table_name) }} t
+    from {{ source(parts[0], parts[1]) if parts | length == 2 else source('tamanu', table_name) }} t
     where t.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- else %}
     select c.record_id{% if key_type %}::{{ key_type }}{% endif %}
