@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='program_registry_conditions',
-    source_type='table'
+    table='program_registry_conditions'
 ) }}
 select
     id,

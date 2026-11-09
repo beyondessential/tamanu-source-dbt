@@ -1,8 +1,7 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-001..BL-002.
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='medication_administration_records',
-    source_type='table'
+    table='medication_administration_records'
 ) }}
 select
     mar.id,

@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='user_login_attempts',
-    source_type='table'
+    table='user_login_attempts'
 ) }}
 select
     id,

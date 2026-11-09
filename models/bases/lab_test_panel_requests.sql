@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='lab_test_panel_requests',
-    source_type='table'
+    table='lab_test_panel_requests'
 ) }}
 select
     ltpr.id,

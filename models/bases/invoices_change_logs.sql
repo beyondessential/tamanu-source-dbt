@@ -1,6 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_logs(
     key='invoice_id',
-    source='invoices',
+    table='invoices',
     key_type='uuid'
 ) }}
 select

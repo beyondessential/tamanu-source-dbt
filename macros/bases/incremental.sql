@@ -4,12 +4,23 @@
 -- full refresh removes them.
 
 
--- key:          column that identifies a row (dbt's unique_key)
--- source:       Tamanu table whose changed records are this model's keys; another source
---               schema as 'schema.table', e.g. 'logs__tamanu.accesses' (table mode only)
--- source_type:  where those changes are found: 'logs' (logs.changes) or 'table' (own tick)
--- key_type:     cast for record_id (text) when the key isn't text, e.g. 'uuid'
-{%- macro incremental_config(key, source=none, source_type='logs', key_type=none) -%}
+-- incremental_from_logs: changes are found in logs.changes for `table`, e.g. 'patients'.
+--   key_type casts logs.changes.record_id (text) when the key isn't text, e.g. 'uuid'.
+-- incremental_from_table: changes are marked by `table`'s own updated_at_sync_tick, e.g.
+--   'encounters'. source is its dbt source, 'tamanu' unless set, e.g. 'logs__tamanu'.
+-- key is the column that identifies a row (dbt's unique_key).
+{%- macro incremental_from_logs(key, table, key_type=none) -%}
+    {{- incremental_settings(key, {'from_logs': table, 'key_type': key_type}) -}}
+{%- endmacro %}
+
+
+{%- macro incremental_from_table(key, table, source='tamanu') -%}
+    {{- incremental_settings(key, {'from_table': table, 'source': source}) -}}
+{%- endmacro %}
+
+
+-- Shared by the two macros above: incremental on analytics, a view everywhere else.
+{%- macro incremental_settings(key, options) -%}
     {%- set analytics = target.name.startswith('analytics') -%}
     {{- config(
         materialized=('incremental' if analytics else 'view'),
@@ -17,7 +28,7 @@
         unique_key=key,
         on_schema_change='sync_all_columns',
         indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
-        incremental={'source': source, 'source_type': source_type, 'key_type': key_type}
+        incremental=options
     ) -}}
 {%- endmacro %}
 
@@ -28,7 +39,7 @@
     {%- set target_relation = arg_dict['target_relation'] -%}
     {%- set key = arg_dict['unique_key'] -%}
     {%- set options = config.get('incremental') or {} -%}
-    {%- set source_table = options.get('source') -%}
+    {%- set source_table = options.get('from_logs') or options.get('from_table') -%}
     {%- set columns = get_quoted_csv(arg_dict['dest_columns'] | map(attribute='name')) -%}
 
     delete from {{ target_relation }}
@@ -38,9 +49,10 @@
         union
         {{ changed_since_last_run(
             source_table,
-            source_type=options.get('source_type'),
+            source_type=('logs' if options.get('from_logs') else 'table'),
             key=key,
-            key_type=options.get('key_type')
+            key_type=options.get('key_type'),
+            source_name=options.get('source') or 'tamanu'
         ) }}
         {%- endif %}
     );
@@ -52,12 +64,11 @@
 
 
 -- Records of table_name changed since the last run, soft deletes included: from logs.changes,
--- or from the table's own tick. key is the column to return in 'table' mode.
-{% macro changed_since_last_run(table_name, source_type='logs', key='id', key_type=none) -%}
+-- or from the table's own tick. key is the column, and source_name the dbt source, in 'table' mode.
+{% macro changed_since_last_run(table_name, source_type='logs', key='id', key_type=none, source_name='tamanu') -%}
     {%- if source_type == 'table' %}
-    {%- set parts = table_name.split('.') %}
     select t.{{ key }}
-    from {{ source(parts[0], parts[1]) if parts | length == 2 else source('tamanu', table_name) }} t
+    from {{ source(source_name, table_name) }} t
     where t.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- else %}
     select c.record_id{% if key_type %}::{{ key_type }}{% endif %}

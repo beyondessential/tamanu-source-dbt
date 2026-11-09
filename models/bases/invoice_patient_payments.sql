@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='invoice_patient_payments',
-    source_type='table'
+    table='invoice_patient_payments'
 ) }}
 select
     ipp.id,

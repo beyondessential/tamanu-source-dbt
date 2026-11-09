@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='contributing_death_causes',
-    source_type='table'
+    table='contributing_death_causes'
 ) }}
 select
     cdc.id,

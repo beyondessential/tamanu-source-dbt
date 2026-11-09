@@ -1,6 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_logs(
     key='id',
-    source='administered_vaccines'
+    table='administered_vaccines'
 ) }}
 with filtered_changes as (
     select

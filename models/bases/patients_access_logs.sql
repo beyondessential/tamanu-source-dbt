@@ -1,7 +1,7 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='logs__tamanu.accesses',
-    source_type='table'
+    table='accesses',
+    source='logs__tamanu'
 ) }}
 select
     id,

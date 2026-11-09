@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='invoice_item_finalised_insurances',
-    source_type='table'
+    table='invoice_item_finalised_insurances'
 ) }}
 select
     iifi.id,

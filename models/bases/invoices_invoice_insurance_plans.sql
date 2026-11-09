@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='invoices_invoice_insurance_plans',
-    source_type='table'
+    table='invoices_invoice_insurance_plans'
 ) }}
 select
     iiip.id,

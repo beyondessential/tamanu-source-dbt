@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='scheduled_vaccines',
-    source_type='table'
+    table='scheduled_vaccines'
 ) }}
 select
     id,

@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='survey_response_answers',
-    source_type='table'
+    table='survey_response_answers'
 ) }}
 select
     id,

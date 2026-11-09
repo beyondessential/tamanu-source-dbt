@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='administered_vaccines',
-    source_type='table'
+    table='administered_vaccines'
 ) }}
 select
     av.id,

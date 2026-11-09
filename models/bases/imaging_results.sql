@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='imaging_results',
-    source_type='table'
+    table='imaging_results'
 ) }}
 select
     ires.id,

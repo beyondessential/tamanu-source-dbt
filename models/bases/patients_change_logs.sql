@@ -1,6 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_logs(
     key='id',
-    source='patients'
+    table='patients'
 ) }}
 with filtered_changes as (
     {{ base_history_from_log('patients') }}

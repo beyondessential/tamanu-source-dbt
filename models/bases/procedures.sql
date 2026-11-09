@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='procedures',
-    source_type='table'
+    table='procedures'
 ) }}
 select
     p.id,

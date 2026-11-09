@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='imaging_area_external_codes',
-    source_type='table'
+    table='imaging_area_external_codes'
 ) }}
 select
     id,

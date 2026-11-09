@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='encounter_prescriptions',
-    source_type='table'
+    table='encounter_prescriptions'
 ) }}
 select
     ep.id,

@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='lab_request_logs',
-    source_type='table'
+    table='lab_request_logs'
 ) }}
 select
     lrl.id,

@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='encounter_id',
-    source='discharges',
-    source_type='table'
+    table='discharges'
 ) }}
 {#- One row per encounter: the earliest discharge recorded against it.
 

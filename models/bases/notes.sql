@@ -1,8 +1,7 @@
 -- May include notes for the test patient.
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='notes',
-    source_type='table'
+    table='notes'
 ) }}
 select
     n.id,

@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='invoices',
-    source_type='table'
+    table='invoices'
 ) }}
 select
     i.id,

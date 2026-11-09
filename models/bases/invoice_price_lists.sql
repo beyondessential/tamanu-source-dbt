@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='invoice_price_lists',
-    source_type='table'
+    table='invoice_price_lists'
 ) }}
 select
     id,

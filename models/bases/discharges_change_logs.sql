@@ -1,6 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_logs(
     key='discharge_id',
-    source='discharges'
+    table='discharges'
 ) }}
 -- BL-014: thin projection of the discharge change log -- source filters, no window functions,
 -- so consumers can filter it and have the predicate reach the (table_name, record_id) index.

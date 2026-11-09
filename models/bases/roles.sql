@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='roles',
-    source_type='table'
+    table='roles'
 ) }}
 select
     id,

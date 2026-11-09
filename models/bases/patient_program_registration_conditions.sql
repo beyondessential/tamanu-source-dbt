@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='patient_program_registration_conditions',
-    source_type='table'
+    table='patient_program_registration_conditions'
 ) }}
 select
     pprc.id,

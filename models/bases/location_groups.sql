@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='location_groups',
-    source_type='table'
+    table='location_groups'
 ) }}
 select
     id,

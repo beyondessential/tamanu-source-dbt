@@ -1,7 +1,6 @@
-{{ incremental_config(
+{{ incremental_from_table(
     key='id',
-    source='encounter_history',
-    source_type='table'
+    table='encounter_history'
 ) }}
 select
     eh.id,
