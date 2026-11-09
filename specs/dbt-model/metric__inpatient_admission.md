@@ -24,7 +24,7 @@ stay in AIHW patient days.
 | `metric_id` | Unit | Measures |
 |---|---|---|
 | `inpatient_admission` | count | Inpatient admissions, dated by when the patient became an inpatient (always 1 per row) |
-| `inpatient_separation` | count | Separations — AIHW "hospitalisations" — dated by separation, carrying `patient_days` (always 1 per row). Average length of stay is formed from it by the consumer (BL-023) |
+| `inpatient_separation` | count | Separations — AIHW "hospitalisations" — dated by separation (always 1 per row), each carrying its `patient_days`. Average length of stay is formed from it by the consumer (BL-023) |
 
 `length_of_stay__minutes` (BES, elapsed time) and `patient_days` (AIHW) are alternative
 definitions of length of stay. Both are emitted, and each deployment's consumer chooses which
@@ -39,9 +39,8 @@ of each encounter that is typed as an inpatient visit**, not the encounter's fir
 unconditionally — otherwise an ED-then-admitted encounter would be missed (its first segment is
 an ED segment, concept 9203, not 9201).
 
-**Who reads it.** No consumer is registered yet — this is a generic definition, to be wired to
-a Tupaia data table (`tupaia-data-product`) or Tamanu report once a deployment requests it, via
-a metric-agnostic Tupaia template parameterised by `metric_id`.
+**Who reads it.** The inpatient Tupaia dashboards, through data tables in `tupaia-data-product`
+and metric-agnostic Tupaia templates parameterised by `metric_id` (§ Consumers).
 
 This repo already has an unrelated, older "admission" concept at
 `models/datasets/standard/ds__admissions.sql` (the Tamanu-report-layer admissions line list,
@@ -304,7 +303,7 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 
 | Consumer | Reads |
 |---|---|
-| `tupaia-data-product` inpatient data tables (`inpatient_admission__standard`, `__maternity`, `__clinician`, `__clinician_name`) | `inpatient_admission`; its length-of-stay and discharge-disposition cards move to `inpatient_separation` once BL-019–BL-024 land |
+| `tupaia-data-product` inpatient data tables (`inpatient_admission__standard`, `__maternity`, `__clinician`, `__clinician_name`) | `inpatient_admission` for the admission cards. `inpatient_separation` for average length of stay, overall and overnight (BL-023), the patient-day bands and discharge disposition |
 
 **What a consumer must do:**
 
@@ -345,3 +344,4 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | Date | Change |
 |---|---|
 | 2026-10-29 | BL-019–BL-024: `inpatient_separation` metric_id with AIHW patient days and same-day flag, so average length of stay follows the AIHW definition; BL-002 points separations at it. DV-002–DV-004 record the AIHW rules Tamanu data cannot follow (MAUI-7069). |
+| 2026-11-09 | Consumers: the inpatient Tupaia length-of-stay and discharge-disposition cards read `inpatient_separation` (MAUI-7069). |
