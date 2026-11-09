@@ -39,6 +39,7 @@ metrics:
   - sex
   - reporting_category
   - is_selected_for_surgery
+  - has_first_surgical_procedure
   variant_of: null
   owner: bes-maui
   status: approved
@@ -70,6 +71,7 @@ metrics:
   - sex
   - reporting_category
   - procedure_sequence
+  - has_first_surgical_procedure
   variant_of: null
   owner: bes-maui
   status: approved
