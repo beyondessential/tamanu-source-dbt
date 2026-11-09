@@ -1,5 +1,5 @@
 {{ incremental_config(
-    key='id',
+    key='encounter_id',
     source='discharges',
     source_type='table'
 ) }}
@@ -10,7 +10,10 @@
     table first; a plain `where` lets that filter reach the index on discharges.
 
     `(created_at, id)` rather than created_at alone, so a tie resolves to the same row every
-    run. -#}
+    run.
+
+    Incremental on encounter_id: a change to any of an encounter's discharges (a deletion, an
+    earlier one syncing late) re-picks the encounter's first discharge. -#}
 select
     d.id,
     d.note,
@@ -31,5 +34,9 @@ where d.deleted_at is null
             and (d2.created_at, d2.id) < (d.created_at, d.id)
     )
     {%- if is_incremental() %}
-    and d.updated_at_sync_tick >= {{ last_sync_tick() }}
+    and d.encounter_id in (
+        select d3.encounter_id
+        from {{ source('tamanu', 'discharges') }} d3
+        where d3.updated_at_sync_tick >= {{ last_sync_tick() }}
+    )
     {%- endif %}
