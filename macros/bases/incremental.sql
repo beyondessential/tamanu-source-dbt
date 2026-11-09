@@ -14,7 +14,7 @@
         materialized=('incremental' if analytics else 'view'),
         incremental_strategy='delete+upsert',
         unique_key=key,
-        on_schema_change='fail',
+        on_schema_change='sync_all_columns',
         indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
         incremental={'source': source, 'source_type': source_type, 'key_type': key_type}
     ) -}}
