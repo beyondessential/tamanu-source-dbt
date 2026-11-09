@@ -40,6 +40,7 @@ metrics:
   - reporting_category
   - is_selected_for_surgery
   - has_first_surgical_procedure
+  - consult_type
   variant_of: null
   owner: bes-maui
   status: approved
@@ -72,6 +73,7 @@ metrics:
   - reporting_category
   - procedure_sequence
   - has_first_surgical_procedure
+  - consult_type
   variant_of: null
   owner: bes-maui
   status: approved
