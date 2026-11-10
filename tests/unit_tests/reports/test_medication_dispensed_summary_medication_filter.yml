@@ -1,0 +1,104 @@
+unit_tests:
+  - name: test_medication_dispensed_summary_no_medication_selected
+    model: medication-dispensed-summary
+    description: >
+      With no drug selected the report sums every medication dispensed in the window. Unset,
+      medicationId renders as a null, the same empty list the form's [] produces.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+    given: &dispenses_given
+      - input: ref('ds__medication_dispenses')
+        format: sql
+        rows: |
+          select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at
+          union all
+          select 'fac_001', 'med_001', 'Amoxicillin', 'AMX', 5, '2024-01-20 09:00:00'::timestamp
+          union all
+          select 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_medication_dispensed_summary_one_medication_selected
+    model: medication-dispensed-summary
+    description: With one drug selected, only that medication is summed.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: med_002
+    given: *dispenses_given
+    expect: &dispenses_paracetamol_only
+      format: sql
+      rows: |
+        select 'Paracetamol' as "Medication", 'PCM' as "Code", 20 as "Quantity"
+
+  - name: test_medication_dispensed_summary_sensitive_one_selected
+    model: sensitive-medication-dispensed-summary
+    description: The sensitive variant filters on the selected drug the same way.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: med_002
+    given:
+      - input: ref('ds__sensitive_medication_dispenses')
+        format: sql
+        rows: |
+          select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at
+          union all
+          select 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, '2024-01-10 09:00:00'::timestamp
+    expect: *dispenses_paracetamol_only
+
+  - name: test_medication_dispensed_summary_two_selected
+    model: medication-dispensed-summary
+    description: Two values selected return the rows for both.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given: *dispenses_given
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_medication_dispensed_summary_empty_list
+    model: medication-dispensed-summary
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: []
+    given: *dispenses_given
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_medication_dispensed_summary_sensitive_two
+    model: sensitive-medication-dispensed-summary
+    description: The sensitive variant returns the rows for both selected values.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given:
+      - input: ref('ds__sensitive_medication_dispenses')
+        format: sql
+        rows: |
+          select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at
+          union all
+          select 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 10 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20

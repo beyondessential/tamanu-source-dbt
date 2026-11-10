@@ -13,8 +13,8 @@ target and its compliance verdict rather than failing the report:
 A triage score is mandatory in the triage form, but Triage.score is a plain nullable TEXT
 column in the model, so nothing below the UI guarantees one. Blanking a row is therefore the
 safer failure mode for a standard report running against deployments and history this repo
-cannot see. AC-003 in data_tests/data_test__ds__emergency_triage.sql is the backstop: it
-surfaces a category between 1 and 5 with no target at test time.
+cannot see. AC-003 in tests/data_tests/model_invariants/data_test__ds__emergency_triage.sql is
+the backstop: it surfaces a category between 1 and 5 with no target at test time.
 #}
 {%- macro triage_target_minutes_case(score_field) -%}
 case {{ score_field }}

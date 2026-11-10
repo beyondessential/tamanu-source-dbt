@@ -13,8 +13,10 @@ license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
-    "dbt-core",
-    "dbt-postgres",
+    # Matches the dbt that data-lake runs these models on in production. dbt-core 1.13 waits on
+    # dagster-dbt, which caps dbt-core below 1.13.
+    "dbt-core>=1.12.6,<1.13",
+    "dbt-postgres>=1.11.0,<1.12",
     "great-expectations==1.15.1",
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",

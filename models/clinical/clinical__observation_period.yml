@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     data_tests:
       # AC-006: the period must not end before it starts (BL-002). or_equal
       # permits a single-day period; both bounds are not-null (AC-004).

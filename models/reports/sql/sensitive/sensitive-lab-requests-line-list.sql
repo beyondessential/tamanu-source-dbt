@@ -36,10 +36,9 @@ where case
         else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
     and
-    case
-        when {{ parameter('statusId') }} is null then true
-        else status_id = {{ parameter('statusId') }}
-    end
+    -- BL-001 (see specs/reports/lab-requests-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('status_id::text', 'statusId') }}
     and
     {{ to_user_selected_timezone('requested_datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

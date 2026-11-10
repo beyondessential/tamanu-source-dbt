@@ -46,8 +46,7 @@ where
         else vaccine_name = {{ parameter('vaccine') }}
     end
     and
-    case
-        when {{ parameter('status') }} is null then true
-        else vaccine_status = {{ parameter('status') }}
-    end
+    -- BL-001 (see specs/reports/vaccine-audit-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('vaccine_status::text', 'status') }}
 order by vaccination_date, last_name, first_name

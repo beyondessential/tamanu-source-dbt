@@ -37,10 +37,9 @@ where
         else location_group_id = {{ parameter('locationGroupId') }}
     end
     and
-    case
-        when {{ parameter('bookingStatus') }} is null then true
-        else booking_status = {{ parameter('bookingStatus') }}
-    end
+    -- BL-001 (see specs/reports/location-bookings-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('booking_status::text', 'bookingStatus') }}
     and
     case
         when {{ parameter('clinicianId') }} is null then true

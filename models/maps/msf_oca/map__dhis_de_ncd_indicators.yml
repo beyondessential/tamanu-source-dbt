@@ -9,7 +9,7 @@ models:
     columns:
       - name: id
         description: DHIS2 Data Element UID.
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: indicator
@@ -17,6 +17,6 @@ models:
           metric__ncd_indicators.metric_id slug (e.g. consultations_new,
           diagnoses, patients_active, exit_ltfu, referred_specialist,
           htn_bp_controlled, cohort_6m_retention_percent).
-        tests:
+        data_tests:
           - not_null
           - unique

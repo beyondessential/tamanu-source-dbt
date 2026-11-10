@@ -8,20 +8,20 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
-    # tables), so a deployment that bands a value differently adds a file there rather than
-    # forking the metric.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # BL-011: restricted, like
-      # metric__birth and metric__death. A row now carries the patient's Tamanu id (person_id)
-      # beside the event date, age, village and vaccine, which in a small deployment can
-      # identify the patient. No direct identifier -- no name, MRN or date of birth -- so
-      # pii stays false. Consumers only ever aggregate person_id (a distinct count).
-      pii: false
-      classification: restricted
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
+      # tables), so a deployment that bands a value differently adds a file there rather than
+      # forking the metric.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-011: restricted, like
+        # metric__birth and metric__death. A row now carries the patient's Tamanu id (person_id)
+        # beside the event date, age, village and vaccine, which in a small deployment can
+        # identify the patient. No direct identifier -- no name, MRN or date of birth -- so
+        # pii stays false. Consumers only ever aggregate person_id (a distinct count).
+        pii: false
+        classification: restricted
     data_tests:
       # One row per attempt. A duplicate would double-count a refusal in any consumer that
       # sums value_numeric -- error even though the repo default is warn.

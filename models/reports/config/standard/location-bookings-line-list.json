@@ -40,7 +40,7 @@
         "name": "bookingTypeId"
       },
       {
-        "parameterField": "ParameterSelectField",
+        "parameterField": "ParameterMultiselectField",
         "label": "Status",
         "name": "bookingStatus",
         "options": [

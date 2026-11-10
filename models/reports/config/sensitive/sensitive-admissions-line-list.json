@@ -18,10 +18,11 @@
         "filterBySelectedFacility": true
       },
       {
-        "parameterField": "ParameterAutocompleteField",
+        "parameterField": "ParameterSuggesterSelectField",
         "label": "Patient billing type",
         "name": "patientBillingTypeId",
-        "suggesterEndpoint": "patientBillingType"
+        "suggesterEndpoint": "patientBillingType",
+        "isMulti": true
       },
       {
         "parameterField": "ParameterAutocompleteField",

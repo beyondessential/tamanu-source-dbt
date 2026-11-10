@@ -29,10 +29,9 @@ where {{ to_user_selected_timezone('requested_datetime') }}
     {{ to_user_selected_timezone('requested_datetime') }}
     <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
-    case
-        when {{ parameter('statusId') }} is null then true
-        else status_id = {{ parameter('statusId') }}
-    end
+    -- BL-001 (see specs/reports/lab-tests-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('status_id::text', 'statusId') }}
     and
     case
         when {{ parameter('testCategoryId') }} is null then true

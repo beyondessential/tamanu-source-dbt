@@ -42,12 +42,7 @@ where
     {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     -- BL-001, BL-003: multi-select over all drugs. Nothing selected means every medication.
-    -- The form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    and (
-        cardinality(array_remove(array[{{ parameter('medicationId') }}]::text[], null)) = 0
-        or medication_id = any(array[{{ parameter('medicationId') }}]::text[])
-    )
+    and {{ multi_select_filter('medication_id', 'medicationId') }}
     -- BL-004: facility, department and location filters, each nullable
     and case when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}

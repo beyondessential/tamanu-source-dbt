@@ -189,15 +189,14 @@ jobs:
 
           ${SCHEMA_DRIFT_SECTION}
           ## Next Steps
-          After merging this PR, you'll need to build the reporting assets locally:
+          The reporting assets are built in CI when a release is published. To check the build locally first:
           \`\`\`bash
           python scripts/build_reporting_assets.py
           \`\`\`
 
           ## Testing
           - [ ] Verify source models are up to date
-          - [ ] Run \`build_reporting_assets.py\` locally to prepare models and build compiled assets
-          - [ ] Check compiled reporting assets in \`compiled/v$DBT_VERSION/\`
+          - [ ] Run \`build_reporting_assets.py\` locally to check the models and reports build
           - [ ] Run tests: \`dbt test\`
           - [ ] Resolve any report config schema drift flagged above (\`check_schema_drift.py\`)
 

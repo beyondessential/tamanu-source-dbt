@@ -6,15 +6,15 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta -- the Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
-    # adds a file there rather than forking the metric.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # BL-013: a row identifies a pregnant woman by person_id, date and facility
-      pii: true
-      classification: restricted
+      # No data_table_* meta -- the Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, so a deployment that bands age differently
+      # adds a file there rather than forking the metric.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-013: a row identifies a pregnant woman by person_id, date and facility
+        pii: true
+        classification: restricted
     data_tests:
       # AC-001 (BL-005): one row per contact. A duplicate would count a contact twice in any
       # consumer summing value_numeric -- error even though the repo default is warn.

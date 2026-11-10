@@ -50,23 +50,23 @@ models:
     columns:
       - name: metric_id
         description: Globally unique, snake-case identifier. Matches the `metric__` model name suffix or `der__` cohort id. Stable across releases — never reused.
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: kind
         description: Artefact kind — `metric`, `cohort`, `condition_era`, `drug_era`, `dose_era`, or `episode`.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['metric', 'cohort', 'condition_era', 'drug_era', 'dose_era', 'episode']
       - name: name
         description: Human-readable label shown in catalogues and dashboards.
-        tests:
+        data_tests:
           - not_null
       - name: description
         description: Plain-English description of what the artefact measures.
-        tests:
+        data_tests:
           - not_null
       - name: numerator_description
         description: Numerator in words. Metrics only — NULL for `der__` rows.
@@ -74,14 +74,14 @@ models:
         description: Denominator in words. Metrics only — NULL for count metrics and for `der__` rows.
       - name: data_source
         description: Source system the artefact derives from (`tamanu`, `msupply`, `senaite`, `weather`).
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['tamanu', 'msupply', 'senaite', 'weather']
       - name: definition_source
-        description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_SMART_ANC`, `WHO_CORE_100`, `WHO_PEN`, `WHO_UNICEF_WUENIC`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `AIHW`, `MSF`) or `BES` for internal definitions.
-        tests:
+        description: Where the definition comes from — external standard name (e.g. `WHO_SMART_HIV`, `WHO_SMART_ANC`, `WHO_CORE_100`, `WHO_PEN`, `WHO_UNICEF_WUENIC`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `AIHW`, `MSF`, `INTERPLAST`) or `BES` for internal definitions.
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -89,7 +89,9 @@ models:
                 # outpatient.yml). WHO_UNICEF_WUENIC: immunisation_dose
                 # (documentations/metrics/immunisation.yml). WHO_SMART_ANC: who_dak_anc_contact
                 # (documentations/metrics/who_dak_anc.yml).
-                values: ['WHO_SMART_HIV', 'WHO_SMART_ANC', 'WHO_CORE_100', 'WHO_PEN', 'WHO_UNICEF_WUENIC', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'AIHW', 'MSF', 'BES']
+                # INTERPLAST: interplast_consultation, interplast_surgical_procedure
+                # (documentations/metrics/interplast.yml).
+                values: ['WHO_SMART_HIV', 'WHO_SMART_ANC', 'WHO_CORE_100', 'WHO_PEN', 'WHO_UNICEF_WUENIC', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'AIHW', 'MSF', 'INTERPLAST', 'BES']
       - name: definition_source_code
         description: External standard's own identifier for the indicator (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code). NULL for `BES` definitions and standards without a structured code.
       - name: definition_rationale
@@ -111,7 +113,7 @@ models:
           `tamanu-dbt-msf-kule/models/metrics/metric__ncd_indicators_summary.sql`, so
           relabelling them here without changing that model would make this registry wrong.
           Migrating them is a change in that repo.
-        tests:
+        data_tests:
           # AC-016 (metric__billing): `currency` is an accepted unit.
           - accepted_values:
               name: ac_016_metric__billing_unit_accepts_currency
@@ -119,29 +121,29 @@ models:
                 values: ['count', 'proportion', 'percentage', 'rate_per_1000', 'currency']
       - name: subject_grain
         description: Grain of `subject_id` in the metric output — `patient`, `encounter`, `facility`, etc.
-        tests:
+        data_tests:
           - not_null
       - name: disaggregations
         description: Comma-separated list of disaggregation column names the artefact produces.
       - name: variant_of
         description: Parent `metric_id` if this row is a deployment-specific definition variant; else NULL. Metrics only.
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('metric_definitions')
                 field: metric_id
       - name: owner
         description: Team or individual responsible for the artefact.
-        tests:
+        data_tests:
           - not_null
       - name: status
         description: Lifecycle status — `draft`, `approved`, or `deprecated`.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['draft', 'approved', 'deprecated']
       - name: spec_path
         description: Repo-relative path to the SDD spec for this artefact.
-        tests:
+        data_tests:
           - not_null
