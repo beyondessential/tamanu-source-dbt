@@ -49,6 +49,8 @@ common as (
         length_of_stay__minutes,
         -- BL-016
         is_readmission_within_30_days,
+        -- BL-025
+        is_readmission_within_14_days,
         -- BL-017
         clinician,
         -- BL-018
@@ -90,6 +92,7 @@ select
     discharge_disposition,
     length_of_stay__minutes,
     is_readmission_within_30_days,
+    is_readmission_within_14_days,
     clinician,
     clinician_designation,
     null::integer as patient_days,
@@ -120,6 +123,7 @@ select
     discharge_disposition,
     length_of_stay__minutes,
     is_readmission_within_30_days,
+    is_readmission_within_14_days,
     clinician,
     clinician_designation,
     -- BL-021: whole days between the admission and separation dates, minimum 1 (AIHW METeOR
