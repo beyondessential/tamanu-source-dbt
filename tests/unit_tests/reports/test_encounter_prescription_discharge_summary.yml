@@ -36,3 +36,41 @@ unit_tests:
         select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
         union all
         select 'Paracetamol', 'PCM', 20
+
+  - name: test_encounter_prescription_discharge_summary_medication_filter
+    model: encounter-prescription-discharge-summary
+    description: >
+      AC-006 / BL-010 of specs/reports/encounter-prescription-discharge-summary.md: with one drug
+      selected, only that medication is summed. test_encounter_prescription_discharge_summary
+      covers the case with no drug selected.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: med_002
+    given:
+      - input: ref('ds__encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+    expect: &discharge_paracetamol_only
+      format: sql
+      rows: |
+        select 'Paracetamol' as "Medication", 'PCM' as "Code", 20 as "Quantity"
+
+  - name: test_enc_rx_discharge_summary_sensitive_medication_filter
+    model: sensitive-encounter-prescription-discharge-summary
+    description: AC-006 / BL-010 of specs/reports/encounter-prescription-discharge-summary.md, sensitive variant.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: med_002
+    given:
+      - input: ref('ds__sensitive_encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+    expect: *discharge_paracetamol_only
