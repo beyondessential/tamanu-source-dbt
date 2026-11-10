@@ -160,7 +160,6 @@ a deleted or merged patient are out of scope.
   Postgres pushes neither a date nor a `record_id` predicate below a window function.
 - **BL-015:** The encounter type filter is a multi-select that returns a row when its encounter type is any of the selected values, and every row when none is selected. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor.
 
-
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test |
