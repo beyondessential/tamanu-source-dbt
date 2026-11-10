@@ -175,6 +175,7 @@ a deleted or merged patient are out of scope.
 | AC-008 | An encounter with several diagnoses still returns exactly one row, with primary and secondary diagnoses in their own columns | BL-010 | `test_ds__discharge_audit_recording_delay`, plus `unique` on `encounter_id` for the grain. `logical__ds__discharge_audit` asserts nothing about diagnoses. |
 | AC-009 | A discharge recorded and then edited inside a DST fall-back's repeated hour reports the recording, not the edit | BL-002 | `test_ds__discharge_audit_recorded_dst_fall_back` |
 | AC-010 | A discharge changed outside the candidate window (including its ±2/+3 day margin) is excluded from the report; one changed inside it is included and the row's values are unaffected by the candidate step | BL-013 | Manual run against a demo snapshot; `EXPLAIN` confirms the `(table_name, record_id)` index is used for candidates only |
+| AC-011 | With one or two encounter types selected only the discharges of those types are returned, and with none or an empty selection every discharge is returned | BL-015 | `test_audit_discharge_encounter_type_one`, `test_audit_discharge_encounter_type_two`, `test_audit_discharge_encounter_type_empty` |
 
 Data tests run at `warn` severity project-wide (`data_tests: +severity: warn` in
 `dbt_project.yml`) and none of these override it, so a broken acceptance criterion surfaces as

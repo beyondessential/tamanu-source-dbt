@@ -186,6 +186,7 @@ task assigned to no designation.
 | AC-010 | Length of stay is present exactly when the encounter ended, and never negative | BL-001 | dbt singular test |
 | AC-011 | The report's config notes state the outcome mapping, the encounter-type default, and the designation, medication-due and deleted-task exclusions | BL-002, BL-003, BL-005, BL-015 | Manual review of `models/reports/config/standard/task-followup-register.json` |
 | AC-012 | A run over a one-month range with no designation and no encounter type selected returns in workable time on a production/replica snapshot | BL-007, BL-015 | Manual run against a snapshot before merge |
+| AC-013 | With one or two task statuses, or one or two encounter types, selected only the matching tasks are returned, and with an empty selection every task is returned | BL-015, BL-017 | `test_task_followup_register_status_one`, `test_task_followup_register_status_two_selected`, `test_task_followup_register_status_empty_list`, `test_task_followup_register_sensitive_status_two`, `test_task_followup_register_enc_type_one`, `test_task_followup_register_enc_type_two_selected`, `test_task_followup_register_enc_type_empty_list` |
 
 ## Risks
 

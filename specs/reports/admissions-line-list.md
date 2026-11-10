@@ -44,13 +44,10 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With one or several billing types selected only rows with those billing types are returned, in both variants | BL-001 | `test_admissions_line_list_billing_type_one_selected`, `test_admissions_line_list_billing_type_two_selected`, `test_admissions_line_list_sensitive_billing_type_one`, `test_admissions_line_list_sensitive_billing_type_two` |
-| AC-003 | With an empty selection every row is returned | BL-001, BL-003 | `test_admissions_line_list_billing_type_empty_list` |
-| AC-002 | The compiled SQL binds both filters through an array constructor | BL-003 | Inspect `dbt compile` output |
-
-## Risks
-
-- No test selects an admission status. The same expression is tested on the billing type filter.
+| AC-001 | With one or two billing types selected only rows with those billing types are returned, in both variants | BL-001 | `test_admissions_line_list_billing_type_one_selected`, `test_admissions_line_list_billing_type_two_selected`, `test_admissions_line_list_sensitive_billing_type_one`, `test_admissions_line_list_sensitive_billing_type_two` |
+| AC-002 | With one or two admission statuses selected only rows with those statuses are returned, in both variants | BL-002 | `test_admissions_line_list_status_one_selected`, `test_admissions_line_list_status_two_selected`, `test_admissions_line_list_sensitive_status_two` |
+| AC-003 | With an empty selection every row is returned | BL-001, BL-002, BL-003 | `test_admissions_line_list_billing_type_empty_list`, `test_admissions_line_list_status_empty_list` |
+| AC-004 | The compiled SQL binds both filters through an array constructor | BL-003 | Inspect `dbt compile` output |
 
 ## Change log
 

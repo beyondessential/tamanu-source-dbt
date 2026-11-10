@@ -54,7 +54,8 @@
         when {{ parameter('locationGroupId') }} is null then true
         else lg.id = {{ parameter('locationGroupId') }}
     end
-    -- Multi-select. Nothing selected means every status. The form sends an empty selection as [],
+    -- BL-049 (see specs/reports/outpatient-appointments-line-list.md): multi-select. Nothing selected means every status.
+    -- The form sends an empty selection as [],
     -- which expands to nothing, so the list goes through an array constructor: array[]::text[]
     -- is valid where coalesce() and in () are not. Keep the array form: a scalar comparison
     -- fails once several statuses expand to 'a','b'.
