@@ -231,16 +231,13 @@ A select populated with the suggester endpoint's full list (`suggestions/<endpoi
 - `suggesterEndpoint` (string): Must be an endpoint that serves a full list: a reference-data type (e.g. `drug`, `village`) or one of `labTestPanel`, `labTestType`, `locationGroup`, `invoiceInsurancePlan`. Search-only endpoints such as `practitioner`, `department` or `location` don't work here.
 
 **Optional Properties:**
-- `isMulti` (boolean): Render a multi-select. The selected values reach SQL as a comma-separated list, and an empty selection reaches it as nothing at all, because the form sends `[]` and Tamanu expands an empty list into no values. So `coalesce(...)`, `in (...)` and a bare `is null` all fail on some selection. Wrap the parameter in an array constructor, which is valid with zero, one or several values:
+- `isMulti` (boolean): Render a multi-select. The selected values reach SQL as a comma-separated list, and an empty selection reaches it as nothing at all, because the form sends `[]` and Tamanu expands an empty list into no values. So `coalesce(...)`, `in (...)` and a bare `is null` all fail on some selection. Wrap the parameter in an array constructor, which is valid with zero, one or several values. The `multi_select_filter` macro does this and takes a text expression and the parameter name:
 
 ```sql
-and (
-    cardinality(array_remove(array[{{ parameter('medicationId') }}]::text[], null)) = 0
-    or medication_id = any(array[{{ parameter('medicationId') }}]::text[])
-)
+and {{ multi_select_filter('medication_id', 'medicationId') }}
 ```
 
-Nothing selected returns every row.
+Nothing selected returns every row. Cast a column that is not text in the first argument, for example `'status_id::text'`.
 
 `isMulti` is a prop the Tamanu report form passes through to its select component rather than a declared report option (verified in Tamanu `release/2.60` and `main`), so re-test it after Tamanu upgrades.
 

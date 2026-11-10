@@ -10,12 +10,8 @@ where
     end
     and
     -- BL-003 (see specs/reports/medication-dispensed-summary.md): multi-select over all drugs. Nothing selected means every one.
-    -- BL-004: the form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    (
-        cardinality(array_remove(array[{{ parameter('medicationId') }}]::text[], null)) = 0
-        or md.medication_id = any(array[{{ parameter('medicationId') }}]::text[])
-    )
+    -- BL-004: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('md.medication_id', 'medicationId') }}
     and
     {{ to_user_selected_timezone('md.dispensed_at') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}

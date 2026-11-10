@@ -62,18 +62,10 @@ where
         else patient_id = {{ parameter('patientId') }}
     end
     -- BL-017 (see specs/reports/task-followup-register.md): multi-select. Nothing selected means every status.
-    -- The form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    and (
-        cardinality(array_remove(array[{{ parameter('taskStatus') }}]::text[], null)) = 0
-        or task_outcome::text = any(array[{{ parameter('taskStatus') }}]::text[])
-    )
+    and {{ multi_select_filter('task_outcome::text', 'taskStatus') }}
     -- BL-015: Tamanu allows a task on any encounter type, so leaving this unset returns them
     -- all rather than silently hiding a missed task raised outside an admission
-    and (
-        cardinality(array_remove(array[{{ parameter('encounterType') }}]::text[], null)) = 0
-        or encounter_type::text = any(array[{{ parameter('encounterType') }}]::text[])
-    )
+    and {{ multi_select_filter('encounter_type::text', 'encounterType') }}
 order by task_due_datetime desc, display_id asc
 
 {% endmacro %}

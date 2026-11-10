@@ -43,11 +43,7 @@ where
     end
     and
     -- BL-001 (see specs/reports/upcoming-vaccinations-line-list.md): multi-select. Nothing selected means every village.
-    -- BL-002: the form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    (
-        cardinality(array_remove(array[{{ parameter('villageId') }}]::text[], null)) = 0
-        or village_id::text = any(array[{{ parameter('villageId') }}]::text[])
-    )
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('village_id::text', 'villageId') }}
 -- BL-007: order by due date, then patient name and vaccine
 order by due_date, last_name, first_name, vaccine_name

@@ -17,6 +17,22 @@
     {%- endif -%}
 {%- endmacro %}
 
+{%- macro multi_select_filter(text_expression, parameter_name) -%}
+    {#- Filter for a multi-select report parameter: nothing selected keeps every row, otherwise a
+        row is kept when text_expression equals any selected value. text_expression is a SQL
+        expression of type text, for example `status_id::text`.
+
+        Tamanu expands a selection into a comma-separated list of literals and an empty
+        selection, which the form sends as [], into nothing. The list therefore goes through an
+        array constructor: array[]::text[] is valid where coalesce() and in () are not, and a
+        scalar comparison fails once several values expand to 'a','b'.
+
+        Declare the parameter as a multi-select in the report config; see
+        documentations/tamanu-report-configuration-schema.md. -#}
+    {%- set selection = parameter(parameter_name) | trim -%}
+    (cardinality(array_remove(array[{{ selection }}]::text[], null)) = 0 or {{ text_expression }} = any(array[{{ selection }}]::text[]))
+{%- endmacro %}
+
 {%- macro date_param_bound(parameter_name, default_value) -%}
     {#- parameter() compiles to an untyped placeholder, so a caller doing interval
         arithmetic on the result needs the explicit cast -- without it `:toDate + interval`

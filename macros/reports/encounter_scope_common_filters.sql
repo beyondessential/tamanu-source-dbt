@@ -20,13 +20,7 @@ case
     when {{ parameter('facilityId') }} is null then true
     else f.id = {{ parameter('facilityId') }}
 end
--- Multi-select. Nothing selected means every value. The form sends an empty selection as [],
--- which expands to nothing, so the list goes through an array constructor: array[]::text[]
--- is valid where coalesce() and in () are not.
-and (
-    cardinality(array_remove(array[{{ parameter('patientBillingTypeId') }}]::text[], null)) = 0
-    or e.patient_billing_type_id::text = any(array[{{ parameter('patientBillingTypeId') }}]::text[])
-)
+and {{ multi_select_filter('e.patient_billing_type_id::text', 'patientBillingTypeId') }}
 and case
     when {{ parameter('supervisingClinicianId') }} is null then true
     else e.clinician_id = {{ parameter('supervisingClinicianId') }}
