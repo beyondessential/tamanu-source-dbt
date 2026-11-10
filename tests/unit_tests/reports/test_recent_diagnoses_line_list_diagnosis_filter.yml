@@ -49,3 +49,54 @@ unit_tests:
           union all
           select 'dx_002', 'Dengue', '2024-01-12 09:00:00'::timestamp, 'Ben', 'Sio', 'P002', 41::double precision, 'male', '555-0102', 'vil_001', 'Apia', 'clin_001', 'Dr Lee', 'ED', 'Suspected', 'No', 'fac_001'
     expect: *recent_diagnoses_dengue_only
+
+  - name: test_recent_diagnoses_line_list_two_selected
+    model: recent-diagnoses-line-list
+    description: Two values selected return the rows for both.
+    overrides:
+      vars:
+        timezone: UTC
+        diagnosisId: [dx_001, dx_002]
+    given: *recent_diagnoses_given
+    expect:
+      format: sql
+      rows: |
+        select '2024-01-10 09:00:00' as "Date & time", 'Malaria' as "Diagnoses", 'Ana' as "First name", 'Tui' as "Last name", 'P001' as "Patient ID", 30::double precision as "Age", 'female' as "Sex", '555-0101' as "Primary contact number", 'Apia' as "Village", 'Dr Lee' as "Clinician", 'ED' as "Department", 'Confirmed' as "Certainty", 'Yes' as "Is primary"
+        union all
+        select '2024-01-12 09:00:00', 'Dengue', 'Ben', 'Sio', 'P002', 41::double precision, 'male', '555-0102', 'Apia', 'Dr Lee', 'ED', 'Suspected', 'No'
+
+  - name: test_recent_diagnoses_line_list_empty_list
+    model: recent-diagnoses-line-list
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC
+        diagnosisId: []
+    given: *recent_diagnoses_given
+    expect:
+      format: sql
+      rows: |
+        select '2024-01-10 09:00:00' as "Date & time", 'Malaria' as "Diagnoses", 'Ana' as "First name", 'Tui' as "Last name", 'P001' as "Patient ID", 30::double precision as "Age", 'female' as "Sex", '555-0101' as "Primary contact number", 'Apia' as "Village", 'Dr Lee' as "Clinician", 'ED' as "Department", 'Confirmed' as "Certainty", 'Yes' as "Is primary"
+        union all
+        select '2024-01-12 09:00:00', 'Dengue', 'Ben', 'Sio', 'P002', 41::double precision, 'male', '555-0102', 'Apia', 'Dr Lee', 'ED', 'Suspected', 'No'
+
+  - name: test_recent_diagnoses_line_list_sensitive_two
+    model: sensitive-recent-diagnoses-line-list
+    description: The sensitive variant returns the rows for both selected values.
+    overrides:
+      vars:
+        timezone: UTC
+        diagnosisId: [dx_001, dx_002]
+    given:
+      - input: ref('ds__sensitive_diagnoses')
+        format: sql
+        rows: |
+          select 'dx_001' as diagnosis_id, 'Malaria' as diagnosis, '2024-01-10 09:00:00'::timestamp as diagnosis_datetime, 'Ana' as first_name, 'Tui' as last_name, 'P001' as display_id, 30::double precision as age, 'female' as sex, '555-0101' as contact_number, 'vil_001' as village_id, 'Apia' as village, 'clin_001' as clinician_id, 'Dr Lee' as clinician, 'ED' as department, 'Confirmed' as certainty, 'Yes' as is_primary, 'fac_001' as facility_id
+          union all
+          select 'dx_002', 'Dengue', '2024-01-12 09:00:00'::timestamp, 'Ben', 'Sio', 'P002', 41::double precision, 'male', '555-0102', 'vil_001', 'Apia', 'clin_001', 'Dr Lee', 'ED', 'Suspected', 'No', 'fac_001'
+    expect:
+      format: sql
+      rows: |
+        select '2024-01-10 09:00:00' as "Date & time", 'Malaria' as "Diagnoses", 'Ana' as "First name", 'Tui' as "Last name", 'P001' as "Patient ID", 30::double precision as "Age", 'female' as "Sex", '555-0101' as "Primary contact number", 'Apia' as "Village", 'Dr Lee' as "Clinician", 'ED' as "Department", 'Confirmed' as "Certainty", 'Yes' as "Is primary"
+        union all
+        select '2024-01-12 09:00:00', 'Dengue', 'Ben', 'Sio', 'P002', 41::double precision, 'male', '555-0102', 'Apia', 'Dr Lee', 'ED', 'Suspected', 'No'

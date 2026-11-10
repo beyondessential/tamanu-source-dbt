@@ -29,7 +29,7 @@ Only the multi-select filters are numbered here. The rest of the report is descr
 | `category` | `VaccineCategoryField` | Category |
 | `vaccine` | `VaccineField` | Vaccine |
 | `status` | `ParameterSelectField` | Vaccine status |
-| `villageId` | `ParameterSuggesterSelectField, `village`, multi-select` | Village |
+| `villageId` | `ParameterSuggesterSelectField`, `village`, multi-select | Village |
 | `excludeNonHomeCountry` | `ParameterSelectField` | Exclude overseas patients (default No) |
 plus the date range.
 
@@ -42,11 +42,9 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | The compiled SQL binds the village filter through an array constructor | BL-002 | Inspect `dbt compile` output |
-
-## Risks
-
-- No test selects a village for this report. The same expression is tested on `vaccine-line-list`.
+| AC-001 | With one or two villages selected only the patients in those villages are returned | BL-001 | `test_upcoming_vaccinations_village_one_selected`, `test_upcoming_vaccinations_village_two_selected` |
+| AC-002 | With an empty selection every patient is returned | BL-001, BL-002 | `test_upcoming_vaccinations_village_empty_list` |
+| AC-003 | The compiled SQL binds the village filter through an array constructor | BL-002 | Inspect `dbt compile` output |
 
 ## Change log
 

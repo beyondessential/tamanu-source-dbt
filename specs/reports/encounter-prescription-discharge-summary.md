@@ -101,7 +101,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 | AC-003 | Sensitive variant only includes prescriptions at facilities with a `sensitive_network_id` | BL-009 | `test_ds_sensitive_encounter_prescriptions_partition` — fails when the partition is a constant `false` |
 | AC-004 | One row per medication, summed quantity across all matching prescriptions in the selected range | BL-005 | `test_encounter_prescription_discharge_summary` — fails when grouped per prescription |
 | AC-005 | Output columns are labelled with the shared `encounterPrescription*` keys | BL-004 | `test_encounter_prescription_discharge_summary` asserts the default labels `Medication`, `Code`, `Quantity` |
-| AC-006 | With no drug selected every medication is returned, and with one selected only that medication | BL-010 | `test_encounter_prescription_discharge_summary` (none selected) and `test_encounter_prescription_discharge_summary_medication_filter` (one selected). Several selected values cannot be bound outside `dbt compile`, so that case is checked in the compiled SQL |
+| AC-006 | With no drug or an empty selection every medication is returned, and with one or two selected only those medications | BL-010 | `test_encounter_prescription_discharge_summary` (none selected) and `test_encounter_prescription_discharge_summary_empty_list` (empty selection), `test_encounter_prescription_discharge_summary_medication_filter` (one selected) and `test_encounter_prescription_discharge_summary_two_selected` (two selected), with the sensitive variant in `test_enc_rx_discharge_summary_sensitive_medication_filter` and `test_enc_rx_discharge_summary_sensitive_two` |
 
 ## Risks
 

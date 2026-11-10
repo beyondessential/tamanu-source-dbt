@@ -27,7 +27,7 @@ Only the multi-select filters are numbered here. The rest of the report is descr
 | Name | Field | Label |
 |---|---|---|
 | `facilityId` | `FacilityField` | Facility |
-| `villageId` | `ParameterSuggesterSelectField, `village`, multi-select` | Village |
+| `villageId` | `ParameterSuggesterSelectField`, `village`, multi-select | Village |
 | `category` | `VaccineCategoryField` | Category |
 | `vaccine` | `VaccineField` | Vaccine |
 plus the date range.

@@ -27,7 +27,7 @@ Only the multi-select filters are numbered here. The rest of the report is descr
 | Name | Field | Label |
 |---|---|---|
 | `facilityId` | `FacilityField` | Facility |
-| `patientBillingTypeId` | `ParameterSuggesterSelectField, `patientBillingType`, multi-select` | Patient billing type |
+| `patientBillingTypeId` | `ParameterSuggesterSelectField`, `patientBillingType`, multi-select | Patient billing type |
 | `clinicianId` | `ParameterAutocompleteField, `practitioner`` | Admitting clinician |
 | `locationGroupId` | `ParameterAutocompleteField, `locationGroup`` | Area |
 | `departmentId` | `ParameterAutocompleteField, `department`` | Department |

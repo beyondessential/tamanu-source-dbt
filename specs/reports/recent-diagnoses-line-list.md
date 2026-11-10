@@ -46,9 +46,9 @@ One row per recorded encounter diagnosis. Disproven and recorded-in-error diagno
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With no diagnosis selected every diagnosis in the window is returned | BL-003 | `test_recent_diagnoses_line_list_no_diagnosis_selected` |
-| AC-002 | With one diagnosis selected only that diagnosis is returned, in both variants | BL-003 | `test_recent_diagnoses_line_list_one_diagnosis_selected`, `test_recent_diagnoses_line_list_sensitive_one_selected` |
-| AC-003 | The compiled SQL binds `diagnosisId` through an array constructor and references no other diagnosis parameter | BL-004 | Inspect `dbt compile` output. Unit tests bind a single value, so selections of several values are not exercised |
+| AC-001 | With no diagnosis selected every diagnosis in the window is returned | BL-003 | `test_recent_diagnoses_line_list_no_diagnosis_selected`, `test_recent_diagnoses_line_list_empty_list` |
+| AC-002 | With one or two diagnoses selected only those diagnoses are returned, in both variants | BL-003 | `test_recent_diagnoses_line_list_one_diagnosis_selected`, `test_recent_diagnoses_line_list_two_selected`, `test_recent_diagnoses_line_list_sensitive_one_selected`, `test_recent_diagnoses_line_list_sensitive_two` |
+| AC-003 | The compiled SQL binds `diagnosisId` through an array constructor and references no other diagnosis parameter | BL-004 | Inspect `dbt compile` output|
 
 ## Risks
 

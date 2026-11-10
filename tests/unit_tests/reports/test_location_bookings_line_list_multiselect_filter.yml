@@ -68,3 +68,73 @@ unit_tests:
       rows: |
         Patient ID
         P002
+
+  - name: test_location_bookings_line_list_status_two_selected
+    model: location-bookings-line-list
+    description: Two values selected return the rows with either value and no others.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        bookingStatus: [Confirmed, Cancelled]
+    given:
+      - input: ref('ds__location_bookings')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Confirmed'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Arrived'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Cancelled'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
+
+  - name: test_location_bookings_line_list_status_empty_list
+    model: location-bookings-line-list
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        bookingStatus: []
+    given:
+      - input: ref('ds__location_bookings')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Confirmed'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Arrived'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Cancelled'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+        P003
+
+  - name: test_location_bookings_line_list_status_sensitive_two
+    model: sensitive-location-bookings-line-list
+    description: The sensitive variant returns the rows with either selected value.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        bookingStatus: [Confirmed, Cancelled]
+    given:
+      - input: ref('ds__sensitive_location_bookings')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Confirmed'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Arrived'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, '2024-01-15 10:00:00'::timestamp as booking_start_datetime, '2024-01-15 10:00:00'::timestamp as booking_end_datetime, 'x_booking_type_id'::text as booking_type_id, 'x_booking_type'::text as booking_type, 'Cancelled'::text as booking_status, 'x_clinician_id'::text as clinician_id, 'x_clinician'::text as clinician, 'fac_001'::text as facility_id, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
