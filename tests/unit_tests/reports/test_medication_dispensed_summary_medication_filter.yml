@@ -51,3 +51,54 @@ unit_tests:
           union all
           select 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, '2024-01-10 09:00:00'::timestamp
     expect: *dispenses_paracetamol_only
+
+  - name: test_medication_dispensed_summary_two_selected
+    model: medication-dispensed-summary
+    description: Two values selected return the rows for both.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given: *dispenses_given
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_medication_dispensed_summary_empty_list
+    model: medication-dispensed-summary
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: []
+    given: *dispenses_given
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 15 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_medication_dispensed_summary_sensitive_two
+    model: sensitive-medication-dispensed-summary
+    description: The sensitive variant returns the rows for both selected values.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given:
+      - input: ref('ds__sensitive_medication_dispenses')
+        format: sql
+        rows: |
+          select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at
+          union all
+          select 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 10 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20

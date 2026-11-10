@@ -88,7 +88,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 | AC-006 | An `Admitted` outcome always agrees with the encounter's OMOP visit concept, and a presentation with neither an admission nor an encounter end has no outcome | BL-009 | dbt singular test |
 | AC-007 | A zero-minute category target is met by a same-second start of active care and missed by any measurable wait | BL-008 | dbt unit test (`test_ds__emergency_triage_target_time_met`) |
 | AC-008 | Every presentation resolves an OMOP visit concept, so a blank outcome only ever means an open encounter | BL-009 | dbt singular test |
-| AC-009 | With no category selected every category is returned, and with one selected only that category, in both variants | BL-014 | dbt unit tests (`test_emergency_triage_line_list_status_none`, `_status_one`, `_status_sensitive_one`) |
+| AC-009 | With no category or an empty selection every category is returned, and with one or two selected only those categories, in both variants | BL-014 | dbt unit tests (`test_emergency_triage_line_list_status_none`, `_status_empty_list`, `_status_one`, `_status_two_selected`, `_status_sensitive_one`, `_status_sensitive_two`) |
 
 AC-002 to AC-006 and AC-008 run against the standard dataset only. The sensitive variant is
 generated from the same macro, so its logic is identical by construction; it carries the

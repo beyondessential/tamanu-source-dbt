@@ -44,9 +44,9 @@ One row per medication, summed over every dispense in the date range and filters
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With no drug selected every dispensed medication is summed | BL-003, BL-005 | `test_medication_dispensed_summary_no_medication_selected` |
-| AC-002 | With one drug selected only that medication is returned, in both variants | BL-003 | `test_medication_dispensed_summary_one_medication_selected`, `test_medication_dispensed_summary_sensitive_one_selected` |
-| AC-003 | The compiled SQL binds `medicationId` through an array constructor | BL-004 | Inspect `dbt compile` output. Unit tests bind a single value, so selections of several values are not exercised |
+| AC-001 | With no drug selected every dispensed medication is summed | BL-003, BL-005 | `test_medication_dispensed_summary_no_medication_selected`, `test_medication_dispensed_summary_empty_list` |
+| AC-002 | With one or two drugs selected only those medications are returned, in both variants | BL-003 | `test_medication_dispensed_summary_one_medication_selected`, `test_medication_dispensed_summary_two_selected`, `test_medication_dispensed_summary_sensitive_one_selected`, `test_medication_dispensed_summary_sensitive_two` |
+| AC-003 | The compiled SQL binds `medicationId` through an array constructor | BL-004 | Inspect `dbt compile` output|
 
 ## Risks
 

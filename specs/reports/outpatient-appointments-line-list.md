@@ -129,12 +129,8 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   exact — except BL-043, which is deliberately loose and paired with the exact bound it
   widens.
 
-  `appointmentStatus` keeps its `coalesce()` wrapper. It is the one multi-value parameter
-  here, and Tamanu binds it as an array that Sequelize expands to a comma-separated literal
-  list, so `:appointmentStatus is null` would compile to `'Confirmed','Arrived' is null` —
-  a syntax error the moment a second status is selected. The house form across
-  `admissions_line_list`, `audit_discharge_line_list` and `task_followup_register` exists
-  for exactly this, and the wrapper is not decorative.
+  `appointmentStatus` is a multi-select. Nothing selected returns every status, and the selection goes
+  through an array constructor, which stays valid when the form's empty selection expands to nothing.
 - **BL-043:** The date range is expressed twice. The exact predicate (BL-041) wraps the
   column in `to_user_selected_timezone()`, so no index on `appointments.start_time` is
   usable; a second pair of bounds compares the bare column against `(:bound)::date` widened
@@ -181,6 +177,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   recurrence description (`get_recurrence_description()`) for an appointment with a
   `schedule_id`, and the literal `No` for a one-off. Pre-existing behaviour, preserved
   verbatim; see DV-003.
+- **BL-049:** The appointment status filter is a multi-select that returns an appointment whose status is any of the selected values, and every appointment when none is selected. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor.
 
 ## Acceptance criteria
 
@@ -197,6 +194,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
 | AC-048 | The bare-column bounds are a superset of the exact predicate for any `:timezone` | BL-043 | not tested — unreachable from dbt (DV-002); argued from the maximum zone offset |
 | AC-049 | The bare-column bound leaves an index on `start_time` usable | BL-043 | not tested — needs `EXPLAIN` on a populated replica |
 | AC-050 | The creator is the actor on the earliest change by UTC log time, including where the creation falls in a DST fall-back's repeated hour | BL-044 | **passed** — `test_outpatient_appointments_line_list_creator_dst_fall_back` |
+| AC-051 | With one or two appointment statuses selected only the appointments with those statuses are returned, and with an empty selection every appointment is returned | BL-049 | `test_outpatient_appointments_status_one`, `test_outpatient_appointments_status_two_selected`, `test_outpatient_appointments_status_empty_list` |
 
 ## Lineage
 
@@ -292,3 +290,4 @@ patients, patient_additional_data, users, reference_data ───────�
 | 2026-10-16 | Maui team | [MAUI-6960](https://linear.app/bes/issue/MAUI-6960): dropped BL-043's note on `from_user_selected_timezone`, which has been removed. `outpatient_appointments_change_events` now exposes local `logged_at`, so BL-044's `distinct on` orders by local time; the creator it picks is unchanged outside a DST fall-back hour. |
 | 2026-09-17 | Maui team | Added `appointmentId` as the first column and `appointmentCreatedDateTime` as the last (MAUI-6905). `created_datetime` is new in `bases/outpatient_appointments`, where `created_at` is converted from `timestamptz` to deployment-local wall clock, and is passed through the dataset's scope CTE. |
 | 2026-09-07 | Maui team | Initial spec, written alongside the performance rework: filter pushdown into the dataset's scope CTE (BL-042, BL-046), the window-free creator lookup (BL-044), the bare-column index-prunable bounds (BL-043), the shared report macro replacing two copies of the body (BL-047), and `facilityId` applied for the first time (BL-045). BL-041 records why this report keeps the house `<= toDate` form where the audit reports cast and add a day. |
+| 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): added BL-049. |

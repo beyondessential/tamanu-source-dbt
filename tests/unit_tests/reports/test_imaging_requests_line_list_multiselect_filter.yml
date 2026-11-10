@@ -68,3 +68,73 @@ unit_tests:
       rows: |
         Patient ID
         P002
+
+  - name: test_imaging_requests_line_list_status_two_selected
+    model: imaging-requests-line-list
+    description: Two values selected return the rows with either value and no others.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        statusId: [pending, completed]
+    given:
+      - input: ref('ds__imaging_requests')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'pending'::text as status_id, 'pending'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'in_progress'::text as status_id, 'in_progress'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'completed'::text as status_id, 'completed'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
+
+  - name: test_imaging_requests_line_list_status_empty_list
+    model: imaging-requests-line-list
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        statusId: []
+    given:
+      - input: ref('ds__imaging_requests')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'pending'::text as status_id, 'pending'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'in_progress'::text as status_id, 'in_progress'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'completed'::text as status_id, 'completed'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+        P003
+
+  - name: test_imaging_requests_line_list_status_sensitive_two
+    model: sensitive-imaging-requests-line-list
+    description: The sensitive variant returns the rows with either selected value.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        statusId: [pending, completed]
+    given:
+      - input: ref('ds__sensitive_imaging_requests')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'pending'::text as status_id, 'pending'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'in_progress'::text as status_id, 'in_progress'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_request_id'::text as request_id, '2024-01-15 10:00:00'::timestamp as requested_datetime, 'x_supervising_clinician_id'::text as supervising_clinician_id, 'x_supervising_clinician'::text as supervising_clinician, 'x_requesting_clinician_id'::text as requesting_clinician_id, 'x_requesting_clinician'::text as requesting_clinician, 'x_priority'::text as priority, 'x_imaging_type_id'::text as imaging_type_id, 'x_imaging_type'::text as imaging_type, 'x_imaging_area'::text as imaging_area, 'completed'::text as status_id, 'completed'::text as status, '2024-01-15 10:00:00'::timestamp as completed_datetime, 'x_reason_for_cancellation'::text as reason_for_cancellation
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
