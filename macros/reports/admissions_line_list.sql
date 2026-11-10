@@ -42,22 +42,14 @@ where
         else {{ parameter('departmentId') }} = any(department_ids::text [])
     end
     -- BL-001 (see specs/reports/admissions-line-list.md): multi-select. Nothing selected means every billing type.
-    -- BL-003: the form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    and (
-        cardinality(array_remove(array[{{ parameter('patientBillingTypeId') }}]::text[], null)) = 0
-        or billing_type_id::text = any(array[{{ parameter('patientBillingTypeId') }}]::text[])
-    )
+    -- BL-003: the selection goes through multi_select_filter(), which stays valid when empty.
+    and {{ multi_select_filter('billing_type_id::text', 'patientBillingTypeId') }}
     and case when {{ parameter('clinicianId') }} is null then true
         else admitting_clinician_id = {{ parameter('clinicianId') }}
     end
     -- BL-002 (see specs/reports/admissions-line-list.md): multi-select. Nothing selected means every status.
-    -- BL-003: the form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    and (
-        cardinality(array_remove(array[{{ parameter('admissionStatus') }}]::text[], null)) = 0
-        or admission_status::text = any(array[{{ parameter('admissionStatus') }}]::text[])
-    )
+    -- BL-003: the selection goes through multi_select_filter(), which stays valid when empty.
+    and {{ multi_select_filter('admission_status::text', 'admissionStatus') }}
 order by admission_datetime desc
 
 {% endmacro %}

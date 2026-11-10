@@ -55,14 +55,7 @@
         else lg.id = {{ parameter('locationGroupId') }}
     end
     -- BL-049 (see specs/reports/outpatient-appointments-line-list.md): multi-select. Nothing selected means every status.
-    -- The form sends an empty selection as [],
-    -- which expands to nothing, so the list goes through an array constructor: array[]::text[]
-    -- is valid where coalesce() and in () are not. Keep the array form: a scalar comparison
-    -- fails once several statuses expand to 'a','b'.
-    and (
-        cardinality(array_remove(array[{{ parameter('appointmentStatus') }}]::text[], null)) = 0
-        or a.status::text = any(array[{{ parameter('appointmentStatus') }}]::text[])
-    )
+    and {{ multi_select_filter('a.status::text', 'appointmentStatus') }}
     and case
         when {{ parameter('clinicianId') }} is null then true
         else a.clinician_id = {{ parameter('clinicianId') }}
