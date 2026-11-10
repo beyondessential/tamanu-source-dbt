@@ -46,8 +46,11 @@ where
         else vaccine_name = {{ parameter('vaccine') }}
     end
     and
-    case
-        when {{ parameter('status') }} is null then true
-        else vaccine_status = {{ parameter('status') }}
-    end
+    -- BL-001 (see specs/reports/vaccine-audit-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the form sends an empty selection as [], which expands to nothing, so the list goes
+    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
+    (
+        cardinality(array_remove(array[{{ parameter('status') }}]::text[], null)) = 0
+        or vaccine_status::text = any(array[{{ parameter('status') }}]::text[])
+    )
 order by vaccination_date, last_name, first_name
