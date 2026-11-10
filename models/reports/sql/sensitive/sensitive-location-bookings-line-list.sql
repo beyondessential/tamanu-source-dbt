@@ -38,12 +38,8 @@ where
     end
     and
     -- BL-001 (see specs/reports/location-bookings-line-list.md): multi-select. Nothing selected means every value.
-    -- BL-002: the form sends an empty selection as [], which expands to nothing, so the list goes
-    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
-    (
-        cardinality(array_remove(array[{{ parameter('bookingStatus') }}]::text[], null)) = 0
-        or booking_status::text = any(array[{{ parameter('bookingStatus') }}]::text[])
-    )
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('booking_status::text', 'bookingStatus') }}
     and
     case
         when {{ parameter('clinicianId') }} is null then true
