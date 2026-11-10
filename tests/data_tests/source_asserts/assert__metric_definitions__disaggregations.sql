@@ -46,6 +46,8 @@ where trim(t.d) not in (
         -- immediately preceding admission discharged no more than 30 days before this one
         -- started
         'is_readmission_within_30_days',
+        -- the same flag over a 14-day window
+        'is_readmission_within_14_days',
         -- program_registry_enrolment's registry: which programme the enrolment is in. One
         -- metric serves every registry a deployment configures, so the registry is a
         -- disaggregation rather than a metric_id per programme.
