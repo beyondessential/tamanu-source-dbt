@@ -35,10 +35,13 @@ where case
         else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
     and
-    case
-        when {{ parameter('statusId') }} is null then true
-        else status_id = {{ parameter('statusId') }}
-    end
+    -- BL-001 (see specs/reports/lab-requests-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the form sends an empty selection as [], which expands to nothing, so the list goes
+    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
+    (
+        cardinality(array_remove(array[{{ parameter('statusId') }}]::text[], null)) = 0
+        or status_id::text = any(array[{{ parameter('statusId') }}]::text[])
+    )
     and
     {{ to_user_selected_timezone('requested_datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

@@ -41,11 +41,14 @@ where
         when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
     end
-    -- BL-014: the triage category is selectable
-    and case
-        when {{ parameter('triageScore') }} is null then true
-        else score = {{ parameter('triageScore') }}
-    end
+    -- BL-014 (see specs/reports/emergency-triage-line-list.md): the triage category is a multi-select.
+    -- Nothing selected means every category. The form sends an empty selection as [], which expands
+    -- to nothing, so the list goes through an array constructor: array[]::text[] is valid where
+    -- coalesce() and in () are not.
+    and (
+        cardinality(array_remove(array[{{ parameter('triageScore') }}]::text[], null)) = 0
+        or score::text = any(array[{{ parameter('triageScore') }}]::text[])
+    )
     -- BL-012: the date range filters on the date of triage, inclusive of both bounds
     and {{ to_user_selected_timezone('triage_datetime') }}::date
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
