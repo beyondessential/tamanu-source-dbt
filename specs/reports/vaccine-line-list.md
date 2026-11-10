@@ -41,12 +41,9 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With one village selected only rows for that village are returned, in both variants | BL-001 | `test_vaccine_line_list_village_one_selected`, `test_vaccine_line_list_sensitive_village_one_selected` |
-| AC-002 | The compiled SQL binds the filter through an array constructor | BL-002 | Inspect `dbt compile` output. Unit tests bind a single value, so a selection of several values is not exercised |
-
-## Risks
-
-- A selection of several values reaches SQL as a list that unit tests cannot set. The array expression is the same one used by `medication-administration-record-line-list`.
+| AC-001 | With one or several villages selected only rows for those villages are returned, in both variants | BL-001 | `test_vaccine_line_list_village_one_selected`, `test_vaccine_line_list_village_two_selected`, `test_vaccine_line_list_sensitive_village_one_selected`, `test_vaccine_line_list_sensitive_village_two` |
+| AC-003 | With an empty selection every row is returned | BL-001, BL-002 | `test_vaccine_line_list_village_empty_list` |
+| AC-002 | The compiled SQL binds the filter through an array constructor | BL-002 | Inspect `dbt compile` output |
 
 ## Change log
 

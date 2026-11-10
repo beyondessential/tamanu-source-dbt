@@ -76,3 +76,159 @@ unit_tests:
       rows: |
         Patient ID
         P002
+
+  - name: test_encounter_invoice_audit_billing_type_two
+    model: audit-encounter-invoice
+    description: >
+      Two billing types selected return the encounters for both.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+        language: default
+        patientBillingTypeId: [bt_a, bt_b]
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          -- billing type bt_a: filtered out
+          select 'enc_sen' as id, '2024-01-18 09:00:00'::timestamp as start_datetime, '2024-01-18 17:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, 'bt_a'::text as patient_billing_type_id, 'clinic' as encounter_type, null::text as reason_for_encounter, null::text as planned_location_id, null::timestamp as planned_location_start_datetime
+          union all
+          -- billing type bt_b: the only row returned
+          select 'enc_b', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, 'bt_b', 'clinic', null::text, null::text, null::timestamp
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+          union all
+          select 'loc_002', 'fac_002'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
+          union all
+          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Medicine' as name
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('ds__encounter_invoices')
+        format: sql
+        rows: |
+          select
+            null::text as invoice_id, null::text as encounter_id, null::text as status,
+            null::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime,
+            null::numeric as invoice_total, null::numeric as item_adjustment, null::numeric as insurance_coverage,
+            null::numeric as invoice_discount, null::numeric as patient_payment,
+            null::numeric as patient_subtotal, null::text as products_no_category
+          where false
+
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+
+  - name: test_encounter_invoice_audit_billing_type_empty
+    model: audit-encounter-invoice
+    description: >
+      An empty selection returns every encounter in scope.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+        date_format: 'YYYY-MM-DD'
+        time_format: 'HH24:MI'
+        datetime_format: 'YYYY-MM-DD HH24:MI:SS'
+        datetime_without_seconds_format: 'YYYY-MM-DD HH24:MI'
+        yearmonth_format: 'YYYY-MM'
+        language: default
+        patientBillingTypeId: []
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          -- billing type bt_a: filtered out
+          select 'enc_sen' as id, '2024-01-18 09:00:00'::timestamp as start_datetime, '2024-01-18 17:00:00'::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_001' as location_id, 'dept_001' as department_id, null::text as clinician_id, 'bt_a'::text as patient_billing_type_id, 'clinic' as encounter_type, null::text as reason_for_encounter, null::text as planned_location_id, null::timestamp as planned_location_start_datetime
+          union all
+          -- billing type bt_b: the only row returned
+          select 'enc_b', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, 'bt_b', 'clinic', null::text, null::text, null::timestamp
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'fac_001' as facility_id
+          union all
+          select 'loc_002', 'fac_002'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
+          union all
+          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-01-01'::date as date_of_birth, 'male' as sex
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'Medicine' as name
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('ds__encounter_invoices')
+        format: sql
+        rows: |
+          select
+            null::text as invoice_id, null::text as encounter_id, null::text as status,
+            null::timestamp as invoice_datetime, null::timestamp as invoice_finalised_datetime,
+            null::numeric as invoice_total, null::numeric as item_adjustment, null::numeric as insurance_coverage,
+            null::numeric as invoice_discount, null::numeric as patient_payment,
+            null::numeric as patient_subtotal, null::text as products_no_category
+          where false
+
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

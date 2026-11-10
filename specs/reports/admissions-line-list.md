@@ -44,12 +44,13 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With one billing type selected only rows with that billing type are returned, in both variants | BL-001 | `test_admissions_line_list_billing_type_one_selected`, `test_admissions_line_list_sensitive_billing_type_one` |
-| AC-002 | The compiled SQL binds both filters through an array constructor | BL-003 | Inspect `dbt compile` output. Unit tests bind a single value, so a selection of several values is not exercised |
+| AC-001 | With one or several billing types selected only rows with those billing types are returned, in both variants | BL-001 | `test_admissions_line_list_billing_type_one_selected`, `test_admissions_line_list_billing_type_two_selected`, `test_admissions_line_list_sensitive_billing_type_one`, `test_admissions_line_list_sensitive_billing_type_two` |
+| AC-003 | With an empty selection every row is returned | BL-001, BL-003 | `test_admissions_line_list_billing_type_empty_list` |
+| AC-002 | The compiled SQL binds both filters through an array constructor | BL-003 | Inspect `dbt compile` output |
 
 ## Risks
 
-- A selection of several values reaches SQL as a list that unit tests cannot set. The array expression is the same one used by `medication-administration-record-line-list`.
+- No test selects an admission status. The same expression is tested on the billing type filter.
 
 ## Change log
 

@@ -119,7 +119,7 @@ One row per encounter that matches the parameter filters. An encounter without a
 | AC-013 | An encounter whose every non-cancelled invoice has no items reads 0 — not null — for `invoiceTotal`, `invoiceItemAdjustments`, `invoicePatientSubtotal` and `invoicePatientTotal`. | BL-013, BL-014, BL-018 |
 
 Tests: there is no `.yml` for this report (report layer is exempt from generic-test files per `dbt-conventions.md` § Documentation). ACs above are validated by manual run + spot-check against the Tamanu UI.
-| AC-014 | With one patient billing type selected only the encounters with that billing type are returned. | BL-004 | `test_encounter_invoice_audit_billing_type_one` |
+| AC-014 | With one or several patient billing types selected only the encounters with those billing types are returned, and with none selected every encounter in scope is returned. | BL-004 | `test_encounter_invoice_audit_billing_type_one`, `test_encounter_invoice_audit_billing_type_two`, `test_encounter_invoice_audit_billing_type_empty` |
 
 ## Open questions
 

@@ -3,7 +3,13 @@
         :{{ parameter_name }}
     {%- else -%}
         {%- set param_value = var(parameter_name, default_value) -%}
-        {%- if data_type is none -%}
+        {%- if param_value is defined and param_value is iterable and param_value is not string -%}
+            {#- A list var stands for a multi-select: each value renders as a literal, comma separated,
+                the way Tamanu expands a selection, and an empty list renders nothing. -#}
+            {%- for value in param_value -%}
+                '{{ value }}'{% if data_type is not none %}::{{ data_type }}{% endif %}{{ ', ' if not loop.last }}
+            {%- endfor -%}
+        {%- elif data_type is none -%}
             nullif('{{ param_value }}', '')
         {%- else -%}
             nullif('{{ param_value }}', '')::{{ data_type }}

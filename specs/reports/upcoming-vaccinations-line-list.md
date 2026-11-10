@@ -42,11 +42,11 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | The compiled SQL binds the village filter through an array constructor | BL-002 | Inspect `dbt compile` output. Unit tests bind a single value, so a selection of several values is not exercised |
+| AC-001 | The compiled SQL binds the village filter through an array constructor | BL-002 | Inspect `dbt compile` output |
 
 ## Risks
 
-- A selection of several values reaches SQL as a list that unit tests cannot set. The array expression is the same one used by `medication-administration-record-line-list`.
+- No test selects a village for this report. The same expression is tested on `vaccine-line-list`.
 
 ## Change log
 
