@@ -67,3 +67,72 @@ unit_tests:
       rows: |
         Patient ID
         P002
+
+  - name: test_vaccine_audit_line_list_status_two_selected
+    model: vaccine-audit-line-list
+    description: Two values selected return the rows with either value and no others.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        status: [Recorded in error, Historical]
+    given:
+      - input: ref('ds__vaccinations')
+        format: sql
+        rows: |
+          select 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Recorded in error'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Historical'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Given'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+
+  - name: test_vaccine_audit_line_list_status_empty_list
+    model: vaccine-audit-line-list
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        status: []
+    given:
+      - input: ref('ds__vaccinations')
+        format: sql
+        rows: |
+          select 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Recorded in error'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Historical'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Given'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+
+  - name: test_vaccine_audit_line_list_status_sensitive_two
+    model: sensitive-vaccine-audit-line-list
+    description: The sensitive variant returns the rows with either selected value.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        status: [Recorded in error, Historical]
+    given:
+      - input: ref('ds__sensitive_vaccinations')
+        format: sql
+        rows: |
+          select 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Recorded in error'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Historical'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+          union all
+          select 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, 'x_patient_id'::text as patient_id, '1990-01-01'::date as date_of_birth, 'x_age'::text as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'fac_001'::text as facility_id, 'x_facility'::text as facility, 'x_department_id'::text as department_id, 'x_department'::text as department, 'x_location_group_id'::text as location_group_id, 'x_location_group'::text as location_group, 'x_location_id'::text as location_id, 'x_location'::text as location, 'x_scheduled_vaccine_id'::text as scheduled_vaccine_id, '2024-01-15 10:00:00'::timestamp as vaccination_date, 'x_vaccine_category'::text as vaccine_category, 'x_vaccine_name'::text as vaccine_name, 'x_vaccine_brand'::text as vaccine_brand, 'x_disease'::text as disease, 'Given'::text as vaccine_status, 'x_vaccine_schedule'::text as vaccine_schedule, 'x_batch'::text as batch, 'x_recorded_by'::text as recorded_by, 'x_circumstances'::text as circumstances, 'x_given_by'::text as given_by, 'x_given_elsewhere_by'::text as given_elsewhere_by, 'x_not_given_clinician'::text as not_given_clinician, 'x_not_given_reason'::text as not_given_reason, 'x_modified_by'::text as modified_by, '2024-01-15 10:00:00'::timestamp as updated_at
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

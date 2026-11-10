@@ -74,3 +74,66 @@ unit_tests:
           union all
           select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
     expect: *discharge_paracetamol_only
+
+  - name: test_encounter_prescription_discharge_summary_two_selected
+    model: encounter-prescription-discharge-summary
+    description: Two values selected return the rows for both.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given:
+      - input: ref('ds__encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 10 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_encounter_prescription_discharge_summary_empty_list
+    model: encounter-prescription-discharge-summary
+    description: An empty selection, which is what the form sends when nothing is picked, returns every row.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: []
+    given:
+      - input: ref('ds__encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 10 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20
+
+  - name: test_enc_rx_discharge_summary_sensitive_two
+    model: sensitive-encounter-prescription-discharge-summary
+    description: The sensitive variant returns the rows for both selected values.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: [med_001, med_002]
+    given:
+      - input: ref('ds__sensitive_encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
+          union all
+          select 'rx_003', 'fac_001', 'med_002', 'Paracetamol', 'PCM', 20, true, '2024-01-10 09:00:00'::timestamp
+    expect:
+      format: sql
+      rows: |
+        select 'Amoxicillin' as "Medication", 'AMX' as "Code", 10 as "Quantity"
+        union all
+        select 'Paracetamol', 'PCM', 20

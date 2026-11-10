@@ -39,13 +39,9 @@ plus the date range.
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
-| AC-001 | With nothing selected every row in scope is returned | BL-001, BL-002 | `test_lab_tests_line_list_status_none` |
-| AC-002 | With one value selected only rows with that value are returned, in both variants | BL-001 | `test_lab_tests_line_list_status_one`, `test_lab_tests_line_list_status_sensitive_one` |
-| AC-003 | The compiled SQL binds the filter through an array constructor | BL-002 | Inspect `dbt compile` output. Unit tests bind a single value, so a selection of several values is not exercised |
-
-## Risks
-
-- A selection of several values reaches SQL as a list that unit tests cannot set. The array expression is the same one used by `medication-administration-record-line-list`.
+| AC-001 | With nothing selected every row in scope is returned | BL-001, BL-002 | `test_lab_tests_line_list_status_none`, `test_lab_tests_line_list_status_empty_list` |
+| AC-002 | With one or two values selected only rows with those values are returned, in both variants | BL-001 | `test_lab_tests_line_list_status_one`, `test_lab_tests_line_list_status_two_selected`, `test_lab_tests_line_list_status_sensitive_one`, `test_lab_tests_line_list_status_sensitive_two` |
+| AC-003 | The compiled SQL binds the filter through an array constructor | BL-002 | Inspect `dbt compile` output|
 
 ## Change log
 

@@ -65,9 +65,13 @@ where
     and case when {{ parameter('departmentId') }} is null then true
         else department_id = {{ parameter('departmentId') }}
     end
-    and case when coalesce({{ parameter('encounterType') }}) is null then true
-        else encounter_type in ({{ parameter('encounterType') }})
-    end
+    -- BL-015 (see specs/reports/audit-discharge-line-list.md): multi-select. Nothing selected means every encounter type.
+    -- The form sends an empty selection as [], which expands to nothing, so the list goes
+    -- through an array constructor: array[]::text[] is valid where coalesce() and in () are not.
+    and (
+        cardinality(array_remove(array[{{ parameter('encounterType') }}]::text[], null)) = 0
+        or encounter_type::text = any(array[{{ parameter('encounterType') }}]::text[])
+    )
     and case when {{ parameter('dischargeType') }} is null then true
         when {{ parameter('dischargeType') }} = 'automatic' then is_auto_discharge
         else not is_auto_discharge

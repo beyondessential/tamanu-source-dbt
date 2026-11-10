@@ -50,10 +50,11 @@
         ]
       },
       {
-        "parameterField": "ParameterAutocompleteField",
+        "parameterField": "ParameterSuggesterSelectField",
         "label": "Village",
         "name": "villageId",
-        "suggesterEndpoint": "village"
+        "suggesterEndpoint": "village",
+        "isMulti": true
       },
       {
         "parameterField": "ParameterSelectField",
