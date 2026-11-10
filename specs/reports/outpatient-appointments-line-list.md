@@ -129,12 +129,8 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   exact — except BL-043, which is deliberately loose and paired with the exact bound it
   widens.
 
-  `appointmentStatus` keeps its `coalesce()` wrapper. It is the one multi-value parameter
-  here, and Tamanu binds it as an array that Sequelize expands to a comma-separated literal
-  list, so `:appointmentStatus is null` would compile to `'Confirmed','Arrived' is null` —
-  a syntax error the moment a second status is selected. The house form across
-  `admissions_line_list`, `audit_discharge_line_list` and `task_followup_register` exists
-  for exactly this, and the wrapper is not decorative.
+  `appointmentStatus` is a multi-select. Nothing selected returns every status, and the selection goes
+  through an array constructor, which stays valid when the form's empty selection expands to nothing.
 - **BL-043:** The date range is expressed twice. The exact predicate (BL-041) wraps the
   column in `to_user_selected_timezone()`, so no index on `appointments.start_time` is
   usable; a second pair of bounds compares the bare column against `(:bound)::date` widened

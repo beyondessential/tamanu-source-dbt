@@ -54,14 +54,14 @@
         when {{ parameter('locationGroupId') }} is null then true
         else lg.id = {{ parameter('locationGroupId') }}
     end
-    -- appointmentStatus is a ParameterMultiselectField, so Tamanu binds it as an array and
-    -- Sequelize expands it to a comma-separated literal list. The coalesce() is load-bearing:
-    -- without it a two-status selection compiles to `'Confirmed','Arrived' is null`, which is
-    -- a syntax error. Same form as admissions_line_list and task_followup_register.
-    and case
-        when coalesce({{ parameter('appointmentStatus') }}) is null then true
-        else a.status in ({{ parameter('appointmentStatus') }})
-    end
+    -- Multi-select. Nothing selected means every status. The form sends an empty selection as [],
+    -- which expands to nothing, so the list goes through an array constructor: array[]::text[]
+    -- is valid where coalesce() and in () are not. Keep the array form: a scalar comparison
+    -- fails once several statuses expand to 'a','b'.
+    and (
+        cardinality(array_remove(array[{{ parameter('appointmentStatus') }}]::text[], null)) = 0
+        or a.status::text = any(array[{{ parameter('appointmentStatus') }}]::text[])
+    )
     and case
         when {{ parameter('clinicianId') }} is null then true
         else a.clinician_id = {{ parameter('clinicianId') }}

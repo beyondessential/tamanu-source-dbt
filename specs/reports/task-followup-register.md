@@ -167,6 +167,8 @@ task assigned to no designation.
   `public.tasks` and `public.task_designations`.
 - **BL-015:** Leaving `encounterType` unset returns tasks on every encounter type.
 - **BL-016:** A diagnosis with no `is_primary` value is reported as secondary.
+- **BL-017:** The task status filter is a multi-select that returns a row when its register outcome is any of the selected values, and every row when none is selected. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor.
+
 
 ## Acceptance criteria
 
@@ -239,3 +241,4 @@ than `completed`, or only a task left at `todo`; BL-005 renders both, as `Not co
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-06 | Maui team | Implemented (MAUI-6852) as a standard report on the `2.54` branch, so deployments pinned to 2.54 pick it up on a package bump rather than carrying their own copy. Dataset and report bodies are single macros parametrised by `is_sensitive`, giving the standard and sensitive-facility variants from one definition. Follow-up appointment matching excludes the appointment the encounter was created from, which otherwise reported an open clinic encounter's own booking as its follow-up. The designation join is a left join so a task whose only designation has no resolvable reference data row stays in the register under its raw ID instead of disappearing. Scoped by designation rather than fixed to physiotherapy, per the requester's comment on the issue, which makes the register reusable by every discipline that receives tasks. Encounter type is a parameter rather than a hardcoded `admission` filter: Tamanu gates the tasking pane on a setting and a permission but not on encounter type, so a task raised during an emergency or clinic encounter is as real as one raised on the ward, and hardcoding the filter would have silently hidden exactly the missed tasks the register exists to surface. Grain is one row per task rather than the one representative task per admission the supplied template assumed, for the same reason: collapsing an encounter's tasks to one would hide the missed ones. The template's second inclusion path — an encounter with a note from the discipline but no task — is not implemented, since a task-monitoring register has nothing to report on such an encounter. "Physio notes written?" is derived from note authorship against `user_designations`, which the template treated as underivable. `Missed` is bound to Tamanu's own overdue reason ID rather than to elapsed time, so the register never disagrees with what Tamanu recorded. |
+| 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): added BL-017. |
