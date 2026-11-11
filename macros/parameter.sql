@@ -28,7 +28,10 @@
         scalar comparison fails once several values expand to 'a','b'.
 
         Declare the parameter as a multi-select in the report config; see
-        documentations/tamanu-report-configuration-schema.md. -#}
+        documentations/tamanu-report-configuration-schema.md.
+
+        scripts/tests/test_report_parameters.py finds the parameters a report reads by pattern.
+        A macro that takes a parameter name as an argument needs a pattern there. -#}
     {%- set selection = parameter(parameter_name) | trim -%}
     (cardinality(array_remove(array[{{ selection }}]::text[], null)) = 0 or {{ text_expression }} = any(array[{{ selection }}]::text[]))
 {%- endmacro %}
