@@ -32,6 +32,8 @@ where trim(t.d) not in (
         'triage_score',
         -- ed_visit's arrival hour
         'ed_start__hour',
+        -- opd_visit's visit start hour, the same 0-23 convention as ed_start__hour
+        'visit_start__hour',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition',
         -- inpatient_admission's ward (department) the patient was admitted to
