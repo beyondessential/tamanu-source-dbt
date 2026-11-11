@@ -1,0 +1,35 @@
+unit_tests:
+  - name: test_metric__who_dak_hiv_indicators_art9_toxicity
+    model: metric__who_dak_hiv_indicators
+    description: >
+      BL-023, ART.9. Annex C counts a regimen substitution on *any* line whose date falls in
+      the reporting period, so a client substituted on first line in January and on third line
+      in June is counted in both months -- collapsing the three dates into one would lose the
+      later substitution entirely. A treatment stop for toxicity counts in the month it is
+      dated.
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'resp_multi' as response_id, 'pat_multi' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-06-30 09:00:00'::timestamp as submitted_datetime, 'male' as sex, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::text as art_stopped_reason, '["Toxicity/side effects"]' as regimen_substitution_reason, null::text as key_population_hts_json, null::text as key_population_pmtct_json, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, null::date as art_start_date, null::date as baseline_cd4_test_date, null::date as viral_load_sample_date, null::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, null::date as art_stopped_date, '2026-01-15'::date as substitution_first_line_date, null::date as substitution_second_line_date, '2026-06-20'::date as substitution_third_line_date, null::numeric as baseline_cd4_count, null::numeric as viral_load_result, true as on_art, null::boolean as dsd_eligible, null::boolean as dsd_enrolled
+          union all
+          select 'resp_stopped', 'pat_stopped', 'fac_001', 'carevisit', '2026-06-10 09:00:00'::timestamp, 'female', 1985, 1, 1, null::text, null::text, null::text, '["Toxicity/side effects"]', null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, '2026-06-05'::date, null::date, null::date, null::date, null::numeric, null::numeric, true, null::boolean, null::boolean
+
+      - input: ref('int__who_dak_hiv_client_month_state')
+        format: sql
+        rows: |
+          select null::date as month_start, null::date as month_end, null::text as patient_id, null::text as facility_id, null::boolean as on_art, null::boolean as on_art_recorded, null::date as art_stopped_date, null::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, null::int as months_on_art, null::int as months_on_dsd, null::text as sex, null::int as age_years where false
+
+      - input: ref('int__who_dak_hiv_key_populations')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as key_population where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'who_dak_hiv_art_toxicity' as metric_id, null::text as variant_id, 'pat_multi' as subject_id, 'patient' as subject_grain, '2026-01-01'::date as period_start, '2026-01-31'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'male' as sex, 41 as age_years, null::int as months_on_dsd, null::text as key_population
+        union all
+        select 'who_dak_hiv_art_toxicity', null::text, 'pat_multi', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'male', 41, null::int, null::text
+        union all
+        select 'who_dak_hiv_art_toxicity', null::text, 'pat_stopped', 'patient', '2026-06-01'::date, '2026-06-30'::date, 'month', 1::numeric, null::boolean, 'fac_001', 'female', 41, null::int, null::text

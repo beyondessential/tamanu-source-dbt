@@ -10,6 +10,8 @@ with filtered_changes as (
 select
     fc.changelog_id,
     fc.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    fc.logged_at at time zone 'UTC' as logged_at_utc,
     fc.updated_by_user_id,
     fc.record_id as id,
     (fc.record_data ->> 'date')::timestamp as datetime,
@@ -23,5 +25,6 @@ select
     fc.record_data ->> 'village_id' as village_id,
     fc.record_data ->> 'deactivated_clinician_id' as deactivated_by_id,
     (fc.record_data ->> 'deactivated_date')::timestamp as deactivated_datetime,
-    fc.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at
+    fc.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
+    fc.record_updated_at at time zone 'UTC' as record_updated_at_utc
 from filtered_changes fc
