@@ -17,7 +17,8 @@ name: Checks
 # reachable database but queries no tables, and the unit tests mock every input, so none
 # of it needs Tamanu data -- no secrets, no live database, no access to a deployment. Data
 # tests are deliberately not run here: they assert over real rows and need a live database
-# with credentials (#427).
+# with credentials (#427). The same job then creates every model as a view against an empty
+# copy of the Tamanu schema, which catches syntax a unit test does not reach.
 #
 # These steps mirror `make check` (the .maui submodule is private, so CI cannot run it).
 # Keep the two in step.
@@ -159,3 +160,18 @@ jobs:
 
       - name: Run dbt unit tests
         run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
+
+      # BL-003: create every model as a view on the lowest supported Postgres, against an empty
+      # copy of the Tamanu schema (specs/testing/model-postgres-compatibility.md). A model using
+      # a function or syntax newer than Postgres 12 fails here even when it has no unit test.
+      - name: Create an empty copy of the Tamanu schema
+        env:
+          PGPASSWORD: postgres
+        run: |
+          python scripts/generate_source_schema.py > source_schema.sql
+          psql -h localhost -U postgres -d tamanu_source_dbt_ci -v ON_ERROR_STOP=1 -q -f source_schema.sql
+
+      - name: Seed and create every model
+        run: |
+          dbt seed --profiles-dir config --target reporting_release
+          dbt run --profiles-dir config --target reporting_release
