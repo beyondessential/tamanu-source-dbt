@@ -1,7 +1,7 @@
 -- metric__birth -- D5 metric view for the four maternity/newborn indicators registered in
 -- documentations/metrics/maternity.yml: birth, low_birth_weight, preterm_birth,
 -- low_apgar_5min (MAUI-6838).
--- Spec: specs/dbt-model/metric__birth.md (BL-001..BL-015).
+-- Spec: specs/dbt-model/metric__birth.md (BL-001..BL-017).
 -- See specs/dbt-model/metric__birth.md for the BL clauses this model implements.
 --
 -- Per-birth (subject) grain: one row per registered live birth, per metric_id, value_numeric
@@ -28,6 +28,50 @@ patients as (
 
 person as (
     select * from {{ ref('clinical__person') }}
+),
+
+patient_additional_data as (
+    select * from {{ ref('patient_additional_data') }}
+),
+
+patient_conditions as (
+    select * from {{ ref('patient_conditions') }}
+),
+
+reference_data as (
+    select * from {{ ref('reference_data') }}
+),
+
+-- BL-017: patients with a recorded condition coded as diabetes -- ICD-10 E10-E14 (diabetes
+-- mellitus) or O24 (diabetes in pregnancy). Matched on the code's first three characters,
+-- upper-cased, the way diagnosis__icd10_chapter matches, so no deployment's list of condition
+-- ids has to be kept here. Any recorded condition counts, resolved or not: the legacy
+-- definition this replaces did not look at resolution either. bases/patient_conditions
+-- already drops deleted rows. `distinct` holds it to one row per patient, so the join below
+-- cannot fan a birth out where the mother has several such conditions.
+diabetic_patients as (
+    select distinct pc.patient_id
+    from patient_conditions pc
+    join reference_data rd
+        on rd.id = pc.condition_id
+    where left(upper(rd.code), 3) between 'E10' and 'E14'
+        or left(upper(rd.code), 3) = 'O24'
+),
+
+-- BL-016: the newborn's mother, through patient_additional_data.mother_id, resolved against
+-- bases/patients so a deleted or merged mother record counts as no mother. Only her date of
+-- birth and diabetes flag leave this CTE -- her id is used to join and then dropped, so no
+-- row of this model carries an identifier of the mother.
+mothers as (
+    select
+        pad.patient_id as newborn_id,
+        m.date_of_birth as mother_date_of_birth,
+        dp.patient_id is not null as is_diabetic
+    from patient_additional_data pad
+    join patients m
+        on m.id = pad.mother_id
+    left join diabetic_patients dp
+        on dp.patient_id = m.id
 ),
 
 -- BL-002: inner join to patients drops soft-deleted, merged and test patients.
@@ -62,10 +106,20 @@ births as (
         pbd.birth_type,
         pbd.birth_weight,
         pbd.gestational_age_estimate,
-        pbd.apgar_score_five_minutes
+        pbd.apgar_score_five_minutes,
+        -- BL-016: the mother's age in whole years on the newborn's date of birth. NULL where
+        -- no mother is linked, or either date of birth is missing.
+        extract(year from age(p.date_of_birth, mo.mother_date_of_birth))::int as mother_age_years,
+        -- BL-017: false, not NULL, where no mother is linked -- the same array-filter reason
+        -- as BL-009.
+        coalesce(mo.is_diabetic, false) as is_mother_diabetic
     from patient_birth_data pbd
     join patients p on p.id = pbd.patient_id
     join person per on per.person_id = pbd.patient_id
+    -- BL-016: left join -- a birth with no linked mother still counts. One
+    -- patient_additional_data row per patient, the same assumption clinical__person's own join
+    -- makes, so this cannot fan out (AC-001 is the backstop).
+    left join mothers mo on mo.newborn_id = pbd.patient_id
 ),
 
 -- D5 wide format: one row per (metric_id, subject_id). birth is every row; the three
@@ -139,5 +193,10 @@ select
     -- BL-015: the newborn's home village as a Tamanu id, untranslated like facility_id and
     -- deliberately not coalesced -- NULL means the record carries no village, the same rule as
     -- metric__immunisation_dose's patient_location_id, so the two join to one village list.
-    patient_location_id
+    patient_location_id,
+    -- BL-016: a measure, not a dimension -- banding (e.g. age_group__aihw_maternal_age) is the
+    -- consumer's.
+    mother_age_years,
+    -- BL-017
+    is_mother_diabetic
 from metric_rows
