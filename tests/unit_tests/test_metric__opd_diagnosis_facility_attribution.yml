@@ -5,7 +5,8 @@ unit_tests:
       BL-004. The encounter has two qualifying outpatient segments at different
       facilities (clinic at loc6a, an inpatient stay in between, then clinic again at
       loc6b). c6's window (dated the day the encounter opens) overlaps both -- the
-      earliest-starting one wins the facility attribution, not the later one.
+      earliest-starting one wins the facility attribution, not the later one. BL-009: the
+      location group is resolved from that same segment's location.
     given:
       - input: ref('clinical__condition_occurrence')
         format: sql
@@ -34,17 +35,26 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc6a' as id, 'L6A' as code, 'Location 6A' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac6a' as facility_id, 'current' as visibility_status
+          select 'loc6a' as id, 'L6A' as code, 'Location 6A' as name, null::int as max_occupancy, 'lg_6a'::varchar as location_group_id, 'fac6a' as facility_id, 'current' as visibility_status
           union all
           select 'loc6mid', 'L6M', 'Location 6 mid', null::int, null::varchar, 'fac6mid', 'current'
           union all
-          select 'loc6b', 'L6B', 'Location 6B', null::int, null::varchar, 'fac6b', 'current'
+          select 'loc6b', 'L6B', 'Location 6B', null::int, 'lg_6b'::varchar, 'fac6b', 'current'
 
       - input: ref('departments')
         format: sql
         rows: "select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id, null::varchar as visibility_status limit 0"
 
+      # BL-009: the earliest qualifying segment's location (loc6a) is in lg_6a; loc6b is in
+      # another group, which must not win.
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_6a' as id, 'Outpatients - General AM' as name
+          union all
+          select 'lg_6b', 'Outpatients - MCU/Visa'
+
     expect:
       format: sql
       rows: |
-        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c6' as subject_id, '2026-01-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac6a' as facility_id, 'female' as sex, 'A06' as diagnosis_code, 'Two segment diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years, 'Not recorded' as department
+        select 'opd_diagnosis' as metric_id, null::text as variant_id, 'c6' as subject_id, '2026-01-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac6a' as facility_id, 'female' as sex, 'A06' as diagnosis_code, 'Two segment diagnosis' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 30 as age_years, 'Not recorded' as department, 'Outpatients - General AM' as location_group_name

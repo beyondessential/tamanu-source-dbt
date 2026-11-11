@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.60`) |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
 | **Created** | 2026-08-26 |
-| **Last updated** | 2026-10-20 |
+| **Last updated** | 2026-11-11 |
 
 Canonical definition for `birth`, `low_birth_weight`, `preterm_birth` and `low_apgar_5min`: one
 row per live birth registered in Tamanu, at the newborn's `patient_id`.
@@ -82,7 +82,7 @@ uniqueness holds without a fan-out guard; AC-001 is the backstop if that assumpt
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and four measure attributes.
+D5 wide format, plus eight disaggregation columns and five measure attributes.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -104,6 +104,8 @@ D5 wide format, plus seven disaggregation columns and four measure attributes.
 | `gestational_age_estimate` | numeric | Completed weeks as recorded. A measure, not a dimension (BL-014) |
 | `apgar_score_five_minutes` | integer | As recorded. A measure, not a dimension (BL-014) |
 | `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu id into `ref__location` (BL-015). Nullable — not coalesced |
+| `mother_age_years` | integer | The linked mother's age in whole years on the newborn's date of birth (BL-016). A measure, not a dimension. NULL where no mother is linked or a date of birth is missing |
+| `is_mother_diabetic` | boolean | The linked mother has a recorded condition coded ICD-10 E10–E14 or O24 (BL-017). Never NULL — `false` where no mother is linked (AC-016) |
 
 ## Data tables
 
@@ -213,6 +215,36 @@ carries no `data_table_*` meta.
   carries no village — the same column, rule and village list as
   `metric__immunisation_dose`'s `patient_location_id`, so births and birth doses can be read by
   village side by side.
+- **BL-016 (mother's age):** `mother_age_years` is the mother's age in whole years on the
+  newborn's date of birth, `extract(year from age(newborn date_of_birth, mother date_of_birth))`.
+  The mother is the newborn's `patient_additional_data.mother_id`, resolved against
+  `bases/patients`, so a deleted or merged mother record counts as no mother. Left joined: a
+  birth with no linked mother keeps its row with `mother_age_years` NULL, as it is when either
+  date of birth is missing. It is measured on the newborn's date of birth, not `period_start`:
+  a birth dated by its registration date (BL-003) has NULL `mother_age_years`.
+  A measure, not a dimension, absent from the registry's disaggregations — banding it (for
+  example with `age_group__aihw_maternal_age`) is the consumer's, the same division of labour as
+  BL-014.
+
+  **Derive from the mother, never expose her.** The mother's id is used only to join and is
+  dropped inside the model: no column carries `mother_id`, her patient id or her date of birth,
+  only her age and the BL-017 flag — the same "derive from, don't expose" rule
+  `metric__inpatient_admission` BL-016 applies to `person_id`.
+
+  `patient_additional_data` is assumed to hold one row per patient, the same assumption
+  `clinical__person` makes when it joins it; AC-001 at `error` severity is the backstop if a
+  duplicate ever fans a birth out.
+- **BL-017 (mother's diabetes):** `is_mother_diabetic` is true where the linked mother (BL-016)
+  has a non-deleted `patient_conditions` row whose `condition_id` resolves through
+  `reference_data` to a code whose first three characters, upper-cased, are `E10`–`E14`
+  (diabetes mellitus) or `O24` (diabetes in pregnancy, childbirth and the puerperium) — the
+  same prefix matching `diagnosis__icd10_chapter` uses. Any recorded condition counts, resolved
+  or not and whenever recorded. The mother's diabetic conditions are collapsed to one row per
+  patient before the join, so several cannot fan a birth out.
+
+  A disaggregation, coalesced to `false`, never NULL (AC-016): `false` where she has no such
+  condition **and** where no mother is linked, the BL-009 array-filter reasoning. A consumer
+  that must separate "not diabetic" from "no mother linked" reads `mother_age_years`.
 
 ## Acceptance criteria
 
@@ -233,6 +265,8 @@ carries no `data_table_*` meta.
 | AC-013 | Subset membership matches the source predicate over the included population, both directions: every qualifying `birth` has its subset row, and every subset row has a `birth` row whose source measure meets the threshold | BL-002, BL-005–BL-007, grain | singular test |
 | AC-014 | The D5 projection resolves as specified: both `period_start` fallbacks, `birth_time` ignored at day granularity, each threshold's boundary excluded, a NULL measure emitting no subset row, a facility-less birth keeping its row, a facility absent from `bases/facilities` keeping its id, and unrecorded disaggregations reading `'Not recorded'`, and `patient_location_id` passing through including NULL | BL-003, BL-005–BL-007, BL-009, BL-010, BL-013, BL-015 | unit test `ac_014_metric__birth_projection` |
 | AC-015 | `birth_delivery_type`, `attendant_at_birth`, `registered_birth_place` and `birth_type` are each `not_null` | BL-009 | `not_null` × 4 |
+| AC-016 | `is_mother_diabetic` is `not_null` | BL-017 | `not_null` |
+| AC-017 | The mother columns resolve as specified: the mother's age is taken on the newborn's date of birth; an E11 and a lower-case `o24` condition both mark her diabetic, an E15 (outside E10–E14) does not; a resolved diabetic condition still counts; two diabetic conditions do not fan the birth out; no linked mother, and a mother absent from `bases/patients`, give NULL age and `false`; no mother identifier is emitted | BL-016, BL-017 | unit test `ac_017_metric__birth_mother` |
 
 AC-010 through AC-012 assert the thresholds against whatever rows a deployment holds; AC-014
 asserts them against controlled rows at each boundary, since no deployment database guarantees a
@@ -251,7 +285,7 @@ Four active rows in `documentations/metrics/maternity.yml` — `birth`, `low_bir
 `preterm_birth`, `low_apgar_5min` — each `kind: metric`, `subject_grain: patient`, `status:
 approved`, `spec_path` pointing here, `variant_of: null`.
 `disaggregations: facility_id,sex,birth_delivery_type,attendant_at_birth,registered_birth_place,
-birth_type,patient_location_id` on every row (identical across the four, since they share a base).
+birth_type,patient_location_id,is_mother_diabetic` on every row (identical across the four, since they share a base).
 
 Every disaggregation must be added to the allowlist in
 `tests/data_tests/source/assert__metric_definitions__disaggregations.sql`.
@@ -261,8 +295,10 @@ Every disaggregation must be added to the allowlist in
 | Ref | Layer | Role |
 |---|---|---|
 | `patient_birth_data` | `bases/` | Birth record: delivery type, attendant, place, weight, gestational age, Apgar (BL-002–BL-010) |
-| `patients` | `bases/` | Inclusion filter and date of birth for the reporting-period fallback (BL-002, BL-003) |
+| `patients` | `bases/` | Inclusion filter and date of birth for the reporting-period fallback (BL-002, BL-003); the mother's date of birth (BL-016) |
 | `clinical__person` | `clinical/` | Sex (BL-004), village (BL-015) |
+| `patient_additional_data` | `bases/` | The newborn's `mother_id` (BL-016) |
+| `patient_conditions`, `reference_data` | `bases/` | The mother's recorded conditions and their ICD-10 codes (BL-017) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
@@ -286,12 +322,6 @@ Every disaggregation must be added to the allowlist in
    from a "by place" split unless the consumer labels the NULL bucket explicitly.
 5. **Respect `classification: restricted`.** Per BL-012.
 
-## Open questions
-
-| ID | Question | Owner | Due |
-|---|---|---|---|
-| OQ-001 | Whether a "deliveries by maternal age" disaggregation is in scope for a later revision. This branch line carries `age_group__aihw_maternal_age`, so the banding is available; what is missing is the link to the mother — `patient_birth_data` is keyed on the newborn and reaches her only through nullable `patient_additional_data.mother_id`. Resolving that join is the prerequisite, not the macro | @maui-team | unscheduled |
-
 ## Related
 
 | Artefact | Relationship |
@@ -300,9 +330,10 @@ Every disaggregation must be added to the allowlist in
 | `metric__antenatal_booking` | Antenatal booking definition — no shared base, different subject grain, implemented per deployment |
 | `int__patient_birth_measurements` | Same base (`patient_birth_data`), projects the OMOP MEASUREMENT domain instead of the D5 metric shape |
 | `ds__births` | Report-layer birth line list at the same grain, with PII (mother/father, village) |
-| `age_group__aihw_maternal_age`, `diagnosis__icd10_obstetric_block` | Maternity macros carried on this branch line. Neither is called by this model; both are available to a consumer's data table — to band maternal age once the mother link is resolved (OQ-001), or to group obstetric diagnoses |
+| `age_group__aihw_maternal_age`, `diagnosis__icd10_obstetric_block` | Maternity macros carried on this branch line. Neither is called by this model; both are available to a consumer's data table — to band `mother_age_years` (BL-016), or to group obstetric diagnoses |
 | MAUI-6838 | Tupaia maternity and newborn dashboard: standard metric and visuals |
 | MAUI-7034 | Adds `patient_location_id` (BL-015), for Tuvalu's live-births-vs-birth-doses card by village |
+| MAUI-7132 | Adds `mother_age_years` and `is_mother_diabetic` (BL-016, BL-017), for Naoero's (Nauru's) maternity dashboard, replacing `data-staging`'s `fct_births` |
 
 ## Change log
 
@@ -311,3 +342,4 @@ Every disaggregation must be added to the allowlist in
 | 2026-08-26 | Maui team | Initial draft |
 | 2026-08-30 | Maui team | BL-009: the four disaggregations coalesce to `'Not recorded'` (new AC-015) — a raw NULL was droppable by Tupaia's array filter. BL-010: `facility_id` carried as recorded rather than left-joined to `bases/facilities`, which turned a soft-deleted facility into an apparent home birth. BL-012: corrected the `pii: false` justification — the newborn's date of birth *is* emitted as `period_start`. AC-013 restated as a source-anchored, falsifiable check. Registry `subject_grain` corrected to `patient` |
 | 2026-10-20 | Maui team | BL-015: `patient_location_id`, the newborn's village, added as a disaggregation (MAUI-7034), matching `metric__immunisation_dose`'s. AC-014 extended to cover it |
+| 2026-11-11 | Maui team | BL-016/BL-017: `mother_age_years` (measure) and `is_mother_diabetic` (disaggregation), derived from the newborn's linked mother without emitting any identifier of hers (MAUI-7132). They replace `data-staging`'s `fct_births` mother columns, which exposed the mother's patient id and matched diabetes on a hard-coded list of condition ids; matching the ICD-10 code keeps the rule deployment-neutral. New AC-016, AC-017; OQ-001 (maternal age) closed by BL-016 |
