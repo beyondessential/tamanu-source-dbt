@@ -158,6 +158,9 @@ outpatient_visits as (
         coalesce(lg.name, 'Not recorded') as location_group_name,
         -- BL-016
         coalesce(referral.name, 'Not recorded') as referral_source,
+        -- BL-017: the local hour the intake segment started, 0-23 -- the same timestamp
+        -- period_start is the date of, so the time of day the date grain drops is kept
+        extract(hour from i.visit_detail_start_datetime)::int as visit_start__hour,
         -- BL-011: intake to the departure resolved above, falling back to the encounter
         -- end. NULL while the encounter is open and nothing has ended the episode.
         case
@@ -259,5 +262,7 @@ select
     -- BL-015
     location_group_name,
     -- BL-016
-    referral_source
+    referral_source,
+    -- BL-017
+    visit_start__hour
 from outpatient_visits

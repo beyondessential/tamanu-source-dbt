@@ -48,6 +48,7 @@ metrics:
   - department
   - location_group_name
   - referral_source
+  - visit_start__hour
   variant_of: null
   owner: bes-maui
   status: approved
