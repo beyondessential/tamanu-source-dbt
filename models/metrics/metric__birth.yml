@@ -185,3 +185,17 @@ models:
         description: "{{ doc('metric__birth__patient_location_id') }}"
         # BL-015: deliberately no not_null test -- NULL means the newborn's record carries no
         # village, a real state rather than an anomaly.
+      - name: mother_age_years
+        data_type: integer
+        description: "{{ doc('metric__birth__mother_age_years') }}"
+        # BL-016: a measure, not a dimension -- banding is the consumer's. Deliberately no
+        # not_null test: NULL where no mother is linked or a date of birth is missing.
+      - name: is_mother_diabetic
+        data_type: boolean
+        description: "{{ doc('metric__birth__is_mother_diabetic') }}"
+        data_tests:
+          # AC-016 (BL-017): coalesced to false precisely so this holds -- Tupaia's array
+          # filter drops NULL rows, so a NULL would disappear the birth from a "by maternal
+          # diabetes" split.
+          - not_null:
+              name: ac_016_metric__birth_is_mother_diabetic_not_null
