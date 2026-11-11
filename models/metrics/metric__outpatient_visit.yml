@@ -217,3 +217,16 @@ models:
           # BL-016: same reasoning as department.
           - not_null:
               name: ac_018_metric__outpatient_visit_referral_source_not_null
+      - name: visit_start__hour
+        data_type: integer
+        description: "{{ doc('metric__outpatient_visit__visit_start__hour') }}"
+        data_tests:
+          # BL-017: visit_detail_start_datetime is never NULL on an intake segment, so neither
+          # is its hour.
+          - not_null:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_range
+              arguments:
+                min_value: 0
+                max_value: 23
