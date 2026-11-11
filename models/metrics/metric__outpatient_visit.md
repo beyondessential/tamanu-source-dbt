@@ -259,3 +259,14 @@ admission_source.
 'Not recorded' where the encounter carries no referral source. Never NULL, for the same
 array-filter reason as department.
 {% enddocs %}
+
+{% docs metric__outpatient_visit__visit_start__hour %}
+Hour of the day the visit started, 0 to 23, for time-of-day profiling (BL-017). The hour of
+the intake segment's start -- the same timestamp period_start is the date of, since
+period_start is a date and so drops the time of day.
+
+Tamanu stores naive timestamps in the deployment's central timezone (var('timezone')), so
+this is already a local hour and no conversion is applied, as for metric__emergency_visit's
+ed_start__hour. An integer rather than a label so it sorts and buckets naturally: a consumer
+wanting sessions or a morning/afternoon split groups ranges of it.
+{% enddocs %}
