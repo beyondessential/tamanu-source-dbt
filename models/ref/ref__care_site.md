@@ -1,9 +1,13 @@
 {% docs ref__care_site %}
 OMOP CARE_SITE wrapper over Tamanu care units. Heterogeneous: one row per department
-(the organizational care unit, care_site_type = 'department') and one row per location
-(the physical room/bed, care_site_type = 'location'), each denormalised with its parent
-facility. Locations are the care site on both clinical__visit_occurrence and
-clinical__visit_detail.
+(the organizational care unit, care_site_type = 'department'), one row per location
+(the physical room/bed, care_site_type = 'location') and one row per facility (the site
+as a whole, care_site_type = 'facility'), each denormalised with its parent facility --
+which, on a facility row, is itself.
+
+Locations are the care site on both clinical__visit_occurrence and clinical__visit_detail.
+Facilities are the care site on clinical__episode: an enrolment is registered at a facility
+and never at a room, so its care site is the coarser grain.
 {% enddocs %}
 
 {% docs ref__care_site__care_site_id %}
@@ -12,8 +16,10 @@ care_site_id.
 {% enddocs %}
 
 {% docs ref__care_site__care_site_type %}
-Which Tamanu entity this care site represents: 'department' (organizational unit) or
-'location' (physical room/bed). Lets consumers pick the grain they need.
+Which Tamanu entity this care site represents: 'department' (organizational unit),
+'location' (physical room/bed) or 'facility' (the site as a whole). Lets consumers pick
+the grain they need -- filter on it before aggregating, or a facility will be counted
+alongside the departments and locations inside it.
 {% enddocs %}
 
 {% docs ref__care_site__care_site_name %}

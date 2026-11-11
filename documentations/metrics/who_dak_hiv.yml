@@ -1,0 +1,438 @@
+# WHO SMART guidelines HIV Digital Adaptation Kit indicators.
+#
+# Web Annex C of the DAK (WHO-UCN-HHS-SIA-2023.29, IRIS handle 10665/375058) defines 140
+# indicators, HIV.IND.1 to HIV.IND.140, each with a numerator, a denominator and its
+# disaggregations. Registered here are the eleven counts computable from the DAK's own data
+# elements as the generated forms collect them; `definition_source_code` carries Annex C's
+# `Ref no.`, which is what the GAM, Global Fund and PEPFAR MER crosswalk sheets key on.
+#
+# A rate is formed from a numerator and its denominator, both registered separately, so a
+# consumer reads ART.3 as who_dak_hiv_art_viral_suppression over
+# who_dak_hiv_art_routine_viral_load. Annex C's own denominators that are population estimates
+# (ART.1 treatment coverage) or come from another system are not registered: nothing in Tamanu
+# can supply them.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: who_dak_hiv_hts_test
+  kind: metric
+  name: HIV tests with results returned (HTS.2 denominator)
+  description: HIV tests performed whose results were returned to the client during the reporting month.
+  numerator_description: >-
+    COUNT of tests with an HIV test date and a date HIV test results returned in the reporting period.
+    Test grain, not client grain: Annex C counts tests here, so a client tested twice contributes twice
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: HTS.2
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.19 (HTS.2, "HTS test volume and
+    positivity"), read against the DAK data elements HIV.B.DE110 and HIV.B.DE60 as the generated
+    who-dak-hiv forms collect them.
+  unit: count
+  subject_grain: test
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_hts_test_positive
+  kind: metric
+  name: HIV-positive results returned (HTS.2 numerator)
+  description: HIV tests returning a positive result during the reporting month.
+  numerator_description: >-
+    COUNT of tests with HIV test result 'HIV-positive' and either a date HIV test results returned or an
+    HIV diagnosis date in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: HTS.2
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.19 (HTS.2). Positivity is this count
+    over who_dak_hiv_hts_test.
+  unit: count
+  subject_grain: test
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_hts_client_tested
+  kind: metric
+  name: Clients tested for HIV (HTS.3 denominator)
+  description: Clients who received an HIV test result during the reporting month.
+  numerator_description: >-
+    COUNT of clients with an HIV test date and a date HIV test results returned in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: HTS.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.20 (HTS.3, "Individuals testing positive
+    for HIV").
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_hts_client_positive
+  kind: metric
+  name: Clients testing HIV-positive (HTS.3 numerator)
+  description: Clients whose HIV test in the reporting month returned a positive result.
+  numerator_description: >-
+    COUNT of clients with HIV test result 'HIV-positive', an HIV test date in the reporting period, and
+    either a date HIV test results returned or an HIV diagnosis date in the reporting period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: HTS.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.20 (HTS.3). Positivity is this count over
+    who_dak_hiv_hts_client_tested.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_initiated
+  kind: metric
+  name: New ART patients (ART.4)
+  description: People living with HIV who initiated antiretroviral therapy during the reporting month.
+  numerator_description: >-
+    COUNT of clients recorded as on ART whose ART start date falls in the reporting period. Counted in the
+    month treatment began, so a form recorded late still counts in the right month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.4
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.30 (ART.4, "New ART patients"), whose
+    denominator Annex C gives as 1 -- it is a count, not a rate.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_cd4_at_initiation
+  kind: metric
+  name: ART initiations with a baseline CD4 count (ART.5 denominator)
+  description: ART initiations in the reporting month that have a baseline CD4 count recorded.
+  numerator_description: >-
+    COUNT of clients with an ART start date in the reporting period and a baseline CD4 count test in the
+    same month
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.5
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.31 (ART.5, "Late ART initiation").
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_late_initiation
+  kind: metric
+  name: Late ART initiation (ART.5 numerator)
+  description: ART initiations in the reporting month with a baseline CD4 count below 200 cells/mm3.
+  numerator_description: >-
+    COUNT of clients with an ART start date in the reporting period, a baseline CD4 count test in the same
+    month, and a baseline CD4 count below 200 cells/mm3
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.5
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.31 (ART.5). Late initiation is this count
+    over who_dak_hiv_art_cd4_at_initiation -- advanced HIV disease at the point treatment starts, which is
+    a measure of how late people are being diagnosed.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_routine_viral_load
+  kind: metric
+  name: Routine viral load tests among established ART patients (ART.3 denominator)
+  description: >-
+    Routine viral load samples collected in the reporting month from clients on ART for at least six
+    months.
+  numerator_description: >-
+    COUNT of clients on ART whose ART start date is more than six months before the end of the reporting
+    period, with a viral load sample collected in the period for reason 'Routine viral load test'
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.29 (ART.3, "People living with HIV on ART
+    who have suppressed viral load"). The six-month and routine-reason conditions are Annex C's, not a
+    local narrowing: a targeted test taken because treatment is failing would bias suppression downwards.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_viral_suppression
+  kind: metric
+  name: Viral suppression on ART (ART.3 numerator)
+  description: >-
+    Clients on ART for at least six months whose routine viral load in the reporting month was below 1000
+    copies/mL.
+  numerator_description: >-
+    COUNT of clients meeting who_dak_hiv_art_routine_viral_load whose viral load test result is below 1000
+    copies/mL
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.29 (ART.3). Suppression is this count over
+    who_dak_hiv_art_routine_viral_load -- the third 95 of the UNAIDS targets.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_eligible
+  kind: metric
+  name: Clients assessed as eligible for DSD ART (DSD.3 denominator)
+  description: >-
+    Clients on ART assessed during the reporting month as eligible for a differentiated service delivery
+    ART model.
+  numerator_description: >-
+    COUNT of clients on ART with a date DSD ART eligibility assessed in the reporting period and eligible
+    for DSD ART recorded true
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.55 (DSD.3, "Coverage of DSD ART models
+    among people living with HIV on ART"). Annex C offers two denominators -- those assessed eligible where
+    an electronic system records the assessment, or all clients on ART where records are paper-based. This
+    is the first, which is the one a Tamanu deployment has.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_enrolled
+  kind: metric
+  name: Clients enrolled in a DSD ART model (DSD.3 numerator)
+  description: Clients on ART recorded during the reporting month as currently enrolled in a DSD ART model.
+  numerator_description: >-
+    COUNT of clients on ART with currently enrolled in DSD ART model recorded true. Annex C gives this
+    numerator no date element, so the submission recording the enrolment places it in a period
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.3
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.55 (DSD.3). Coverage is this count over
+    who_dak_hiv_dsd_eligible.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_on_art
+  kind: metric
+  name: People living with HIV on ART (ART.1)
+  description: >-
+    People living with HIV recorded as on antiretroviral therapy at the end of the reporting month.
+  numerator_description: >-
+    COUNT of clients whose last recorded state at the reporting period end date is on ART. A point-in-time
+    count, so a client not seen during the month is still counted -- the record says they are on treatment
+    until it says otherwise
+  denominator_description: >-
+    Not registered: Annex C's denominators are the estimated number of people living with HIV, or the
+    estimate of those who know their status, both of which come from outside Tamanu
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.1
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.27 (ART.1, "People living with HIV on
+    ART") -- the second 95 of the UNAIDS targets, and the count a treatment coverage figure divides by a
+    population estimate. Also serves as ART.9's denominator, which Annex C words as clients on ART within
+    the reporting period.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_toxicity
+  kind: metric
+  name: Treatment-limiting ARV toxicity (ART.9 numerator)
+  description: >-
+    Clients whose ART was stopped or whose regimen was substituted for toxicity during the reporting
+    month.
+  numerator_description: >-
+    COUNT of clients with a date ART stopped in the reporting period for reason toxicity or side effects,
+    plus clients on ART with a first-, second- or third-line regimen substitution date in the period for
+    the same reason. A client with both counts once
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.9
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.35 (ART.9, "ARV toxicity prevalence").
+    Prevalence is this count over who_dak_hiv_art_on_art, which is Annex C's denominator of clients on ART
+    within the reporting period.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_retention_eligible
+  kind: metric
+  name: Clients due for DSD retention reporting (DSD.4 denominator)
+  description: >-
+    Clients on ART whose differentiated service delivery model started at least twelve months before the
+    end of the reporting month.
+  numerator_description: >-
+    COUNT of clients on ART at the reporting period end date whose DSD ART start date is twelve or more
+    months earlier. Annex C reports retention at 12, 24, 36, 48 and 60 months; months_on_dsd is emitted so
+    a consumer selects the cohort rather than the model carrying five near-identical metrics
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.4
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.56 (DSD.4, "Retention in DSD ART models").
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - months_on_dsd
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_dsd_retained
+  kind: metric
+  name: Retention in DSD ART models (DSD.4 numerator)
+  description: >-
+    Clients still enrolled in a differentiated service delivery model twelve or more months after starting
+    it.
+  numerator_description: >-
+    COUNT of clients meeting who_dak_hiv_dsd_retention_eligible whose last recorded state is enrolled in a
+    DSD ART model
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: DSD.4
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.56 (DSD.4). Retention is this count over
+    who_dak_hiv_dsd_retention_eligible, at whichever months_on_dsd cohort the consumer selects.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - months_on_dsd
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_on_art_key_population
+  kind: metric
+  name: People living with HIV on ART, by key population (ART.1)
+  description: >-
+    ART.1 disaggregated by key population: one row per client per key population they are recorded as
+    belonging to.
+  numerator_description: >-
+    COUNT of client-population pairs where the client's last recorded state at the reporting period end
+    date is on ART. Key population is a MultiSelect, so a client belonging to two populations contributes
+    to both -- summing across populations therefore double-counts that client, which is what Annex C's own
+    disaggregation does
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.1
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.27 (ART.1), whose disaggregation list
+    includes key population member type. Registered separately from who_dak_hiv_art_on_art rather than
+    added to it as a column, because one client can hold several populations and a column would make the
+    plain count of people wrong. The same bridge disaggregates any other indicator that needs it.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  - key_population
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
