@@ -44,6 +44,7 @@ metrics:
   - is_readmission_within_14_days
   - clinician
   - clinician_designation
+  - admission_location_group_name
   variant_of: null
   owner: bes-maui
   status: approved
@@ -92,6 +93,7 @@ metrics:
   - clinician
   - clinician_designation
   - is_same_day
+  - admission_location_group_name
   variant_of: null
   owner: bes-maui
   status: approved
