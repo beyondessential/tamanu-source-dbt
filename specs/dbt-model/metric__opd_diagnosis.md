@@ -11,6 +11,7 @@
 | **Status** | `draft` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
+| **Linear** | MAUI-7131 (location group, for Naoero's outpatient dashboard) |
 
 Canonical definition for `opd_diagnosis`: one row per diagnosis whose window overlaps an
 outpatient segment, at day resolution.
@@ -60,6 +61,7 @@ allows a diagnosis to overlap both.
 | `is_primary` | boolean | Whether this is the encounter's principal diagnosis. NULL where unranked |
 | `age_years` | integer | Age in whole years at the diagnosis, unbanded |
 | `department` | text | The qualifying segment's own department, resolved to a name (BL-008). Never NULL |
+| `location_group_name` | text | The qualifying segment's location group (clinic/area), resolved to a name (BL-009). Never NULL |
 
 ## Data tables
 
@@ -126,6 +128,11 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
   than an opaque Tamanu id. Never NULL -- falls back to `'Not recorded'`, so a
   `metric_filters` scope to one department does not silently drop a diagnosis whose segment
   carries no department (MAUI-6909).
+- **BL-009 (location group):** `location_group_name` is the name of the location group of
+  the same qualifying segment's location BL-004 resolves `facility_id` from, through
+  `locations.location_group_id` to `bases/location_groups` -- the clinic or area -- the same
+  column and resolution as `metric__outpatient_visit` BL-015. Left joined and coalesced to
+  `'Not recorded'`, never NULL, for the same reason as BL-008.
 
 ## Acceptance criteria
 
@@ -145,11 +152,12 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
 | AC-012 | `diagnosis_code` is `not_null` | BL-006 | `not_null` |
 | AC-013 | `diagnosis_certainty` is `not_null` | BL-006 | `not_null` |
 | AC-014 | `department` is `not_null` | BL-008 | `not_null` |
+| AC-015 | `location_group_name` is `not_null`, and is the earliest qualifying segment's location's group, not a later segment's | BL-009 | `not_null` + unit test `test_metric__opd_diagnosis_facility_attribution` |
 
 ## Registry entry
 
 `opd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: draft`,
-`disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary,department`.
+`disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary,department,location_group_name`.
 No vocabulary change needed -- all admitted via `metric__encounter_diagnosis`'s own
 registration.
 
@@ -163,6 +171,7 @@ registration.
 | `clinical__person` | `clinical/` | Sex and birth date (BL-007) |
 | `locations` | `bases/` | Facility id of the qualifying segment's care site (BL-004) |
 | `departments` | `bases/` | Department name of the qualifying segment's own department (BL-008) |
+| `location_groups` | `bases/` | Name of the qualifying segment's location group (BL-009) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
@@ -194,3 +203,9 @@ registration.
 | `metric__encounter_diagnosis` | Same clinical source; carries `encounter_type` instead of an OPD/IPD split |
 | `metric__outpatient_visit` | Sibling metric in the outpatient product; first-segment grain |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
+
+## Change log
+
+| Date | Change |
+|---|---|
+| 2026-11-11 | BL-009: `location_group_name`, the qualifying segment's clinic/area, added as a disaggregation for Naoero's Outpatient dashboard (MAUI-7131). New AC-015. |

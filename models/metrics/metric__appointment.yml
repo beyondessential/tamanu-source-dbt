@@ -1,0 +1,129 @@
+version: 2
+
+# See specs/dbt-model/metric__appointment.md for the BL clauses this file implements.
+
+models:
+  - name: metric__appointment
+    description: "{{ doc('metric__appointment') }}"
+    config:
+      tags:
+        - clinical
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-010: per-appointment rows, but the subject is an appointment id with no patient
+        # identifier, name or birth date alongside it -- no patient is identifiable through a
+        # row, the same reasoning metric__outpatient_visit uses.
+        pii: false
+        classification: internal
+    data_tests:
+      # One row per appointment. A duplicate would double-count it in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__appointment_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        data_type: text
+        description: "{{ doc('metric__appointment__metric_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_002_metric__appointment_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__appointment_metric_id_values
+              arguments:
+                values:
+                  - outpatient_appointment
+          # Definition <-> implementation link: every metric__ view asserts its ids are
+          # registered in the canonical registry.
+          - relationships:
+              name: ac_003_metric__appointment_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: "{{ doc('metric__appointment__variant_id') }}"
+      - name: subject_id
+        data_type: character varying(255)
+        description: "{{ doc('metric__appointment__subject_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_004_metric__appointment_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: "{{ doc('metric__appointment__period_start') }}"
+        data_tests:
+          - not_null:
+              name: ac_005_metric__appointment_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: "{{ doc('metric__appointment__period_end') }}"
+      - name: period_granularity
+        data_type: text
+        description: "{{ doc('metric__appointment__period_granularity') }}"
+        data_tests:
+          - not_null:
+              name: ac_006_metric__appointment_period_granularity_not_null
+          - accepted_values:
+              name: ac_006_metric__appointment_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: "{{ doc('metric__appointment__value_numeric') }}"
+        data_tests:
+          - not_null:
+              name: ac_007_metric__appointment_value_numeric_not_null
+          - accepted_values:
+              name: ac_007_metric__appointment_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: "{{ doc('metric__appointment__value_boolean') }}"
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} of the appointment's location group (BL-005)."
+        data_tests:
+          - not_null:
+              name: ac_008_metric__appointment_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age_years
+        data_type: integer
+        description: "{{ doc('metric__appointment__age_years') }}"
+        # BL-009: a measure, not a dimension -- banding is the consumer's.
+      - name: appointment_status
+        data_type: character varying(255)
+        description: "{{ doc('metric__appointment__appointment_status') }}"
+        data_tests:
+          # BL-007: Tupaia's array filter drops NULL rows, so a NULL would disappear the
+          # appointment from a "by status" split.
+          - not_null:
+              name: ac_009_metric__appointment_appointment_status_not_null
+      - name: appointment_type
+        data_type: character varying(255)
+        description: "{{ doc('metric__appointment__appointment_type') }}"
+        data_tests:
+          # BL-008: same reasoning as appointment_status.
+          - not_null:
+              name: ac_010_metric__appointment_appointment_type_not_null
+      - name: location_group_name
+        data_type: character varying(255)
+        description: "{{ doc('metric__appointment__location_group_name') }}"
+        data_tests:
+          # BL-006: same reasoning as appointment_status.
+          - not_null:
+              name: ac_011_metric__appointment_location_group_name_not_null
