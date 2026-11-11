@@ -17,12 +17,12 @@ Deployment-neutral: sourced from patient_birth_data, present across every Tamanu
 with no visit or encounter concept -- a birth registration is patient-level, not visit-scoped.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, sex, delivery type, attendant, place, birth type -- and over any time grain from
-day upwards. A rate (e.g. the low-birth-weight rate) is formed as
+facility, sex, delivery type, attendant, place, birth type, mother's diabetes -- and over any
+time grain from day upwards. A rate (e.g. the low-birth-weight rate) is formed as
 sum(value_numeric) filter (where metric_id = '<subset>') / sum(value_numeric) filter
 (where metric_id = 'birth') at whatever grain the consumer groups to.
 
-See specs/dbt-model/metric__birth.md for BL-001..BL-014.
+See specs/dbt-model/metric__birth.md for BL-001..BL-017.
 {% enddocs %}
 
 {% docs metric__birth__metric_id %}
@@ -119,4 +119,26 @@ the baby lives, not where it was born. Distinct from facility_id, the facility o
 NULL when the newborn's record carries no village. Not coalesced to a placeholder: this is an id
 a consumer joins to a village list, the same rule as metric__immunisation_dose's
 patient_location_id, so births and doses can be read against one village list.
+{% enddocs %}
+
+{% docs metric__birth__mother_age_years %}
+The mother's age in whole years on the newborn's date of birth (BL-016). The mother is the
+patient linked as the newborn's mother in Tamanu (patient_additional_data.mother_id).
+
+A measure, not a dimension -- banding it (e.g. with age_group__aihw_maternal_age) is the
+consumer's. NULL where no mother is linked, her record is deleted or merged, or either date of
+birth is missing. Only the age leaves the model: the mother's own id is used to resolve it and
+then dropped, so no row identifies her.
+{% enddocs %}
+
+{% docs metric__birth__is_mother_diabetic %}
+True where the linked mother has a recorded condition coded as diabetes -- ICD-10 E10-E14
+(diabetes mellitus) or O24 (diabetes in pregnancy), matched on the code's first three
+characters (BL-017). Any recorded condition counts, resolved or not, and whenever it was
+recorded.
+
+False, never NULL, where she has none or no mother is linked -- Tupaia's array filter drops
+NULL rows, so a NULL would disappear the birth from a "by maternal diabetes" split. A false
+therefore also covers "no mother linked"; a consumer that needs to tell the two apart reads
+mother_age_years, which is NULL only when there is no usable mother link or date of birth.
 {% enddocs %}
