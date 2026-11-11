@@ -11,7 +11,7 @@
 -- facility.
 --
 -- The registry carries the definition and this model is its implementation.
--- See specs/dbt-model/metric__death.md for BL-001..BL-007.
+-- See specs/dbt-model/metric__death.md for BL-001..BL-008.
 
 with patients as (
     select * from {{ ref('patients') }}
@@ -98,7 +98,10 @@ select
     end as place_of_death,
     coalesce(pdd.manner, 'Not recorded') as manner_of_death,
     -- BL-006
-    coalesce(dept.name, 'Not recorded') as department
+    coalesce(dept.name, 'Not recorded') as department,
+    -- BL-008: whole days from birth to the date of death, NULL where the birth date is not
+    -- recorded -- the derivation metric__immunisation_dose's age_days uses
+    (p.date_of_death::date - p.date_of_birth) as age_days
 from patients p
 join person pr
     on pr.person_id = p.id
