@@ -1,0 +1,144 @@
+unit_tests:
+  - name: ac_017_metric__birth_mother
+    model: metric__birth
+    description: >
+      The mother columns (MAUI-7132). BL-016: mother_age_years is the linked mother's age in
+      whole years on the newborn's date of birth -- not on the registration date a birth with
+      no date of birth falls back to -- and NULL where no mother is linked, the link is empty,
+      or the mother is absent from bases/patients (deleted or merged). BL-017:
+      is_mother_diabetic is true for a condition coded E10-E14 or O24, matched on the
+      upper-cased three-character prefix, whether or not the condition is resolved, and false
+      -- never NULL -- otherwise, including for an E15 code just outside the range and for
+      every birth with no usable mother. A mother with two diabetic conditions does not fan the
+      birth out. No column carries the mother's id or date of birth.
+
+    given:
+      # mb_1: mother mum_1, born the day after the newborn's date in 1994, so 29 not 30; two
+      #       diabetic conditions (E11.9, O24.4) -- one row, not two
+      # mb_2: mother mum_2, a lower-case, resolved 'o24.1' -- still diabetic
+      # mb_3: mother mum_3, E15 (outside E10-E14) and J45 -- not diabetic; on her birthday, 34
+      # mb_4: no patient_additional_data row at all
+      # mb_5: a patient_additional_data row with no mother_id
+      # mb_6: mother_id points at a record bases/patients excludes, so no mother, even though
+      #       that record has an E10 condition
+      # mb_7: mother mum_2, but the newborn has no date of birth -- period_start falls back to
+      #       registration_date (BL-003) and the age is NULL rather than taken at registration
+      - input: ref('patient_birth_data')
+        format: sql
+        rows: |
+          select 'mb_1' as patient_id, null::float as gestational_age_estimate, 'midwife' as attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, null::numeric as birth_weight, null::integer as apgar_score_five_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-03-09'::date as registration_date
+          union all
+          select 'mb_2', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-06-01'::date
+          union all
+          select 'mb_3', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-01'::date
+          union all
+          select 'mb_4', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-02'::date
+          union all
+          select 'mb_5', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-03'::date
+          union all
+          select 'mb_6', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-04'::date
+          union all
+          select 'mb_7', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-08-01'::date
+
+      # Newborns and mothers are both patients. mum_gone is deliberately absent.
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'mb_1' as id, '2024-03-09'::date as date_of_birth
+          union all
+          select 'mb_2', '2024-06-01'::date
+          union all
+          select 'mb_3', '2024-07-01'::date
+          union all
+          select 'mb_4', '2024-07-02'::date
+          union all
+          select 'mb_5', '2024-07-03'::date
+          union all
+          select 'mb_6', '2024-07-04'::date
+          union all
+          select 'mb_7', null::date
+          union all
+          select 'mum_1', '1994-03-10'::date
+          union all
+          select 'mum_2', '2000-01-01'::date
+          union all
+          select 'mum_3', '1990-07-01'::date
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'mb_1' as person_id, 'Female' as gender_source_value, null::varchar as location_id
+          union all
+          select 'mb_2', 'Male', null::varchar
+          union all
+          select 'mb_3', 'Female', null::varchar
+          union all
+          select 'mb_4', 'Male', null::varchar
+          union all
+          select 'mb_5', 'Female', null::varchar
+          union all
+          select 'mb_6', 'Male', null::varchar
+          union all
+          select 'mb_7', 'Female', null::varchar
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select 'mb_1'::text as patient_id, 'mum_1'::varchar as mother_id
+          union all
+          select 'mb_2', 'mum_2'
+          union all
+          select 'mb_3', 'mum_3'
+          union all
+          select 'mb_5', null::varchar
+          union all
+          select 'mb_6', 'mum_gone'
+          union all
+          select 'mb_7', 'mum_2'
+
+      - input: ref('patient_conditions')
+        format: sql
+        rows: |
+          select 'pc_1' as id, 'mum_1' as patient_id, 'icd10-E11-9' as condition_id, false as is_resolved
+          union all
+          select 'pc_2', 'mum_1', 'icd10-O24-4', false
+          union all
+          select 'pc_3', 'mum_2', 'icd10-o24-1', true
+          union all
+          select 'pc_4', 'mum_3', 'icd10-E15', false
+          union all
+          select 'pc_5', 'mum_3', 'icd10-J45', false
+          union all
+          select 'pc_6', 'mum_gone', 'icd10-E10', false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'icd10-E11-9' as id, 'E11.9' as code, 'Type 2 diabetes mellitus without complications' as name, 'diagnosis' as type
+          union all
+          select 'icd10-O24-4', 'O24.4', 'Diabetes mellitus arising in pregnancy', 'diagnosis'
+          union all
+          select 'icd10-o24-1', 'o24.1', 'Pre-existing diabetes mellitus, non-insulin-dependent', 'diagnosis'
+          union all
+          select 'icd10-E15', 'E15', 'Nondiabetic hypoglycaemic coma', 'diagnosis'
+          union all
+          select 'icd10-J45', 'J45', 'Asthma', 'diagnosis'
+          union all
+          select 'icd10-E10', 'E10', 'Type 1 diabetes mellitus', 'diagnosis'
+
+    expect:
+      format: sql
+      rows: |
+        select 'birth' as metric_id, null::text as variant_id, 'mb_1'::varchar as subject_id, '2024-03-09 00:00'::timestamp as period_start, '2024-03-09 00:00'::timestamp as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'Female' as sex, 'normal_vaginal_delivery' as birth_delivery_type, 'midwife' as attendant_at_birth, 'health_facility' as registered_birth_place, 'single' as birth_type, null::numeric as birth_weight, null::numeric as gestational_age_estimate, null::integer as apgar_score_five_minutes, null::varchar as patient_location_id, 29 as mother_age_years, true as is_mother_diabetic
+        union all
+        select 'birth', null::text, 'mb_2'::varchar, '2024-06-01 00:00'::timestamp, '2024-06-01 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Male', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, 24, true
+        union all
+        select 'birth', null::text, 'mb_3'::varchar, '2024-07-01 00:00'::timestamp, '2024-07-01 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, 34, false
+        union all
+        select 'birth', null::text, 'mb_4'::varchar, '2024-07-02 00:00'::timestamp, '2024-07-02 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Male', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, null::integer, false
+        union all
+        select 'birth', null::text, 'mb_5'::varchar, '2024-07-03 00:00'::timestamp, '2024-07-03 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, null::integer, false
+        union all
+        select 'birth', null::text, 'mb_6'::varchar, '2024-07-04 00:00'::timestamp, '2024-07-04 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Male', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, null::integer, false
+        union all
+        select 'birth', null::text, 'mb_7'::varchar, '2024-08-01 00:00'::timestamp, '2024-08-01 00:00'::timestamp, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'Female', 'normal_vaginal_delivery', 'midwife', 'health_facility', 'single', null::numeric, null::numeric, null::integer, null::varchar, null::integer, true

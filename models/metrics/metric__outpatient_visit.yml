@@ -203,3 +203,17 @@ models:
         data_tests:
           - not_null:
               name: ac_017_metric__outpatient_visit_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__location_group_name') }}"
+        data_tests:
+          # BL-015: same reasoning as department.
+          - not_null:
+              name: ac_017_metric__outpatient_visit_location_group_name_not_null
+      - name: referral_source
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__referral_source') }}"
+        data_tests:
+          # BL-016: same reasoning as department.
+          - not_null:
+              name: ac_018_metric__outpatient_visit_referral_source_not_null
