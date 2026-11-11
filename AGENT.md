@@ -167,6 +167,10 @@ the same way. See README § Local development.
 ## Pre-commit checklist
 
 ```bash
+# with no .env present, needs Docker (make db-up) and uses the committed .env.local, so no
+# credentials. A real .env takes precedence and runs every dbt test unscoped. Runs pytest
+# scripts/tests, sqlfluff lint, the dbt tests and the validators.
+make check
 uv run python .maui/scripts/with_secrets.py -- sqlfluff fix .
 uv run python .maui/scripts/with_secrets.py -- dbt test
 uv run python .maui/scripts/with_secrets.py -- python scripts/validate_report_configs.py
