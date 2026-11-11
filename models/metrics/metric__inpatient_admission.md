@@ -239,3 +239,13 @@ a consumer excludes same-day stays to form AIHW's overnight-only average length 
 sum(patient_days) / sum(value_numeric) over inpatient_separation rows where is_same_day is
 false (BL-023).
 {% enddocs %}
+
+{% docs metric__inpatient_admission__admission_location_group_name %}
+The location group (ward or area) of the admission segment's location -- the same location
+facility_id is taken from -- resolved to its name (BL-026), on both inpatient_admission and
+inpatient_separation rows. A readable label, unlike admission_ward_id, which is the department
+id.
+
+'Not recorded' where the location is in no group. Never NULL, for the same array-filter reason
+as admission_source.
+{% enddocs %}
