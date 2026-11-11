@@ -10,11 +10,17 @@ name: Checks
 # to main automatically by release-reporting-assets.yml's list-reports job on every
 # release cut from main, so it can't drift for long.
 #
-# dbt-unit-tests first runs a full `dbt parse`, which fails on any dbt deprecation,
-# then runs the dbt unit tests against an ephemeral Postgres. They mock
-# every input, so they need a database connection but no Tamanu data -- no secrets,
-# no live database, no access to a deployment. Data tests are deliberately not run
-# here: they assert over real rows and need a live database with credentials (#427).
+# dbt-unit-tests runs against an ephemeral Postgres on the lowest supported version, so a
+# model using newer syntax fails `dbt parse` here. It first runs a full `dbt parse`, which
+# fails on any dbt deprecation, then lints the SQL, validates the report configs and
+# translation labels, and runs the dbt unit tests. sqlfluff's dbt templater needs a
+# reachable database but queries no tables, and the unit tests mock every input, so none
+# of it needs Tamanu data -- no secrets, no live database, no access to a deployment. Data
+# tests are deliberately not run here: they assert over real rows and need a live database
+# with credentials (#427).
+#
+# These steps mirror `make check` (the .maui submodule is private, so CI cannot run it).
+# Keep the two in step.
 #
 # Why it exists: nothing was executing dbt's own unit tests, and a fixture whose
 # UNION arms had mismatched column counts reached a release through seven green PRs
@@ -77,7 +83,8 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # The lowest Postgres version these models support (see AGENT.md).
+        image: postgres:12
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -137,6 +144,15 @@ jobs:
         # dbt_project.yml promotes every deprecation to an error, and some are only raised
         # during a full parse.
         run: dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release
+
+      - name: Lint SQL
+        run: sqlfluff lint .
+
+      - name: Validate report configs
+        run: python scripts/validate_report_configs.py
+
+      - name: Check report translations
+        run: python scripts/check_translations.py
 
       - name: Run dbt unit tests
         run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
