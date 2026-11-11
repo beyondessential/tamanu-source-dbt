@@ -1,0 +1,59 @@
+unit_tests:
+  - name: ac_012_metric__appointment_projection
+    model: metric__appointment
+    description: >
+      The D5 projection. BL-002: every status is kept -- Confirmed, No-show and Cancelled all
+      emit a row. BL-004: period_start and period_end are the scheduled start and end truncated
+      to the minute, and period_end stays NULL where none is recorded. BL-005/BL-006: facility_id
+      and location_group_name come from the appointment's location group, and an appointment
+      whose location group does not resolve is excluded. BL-008: an appointment type that no
+      longer resolves reads 'Not recorded'. BL-009: age_years is whole years on the appointment
+      date -- per_1 turns 40 the day after ap_1, so 39 -- and an appointment whose patient
+      bases/patients excludes is excluded. BL-010: no patient id is emitted.
+
+    given:
+      # ap_1 Confirmed at General AM, start with seconds that truncate away
+      # ap_2 No-show at MCU/Visa, no recorded end
+      # ap_3 Cancelled, appointment type deleted from reference data
+      # ap_4 location group no longer resolves -- excluded (BL-005)
+      # ap_5 patient no longer resolves (deleted or merged) -- excluded (BL-009)
+      - input: ref('outpatient_appointments')
+        format: sql
+        rows: |
+          select 'ap_1' as id, '2024-05-15 09:00:30'::timestamp as start_datetime, '2024-05-15 09:30:00'::timestamp as end_datetime, 'per_1' as patient_id, 'lg_am' as location_group_id, 'at_gen' as appointment_type_id, 'Confirmed' as status
+          union all
+          select 'ap_2', '2024-05-16 14:15:00'::timestamp, null::timestamp, 'per_2', 'lg_mcu', 'at_gen', 'No-show'
+          union all
+          select 'ap_3', '2024-05-17 10:00:00'::timestamp, '2024-05-17 10:20:00'::timestamp, 'per_2', 'lg_am', 'at_gone', 'Cancelled'
+          union all
+          select 'ap_4', '2024-05-18 10:00:00'::timestamp, '2024-05-18 10:20:00'::timestamp, 'per_1', 'lg_gone', 'at_gen', 'Arrived'
+          union all
+          select 'ap_5', '2024-05-19 10:00:00'::timestamp, '2024-05-19 10:20:00'::timestamp, 'per_gone', 'lg_am', 'at_gen', 'Seen'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'male' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 16 as day_of_birth
+          union all
+          select 'per_2', 'female', 2000, 1, 1
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_am' as id, 'Outpatients - General AM' as name, 'fac_1' as facility_id
+          union all
+          select 'lg_mcu', 'Outpatients - MCU/Visa', 'fac_2'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'at_gen' as id, 'General' as name
+
+    expect:
+      format: sql
+      rows: |
+        select 'outpatient_appointment' as metric_id, null::text as variant_id, 'ap_1'::varchar as subject_id, '2024-05-15 09:00'::timestamp as period_start, '2024-05-15 09:30'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'male' as sex, 39 as age_years, 'Confirmed' as appointment_status, 'General' as appointment_type, 'Outpatients - General AM' as location_group_name
+        union all
+        select 'outpatient_appointment', null::text, 'ap_2'::varchar, '2024-05-16 14:15'::timestamp, null::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_2', 'female', 24, 'No-show', 'General', 'Outpatients - MCU/Visa'
+        union all
+        select 'outpatient_appointment', null::text, 'ap_3'::varchar, '2024-05-17 10:00'::timestamp, '2024-05-17 10:20'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'female', 24, 'Cancelled', 'Not recorded', 'Outpatients - General AM'

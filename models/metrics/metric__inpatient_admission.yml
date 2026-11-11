@@ -204,3 +204,10 @@ models:
         description: "{{ doc('metric__inpatient_admission__is_same_day') }}"
         # BL-022: populated only on inpatient_separation, NULL on inpatient_admission --
         # covered by the singular test's AC-022, not a column-grain generic test.
+      - name: admission_location_group_name
+        data_type: text
+        description: "{{ doc('metric__inpatient_admission__admission_location_group_name') }}"
+        data_tests:
+          # BL-026: coalesced to 'Not recorded' for the same reason as admission_source.
+          - not_null:
+              name: ac_026_metric__inpatient_admission_admission_location_group_name_not_null

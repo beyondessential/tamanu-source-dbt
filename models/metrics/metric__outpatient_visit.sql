@@ -23,6 +23,20 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-015: the intake location's group -- the clinic or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
+-- BL-016: the referral source lives on the encounter, not on clinical__visit_occurrence.
+encounters as (
+    select * from {{ ref('encounters') }}
+),
+
+reference_data as (
+    select * from {{ ref('reference_data') }}
+),
+
 discharges as (
     select * from {{ ref('discharges') }}
 ),
@@ -140,6 +154,10 @@ outpatient_visits as (
         coalesce(dis.note like 'Automatically discharged%', false) as is_auto_discharge,
         -- BL-013
         coalesce(dept.name, 'Not recorded') as department,
+        -- BL-015
+        coalesce(lg.name, 'Not recorded') as location_group_name,
+        -- BL-016
+        coalesce(referral.name, 'Not recorded') as referral_source,
         -- BL-011: intake to the departure resolved above, falling back to the encounter
         -- end. NULL while the encounter is open and nothing has ended the episode.
         case
@@ -182,6 +200,15 @@ outpatient_visits as (
     -- left: a visit with no department set still counts
     left join departments dept
         on dept.id = i.department_id
+    -- BL-015: left join -- a location in no group, or a since-deleted group, still counts
+    left join location_groups lg
+        on lg.id = loc.location_group_id
+    -- BL-016: left joins -- one encounter row per visit, and a visit with no referral source
+    -- still counts
+    left join encounters enc
+        on enc.id = i.visit_occurrence_id
+    left join reference_data referral
+        on referral.id = enc.referral_source_id
 )
 
 -- D5 wide format: value_boolean is unused. period_granularity is 'day' -- period_start and
@@ -228,5 +255,9 @@ select
     -- choices the consumer makes.
     round(opd_time__seconds / 60.0, 2) as opd_time__minutes,
     -- BL-013
-    department
+    department,
+    -- BL-015
+    location_group_name,
+    -- BL-016
+    referral_source
 from outpatient_visits

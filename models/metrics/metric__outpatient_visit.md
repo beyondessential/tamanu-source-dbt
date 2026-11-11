@@ -8,15 +8,15 @@ An outpatient visit is an encounter whose first history segment carries OMOP vis
 segment, so each visit counts once.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
-facility, location, sex, clinician, admission outcome, admitting clinician, department, and
-whether the discharge was system-generated -- and over any time grain from day upwards.
+facility, location, location group (clinic), sex, clinician, admission outcome, admitting
+clinician, department, referral source, and whether the discharge was system-generated -- and over any time grain from day upwards.
 Nothing is pre-aggregated, so no dimension has to be collapsed to get a total.
 
 Two measures ride alongside the count and are not summed as if they were one: age_years,
 and opd_time__minutes, the time in the outpatient department. Both are emitted per visit and
 unbanded, so a consumer forms whatever mean, median or band set it needs.
 
-See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-013.
+See specs/dbt-model/metric__outpatient_visit.md for BL-001..BL-016.
 {% enddocs %}
 
 {% docs metric__outpatient_visit__metric_id %}
@@ -240,4 +240,22 @@ combines the two for display.
 The designations of the admitting clinician (`admission_clinician_id`), as
 `clinician_designation` reads them for the attending clinician. 'Not recorded' for a visit that
 was never admitted, as well as for an admitting clinician with none.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__location_group_name %}
+The location group of the intake segment's location -- the clinic or area the visit was seen
+in -- resolved to its name via `location_groups` (BL-015).
+The same location `facility_id` and `location_id` come from.
+
+'Not recorded' where the location belongs to no group. Never NULL, for the same array-filter
+reason as department.
+{% enddocs %}
+
+{% docs metric__outpatient_visit__referral_source %}
+The encounter's referral source -- how the patient came to the clinic -- resolved to its
+reference-data name, as recorded (BL-016). The same derivation as metric__inpatient_admission's
+admission_source.
+
+'Not recorded' where the encounter carries no referral source. Never NULL, for the same
+array-filter reason as department.
 {% enddocs %}
