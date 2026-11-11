@@ -1,0 +1,51 @@
+unit_tests:
+  - name: ac_005_mar_line_list_dose_trailing_zeros
+    model: medication-administration-record-line-list
+    description: >
+      BL-006: the dose shows the stored amount without trailing zeros after the decimal point
+      and never drops a zero from a whole number. A variable-dose prescription reads Variable,
+      and a prescription with no amount and no unit reads blank.
+    overrides:
+      vars:
+        timezone: UTC
+        medicationId: []
+        facilityId: ''
+        departmentId: ''
+        locationId: ''
+    given:
+      - input: ref('ds__prescription_administrations')
+        format: sql
+        rows: |
+          select
+              id::text as display_id, 'mg'::text as dosing_unit, dose_amount::numeric as dose_amount,
+              is_variable_dose::boolean as is_variable_dose,
+              '2024-01-10 09:00:00'::timestamp as datetime,
+              'med_001'::text as medication_id, null::text as facility_id,
+              null::text as department_id, null::text as location_id,
+              id::text as prescription_id, null::timestamp as administration_due_datetime,
+              null::integer as administration_dose_index, null::text as administration_id,
+              null::text as administration_status, null::text as prescription_notes,
+              null::text as administration_notes, null::timestamp as administered_datetime,
+              null::date as date_of_birth, null::text as first_name, null::text as last_name,
+              null::text as sex, null::text as medication, null::text as prescriber,
+              null::text as route, null::text as administered_by, null::text as department,
+              null::text as location, null::text as facility, null::text as encounter_type
+          from (values
+              ('whole', 100, false),
+              ('whole_scaled', 100.00, false),
+              ('fraction_scaled', 2.50, false),
+              ('fraction', 0.5, false),
+              ('tens', 10.0, false),
+              ('small', 0.00005, false),
+              ('variable', 5, true)
+          ) as v(id, dose_amount, is_variable_dose)
+    expect:
+      format: dict
+      rows:
+        - {"Patient ID": whole, "Dose": 100 mg}
+        - {"Patient ID": whole_scaled, "Dose": 100 mg}
+        - {"Patient ID": fraction_scaled, "Dose": 2.5 mg}
+        - {"Patient ID": fraction, "Dose": 0.5 mg}
+        - {"Patient ID": tens, "Dose": 10 mg}
+        - {"Patient ID": small, "Dose": 0.00005 mg}
+        - {"Patient ID": variable, "Dose": Variable}
