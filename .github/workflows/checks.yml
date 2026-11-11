@@ -146,6 +146,9 @@ jobs:
         run: dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release
 
       - name: Lint SQL
+        # sqlfluff's dbt templater reads the profile from DBT_PROFILES_DIR, not a flag.
+        env:
+          DBT_PROFILES_DIR: config
         run: sqlfluff lint .
 
       - name: Validate report configs
