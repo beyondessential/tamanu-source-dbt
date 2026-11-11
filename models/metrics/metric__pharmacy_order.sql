@@ -119,7 +119,7 @@ orders as (
         -- one. NULL, not zero, for a line with no fill: a line nobody has dispensed has no wait to
         -- average, and a zero would pull a mean down.
         (d.first_dispensed_at is not null) as has_dispense,
-        round(extract(epoch from (d.first_dispensed_at - d.ordered_datetime)) / 60, 1) as minutes_to_first_dispense,
+        round((extract(epoch from (d.first_dispensed_at - d.ordered_datetime)) / 60)::numeric, 1) as minutes_to_first_dispense,
         pr.gender_source_value as sex,
         -- BL-004: a drug line whose prescription or medication reference does not resolve
         -- keeps its row on the 'Not recorded' fallback rather than disappearing
