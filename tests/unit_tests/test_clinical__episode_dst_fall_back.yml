@@ -1,0 +1,62 @@
+unit_tests:
+  # Australia/Sydney falls back at 03:00 AEDT on 2026-04-05 (16:00 UTC on the 4th), repeating
+  # 02:00-03:00 local. A change at 15:40 UTC is 02:40 AEDT and a later one at 16:20 UTC is
+  # 02:20 AEST, so the local logged_at puts the later change first. Every fixture below uses that
+  # pair (MAUI-7018).
+  - name: test_int__registration_status_history_dst_fall_back
+    model: int__registration_status_history
+    description: >
+      BL-012, AC-013. Two changes exactly an hour apart across a DST fall-back share a local
+      logged_at (02:30 AEDT and 02:30 AEST). Deduplicated on the local value they would collapse
+      into one entry; on logged_at_utc both survive, in order, and the current state that agrees
+      with the later one is dropped as redundant (BL-014).
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2026-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, 'cs_002' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as id, '2026-04-05 02:30:00'::timestamp as logged_at, '2026-04-04 15:30:00'::timestamp as logged_at_utc, 'active' as registration_status, 'cs_001' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:30:00'::timestamp, '2026-04-04 16:30:00'::timestamp, 'active', 'cs_002', 'pat_001', 'preg_001', 'usr_003'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2026-04-05 02:30:00'::timestamp as logged_at, '2026-04-04 15:30:00'::timestamp as logged_at_utc, 'active' as registration_status, 'cs_001' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'pat_001;preg_001', 'pat_001', 'preg_001', '2026-04-05 02:30:00'::timestamp, '2026-04-04 16:30:00'::timestamp, 'active', 'cs_002', 'usr_003', 'change log', 2
+
+  - name: test_clinical__episode_end_dst_fall_back
+    model: clinical__episode
+    description: >
+      BL-004, BL-012. The earliest logged change to inactive is found by the UTC instant. The
+      registration became inactive at 02:40 AEDT and again at 02:20 AEST forty minutes later;
+      the earliest by local logged_at would be the second, so the episode would end 20 minutes
+      before it actually did.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_code, 'Lost to follow up' as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+
+      - input: ref('int__registration_status_history')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, '2024-01-10 09:00:00'::timestamp as logged_at_utc, 'active' as registration_status, 'change log' as history_source
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:40:00'::timestamp, '2026-04-04 15:40:00'::timestamp, 'inactive', 'change log'
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'inactive', 'change log'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, null::int as episode_concept_id, null::int as episode_object_concept_id, '2024-01-10'::date as episode_start_date, '2024-01-10 09:00:00'::timestamp as episode_start_datetime, '2026-04-05'::date as episode_end_date, '2026-04-05 02:40:00'::timestamp as episode_end_datetime, 'status change' as episode_end_source, 'program registry' as episode_type_source_value, 'HIV' as episode_source_value, 'HIV Program' as episode_source_name, 'preg_001' as program_registry_id, 'prog_001' as program_id, null::text as episode_parent_id, null::int as episode_number, 'inactive' as registration_status, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_source_value, 'Lost to follow up' as clinical_status_source_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as care_site_id, 'usr_001' as provider_id, null::timestamp as deactivated_datetime, null::text as deactivated_by_provider_id
+
