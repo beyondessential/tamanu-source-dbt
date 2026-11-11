@@ -1,7 +1,7 @@
 -- metric__inpatient_admission -- D5 metric view for the inpatient admission and separation
 -- indicators registered in documentations/metrics/*.yml: inpatient_admission,
 -- inpatient_separation.
--- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-024).
+-- Spec: specs/dbt-model/metric__inpatient_admission.md (BL-001..BL-026).
 --
 -- Per-admission (subject) grain: one row per hospital admission or separation, value_numeric
 -- 1, so a consumer aggregates at whatever grain it needs -- any subset of the
@@ -54,7 +54,9 @@ common as (
         -- BL-017
         clinician,
         -- BL-018
-        clinician_designation
+        clinician_designation,
+        -- BL-026
+        admission_location_group_name
     from inpatient_admission
 )
 
@@ -96,7 +98,9 @@ select
     clinician,
     clinician_designation,
     null::integer as patient_days,
-    null::boolean as is_same_day
+    null::boolean as is_same_day,
+    -- BL-026
+    admission_location_group_name
 from common
 
 union all
@@ -135,6 +139,8 @@ select
         else greatest(visit_end__datetime::date - admission_start__datetime::date, 1)
     end::integer as patient_days,
     -- BL-022: admitted and separated on the same calendar date.
-    (visit_end__datetime::date = admission_start__datetime::date) as is_same_day
+    (visit_end__datetime::date = admission_start__datetime::date) as is_same_day,
+    -- BL-026
+    admission_location_group_name
 from common
 where visit_end__datetime is not null
