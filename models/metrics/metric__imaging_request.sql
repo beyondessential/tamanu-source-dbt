@@ -4,7 +4,7 @@
 -- Per-request (subject) grain: one row per imaging request, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. It is the imaging-request counterpart to
 -- metric__procedure over the same clinical model.
--- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-012.
+-- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-016.
 --
 -- BL-003: encounter_type is the setting the request was raised in -- read off the
 -- clinical__visit_detail segment clinical__procedure_occurrence resolves as its
@@ -20,7 +20,9 @@
 -- BL-010: sourced from clinical__procedure_occurrence's imaging branch, not
 -- bases/imaging_requests directly -- the same clinical layer metric__procedure builds on.
 -- deleted/entered_in_error rows are already excluded there (its own BL-002), so this model
--- does not re-filter status.
+-- does not re-filter status. The request-level attributes that model does not carry (status,
+-- priority, cancellation reason) are read off bases/imaging_requests by id, the same way the
+-- results, areas and notes below join (BL-013, BL-014).
 --
 -- BL-005: facility_id is the resolved segment's own care_site_id, the same source
 -- metric__procedure uses, so a procedure and an imaging request belonging to one segment
@@ -37,6 +39,12 @@ with procedure_occurrence as (
 
 visit_detail as (
     select * from {{ ref('clinical__visit_detail') }}
+),
+
+-- BL-013, BL-014: the request's own status, priority and cancellation reason.
+-- procedure_occurrence_id is imaging_requests.id unchanged.
+imaging_requests as (
+    select * from {{ ref('imaging_requests') }}
 ),
 
 imaging_results as (
@@ -61,6 +69,10 @@ person as (
 
 locations as (
     select * from {{ ref('locations') }}
+),
+
+location_groups as (
+    select * from {{ ref('location_groups') }}
 ),
 
 -- BL-011: the resolved segment's own department, resolved to a name for metric_filters
@@ -146,11 +158,20 @@ requests as (
         pr.gender_source_value as sex,
         {{ age_years('po.procedure_date', 'pr') }} as age_years,
         po.is_completed,
+        -- BL-013: the request's lifecycle status and, for a cancelled one, the reason, as
+        -- recorded
+        ir.status as request_status,
+        ir.reason_for_cancellation,
+        -- BL-014: the request's priority, as recorded
+        ir.priority,
         po.procedure_source_value as imaging_type_code_raw,
         po.procedure_source_name as imaging_type_raw,
         areas.imaging_area as imaging_area_raw,
         -- BL-011
-        coalesce(dept.name, 'Not recorded') as department
+        coalesce(dept.name, 'Not recorded') as department,
+        -- BL-015: the area -- the location group of the segment's own location, not the
+        -- encounter's current one
+        lg.name as location_group_name
     from procedure_occurrence po
     -- BL-003: inner join on the segment FK clinical__procedure_occurrence resolves (its
     -- BL-005), so every metric over that model agrees on which segment a request belongs
@@ -165,6 +186,12 @@ requests as (
     -- anomaly, excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = vd.care_site_id
+    -- BL-013: left join -- every request in the clinical branch comes from this base, but a
+    -- missing row is surfaced as 'Not recorded' rather than dropping the request
+    left join imaging_requests ir
+        on ir.id = po.procedure_occurrence_id
+    left join location_groups lg
+        on lg.id = loc.location_group_id
     left join completions c
         on c.imaging_request_id = po.procedure_occurrence_id
     left join imaging_areas areas
@@ -192,8 +219,18 @@ select
     visit_detail_concept_name,
     sex,
     -- the clinical model's own completion flag -- cancelled and still-open requests are
-    -- both false, indistinguishable from each other by this column alone.
+    -- both false; request_status tells them apart.
     is_completed,
+    -- BL-013: the request's lifecycle status as recorded (pending, in_progress, completed,
+    -- cancelled), so a cancelled request, a pending one and a completed one can be told
+    -- apart. Coalesced so an array filter cannot drop a request with no status.
+    coalesce(request_status, 'Not recorded') as request_status,
+    -- BL-013: why a cancelled request was cancelled. Coalesced for the same reason; only a
+    -- cancelled request is expected to carry one, so a consumer scopes to request_status
+    -- first.
+    coalesce(reason_for_cancellation, 'Not specified') as cancellation_reason,
+    -- BL-014: the request's priority as recorded (e.g. routine, urgent), never NULL.
+    coalesce(priority, 'Not recorded') as priority,
     -- BL-007: raw Tamanu modality value, never NULL.
     coalesce(imaging_type_code_raw, 'Not recorded') as imaging_type_code,
     -- BL-007: readable modality label, falling back to the raw code where the shared
@@ -205,5 +242,15 @@ select
     -- BL-008: a measure, not a dimension -- age classification is the consumer's.
     age_years,
     -- BL-011: the resolved segment's own department, never NULL.
-    department
+    department,
+    -- BL-015: the area, never NULL.
+    coalesce(location_group_name, 'Not recorded') as location_group_name,
+    -- BL-016: whole minutes from the request being raised to its completion, for a completed
+    -- request. NULL while it is pending, in progress or cancelled, and NULL where the
+    -- completion is recorded before the request, which is a recording error and not a
+    -- negative duration.
+    case
+        when is_completed and completed_datetime >= requested_datetime
+            then round(extract(epoch from (completed_datetime - requested_datetime)) / 60)
+    end::numeric as turnaround__minutes
 from requests
