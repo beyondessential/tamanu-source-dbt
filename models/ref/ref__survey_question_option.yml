@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: ref__survey_question_option
+    description: "{{ doc('ref__survey_question_option') }}"
+    config:
+      tags:
+        - reference
+      meta:
+        owner: bes-maui
+        domain: admin
+        pii: false
+        classification: internal
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_002_ref__survey_question_option_component_option_index_unique
+          arguments:
+            combination_of_columns:
+              - survey_screen_component_id
+              - option_index
+    columns:
+      - name: survey_id
+        data_type: character varying(255)
+        description: "{{ doc('survey_screen_components__survey_id') }}"
+      - name: survey_code
+        data_type: character varying(255)
+        description: "{{ doc('surveys__code') }}"
+      - name: survey_name
+        data_type: character varying(255)
+        description: "{{ doc('surveys__name') }}"
+      - name: survey_type
+        data_type: character varying(255)
+        description: "{{ doc('surveys__survey_type') }}"
+      - name: program_id
+        data_type: character varying(255)
+        description: "{{ doc('surveys__program_id') }}"
+      - name: survey_visibility_status
+        data_type: character varying(255)
+        description: "{{ doc('ref__survey_question_option__survey_visibility_status') }}"
+      - name: survey_screen_component_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__survey_question_option__survey_screen_component_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__survey_question_option_component_id_not_null
+      - name: question_visibility_status
+        data_type: character varying(255)
+        description: "{{ doc('ref__survey_question_option__question_visibility_status') }}"
+      - name: data_element_id
+        data_type: character varying(255)
+        description: "{{ doc('ref__survey_question_option__data_element_id') }}"
+      - name: data_element_code
+        data_type: character varying(255)
+        description: "{{ doc('program_data_elements__code') }}"
+      - name: data_element_name
+        data_type: character varying(255)
+        description: "{{ doc('program_data_elements__name') }}"
+      - name: question_text
+        data_type: character varying(255)
+        description: "{{ doc('ref__survey_question_option__question_text') }}"
+      - name: question_type
+        data_type: character varying(31)
+        description: "{{ doc('ref__survey_question_option__question_type') }}"
+      - name: options_source
+        data_type: text
+        description: "{{ doc('ref__survey_question_option__options_source') }}"
+      - name: option_index
+        data_type: integer
+        description: "{{ doc('ref__survey_question_option__option_index') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__survey_question_option_option_index_not_null
+      - name: option_label
+        data_type: text
+        description: "{{ doc('ref__survey_question_option__option_label') }}"
+        data_tests:
+          - not_null:
+              name: ac_001_ref__survey_question_option_option_label_not_null
