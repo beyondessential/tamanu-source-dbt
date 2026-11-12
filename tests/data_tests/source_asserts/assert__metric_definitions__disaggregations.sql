@@ -44,6 +44,9 @@ where trim(t.d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- encounter_diagnosis's diagnosis, grouped to its ICD-10 chapter and block
+        'diagnosis__icd10_chapter',
+        'diagnosis__icd10_block',
         -- inpatient_admission's 30-day readmission flag: true where the same patient's
         -- immediately preceding admission discharged no more than 30 days before this one
         -- started
