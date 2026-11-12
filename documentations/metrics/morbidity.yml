@@ -49,3 +49,35 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__encounter_diagnosis.md
+
+
+- metric_id: patient_condition
+  kind: metric
+  name: Patient ongoing conditions
+  description: >-
+    Ongoing conditions recorded on patients, from the date recorded to the date resolved. One row
+    per condition record; count patients with a distinct count over person_id.
+  numerator_description: >-
+    Patient ongoing condition records not deleted, counted on the date recorded
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of the conditions on a patient's ongoing conditions list, which no external body
+    registers as an indicator. The condition is emitted as recorded, with its ICD-10 code where it
+    comes from the diagnosis list, so registration and prevalence by condition are formed by the
+    consumer. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: patient_condition
+  disaggregations:
+  - sex
+  - patient_location_id
+  - condition_id
+  - condition_code
+  - condition_name
+  - is_resolved
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__patient_condition.md
