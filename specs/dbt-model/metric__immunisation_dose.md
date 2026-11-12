@@ -11,9 +11,9 @@
 | **Status** | `review` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` (branch line `2.57`, forward-ported) |
-| **Linear issue** | [MAUI-6808](https://linear.app/bes/issue/MAUI-6808) (initial), [MAUI-7034](https://linear.app/bes/issue/MAUI-7034) (BL-009 to BL-014) |
+| **Linear issue** | [MAUI-6808](https://linear.app/bes/issue/MAUI-6808) (initial), [MAUI-7034](https://linear.app/bes/issue/MAUI-7034) (BL-009 to BL-014), [MAUI-7122](https://linear.app/bes/issue/MAUI-7122) (BL-015) |
 | **Created** | 2026-10-20 (the model shipped in MAUI-6808 without this file; its clauses are recorded here as implemented) |
-| **Last updated** | 2026-10-20 |
+| **Last updated** | 2026-11-13 |
 
 Canonical definition for `immunisation_dose`: one row per vaccine dose given, recorded in Tamanu.
 
@@ -75,6 +75,7 @@ D5 wide format, plus disaggregations and measures.
 | `age_years` | integer | Age at the dose in whole completed years, a measure (BL-012) |
 | `facility_source` | text | `'dose location'` or `'encounter location'` (BL-014, AC-017) |
 | `is_given_elsewhere` | boolean | Recorded as given elsewhere; counted, flagged (BL-014, AC-018) |
+| `department` | text | The dose's encounter's department, by name, `'Not recorded'` when none (BL-015, AC-020) |
 
 ## Data tables
 
@@ -117,6 +118,9 @@ Tupaia data tables over this view are configured in `tupaia-data-product` at
 - **BL-014 (source flags):** `facility_source` is `'dose location'` or `'encounter location'` by
   where BL-004 took the location, and `is_given_elsewhere` is the dose's given-elsewhere flag
   (false when unset), so a consumer can exclude or label those doses.
+- **BL-015 (department):** `department` is the name of the dose's encounter's department
+  (`encounters.department_id` to `bases/departments`), `'Not recorded'` when the encounter has
+  none or it no longer resolves, so an array filter cannot drop the row.
 
 ## Acceptance criteria
 
@@ -130,7 +134,7 @@ Tupaia data tables over this view are configured in `tupaia-data-product` at
 | AC-006 | `value_numeric` is `not_null` and `1` | BL-003 | `not_null` + `accepted_values` |
 | AC-007 | `facility_id` is `not_null` | BL-004 | `not_null` |
 | AC-008 | `subject_id` is `not_null` | grain | `not_null` |
-| AC-009 | The projection resolves as specified: inclusion, period, every fallback and every pass-through, including the BL-009 to BL-012 fields | BL-001, BL-002, BL-005–BL-012 | unit test `ac_009_metric__immunisation_dose_projection`, plus `period_end >= period_start` |
+| AC-009 | The projection resolves as specified: inclusion, period, every fallback and every pass-through, including the BL-009 to BL-012 and BL-015 fields | BL-001, BL-002, BL-005–BL-012, BL-015 | unit test `ac_009_metric__immunisation_dose_projection`, plus `period_end >= period_start` |
 | AC-010 | `disease` is `not_null` | BL-005 | `not_null` |
 | AC-011 | `period_end` is `not_null` | BL-002 | `not_null` |
 | AC-012 | `age_group__who_epi_schedule` is `not_null` | BL-006 | `not_null` |
@@ -141,13 +145,14 @@ Tupaia data tables over this view are configured in `tupaia-data-product` at
 | AC-017 | `facility_source` is `not_null` and one of `'dose location'`, `'encounter location'` | BL-014 | `not_null` + `accepted_values` |
 | AC-018 | `is_given_elsewhere` is `not_null` | BL-014 | `not_null` |
 | AC-019 | Every given vaccination whose patient is included is an `immunisation_dose` row, whatever its location and whether given elsewhere | BL-001, BL-004 | singular test `data_test__metric__immunisation_dose` (`error`) |
+| AC-020 | `department` is `not_null` | BL-015 | `not_null` |
 
 ## Registry entry
 
 `immunisation_dose` in `documentations/metrics/immunisation.yml`: `kind: metric`,
 `subject_grain: dose`, `spec_path` pointing here. `disaggregations: facility_id, sex, disease,
 age_group__who_epi_schedule, dose_label, patient_location_id, vaccine_id, vaccine_label,
-vaccine_category, location_group_id, facility_source, is_given_elsewhere`. `person_id`,
+vaccine_category, location_group_id, facility_source, is_given_elsewhere, department`. `person_id`,
 `age_days` and `age_years` are not disaggregations — an aggregation key and two measures. Every disaggregation is on the allowlist in
 `tests/data_tests/source/assert__metric_definitions__disaggregations.sql`.
 
@@ -156,8 +161,8 @@ vaccine_category, location_group_id, facility_source, is_given_elsewhere`. `pers
 | Ref | Layer | Role |
 |---|---|---|
 | `clinical__drug_exposure` | `clinical/` | Dose identity and date (BL-001, BL-002) |
-| `int__vaccine_administration_attributes` | `intermediate/` | Every attribute (BL-004–BL-012, BL-014), shared with `metric__immunisation_refusal` |
-| `vaccine_administrations`, `vaccine_schedules`, `locations`, `encounters`, `reference_data` | `bases/` | Read by the intermediate model |
+| `int__vaccine_administration_attributes` | `intermediate/` | Every attribute (BL-004–BL-012, BL-014, BL-015), shared with `metric__immunisation_refusal` |
+| `vaccine_administrations`, `vaccine_schedules`, `locations`, `encounters`, `reference_data`, `departments` | `bases/` | Read by the intermediate model |
 | `clinical__person` | `clinical/` | Sex, village and date of birth (BL-006, BL-008, BL-012) |
 | `metric_definitions` | root | Registry (AC-003) |
 
@@ -192,3 +197,4 @@ It bands `age_days` / `age_years` itself, maps `facility_id`, `patient_location_
 |---|---|---|
 | 2026-10-20 | Maui team | Spec written for the model shipped in MAUI-6808, recording BL-001 to BL-008 as implemented. Added BL-009 to BL-013 (MAUI-7034): `person_id`, `vaccine_id` / `vaccine_label` / `vaccine_category`, `location_group_id`, `age_days` / `age_years`, and the move to `classification: restricted`; AC-014 to AC-016 and AC-009 extended |
 | 2026-10-21 | Maui team | BL-004 rewritten (MAUI-7034): the location falls back to the encounter's, and doses with no location of their own or given elsewhere are kept. The old inner join on the dose's own location dropped ~34,600 of Tuvalu's ~70,700 given doses — older and migrated records held the location only on the encounter — where the legacy pipeline counted them. BL-014: `facility_source` and `is_given_elsewhere`. BL-001 restated (only the patient now excludes). AC-017 to AC-019 added |
+| 2026-11-13 | Maui team | BL-015 (MAUI-7122): `department`, the dose's encounter's department by name, for Naoero's immunisation dashboards. AC-020 added and AC-009 extended |
