@@ -111,3 +111,12 @@ an unrecorded attendant reads 'Not recorded'.
 Raw source value: health_facility, home or other. Ungrouped and never NULL, same treatment
 as birth_delivery_type -- an unrecorded place reads 'Not recorded'.
 {% enddocs %}
+
+{% docs metric__birth__patient_location_id %}
+The newborn's own home village (clinical__person.location_id, an id into ref__location) -- where
+the baby lives, not where it was born. Distinct from facility_id, the facility of the birth.
+
+NULL when the newborn's record carries no village. Not coalesced to a placeholder: this is an id
+a consumer joins to a village list, the same rule as metric__immunisation_dose's
+patient_location_id, so births and doses can be read against one village list.
+{% enddocs %}
