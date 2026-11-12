@@ -44,6 +44,12 @@ where trim(t.d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- death's maternal flags from the death record: pregnant, and pregnancy contributed
+        'was_pregnant',
+        'pregnancy_contributed',
+        -- encounter_diagnosis's diagnosis, grouped to its ICD-10 chapter and block
+        'diagnosis__icd10_chapter',
+        'diagnosis__icd10_block',
         -- inpatient_admission's 30-day readmission flag: true where the same patient's
         -- immediately preceding admission discharged no more than 30 days before this one
         -- started
@@ -127,9 +133,12 @@ where trim(t.d) not in (
         -- applied downstream rather than registered here.
         'lab_order',
         'lab_order_code',
-        -- lab_order's request lifecycle status and, for a cancelled request, its reason, as recorded
+        -- lab_order's and imaging_request's request lifecycle status and, for a cancelled
+        -- request, its reason, as recorded
         'request_status',
         'cancellation_reason',
+        -- imaging_request's priority (e.g. routine, urgent), as recorded (MAUI-7122)
+        'priority',
         -- prescription_discontinuation's recorded reason, as recorded and ungrouped
         'discontinuing_reason',
         -- lab_test's request-level category (e.g. Haematology), as recorded
@@ -176,6 +185,11 @@ where trim(t.d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
+        -- procedure's clinician and anaesthetist, resolved to names through ref__provider, and
+        -- its anaesthetic, resolved to its reference-data name (MAUI-7122)
+        'procedure_clinician',
+        'procedure_anaesthetist',
+        'anaesthetic',
         -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
         'chief_complaint',
         -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
@@ -183,12 +197,16 @@ where trim(t.d) not in (
         'clinician_designation',
         'admission_clinician_designation',
         -- encounter's location group (area), id and name (MAUI-6906); the name also on
-        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131)
+        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131), procedure's own
+        -- location's group and imaging_request (MAUI-7122)
         'location_group_id',
         'location_group_name',
         -- inpatient_admission's / _separation's admission location group (ward/area), by name
         -- (MAUI-7131)
         'admission_location_group_name',
+        -- inpatient_separation's discharge location group: the ward/area the patient was
+        -- discharged from, by name (MAUI-7122)
+        'discharge_location_group_name',
         -- opd_visit's referral source, carried as recorded, as admission_source is (MAUI-7131)
         'referral_source',
         -- outpatient_appointment's Tamanu status as recorded (e.g. No-show) and its appointment

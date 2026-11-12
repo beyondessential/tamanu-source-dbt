@@ -27,8 +27,9 @@ metrics:
     morbidity reporting is built on cause-of-admission and cause-of-death groupings over a national
     coding standard rather than on a plain count of what clinicians recorded. Deployments also
     differ in what they code diagnoses with -- some use real ICD-10, others a local reference-data
-    list -- so this metric emits the diagnosis as recorded and leaves any grouping to the consumer,
-    which is what lets it serve deployments on either. Pending alignment with the deploying
+    list -- so this metric emits the diagnosis as recorded, with its ICD-10 chapter and block
+    alongside for deployments coding in ICD-10 ('Unclassified' for a local code), and leaves any
+    national grouping to the consumer, which is what lets it serve deployments on either. Pending alignment with the deploying
     country's national HMIS definition.
   unit: count
   subject_grain: diagnosis
@@ -42,6 +43,8 @@ metrics:
   - diagnosis
   - diagnosis_certainty
   - is_primary
+  - diagnosis__icd10_chapter
+  - diagnosis__icd10_block
   variant_of: null
   owner: bes-maui
   status: approved
@@ -68,8 +71,7 @@ metrics:
     one. No external body registers a single diagnosis-count indicator scoped to inpatient
     care specifically, and morbidity classification (ICD-10 chapter, block) is a deployment
     choice, so this metric emits the diagnosis as recorded and leaves any grouping to the
-    consumer, the same approach metric__encounter_diagnosis and metric__opd_diagnosis take.
-    Pending alignment with the deploying country's national HMIS definition.
+    consumer, the same approach metric__opd_diagnosis takes. Pending alignment with the deploying country's national HMIS definition.
   unit: count
   subject_grain: diagnosis
   disaggregations:
@@ -83,3 +85,34 @@ metrics:
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__ipd_diagnosis.md
+
+- metric_id: patient_condition
+  kind: metric
+  name: Patient ongoing conditions
+  description: >-
+    Ongoing conditions recorded on patients, from the date recorded to the date resolved. One row
+    per condition record; count patients with a distinct count over person_id.
+  numerator_description: >-
+    Patient ongoing condition records not deleted, counted on the date recorded
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of the conditions on a patient's ongoing conditions list, which no external body
+    registers as an indicator. The condition is emitted as recorded, with its ICD-10 code where it
+    comes from the diagnosis list, so registration and prevalence by condition are formed by the
+    consumer. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: patient_condition
+  disaggregations:
+  - sex
+  - patient_location_id
+  - condition_id
+  - condition_code
+  - condition_name
+  - is_resolved
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__patient_condition.md

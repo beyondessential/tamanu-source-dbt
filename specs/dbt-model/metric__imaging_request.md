@@ -11,7 +11,7 @@
 | **Status** | `draft` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Linear issue** | MAUI-6806 |
+| **Linear issue** | MAUI-6806, MAUI-7122 |
 
 Canonical definition for `imaging_request`: one row per imaging request, in any encounter
 setting. The direct imaging-request counterpart to `metric__procedure` -- modelled on its
@@ -39,8 +39,10 @@ reads as `triage`, not `admission`.
 1. **By modality / area** -- `imaging_type` and `imaging_area`.
 2. **By setting** -- `encounter_type`, so a consumer scopes to one setting from this
    single view.
-3. **Turnaround time** -- not currently surfaced. Computable later
-   from `period_start`/`period_end`.
+3. **By status, priority and cancellation reason** -- `request_status`, `priority` and
+   `cancellation_reason`, so a card splits requests by priority, counts cancelled ones by
+   reason and counts completed ones (MAUI-7122).
+4. **Turnaround time** -- `turnaround__minutes`, request to completion (BL-016).
 
 **Who reads it.** Any Tupaia dashboard needing imaging-request volume across every
 setting, or split by setting, via a data table over this view in `tupaia-data-product`, once
@@ -70,7 +72,7 @@ attribution here decides *disaggregation*, not identity.
 
 ## Output schema
 
-D5 wide format, plus eight disaggregation columns and one measure attribute.
+D5 wide format, plus fourteen disaggregation columns and two measures.
 `encounter_type` is among them, since this metric applies no setting restriction.
 
 | Column | Type | Notes |
@@ -88,12 +90,17 @@ D5 wide format, plus eight disaggregation columns and one measure attribute.
 | `visit_detail_concept_id` | integer | The resolved segment's OMOP Visit concept: 9201, 9202, 9203 or 0 (BL-012) |
 | `visit_detail_concept_name` | text | Its OMOP name, e.g. Outpatient Visit (BL-012) |
 | `sex` | varchar(255) | `clinical__person.gender_source_value` |
-| `is_completed` | boolean | `clinical__procedure_occurrence`'s completion flag. Never NULL. Does not distinguish `cancelled` from `pending`/`in_progress` |
+| `is_completed` | boolean | `clinical__procedure_occurrence`'s completion flag. Never NULL. Does not distinguish `cancelled` from `pending`/`in_progress` -- `request_status` does |
+| `request_status` | text | The request's lifecycle status as recorded (BL-013). Never NULL: `'Not recorded'` when absent |
+| `cancellation_reason` | text | Why a cancelled request was cancelled, as recorded (BL-013). Never NULL: `'Not specified'` when absent |
+| `priority` | text | The request's priority, as recorded (BL-014). Never NULL: `'Not recorded'` when absent |
 | `imaging_type` | text | Readable modality label, falling back to `imaging_type_code` then `'Not recorded'` (BL-007). Never NULL |
 | `imaging_type_code` | text | Tamanu's raw imaging-type value, or `'Not recorded'` (BL-007). Never NULL |
 | `imaging_area` | text | Comma-joined body area/study area, or `'Not recorded'` (BL-007). Never NULL |
 | `age_years` | integer | Age in whole years at the request, unbanded (BL-008). A measure, not a dimension |
 | `department` | text | The department of the segment the request was raised in, resolved to a name (BL-011). Never NULL |
+| `location_group_name` | text | The area: the location group of the resolved segment's own location (BL-015). Never NULL: `'Not recorded'` when absent |
+| `turnaround__minutes` | numeric | Minutes from request to completion, for a completed request; NULL otherwise (BL-016) |
 
 ## Data tables
 
@@ -179,8 +186,9 @@ yet built as of this spec.
   `clinical__procedure_occurrence`, filtered to `procedure_type_source_value = 'imaging
   request'`. `deleted`/`entered_in_error` requests are excluded upstream; this model does not
   re-filter status. The clinical model carries only `is_completed` (boolean), not Tamanu's
-  four-value `status`, so `cancelled` and still-open requests remain indistinguishable
-  here.
+  four-value `status`; the status, priority and cancellation reason are read off
+  `bases/imaging_requests` by id (BL-013, BL-014), the same way `imaging_results`,
+  `imaging_request_areas` and `notes` join.
 
 - **BL-011 (department):** the resolved segment's own `department_id`, resolved to a name
   through `departments` so a consumer scopes to one department (e.g. Dental) via
@@ -188,6 +196,35 @@ yet built as of this spec.
   rather than an opaque Tamanu id. `bases/locations` carries no `department_id`, so it comes
   off the segment directly. Never NULL -- falls back to `'Not recorded'`.
 - **BL-012 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
+
+- **BL-013 (request status and cancellation reason):** `request_status` is
+  `imaging_requests.status` as recorded -- `pending`, `in_progress`, `completed` or `cancelled`,
+  since `deleted` and `entered_in_error` never reach this model (BL-010) -- and
+  `cancellation_reason` is `imaging_requests.reason_for_cancellation`, a deployment-customisable
+  list (by default `duplicate` and `entered-in-error`). Emitted raw: grouping statuses into the
+  labels a card shows is the consumer's choice. Read off `bases/imaging_requests` by id through
+  a left join, coalesced to `'Not recorded'` and `'Not specified'` so an array filter cannot
+  drop a row. Only a cancelled request is expected to carry a reason. `is_completed` keeps its
+  meaning, and a consumer telling a cancelled request from a pending one reads
+  `request_status`. Resolves OQ-002 (MAUI-7122).
+
+- **BL-014 (priority):** `priority` is `imaging_requests.priority` as recorded, a
+  deployment-customisable list (by default `routine`, `urgent`, `asap`, `stat`), coalesced to
+  `'Not recorded'` (MAUI-7122).
+
+- **BL-015 (area):** `location_group_name` is the location group of the resolved segment's own
+  location (BL-005), not the encounter's current one, coalesced to `'Not recorded'` -- the same
+  rule `metric__lab_order` applies. Not `imaging_requests.location_group_id`, the request's own
+  area field, so the area agrees with `facility_id` and `department`, which both come off the
+  same segment (MAUI-7122).
+
+- **BL-016 (turnaround):** `turnaround__minutes` is the whole minutes from `period_start` to
+  `period_end`, for a request whose status is `completed` -- so it uses the same completion
+  timestamp BL-002 gates, the earliest `imaging_results.datetime`. NULL while a request is
+  pending, in progress or cancelled, and NULL where the completion is recorded before the
+  request -- a recording error, which the `period_end_at_or_after_start` warning already
+  surfaces, rather than a negative duration. A measure: a consumer sums it and divides by the
+  count of rows where it is not NULL, never averaging per-group averages (MAUI-7122).
 
 ## Acceptance criteria
 
@@ -208,6 +245,10 @@ yet built as of this spec.
 | AC | `imaging_type_code` is `not_null` | BL-007 | `not_null` |
 | AC | `imaging_area` is `not_null` | BL-007 | `not_null` |
 | AC | `department` is `not_null` | BL-011 | `not_null` |
+| AC | `request_status` is `not_null` | BL-013 | `not_null` |
+| AC | `cancellation_reason` is `not_null` | BL-013 | `not_null` |
+| AC | `priority` is `not_null` | BL-014 | `not_null` |
+| AC | `location_group_name` is `not_null` | BL-015 | `not_null` |
 | AC | `period_end` is populated only where `is_completed` | BL-002 | `dbt_utils.expression_is_true` |
 
 Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), matching
@@ -217,12 +258,17 @@ Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), match
 
 One active row -- `imaging_request`, `kind: metric`, `subject_grain: imaging_request`,
 `status: draft`, `spec_path` pointing here, with `disaggregations:
-facility_id,encounter_type,sex,is_completed,imaging_type,imaging_type_code,imaging_area,department`.
+facility_id,encounter_type,visit_detail_concept_id,visit_detail_concept_name,sex,is_completed,request_status,cancellation_reason,priority,imaging_type,imaging_type_code,imaging_area,department,location_group_name`.
 
 `encounter_type` is already admitted to the allowlist in
 `assert__metric_definitions__disaggregations` (`metric__procedure`'s own setting
 disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_completed`,
-`facility_id`, `sex` are all already admitted by `metric__procedure`.
+`facility_id`, `sex` are all already admitted by `metric__procedure`. `request_status`,
+`cancellation_reason` and `location_group_name` are already admitted by `metric__lab_order`
+and the encounter metrics; `priority` is added for this model (MAUI-7122).
+
+Regenerate `macros/metric_definitions.sql` with
+`python scripts/generate_metric_definitions_macro.py` and commit it -- CI fails on drift.
 
 ## Dependencies
 
@@ -230,6 +276,7 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 |---|---|---|
 | `clinical__procedure_occurrence` | `clinical/` | The request itself, via its imaging branch: identity, timestamp, modality, completion flag, grain anchor (BL-002, BL-007, BL-010) |
 | `clinical__visit_detail` | `clinical/` | `encounter_type`, facility and department: the resolved segment's own type, `care_site_id` and `department_id` (BL-003, BL-005, BL-011) |
+| `imaging_requests` | `bases/` | Status, priority and cancellation reason, by id (BL-013, BL-014) |
 | `imaging_results` | `bases/` | Completion timestamp, `min(datetime)` per request (BL-002) |
 | `imaging_request_areas` | `bases/` | Structured body-area links (BL-007) |
 | `reference_data` | `bases/` | Area names for `imaging_request_areas.area_id` (BL-007) |
@@ -237,6 +284,7 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 | `clinical__person` | `clinical/` | Sex and birth date (BL-008) |
 | `locations` | `bases/` | Facility id of the resolved segment's `care_site_id` (BL-005) |
 | `departments` | `bases/` | Department name for the resolved segment (BL-011) |
+| `location_groups` | `bases/` | Area name for the resolved segment's location (BL-015) |
 | `metric_definitions` | root | Registry; `metric_id` FK target |
 
 ## Consumers
@@ -252,12 +300,13 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
    minute-resolution timestamps, so a monthly card applies its own month bucketing and
    filters the current month itself.
 3. **Not rely on `is_completed` to mean "not cancelled."** A cancelled request and a
-   still-open one are both `false`, indistinguishable by this column alone.
+   still-open one are both `false`. Read `request_status` to tell them apart, and scope to
+   `request_status = 'cancelled'` before splitting by `cancellation_reason`.
 4. **Filter `encounter_type` itself, if a single setting is wanted.** This metric does not
    pre-scope to any setting -- a consumer wanting outpatient clinic imaging requests
    filters `encounter_type = 'clinic'`, and inpatient `'admission'`.
-5. **Compute turnaround time itself, if needed.** Not emitted; both `period_start` and
-   `period_end` remain on the model.
+5. **Average turnaround over the completed requests only.** Sum `turnaround__minutes` and
+   divide by the count of rows where it is not NULL.
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
    here.
 
@@ -273,8 +322,10 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 
 - **OQ-001:** Should a coarser AIHW-aligned modality grouping be added as a data-table-layer
   derived column in `tupaia-data-product`, alongside the raw `imaging_type`?
-- **OQ-002:** Should the full `pending`/`in_progress`/`completed`/`cancelled` status
-  lifecycle be reintroduced as a disaggregation?
+- **OQ-002 -- resolved by BL-013:** Should the full `pending`/`in_progress`/`completed`/`cancelled` status
+  lifecycle be reintroduced as a disaggregation? Yes: `request_status` carries it as recorded,
+  so a cancelled request is told apart from a pending one, and `is_completed` keeps its
+  meaning (MAUI-7122).
 
 ## Change log
 
@@ -282,3 +333,5 @@ disaggregation); `imaging_type`, `imaging_type_code`, `imaging_area`, `is_comple
 |---|---|---|
 | 2026-09-11 | @gagank16 | Initial draft (MAUI-6806) -- first all-settings imaging-request metric in the repo |
 | 2026-09-28 | @gagank16 | Single imaging-request metric: the OPD and IPD scoped metrics retired behind an `encounter_type` filter, `department` added |
+| 2026-11-13 | @hrazasalman | `request_status`, `cancellation_reason`, `priority` and `location_group_name` added for Nauru's Radiology dashboard (BL-013, BL-014, BL-015), resolving OQ-002 (MAUI-7122) |
+| 2026-11-13 | @hrazasalman | `turnaround__minutes` added, request to completion (BL-016) (MAUI-7122) |
