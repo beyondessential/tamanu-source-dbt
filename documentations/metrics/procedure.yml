@@ -27,8 +27,7 @@ metrics:
     procedure classifications (e.g. ICD-10-PCS, CPT) code what a procedure is, not how a
     deployment should count procedure activity, and deployments differ in what they code
     procedures with. This metric emits the procedure as recorded and leaves any grouping to the
-    consumer, the same approach encounter_diagnosis takes for diagnoses. Pending alignment with
-    the deploying country's national HMIS definition.
+    consumer. Pending alignment with the deploying country's national HMIS definition.
   unit: count
   subject_grain: procedure
   disaggregations:

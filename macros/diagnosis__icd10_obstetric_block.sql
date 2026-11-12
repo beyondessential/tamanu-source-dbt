@@ -23,8 +23,8 @@
     codes that failed to resolve at all.
 
     Named diagnosis__<grouping> so the value carries which grouping produced it -- groupings
-    are not comparable with each other. Scoped to chapter XV; a general block macro covers
-    every chapter's ~130 blocks and is its own piece of work.
+    are not comparable with each other. Scoped to chapter XV; diagnosis__icd10_block covers
+    every chapter.
 
     Matching is on the first three characters of the code, upper-cased -- see
     diagnosis__icd10_chapter for why a plain text `between` is enough and an integer cast
