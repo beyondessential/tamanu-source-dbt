@@ -41,11 +41,8 @@ where
         when {{ parameter('facilityId') }} is null then true
         else facility_id = {{ parameter('facilityId') }}
     end
-    -- BL-014: the triage category is selectable
-    and case
-        when {{ parameter('triageScore') }} is null then true
-        else score = {{ parameter('triageScore') }}
-    end
+    -- BL-014 (see specs/reports/emergency-triage-line-list.md): the triage category is a multi-select.
+    and {{ multi_select_filter('score::text', 'triageScore') }}
     -- BL-012: the date range filters on the date of triage, inclusive of both bounds
     and {{ to_user_selected_timezone('triage_datetime') }}::date
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

@@ -6,18 +6,18 @@ models:
     config:
       tags:
         - clinical
-    # BL-009: no data_table_* meta. The Tupaia data tables over this model, once one exists,
-    # are configured in tupaia-data-product at tamanu/data_tables/, one file per data table --
-    # see the spec's § Consumers.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # BL-010: per-admission rows, but the subject is an encounter id with no patient
-      # identifier, name, birth date or diagnosis code alongside it -- no patient is
-      # identifiable through a row, so this stays unrestricted and covers standard and
-      # sensitive facilities alike.
-      pii: false
-      classification: internal
+      # BL-009: no data_table_* meta. The Tupaia data tables over this model, once one exists,
+      # are configured in tupaia-data-product at tamanu/data_tables/, one file per data table --
+      # see the spec's § Consumers.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-010: per-admission rows, but the subject is an encounter id with no patient
+        # identifier, name, birth date or diagnosis code alongside it -- no patient is
+        # identifiable through a row, so this stays unrestricted and covers standard and
+        # sensitive facilities alike.
+        pii: false
+        classification: internal
     data_tests:
       # One row per admission. A duplicate would double-count an admission in any consumer
       # that sums value_numeric -- error even though the repo default is warn.
@@ -175,6 +175,13 @@ models:
           # NULL rows, so a NULL here would silently disappear the admission.
           - not_null:
               name: ac_017_metric__inpatient_admission_is_readmission_within_30_days_not_null
+      - name: is_readmission_within_14_days
+        data_type: boolean
+        description: "{{ doc('metric__inpatient_admission__is_readmission_within_14_days') }}"
+        data_tests:
+          # Coalesced to false for the same reason as is_readmission_within_30_days.
+          - not_null:
+              name: ac_025_metric__inpatient_admission_is_readmission_within_14_days_not_null
       - name: clinician
         data_type: text
         description: "{{ doc('metric__inpatient_admission__clinician') }}"
@@ -197,3 +204,10 @@ models:
         description: "{{ doc('metric__inpatient_admission__is_same_day') }}"
         # BL-022: populated only on inpatient_separation, NULL on inpatient_admission --
         # covered by the singular test's AC-022, not a column-grain generic test.
+      - name: admission_location_group_name
+        data_type: text
+        description: "{{ doc('metric__inpatient_admission__admission_location_group_name') }}"
+        data_tests:
+          # BL-026: coalesced to 'Not recorded' for the same reason as admission_source.
+          - not_null:
+              name: ac_026_metric__inpatient_admission_admission_location_group_name_not_null

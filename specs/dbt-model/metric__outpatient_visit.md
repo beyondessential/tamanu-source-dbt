@@ -11,6 +11,7 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
+| **Linear** | MAUI-7131 (location group, referral source and visit start hour, for Naoero's outpatient dashboard) |
 
 Canonical definition for `opd_visit`: one row per outpatient visit, at day resolution.
 Replaces the earlier `ds__outpatient_visit` dataset, converting it onto the same
@@ -32,7 +33,7 @@ than assumed to run to the encounter end (BL-011), and the outcome is carried as
 disaggregation rather than as a second metric (BL-009).
 
 **Who reads it.** The Tupaia "Hospital Administration" dashboard for Queen of Sheba
-Hospital, via a data table over this view.
+Hospital, and Naoero's (Nauru's) Outpatient dashboard, via data tables over this view.
 
 ## Definition sources
 
@@ -57,7 +58,7 @@ visit`, and is unique because only the intake segment is counted (BL-003) -- so
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and two measure attributes.
+D5 wide format, plus the disaggregation columns and two measure attributes below.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -83,6 +84,9 @@ D5 wide format, plus seven disaggregation columns and two measure attributes.
 | `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
 | `opd_time__minutes` | numeric | Time in the outpatient department, minutes to 2 dp (BL-011). A measure, not a dimension. NULL while open |
 | `department` | text | Intake segment's own department, resolved to a name (BL-013). Never NULL |
+| `location_group_name` | text | Location group (clinic/area) of the intake segment's location, resolved to a name (BL-015). Never NULL (AC-017) |
+| `referral_source` | text | The encounter's referral source, resolved to its name, as recorded (BL-016). Never NULL (AC-018) |
+| `visit_start__hour` | integer | Local hour the visit started, 0–23 (BL-017). Always populated (AC-019) |
 
 ## Data tables
 
@@ -93,10 +97,10 @@ configuration (permission groups included) in that repo. `validate_data_tables.p
 checks each file against this project's dbt manifest, so a column renamed here fails there
 at generate time rather than emptying a dashboard.
 
-Area/clinic disaggregation (`location_group`) and the Tamanu-to-Tupaia facility crosswalk
-are both left to that layer too -- joined at the data table against a seed, rather than
-resolved here. This model emits the raw `location_id` so that join is possible; it does not
-resolve `location_group` itself (see BL-006).
+The Tamanu-to-Tupaia facility crosswalk is left to that layer too -- joined at the data
+table against a seed, rather than resolved here. The clinic/area, on the other hand, is
+resolved here as `location_group_name` (BL-015): its name is the same for every consumer, so
+it follows the labelled-reference-data pattern (BL-007), not the crosswalked-identity one.
 
 This model therefore carries no `data_table_*` meta.
 
@@ -144,11 +148,10 @@ This model therefore carries no `data_table_*` meta.
   The join is **inner**, so an encounter whose location does not resolve is excluded rather
   than attributed to a NULL facility.
 
-  `location_id` is one level finer than facility and carries no area/clinic resolution of
-  its own -- `metric__emergency_visit` has no equivalent column at all. It exists so a
-  consumer can join to `bases/location_groups` (or a similar area lookup) at the data table
-  layer if it wants clinic-level detail, without this model resolving that join itself (see
-  § Data tables). First `metric__` disaggregation finer than facility.
+  `location_id` is one level finer than facility -- `metric__emergency_visit` has no
+  equivalent column at all. First `metric__` disaggregation finer than facility. The clinic
+  or area the location belongs to is resolved separately, by name, as `location_group_name`
+  (BL-015).
 - **BL-007 (facility and location identity stay Tamanu's; the clinician is labelled here):**
   `facility_id` and `location_id` are emitted as Tamanu ids, untranslated -- a Tupaia entity
   code or an area/clinic grouping is a consumer-specific identifier and is crosswalked in the
@@ -298,6 +301,30 @@ This model therefore carries no `data_table_*` meta.
   clinician has none, there is no clinician, or (for the admitting clinician) the visit was not
   admitted. Kept apart from the names so a filter by name is unaffected; a consumer combines the
   two for display (MAUI-6906).
+- **BL-015 (location group):** `location_group_name` is the name of the location group of the
+  intake segment's location -- the same `bases/locations` row BL-006 takes `facility_id` and
+  `location_id` from, through `locations.location_group_id` to `bases/location_groups`. A
+  location group is how a Tamanu deployment names its clinics, so this is the "visits by
+  clinic" split. Left
+  joined and coalesced to `'Not recorded'`, never NULL (AC-017): a location in no group, or
+  whose group has been deleted, keeps the visit, for the array-filter reason BL-013 gives. The
+  same column name and resolution as `metric__encounter`'s `location_group_name`, so the two
+  read against one clinic list.
+- **BL-016 (referral source):** `referral_source` is the encounter's `referral_source_id`
+  (`bases/encounters`), resolved to its `reference_data` name and carried as recorded,
+  ungrouped -- the derivation `metric__inpatient_admission` BL-012 uses for
+  `admission_source`. Left joined and coalesced to `'Not recorded'`, never NULL (AC-018),
+  covering both no referral source and an id that no longer resolves. `bases/encounters` is
+  one row per encounter, so the join cannot fan a visit out.
+- **BL-017 (hour of the visit start):** `visit_start__hour` is the hour of the intake segment's
+  `visit_detail_start_datetime`, 0–23, as an integer so it sorts and buckets naturally -- the
+  same timestamp `period_start` is the date of. `period_start` is a date (BL-002), so without
+  this the time of day is lost. The derivation and name follow `metric__emergency_visit`
+  BL-016's `ed_start__hour`: Tamanu stores naive timestamps in the deployment's central
+  timezone (`var('timezone')`), so this is already a local hour; a deployment spanning
+  timezones gets the central zone's hour. A disaggregation, as `ed_start__hour` is, so a
+  "visits by hour of day" card groups by it. Never NULL (AC-019): an intake segment always has
+  a start.
 
 ## Acceptance criteria
 
@@ -319,12 +346,15 @@ This model therefore carries no `data_table_*` meta.
 | AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 | AC-015 | `department` is `not_null` | BL-013 | `not_null` (`ac_017_metric__outpatient_visit_department_not_null`) |
 | AC-016 | `clinician_designation` and `admission_clinician_designation` are `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none, no clinician and no admission read `'Not recorded'` | BL-014 | `not_null` (`ac_018_…`) + unit test `ac_014_metric__outpatient_visit_derivations` |
+| AC-017 | `location_group_name` is `not_null`; it is the intake location's group, and `'Not recorded'` for a location in no group | BL-015 | `not_null` (`ac_017_metric__outpatient_visit_location_group_name_not_null`) + unit test `ac_014_metric__outpatient_visit_derivations` |
+| AC-018 | `referral_source` is `not_null`; it is the referral source's name, and `'Not recorded'` for none and for an id that no longer resolves | BL-016 | `not_null` (`ac_018_metric__outpatient_visit_referral_source_not_null`) + unit test `ac_014_metric__outpatient_visit_derivations` |
+| AC-019 | `visit_start__hour` is `not_null` and between 0 and 23; it is the hour of the intake segment's start | BL-017 | `not_null` + `dbt_expectations.expect_column_values_to_be_between` (`ac_019_…`) + unit test `ac_014_metric__outpatient_visit_derivations` |
 
 ## Registry entry
 
 One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with `disaggregations:
-facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge,department`.
+facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge,department,location_group_name,referral_source,visit_start__hour`.
 
 `age_years` and `opd_time__minutes` are absent: they are measures, not dimensions
 (BL-004, BL-011).
@@ -343,6 +373,8 @@ which keeps the registry and the model from drifting.
 | `ref__provider` | `ref/` | Attending and admitting clinician display names (BL-008, BL-010) |
 | `discharges` | `bases/` | Discharge note, for the system-discharge flag (BL-012) |
 | `departments` | `bases/` | Department name of the intake segment's own department (BL-013) |
+| `location_groups` | `bases/` | Name of the intake location's group (BL-015) |
+| `encounters`, `reference_data` | `bases/` | The encounter's referral source and its name (BL-016) |
 | `user_designations`, `reference_data` | `bases/` | The attending and admitting clinicians' designations, via `user_designation_names()` (BL-014) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
@@ -350,7 +382,7 @@ which keeps the registry and the model from drifting.
 
 | Consumer | Use |
 |---|---|
-| `tupaia-data-product` `tamanu` source | Data table over this view, backing OPD visuals for Queen of Sheba |
+| `tupaia-data-product` `tamanu` source | Data tables over this view, backing OPD visuals for Queen of Sheba and Naoero's Outpatient dashboard (visits by clinic, by referral source, by hour of day) |
 
 **What a consumer must do:**
 
@@ -362,9 +394,8 @@ which keeps the registry and the model from drifting.
    declares its own classification in its data table.
 4. **Translate `facility_id`, and join `location_id` for area if needed.** `facility_id` is
    the Tamanu id, not a consumer-specific one -- for Tupaia, the crosswalk to a Tupaia
-   entity code is joined at the data table. Clinic/area (`location_group`) resolution is
-   not done by this model either -- a consumer wanting it joins `location_id` to its own
-   area reference at the data table.
+   entity code is joined at the data table. The clinic/area arrives resolved, as
+   `location_group_name` (BL-015).
 5. **Handle a NULL `period_end`.** A duration visual filters those rows out; a count visual
    keeps them.
 6. **Form its own rate.** `is_admitted` is a flag per visit, not a percentage -- the admitted
@@ -391,3 +422,10 @@ which keeps the registry and the model from drifting.
 | `macros/datasets/discharge_audit.sql` | BL-004 defines the system-discharge predicate BL-012 reuses verbatim |
 | `ref__provider` | OMOP PROVIDER wrapper over `bases/users`; supplies the clinician display names this model emits (BL-007, BL-008, BL-010) |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
+
+## Change log
+
+| Date | Change |
+|---|---|
+| 2026-11-11 | BL-015/BL-016: `location_group_name` (the intake location's clinic/area) and `referral_source` (the encounter's referral source) added as disaggregations, for Naoero's Outpatient dashboard (MAUI-7131). BL-006 and § Data tables no longer leave the location group to the consumer. New AC-017, AC-018. |
+| 2026-11-11 | BL-017: `visit_start__hour` (the local hour the visit started, 0–23) added as a disaggregation, mirroring `metric__emergency_visit`'s `ed_start__hour`, for Naoero's visits-by-hour card (MAUI-7131). New AC-019. |

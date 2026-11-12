@@ -20,10 +20,7 @@ case
     when {{ parameter('facilityId') }} is null then true
     else f.id = {{ parameter('facilityId') }}
 end
-and case
-    when {{ parameter('patientBillingTypeId') }} is null then true
-    else e.patient_billing_type_id = {{ parameter('patientBillingTypeId') }}
-end
+and {{ multi_select_filter('e.patient_billing_type_id::text', 'patientBillingTypeId') }}
 and case
     when {{ parameter('supervisingClinicianId') }} is null then true
     else e.clinician_id = {{ parameter('supervisingClinicianId') }}

@@ -10,16 +10,16 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: triage_id
         data_type: character varying(255)
         description: "{{ doc('generic__id') }} in triages."
-        tests:
+        data_tests:
           - not_null:
               name: ac_001_ds__emergency_triage_triage_id_not_null
           - unique:
@@ -27,7 +27,7 @@ models:
       - name: encounter_id
         data_type: character varying(255)
         description: "{{ doc('triages__encounter_id') }}"
-        tests:
+        data_tests:
           - not_null:
               name: ac_001_ds__emergency_triage_encounter_id_not_null
       - name: patient_id
@@ -69,7 +69,7 @@ models:
       - name: triage_datetime
         data_type: timestamp
         description: "{{ doc('triages__triage_time') }}"
-        tests:
+        data_tests:
           - not_null:
               name: ac_001_ds__emergency_triage_triage_datetime_not_null
       - name: score

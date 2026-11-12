@@ -13,11 +13,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      classification: internal
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        classification: internal
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           name: ac_001_clinical__procedure_occurrence_grain

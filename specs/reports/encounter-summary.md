@@ -258,7 +258,8 @@ own downstream column names.
 
 `encounter_scope_common_filters()` (`macros/reports/encounter_scope_common_filters.sql`)
 emits the facility, patient-billing-type and supervising-clinician filters that the
-encounter-scoped reports apply identically. It calls `parameter()`, so it is report-only.
+encounter-scoped reports apply identically. It calls `parameter()`, so it is report-only. The patient billing type is a multi-select: nothing selected
+keeps every encounter, and the selection goes through an array constructor, which stays valid when empty.
 
 Date ranges and report-specific flags are excluded from it: they differ between callers.
 

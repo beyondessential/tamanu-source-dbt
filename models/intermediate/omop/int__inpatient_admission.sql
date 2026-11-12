@@ -23,6 +23,11 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-026: the admission location's group -- the ward or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 encounters as (
     select * from {{ ref('encounters') }}
 ),
@@ -109,6 +114,9 @@ admissions as (
         -- facility_id (BL-009). Nullable: an admission segment recorded with no department
         -- stays NULL rather than being excluded.
         adm.department_id as admission_ward_id,
+        -- BL-026: the group of the same location facility_id is taken from, resolved to its
+        -- name. 'Not recorded' where the location is in no group.
+        coalesce(lg.name, 'Not recorded') as admission_location_group_name,
         pr.gender_source_value as sex,
         -- BL-005: visit-level concept 262 ('Emergency Room and Inpatient Visit') marks an
         -- admission that had a prior ED/triage/observation phase; it exists only at visit
@@ -147,6 +155,9 @@ admissions as (
     -- location does not resolve is excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = adm.care_site_id
+    -- BL-026: left join -- an admission whose location is in no group still counts.
+    left join location_groups lg
+        on lg.id = loc.location_group_id
     -- BL-012: the referral source lives on the encounter, not on clinical__visit_occurrence.
     join encounters enc
         on enc.id = adm.visit_occurrence_id
@@ -192,6 +203,7 @@ select
     visit_end__datetime,
     facility_id,
     admission_ward_id,
+    admission_location_group_name,
     sex,
     age_years,
     clinician,
@@ -219,5 +231,11 @@ select
         admission_start__datetime >= previous_discharge__datetime
         and admission_start__datetime - previous_discharge__datetime <= interval '30 days',
         false
-    ) as is_readmission_within_30_days
+    ) as is_readmission_within_30_days,
+    -- BL-025: the same rule as BL-016 over a 14-day window.
+    coalesce(
+        admission_start__datetime >= previous_discharge__datetime
+        and admission_start__datetime - previous_discharge__datetime <= interval '14 days',
+        false
+    ) as is_readmission_within_14_days
 from admissions_with_readmission

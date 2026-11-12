@@ -46,6 +46,9 @@ metrics:
   - admission_clinician_designation
   - is_auto_discharge
   - department
+  - location_group_name
+  - referral_source
+  - visit_start__hour
   variant_of: null
   owner: bes-maui
   status: approved
@@ -128,9 +131,44 @@ metrics:
   - diagnosis_certainty
   - is_primary
   - department
+  - location_group_name
   variant_of: null
   owner: bes-maui
   status: draft
   spec_path: specs/dbt-model/metric__opd_diagnosis.md
 
 
+
+- metric_id: outpatient_appointment
+  kind: metric
+  name: Outpatient appointments
+  description: >-
+    Outpatient appointments booked in Tamanu, whatever their status. One row per appointment,
+    dated to its scheduled start. No-shows are the rows whose appointment_status is 'No-show'.
+  numerator_description: >-
+    Non-deleted outpatient appointments (appointments with an appointment type, so not location
+    bookings), counted on the scheduled start
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    A count of booked outpatient appointments by their recorded status. No external body
+    registers an appointment-count or no-show indicator that a Tamanu appointment maps to, so
+    this is a BES composition: every status is kept as a disaggregation rather than a metric_id
+    per status, so a consumer forms attendance or no-show counts, and a no-show rate over
+    whichever statuses it counts as booked, from one view. The status is the appointment's
+    current one, which Tamanu updates in place. Pending alignment with the deploying country's
+    national HMIS definition.
+  unit: count
+  subject_grain: appointment
+  disaggregations:
+  - facility_id
+  - sex
+  - appointment_status
+  - appointment_type
+  - location_group_name
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__appointment.md

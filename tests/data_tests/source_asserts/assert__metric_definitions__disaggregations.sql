@@ -32,6 +32,8 @@ where trim(t.d) not in (
         'triage_score',
         -- ed_visit's arrival hour
         'ed_start__hour',
+        -- opd_visit's visit start hour, the same 0-23 convention as ed_start__hour
+        'visit_start__hour',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition',
         -- inpatient_admission's ward (department) the patient was admitted to
@@ -46,6 +48,8 @@ where trim(t.d) not in (
         -- immediately preceding admission discharged no more than 30 days before this one
         -- started
         'is_readmission_within_30_days',
+        -- the same flag over a 14-day window
+        'is_readmission_within_14_days',
         -- program_registry_enrolment's registry: which programme the enrolment is in. One
         -- metric serves every registry a deployment configures, so the registry is a
         -- disaggregation rather than a metric_id per programme.
@@ -178,9 +182,22 @@ where trim(t.d) not in (
         -- opd_visit, and the admitting clinician's on opd_visit (MAUI-6906)
         'clinician_designation',
         'admission_clinician_designation',
-        -- encounter's location group (area), id and name (MAUI-6906)
+        -- encounter's location group (area), id and name (MAUI-6906); the name also on
+        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131)
         'location_group_id',
         'location_group_name',
+        -- inpatient_admission's / _separation's admission location group (ward/area), by name
+        -- (MAUI-7131)
+        'admission_location_group_name',
+        -- opd_visit's referral source, carried as recorded, as admission_source is (MAUI-7131)
+        'referral_source',
+        -- outpatient_appointment's Tamanu status as recorded (e.g. No-show) and its appointment
+        -- type, resolved to a name (MAUI-7131)
+        'appointment_status',
+        'appointment_type',
+        -- birth's flag that the newborn's linked mother has a recorded diabetes condition
+        -- (ICD-10 E10-E14, O24) (MAUI-7132)
+        'is_mother_diabetic',
         -- death's primary cause from the death record, as recorded, with its reference-data
         -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
         'primary_cause',
@@ -211,5 +228,17 @@ where trim(t.d) not in (
         'tested',
         -- inpatient_separation's same-day flag: admitted and discharged on the same day, so
         -- an overnight-only average length of stay can exclude those stays.
-        'is_same_day'
+        'is_same_day',
+        -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
+        -- the reporting category of the screening's diagnosis, whether the screening selected
+        -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
+        -- procedure was recorded on, and whether a First Surgical Procedure followed the
+        -- screening (a surgical patient), and the screening's Type of consult (Surgical or
+        -- Allied Health).
+        'country_id',
+        'reporting_category',
+        'is_selected_for_surgery',
+        'procedure_sequence',
+        'has_first_surgical_procedure',
+        'consult_type'
     )

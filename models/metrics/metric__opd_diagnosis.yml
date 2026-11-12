@@ -11,17 +11,17 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
-    # metric__encounter_diagnosis uses.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier, name
-      # or birth date alongside it -- no patient is identifiable through a row, the same
-      # reasoning metric__encounter_diagnosis uses.
-      pii: false
-      classification: internal
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table, the same convention
+      # metric__encounter_diagnosis uses.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # Per-diagnosis rows, but the subject is a diagnosis id with no patient identifier, name
+        # or birth date alongside it -- no patient is identifiable through a row, the same
+        # reasoning metric__encounter_diagnosis uses.
+        pii: false
+        classification: internal
     data_tests:
       # One row per diagnosis. A duplicate would double-count it in any consumer that sums
       # value_numeric -- error even though the repo default is warn.
@@ -158,3 +158,12 @@ models:
         data_tests:
           - not_null:
               name: ac_014_metric__opd_diagnosis_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: >-
+          The location group (clinic or area) of the same
+          qualifying segment's location that facility_id is resolved from, resolved to its name
+          (BL-009). Never NULL -- falls back to 'Not recorded' where the location is in no group.
+        data_tests:
+          - not_null:
+              name: ac_015_metric__opd_diagnosis_location_group_name_not_null

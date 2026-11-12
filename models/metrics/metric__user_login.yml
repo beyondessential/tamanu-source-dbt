@@ -6,13 +6,13 @@ models:
     config:
       tags:
         - administration
-    # No data_table_* meta -- the Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table.
-    meta:
-      owner: bes-maui
-      domain: admin
-      pii: false
-      classification: internal
+      # No data_table_* meta -- the Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: admin
+        pii: false
+        classification: internal
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           name: ac_001_metric__user_login_grain

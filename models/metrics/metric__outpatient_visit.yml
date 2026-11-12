@@ -6,23 +6,23 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta. The Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
-    # tables), so a deployment that bands a value differently adds a file there rather than
-    # forking the metric.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      # Per-visit rows, but the subject is an encounter id with no patient identifier, name
-      # or birth date alongside it -- no patient is identifiable through a row, so this
-      # stays unrestricted and covers standard and sensitive facilities alike.
-      #
-      # It does carry the attending and admitting clinician's display name (BL-008, BL-010),
-      # which is staff-attributable but not patient-identifying: a row says a named clinician
-      # saw someone, never who. Treated the same way ds__discharge_audit treats its
-      # discharger_on_form column.
-      pii: false
-      classification: internal
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table (spec § Data
+      # tables), so a deployment that bands a value differently adds a file there rather than
+      # forking the metric.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # Per-visit rows, but the subject is an encounter id with no patient identifier, name
+        # or birth date alongside it -- no patient is identifiable through a row, so this
+        # stays unrestricted and covers standard and sensitive facilities alike.
+        #
+        # It does carry the attending and admitting clinician's display name (BL-008, BL-010),
+        # which is staff-attributable but not patient-identifying: a row says a named clinician
+        # saw someone, never who. Treated the same way ds__discharge_audit treats its
+        # discharger_on_form column.
+        pii: false
+        classification: internal
     data_tests:
       # One row per visit. A duplicate would double-count a visit in any consumer that
       # sums value_numeric -- error even though the repo default is warn.
@@ -203,3 +203,30 @@ models:
         data_tests:
           - not_null:
               name: ac_017_metric__outpatient_visit_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__location_group_name') }}"
+        data_tests:
+          # BL-015: same reasoning as department.
+          - not_null:
+              name: ac_017_metric__outpatient_visit_location_group_name_not_null
+      - name: referral_source
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__referral_source') }}"
+        data_tests:
+          # BL-016: same reasoning as department.
+          - not_null:
+              name: ac_018_metric__outpatient_visit_referral_source_not_null
+      - name: visit_start__hour
+        data_type: integer
+        description: "{{ doc('metric__outpatient_visit__visit_start__hour') }}"
+        data_tests:
+          # BL-017: visit_detail_start_datetime is never NULL on an intake segment, so neither
+          # is its hour.
+          - not_null:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_range
+              arguments:
+                min_value: 0
+                max_value: 23
