@@ -119,9 +119,8 @@ metrics:
     registers a single diagnosis-count indicator scoped to outpatient care specifically --
     AIHW's non-admitted reporting counts service events and occasions of service, not
     diagnoses, and morbidity classification (ICD-10 chapter, block) is a deployment choice, so
-    this metric emits the diagnosis as recorded and leaves any grouping to the consumer, the
-    same approach metric__encounter_diagnosis takes. Pending alignment with the deploying
-    country's national HMIS definition.
+    this metric emits the diagnosis as recorded and leaves any grouping to the consumer.
+    Pending alignment with the deploying country's national HMIS definition.
   unit: count
   subject_grain: diagnosis
   disaggregations:
