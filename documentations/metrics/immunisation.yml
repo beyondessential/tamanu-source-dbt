@@ -43,7 +43,7 @@ metrics:
   - is_given_elsewhere
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__immunisation_dose.md
 
 - metric_id: immunisation_refusal
@@ -83,5 +83,5 @@ metrics:
   - is_given_elsewhere
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__immunisation_refusal.md

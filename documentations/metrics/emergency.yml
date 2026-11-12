@@ -196,7 +196,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__ed_lab_order.md
 
 - metric_id: ed_pharmacy_order
@@ -231,5 +231,5 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__ed_pharmacy_order.md

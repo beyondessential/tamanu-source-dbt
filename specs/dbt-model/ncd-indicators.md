@@ -107,9 +107,8 @@ D5 wide format. Each `metric__` view emits:
 per-indicator `description`, `numerator_description`,
 `denominator_description`, `unit`, `subject_grain`, and `disaggregations`.
 
-Status starts `draft` for every row and promotes to `approved` row-by-row
-as the corresponding canonical implementation lands in
-`tamanu-source-dbt`.
+Every row is `approved`: each landed with its reviewed implementation,
+which for now is the deployment repo below.
 
 ## Implementations
 
