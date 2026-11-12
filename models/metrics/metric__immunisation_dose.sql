@@ -46,7 +46,8 @@ doses as (
         va.age_days,
         va.age_years,
         va.facility_source,
-        va.is_given_elsewhere
+        va.is_given_elsewhere,
+        va.department
     from drug_exposure de
     join vaccine_attributes va
         on va.administered_vaccine_id = de.drug_exposure_id
@@ -110,5 +111,7 @@ select
     -- BL-014: where facility_id came from, and whether the dose was recorded as given
     -- elsewhere, so a card can exclude or label those doses.
     facility_source,
-    is_given_elsewhere
+    is_given_elsewhere,
+    -- BL-015: the encounter's department, 'Not recorded' like the other labels
+    coalesce(department, 'Not recorded') as department
 from doses
