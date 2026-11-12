@@ -36,6 +36,7 @@ metrics:
   disaggregations:
   - facility_id
   - location_id
+  - patient_location_id
   - sex
   - clinician_id
   - clinician_name
