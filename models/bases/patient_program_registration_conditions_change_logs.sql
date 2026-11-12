@@ -1,9 +1,16 @@
+{{ incremental_from_logs(
+    key='id',
+    table='patient_program_registration_conditions'
+) }}
 with filtered_changes as (
     {{ base_history_from_log('patient_program_registration_conditions') }}
         and (
             version = 'unknown'
             or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patient_program_registration_conditions') }})
+        {%- endif %}
 )
 
 select
@@ -20,5 +27,6 @@ select
     fc.record_data ->> 'reason_for_change' as reason_for_change,
     fc.record_data ->> 'clinician_id' as recorded_by_id,
     (fc.record_data ->> 'deletion_date')::timestamp as deleted_datetime,
-    fc.record_data ->> 'deletion_clinician_id' as deleted_by_id
+    fc.record_data ->> 'deletion_clinician_id' as deleted_by_id,
+    fc.updated_at_sync_tick
 from filtered_changes fc

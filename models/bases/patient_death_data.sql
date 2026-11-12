@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='patient_death_data'
+) }}
 select
     id,
     manner,
@@ -35,7 +39,11 @@ select
     manner_of_death_description,
     pregnancy_moment,
     multiple_pregnancy,
-    mother_condition_description
+    mother_condition_description,
+    updated_at_sync_tick
 from {{ source('tamanu', 'patient_death_data') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

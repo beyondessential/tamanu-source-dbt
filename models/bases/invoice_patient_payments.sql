@@ -1,8 +1,13 @@
+{{ incremental_from_table(
+    key='id',
+    table='invoice_patient_payments'
+) }}
 select
     ipp.id,
     ipp.invoice_payment_id,
     ipp.method_id,
-    ipp.cheque_number
+    ipp.cheque_number,
+    ipp.updated_at_sync_tick
 from {{ source('tamanu', 'invoice_patient_payments') }} ipp
 join {{ source('tamanu', 'invoice_payments') }} ipay on ipay.id = ipp.invoice_payment_id
 join {{ source('tamanu', 'invoices') }} i on i.id = ipay.invoice_id
@@ -13,3 +18,6 @@ where
     and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and ipp.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

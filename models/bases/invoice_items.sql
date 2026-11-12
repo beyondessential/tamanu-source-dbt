@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='invoice_items'
+) }}
 select
     ii.id,
     ii.invoice_id,
@@ -12,7 +16,8 @@ select
     ii.ordered_by_user_id,
     ii.approved,
     ii.source_record_type,
-    ii.source_record_id
+    ii.source_record_id,
+    ii.updated_at_sync_tick
 from {{ source('tamanu', 'invoice_items') }} ii
 join {{ source('tamanu', 'invoices') }} i on i.id = ii.invoice_id
 join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id
@@ -21,3 +26,6 @@ where
     and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and ii.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

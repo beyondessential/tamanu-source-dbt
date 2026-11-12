@@ -121,3 +121,6 @@ models:
       - name: mother_condition_description
         data_type: text
         description: "{{ doc('patient_death_data__mother_condition_description') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

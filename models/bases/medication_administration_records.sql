@@ -1,4 +1,8 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-001..BL-002.
+{{ incremental_from_table(
+    key='id',
+    table='medication_administration_records'
+) }}
 select
     mar.id,
     mar.prescription_id,
@@ -10,7 +14,8 @@ select
     mar.changing_status_reason,
     mar.is_auto_generated,
     mar.is_error,
-    mar.error_notes
+    mar.error_notes,
+    mar.updated_at_sync_tick
 from {{ source('tamanu', 'medication_administration_records') }} mar
 join {{ source('tamanu', 'prescriptions') }} p on p.id = mar.prescription_id
 -- BL-001: exclude deleted records and records whose prescription is deleted
@@ -26,3 +31,6 @@ where mar.deleted_at is null
             and e.deleted_at is null
             and e.patient_id = '{{ var("test_patient") }}'
     )
+    {%- if is_incremental() %}
+    and mar.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

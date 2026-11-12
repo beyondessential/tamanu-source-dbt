@@ -45,3 +45,6 @@ models:
       - name: back_end_context
         data_type: jsonb
         description: "{{ doc('logs__accesses__back_end_context') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__accesses__updated_at_sync_tick') }}"

@@ -1,3 +1,8 @@
+{{ incremental_from_logs(
+    key='invoice_id',
+    table='invoices',
+    key_type='uuid'
+) }}
 select
     c.id as changelog_id,
     c.record_id::uuid as invoice_id,
@@ -14,7 +19,8 @@ select
     row_number() over (
         partition by c.record_id
         order by c.logged_at, c.record_updated_at, c.id
-    ) as change_sequence
+    ) as change_sequence,
+    c.updated_at_sync_tick
 from {{ source('logs__tamanu', 'changes') }} c
 join {{ source('tamanu', 'invoices') }} i
     on i.id = c.record_id::uuid
@@ -26,3 +32,6 @@ join {{ source('tamanu', 'encounters') }} e
 where
     c.table_name = 'invoices'
     and c.record_deleted_at is null
+    {%- if is_incremental() %}
+    and c.record_id in ({{ changed_since_last_run('invoices') }})
+    {%- endif %}

@@ -23,3 +23,6 @@ models:
       - name: is_selected_for_discharge
         data_type: boolean
         description: "{{ doc('encounter_prescriptions__is_selected_for_discharge') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
