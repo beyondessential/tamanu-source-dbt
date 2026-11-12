@@ -44,6 +44,9 @@ where trim(d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- death's maternal flags from the death record: pregnant, and pregnancy contributed
+        'was_pregnant',
+        'pregnancy_contributed',
         -- encounter_diagnosis's diagnosis, grouped to its ICD-10 chapter and block
         'diagnosis__icd10_chapter',
         'diagnosis__icd10_block',
