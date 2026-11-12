@@ -22,7 +22,10 @@ unit_tests:
       designations, read alphabetically on one row; inp_2's holds none; the rest have no
       clinician. BL-026: admission_location_group_name is the group of the admission
       segment's own location -- inp_2's ED location is in another group, and the admission
-      segment's wins -- and 'Not recorded' for inp_4, whose location is in no group.
+      segment's wins -- and 'Not recorded' for inp_4, whose location is in no group. BL-027:
+      discharge_location_group_name is the group of the encounter's latest segment -- inp_1 is
+      moved to a surgical ward after admission, so it is discharged from Surgical Ward while
+      admitted to Medical Ward -- 'Not recorded' for inp_4, and NULL for inp_3, still open.
 
     given:
       # inp_1 is a direct admission: one segment, concept 9201.
@@ -43,6 +46,9 @@ unit_tests:
         format: sql
         rows: |
           select 'vd_1' as visit_detail_id, 'inp_1' as visit_occurrence_id, 'per_1' as person_id, 'loc_ward' as care_site_id, 'dept_med' as department_id, 'clin_1'::varchar as provider_id, '2024-06-01 10:00'::timestamp as visit_detail_start_datetime, 9201 as visit_detail_concept_id
+          union all
+          -- BL-027: inp_1 moves to the surgical ward before discharge.
+          select 'vd_1b', 'inp_1', 'per_1', 'loc_surg', 'dept_surg', 'clin_1'::varchar, '2024-06-03 10:00'::timestamp, 9201
           union all
           select 'vd_2a', 'inp_2', 'per_1', 'loc_ed', 'dept_ed', null::varchar, '2024-06-02 07:00'::timestamp, 9203
           union all
@@ -121,6 +127,8 @@ unit_tests:
           select 'loc_ed', 'fac_1', 'lg_ed'
           union all
           select 'loc_ward_nogroup', 'fac_1', null::varchar
+          union all
+          select 'loc_surg', 'fac_1', 'lg_surg'
 
       - input: ref('location_groups')
         format: sql
@@ -128,6 +136,8 @@ unit_tests:
           select 'lg_ward' as id, 'Medical Ward' as name
           union all
           select 'lg_ed', 'Emergency'
+          union all
+          select 'lg_surg', 'Surgical Ward'
 
       # BL-014: inp_1 and inp_2 have discharge records; inp_3, inp_4 and per_2's admissions do
       # not.
@@ -185,18 +195,18 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'Medical Ward' as admission_location_group_name, 'male' as sex, 33 as age_years, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days, false as is_readmission_within_14_days
+        select 'inp_1' as visit_occurrence_id, '2024-06-01 10:00'::timestamp as admission_start__datetime, '2024-06-05 12:00'::timestamp as visit_end__datetime, 'fac_1' as facility_id, 'dept_med' as admission_ward_id, 'Medical Ward' as admission_location_group_name, 'Surgical Ward' as discharge_location_group_name, 'male' as sex, 33 as age_years, 'Dr Ana' as clinician, 'Dentist, Medical Officer' as clinician_designation, false as is_admitted_via_emergency, 'General practitioner referral' as admission_source, 352800::bigint as length_of_stay__seconds, 5880.00::numeric as length_of_stay__minutes, 'A00.0' as principal_diagnosis_code, 'Home' as discharge_disposition, false as is_readmission_within_30_days, false as is_readmission_within_14_days
         union all
-        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'Medical Ward', 'male', 33, 'Dr Ben', 'Not recorded', true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false, false
+        select 'inp_2', '2024-06-02 09:30'::timestamp, '2024-06-06 08:00'::timestamp, 'fac_1', 'dept_surg', 'Medical Ward', 'Medical Ward', 'male', 33, 'Dr Ben', 'Not recorded', true, 'Not recorded', 340200::bigint, 5670.00::numeric, 'J45.9', 'Transfer to another facility', false, false
         union all
-        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'Medical Ward', 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false, false
+        select 'inp_3', '2024-06-03 14:00'::timestamp, null::timestamp, 'fac_1', null::text, 'Medical Ward', null::text, 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', null::bigint, null::numeric, null::text, 'Not recorded', false, false
         union all
-        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'Not recorded', 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false, false
+        select 'inp_4', '2024-06-04 05:00'::timestamp, '2024-06-04 20:00'::timestamp, 'fac_1', 'dept_med', 'Not recorded', 'Not recorded', 'male', 33, 'Not recorded', 'Not recorded', false, 'Not recorded', 54000::bigint, 900.00::numeric, null::text, 'Not recorded', false, false
         union all
-        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false, false
+        select 'inp_5', '2024-07-01 09:00'::timestamp, '2024-07-03 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false, false
         union all
-        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true, true
+        select 'inp_6', '2024-07-10 09:00'::timestamp, '2024-07-12 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true, true
         union all
-        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false, false
+        select 'inp_7', '2024-08-25 09:00'::timestamp, '2024-08-27 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', false, false
         union all
-        select 'inp_8', '2024-09-16 09:00'::timestamp, '2024-09-18 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true, false
+        select 'inp_8', '2024-09-16 09:00'::timestamp, '2024-09-18 09:00'::timestamp, 'fac_1', 'dept_med', 'Medical Ward', 'Medical Ward', 'female', 39, 'Not recorded', 'Not recorded', false, 'Not recorded', 172800::bigint, 2880.00::numeric, null::text, 'Not recorded', true, false
