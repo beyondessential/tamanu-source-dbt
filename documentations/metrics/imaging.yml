@@ -40,10 +40,14 @@ metrics:
   - visit_detail_concept_name
   - sex
   - is_completed
+  - request_status
+  - cancellation_reason
+  - priority
   - imaging_type
   - imaging_type_code
   - imaging_area
   - department
+  - location_group_name
   variant_of: null
   owner: bes-maui
   status: draft

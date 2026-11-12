@@ -173,11 +173,37 @@ models:
         data_type: boolean
         description: >-
           Whether the request has been marked completed. Never NULL. Cancelled and
-          still-open requests are both false -- indistinguishable from each other by this
-          column alone.
+          still-open requests are both false -- request_status tells them apart.
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_is_completed_not_null
+      - name: request_status
+        data_type: text
+        description: >-
+          The request's lifecycle status as recorded in Tamanu (pending, in_progress,
+          completed, cancelled). Never NULL -- falls back to 'Not recorded'. A consumer groups
+          these into its own labels.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_request_status_not_null
+      - name: cancellation_reason
+        data_type: text
+        description: >-
+          Why the request was cancelled, as recorded (a deployment-customisable list, by
+          default duplicate and entered-in-error). Never NULL -- falls back to 'Not specified'.
+          Only a cancelled request is expected to carry a reason, so a consumer scopes to
+          request_status = 'cancelled' first.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_cancellation_reason_not_null
+      - name: priority
+        data_type: text
+        description: >-
+          The request's priority as recorded (a deployment-customisable list, by default
+          routine, urgent, asap and stat). Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_priority_not_null
       - name: imaging_type_code
         data_type: text
         description: >-
@@ -212,6 +238,14 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__imaging_request_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: >-
+          The area: the location group of the segment's own location when the request was
+          raised. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__imaging_request_location_group_name_not_null
       - name: age_years
         data_type: integer
         description: >-
