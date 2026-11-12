@@ -88,9 +88,8 @@ Filtering on it answers "diagnoses on encounters that ended as X".
 The diagnosis's reference-data code, as recorded. 'Not recorded' where the encounter carries
 a diagnosis with no code behind it.
 
-Emitted as recorded, ungrouped. Deployments differ in what this code is -- some record real
-ICD-10, others a local code list -- so any classification of it into chapters, blocks or a
-national grouping is a deployment choice made downstream, not here.
+Emitted as recorded. Its ICD-10 chapter and block are emitted alongside it, as
+diagnosis__icd10_chapter and diagnosis__icd10_block; a national grouping is applied downstream.
 {% enddocs %}
 
 {% docs metric__encounter_diagnosis__diagnosis %}
@@ -116,6 +115,23 @@ comorbid diagnosis. NULL where the encounter did not rank its diagnoses.
 
 Filter to primary diagnoses for a casemix view that counts each encounter once; leave it
 unfiltered to count every condition recorded.
+{% enddocs %}
+
+{% docs metric__encounter_diagnosis__diagnosis__icd10_chapter %}
+The WHO ICD-10 chapter of diagnosis_code, labelled with its Roman numeral and title (e.g.
+'X Diseases of the respiratory system').
+
+'Not recorded' where the diagnosis has no code, and 'Unclassified' where the code does not
+resolve to a chapter -- including every code in a deployment that records diagnoses against a
+local code list rather than ICD-10. Check what a deployment codes with before charting it.
+{% enddocs %}
+
+{% docs metric__encounter_diagnosis__diagnosis__icd10_block %}
+The ICD-10 block of diagnosis_code, the level below the chapter, labelled with its code range
+and title (e.g. 'J09-J18 Influenza and pneumonia').
+
+'Not recorded' where the diagnosis has no code, and 'Unclassified' where the code falls
+outside every block, as for diagnosis__icd10_chapter.
 {% enddocs %}
 
 {% docs metric__encounter_diagnosis__age_years %}
