@@ -18,7 +18,7 @@
 -- population, not this one's.
 --
 -- The registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__procedure.md for BL-001..BL-010.
+-- See specs/dbt-model/metric__procedure.md for BL-001..BL-012.
 
 with procedure_occurrence as (
     select * from {{ ref('clinical__procedure_occurrence') }}
@@ -40,6 +40,30 @@ locations as (
 -- segment directly, since bases/locations carries no department_id.
 departments as (
     select * from {{ ref('departments') }}
+),
+
+-- BL-011: the location group (area, e.g. the operating theatre) of the procedure's own location
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
+-- BL-012: the anaesthetist and anaesthetic, which clinical__procedure_occurrence does not carry.
+-- Only the two ids are read, so bases/procedures' free-text notes never reach this model.
+procedure_staff as (
+    select
+        id,
+        anaesthetist_id,
+        anaesthetic_id
+    from {{ ref('procedures') }}
+),
+
+-- BL-012: clinician and anaesthetist display names
+providers as (
+    select * from {{ ref('ref__provider') }}
+),
+
+reference_data as (
+    select * from {{ ref('reference_data') }}
 ),
 
 procedures as (
@@ -66,7 +90,16 @@ procedures as (
         {{ age_years('po.procedure_date', 'pr') }} as age_years,
         -- the resolved segment's own department, coalesced so an array filter cannot drop
         -- the row
-        coalesce(dept.name, 'Not recorded') as department
+        coalesce(dept.name, 'Not recorded') as department,
+        -- BL-011: the location group of the procedure's own location, not the segment's --
+        -- a procedure can be performed somewhere other than the ward the patient is in (e.g.
+        -- a theatre). Coalesced so an array filter cannot drop the row
+        coalesce(lg.name, 'Not recorded') as location_group_name,
+        -- BL-012: the procedure's clinician, anaesthetist and anaesthetic as recorded, resolved
+        -- to names. Coalesced for the same reason
+        coalesce(clin.provider_name, 'Not recorded') as procedure_clinician,
+        coalesce(anaes.provider_name, 'Not recorded') as procedure_anaesthetist,
+        coalesce(anaesthetic.name, 'Not recorded') as anaesthetic
     from procedure_occurrence po
     -- BL-003: inner join on the segment FK clinical__procedure_occurrence resolves (its
     -- BL-005), so every metric over that model agrees on which segment a procedure belongs
@@ -85,6 +118,22 @@ procedures as (
         on loc.id = vd.care_site_id
     left join departments dept
         on dept.id = vd.department_id
+    -- BL-011: left joins -- a procedure with no location, or a location in no group, still
+    -- counts
+    left join locations proc_loc
+        on proc_loc.id = po.location_id
+    left join location_groups lg
+        on lg.id = proc_loc.location_group_id
+    -- BL-012: left joins -- a procedure with no clinician, anaesthetist or anaesthetic still
+    -- counts. procedures.id is unique, so procedure_staff cannot fan out
+    left join providers clin
+        on clin.provider_id = po.provider_id
+    left join procedure_staff ps
+        on ps.id = po.procedure_occurrence_id
+    left join providers anaes
+        on anaes.provider_id = ps.anaesthetist_id
+    left join reference_data anaesthetic
+        on anaesthetic.id = ps.anaesthetic_id
     -- BL-001: procedure branch only -- imaging is metric__imaging_request's population
     where po.procedure_type_source_value = 'procedure'
 )
@@ -111,5 +160,9 @@ select
     procedure_code,
     is_completed,
     age_years,
-    department
+    department,
+    location_group_name,
+    procedure_clinician,
+    procedure_anaesthetist,
+    anaesthetic
 from procedures

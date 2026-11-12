@@ -41,6 +41,7 @@ metrics:
   - location_group_id
   - facility_source
   - is_given_elsewhere
+  - department
   variant_of: null
   owner: bes-maui
   status: draft

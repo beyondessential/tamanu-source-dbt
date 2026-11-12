@@ -211,3 +211,8 @@ models:
           # BL-026: coalesced to 'Not recorded' for the same reason as admission_source.
           - not_null:
               name: ac_026_metric__inpatient_admission_admission_location_group_name_not_null
+      - name: discharge_location_group_name
+        data_type: text
+        description: "{{ doc('metric__inpatient_admission__discharge_location_group_name') }}"
+        # BL-027: populated only on inpatient_separation, NULL on inpatient_admission --
+        # covered by the singular test's AC-027, not a column-grain generic test.
