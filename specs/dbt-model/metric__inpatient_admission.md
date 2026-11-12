@@ -360,13 +360,13 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 |---|---|
 | `metric__emergency_visit` / `metric__emergency_stay` | Cover the ED side of the encounter; `is_admitted` there and `is_admitted_via_emergency` here describe the same admissions from opposite ends |
 | `int__inpatient_admission` | The shared base this metric projects |
+| `metric__inpatient_transfer` | Location changes within these admissions, one row per move after the admission segment |
 | `ds__admissions` / `ds__sensitive_admissions` | Unrelated, pre-existing Tamanu-report-layer admissions dataset (raw `encounters`, not OMOP) — not reconciled with this metric |
 
 ## Open questions
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Should a follow-up `metric__inpatient_transfer` (ward/department transfers within an admission) be added, mirroring `data-staging`'s `ds__inpatient_transfers`? | bes-maui | TBD |
 | OQ-002 | Bed occupancy / census (`data-staging`'s `ds__inpatient_census`, `fct_bed_occupancy`) is a point-in-time snapshot, not a per-event grain — it does not fit the D5 metric shape used here and would need a date-spine model. Deferred out of scope for this spec. | bes-maui | TBD |
 | OQ-003 | Which Tupaia dashboard or Tamanu report is the first consumer, and does it need `admission_ward_id` resolved to a name at the data-table layer (as `principal_diagnosis__icd10_chapter` etc. are)? | bes-maui | TBD |
 | OQ-004 | `is_readmission_within_30_days` (BL-016) counts a readmission to *any* facility in the deployment, not just the discharging one — a patient discharged from one facility and admitted to another 10 days later still counts. Revisit if a consumer specifically wants same-facility-only. | bes-maui | TBD |
@@ -380,3 +380,4 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | 2026-11-05 | BL-025: `is_readmission_within_14_days`, BL-016's rule over 14 days, added as a disaggregation on both metric_ids for Nauru's 14-day readmissions card (MAUI-7080). |
 | 2026-11-11 | BL-026: `admission_location_group_name`, the admission location's ward/area, added as a disaggregation on both metric_ids for Naoero's inpatient cards (MAUI-7131). |
 | 2026-11-13 | BL-027: `discharge_location_group_name`, the ward/area the patient was discharged from, added on `inpatient_separation` rows (NULL on `inpatient_admission`) so Naoero's inpatient ward cards count discharges against the ward the patient left (MAUI-7122). |
+| 2026-11-13 | Related: ward and department transfers within an admission are `metric__inpatient_transfer` (MAUI-7122). |
