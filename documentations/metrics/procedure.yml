@@ -40,6 +40,10 @@ metrics:
   - procedure_code
   - is_completed
   - department
+  - location_group_name
+  - procedure_clinician
+  - procedure_anaesthetist
+  - anaesthetic
   variant_of: null
   owner: bes-maui
   status: draft
