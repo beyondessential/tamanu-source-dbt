@@ -187,6 +187,11 @@ where trim(d) not in (
         -- billing's encounter department as the Tamanu id, so a deployment groups
         -- departments (e.g. Dental) by id in its data table.
         'department_id',
+        -- procedure's clinician and anaesthetist, resolved to names through ref__provider, and
+        -- its anaesthetic, resolved to its reference-data name (MAUI-7122)
+        'procedure_clinician',
+        'procedure_anaesthetist',
+        'anaesthetic',
         -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
         'chief_complaint',
         -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
@@ -194,7 +199,8 @@ where trim(d) not in (
         'clinician_designation',
         'admission_clinician_designation',
         -- encounter's location group (area), id and name (MAUI-6906); the name also on
-        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131)
+        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131), and procedure's
+        -- own location's group (MAUI-7122)
         'location_group_id',
         'location_group_name',
         -- inpatient_admission's / _separation's admission location group (ward/area), by name
