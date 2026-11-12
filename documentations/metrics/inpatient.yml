@@ -94,6 +94,7 @@ metrics:
   - clinician_designation
   - is_same_day
   - admission_location_group_name
+  - discharge_location_group_name
   variant_of: null
   owner: bes-maui
   status: approved

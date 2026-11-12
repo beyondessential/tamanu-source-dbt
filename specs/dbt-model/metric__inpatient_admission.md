@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
-| **Status** | `approved` (BL-001–BL-026 implemented and reviewed; registry status `approved`) |
+| **Status** | `approved` (BL-001–BL-027 implemented and reviewed; registry status `approved`) |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear** | MAUI-7069 (separations and AIHW length of stay) |
@@ -106,6 +106,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | `patient_days` | integer | AIHW patient days (BL-021). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 | `admission_location_group_name` | text | The location group (ward/area) of the admission segment's location, resolved to a name (BL-026). Always populated (AC-026) |
 | `is_same_day` | boolean | Admitted and separated on the same date (BL-022). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
+| `discharge_location_group_name` | text | The location group (ward/area) the patient was discharged from, resolved to a name (BL-027). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 
 ## Business logic
 
@@ -246,8 +247,19 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
   on both metric_ids, like every BL-024 column, alongside `admission_ward_id`, which stays the
   department id (BL-009). Left joined and coalesced to `'Not recorded'`, never NULL (AC-026),
   for the BL-012 array-filter reason.
-
-## Divergences from AIHW
+- **BL-027 (discharge location group):** `discharge_location_group_name` is the name of the
+  location group of the location of the encounter's **latest** `clinical__visit_detail` segment
+  (by `visit_detail_start_datetime`, `visit_detail_id` breaking a tie), whatever its visit
+  concept -- the place the patient was in when discharged. Resolved through `bases/locations`
+  and `bases/location_groups` as BL-026 is. A patient moved from the admitting ward to another
+  is discharged from the ward they left, so a discharge count grouped on this column counts
+  against that ward, where `admission_location_group_name` would count it against the admitting
+  one. Emitted on `inpatient_separation` rows only and NULL on `inpatient_admission`, the same
+  split as `patient_days` (BL-021) -- an exception to BL-024, since an admission row is not a
+  discharge. Left joined and coalesced to `'Not recorded'` on a separation row, never NULL there
+  (AC-027). This carries the discharging ward only; it does not count transfers between wards
+  (OQ-001) or occupancy (OQ-002) (MAUI-7122).
+ from AIHW
 
 | ID | AIHW rule | Here |
 |---|---|---|
@@ -285,6 +297,7 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | AC-024 | An open admission emits an `inpatient_admission` row and no `inpatient_separation` row | BL-019 | unit test `ac_023_metric__inpatient_admission_patient_days` |
 | AC-025 | `is_readmission_within_14_days` is `not_null`; an admission 20 days after the previous discharge is a 30-day readmission and not a 14-day one | BL-025 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
 | AC-026 | `admission_location_group_name` is `not_null`; it is the admission segment's location's group, not an earlier ED segment's, and `'Not recorded'` for a location in no group | BL-026 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
+| AC-027 | `discharge_location_group_name` is populated on every `inpatient_separation` row and NULL on every `inpatient_admission` row; it is the latest segment's location's group, not the admission segment's, `'Not recorded'` for a location in no group, and NULL for an open encounter | BL-027 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) + unit tests `ac_009_int__inpatient_admission_derivations` and `ac_016_metric__inpatient_admission_projection` |
 
 ## Registry entry
 
@@ -296,19 +309,20 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 - `inpatient_separation` — `definition_source: AIHW`, `definition_source_code: '270045'`, its
   numerator described as separations counted on the separation date, and its description naming
   average length of stay as `sum(patient_days)` over separations (BL-023), linking the AIHW
-  length-of-stay page. `is_same_day` is added to its disaggregations.
+  length-of-stay page. `is_same_day` and `discharge_location_group_name` (BL-027) are added to
+  its disaggregations.
 
 ## Dependencies
 
 | Ref | Layer | Role |
 |---|---|---|
 | `int__inpatient_admission` | `intermediate/omop/` | The shared base; every ref below is reached through it |
-| `clinical__visit_detail` | `clinical/` | Admission segment: inclusion, timing, location, department, encounter id (BL-003, BL-007, BL-011) |
+| `clinical__visit_detail` | `clinical/` | Admission segment: inclusion, timing, location, department, encounter id (BL-003, BL-007, BL-011); the latest segment's location (BL-027) |
 | `clinical__visit_occurrence` | `clinical/` | Encounter end (BL-002) and concept 262 (BL-005) |
 | `clinical__person` | `clinical/` | Sex and birth date (BL-004) |
 | `clinical__condition_occurrence` | `clinical/` | Principal diagnosis code (BL-013) |
-| `locations` | `bases/` | Facility of the admission segment's location (BL-007) |
-| `location_groups` | `bases/` | Name of the admission segment's location group (BL-026) |
+| `locations` | `bases/` | Facility of the admission segment's location (BL-007); the discharge segment's location group (BL-027) |
+| `location_groups` | `bases/` | Name of the admission segment's location group (BL-026) and the discharge segment's (BL-027) |
 | `encounters` | `bases/` | Referral source (BL-012) |
 | `discharges` | `bases/` | Discharge disposition (BL-014) |
 | `reference_data` | `bases/` | Referral source and disposition names (BL-012, BL-014) |
@@ -365,3 +379,4 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | 2026-11-05 | BL-025: `is_readmission_within_14_days`, BL-016's rule over 14 days, added as a disaggregation on both metric_ids for Nauru's 14-day readmissions card (MAUI-7080). |
 | 2026-11-09 | Consumers: the inpatient Tupaia length-of-stay and discharge-disposition cards read `inpatient_separation` (MAUI-7069). |
 | 2026-11-11 | BL-026: `admission_location_group_name`, the admission location's ward/area, added as a disaggregation on both metric_ids for Naoero's inpatient cards (MAUI-7131). |
+| 2026-11-13 | BL-027: `discharge_location_group_name`, the ward/area the patient was discharged from, added on `inpatient_separation` rows (NULL on `inpatient_admission`) so Naoero's inpatient ward cards count discharges against the ward the patient left (MAUI-7122). |
