@@ -95,7 +95,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__opd_visit_department.md
 
 - metric_id: opd_diagnosis
@@ -134,7 +134,7 @@ metrics:
   - location_group_name
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__opd_diagnosis.md
 
 
@@ -170,5 +170,5 @@ metrics:
   - location_group_name
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__appointment.md

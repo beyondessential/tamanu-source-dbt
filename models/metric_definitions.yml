@@ -34,10 +34,12 @@ models:
 
       Schema per Maui data architecture D5
       (`.maui/knowledge/architecture/data-architecture/decisions.md`).
-      Status lifecycle: `draft` → `approved` → `deprecated`. PR review checks
-      that the corresponding `metric__` model output matches the registered
-      shape (disaggregations, subject_grain, unit) before a row promotes from
-      `draft` to `approved`.
+      Status lifecycle: `approved` → `deprecated`. An entry lands `approved`
+      in the PR that adds or changes it, and that PR's review checks the
+      `metric__` model output matches the registered shape (disaggregations,
+      subject_grain, unit). There is no `draft`: an entry is never committed
+      ahead of review (`.maui/knowledge/standards/dbt-conventions.md`
+      § Documentation).
 
     config:
       materialized: view
@@ -137,12 +139,12 @@ models:
         data_tests:
           - not_null
       - name: status
-        description: Lifecycle status — `draft`, `approved`, or `deprecated`.
+        description: Lifecycle status — `approved`, or `deprecated` once the artefact is retired.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['draft', 'approved', 'deprecated']
+                values: ['approved', 'deprecated']
       - name: spec_path
         description: Repo-relative path to the SDD spec for this artefact.
         data_tests:

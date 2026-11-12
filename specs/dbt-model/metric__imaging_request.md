@@ -216,7 +216,7 @@ Test names are unnumbered (`ac_metric__imaging_request_<column>_<check>`), match
 ## Registry entry
 
 One active row -- `imaging_request`, `kind: metric`, `subject_grain: imaging_request`,
-`status: draft`, `spec_path` pointing here, with `disaggregations:
+`status: approved`, `spec_path` pointing here, with `disaggregations:
 facility_id,encounter_type,sex,is_completed,imaging_type,imaging_type_code,imaging_area,department`.
 
 `encounter_type` is already admitted to the allowlist in

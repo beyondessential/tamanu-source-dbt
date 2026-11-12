@@ -197,7 +197,7 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
 ## Registry entry
 
 One active row -- `opd_visit_department`, `kind: metric`, `subject_grain: visit`,
-`status: draft` pending a first real-data spot-check against FSM, `variant_of: null`
+`status: approved`, `variant_of: null`
 (deliberately not a variant of `opd_visit` -- grain and sum semantics differ), `spec_path`
 pointing here, with `disaggregations:
 facility_id,location_id,sex,clinician_id,is_admitted,admission_clinician_id,is_auto_discharge,department`.

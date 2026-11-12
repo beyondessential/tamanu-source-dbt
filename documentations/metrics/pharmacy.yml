@@ -46,7 +46,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__pharmacy_order.md
 - metric_id: medication_dispense
   kind: metric
@@ -82,7 +82,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__medication_dispense.md
 - metric_id: prescription
   kind: metric
@@ -110,7 +110,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__prescription.md
 - metric_id: medication_administration
   kind: metric
@@ -138,7 +138,7 @@ metrics:
   - department
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__medication_administration.md
 - metric_id: prescription_discontinuation
   kind: metric
@@ -167,5 +167,5 @@ metrics:
   - discontinuing_reason
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__prescription_discontinuation.md

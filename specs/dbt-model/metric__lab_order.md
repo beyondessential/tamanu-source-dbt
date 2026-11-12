@@ -278,7 +278,7 @@ dbt's. This model therefore carries no `data_table_*` meta.
 ## Registry entry
 
 One active row in `documentations/metrics/lab.yml` -- `lab_order`, `kind: metric`,
-`subject_grain: lab_order`, `status: draft`, `spec_path` pointing here, with
+`subject_grain: lab_order`, `status: approved`, `spec_path` pointing here, with
 `disaggregations: facility_id, encounter_type, visit_detail_concept_id, visit_detail_concept_name, sex, is_completed,
 request_status, cancellation_reason, is_panel, department, location_group_name, lab_order, lab_order_code, lab_test_category`.
 
