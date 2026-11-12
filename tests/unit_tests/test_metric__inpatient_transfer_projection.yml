@@ -1,0 +1,65 @@
+version: 2
+
+unit_tests:
+  - name: ac_009_metric__inpatient_transfer_projection
+    model: metric__inpatient_transfer
+    description: >
+      BL-001: enc_1 arrives in ED (seg_1a, 9203), is admitted to ward A bed 1 (seg_1b, the
+      admission, not a transfer), has a clinician handover in the same bed (seg_1c, not a
+      transfer), moves to ward A bed 2 (seg_1d, a bed move within the group) and then to an
+      ungrouped room in another department (seg_1e). enc_2's move from ward B to a location that
+      does not resolve (seg_2b) is excluded. BL-002: period_start and period_end are the moved-into
+      segment's start. BL-004: facility is the location moved to. BL-005: age at the move. BL-007:
+      'Not recorded' for a location in no group. BL-009: a change into no group is a group change.
+
+    given:
+      - input: ref('clinical__visit_detail')
+        format: sql
+        rows: |
+          select 'seg_1a' as visit_detail_id, 'enc_1' as visit_occurrence_id, 'pat_1' as person_id, 9203 as visit_detail_concept_id, '2024-01-01 08:00'::timestamp as visit_detail_start_datetime, 'loc_ed' as care_site_id, 'dep_ed' as department_id, null::text as preceding_visit_detail_id
+          union all
+          select 'seg_1b', 'enc_1', 'pat_1', 9201, '2024-01-01 10:00'::timestamp, 'loc_a1', 'dep_med', 'seg_1a'
+          union all
+          select 'seg_1c', 'enc_1', 'pat_1', 9201, '2024-01-02 09:00'::timestamp, 'loc_a1', 'dep_med', 'seg_1b'
+          union all
+          select 'seg_1d', 'enc_1', 'pat_1', 9201, '2024-01-03 11:30'::timestamp, 'loc_a2', 'dep_med', 'seg_1c'
+          union all
+          select 'seg_1e', 'enc_1', 'pat_1', 9201, '2024-01-04 14:15'::timestamp, 'loc_room', 'dep_surg', 'seg_1d'
+          union all
+          select 'seg_2a', 'enc_2', 'pat_2', 9201, '2024-02-01 10:00'::timestamp, 'loc_b1', null::text, null::text
+          union all
+          select 'seg_2b', 'enc_2', 'pat_2', 9201, '2024-02-02 10:00'::timestamp, 'loc_gone', null::text, 'seg_2a'
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, 'female' as gender_source_value, 1990 as year_of_birth, 1 as month_of_birth, 4 as day_of_birth
+          union all
+          select 'pat_2', 'male', null::int, null::int, null::int
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ed' as id, 'ED bay' as name, null::text as location_group_id, 'fac_1' as facility_id
+          union all
+          select 'loc_a1', 'Bed A1', 'lg_a', 'fac_1'
+          union all
+          select 'loc_a2', 'Bed A2', 'lg_a', 'fac_1'
+          union all
+          select 'loc_room', 'Side room', null::text, 'fac_1'
+          union all
+          select 'loc_b1', 'Bed B1', 'lg_b', 'fac_1'
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_a' as id, 'Ward A' as name
+          union all
+          select 'lg_b', 'Ward B'
+
+    expect:
+      format: sql
+      rows: |
+        select 'inpatient_transfer' as metric_id, null::text as variant_id, 'seg_1d'::varchar as subject_id, '2024-01-03 11:30'::timestamp as period_start, '2024-01-03 11:30'::timestamp as period_end, 'minute'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'female' as sex, 33 as age_years, 'enc_1'::varchar as visit_occurrence_id, 'loc_a1' as from_location_id, 'loc_a2' as to_location_id, 'Bed A1' as from_location_name, 'Bed A2' as to_location_name, 'Ward A' as from_location_group_name, 'Ward A' as to_location_group_name, 'dep_med' as from_department_id, 'dep_med' as to_department_id, false as is_location_group_change, false as is_department_change
+        union all
+        select 'inpatient_transfer', null::text, 'seg_1e'::varchar, '2024-01-04 14:15'::timestamp, '2024-01-04 14:15'::timestamp, 'minute'::text, 1::numeric, null::boolean, 'fac_1', 'female', 34, 'enc_1'::varchar, 'loc_a2', 'loc_room', 'Bed A2', 'Side room', 'Ward A', 'Not recorded', 'dep_med', 'dep_surg', true, true
