@@ -206,6 +206,9 @@ where trim(d) not in (
         -- inpatient_admission's / _separation's admission location group (ward/area), by name
         -- (MAUI-7131)
         'admission_location_group_name',
+        -- inpatient_separation's discharge location group: the ward/area the patient was
+        -- discharged from, by name (MAUI-7122)
+        'discharge_location_group_name',
         -- opd_visit's referral source, carried as recorded, as admission_source is (MAUI-7131)
         'referral_source',
         -- outpatient_appointment's Tamanu status as recorded (e.g. No-show) and its appointment
