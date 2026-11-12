@@ -1,5 +1,5 @@
 name: tamanu_source_dbt
-version: 2.67.0
+version: 2.68.0
 config-version: 2
 profile: tamanu_source_dbt
 # dbt enforces this on every project that installs this package, so it states what the package's
