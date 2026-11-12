@@ -99,3 +99,40 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__inpatient_admission.md
+
+- metric_id: inpatient_transfer
+  kind: metric
+  name: Inpatient transfers
+  description: >-
+    Moves of an admitted patient from one location to another within a hospital stay. One row per
+    move, with the locations and wards moved from and to.
+  numerator_description: >-
+    Location changes between two inpatient segments of an encounter, counted on the date moved
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    AIHW counts a change of care type as a statistical separation, but registers no indicator for
+    a ward or bed move within an episode, so this is a BES composition over Tamanu's encounter
+    location history. is_location_group_change separates a ward-to-ward transfer from a bed move
+    within a ward. Pending alignment with the deploying country's national HMIS definition.
+  unit: count
+  subject_grain: transfer
+  disaggregations:
+  - facility_id
+  - sex
+  - from_location_id
+  - to_location_id
+  - from_location_name
+  - to_location_name
+  - from_location_group_name
+  - to_location_group_name
+  - from_department_id
+  - to_department_id
+  - is_location_group_change
+  - is_department_change
+  variant_of: null
+  owner: bes-maui
+  status: draft
+  spec_path: specs/dbt-model/metric__inpatient_transfer.md
