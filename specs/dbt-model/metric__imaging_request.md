@@ -42,8 +42,7 @@ reads as `triage`, not `admission`.
 3. **By status, priority and cancellation reason** -- `request_status`, `priority` and
    `cancellation_reason`, so a card splits requests by priority, counts cancelled ones by
    reason and counts completed ones (MAUI-7122).
-4. **Turnaround time** -- not currently surfaced. Computable later
-   from `period_start`/`period_end`.
+4. **Turnaround time** -- `turnaround__minutes`, request to completion (BL-016).
 
 **Who reads it.** Any Tupaia dashboard needing imaging-request volume across every
 setting, or split by setting, via a data table over this view in `tupaia-data-product`, once
@@ -73,7 +72,7 @@ attribution here decides *disaggregation*, not identity.
 
 ## Output schema
 
-D5 wide format, plus fourteen disaggregation columns and one measure attribute.
+D5 wide format, plus fourteen disaggregation columns and two measures.
 `encounter_type` is among them, since this metric applies no setting restriction.
 
 | Column | Type | Notes |
@@ -101,6 +100,7 @@ D5 wide format, plus fourteen disaggregation columns and one measure attribute.
 | `age_years` | integer | Age in whole years at the request, unbanded (BL-008). A measure, not a dimension |
 | `department` | text | The department of the segment the request was raised in, resolved to a name (BL-011). Never NULL |
 | `location_group_name` | text | The area: the location group of the resolved segment's own location (BL-015). Never NULL: `'Not recorded'` when absent |
+| `turnaround__minutes` | numeric | Minutes from request to completion, for a completed request; NULL otherwise (BL-016) |
 
 ## Data tables
 
@@ -218,6 +218,14 @@ yet built as of this spec.
   area field, so the area agrees with `facility_id` and `department`, which both come off the
   same segment (MAUI-7122).
 
+- **BL-016 (turnaround):** `turnaround__minutes` is the whole minutes from `period_start` to
+  `period_end`, for a request whose status is `completed` -- so it uses the same completion
+  timestamp BL-002 gates, the earliest `imaging_results.datetime`. NULL while a request is
+  pending, in progress or cancelled, and NULL where the completion is recorded before the
+  request -- a recording error, which the `period_end_at_or_after_start` warning already
+  surfaces, rather than a negative duration. A measure: a consumer sums it and divides by the
+  count of rows where it is not NULL, never averaging per-group averages (MAUI-7122).
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -297,8 +305,8 @@ Regenerate `macros/metric_definitions.sql` with
 4. **Filter `encounter_type` itself, if a single setting is wanted.** This metric does not
    pre-scope to any setting -- a consumer wanting outpatient clinic imaging requests
    filters `encounter_type = 'clinic'`, and inpatient `'admission'`.
-5. **Compute turnaround time itself, if needed.** Not emitted; both `period_start` and
-   `period_end` remain on the model.
+5. **Average turnaround over the completed requests only.** Sum `turnaround__minutes` and
+   divide by the count of rows where it is not NULL.
 6. **Band `age_years` and/or group `imaging_type` itself**, if wanted -- neither is emitted
    here.
 
@@ -326,3 +334,4 @@ Regenerate `macros/metric_definitions.sql` with
 | 2026-09-11 | @gagank16 | Initial draft (MAUI-6806) -- first all-settings imaging-request metric in the repo |
 | 2026-09-28 | @gagank16 | Single imaging-request metric: the OPD and IPD scoped metrics retired behind an `encounter_type` filter, `department` added |
 | 2026-11-13 | @hrazasalman | `request_status`, `cancellation_reason`, `priority` and `location_group_name` added for Nauru's Radiology dashboard (BL-013, BL-014, BL-015), resolving OQ-002 (MAUI-7122) |
+| 2026-11-13 | @hrazasalman | `turnaround__minutes` added, request to completion (BL-016) (MAUI-7122) |
