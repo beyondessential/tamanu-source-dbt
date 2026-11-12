@@ -1,0 +1,52 @@
+version: 2
+
+unit_tests:
+  - name: ac_009_metric__patient_condition_projection
+    model: metric__patient_condition
+    description: >
+      BL-001: a condition whose patient does not resolve in clinical__person is excluded. BL-002:
+      period_start is the recorded date, period_end the resolution date of a resolved condition
+      and NULL otherwise. BL-004: facility_id is NULL. BL-005: age_years is whole completed years
+      at the recorded date, NULL with no date of birth. BL-006: patient_location_id passes
+      through, NULL included. BL-008: condition_code only for a diagnosis-type reference, and
+      condition_name falls back to 'Not recorded'. BL-009: a resolution date on an unresolved
+      row is ignored, and an unset flag reads false.
+
+    given:
+      - input: ref('patient_conditions')
+        format: sql
+        rows: |
+          -- resolved ICD-10 condition, birthday not yet reached on the recorded date -> 39
+          select 'pc_1' as id, '2024-03-10 09:00:00'::timestamp as recorded_datetime, 'rd_htn' as condition_id, 'pat_1' as patient_id, true as is_resolved, '2024-09-01 00:00:00'::timestamp as resolved_datetime
+          union all
+          -- ongoing, a resolution date on an unresolved row is ignored; non-diagnosis reference
+          select 'pc_2', '2024-05-01 00:00:00'::timestamp, 'rd_local', 'pat_2', false, '2024-06-01 00:00:00'::timestamp
+          union all
+          -- condition reference does not resolve; flag unset -> false
+          select 'pc_3', '2024-05-02 00:00:00'::timestamp, 'rd_missing', 'pat_2', null::boolean, null::timestamp
+          union all
+          -- patient does not resolve -> excluded
+          select 'pc_4', '2024-05-03 00:00:00'::timestamp, 'rd_htn', 'pat_gone', false, null::timestamp
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth, 'vil_1' as location_id
+          union all
+          select 'pat_2', 'male', null::int, null::int, null::int, null::text
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'rd_htn' as id, 'I10' as code, 'Essential hypertension' as name, 'diagnosis' as type
+          union all
+          select 'rd_local', 'LOCAL1', 'Local condition', 'other'
+
+    expect:
+      format: sql
+      rows: |
+        select 'patient_condition' as metric_id, null::text as variant_id, 'pc_1'::varchar as subject_id, '2024-03-10'::date as period_start, '2024-09-01'::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, null::varchar as facility_id, 'female' as sex, 39 as age_years, 'vil_1' as patient_location_id, 'pat_1' as person_id, 'rd_htn' as condition_id, 'I10' as condition_code, 'Essential hypertension' as condition_name, true as is_resolved, '2024-09-01'::date as resolved_date
+        union all
+        select 'patient_condition', null::text, 'pc_2'::varchar, '2024-05-01'::date, null::date, 'day'::text, 1::numeric, null::boolean, null::varchar, 'male', null::int, null::text, 'pat_2', 'rd_local', null::text, 'Local condition', false, null::date
+        union all
+        select 'patient_condition', null::text, 'pc_3'::varchar, '2024-05-02'::date, null::date, 'day'::text, 1::numeric, null::boolean, null::varchar, 'male', null::int, null::text, 'pat_2', 'rd_missing', null::text, 'Not recorded', false, null::date

@@ -11,7 +11,7 @@
 -- facility.
 --
 -- The registry carries the definition and this model is its implementation.
--- See specs/dbt-model/metric__death.md for BL-001..BL-008.
+-- See specs/dbt-model/metric__death.md for BL-001..BL-009.
 
 with patients as (
     select * from {{ ref('patients') }}
@@ -101,7 +101,17 @@ select
     coalesce(dept.name, 'Not recorded') as department,
     -- BL-008: whole days from birth to the date of death, NULL where the birth date is not
     -- recorded -- the derivation metric__immunisation_dose's age_days uses
-    (p.date_of_death::date - p.date_of_birth) as age_days
+    (p.date_of_death::date - p.date_of_birth) as age_days,
+    -- BL-009: the death record's yes/no answers as booleans. NULL for 'unknown', for no
+    -- answer and for no death record.
+    case lower(pdd.was_pregnant)
+        when 'yes' then true
+        when 'no' then false
+    end as was_pregnant,
+    case lower(pdd.pregnancy_contributed)
+        when 'yes' then true
+        when 'no' then false
+    end as pregnancy_contributed
 from patients p
 join person pr
     on pr.person_id = p.id
