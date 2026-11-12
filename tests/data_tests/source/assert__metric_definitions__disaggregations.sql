@@ -133,9 +133,12 @@ where trim(t.d) not in (
         -- applied downstream rather than registered here.
         'lab_order',
         'lab_order_code',
-        -- lab_order's request lifecycle status and, for a cancelled request, its reason, as recorded
+        -- lab_order's and imaging_request's request lifecycle status and, for a cancelled
+        -- request, its reason, as recorded
         'request_status',
         'cancellation_reason',
+        -- imaging_request's priority (e.g. routine, urgent), as recorded (MAUI-7122)
+        'priority',
         -- prescription_discontinuation's recorded reason, as recorded and ungrouped
         'discontinuing_reason',
         -- lab_test's request-level category (e.g. Haematology), as recorded
@@ -194,8 +197,8 @@ where trim(t.d) not in (
         'clinician_designation',
         'admission_clinician_designation',
         -- encounter's location group (area), id and name (MAUI-6906); the name also on
-        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131), and procedure's
-        -- own location's group (MAUI-7122)
+        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131), procedure's own
+        -- location's group and imaging_request (MAUI-7122)
         'location_group_id',
         'location_group_name',
         -- inpatient_admission's / _separation's admission location group (ward/area), by name
