@@ -190,3 +190,36 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__procedure_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: >-
+          The area: the location group of the procedure's own location (e.g. Operating
+          Theatre), not the segment's -- a procedure can be performed outside the ward the
+          patient is in. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__procedure_location_group_name_not_null
+      - name: procedure_clinician
+        data_type: text
+        description: >-
+          The procedure's clinician (Tamanu's physician on the procedure), resolved to a display
+          name through ref__provider. Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__procedure_procedure_clinician_not_null
+      - name: procedure_anaesthetist
+        data_type: text
+        description: >-
+          The procedure's anaesthetist, resolved to a display name through ref__provider. Never
+          NULL -- falls back to 'Not recorded', which covers a procedure with no anaesthetist.
+        data_tests:
+          - not_null:
+              name: ac_metric__procedure_procedure_anaesthetist_not_null
+      - name: anaesthetic
+        data_type: text
+        description: >-
+          The anaesthetic recorded on the procedure, resolved to its reference-data name. Never
+          NULL -- falls back to 'Not recorded', which covers a procedure with no anaesthetic.
+        data_tests:
+          - not_null:
+              name: ac_metric__procedure_anaesthetic_not_null
