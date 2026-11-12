@@ -4,7 +4,7 @@
 -- Per-request (subject) grain: one row per imaging request, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs. It is the imaging-request counterpart to
 -- metric__procedure over the same clinical model.
--- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-015.
+-- See specs/dbt-model/metric__imaging_request.md for BL-001..BL-016.
 --
 -- BL-003: encounter_type is the setting the request was raised in -- read off the
 -- clinical__visit_detail segment clinical__procedure_occurrence resolves as its
@@ -244,5 +244,13 @@ select
     -- BL-011: the resolved segment's own department, never NULL.
     department,
     -- BL-015: the area, never NULL.
-    coalesce(location_group_name, 'Not recorded') as location_group_name
+    coalesce(location_group_name, 'Not recorded') as location_group_name,
+    -- BL-016: whole minutes from the request being raised to its completion, for a completed
+    -- request. NULL while it is pending, in progress or cancelled, and NULL where the
+    -- completion is recorded before the request, which is a recording error and not a
+    -- negative duration.
+    case
+        when is_completed and completed_datetime >= requested_datetime
+            then round(extract(epoch from (completed_datetime - requested_datetime)) / 60)
+    end::numeric as turnaround__minutes
 from requests

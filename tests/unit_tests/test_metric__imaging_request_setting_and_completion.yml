@@ -34,6 +34,9 @@ unit_tests:
       the segment's own location's group: r3's triage segment sits at loc2, which has no group,
       so it reads 'Not recorded'.
 
+      BL-016: turnaround__minutes is request to completion for a completed request -- r1 120,
+      r3 60. r6 has a result but is not completed, so it stays NULL like the other open ones.
+
       The as-of match and the first-segment clamp are no longer this model's behaviour and
       are covered once, upstream, by
       test_clinical__procedure_occurrence_visit_detail_resolution -- so they are not
@@ -144,12 +147,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'completed' as request_status, 'Not specified' as cancellation_reason, 'urgent' as priority, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department, 'Outpatients' as location_group_name
+        select 'imaging_request' as metric_id, null::text as variant_id, 'r1' as subject_id, '2026-01-01 10:00:00'::timestamp as period_start, '2026-01-01 12:00:00'::timestamp as period_end, 'minute' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, true as is_completed, 'completed' as request_status, 'Not specified' as cancellation_reason, 'urgent' as priority, 'CT Scan' as imaging_type, 'ctScan' as imaging_type_code, 'Not recorded' as imaging_area, 30 as age_years, 'Not recorded' as department, 'Outpatients' as location_group_name, 120::numeric as turnaround__minutes
         union all
-        select 'imaging_request', null::text, 'r3', '2026-01-01 10:00:00'::timestamp, '2026-01-01 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'female', true, 'completed', 'Not specified', 'stat', 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded', 'Not recorded'
+        select 'imaging_request', null::text, 'r3', '2026-01-01 10:00:00'::timestamp, '2026-01-01 11:00:00'::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'triage', 9203, 'Emergency Room Visit', 'female', true, 'completed', 'Not specified', 'stat', 'X-Ray', 'xRay', 'Not recorded', 30, 'Not recorded', 'Not recorded', 60::numeric
         union all
-        select 'imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'pending', 'Not specified', 'routine', 'MRI', 'mri', 'Not recorded', 30, 'Not recorded', 'Outpatients'
+        select 'imaging_request', null::text, 'r4', '2026-01-02 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'pending', 'Not specified', 'routine', 'MRI', 'mri', 'Not recorded', 30, 'Not recorded', 'Outpatients', null::numeric
         union all
-        select 'imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'in_progress', 'Not specified', 'Not recorded', 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded', 'Outpatients'
+        select 'imaging_request', null::text, 'r6', '2026-01-03 09:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'in_progress', 'Not specified', 'Not recorded', 'Ultrasound', 'ultrasound', 'Not recorded', 30, 'Not recorded', 'Outpatients', null::numeric
         union all
-        select 'imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'cancelled', 'duplicate', 'routine', 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded', 'Outpatients'
+        select 'imaging_request', null::text, 'r9', '2026-01-06 08:00:00'::timestamp, null::timestamp, 'minute', 1::numeric, null::boolean, 'fac1', 'clinic', 9202, 'Outpatient Visit', 'female', false, 'cancelled', 'duplicate', 'routine', 'X-Ray', 'xRay', 'Abdomen, Left knee, Right knee, Hip', 30, 'Not recorded', 'Outpatients', null::numeric

@@ -253,3 +253,12 @@ models:
           presentation choice a deployment may set differently, so the consumer's data
           table bands it. A measure, not a dimension: absent from the registry's
           disaggregations.
+      - name: turnaround__minutes
+        data_type: numeric
+        description: >-
+          Whole minutes from the request being raised to its completion (period_start to
+          period_end). NULL for a request that is not completed, and for one recorded as
+          completed before it was raised. A measure, not a dimension: absent from the
+          registry's disaggregations. A consumer sums it and divides by the count of rows
+          where it is not NULL, since an average taken per group would be an average of
+          averages.
