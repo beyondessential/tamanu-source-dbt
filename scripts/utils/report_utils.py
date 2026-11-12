@@ -227,7 +227,7 @@ def _describe_stall(manifest, remaining, selectable):
     for node in remaining:
         excluded = sorted(
             dep
-            for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+            for dep in effective_dependencies(manifest, node)
             if not dep.startswith("source") and dep not in selectable
         )
         if excluded:
@@ -252,6 +252,66 @@ def _describe_stall(manifest, remaining, selectable):
     return "\n".join(lines)
 
 
+def _is_ephemeral(manifest, node):
+    return manifest["nodes"][node].get("config", {}).get("materialized") == "ephemeral"
+
+
+def effective_dependencies(manifest, node):
+    """The models a node's compiled SQL actually selects from.
+
+    dbt inlines an ephemeral model as a CTE, so a node never reads an ephemeral
+    model's view: it reads whatever the ephemeral model reads. Each ephemeral
+    dependency is replaced by its own dependencies, recursively.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        node (str): Unique ID of the node.
+
+    Returns:
+        list: Unique IDs of the non-ephemeral dependencies, in manifest order.
+    """
+    resolved, seen = [], set()
+
+    def visit(current):
+        for dep in manifest["nodes"][current]["depends_on"]["nodes"]:
+            if dep in seen:
+                continue
+            seen.add(dep)
+            if dep in manifest["nodes"] and _is_ephemeral(manifest, dep):
+                visit(dep)
+            else:
+                resolved.append(dep)
+
+    visit(node)
+    return resolved
+
+
+def reporting_schema_nodes(manifest, has_sensitive_facility):
+    """The models the reporting schema creates a view for.
+
+    Every model except the reports themselves, "internal" models and ephemeral
+    models. An ephemeral model is inlined into its consumers and creates nothing
+    in a dbt run, so a view of it would be one no query reads. A "restricted" model
+    is included only when has_sensitive_facility is true.
+
+    Args:
+        manifest (dict): The parsed dbt manifest.
+        has_sensitive_facility (bool): Whether the deployment has a sensitive facility.
+
+    Returns:
+        list: Unique IDs of the models to create, in manifest order.
+    """
+    return [
+        key
+        for key, node in manifest["nodes"].items()
+        if key.startswith("model")
+        and "reports" not in node.get("tags", [])
+        and "internal" not in node.get("tags", [])
+        and not _is_ephemeral(manifest, key)
+        and (has_sensitive_facility or "restricted" not in node.get("tags", []))
+    ]
+
+
 def order_models_for_schema(manifest, nodes):
     """Order models so each view is created after the views it selects from.
 
@@ -272,6 +332,7 @@ def order_models_for_schema(manifest, nodes):
     selectable = set(nodes)
     processed = set()
     ordered = []
+    dependencies = {node: effective_dependencies(manifest, node) for node in nodes}
 
     while len(processed) < len(nodes):
         current = [
@@ -280,7 +341,7 @@ def order_models_for_schema(manifest, nodes):
             if node not in processed
             and all(
                 dep.startswith("source") or dep in processed
-                for dep in manifest["nodes"][node]["depends_on"]["nodes"]
+                for dep in dependencies[node]
             )
         ]
         if not current:
@@ -300,9 +361,10 @@ def generate_reporting_schema_script():
     """
     Generates a SQL script to create views in the reporting schema.
 
-    The script is generated based on the model nodes that do not have the "reports" or
-    "internal" tag and are compiled in the project. Dependencies between models are resolved
-    before generating the views in the schema. Nodes tagged "internal" (e.g. the
+    The script creates a view for each model node that is not a report, "internal" or
+    ephemeral (see reporting_schema_nodes). Dependencies between models are resolved
+    before generating the views in the schema, looking through ephemeral models to the
+    views they read. Nodes tagged "internal" (e.g. the
     metric_definitions registry) are dbt-package-internal and never materialised into the
     deployable reporting schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset
     views) are excluded when has_sensitive_facility is false. has_sensitive_facility is read
@@ -317,17 +379,7 @@ def generate_reporting_schema_script():
     project_vars = get_dbt_project_vars()
     has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
 
-    nodes = [
-        key
-        for key in manifest["nodes"]
-        if key.startswith("model")
-        and "reports" not in manifest["nodes"][key].get("tags", [])
-        and "internal" not in manifest["nodes"][key].get("tags", [])
-        and (
-            has_sensitive_facility
-            or "restricted" not in manifest["nodes"][key].get("tags", [])
-        )
-    ]
+    nodes = reporting_schema_nodes(manifest, has_sensitive_facility)
 
     if not nodes:
         raise RuntimeError("No models found: the manifest carries nothing to build a schema from")

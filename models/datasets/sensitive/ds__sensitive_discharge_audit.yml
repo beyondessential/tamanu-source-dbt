@@ -13,11 +13,11 @@ models:
         - clinical
         - audit
         - restricted
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: discharge_id
         description: "{{ doc('generic__id') }} in discharges."
@@ -103,7 +103,7 @@ models:
         description: "{{ doc('ds__discharge_audit__discharger_on_form') }}"
 
       - name: recorded_by_user_id
-        description: "{{ doc('discharges_change_logs__updated_by_user_id') }}"
+        description: "{{ doc('discharges_change_history__updated_by_user_id') }}"
 
       - name: recorded_by_user
         description: "{{ doc('ds__discharge_audit__recorded_by_user') }}"

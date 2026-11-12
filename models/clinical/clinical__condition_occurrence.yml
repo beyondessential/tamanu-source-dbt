@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     data_tests:
       # AC-007: neither source records a resolution date, so both branches hardcode the
       # end columns to NULL. Asserted as the null invariant itself rather than as an

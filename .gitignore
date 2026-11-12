@@ -11,6 +11,9 @@ CLAUDE.md
 
 # Environment and config
 .env
+.env.*
+!.env.example
+!.env.local
 .user.yml
 local_config/
 
@@ -24,7 +27,7 @@ package-lock.yml
 uv.lock
 
 # Build and generated files
-compiled/*/*.json
+compiled/
 /logs/
 macros/default_translations.sql
 models/surveys/

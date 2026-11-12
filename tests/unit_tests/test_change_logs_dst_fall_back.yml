@@ -1,0 +1,209 @@
+unit_tests:
+  # Australia/Sydney falls back at 03:00 AEDT on 2026-04-05 (16:00 UTC on the 4th), repeating
+  # 02:00-03:00 local. A change at 15:40 UTC is 02:40 AEDT and a later one at 16:20 UTC is
+  # 02:20 AEST, so the local logged_at puts the later change first. Every fixture below uses that
+  # pair (MAUI-7018).
+  - name: test_discharges_change_logs_dst_fall_back
+    model: discharges_change_logs
+    description: >
+      Two changes inside a DST fall-back's repeated hour convert to local logged_at values that
+      reverse their order, while the sort-only logged_at_utc and record_updated_at_utc keep the
+      true order that discharges_change_history() numbers them by.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+    given:
+      - input: source('logs__tamanu', 'changes')
+        format: sql
+        rows: |
+          select '00000000-0000-0000-0000-000000000001' as id, 'discharges' as table_name, 'dis_001' as record_id, '2026-04-04 15:40:00+00'::timestamptz as logged_at, '2026-04-04 15:40:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_001' as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
+          union all
+          select '00000000-0000-0000-0000-000000000002', 'discharges', 'dis_001', '2026-04-04 16:20:00+00'::timestamptz, '2026-04-04 16:20:00+00'::timestamptz, null::timestamptz, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+
+      - input: source('tamanu', 'discharges')
+        format: sql
+        rows: |
+          select 'dis_001' as id, 'enc_001' as encounter_id, null::timestamptz as deleted_at
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
+
+    expect:
+      format: sql
+      rows: |
+        select '00000000-0000-0000-0000-000000000001' as changelog_id, 'dis_001' as discharge_id, 'enc_001' as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001' as updated_by_user_id, '{"note": "Home", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb as record_data
+        union all
+        select '00000000-0000-0000-0000-000000000002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', '{"note": "Home with follow up", "discharger_id": "cli_001", "disposition_id": "disp_001"}'::jsonb
+
+  - name: test_outpatient_appointments_change_logs_dst_fall_back
+    model: outpatient_appointments_change_logs
+    description: >
+      BL-024. Two edits inside a DST fall-back's repeated hour convert to local logged_at values
+      that reverse their order, while the sort-only logged_at_utc and record_updated_at_utc keep
+      the true order that outpatient_appointments_change_history() windows over.
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+    given:
+      - input: source('logs__tamanu', 'changes')
+        format: sql
+        rows: |
+          select 'chg_002' as id, 'appointments' as table_name, 'appt_a' as record_id, '2026-04-04 15:40:00+00'::timestamptz as logged_at, '2026-04-04 15:40:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_002' as updated_by_user_id, 200::bigint as updated_at_sync_tick, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Arrived"}'::jsonb as record_data
+          union all
+          select 'chg_003', 'appointments', 'appt_a', '2026-04-04 16:20:00+00'::timestamptz, '2026-04-04 16:20:00+00'::timestamptz, null::timestamptz, 'usr_003', 300, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Seen"}'::jsonb
+
+    expect:
+      format: sql
+      rows: |
+        select 'chg_002' as changelog_id, 'appt_a' as appointment_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_002' as updated_by_user_id, 200::bigint as updated_at_sync_tick, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Arrived"}'::jsonb as record_data
+        union all
+        select 'chg_003', 'appt_a', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_003', 300, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Seen"}'::jsonb
+
+  - name: test_int__registration_status_history_dst_fall_back
+    model: int__registration_status_history
+    description: >
+      BL-012, AC-013. Two changes exactly an hour apart across a DST fall-back share a local
+      logged_at (02:30 AEDT and 02:30 AEST). Deduplicated on the local value they would collapse
+      into one entry; on logged_at_utc both survive, in order, and the current state that agrees
+      with the later one is dropped as redundant (BL-014).
+    overrides:
+      vars:
+        timezone: Australia/Sydney
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2026-01-10 09:00:00'::timestamp as enrolment_datetime, 'active' as registration_status, 'cs_002' as clinical_status_id, 'preg_001' as program_registry_id, 'usr_001' as registered_by_id
+
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as id, '2026-04-05 02:30:00'::timestamp as logged_at, '2026-04-04 15:30:00'::timestamp as logged_at_utc, 'active' as registration_status, 'cs_001' as clinical_status_id, 'pat_001' as patient_id, 'preg_001' as program_registry_id, 'usr_002' as updated_by_user_id
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:30:00'::timestamp, '2026-04-04 16:30:00'::timestamp, 'active', 'cs_002', 'pat_001', 'preg_001', 'usr_003'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, 'preg_001' as program_registry_id, '2026-04-05 02:30:00'::timestamp as logged_at, '2026-04-04 15:30:00'::timestamp as logged_at_utc, 'active' as registration_status, 'cs_001' as clinical_status_id, 'usr_002' as changed_by_provider_id, 'change log' as history_source, 1 as change_number
+        union all
+        select 'pat_001;preg_001', 'pat_001', 'preg_001', '2026-04-05 02:30:00'::timestamp, '2026-04-04 16:30:00'::timestamp, 'active', 'cs_002', 'usr_003', 'change log', 2
+
+  - name: test_clinical__episode_end_dst_fall_back
+    model: clinical__episode
+    description: >
+      BL-004, BL-012. The earliest logged change to inactive is found by the UTC instant. The
+      registration became inactive at 02:40 AEDT and again at 02:20 AEST forty minutes later;
+      the earliest by local logged_at would be the second, so the episode would end 20 minutes
+      before it actually did.
+    given:
+      - input: ref('int__program_enrolments')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as enrolment_id, 'pat_001' as person_id, '2024-01-10 09:00:00'::timestamp as enrolment_datetime, 'inactive' as registration_status, null::timestamp as deactivated_datetime, null::text as deactivated_by_id, 'preg_001' as program_registry_id, 'HIV' as registry_code, 'HIV Program' as registry_name, 'prog_001' as program_id, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_code, 'Lost to follow up' as clinical_status_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as registering_facility_id, 'usr_001' as registered_by_id
+
+      - input: ref('int__registration_status_history')
+        format: sql
+        rows: |
+          select 'pat_001;preg_001' as episode_id, '2024-01-10 09:00:00'::timestamp as logged_at, '2024-01-10 09:00:00'::timestamp as logged_at_utc, 'active' as registration_status, 'change log' as history_source
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:40:00'::timestamp, '2026-04-04 15:40:00'::timestamp, 'inactive', 'change log'
+          union all
+          select 'pat_001;preg_001', '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'inactive', 'change log'
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_001;preg_001' as episode_id, 'pat_001' as person_id, null::int as episode_concept_id, null::int as episode_object_concept_id, '2024-01-10'::date as episode_start_date, '2024-01-10 09:00:00'::timestamp as episode_start_datetime, '2026-04-05'::date as episode_end_date, '2026-04-05 02:40:00'::timestamp as episode_end_datetime, 'status change' as episode_end_source, 'program registry' as episode_type_source_value, 'HIV' as episode_source_value, 'HIV Program' as episode_source_name, 'preg_001' as program_registry_id, 'prog_001' as program_id, null::text as episode_parent_id, null::int as episode_number, 'inactive' as registration_status, 'stat_002' as clinical_status_id, 'LTFU' as clinical_status_source_value, 'Lost to follow up' as clinical_status_source_name, 'facility' as currently_at_type, 'fac_001' as currently_at_id, 'Central Hospital' as currently_at_name, 'fac_001' as care_site_id, 'usr_001' as provider_id, null::timestamp as deactivated_datetime, null::text as deactivated_by_provider_id
+
+  - name: test_ds__discharge_audit_recorded_dst_fall_back
+    model: ds__discharge_audit
+    description: >
+      BL-002. The recorded datetime is the earliest change log entry by change_sequence, which
+      the base numbers on the UTC log time. The discharge was recorded at 02:40 AEDT and edited
+      at 02:20 AEST forty minutes later; the earliest local logged_at would report the edit.
+    given:
+      - input: ref('discharges')
+        format: sql
+        rows: |
+          select 'dis_001' as id, 'Wound care follow up' as note, 'enc_001' as encounter_id, 'cli_001' as discharged_by_id, 'disp_001' as disposition_id
+          union all
+          select 'dis_002', 'Automatically discharged by outpatient discharger', 'enc_002', 'cli_001', null
+
+      - input: ref('discharges_change_logs')
+        format: sql
+        rows: |
+          select 'chg_001'::text as changelog_id, 'dis_001'::text as discharge_id, 'enc_001'::text as encounter_id, '2026-04-05 02:40:00'::timestamp as logged_at, '2026-04-05 02:40:00'::timestamp as record_updated_at, '2026-04-04 15:40:00'::timestamp as logged_at_utc, '2026-04-04 15:40:00'::timestamp as record_updated_at_utc, 'usr_001'::text as updated_by_user_id, '{}'::jsonb as record_data
+          union all
+          select 'chg_002', 'dis_001', 'enc_001', '2026-04-05 02:20:00'::timestamp, '2026-04-05 02:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, '2026-04-04 16:20:00'::timestamp, 'usr_002', '{}'::jsonb
+          union all
+          select 'chg_003', 'dis_002', 'enc_002', '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, '00000000-0000-0000-0000-000000000000', '{}'::jsonb
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_001' as id, 'pat_001' as patient_id, 'admission' as encounter_type, '2026-03-30 11:00:00'::timestamp as start_datetime, '2026-04-01 16:00:00'::timestamp as end_datetime, 'dept_001' as department_id, 'loc_001' as location_id
+          union all
+          select 'enc_002', 'pat_002', 'clinic', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, 'dept_001', 'loc_001'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_001' as id, 'Room 1' as name, 'fac_001' as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_001' as id, 'General Medicine' as name
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, 'vil_001' as village_id
+          union all
+          select 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'female', null
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'vil_001' as id, 'Village A' as name, 'villageA' as code
+          union all
+          select 'disp_001', 'Home', 'home'
+          union all
+          select 'diag_001', 'Malaria', 'B54'
+          union all
+          select 'diag_002', 'Anaemia', 'D64.9'
+          union all
+          select 'diag_003', 'Pneumonia', 'J18.9'
+
+      - input: ref('encounter_diagnoses')
+        format: sql
+        rows: |
+          select 'edx_001' as id, 'enc_001' as encounter_id, 'diag_002' as diagnosis_id, false as is_primary, '2024-03-09 10:00:00'::timestamp as datetime
+          union all
+          select 'edx_002', 'enc_001', 'diag_001', true, '2024-03-09 12:00:00'::timestamp
+          union all
+          select 'edx_003', 'enc_001', 'diag_003', false, '2024-03-09 08:00:00'::timestamp
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'cli_001' as id, 'Dr Alice Wilson' as display_name
+          union all
+          select 'usr_001', 'Nurse Bob Martinez'
+          union all
+          select 'usr_002', 'Nurse Carol Reid'
+
+    expect:
+      format: sql
+      rows: |
+        select 'dis_001' as discharge_id, 'enc_001' as encounter_id, 'admission' as encounter_type, 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'Male' as sex, 'vil_001' as village_id, 'Village A' as village, 'fac_001' as facility_id, 'Central Hospital' as facility, 'dept_001' as department_id, 'General Medicine' as department, 'loc_001' as location_id, 'Room 1' as location, '2026-03-30 11:00:00'::timestamp as admission_datetime, '2026-04-01 16:00:00'::timestamp as discharge_datetime_entered, '2026-04-05 02:40:00'::timestamp as discharge_recorded_datetime, 4 as days_between_discharge_and_recording, 'disp_001' as discharge_disposition_id, 'Home' as discharge_disposition, 'cli_001' as discharger_id, 'Dr Alice Wilson' as discharger_on_form, 'usr_001' as recorded_by_user_id, 'Nurse Bob Martinez' as recorded_by_user, false as is_auto_discharge, 1 as later_edit_count, 'Malaria' as primary_diagnoses, 'B54' as primary_diagnoses_codes, 'Pneumonia; Anaemia' as secondary_diagnoses, 'J18.9; D64.9' as secondary_diagnoses_codes
+        union all
+        select 'dis_002', 'enc_002', 'clinic', 'pat_002', 'P002', 'Jane', 'Smith', '1985-08-22'::date, 'Female', null, null, 'fac_001', 'Central Hospital', 'dept_001', 'General Medicine', 'loc_001', 'Room 1', '2024-03-11 09:00:00'::timestamp, '2024-03-11 17:00:00'::timestamp, '2024-03-11 22:00:00'::timestamp, 0, null, null, 'cli_001', 'Dr Alice Wilson', '00000000-0000-0000-0000-000000000000', null, true, 0, null, null, null, null

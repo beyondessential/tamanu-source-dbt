@@ -55,7 +55,7 @@ with appointments_in_scope as (
 {#- BL-042: `where` and each paren sit on their own line. A caller's predicate text may
     legally end on a `--` comment, and a same-line `)` would then be commented out and the
     model would fail to compile. Note that encounters_core() and
-    outpatient_appointments_change_log_events() both splice their predicate onto the `where`
+    outpatient_appointments_change_history() both splice their predicate onto the `where`
     line without parens -- this macro is deliberately stricter, because the report's filter
     is comment-heavy and ends inside a `case ... end` block. #}
 {%- if appointment_filter %}
@@ -69,23 +69,22 @@ with appointments_in_scope as (
 appointment_creators as (
     -- BL-044: the creator is the actor on the appointment's earliest surviving change
     -- event. `distinct on` picks the same row that `change_sequence = 1` picks in
-    -- outpatient_appointments_change_logs: same source rows (both read
-    -- outpatient_appointments_change_events, which applies the BL-037 filters), same
+    -- outpatient_appointments_change_history(): same source rows (both read
+    -- outpatient_appointments_change_logs, which applies the BL-037 filters), same
     -- ordering, and at that row first_value(updated_by_user_id) is just
     -- updated_by_user_id. Both order by the UTC sort keys, since local logged_at repeats an
     -- hour at a DST fall-back (MAUI-7018).
     --
-    -- Reading outpatient_appointments_change_logs instead would put row_number() / lag()
+    -- Reading outpatient_appointments_change_history() instead would put row_number() / lag()
     -- between this scope filter and the change-log scan, and window functions are an
     -- optimisation fence -- a one-month report would window the whole appointment change
     -- history, carrying every row's JSONB record_data through the sort. Filtering the
     -- change events by the appointments already in scope is the same move BL-030 makes in
-    -- audit_outpatient_appointments. BL-031's note that the base model itself cannot be
-    -- date-scoped still holds; this simply no longer depends on that model.
+    -- audit_outpatient_appointments.
     select distinct on (c.appointment_id)
         c.appointment_id,
         c.updated_by_user_id as created_by_user_id
-    from {{ ref('outpatient_appointments_change_events') }} c
+    from {{ ref('outpatient_appointments_change_logs') }} c
     join appointments_in_scope s on s.appointment_id = c.appointment_id
     order by c.appointment_id, c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
 )

@@ -19,10 +19,8 @@ where
         else ep.facility_id = {{ parameter('facilityId') }}
     end
     and
-    case
-        when {{ parameter('medicationId') }} is null then true
-        else ep.medication_id = {{ parameter('medicationId') }}
-    end
+    -- BL-010 (see specs/reports/encounter-prescription-discharge-summary.md): multi-select over all drugs.
+    {{ multi_select_filter('ep.medication_id', 'medicationId') }}
     -- BL-003: date range on the prescription's datetime, in the viewer's timezone
     and
     {{ to_user_selected_timezone('ep.datetime') }}

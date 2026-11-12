@@ -87,6 +87,7 @@ so this model carries no `data_table_*` meta.
 - **BL-010 (encounter type):** `encounter_type` is the active segment's own encounter type.
 - **BL-011 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
 - **BL-012 (time to dispense):** `has_dispense` is true where at least one `medication_dispenses` row exists for the drug line, and `minutes_to_first_dispense` is the minutes from the order's `datetime` to the earliest `dispensed_at`, rounded to one decimal place, NULL where there is no fill. Measured to the first fill, not the last of several partial fills. Not clamped: a first fill dated before the order is negative.
+- **BL-013 (empty-deployment rowcount):** AC-007's `fail_calc` is overridden to `coalesce(sum(coalesce(diff_count, 0)), 0)`. `dbt_utils.equal_rowcount`'s default `fail_calc` sums `diff_count` with no fallback for the result having no rows at all, which happens when both this model and `pharmacy_order_prescriptions` are empty (a deployment with no pharmacy orders, e.g. Tuvalu, Samoa, Kiribati) -- `SUM` over zero rows is `NULL`, not `0`, which dbt cannot record as an integer failure count and errors the whole `dbt build` run rather than passing or warning normally (MAUI-7078).
 
 ## Acceptance criteria
 
@@ -98,7 +99,7 @@ so this model carries no `data_table_*` meta.
 | AC-004 | `period_end` is always NULL and `period_granularity` always `'day'` | BL-006 | `expect_column_values_to_be_null` + `accepted_values` |
 | AC-006 | Facility, department and visit concept follow the segment active at the order, not the encounter's later segment; an order predating its segments clamps to the first; an order on a segment's start time falls in that segment; an order after the last segment began falls in the last segment; an emergency-phase order carries 9203; a drug line on an encounter with no segment is dropped; an ongoing-prescription line resolves its medication; an unresolved medication falls back to `'Not recorded'` | BL-002 -- BL-004, BL-007 -- BL-011 | unit test `ac_006_metric__pharmacy_order_segment` |
 | AC-008 | `has_dispense` is `not_null`; a line with fills reports the minutes from its order to the earliest fill, and a line with none reports `false` and NULL | BL-012 | `not_null` + unit test `ac_006_metric__pharmacy_order_segment` |
-| AC-007 | Every drug line in `pharmacy_order_prescriptions` has a row, so a drug line dropped for want of a segment, patient or location is surfaced | BL-002, BL-008, BL-009 | `dbt_utils.equal_rowcount` against `pharmacy_order_prescriptions` (`warn`) |
+| AC-007 | Every drug line in `pharmacy_order_prescriptions` has a row, so a drug line dropped for want of a segment, patient or location is surfaced. A deployment where both sides are empty passes (0 dropped), rather than erroring the build | BL-002, BL-008, BL-009, BL-013 | `dbt_utils.equal_rowcount` against `pharmacy_order_prescriptions` (`warn`) |
 
 ## Registry entry
 
@@ -137,5 +138,6 @@ Registered in `documentations/metrics/pharmacy.yml` as `pharmacy_order`, `kind: 
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-10-30 | Maui team | AC-007's `fail_calc` coalesced to 0 so a deployment with no pharmacy orders passes instead of erroring the build (BL-013, MAUI-7078) |
 | 2026-10-03 | Maui team | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` |
 | 2026-09-30 | Maui team | Spec written; facility, department and setting resolved from the active segment |

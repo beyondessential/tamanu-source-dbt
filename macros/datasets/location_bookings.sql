@@ -17,6 +17,7 @@ select
     a.status as booking_status,
     u.id as clinician_id,
     u.display_name as clinician,
+    f.id as facility_id,
     lg.id as location_group_id,
     lg.name as location_group,
     l.id as location_id,

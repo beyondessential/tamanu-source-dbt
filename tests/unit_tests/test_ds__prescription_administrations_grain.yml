@@ -1,0 +1,104 @@
+unit_tests:
+  - name: test_ds__prescription_administrations_grain
+    model: ds__prescription_administrations
+    description: >
+      AC-001 / BL-003: a prescription with no MAR record appears once with null administration
+      columns (rx_none). AC-002 / BL-004: a MAR record marked as an error is not joined, so its
+      prescription appears as never administered (rx_err). AC-005 / BL-005, BL-011: a MAR record
+      with two doses yields one row per dose, each with its own given time and the user who gave
+      it (rx_two); a MAR record with no dose yields one row with null dose columns (rx_ng).
+      AC-003 / BL-007: a prescription at a sensitive facility is excluded from the standard
+      dataset (rx_sens). AC-007 / BL-006: enc_1 moved from Emergency (Ward 1) to ICU (Ward 3) at
+      10:15 on 2 April, between rx_two's two doses, and its current ward is Ward 3; each row
+      shows the ward in effect at its dose, due time or prescription time.
+    given:
+      - input: ref('encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep_none' as id, 'enc_1' as encounter_id, 'rx_none' as prescription_id, false as is_selected_for_discharge
+          union all select 'ep_err', 'enc_1', 'rx_err', false
+          union all select 'ep_two', 'enc_1', 'rx_two', false
+          union all select 'ep_ng', 'enc_1', 'rx_ng', false
+          union all select 'ep_sens', 'enc_2', 'rx_sens', false
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id, 'loc_3' as location_id, 'dep_2' as department_id, 'admission' as encounter_type
+          union all select 'enc_2', 'pat_1', 'loc_2', null::text, 'admission'
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_1' as id, 'P001' as display_id, 'Jane' as first_name, 'Doe' as last_name, '1980-01-01'::date as date_of_birth, 'female' as sex
+
+      - input: ref('prescriptions')
+        format: sql
+        rows: |
+          select 'rx_none' as id, '2026-04-01 09:00:00'::timestamp as datetime, 'drug-Inj900' as medication_id, null::text as prescriber_id, false as is_variable_dose, 50::numeric as dose_amount, 'mg' as dosing_unit, 'IV' as route, null::text as notes
+          union all select 'rx_err', '2026-04-01 09:05:00'::timestamp, 'drug-Inj900', null::text, false, 50::numeric, 'mg', 'IV', null::text
+          union all select 'rx_two', '2026-04-02 09:00:00'::timestamp, 'drug-Inj901', null::text, false, 40::numeric, 'mg', 'IV', null::text
+          union all select 'rx_ng', '2026-04-03 09:00:00'::timestamp, 'drug-Inj901', null::text, false, 40::numeric, 'mg', 'IV', null::text
+          union all select 'rx_sens', '2026-04-04 09:00:00'::timestamp, 'drug-Inj901', null::text, false, 40::numeric, 'mg', 'IV', null::text
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'drug-Inj900' as id, 'Inj900' as code, 'Alteplase 50mg Injection' as name
+          union all select 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection'
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1' as id, 'Ward 1' as name, 'fac_1' as facility_id
+          union all select 'loc_2', 'Ward 2', 'fac_2'
+          union all select 'loc_3', 'Ward 3', 'fac_1'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_1' as id, 'Hospital' as name, null::text as sensitive_network_id
+          union all select 'fac_2', 'Sensitive clinic', 'sn_1'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dep_1' as id, 'Emergency' as name
+          union all select 'dep_2', 'ICU'
+
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'eh_1' as id, 'enc_1' as encounter_id, '2026-03-31 08:00:00'::timestamp as datetime, 'dep_1' as department_id, 'loc_1' as location_id
+          union all select 'eh_2', 'enc_1', '2026-04-02 10:15:00'::timestamp, 'dep_2', 'loc_3'
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'u_nurse1' as id, 'Nurse One' as display_name
+          union all select 'u_nurse2', 'Nurse Two'
+
+      - input: ref('medication_administration_records')
+        format: sql
+        rows: |
+          select 'mar_err' as id, 'rx_err' as prescription_id, 'GIVEN' as status, '2026-04-01 10:00:00'::timestamp as due_datetime, '2026-04-01 10:05:00'::timestamp as recorded_datetime, null::text as changing_status_reason, true as is_error
+          union all select 'mar_two', 'rx_two', 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, null::text, false
+          union all select 'mar_ng', 'rx_ng', 'NOT_GIVEN', '2026-04-03 10:00:00'::timestamp, '2026-04-03 10:05:00'::timestamp, null::text, false
+          union all select 'mar_sens', 'rx_sens', 'GIVEN', '2026-04-04 10:00:00'::timestamp, '2026-04-04 10:05:00'::timestamp, null::text, false
+
+      - input: ref('medication_administration_record_doses')
+        format: sql
+        rows: |
+          select 'dose_err' as id, 'mar_err' as mar_id, 1 as dose_index, 50::numeric as dose_amount, '2026-04-01 10:01:00'::timestamp as given_datetime, 'u_nurse1' as given_by_user_id
+          union all select 'dose_a', 'mar_two', 1, 20::numeric, '2026-04-02 10:00:00'::timestamp, 'u_nurse1'
+          union all select 'dose_b', 'mar_two', 2, 20::numeric, '2026-04-02 10:30:00'::timestamp, 'u_nurse2'
+          union all select 'dose_sens', 'mar_sens', 1, 40::numeric, '2026-04-04 10:01:00'::timestamp, 'u_nurse1'
+
+    expect:
+      format: sql
+      rows: |
+        select 'enc_1' as encounter_id, 'rx_none' as prescription_id, null::text as administration_id, null::text as administration_dose_id, '2026-04-01 09:00:00'::timestamp as datetime, 'pat_1' as patient_id, 'P001' as display_id, 'Jane' as first_name, 'Doe' as last_name, '1980-01-01'::date as date_of_birth, 'female' as sex, 'admission' as encounter_type, 'dep_1' as department_id, 'Emergency' as department, 'loc_1' as location_id, 'Ward 1' as location, 'fac_1' as facility_id, 'Hospital' as facility, 'drug-Inj900' as medication_id, 'Inj900' as medication_code, 'Alteplase 50mg Injection' as medication, null::text as prescriber_id, null::text as prescriber, false as is_variable_dose, 50::numeric as dose_amount, 'mg' as dosing_unit, 'IV' as route, null::text as prescription_notes, null::text as administration_status, null::timestamp as administration_due_datetime, null::timestamp as administration_recorded_datetime, null::integer as administration_dose_index, null::numeric as administered_dose_amount, null::timestamp as administered_datetime, null::text as administered_by_id, null::text as administered_by, null::text as administration_notes
+        union all select 'enc_1', 'rx_err', null::text, null::text, '2026-04-01 09:05:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj900', 'Inj900', 'Alteplase 50mg Injection', null::text, null::text, false, 50::numeric, 'mg', 'IV', null::text, null::text, null::timestamp, null::timestamp, null::integer, null::numeric, null::timestamp, null::text, null::text, null::text
+        union all select 'enc_1', 'rx_two', 'mar_two', 'dose_a', '2026-04-02 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_1', 'Emergency', 'loc_1', 'Ward 1', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, 1, 20::numeric, '2026-04-02 10:00:00'::timestamp, 'u_nurse1', 'Nurse One', null::text
+        union all select 'enc_1', 'rx_two', 'mar_two', 'dose_b', '2026-04-02 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_2', 'ICU', 'loc_3', 'Ward 3', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'GIVEN', '2026-04-02 10:00:00'::timestamp, '2026-04-02 10:40:00'::timestamp, 2, 20::numeric, '2026-04-02 10:30:00'::timestamp, 'u_nurse2', 'Nurse Two', null::text
+        union all select 'enc_1', 'rx_ng', 'mar_ng', null::text, '2026-04-03 09:00:00'::timestamp, 'pat_1', 'P001', 'Jane', 'Doe', '1980-01-01'::date, 'female', 'admission', 'dep_2', 'ICU', 'loc_3', 'Ward 3', 'fac_1', 'Hospital', 'drug-Inj901', 'Inj901', 'Tenecteplase 40mg Injection', null::text, null::text, false, 40::numeric, 'mg', 'IV', null::text, 'NOT_GIVEN', '2026-04-03 10:00:00'::timestamp, '2026-04-03 10:05:00'::timestamp, null::integer, null::numeric, null::timestamp, null::text, null::text, null::text

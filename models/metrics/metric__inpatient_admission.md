@@ -1,23 +1,26 @@
 {% docs metric__inpatient_admission %}
-D5 metric view for the inpatient admission indicator registered in
-documentations/metrics/*.yml: inpatient_admission. One row per hospital admission --
-per-admission (subject) grain, so a consumer aggregates at whatever grain it needs.
+D5 metric view for the inpatient admission and separation indicators registered in
+documentations/metrics/*.yml: inpatient_admission, inpatient_separation. One row per hospital
+admission or separation -- per-admission (subject) grain, so a consumer aggregates at whatever
+grain it needs.
 
 An admission is an encounter's earliest segment whose OMOP visit concept is 9201/Inpatient
 Visit -- the segment where the patient became an inpatient, whether or not it followed an
 ED/triage/observation phase. Admissions reached via the ED are flagged by
-is_admitted_via_emergency.
+is_admitted_via_emergency. A separation is a closed admission, dated by its discharge.
 
 Aggregate by summing value_numeric (always 1) over any subset of the disaggregations --
 facility, ward, sex, admission source, arrival via ED, principal diagnosis chapter, discharge
 disposition -- and over any time grain from minute upwards. Grouping on period_start counts
-admissions in a period; grouping on period_end counts discharges over the same rows, so there
-is no separate discharge metric_id.
+admissions in a period for inpatient_admission, and separations in a period for
+inpatient_separation.
 
-Length of stay is period_end - period_start, where period_end is non-NULL -- becoming an
-inpatient to discharge from hospital.
+length_of_stay__minutes (elapsed time) and patient_days (AIHW whole days, inpatient_separation
+only) are alternative definitions of length of stay -- a consumer picks one. Average length of
+stay is sum(patient_days) / sum(value_numeric) over inpatient_separation rows at the consumer's
+grain.
 
-See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-015.
+See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-024.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__variant_id %}
@@ -41,13 +44,14 @@ keeps this model unrestricted.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__metric_id %}
-The registered indicator identifier: always 'inpatient_admission'. Joins to the canonical
-registry in documentations/metrics/*.yml, which carries its definition, source and rationale.
+The registered indicator identifier: 'inpatient_admission' or 'inpatient_separation'. Joins to
+the canonical registry in documentations/metrics/*.yml, which carries each one's definition,
+source and rationale.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__period_start %}
-Timestamp the patient became an inpatient -- the start of the admission segment, to the
-minute.
+On inpatient_admission: timestamp the patient became an inpatient -- the start of the admission
+segment, to the minute. On inpatient_separation: the separation datetime (same as period_end).
 
 For a direct admission this is the encounter's start; for an admission reached via the ED it is
 later than the encounter's start, since the ED/triage/observation portion is out of scope for
@@ -59,11 +63,11 @@ consumer wanting only complete months excludes the current one in its own date f
 {% enddocs %}
 
 {% docs metric__inpatient_admission__period_end %}
-Timestamp the encounter ended -- discharge from hospital, to the minute.
-
-**NULL while the encounter is open**, so this column is deliberately nullable: length of stay
-is undefined until the patient is discharged. A consumer measuring duration filters these rows
-out; a consumer counting admissions keeps them.
+On inpatient_admission: timestamp the encounter ended -- discharge from hospital, to the
+minute. **NULL while the encounter is open**, so this column is deliberately nullable on that
+metric_id: length of stay is undefined until the patient is discharged. On inpatient_separation
+this is always the same non-NULL separation datetime as period_start, since only closed
+admissions have a separation row.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__period_granularity %}
@@ -190,6 +194,16 @@ NULL rows, so the model coalesces to false where there is no previous admission,
 one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 {% enddocs %}
 
+{% docs metric__inpatient_admission__is_readmission_within_14_days %}
+True where the immediately preceding admission for the same patient discharged no more than 14
+days before this one started.
+
+The same rule as is_readmission_within_30_days over a shorter window, for a consumer whose
+readmission measure is 14 days. A flag rather than the gap itself, for the same reason: the gap
+in time, read against period_start, would point at the patient's previous admission. Never
+NULL, and false in the same cases.
+{% enddocs %}
+
 {% docs metric__inpatient_admission__clinician %}
 The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
 clinician" card. Never NULL -- falls back to 'Not recorded'.
@@ -201,4 +215,37 @@ more than one (BL-018). Current designations: Tamanu keeps no history, so a clin
 changed role reads the new designation on earlier admissions too. Never NULL -- falls back to
 'Not recorded' where the clinician has none, or the admission has no clinician. Kept apart from
 `clinician` so a filter by name is unaffected; a consumer combines the two for display.
+{% enddocs %}
+
+{% docs metric__inpatient_admission__patient_days %}
+AIHW patient days (METeOR 270045): the separation date minus the admission date in whole days,
+minimum 1, both dates taken from the naive local timestamps (BL-021).
+
+**-1** where the separation date is earlier than the admission date -- a corrupt period, not a
+valid stay. A consumer forming average length of stay excludes these rows rather than this
+model dropping them outright (BL-023, OQ-005).
+
+Populated on every inpatient_separation row; NULL on inpatient_admission, where length of stay
+is not yet defined. A measure, not a dimension -- continuous, so it is absent from the
+registry's disaggregations. Average length of stay is sum(patient_days) / sum(value_numeric)
+over inpatient_separation rows at the consumer's grain, excluding patient_days = -1 (BL-023).
+{% enddocs %}
+
+{% docs metric__inpatient_admission__is_same_day %}
+True where the admission date and the separation date are the same calendar date (BL-022).
+
+Populated on every inpatient_separation row; NULL on inpatient_admission. A disaggregation, so
+a consumer excludes same-day stays to form AIHW's overnight-only average length of stay --
+sum(patient_days) / sum(value_numeric) over inpatient_separation rows where is_same_day is
+false (BL-023).
+{% enddocs %}
+
+{% docs metric__inpatient_admission__admission_location_group_name %}
+The location group (ward or area) of the admission segment's location -- the same location
+facility_id is taken from -- resolved to its name (BL-026), on both inpatient_admission and
+inpatient_separation rows. A readable label, unlike admission_ward_id, which is the department
+id.
+
+'Not recorded' where the location is in no group. Never NULL, for the same array-filter reason
+as admission_source.
 {% enddocs %}

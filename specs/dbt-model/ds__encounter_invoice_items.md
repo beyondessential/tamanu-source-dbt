@@ -146,7 +146,7 @@ Bases refreshed within 24 hours (inherits the standard reporting refresh).
 |---|---|---|---|
 | AC-001 | `invoice_item_id` is `not_null` and `unique` | grain | dbt `not_null` + `unique` |
 | AC-002 | Every `invoice_id` exists in `invoices.id` | BL-001 | dbt `relationships` |
-| AC-003 | `sum(discounted_total)` per invoice equals `ds__encounter_invoices.invoice_total` (within rounding) — the item breakdown reconciles to the invoice total | BL-001, BL-003 | dbt singular test |
+| AC-003 | `sum(discounted_total)` per invoice equals `ds__encounter_invoices.invoice_total + item_adjustment` (within rounding) — the item breakdown reconciles to the invoice total after item adjustments | BL-001, BL-003 | dbt singular test |
 | AC-004 | `sum(insurance_coverage)` per invoice equals `ds__encounter_invoices.insurance_coverage` (within rounding) | BL-004 | dbt singular test |
 | AC-005 | `insurance_coverage <= discounted_total` per item (cap) | BL-004 | dbt singular test |
 | AC-006 | `invoice_status` is one of `in_progress` / `finalised` / `cancelled` | BL-008 | dbt `accepted_values` |
@@ -186,3 +186,4 @@ Resolved during implementation — none outstanding.
 | 2026-07-26 | Maui team | Implemented: `invoice_item_amounts()` macro, `int__encounter_invoice_item_amounts`, `ds__encounter_invoice_items` (+ yml/docs), reconciliation singular tests and an item-grain unit test; OQ-002 resolved (signed adjustment). AC tests run green against the 2.57 replica; status → `implemented`. |
 | 2026-08-31 | Maui team | DV-001's AC-008 evidence corrected. The retargeted `test_int__encounter_invoice_amounts_*` tests were verified on 2.57 but never reached `main`, which kept the pre-extraction `test_ds__encounter_invoices_*` copies — those name the projection as the model under test and cannot compile, so AC-008 was unverified on `main` from the extraction until the tests were carried across. |
 | 2026-10-02 | Maui team | [MAUI-6967](https://linear.app/bes/issue/MAUI-6967): added BL-009 fixed-price charging and the `is_fixed_price` column. The macro previously ignored `is_fixed_price` / `is_fixed_price_final` and charged every line `unit_price × quantity`, so fixed-price medications (Yap, Kosrae) were overstated by their dispensed quantity in the invoice audit report and the Tupaia billing metrics. |
+| 2026-11-01 | Maui team | AC-003 reconciles `sum(discounted_total)` to `invoice_total + item_adjustment`, following `invoice_total` becoming the total before item adjustments (MAUI-6911). |

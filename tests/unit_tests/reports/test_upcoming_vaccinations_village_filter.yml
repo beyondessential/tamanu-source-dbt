@@ -1,0 +1,120 @@
+unit_tests:
+  - name: test_upcoming_vaccinations_village_one_selected
+    model: upcoming-vaccinations-line-list
+    description: One village selected returns only the patients in that village.
+    overrides:
+      vars:
+        date_format: YYYY-MM-DD
+        fromDate: '2015-01-01'
+        toDate: '2025-01-01'
+        villageId: vil_b
+    given:
+      - input: ref('ds__patient_vaccinations_upcoming')
+        format: sql
+        rows: |
+          select
+            'P001'::text as display_id, 'Ann'::text as first_name, 'Alpha'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_a'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P002'::text as display_id, 'Ben'::text as first_name, 'Bravo'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_b'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P003'::text as display_id, 'Cara'::text as first_name, 'Charlie'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_c'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P002
+
+  - name: test_upcoming_vaccinations_village_two_selected
+    model: upcoming-vaccinations-line-list
+    description: Two villages selected return the patients in both and no others.
+    overrides:
+      vars:
+        date_format: YYYY-MM-DD
+        fromDate: '2015-01-01'
+        toDate: '2025-01-01'
+        villageId: [vil_a, vil_c]
+    given:
+      - input: ref('ds__patient_vaccinations_upcoming')
+        format: sql
+        rows: |
+          select
+            'P001'::text as display_id, 'Ann'::text as first_name, 'Alpha'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_a'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P002'::text as display_id, 'Ben'::text as first_name, 'Bravo'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_b'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P003'::text as display_id, 'Cara'::text as first_name, 'Charlie'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_c'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
+
+  - name: test_upcoming_vaccinations_village_empty_list
+    model: upcoming-vaccinations-line-list
+    description: An empty selection, which is what the form sends when nothing is picked, returns every patient.
+    overrides:
+      vars:
+        date_format: YYYY-MM-DD
+        fromDate: '2015-01-01'
+        toDate: '2025-01-01'
+        villageId: []
+    given:
+      - input: ref('ds__patient_vaccinations_upcoming')
+        format: sql
+        rows: |
+          select
+            'P001'::text as display_id, 'Ann'::text as first_name, 'Alpha'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_a'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P002'::text as display_id, 'Ben'::text as first_name, 'Bravo'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_b'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+          union all
+          select
+            'P003'::text as display_id, 'Cara'::text as first_name, 'Charlie'::text as last_name,
+            '2020-01-01'::date as date_of_birth, 5::integer as age, 'Female'::text as sex,
+            'vil_c'::text as village_id, 'x_village'::text as village, 'country-Home'::text as country_id,
+            '2025-06-01'::date as due_date, 'Routine'::text as vaccine_category, 'BCG'::text as vaccine_name,
+            'Dose 1'::text as vaccine_schedule, 'DUE'::text as vaccine_status
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+        P003

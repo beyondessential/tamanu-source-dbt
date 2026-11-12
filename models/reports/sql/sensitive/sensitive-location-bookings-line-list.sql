@@ -22,7 +22,13 @@ select
     booking_type as "{{ translate_label('bookingType') }}",
     booking_status as "{{ translate_label('bookingStatus') }}"
 from {{ ref('ds__sensitive_location_bookings') }}
-where {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
+where
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else facility_id = {{ parameter('facilityId') }}
+    end
+    and
+    {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('booking_end_datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
@@ -31,10 +37,9 @@ where {{ to_user_selected_timezone('booking_start_datetime') }} >= {{ parameter(
         else location_group_id = {{ parameter('locationGroupId') }}
     end
     and
-    case
-        when {{ parameter('bookingStatus') }} is null then true
-        else booking_status = {{ parameter('bookingStatus') }}
-    end
+    -- BL-001 (see specs/reports/location-bookings-line-list.md): multi-select. Nothing selected means every value.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('booking_status::text', 'bookingStatus') }}
     and
     case
         when {{ parameter('clinicianId') }} is null then true

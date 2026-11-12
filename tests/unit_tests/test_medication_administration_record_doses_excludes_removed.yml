@@ -1,0 +1,46 @@
+unit_tests:
+  - name: test_medication_administration_record_doses_excludes_removed
+    model: medication_administration_record_doses
+    description: >
+      AC-006 / BL-010: the doses base keeps a live dose and excludes a dose marked removed,
+      a soft-deleted dose, a dose whose MAR record is soft-deleted, and a dose of the test
+      patient.
+    given:
+      - input: source('tamanu', 'medication_administration_record_doses')
+        format: sql
+        rows: |
+          select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00' as given_time, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change, null::timestamptz as deleted_at, false as is_removed
+          union all select 'dose_removed', 'mar_1', 2, 40::numeric, '2026-04-02 10:10:00', 'u_1', 'u_1', null::text, null::timestamptz, true
+          union all select 'dose_deleted', 'mar_1', 3, 40::numeric, '2026-04-02 10:20:00', 'u_1', 'u_1', null::text, '2026-04-02 11:00:00'::timestamptz, false
+          union all select 'dose_mar_deleted', 'mar_2', 1, 40::numeric, '2026-04-02 10:30:00', 'u_1', 'u_1', null::text, null::timestamptz, false
+          union all select 'dose_test_patient', 'mar_3', 1, 40::numeric, '2026-04-02 10:40:00', 'u_1', 'u_1', null::text, null::timestamptz, false
+
+      - input: source('tamanu', 'medication_administration_records')
+        format: sql
+        rows: |
+          select 'mar_1' as id, 'rx_1' as prescription_id, null::timestamptz as deleted_at
+          union all select 'mar_2', 'rx_1', '2026-04-02 11:00:00'::timestamptz
+          union all select 'mar_3', 'rx_test', null::timestamptz
+
+      - input: source('tamanu', 'prescriptions')
+        format: sql
+        rows: |
+          select 'rx_1' as id, null::timestamptz as deleted_at
+          union all select 'rx_test', null::timestamptz
+
+      - input: source('tamanu', 'encounter_prescriptions')
+        format: sql
+        rows: |
+          select 'ep_1' as id, 'enc_1' as encounter_id, 'rx_1' as prescription_id, null::timestamptz as deleted_at
+          union all select 'ep_test', 'enc_test', 'rx_test', null::timestamptz
+
+      - input: source('tamanu', 'encounters')
+        format: sql
+        rows: |
+          select 'enc_1' as id, 'pat_1' as patient_id, null::timestamptz as deleted_at
+          union all select 'enc_test', 'h1627394-3778-4c31-a510-9fcb88efdbf3', null::timestamptz
+
+    expect:
+      format: sql
+      rows: |
+        select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00'::timestamp as given_datetime, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change

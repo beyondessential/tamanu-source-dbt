@@ -13,7 +13,7 @@
 | **Linear issue** | _none yet — this spec was written alongside the performance rework_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-07 |
-| **Last updated** | 2026-09-07 |
+| **Last updated** | 2026-11-04 |
 
 ## Purpose
 
@@ -58,7 +58,7 @@ dataset models, the report's predicate text for the report.
 |---|---|
 | `ref('outpatient_appointments')` | Appointment population and schedule fields (BL-040), and the appointment's own id and creation timestamp |
 | `ref('location_groups')`, `ref('facilities')` | Area and facility names, and the sensitivity partition (BL-045) |
-| `ref('outpatient_appointments_change_events')` | The creation event, for `created_by` (BL-044) |
+| `ref('outpatient_appointments_change_logs')` | The creation event, for `created_by` (BL-044) |
 | `ref('patients')`, `ref('patient_additional_data')` | Demographics and contact number |
 | `ref('users')` ×2 (clinician, creator) | Display names |
 | `ref('reference_data')` ×3 (billing type, village, appointment type) | Resolved names |
@@ -129,12 +129,8 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   exact — except BL-043, which is deliberately loose and paired with the exact bound it
   widens.
 
-  `appointmentStatus` keeps its `coalesce()` wrapper. It is the one multi-value parameter
-  here, and Tamanu binds it as an array that Sequelize expands to a comma-separated literal
-  list, so `:appointmentStatus is null` would compile to `'Confirmed','Arrived' is null` —
-  a syntax error the moment a second status is selected. The house form across
-  `admissions_line_list`, `audit_discharge_line_list` and `task_followup_register` exists
-  for exactly this, and the wrapper is not decorative.
+  `appointmentStatus` is a multi-select. Nothing selected returns every status, and the selection goes
+  through an array constructor, which stays valid when the form's empty selection expands to nothing.
 - **BL-043:** The date range is expressed twice. The exact predicate (BL-041) wraps the
   column in `to_user_selected_timezone()`, so no index on `appointments.start_time` is
   usable; a second pair of bounds compares the bare column against `(:bound)::date` widened
@@ -143,21 +139,18 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   direction, so the bare-column pair is always a strict superset of the exact one.
 - **BL-044:** `created_by` is the actor on the appointment's earliest surviving change
   event, resolved with `distinct on (appointment_id)` over
-  `bases/outpatient_appointments_change_events` — the window-free projection BL-037 exists
+  `bases/outpatient_appointments_change_logs` — the window-free projection BL-037 exists
   for — joined to `appointments_in_scope`.
 
-  This replaced a read of `outpatient_appointments_change_logs` filtered on
-  `change_sequence = 1`. That put `row_number()` and `lag(record_data)` between the
+  It does not use `outpatient_appointments_change_history()` filtered on
+  `change_sequence = 1`: that would put `row_number()` and `lag(record_data)` between the
   report's filters and the change-log scan, and Postgres pushes no predicate below a
-  `WindowAgg`, so a one-month report windowed every appointment's entire history and
-  carried each row's JSONB payload through the sort. The rewrite is an exact equivalence,
-  on three counts: both read the same source rows under the same BL-037 filters; the
+  `WindowAgg`, so a one-month report would window every appointment's entire history and
+  carry each row's JSONB payload through the sort. The two give the same result, on three
+  counts: both read the same source rows under the same BL-037 filters; the
   `order by` is the window's own `(logged_at_utc, record_updated_at_utc, changelog_id)`, so `distinct on`
   selects the row where `row_number() = 1`; and at that row
   `first_value(updated_by_user_id)` is `updated_by_user_id`.
-
-  BL-031's statement that the base model itself cannot be date-scoped still holds — this
-  removes the line list's dependence on that model rather than changing it.
 - **BL-045:** Facility scope is the `is_sensitive` partition plus the optional `facilityId`
   parameter, both applied in the scope CTE. Area and facility are inner joins, so an
   appointment whose `location_group_id` is null or dangling produces no row at all; the
@@ -184,6 +177,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   recurrence description (`get_recurrence_description()`) for an appointment with a
   `schedule_id`, and the literal `No` for a one-off. Pre-existing behaviour, preserved
   verbatim; see DV-003.
+- **BL-049:** The appointment status filter is a multi-select that returns an appointment whose status is any of the selected values, and every appointment when none is selected. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor.
 
 ## Acceptance criteria
 
@@ -200,6 +194,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
 | AC-048 | The bare-column bounds are a superset of the exact predicate for any `:timezone` | BL-043 | not tested — unreachable from dbt (DV-002); argued from the maximum zone offset |
 | AC-049 | The bare-column bound leaves an index on `start_time` usable | BL-043 | not tested — needs `EXPLAIN` on a populated replica |
 | AC-050 | The creator is the actor on the earliest change by UTC log time, including where the creation falls in a DST fall-back's repeated hour | BL-044 | **passed** — `test_outpatient_appointments_line_list_creator_dst_fall_back` |
+| AC-051 | With one or two appointment statuses selected only the appointments with those statuses are returned, and with an empty selection every appointment is returned | BL-049 | `test_outpatient_appointments_status_one`, `test_outpatient_appointments_status_two_selected`, `test_outpatient_appointments_status_empty_list` |
 
 ## Lineage
 
@@ -207,7 +202,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
 appointments ──► outpatient_appointments (base, BL-040) ──┐
 location_groups, facilities ──────────────────────────────┤
                                                           ├──► appointments_in_scope (BL-042, BL-045)
-logs.changes ──► outpatient_appointments_change_events ───┘         │
+logs.changes ──► outpatient_appointments_change_logs ─────┘         │
                  (thin base, BL-037)                                │
                         └──► distinct on (BL-044) ──► appointment_creators
                                                                      │
@@ -245,10 +240,10 @@ patients, patient_additional_data, users, reference_data ───────�
   meaninglessly in Excel and cannot answer "which appointments repeat" without string
   matching. Pre-existing and preserved deliberately — changing it is a product decision
   needing a `translate_label` key. *Resolution:* raise separately if users ask.
-- **DV-004:** The dataset gained two columns (`facility_id`, `facility`) and one upstream
-  dependency it did not have before (`outpatient_appointments_change_events` is now read
-  directly rather than through `outpatient_appointments_change_logs`). An analytics build
-  must select the model with its upstream chain rather than in isolation. *Resolution:*
+- **DV-004:** The dataset has two columns (`facility_id`, `facility`) and an upstream
+  dependency on the thin `outpatient_appointments_change_logs` base, which BL-044 reads
+  directly. An analytics build must select the model with its upstream chain rather than in
+  isolation. *Resolution:*
   confirm the analytics pipeline does, as the audit report's DV-008 asks for the same
   model.
 - **DV-005:** `check_spec_anchors.py` is not run by CI (`.github/workflows/checks.yml` does
@@ -266,8 +261,8 @@ patients, patient_additional_data, users, reference_data ───────�
 ## Risks
 
 - **The BL-044 equivalence rests on the two paths reading the same rows.** If
-  `bases/outpatient_appointments_change_events` and
-  `outpatient_appointments_change_log_events()` ever diverge in their source filters, the
+  `bases/outpatient_appointments_change_logs` and
+  `outpatient_appointments_change_history()` ever diverge in their source filters, the
   creator resolved here diverges from the one the audit report reports, silently. They read
   the same base today precisely because BL-037 put the filters in one place; a change to
   either must keep them together.
@@ -295,3 +290,4 @@ patients, patient_additional_data, users, reference_data ───────�
 | 2026-10-16 | Maui team | [MAUI-6960](https://linear.app/bes/issue/MAUI-6960): dropped BL-043's note on `from_user_selected_timezone`, which has been removed. `outpatient_appointments_change_events` now exposes local `logged_at`, so BL-044's `distinct on` orders by local time; the creator it picks is unchanged outside a DST fall-back hour. |
 | 2026-09-17 | Maui team | Added `appointmentId` as the first column and `appointmentCreatedDateTime` as the last (MAUI-6905). `created_datetime` is new in `bases/outpatient_appointments`, where `created_at` is converted from `timestamptz` to deployment-local wall clock, and is passed through the dataset's scope CTE. |
 | 2026-09-07 | Maui team | Initial spec, written alongside the performance rework: filter pushdown into the dataset's scope CTE (BL-042, BL-046), the window-free creator lookup (BL-044), the bare-column index-prunable bounds (BL-043), the shared report macro replacing two copies of the body (BL-047), and `facilityId` applied for the first time (BL-045). BL-041 records why this report keeps the house `<= toDate` form where the audit reports cast and add a day. |
+| 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): added BL-049. |

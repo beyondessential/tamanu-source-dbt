@@ -6,11 +6,11 @@ models:
       tags:
         - clinical
         - log
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        classification: restricted
     columns:
       - name: id
         data_type: character varying(255)
@@ -21,4 +21,6 @@ models:
       - name: updated_datetime
         data_type: timestamp
         description: "{{ doc('generic__updated_at') }} in the procedures table."
-
+      - name: deleted_datetime
+        data_type: timestamp
+        description: "{{ doc('generic__deleted_at') }} in the procedures table, from its latest logged change. NULL when the record is not deleted, or was restored."

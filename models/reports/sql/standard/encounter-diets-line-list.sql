@@ -10,6 +10,11 @@ select
 from {{ ref('ds__encounter_diets') }} ed
 where
     case
+        when {{ parameter('facilityId') }} is null then true
+        else ed.facility_id = {{ parameter('facilityId') }}
+    end
+    and
+    case
         when {{ parameter('locationGroupId') }} is null then true
         else ed.location_group_id = {{ parameter('locationGroupId') }}
     end

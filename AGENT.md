@@ -59,6 +59,14 @@ where c.table_name = 'invoices'
 
 Always filter `c.record_deleted_at is null` regardless of pattern.
 
+## `meta` and `tags` sit under `config:`
+
+On every model, seed, snapshot, source, source table and column, `meta` and `tags` go inside
+the `config:` block, never as top-level properties. dbt 2.0 reads them nowhere else, and dbt 1.x
+accepts the top-level spelling without a deprecation, so `dbt parse` cannot catch it.
+`scripts/tests/test_property_layout.py` does, in CI. The manifest is the same either way, so the
+data platform and tupaia-data-product, which read `node.meta` and `column.meta`, are unaffected.
+
 ## Base model conventions
 
 - All base model `.yml` files require a domain-specific `config.tags` — use the tag that matches the entity type: `clinical` (clinical entities), `reference` (reference/lookup data), `log` (change log models), `administration` (admin entities), `patient` (patient-specific models)
@@ -150,13 +158,19 @@ bundle rather than a seed table:
 Run project commands through the secrets runner, `uv run python .maui/scripts/with_secrets.py
 -- <cmd>`. It loads the DB credentials plus `DBT_PROFILES_DIR` from the sources in
 `secret-sources.ini` for that command only (so no `--profiles-dir` flag is needed). Run
-`dbt deps` through it once first. If it reports a locked vault, ask the developer to export
-`BW_SESSION`; never unlock it yourself. Where a developer still keeps a `.env`, the legacy
-`uv run --env-file .env <cmd>` works the same way. See README § Local development.
+`dbt deps` through it once first. If it reports a locked vault, ask the developer to run the
+command themselves in an interactive terminal; never unlock it yourself, and never suggest
+exporting `BW_SESSION` — that hands out standing whole-vault access the script is built to
+avoid. Where a developer still keeps a `.env`, the legacy `uv run --env-file .env <cmd>` works
+the same way. See README § Local development.
 
 ## Pre-commit checklist
 
 ```bash
+# with no .env present, needs Docker (make db-up) and uses the committed .env.local, so no
+# credentials. A real .env takes precedence and runs every dbt test unscoped. Runs pytest
+# scripts/tests, sqlfluff lint, the dbt tests and the validators.
+make check
 uv run python .maui/scripts/with_secrets.py -- sqlfluff fix .
 uv run python .maui/scripts/with_secrets.py -- dbt test
 uv run python .maui/scripts/with_secrets.py -- python scripts/validate_report_configs.py
@@ -171,27 +185,20 @@ uv run python .maui/scripts/with_secrets.py -- python scripts/generate_metric_de
 
 ## Cutting a release
 
-```bash
-# from the version branch being released; --dry-run to preview
-uv run python .maui/scripts/with_secrets.py -- python scripts/prepare_release.py
-# a version branch that doesn't carry secret-sources.ini yet: its .env
-uv run --env-file .env python scripts/prepare_release.py
-```
+Publishing a GitHub release for a `vX.Y.Z` tag, cut from the version branch, runs
+`release-reporting-assets.yml`. It stamps the tag's version into `dbt_project.yml` and
+`pyproject.toml` on the runner, builds the bundle, attaches it to the release and publishes it
+to S3. Nothing is committed for a release: no version bump and no bundle. The branch's
+`dbt_project.yml` must be on the same minor as the tag, or the build stops.
 
-Bumps the version, cuts `release/vX.Y.Z`, builds the bundle, diffs it against the last
-released bundle, and drafts the commit message and PR body under `target/`. It stops
-before the commit (`--commit` makes it) and never pushes or opens the PR.
+`compiled/` is untracked build output. See [README](README.md#creating-a-release).
 
-The runner picks the release database from `version:` in `dbt_project.yml`
-(`tamanu-release-2-64` on `2.64`), so it follows the branch you are on. Never set
-`MAUI_RELEASE_SERIES` for a release. It refuses to build unless dbt resolves to the release
-database matching the version being released — building against a stale `.env`, or with
-`MAUI_RELEASE_SERIES` pointing elsewhere, produces artefacts that look valid and are wrong
-for the branch.
+## Tamanu minor-version upgrades
 
-A release is a version bump **and** the bundle committed under `compiled/v<version>/`.
-Tagging a version with no bundle behind it publishes nothing. See
-[README](README.md#creating-a-release).
+A MAUI card titled "Upgrade data models to latest available version v<major>.<minor>", a PR
+whose title contains "Upgrade Tamanu version to <major>.<minor>" (the bot adds a conventional
+commit prefix), or a `feature/tamanu-upgrade-v<major>.<minor>` branch is worked with the `tamanu-upgrade` skill (`maui-internal` plugin), not by hand. It does
+not apply to a patch version.
 
 ---
 

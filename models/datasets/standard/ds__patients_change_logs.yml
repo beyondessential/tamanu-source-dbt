@@ -6,11 +6,11 @@ models:
       tags:
         - patient
         - history
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: patient_id
         data_type: text
