@@ -163,6 +163,24 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__lab_order_is_completed_not_null
+      - name: request_status
+        data_type: text
+        description: >-
+          The request's lifecycle status as recorded in Tamanu (for example reception_pending,
+          results_pending, published, cancelled, invalidated). Never NULL -- falls back to
+          'Not recorded'. A consumer groups these into its own labels.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_request_status_not_null
+      - name: cancellation_reason
+        data_type: text
+        description: >-
+          Why the request was cancelled, as recorded. Never NULL -- falls back to
+          'Not specified'. Only a cancelled request is expected to carry a reason, so a consumer
+          scopes to request_status = 'cancelled' first.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_cancellation_reason_not_null
       - name: is_panel
         data_type: boolean
         description: >-
@@ -178,6 +196,14 @@ models:
         data_tests:
           - not_null:
               name: ac_metric__lab_order_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: >-
+          The area: the location group of the segment's own location when the order was placed.
+          Never NULL -- falls back to 'Not recorded'.
+        data_tests:
+          - not_null:
+              name: ac_metric__lab_order_location_group_name_not_null
       - name: lab_order_code
         data_type: text
         description: >-
@@ -206,3 +232,11 @@ models:
         description: >-
           Age in whole years at the order. Not banded -- the classification is the consumer's.
           A measure, not a dimension: absent from the registry's disaggregations.
+      - name: turnaround__minutes
+        data_type: numeric
+        description: >-
+          Whole minutes from the request being placed to its publication. NULL for a request that is
+          not published, and for one recorded as published before it was placed. A measure,
+          not a dimension: absent from the registry's disaggregations. A consumer sums it and
+          divides by the count of rows where it is not NULL, since an average taken per group
+          would be an average of averages.

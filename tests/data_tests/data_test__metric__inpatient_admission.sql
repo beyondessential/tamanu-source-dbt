@@ -19,7 +19,8 @@ separation_rows as (
         period_start,
         period_end,
         patient_days,
-        is_same_day
+        is_same_day,
+        discharge_location_group_name
     from inpatient_admission
     where metric_id = 'inpatient_separation'
 ),
@@ -76,6 +77,25 @@ ac_022 as (
     from inpatient_admission
     where metric_id = 'inpatient_admission'
         and (patient_days is not null or is_same_day is not null)
+),
+
+-- AC-027: discharge_location_group_name is populated on every separation row and NULL on
+-- every admission row (BL-027).
+ac_027 as (
+    select
+        subject_id,
+        'AC-027 (discharge_location_group_name missing on a separation row)' as failed_ac
+    from separation_rows
+    where discharge_location_group_name is null
+
+    union all
+
+    select
+        subject_id,
+        'AC-027 (discharge_location_group_name populated on an admission row)' as failed_ac
+    from inpatient_admission
+    where metric_id = 'inpatient_admission'
+        and discharge_location_group_name is not null
 )
 
 select
@@ -92,3 +112,8 @@ select
     subject_id,
     failed_ac
 from ac_022
+union all
+select
+    subject_id,
+    failed_ac
+from ac_027

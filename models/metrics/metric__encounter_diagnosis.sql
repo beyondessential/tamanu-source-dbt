@@ -79,11 +79,8 @@ diagnoses as (
 -- Tamanu records a diagnosis against a date, and a diagnosis is point-in-time, so there is
 -- no period to close (BL-002).
 --
--- BL-006: the diagnosis code and name are emitted raw and ungrouped. Classifying either one
--- -- an ICD-10 chapter, a block, a national grouping -- is a presentation choice a
--- deployment may set differently, so it happens at the deployment/data-table layer, the same
--- division as age_years (BL-008). macros/diagnosis__icd10_chapter.sql stays available for a
--- deployment to apply over diagnosis_code there.
+-- BL-006: the diagnosis code and name are emitted as recorded, alongside the code's ICD-10
+-- chapter and block. A code that is not ICD-10 reads 'Unclassified' in both.
 select
     'encounter_diagnosis'::text as metric_id,
     null::text as variant_id,
@@ -105,6 +102,15 @@ select
     diagnosis,
     diagnosis_certainty,
     is_primary,
+    -- BL-006: 'Not recorded' where the diagnosis has no code, as diagnosis_code reads
+    case
+        when diagnosis_code = 'Not recorded' then 'Not recorded'
+        else {{ diagnosis__icd10_chapter('diagnosis_code') }}
+    end as diagnosis__icd10_chapter,
+    case
+        when diagnosis_code = 'Not recorded' then 'Not recorded'
+        else {{ diagnosis__icd10_block('diagnosis_code') }}
+    end as diagnosis__icd10_block,
     -- BL-008: age in whole years at the diagnosis. Unbanded -- an age classification is a
     -- presentation choice a deployment may set differently, so the consumer's data table
     -- bands it.
