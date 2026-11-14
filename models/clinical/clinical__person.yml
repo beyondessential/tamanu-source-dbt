@@ -79,3 +79,27 @@ models:
               arguments:
                 to: ref('ref__location')
                 field: location_id
+      - name: ethnicity_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__person__ethnicity_concept_id') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_009_clinical__person_ethnicity_concept_id_no_standard_concept
+              arguments:
+                values: [0]
+                quote: false
+          - not_null:
+              name: ac_009_clinical__person_ethnicity_concept_id_not_null
+      - name: ethnicity_source_concept_id
+        data_type: integer
+        description: "{{ doc('clinical__person__ethnicity_source_concept_id') }}"
+        data_tests:
+          - not_null:
+              name: ac_010_clinical__person_ethnicity_source_concept_id_not_null
+          - relationships:
+              name: ac_011_clinical__person_ethnicity_source_concept_id_mapped
+              arguments:
+                to: ref('map__omop_ethnicity')
+                field: concept_id
+              config:
+                where: "ethnicity_source_concept_id <> 0"
