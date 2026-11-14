@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: map__omop_ethnicity
+    description: >-
+      Tamanu ethnicities mapped to OMOP custom concepts, one row per ethnicity. Ethnicity lists
+      are set up by each deployment and have no standard OMOP concept, so each deployment gives
+      its list fixed concept IDs of its own. Joined by clinical__person to give each patient an
+      ethnicity concept, and by consumers that need the ethnicity's name.
+
+      Empty by default. A deployment that codes its ethnicity list disables this model and
+      defines its own of the same name, carrying the tests declared here.
+    config:
+      tags:
+        - reference
+    meta:
+      owner: bes-maui
+      domain: reference
+    columns:
+      - name: local_code
+        data_type: text
+        description: The Tamanu ethnicity, as the reference data ID recorded against the patient.
+        data_tests:
+          - not_null:
+              name: ac_001_map__omop_ethnicity_local_code_not_null
+          - unique:
+              name: ac_002_map__omop_ethnicity_local_code_unique
+      - name: local_name
+        data_type: text
+        description: The ethnicity's name as shown in Tamanu.
+        data_tests:
+          - not_null:
+              name: ac_003_map__omop_ethnicity_local_name_not_null
+      - name: concept_id
+        data_type: integer
+        description: >-
+          OMOP custom concept ID for the ethnicity, from the block of IDs assigned to the
+          deployment. Fixed once issued.
+        data_tests:
+          - not_null:
+              name: ac_004_map__omop_ethnicity_concept_id_not_null
+          - unique:
+              name: ac_005_map__omop_ethnicity_concept_id_unique
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_006_map__omop_ethnicity_concept_id_custom_range
+              arguments:
+                min_value: 2000000000
+                max_value: 2147483647
+      - name: concept_name
+        data_type: text
+        description: Name of the custom concept.
+        data_tests:
+          - not_null:
+              name: ac_007_map__omop_ethnicity_concept_name_not_null
+      - name: vocabulary_id
+        data_type: text
+        description: The deployment's local vocabulary the custom concept belongs to.
+        data_tests:
+          - not_null:
+              name: ac_008_map__omop_ethnicity_vocabulary_id_not_null
