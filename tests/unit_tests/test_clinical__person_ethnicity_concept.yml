@@ -1,0 +1,53 @@
+unit_tests:
+  - name: ac_012_clinical__person_ethnicity_concept
+    model: clinical__person
+    description: >-
+      AC-012 (BL-008): ethnicity_source_concept_id is the deployment's custom concept for the
+      recorded ethnicity, and 0 where the ethnicity has no row in map__omop_ethnicity or none is
+      recorded. ethnicity_concept_id is 0 on every row. pat_1's ethnicity is mapped. pat_2's is
+      not. pat_3 has no additional-data record at all and is still returned (BL-005).
+    given:
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_1' as id, 'P1' as display_id, 'female' as sex,
+            '1990-01-01'::date as date_of_birth, null::text as village_id
+          union all
+          select 'pat_2', 'P2', 'male', '1985-06-15'::date, null
+          union all
+          select 'pat_3', 'P3', 'male', '2000-03-03'::date, null
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select 'pat_1' as patient_id, 'eth_mapped' as ethnicity_id
+          union all
+          select 'pat_2', 'eth_unmapped'
+      - input: ref('patient_birth_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::time as birth_time where false
+      - input: ref('map__omop_sex')
+        format: sql
+        rows: |
+          select 'female' as local_code, 8532 as concept_id
+          union all
+          select 'male', 8507
+      - input: ref('map__omop_ethnicity')
+        format: sql
+        rows: |
+          select 'eth_mapped' as local_code, 2001000001 as concept_id
+    expect:
+      rows:
+        - person_id: pat_1
+          ethnicity_source_value: eth_mapped
+          ethnicity_concept_id: 0
+          ethnicity_source_concept_id: 2001000001
+        - person_id: pat_2
+          ethnicity_source_value: eth_unmapped
+          ethnicity_concept_id: 0
+          ethnicity_source_concept_id: 0
+        - person_id: pat_3
+          ethnicity_source_value: null
+          ethnicity_concept_id: 0
+          ethnicity_source_concept_id: 0
