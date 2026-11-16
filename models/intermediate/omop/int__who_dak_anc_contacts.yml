@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: int__who_dak_anc_contacts
+    description: >
+      One row per WHO DAK ANC contact, a woman seen for antenatal care on a day, recorded on a
+      contact form, with the DAK data elements recorded for her that day. Read by
+      metric__who_dak_anc_indicators.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    columns:
+      - name: patient_id
+        description: The woman seen.
+      - name: contact_day
+        description: The day of the contact.
+      - name: facility_id
+        description: Facility of the day's earliest contact form. Blank where it has none.
+      - name: contact_number
+        description: ANC.A7.DE12 ANC contact number, as recorded that day.
+      - name: gestational_age_weeks
+        description: ANC.B6.DE17 Gestational age, as recorded that day.
+      - name: lmp_date
+        description: ANC.B6.DE14 Last menstrual period (LMP) date, as recorded that day.
+      - name: edd_date
+        description: ANC.B6.DE22 Expected date of delivery (EDD), as recorded that day.
+      - name: gravida
+        description: ANC.B6.DE24 Number of pregnancies (gravida), as recorded that day.
+      - name: miscarriages_abortions
+        description: ANC.B6.DE25 Number of miscarriages and/or abortions, as recorded that day.
+      - name: parity
+        description: ANC.B6.DE32 Parity, as recorded that day.
+      - name: tt_dose_1_date
+        description: ANC.B10.DE166 Date tetanus toxoid 1 immunization was received, as recorded that day.
+      - name: tt_dose_2_date
+        description: ANC.B10.DE168 Date tetanus toxoid 2 immunization was received, as recorded that day.
+      - name: tt_dose_3_date
+        description: ANC.B10.DE170 Date tetanus toxoid 3 immunization was received, as recorded that day.
+      - name: tt_dose_4_date
+        description: ANC.B10.DE172 Date tetanus toxoid 4 immunization was received, as recorded that day.
+      - name: tt_dose_5_date
+        description: ANC.B10.DE174 Date tetanus toxoid 5 immunization was received, as recorded that day.

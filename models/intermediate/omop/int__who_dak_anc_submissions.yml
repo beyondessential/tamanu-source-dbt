@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: int__who_dak_anc_submissions
+    description: >
+      One row per WHO DAK ANC form submission, native or mapped through who_dak_anc_local_surveys,
+      with the DAK data elements it carries cast to Annex A's types. Read by
+      int__who_dak_anc_contacts.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    columns:
+      - name: response_id
+        description: "{{ doc('generic__id') }} of the form submission."
+      - name: survey_id
+        description: The form submitted.
+      - name: patient_id
+        description: The woman the form is about.
+      - name: facility_id
+        description: Facility of the submission's encounter location. Blank where it has none.
+      - name: start_datetime
+        description: When the form was started.
+      - name: end_datetime
+        description: When the form was submitted. Blank for an unsubmitted form.
+      - name: is_contact_form
+        description: Whether the form records an antenatal care contact.
+      - name: contact_number
+        description: ANC.A7.DE12 ANC contact number.
+      - name: gestational_age_weeks
+        description: ANC.B6.DE17 Gestational age, in weeks.
+      - name: lmp_date
+        description: ANC.B6.DE14 Last menstrual period (LMP) date.
+      - name: edd_date
+        description: ANC.B6.DE22 Expected date of delivery (EDD).
+      - name: gravida
+        description: ANC.B6.DE24 Number of pregnancies (gravida).
+      - name: miscarriages_abortions
+        description: ANC.B6.DE25 Number of miscarriages and/or abortions.
+      - name: parity
+        description: ANC.B6.DE32 Parity.
+      - name: tt_dose_1_date
+        description: ANC.B10.DE166 Date tetanus toxoid 1 immunization was received.
+      - name: tt_dose_2_date
+        description: ANC.B10.DE168 Date tetanus toxoid 2 immunization was received.
+      - name: tt_dose_3_date
+        description: ANC.B10.DE170 Date tetanus toxoid 3 immunization was received.
+      - name: tt_dose_4_date
+        description: ANC.B10.DE172 Date tetanus toxoid 4 immunization was received.
+      - name: tt_dose_5_date
+        description: ANC.B10.DE174 Date tetanus toxoid 5 immunization was received.
+      - name: closure_reason
+        description: ANC.End.1 Reason for closing ANC record.
+      - name: delivery_date
+        description: ANC.End.12 Delivery date.
+      - name: miscarriage_abortion_date
+        description: ANC.End.38 Date of miscarriage or abortion.
+      - name: death_date
+        description: ANC.End.39 Date of death.
+      - name: contact_day
+        description: ANC.A7.DE4 Contact date where recorded, else the day the form was started.
