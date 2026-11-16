@@ -20,10 +20,12 @@ metrics:
   name: Antenatal care contacts
   description: >-
     Antenatal care contacts -- a pregnant woman seen for antenatal care on a day, recorded on the
-    WHO DAK ANC Registration form or a local form mapped to it.
+    WHO DAK ANC Registration form, a local form mapped to it, or as a visit to an antenatal clinic
+    location group the deployment names.
   numerator_description: >-
     COUNT of (woman, day) pairs with at least one antenatal contact form, dated by the form's
-    Contact date (ANC.A7.DE4) or, where that is blank, by its submission.
+    Contact date (ANC.A7.DE4) or, where that is blank, by its submission, or at least one visit to
+    a named antenatal clinic location group, dated by its start.
   denominator_description: null
   data_source: tamanu
   definition_source: WHO_SMART_ANC
@@ -42,3 +44,32 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/metric__who_dak_anc_indicators.md
+- metric_id: episode_pregnancy_samoa
+  kind: episode
+  name: Pregnancy episode (Samoa)
+  description: >-
+    One pregnancy of a woman in antenatal care under Samoa Ministry of Health's definition,
+    assembled from her who_dak_anc_contact contacts. It starts at her first contact and takes in
+    each later contact until a pregnancy outcome or more than 140 days pass with no contact. A contact in the 42 days after a delivery or a child's birth
+    is postnatal and belongs to no pregnancy. It ends at the outcome recorded on an end-of-pregnancy
+    form, else a child's birth, else her death, else her last contact once 140 days have passed with
+    no contact, and is open otherwise.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: null
+  definition_rationale: >-
+    Samoa Ministry of Health's definition, for its Antenatal Care Log Book. Samoa records antenatal
+    care on its own forms and at antenatal clinic visits rather than on the DAK registration and
+    end forms, so the pregnancy is assembled from those, mapped to DAK data elements. It stands in
+    for the DAK's ANC record, opened at registration and closed by ANC.End.1 Reason for closing ANC
+    record, which the DAK's pregnancy indicators count. The 140-day gap, the 42-day postnatal window
+    and the closure order are Samoa's rules, not the DAK's.
+  unit: null
+  subject_grain: episode
+  disaggregations: null
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/derived__episode_pregnancy_samoa.md

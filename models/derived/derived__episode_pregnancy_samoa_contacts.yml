@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: derived__episode_pregnancy_samoa_contacts
+    description: >
+      One row per antenatal care contact under Samoa Ministry of Health's definition, with the
+      pregnancy episode it belongs to (episode_pregnancy_samoa), its number within the pregnancy and
+      the gestational age at the contact.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_003_derived__episode_pregnancy_samoa_contacts_one_per_contact
+          arguments:
+            combination_of_columns:
+              - subject_id
+              - contact_day
+          config:
+            severity: error
+    columns:
+      - name: episode_id
+        description: The pregnancy the contact belongs to.
+        data_tests:
+          - not_null:
+              name: ac_003_derived__episode_pregnancy_samoa_contacts_episode_id_not_null
+      - name: variant_id
+        description: Always blank, as this is a definition of its own rather than a variant of another.
+      - name: subject_id
+        description: The pregnant woman.
+      - name: contact_day
+        description: The day of the contact.
+      - name: facility_id
+        description: The facility of the contact.
+      - name: episode_contact_number
+        description: Which contact of the pregnancy this is, counting from 1.
+      - name: gestational_age_weeks
+        description: >
+          Gestational age in weeks at the contact: as recorded or worked out that day, else the
+          whole weeks from the pregnancy's last menstrual period or expected date of delivery.

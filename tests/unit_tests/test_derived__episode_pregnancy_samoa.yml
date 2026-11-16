@@ -1,0 +1,182 @@
+unit_tests:
+  - name: test_derived__episode_pregnancy_samoa_assembly
+    model: derived__episode_pregnancy_samoa
+    description: >
+      AC-004 (specs/dbt-model/derived__episode_pregnancy_samoa.md). Today is 2026-12-31. w1's contact on
+      2026-06-21 is 140 days after her previous one, so it continues her first pregnancy; her
+      contact on 2026-11-09 is 141 days later and starts a second, which is still open. The first
+      ends at its last contact, lost to follow-up, and carries its LMP from its first contact and
+      its gravida from the latest contact recording one. w2's child is born between her two
+      contacts, 61 days apart, which closes the first pregnancy as a live birth and starts a second.
+    overrides:
+      vars:
+        test_current_date: '2026-12-31'
+    given:
+      - input: ref('int__who_dak_anc_contacts')
+        format: sql
+        rows: |
+          with c (patient_id, contact_day, facility_id, lmp_date, gravida) as (
+            values
+            ('w1', '2026-01-05'::date, 'fac_1', '2025-11-01'::date, 2),
+            ('w1', '2026-02-01'::date, 'fac_2', null, null),
+            ('w1', '2026-06-21'::date, 'fac_1', null, 3),
+            ('w1', '2026-11-09'::date, 'fac_1', '2026-08-01'::date, null),
+            ('w2', '2026-03-01'::date, 'fac_1', null, null),
+            ('w2', '2026-05-01'::date, 'fac_1', null, null)
+          )
+          select
+            c.*,
+            null::date as edd_date, null::integer as miscarriages_abortions, null::integer as parity,
+            null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
+            null::date as tt_dose_4_date, null::date as tt_dose_5_date
+          from c
+      - input: ref('int__who_dak_anc_submissions')
+        format: sql
+        rows: |
+          select
+            null::text as patient_id, null::text as closure_reason, null::date as delivery_date,
+            null::date as miscarriage_abortion_date, null::date as death_date, null::date as contact_day
+          where false
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'w1'::text as id, '1995-01-01'::date as date_of_birth, null::timestamp as date_of_death
+          union all
+          select 'w2', '1995-01-01'::date, null
+          union all
+          select 'c1', '2026-03-10'::date, null
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select 'c1'::text as patient_id, 'w2'::text as mother_id
+    expect:
+      rows:
+        - {episode_id: 'w1;2026-01-05', subject_id: w1, metric_id: episode_pregnancy_samoa, episode_start_date: '2026-01-05', last_contact_date: '2026-06-21', contact_count: 3, first_contact_facility_id: fac_1, episode_end_date: '2026-06-21', closure_reason: Lost to follow-up, closure_source: no_contact, lmp_date: '2025-11-01', gravida: 3}
+        - {episode_id: 'w1;2026-11-09', subject_id: w1, metric_id: episode_pregnancy_samoa, episode_start_date: '2026-11-09', last_contact_date: '2026-11-09', contact_count: 1, first_contact_facility_id: fac_1, episode_end_date: null, closure_reason: null, closure_source: null, lmp_date: '2026-08-01', gravida: null}
+        - {episode_id: 'w2;2026-03-01', subject_id: w2, metric_id: episode_pregnancy_samoa, episode_start_date: '2026-03-01', last_contact_date: '2026-03-01', contact_count: 1, first_contact_facility_id: fac_1, episode_end_date: '2026-03-10', closure_reason: Live birth, closure_source: birth_record, lmp_date: null, gravida: null}
+        - {episode_id: 'w2;2026-05-01', subject_id: w2, metric_id: episode_pregnancy_samoa, episode_start_date: '2026-05-01', last_contact_date: '2026-05-01', contact_count: 1, first_contact_facility_id: fac_1, episode_end_date: '2026-05-01', closure_reason: Lost to follow-up, closure_source: no_contact, lmp_date: null, gravida: null}
+
+  - name: test_derived__episode_pregnancy_samoa_closure
+    model: derived__episode_pregnancy_samoa
+    description: >
+      AC-005 (specs/dbt-model/derived__episode_pregnancy_samoa.md). Today is 2026-12-31. w3's end form,
+      dated by its delivery date, outranks her child's birth the same day. w4's child's birth
+      outranks her death the same day. w5's death ends her pregnancy. w6's child born before her
+      first contact and her end form more than 140 days after her last do not close it, so she is
+      lost to follow-up. w7's contact is 30 days ago, so her pregnancy is open; a form with no
+      outcome on it is not an event. w8's end form gives a miscarriage, dated by its date. w9's
+      child is born in her second pregnancy, so it closes that one and not the first. AC-006: w10's
+      contact 19 days after her child's birth is postnatal and belongs to no pregnancy, and her next
+      contact starts one.
+    overrides:
+      vars:
+        test_current_date: '2026-12-31'
+    given:
+      - input: ref('int__who_dak_anc_contacts')
+        format: sql
+        rows: |
+          with c (patient_id, contact_day) as (
+            values
+            ('w3', '2026-01-10'::date),
+            ('w3', '2026-02-10'::date),
+            ('w4', '2026-01-10'::date),
+            ('w5', '2026-01-10'::date),
+            ('w6', '2026-04-01'::date),
+            ('w7', '2026-12-01'::date),
+            ('w8', '2026-02-01'::date),
+            ('w9', '2026-01-01'::date),
+            ('w9', '2026-06-01'::date),
+            ('w10', '2026-01-10'::date),
+            ('w10', '2026-03-20'::date),
+            ('w10', '2026-06-01'::date)
+          )
+          select
+            c.*, 'fac_1'::text as facility_id,
+            null::date as lmp_date, null::date as edd_date, null::integer as gravida,
+            null::integer as miscarriages_abortions, null::integer as parity,
+            null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
+            null::date as tt_dose_4_date, null::date as tt_dose_5_date
+          from c
+      - input: ref('int__who_dak_anc_submissions')
+        format: sql
+        rows: |
+          with s (patient_id, closure_reason, delivery_date, miscarriage_abortion_date, death_date, contact_day) as (
+            values
+            ('w3', null::text, '2026-03-01'::date, null::date, null::date, '2026-03-02'::date),
+            ('w6', null, '2026-09-01'::date, null, null, '2026-09-01'::date),
+            ('w7', null, null, null, null, '2026-12-01'::date),
+            ('w8', 'Miscarriage', null, '2026-02-15'::date, null, '2026-02-20'::date)
+          )
+          select * from s
+      - input: ref('patients')
+        format: sql
+        rows: |
+          with p (id, date_of_birth, date_of_death) as (
+            values
+            ('w4', '1995-01-01'::date, '2026-02-01 10:00'::timestamp),
+            ('w5', '1995-01-01'::date, '2026-03-01 10:00'::timestamp),
+            ('c3', '2026-03-01'::date, null),
+            ('c4', '2026-02-01'::date, null),
+            ('c6', '2025-12-01'::date, null),
+            ('c9', '2026-07-01'::date, null),
+            ('c10', '2026-03-01'::date, null)
+          )
+          select * from p
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select 'c3'::text as patient_id, 'w3'::text as mother_id
+          union all
+          select 'c4', 'w4'
+          union all
+          select 'c6', 'w6'
+          union all
+          select 'c9', 'w9'
+          union all
+          select 'c10', 'w10'
+    expect:
+      rows:
+        - {episode_id: 'w3;2026-01-10', episode_end_date: '2026-03-01', closure_reason: null, closure_source: end_form}
+        - {episode_id: 'w4;2026-01-10', episode_end_date: '2026-02-01', closure_reason: Live birth, closure_source: birth_record}
+        - {episode_id: 'w5;2026-01-10', episode_end_date: '2026-03-01', closure_reason: Woman died, closure_source: death}
+        - {episode_id: 'w6;2026-04-01', episode_end_date: '2026-04-01', closure_reason: Lost to follow-up, closure_source: no_contact}
+        - {episode_id: 'w7;2026-12-01', episode_end_date: null, closure_reason: null, closure_source: null}
+        - {episode_id: 'w8;2026-02-01', episode_end_date: '2026-02-15', closure_reason: Miscarriage, closure_source: end_form}
+        - {episode_id: 'w9;2026-01-01', episode_end_date: '2026-01-01', closure_reason: Lost to follow-up, closure_source: no_contact}
+        - {episode_id: 'w9;2026-06-01', episode_end_date: '2026-07-01', closure_reason: Live birth, closure_source: birth_record}
+        - {episode_id: 'w10;2026-01-10', episode_end_date: '2026-03-01', closure_reason: Live birth, closure_source: birth_record}
+        - {episode_id: 'w10;2026-06-01', episode_end_date: '2026-06-01', closure_reason: Lost to follow-up, closure_source: no_contact}
+
+  - name: test_derived__episode_pregnancy_samoa_contacts
+    model: derived__episode_pregnancy_samoa_contacts
+    description: >
+      AC-004 (specs/dbt-model/derived__episode_pregnancy_samoa.md). Contacts are numbered within their
+      pregnancy. A contact with its own gestational age keeps it; one without takes the whole weeks
+      from the pregnancy's LMP, or from 280 days before its EDD.
+    given:
+      - input: ref('int__who_dak_anc_contacts')
+        format: sql
+        rows: |
+          with c (patient_id, contact_day, facility_id, gestational_age_weeks) as (
+            values
+            ('w1', '2026-01-05'::date, 'fac_1', null::numeric),
+            ('w1', '2026-02-01'::date, 'fac_2', 20::numeric),
+            ('w1', '2026-06-21'::date, 'fac_1', null),
+            ('w1', '2026-11-09'::date, 'fac_1', null)
+          )
+          select * from c
+      - input: ref('derived__episode_pregnancy_samoa')
+        format: sql
+        rows: |
+          with e (episode_id, subject_id, episode_start_date, last_contact_date, lmp_date, edd_date) as (
+            values
+            ('w1;2026-01-05', 'w1', '2026-01-05'::date, '2026-06-21'::date, '2025-11-01'::date, null::date),
+            ('w1;2026-11-09', 'w1', '2026-11-09'::date, '2026-11-09'::date, null, '2027-05-01'::date)
+          )
+          select * from e
+    expect:
+      rows:
+        - {episode_id: 'w1;2026-01-05', subject_id: w1, contact_day: '2026-01-05', facility_id: fac_1, episode_contact_number: 1, gestational_age_weeks: 9}
+        - {episode_id: 'w1;2026-01-05', subject_id: w1, contact_day: '2026-02-01', facility_id: fac_2, episode_contact_number: 2, gestational_age_weeks: 20}
+        - {episode_id: 'w1;2026-01-05', subject_id: w1, contact_day: '2026-06-21', facility_id: fac_1, episode_contact_number: 3, gestational_age_weeks: 33}
+        - {episode_id: 'w1;2026-11-09', subject_id: w1, contact_day: '2026-11-09', facility_id: fac_1, episode_contact_number: 1, gestational_age_weeks: 15}
