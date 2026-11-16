@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: derived__episode_pregnancy_samoa
+    description: >
+      Pregnancy episodes under Samoa Ministry of Health's definition (episode_pregnancy_samoa): one
+      row per pregnancy of a woman in antenatal care, assembled from her antenatal care contacts. A
+      pregnancy starts at her first contact and takes in each later one until a pregnancy outcome or
+      more than 140 days pass with no contact. A contact in the 42 days after a delivery or a child's
+      birth is postnatal and belongs to no pregnancy. It ends at the outcome on an end-of-pregnancy
+      form, else a child's birth, else her death, else her last contact once 140 days have passed
+      with no contact, and is open otherwise.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    columns:
+      - name: metric_id
+        description: The registered episode, always episode_pregnancy_samoa.
+        data_tests:
+          - not_null:
+              name: ac_002_derived__episode_pregnancy_samoa_metric_id_not_null
+          - accepted_values:
+              name: ac_002_derived__episode_pregnancy_samoa_metric_id_accepted
+              arguments:
+                values: ['episode_pregnancy_samoa']
+          - relationships:
+              name: ac_002_derived__episode_pregnancy_samoa_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        description: Always blank, as this is a definition of its own rather than a variant of another.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              name: ac_002_derived__episode_pregnancy_samoa_variant_id_null
+              arguments:
+                expression: "is null"
+      - name: episode_id
+        description: The pregnancy, identified by the woman and the day of her first contact.
+        data_tests:
+          - unique:
+              name: ac_001_derived__episode_pregnancy_samoa_episode_id_unique
+              config:
+                severity: error
+          - not_null:
+              name: ac_001_derived__episode_pregnancy_samoa_episode_id_not_null
+      - name: subject_id
+        description: The pregnant woman.
+      - name: episode_concept_id
+        description: Standard concept for the kind of episode. Blank until the standard vocabulary is added.
+      - name: episode_start_date
+        description: The day of her first antenatal care contact in the pregnancy.
+      - name: episode_end_date
+        description: The day the pregnancy ended, or her last contact if she was lost to follow-up. Blank while it is open.
+      - name: closure_reason
+        description: >
+          Why the pregnancy ended: the reason recorded on the end-of-pregnancy form, Live birth,
+          Woman died or Lost to follow-up. Blank while it is open, or when the form records only a
+          date.
+      - name: closure_source
+        description: What ended the pregnancy — end_form, birth_record, death or no_contact. Blank while it is open.
+      - name: first_contact_facility_id
+        description: The facility of her first contact in the pregnancy.
+      - name: last_contact_date
+        description: The day of her latest contact in the pregnancy.
+      - name: contact_count
+        description: The number of antenatal care contacts in the pregnancy.
+      - name: contact_days
+        description: The days of the pregnancy's contacts, in order.
+      - name: lmp_date
+        description: Her last menstrual period, as most recently recorded in the pregnancy.
+      - name: edd_date
+        description: The expected date of delivery, as most recently recorded in the pregnancy.
+      - name: gravida
+        description: How many times she has been pregnant including this pregnancy, as most recently recorded or worked out.
+      - name: miscarriages_abortions
+        description: Her previous miscarriages and abortions, as most recently recorded in the pregnancy.
+      - name: parity
+        description: Her previous live births and stillbirths, as most recently recorded in the pregnancy.
+      - name: tt_dose_1_date
+        description: The date she received tetanus toxoid dose 1, as most recently recorded in the pregnancy.
+      - name: tt_dose_2_date
+        description: The date she received tetanus toxoid dose 2, as most recently recorded in the pregnancy.
+      - name: tt_dose_3_date
+        description: The date she received tetanus toxoid dose 3, as most recently recorded in the pregnancy.
+      - name: tt_dose_4_date
+        description: The date she received tetanus toxoid dose 4, as most recently recorded in the pregnancy.
+      - name: tt_dose_5_date
+        description: The date she received tetanus toxoid dose 5, as most recently recorded in the pregnancy.
