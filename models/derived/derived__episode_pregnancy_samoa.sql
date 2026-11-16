@@ -5,20 +5,6 @@
 --
 -- Sources only from bases/ and int__ (D10).
 
--- the DAK elements carried from the pregnancy's contacts
-{%- set episode_elements = [
-    'lmp_date',
-    'edd_date',
-    'gravida',
-    'miscarriages_abortions',
-    'parity',
-    'tt_dose_1_date',
-    'tt_dose_2_date',
-    'tt_dose_3_date',
-    'tt_dose_4_date',
-    'tt_dose_5_date',
-] %}
-
 -- BL-011: the antenatal care contacts
 with contacts as (
     select * from {{ ref('int__who_dak_anc_contacts') }}
@@ -159,11 +145,16 @@ episodes as (
         count(*)::integer as contact_count,
         array_agg(n.contact_day order by n.contact_day asc) as contact_days,
         (array_agg(n.facility_id order by n.contact_day asc))[1] as first_contact_facility_id,
-        {%- for column in episode_elements %}
-            (array_agg(
-                n.{{ column }} order by n.contact_day desc
-            ) filter (where n.{{ column }} is not null))[1] as {{ column }}{{ "," if not loop.last }}
-        {%- endfor %}
+        {{ latest_non_null('n.lmp_date', 'n.contact_day desc') }} as lmp_date,
+        {{ latest_non_null('n.edd_date', 'n.contact_day desc') }} as edd_date,
+        {{ latest_non_null('n.gravida', 'n.contact_day desc') }} as gravida,
+        {{ latest_non_null('n.miscarriages_abortions', 'n.contact_day desc') }} as miscarriages_abortions,
+        {{ latest_non_null('n.parity', 'n.contact_day desc') }} as parity,
+        {{ latest_non_null('n.tt_dose_1_date', 'n.contact_day desc') }} as tt_dose_1_date,
+        {{ latest_non_null('n.tt_dose_2_date', 'n.contact_day desc') }} as tt_dose_2_date,
+        {{ latest_non_null('n.tt_dose_3_date', 'n.contact_day desc') }} as tt_dose_3_date,
+        {{ latest_non_null('n.tt_dose_4_date', 'n.contact_day desc') }} as tt_dose_4_date,
+        {{ latest_non_null('n.tt_dose_5_date', 'n.contact_day desc') }} as tt_dose_5_date
     from numbered n
     group by n.patient_id, n.pregnancy_number
 ),
@@ -239,7 +230,14 @@ select
     b.last_contact_date,
     b.contact_count,
     b.contact_days,
-    {%- for column in episode_elements %}
-    b.{{ column }}{{ "," if not loop.last }}
-    {%- endfor %}
+    b.lmp_date,
+    b.edd_date,
+    b.gravida,
+    b.miscarriages_abortions,
+    b.parity,
+    b.tt_dose_1_date,
+    b.tt_dose_2_date,
+    b.tt_dose_3_date,
+    b.tt_dose_4_date,
+    b.tt_dose_5_date
 from closed b
