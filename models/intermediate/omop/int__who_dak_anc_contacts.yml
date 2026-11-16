@@ -3,9 +3,10 @@ version: 2
 models:
   - name: int__who_dak_anc_contacts
     description: >
-      One row per WHO DAK ANC contact, a woman seen for antenatal care on a day, recorded on a
-      contact form, with the DAK data elements recorded for her that day. Read by
-      metric__who_dak_anc_indicators.
+      One row per antenatal care contact, a woman seen for antenatal care on a day, with the DAK
+      data elements recorded for her that day. A contact is a contact form, or an encounter at a
+      location group named in who_dak_anc_contact_location_groups. Shared by
+      metric__who_dak_anc_indicators and the Samoa pregnancy episode.
     config:
       tags:
         - clinical
@@ -20,17 +21,23 @@ models:
       - name: contact_day
         description: The day of the contact.
       - name: facility_id
-        description: Facility of the day's earliest contact form. Blank where it has none.
+        description: Facility of the day's earliest contact form or contact encounter. Blank where it has none.
       - name: contact_number
         description: ANC.A7.DE12 ANC contact number, as recorded that day.
       - name: gestational_age_weeks
-        description: ANC.B6.DE17 Gestational age, as recorded that day.
+        description: >
+          ANC.B6.DE17 Gestational age as recorded that day. Where none is recorded and
+          who_dak_anc_calculate_gestational_age_and_gravida is on, the whole weeks from that day's
+          LMP, or from 280 days before its EDD, within 0 to 45 weeks.
       - name: lmp_date
         description: ANC.B6.DE14 Last menstrual period (LMP) date, as recorded that day.
       - name: edd_date
         description: ANC.B6.DE22 Expected date of delivery (EDD), as recorded that day.
       - name: gravida
-        description: ANC.B6.DE24 Number of pregnancies (gravida), as recorded that day.
+        description: >
+          ANC.B6.DE24 Number of pregnancies (gravida) as recorded that day. Where none is recorded
+          and who_dak_anc_calculate_gestational_age_and_gravida is on, parity plus miscarriages
+          and/or abortions plus 1.
       - name: miscarriages_abortions
         description: ANC.B6.DE25 Number of miscarriages and/or abortions, as recorded that day.
       - name: parity
