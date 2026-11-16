@@ -8,21 +8,8 @@
 --
 -- Sources only from bases/ and int__who_dak_anc_submissions (D10).
 
--- the DAK elements attached to a contact, read from int__who_dak_anc_submissions
-{%- set contact_elements = [
-    'contact_number',
-    'gestational_age_weeks',
-    'lmp_date',
-    'edd_date',
-    'gravida',
-    'miscarriages_abortions',
-    'parity',
-    'tt_dose_1_date',
-    'tt_dose_2_date',
-    'tt_dose_3_date',
-    'tt_dose_4_date',
-    'tt_dose_5_date',
-] -%}
+-- BL-008: the latest submitted wins, and an unsubmitted response (no end_datetime) sorts last
+{%- set latest_submission_first = 's.end_datetime desc nulls last, s.start_datetime desc, s.response_id desc' -%}
 
 -- BL-017: gestational age as recorded, else, where calculation is on, the whole weeks from the LMP,
 -- or from 280 days before the EDD, kept only within 0 to 45 weeks. BL-018: gravida as recorded,
@@ -150,12 +137,18 @@ attached as (
         c.patient_id,
         c.contact_day,
         c.facility_id,
-        {%- for column in contact_elements %}
-            (array_agg(
-                s.{{ column }}
-                order by s.end_datetime desc nulls last, s.start_datetime desc, s.response_id desc
-            ) filter (where s.{{ column }} is not null))[1] as {{ column }}{{ "," if not loop.last }}
-        {%- endfor %}
+        {{ latest_non_null('s.contact_number', latest_submission_first) }} as contact_number,
+        {{ latest_non_null('s.gestational_age_weeks', latest_submission_first) }} as gestational_age_weeks,
+        {{ latest_non_null('s.lmp_date', latest_submission_first) }} as lmp_date,
+        {{ latest_non_null('s.edd_date', latest_submission_first) }} as edd_date,
+        {{ latest_non_null('s.gravida', latest_submission_first) }} as gravida,
+        {{ latest_non_null('s.miscarriages_abortions', latest_submission_first) }} as miscarriages_abortions,
+        {{ latest_non_null('s.parity', latest_submission_first) }} as parity,
+        {{ latest_non_null('s.tt_dose_1_date', latest_submission_first) }} as tt_dose_1_date,
+        {{ latest_non_null('s.tt_dose_2_date', latest_submission_first) }} as tt_dose_2_date,
+        {{ latest_non_null('s.tt_dose_3_date', latest_submission_first) }} as tt_dose_3_date,
+        {{ latest_non_null('s.tt_dose_4_date', latest_submission_first) }} as tt_dose_4_date,
+        {{ latest_non_null('s.tt_dose_5_date', latest_submission_first) }} as tt_dose_5_date
     from contacts c
     left join submissions s
         on s.patient_id = c.patient_id
