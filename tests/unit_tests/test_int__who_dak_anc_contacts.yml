@@ -2,13 +2,13 @@ unit_tests:
   - name: test_int__who_dak_anc_contacts_elements
     model: int__who_dak_anc_contacts
     description: >
-      AC-006, AC-007, AC-009, AC-011 (specs/dbt-model/metric__who_dak_anc_indicators.md).
-      pat_1's two contact forms on one day
+      AC-006, AC-007, AC-009, AC-011, AC-012 (specs/dbt-model/metric__who_dak_anc_indicators.md).
+      The DAK definition only, as the Samoa variant is unset. pat_1's two contact forms on one day
       are one contact at the earlier form's facility, with the later submitted form's contact
       number, and gestational age from a non-contact form that day, the submitted one winning over
       an unsubmitted one. Gestational age and gravida are as recorded and never worked out: pat_2
       and pat_3 record none, and pat_4's recorded values are kept. pat_6 has only a non-contact
-      form, so no contact. pat_7, aged 9, is a contact.
+      form, so no contact. pat_7, aged 9, is a contact under the DAK definition.
     given:
       - input: ref('int__who_dak_anc_submissions')
         format: sql
@@ -40,10 +40,187 @@ unit_tests:
             null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
             null::date as tt_dose_4_date, null::date as tt_dose_5_date
           from s
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            null::text as id, null::text as patient_id, null::text as location_id,
+            null::timestamp as start_datetime, null::text as encounter_type
+          where false
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select null::text as encounter_id, null::text as location_id
+          where false
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select null::text as id, null::text as facility_id, null::text as location_group_id
+          where false
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name
+          where false
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select
+            'pat_7'::text as person_id, 'Female'::text as gender_source_value,
+            2016::int as year_of_birth, 5::int as month_of_birth, 11::int as day_of_birth
     expect:
       rows:
-        - {patient_id: pat_1, contact_day: '2026-03-04', facility_id: fac_1, contact_number: 2, gestational_age_weeks: 24.5, gravida: null}
-        - {patient_id: pat_2, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
-        - {patient_id: pat_3, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
-        - {patient_id: pat_4, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: 20, gravida: 4}
-        - {patient_id: pat_7, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_1, contact_day: '2026-03-04', facility_id: fac_1, contact_number: 2, gestational_age_weeks: 24.5, gravida: null}
+        - {variant_id: null, patient_id: pat_2, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_3, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_4, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: 20, gravida: 4}
+        - {variant_id: null, patient_id: pat_7, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+
+  - name: test_int__who_dak_anc_contacts_samoa
+    model: int__who_dak_anc_contacts
+    description: >
+      AC-010, AC-011, AC-012, AC-013 (specs/dbt-model/metric__who_dak_anc_indicators.md). The Samoa
+      variant is set. pat_1's contact form is a contact under both definitions; under the Samoa
+      variant her two encounters at the antenatal location group that day join it, at the form's
+      facility, the earliest source. pat_2's encounter is now at a gynae location group but passed
+      through the antenatal one, so it is a Samoa contact at the antenatal group's facility with no
+      elements. pat_2's form-only encounter, pat_3's encounter (recorded as male) and pat_4's
+      encounter at the gynae group alone yield none. pat_5's gestational age (12 weeks from her
+      LMP) and gravida (parity 1 + 1 miscarriage/abortion + 1) are worked out on her Samoa row
+      only. pat_7 is a day short of 10, so she is a contact under the DAK definition only, while
+      pat_8 turns 10 that day and is one under both.
+    overrides:
+      vars:
+        who_dak_anc_samoa_moh_2026:
+          contact_location_groups:
+            - '%antenatal%'
+    given:
+      - input: ref('int__who_dak_anc_submissions')
+        format: sql
+        rows: |
+          with s (response_id, patient_id, facility_id, start_datetime, end_datetime, is_contact_form, contact_day,
+                  contact_number, gestational_age_weeks, lmp_date, edd_date, gravida, miscarriages_abortions, parity) as (
+            values
+            ('s_1', 'pat_1', 'fac_2', '2026-05-06 08:00'::timestamp, '2026-05-06 08:10'::timestamp, true, '2026-05-06'::date,
+              1, null::numeric, null::date, null::date, null::integer, null::integer, null::integer),
+            ('s_5', 'pat_5', 'fac_1', '2026-03-01 09:00'::timestamp, '2026-03-01 09:10'::timestamp, true, '2026-03-01'::date,
+              null, null, '2025-12-01'::date, null, null, 1, 1),
+            ('s_7', 'pat_7', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
+              null, null, null, null, null, null, null),
+            ('s_8', 'pat_8', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
+              null, null, null, null, null, null, null)
+          )
+          select
+            s.*,
+            null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
+            null::date as tt_dose_4_date, null::date as tt_dose_5_date
+          from s
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_anc'::text as id, 'Antenatal Clinic'::text as name
+          union all
+          select 'lg_gyn', 'Gynae Clinic'
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_anc'::text as id, 'fac_1'::text as facility_id, 'lg_anc'::text as location_group_id
+          union all
+          select 'loc_gyn', 'fac_2', 'lg_gyn'
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_anc'::text as location_id,
+            '2026-05-06 09:00:00'::timestamp as start_datetime, 'clinic'::text as encounter_type
+          union all
+          select 'enc_2', 'pat_1', 'loc_anc', '2026-05-06 14:00:00'::timestamp, 'clinic'
+          union all
+          select 'enc_4', 'pat_2', 'loc_gyn', '2026-05-07 10:00:00'::timestamp, 'clinic'
+          union all
+          select 'enc_5', 'pat_2', 'loc_anc', '2026-05-08 10:00:00'::timestamp, 'surveyResponse'
+          union all
+          select 'enc_6', 'pat_3', 'loc_anc', '2026-05-07 10:00:00'::timestamp, 'clinic'
+          union all
+          select 'enc_7', 'pat_4', 'loc_gyn', '2026-05-07 10:00:00'::timestamp, 'clinic'
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'enc_1'::text as encounter_id, 'loc_anc'::text as location_id
+          union all
+          select 'enc_4', 'loc_anc'
+          union all
+          select 'enc_4', 'loc_gyn'
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select
+            'pat_1'::text as person_id, 'Female'::text as gender_source_value,
+            1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
+          union all
+          select 'pat_2', 'Female', 1990, 1, 1
+          union all
+          select 'pat_3', 'Male', 1990, 1, 1
+          union all
+          select 'pat_4', 'Female', 1990, 1, 1
+          union all
+          select 'pat_5', 'Female', 1990, 1, 1
+          union all
+          select 'pat_7', 'Female', 2016, 5, 11
+          union all
+          select 'pat_8', 'Female', 2016, 5, 10
+    expect:
+      rows:
+        - {variant_id: null, patient_id: pat_1, contact_day: '2026-05-06', facility_id: fac_2, contact_number: 1, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_5, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_7, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: null, patient_id: pat_8, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: samoa_moh_2026, patient_id: pat_1, contact_day: '2026-05-06', facility_id: fac_2, contact_number: 1, gestational_age_weeks: null, gravida: null}
+        - {variant_id: samoa_moh_2026, patient_id: pat_2, contact_day: '2026-05-07', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {variant_id: samoa_moh_2026, patient_id: pat_5, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: 12, gravida: 3}
+        - {variant_id: samoa_moh_2026, patient_id: pat_8, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+
+  - name: test_int__who_dak_anc_contacts_samoa_unset
+    model: int__who_dak_anc_contacts
+    description: >
+      AC-010 (specs/dbt-model/metric__who_dak_anc_indicators.md). With who_dak_anc_samoa_moh_2026
+      unset, an encounter at an antenatal location group is not a contact.
+    given:
+      - input: ref('int__who_dak_anc_submissions')
+        format: sql
+        rows: |
+          select
+            null::text as response_id, null::text as patient_id, null::text as facility_id,
+            null::timestamp as start_datetime, null::timestamp as end_datetime,
+            null::boolean as is_contact_form, null::date as contact_day,
+            null::integer as contact_number, null::numeric as gestational_age_weeks, null::date as lmp_date,
+            null::date as edd_date, null::integer as gravida, null::integer as miscarriages_abortions,
+            null::integer as parity, null::date as tt_dose_1_date, null::date as tt_dose_2_date,
+            null::date as tt_dose_3_date, null::date as tt_dose_4_date, null::date as tt_dose_5_date
+          where false
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_anc'::text as id, 'Antenatal Clinic'::text as name
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_anc'::text as id, 'fac_1'::text as facility_id, 'lg_anc'::text as location_group_id
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+            'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_anc'::text as location_id,
+            '2026-05-06 09:00:00'::timestamp as start_datetime, 'clinic'::text as encounter_type
+      - input: ref('encounter_history')
+        format: sql
+        rows: |
+          select 'enc_1'::text as encounter_id, 'loc_anc'::text as location_id
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select
+            'pat_1'::text as person_id, 'Female'::text as gender_source_value,
+            1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
+    expect:
+      rows: []

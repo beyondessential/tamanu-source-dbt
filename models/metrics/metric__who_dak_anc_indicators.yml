@@ -43,6 +43,7 @@ models:
               arguments:
                 values:
                   - who_dak_anc_contact
+                  - who_dak_anc_contact_samoa
           # Definition <-> implementation link: every metric__ view asserts its ids are
           # registered in the canonical registry.
           - relationships:
@@ -55,6 +56,12 @@ models:
       - name: variant_id
         data_type: text
         description: "{{ doc('metric__who_dak_anc_indicators__variant_id') }}"
+        data_tests:
+          - accepted_values:
+              name: ac_002_metric__who_dak_anc_indicators_variant_id_values
+              arguments:
+                values:
+                  - samoa_moh_2026
       - name: subject_id
         data_type: character varying
         description: "{{ doc('metric__who_dak_anc_indicators__subject_id') }}"

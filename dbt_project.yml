@@ -97,6 +97,12 @@ models:
       +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
       +tags:
         - clinical
+    derived:
+      +docs:
+        show: true
+      +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      +tags:
+        - derived
     metrics:
       +docs:
         show: true
