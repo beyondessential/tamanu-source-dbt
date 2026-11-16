@@ -1,0 +1,163 @@
+unit_tests:
+  - name: test_int__who_dak_anc_submissions_native
+    model: int__who_dak_anc_submissions
+    description: >
+      AC-006, AC-008 (specs/dbt-model/metric__who_dak_anc_indicators.md). Native forms are read by
+      their question codes. A Registration form is a contact form dated by its contact date; a
+      malformed or missing contact date falls back to the day it was started. A Profile form is not
+      a contact form and carries gestational age; a question the model does not read is ignored. An
+      end-of-pregnancy form carries its closure reason and delivery date. A submission whose
+      encounter has no location has no facility, and an unmapped survey is not read.
+    given:
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-de4'::text as id, 'whodakanc-a7-de4'::text as code
+          union all
+          select 'pde-de12', 'whodakanc-a7-de12'
+          union all
+          select 'pde-de17', 'whodakanc-b6-de17'
+          union all
+          select 'pde-de99', 'whodakanc-b6-de99'
+          union all
+          select 'pde-end1', 'whodakanc-end-1'
+          union all
+          select 'pde-end12', 'whodakanc-end-12'
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'fac_1'::text as facility_id
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
+          union all
+          select 'enc_2', 'pat_1', 'loc_1'
+          union all
+          select 'enc_3', 'pat_2', 'loc_1'
+          union all
+          select 'enc_4', 'pat_3', null
+          union all
+          select 'enc_5', 'pat_4', 'loc_1'
+      - input: ref('survey_responses')
+        format: sql
+        rows: |
+          select
+            'r_1'::text as id, 'program-whodakanc-registration'::text as survey_id, 'enc_1'::text as encounter_id,
+            '2026-03-04 09:00:00'::timestamp as start_datetime, '2026-03-04 09:10:00'::timestamp as end_datetime
+          union all
+          select 'r_2', 'program-whodakanc-profile', 'enc_2', '2026-03-04 09:20:00'::timestamp, '2026-03-04 09:30:00'::timestamp
+          union all
+          select 'r_3', 'program-whodakanc-registration', 'enc_3', '2026-04-01 09:00:00'::timestamp, '2026-04-01 09:10:00'::timestamp
+          union all
+          select 'r_4', 'program-whodakanc-registration', 'enc_4', '2026-04-02 09:00:00'::timestamp, '2026-04-02 09:10:00'::timestamp
+          union all
+          select 'r_5', 'program-whodakanc-episodeend', 'enc_5', '2026-05-01 09:00:00'::timestamp, '2026-05-01 09:10:00'::timestamp
+          union all
+          select 'r_6', 'program-unmapped', 'enc_5', '2026-05-01 09:00:00'::timestamp, '2026-05-01 09:10:00'::timestamp
+          union all
+          select 'r_7', 'program-whodakanc-registration', 'enc_3', '2026-04-05 09:00:00'::timestamp, '2026-04-05 09:10:00'::timestamp
+      - input: ref('survey_response_answers')
+        format: sql
+        rows: |
+          select 'a_1'::text as id, 'r_1'::text as response_id, 'pde-de4'::text as data_element_id, '2026-03-03'::text as body
+          union all
+          select 'a_2', 'r_1', 'pde-de12', '2'
+          union all
+          select 'a_3', 'r_2', 'pde-de17', '24.5'
+          union all
+          select 'a_4', 'r_2', 'pde-de99', '7'
+          union all
+          select 'a_5', 'r_3', 'pde-de4', 'not a date'
+          union all
+          select 'a_6', 'r_5', 'pde-end1', 'Live birth'
+          union all
+          select 'a_7', 'r_5', 'pde-end12', '2026-04-30'
+          union all
+          select 'a_8', 'r_6', 'pde-de12', '9'
+          union all
+          select 'a_9', 'r_7', 'pde-de4', '2026-02-30'
+          union all
+          select 'a_10', 'r_7', 'pde-de12', '99999999999'
+    expect:
+      rows:
+        - {response_id: r_1, patient_id: pat_1, facility_id: fac_1, is_contact_form: true, contact_day: '2026-03-03', contact_number: 2, gestational_age_weeks: null, closure_reason: null, delivery_date: null}
+        - {response_id: r_2, patient_id: pat_1, facility_id: fac_1, is_contact_form: false, contact_day: '2026-03-04', contact_number: null, gestational_age_weeks: 24.5, closure_reason: null, delivery_date: null}
+        - {response_id: r_3, patient_id: pat_2, facility_id: fac_1, is_contact_form: true, contact_day: '2026-04-01', contact_number: null, gestational_age_weeks: null, closure_reason: null, delivery_date: null}
+        - {response_id: r_4, patient_id: pat_3, facility_id: null, is_contact_form: true, contact_day: '2026-04-02', contact_number: null, gestational_age_weeks: null, closure_reason: null, delivery_date: null}
+        - {response_id: r_5, patient_id: pat_4, facility_id: fac_1, is_contact_form: false, contact_day: '2026-05-01', contact_number: null, gestational_age_weeks: null, closure_reason: Live birth, delivery_date: '2026-04-30'}
+        - {response_id: r_7, patient_id: pat_2, facility_id: fac_1, is_contact_form: true, contact_day: '2026-04-05', contact_number: null, gestational_age_weeks: null, closure_reason: null, delivery_date: null}
+
+  - name: test_int__who_dak_anc_submissions_local_mapping
+    model: int__who_dak_anc_submissions
+    description: >
+      AC-009, AC-011 (specs/dbt-model/metric__who_dak_anc_indicators.md). A local chart mapped as a
+      contact form is dated by its mapped contact date and carries mapped parity, stored as 2.0 and
+      read as 2. A mapped booking form without is_contact is not a contact form. A native question
+      code on a mapped survey is not read, and an unmapped survey carrying a mapped code is not read
+      at all.
+    overrides:
+      vars:
+        who_dak_anc_local_surveys:
+          program-local-chart:
+            is_contact: true
+            data_elements:
+              ANC.A7.DE4: LocalChartDate
+              ANC.B6.DE32: LocalParity
+          program-local-booking:
+            data_elements:
+              ANC.B6.DE17: LocalGestation
+    given:
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-LocalChartDate'::text as id, 'LocalChartDate'::text as code
+          union all
+          select 'pde-LocalParity', 'LocalParity'
+          union all
+          select 'pde-LocalGestation', 'LocalGestation'
+          union all
+          select 'pde-de17', 'whodakanc-b6-de17'
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1'::text as id, 'fac_1'::text as facility_id
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
+          union all
+          select 'enc_2', 'pat_1', 'loc_1'
+          union all
+          select 'enc_3', 'pat_2', 'loc_1'
+          union all
+          select 'enc_4', 'pat_3', 'loc_1'
+      - input: ref('survey_responses')
+        format: sql
+        rows: |
+          select
+            'r_1'::text as id, 'program-local-chart'::text as survey_id, 'enc_1'::text as encounter_id,
+            '2026-05-07 09:00:00'::timestamp as start_datetime, '2026-05-07 09:05:00'::timestamp as end_datetime
+          union all
+          select 'r_2', 'program-local-booking', 'enc_2', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+          union all
+          select 'r_3', 'program-unmapped', 'enc_3', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+          union all
+          select 'r_4', 'program-local-booking', 'enc_4', '2026-05-06 08:00:00'::timestamp, '2026-05-06 08:30:00'::timestamp
+      - input: ref('survey_response_answers')
+        format: sql
+        rows: |
+          select 'a_1'::text as id, 'r_1'::text as response_id, 'pde-LocalChartDate'::text as data_element_id, '2026-05-06'::text as body
+          union all
+          select 'a_2', 'r_1', 'pde-LocalParity', '2.0'
+          union all
+          select 'a_3', 'r_2', 'pde-LocalGestation', '24.5'
+          union all
+          select 'a_4', 'r_3', 'pde-LocalChartDate', '2026-05-06'
+          union all
+          select 'a_5', 'r_4', 'pde-de17', '12'
+    expect:
+      rows:
+        - {response_id: r_1, patient_id: pat_1, is_contact_form: true, contact_day: '2026-05-06', parity: 2, gestational_age_weeks: null}
+        - {response_id: r_2, patient_id: pat_1, is_contact_form: false, contact_day: '2026-05-06', parity: null, gestational_age_weeks: 24.5}
+        - {response_id: r_4, patient_id: pat_3, is_contact_form: false, contact_day: '2026-05-06', parity: null, gestational_age_weeks: null}
