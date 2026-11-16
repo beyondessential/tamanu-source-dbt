@@ -17,6 +17,9 @@ Registration form, or a local form the deployment marks as one — and dated by 
 same woman on the same day are one contact. The contact number and gestational age come from any
 antenatal form filled in for her that day, and are blank when there is none.
 
+**Clinic visits can be contacts too.** A deployment that records antenatal care at clinic visits
+names its antenatal clinic location groups, and a visit to one is then a contact as well.
+
 **Counts only.** Antenatal coverage needs an expected-pregnancies estimate Tamanu does not hold,
 so the consumer forms it against its own estimate.
 
@@ -75,8 +78,9 @@ The ANC contact number recorded for this contact, as entered. NULL where none wa
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__gestational_age_weeks %}
-Gestational age in weeks recorded on the day of the contact, as entered. NULL where none was
-recorded.
+Gestational age in weeks recorded on the day of the contact, as entered. Where none was recorded
+and the deployment has turned it on, the whole weeks since the last menstrual period, or worked out
+from the expected date of delivery, and blank outside 0 to 45 weeks.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__lmp_date %}
@@ -89,7 +93,8 @@ The expected date of delivery, as recorded on the day of the contact.
 
 {% docs metric__who_dak_anc_indicators__gravida %}
 How many times the woman has been pregnant, including this pregnancy, as recorded on the day of
-the contact.
+the contact. Where none was recorded and the deployment has turned it on, her parity plus her
+miscarriages and abortions plus this pregnancy.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__miscarriages_abortions %}
