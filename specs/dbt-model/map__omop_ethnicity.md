@@ -26,7 +26,7 @@ model and supplies its own of the same name.
 | **Linear issue** | [MAUI-7184](https://linear.app/bes/issue/MAUI-7184) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-11-14 |
-| **Last updated** | 2026-11-14 |
+| **Last updated** | 2026-11-15 |
 
 ## Grain
 
@@ -58,6 +58,8 @@ ships in the compiled bundle, and may read `reference_data` for current names.
   map gives every patient concept `0`.
 - **BL-004:** A deployment's model replaces the package model by the same name, with the package
   model disabled in the deployment's `dbt_project.yml`. The tests declared here apply to it.
+- **BL-005:** Where the map holds rows, every ethnicity reference record and every ethnicity recorded
+  against a patient has a row, and a gap is reported as a warning.
 
 ## Acceptance criteria
 
@@ -71,6 +73,7 @@ ships in the compiled bundle, and may read `reference_data` for current names.
 | AC-006 | `concept_id` is between 2,000,000,000 and 2,147,483,647 | BL-002 | `dbt_expectations.expect_column_values_to_be_between` |
 | AC-007 | `concept_name` is never NULL | grain | dbt `not_null` |
 | AC-008 | `vocabulary_id` is never NULL | grain | dbt `not_null` |
+| AC-009 | Where the map holds rows, no ethnicity reference record or patient ethnicity lacks a row | BL-005 | dbt singular test (`data_test__map__omop_ethnicity`) |
 
 BL-003 is covered by `clinical__person` AC-012, and the range within a deployment's own block
 (BL-002) by a test in the deployment's repo.
@@ -87,3 +90,4 @@ deployment map__omop_ethnicity ──► clinical__person ──► metric__ / d
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-14 | @julianam-w | Initial version (MAUI-7184) |
+| 2026-11-15 | @julianam-w | Add the coverage test (BL-005, AC-009) |
