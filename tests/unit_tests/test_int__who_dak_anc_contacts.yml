@@ -1,0 +1,49 @@
+unit_tests:
+  - name: test_int__who_dak_anc_contacts_elements
+    model: int__who_dak_anc_contacts
+    description: >
+      AC-006, AC-007, AC-009, AC-011 (specs/dbt-model/metric__who_dak_anc_indicators.md).
+      pat_1's two contact forms on one day
+      are one contact at the earlier form's facility, with the later submitted form's contact
+      number, and gestational age from a non-contact form that day, the submitted one winning over
+      an unsubmitted one. Gestational age and gravida are as recorded and never worked out: pat_2
+      and pat_3 record none, and pat_4's recorded values are kept. pat_6 has only a non-contact
+      form, so no contact. pat_7, aged 9, is a contact.
+    given:
+      - input: ref('int__who_dak_anc_submissions')
+        format: sql
+        rows: |
+          with s (response_id, patient_id, facility_id, start_datetime, end_datetime, is_contact_form, contact_day,
+                  contact_number, gestational_age_weeks, lmp_date, edd_date, gravida, miscarriages_abortions, parity) as (
+            values
+            ('s_1', 'pat_1', 'fac_1', '2026-03-04 09:00'::timestamp, '2026-03-04 09:10'::timestamp, true, '2026-03-04'::date,
+              1, null::numeric, null::date, null::date, null::integer, null::integer, null::integer),
+            ('s_2', 'pat_1', 'fac_2', '2026-03-04 10:00'::timestamp, '2026-03-04 10:05'::timestamp, true, '2026-03-04'::date,
+              2, null, null, null, null, null, null),
+            ('s_3', 'pat_1', 'fac_2', '2026-03-04 09:30'::timestamp, null, false, '2026-03-04'::date,
+              null, 30, null, null, null, null, null),
+            ('s_4', 'pat_1', 'fac_2', '2026-03-04 09:20'::timestamp, '2026-03-04 09:25'::timestamp, false, '2026-03-04'::date,
+              null, 24.5, null, null, null, null, null),
+            ('s_5', 'pat_2', 'fac_1', '2026-03-01 09:00'::timestamp, '2026-03-01 09:10'::timestamp, true, '2026-03-01'::date,
+              null, null, '2025-12-01'::date, '2026-09-07'::date, null, 1, 1),
+            ('s_6', 'pat_3', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
+              null, null, null, '2026-10-01'::date, null, null, 2),
+            ('s_7', 'pat_4', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
+              null, 20, '2025-01-01'::date, null, 4, 0, 1),
+            ('s_9', 'pat_6', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, false, '2026-05-10'::date,
+              null, 18, null, null, null, null, null),
+            ('s_10', 'pat_7', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
+              null, null, null, null, null, null, null)
+          )
+          select
+            s.*,
+            null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
+            null::date as tt_dose_4_date, null::date as tt_dose_5_date
+          from s
+    expect:
+      rows:
+        - {patient_id: pat_1, contact_day: '2026-03-04', facility_id: fac_1, contact_number: 2, gestational_age_weeks: 24.5, gravida: null}
+        - {patient_id: pat_2, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {patient_id: pat_3, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
+        - {patient_id: pat_4, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: 20, gravida: 4}
+        - {patient_id: pat_7, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}

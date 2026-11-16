@@ -15,7 +15,7 @@ the same way, so a contact means the same thing on every deployment.
 Registration form, or a local form the deployment marks as one — and dated by the form's
 *Contact date*, or by when the form was filled in where that is blank. Two contact forms for the
 same woman on the same day are one contact. The contact number and gestational age come from any
-antenatal form filled in for her that day.
+antenatal form filled in for her that day, and are blank when there is none.
 
 **Counts only.** Antenatal coverage needs an expected-pregnancies estimate Tamanu does not hold,
 so the consumer forms it against its own estimate.
@@ -77,4 +77,32 @@ The ANC contact number recorded for this contact, as entered. NULL where none wa
 {% docs metric__who_dak_anc_indicators__gestational_age_weeks %}
 Gestational age in weeks recorded on the day of the contact, as entered. NULL where none was
 recorded.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__lmp_date %}
+The first day of the woman's last menstrual period, as recorded on the day of the contact.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__edd_date %}
+The expected date of delivery, as recorded on the day of the contact.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__gravida %}
+How many times the woman has been pregnant, including this pregnancy, as recorded on the day of
+the contact.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__miscarriages_abortions %}
+The number of the woman's previous pregnancies that ended in a miscarriage or abortion, as recorded
+on the day of the contact.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__parity %}
+The number of the woman's previous live births and stillbirths, as recorded on the day of the
+contact.
+{% enddocs %}
+
+{% docs metric__who_dak_anc_indicators__tt_dose_date %}
+The date the woman received this dose of a tetanus toxoid-containing vaccine, as recorded on the day
+of the contact.
 {% enddocs %}
