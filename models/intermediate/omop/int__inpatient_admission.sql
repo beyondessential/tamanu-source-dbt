@@ -131,12 +131,20 @@ admissions as (
         -- BL-026: the group of the same location facility_id is taken from, resolved to its
         -- name. 'Not recorded' where the location is in no group.
         coalesce(lg.name, 'Not recorded') as admission_location_group_name,
+        -- BL-028: the same group as the raw Tamanu id, for a consumer keyed on id rather than
+        -- a name that can be renamed. NULL (not coalesced) where the location is in no group.
+        loc.location_group_id as admission_location_group_id,
         -- BL-027: the discharge segment's location group, resolved to its name. NULL while
         -- the encounter is open -- there is no discharge yet -- and 'Not recorded' for a
         -- closed one whose location is in no group.
         case
             when vo.visit_end_datetime is not null then coalesce(dis_lg.name, 'Not recorded')
         end as discharge_location_group_name,
+        -- BL-029: the discharge segment's location group as the raw id. NULL while the
+        -- encounter is open and for a location in no group (not coalesced).
+        case
+            when vo.visit_end_datetime is not null then dis_loc.location_group_id
+        end as discharge_location_group_id,
         pr.gender_source_value as sex,
         -- BL-005: visit-level concept 262 ('Emergency Room and Inpatient Visit') marks an
         -- admission that had a prior ED/triage/observation phase; it exists only at visit
@@ -233,7 +241,9 @@ select
     facility_id,
     admission_ward_id,
     admission_location_group_name,
+    admission_location_group_id,
     discharge_location_group_name,
+    discharge_location_group_id,
     sex,
     age_years,
     clinician,

@@ -204,6 +204,9 @@ where trim(t.d) not in (
         -- inpatient_admission's / _separation's admission location group (ward/area), by name
         -- (MAUI-7131)
         'admission_location_group_name',
+        -- and the same groups by raw Tamanu id, for consumers keyed on id (MAUI-7177)
+        'admission_location_group_id',
+        'discharge_location_group_id',
         -- inpatient_separation's discharge location group: the ward/area the patient was
         -- discharged from, by name (MAUI-7122)
         'discharge_location_group_name',
