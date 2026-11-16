@@ -2,17 +2,14 @@ unit_tests:
   - name: test_metric__who_dak_anc_indicators_framing
     model: metric__who_dak_anc_indicators
     description: >
-      AC-002, AC-004, AC-005, AC-013 (specs/dbt-model/metric__who_dak_anc_indicators.md). Each
+      AC-002, AC-004, AC-005 (specs/dbt-model/metric__who_dak_anc_indicators.md). Each
       contact is one row counting 1, identified by the woman and the day, on that day, with her age
-      in whole years on it and the contact's elements carried through. A DAK contact is
-      who_dak_anc_contact with no variant, and a Samoa variant contact is who_dak_anc_contact_samoa
-      with variant samoa_moh_2026. A woman with no person record has no age.
+      in whole years on it and the contact's elements carried through. A woman with no person record has no age.
     given:
       - input: ref('int__who_dak_anc_contacts')
         format: sql
         rows: |
           select
-            null::text as variant_id,
             'pat_1'::text as patient_id, '2026-03-04'::date as contact_day, 'fac_1'::text as facility_id,
             2 as contact_number, 24.5::numeric as gestational_age_weeks, '2025-09-20'::date as lmp_date,
             null::date as edd_date, 3 as gravida, 1 as miscarriages_abortions, 1 as parity,
@@ -20,12 +17,8 @@ unit_tests:
             null::date as tt_dose_4_date, null::date as tt_dose_5_date
           union all
           select
-            null, 'pat_2', '2026-03-05'::date, null, null, null, null, null, null, null, null,
+            'pat_2', '2026-03-05'::date, null, null, null, null, null, null, null, null,
             null, null, null, null, null
-          union all
-          select
-            'samoa_moh_2026', 'pat_1', '2026-03-04'::date, 'fac_1', 2, 24.5, '2025-09-20'::date, null, 3, 1, 1,
-            '2026-02-20'::date, null, null, null, null
       - input: ref('clinical__person')
         format: sql
         rows: |
@@ -34,4 +27,3 @@ unit_tests:
       rows:
         - {metric_id: who_dak_anc_contact, variant_id: null, subject_id: 'pat_1;2026-03-04', period_start: '2026-03-04', period_end: '2026-03-04', period_granularity: day, value_numeric: 1, facility_id: fac_1, person_id: pat_1, age_years: 29, contact_number: 2, gestational_age_weeks: 24.5, gravida: 3, tt_dose_1_date: '2026-02-20'}
         - {metric_id: who_dak_anc_contact, variant_id: null, subject_id: 'pat_2;2026-03-05', period_start: '2026-03-05', period_end: '2026-03-05', period_granularity: day, value_numeric: 1, facility_id: null, person_id: pat_2, age_years: null, contact_number: null, gestational_age_weeks: null, gravida: null, tt_dose_1_date: null}
-        - {metric_id: who_dak_anc_contact_samoa, variant_id: samoa_moh_2026, subject_id: 'pat_1;2026-03-04', period_start: '2026-03-04', period_end: '2026-03-04', period_granularity: day, value_numeric: 1, facility_id: fac_1, person_id: pat_1, age_years: 29, contact_number: 2, gestational_age_weeks: 24.5, gravida: 3, tt_dose_1_date: '2026-02-20'}

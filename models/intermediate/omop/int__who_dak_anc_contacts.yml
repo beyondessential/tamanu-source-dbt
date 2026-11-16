@@ -3,13 +3,11 @@ version: 2
 models:
   - name: int__who_dak_anc_contacts
     description: >
-      One row per antenatal care contact and definition, a woman seen for antenatal care on a day,
-      with the DAK data elements recorded for her that day. Under the WHO DAK definition (variant_id
-      NULL) a contact is a contact form, with elements as recorded. Under Samoa Ministry of Health's
-      (samoa_moh_2026, when who_dak_anc_samoa_moh_2026 is set) it is also an encounter at a named
-      antenatal clinic location group, gestational age and gravida are worked out where not
-      recorded, and a patient younger than 10 is left out. Shared by metric__who_dak_anc_indicators
-      and the Samoa pregnancy episode.
+      One row per antenatal care contact, a woman seen for antenatal care on a day, with the DAK
+      data elements recorded for her that day. A contact is a contact form, or an encounter at a
+      location group named in who_dak_anc_contact_location_groups. A patient recorded as male or
+      younger than 10 is left out. Shared by metric__who_dak_anc_indicators and the Samoa pregnancy
+      episode.
     config:
       tags:
         - clinical
@@ -19,8 +17,6 @@ models:
         pii: true
         classification: restricted
     columns:
-      - name: variant_id
-        description: The definition. NULL for the WHO DAK definition, samoa_moh_2026 for Samoa Ministry of Health's.
       - name: patient_id
         description: The woman seen.
       - name: contact_day
@@ -31,17 +27,18 @@ models:
         description: ANC.A7.DE12 ANC contact number, as recorded that day.
       - name: gestational_age_weeks
         description: >
-          ANC.B6.DE17 Gestational age as recorded that day. Under Samoa Ministry of Health's
-          definition, where none is recorded, the whole weeks from that day's LMP, or from 280 days
-          before its EDD, within 0 to 45 weeks.
+          ANC.B6.DE17 Gestational age as recorded that day. Where none is recorded and
+          who_dak_anc_calculate_gestational_age_and_gravida is on, the whole weeks from that day's
+          LMP, or from 280 days before its EDD, within 0 to 45 weeks.
       - name: lmp_date
         description: ANC.B6.DE14 Last menstrual period (LMP) date, as recorded that day.
       - name: edd_date
         description: ANC.B6.DE22 Expected date of delivery (EDD), as recorded that day.
       - name: gravida
         description: >
-          ANC.B6.DE24 Number of pregnancies (gravida) as recorded that day. Under Samoa Ministry of
-          Health's definition, where none is recorded, parity plus miscarriages and/or abortions plus 1.
+          ANC.B6.DE24 Number of pregnancies (gravida) as recorded that day. Where none is recorded
+          and who_dak_anc_calculate_gestational_age_and_gravida is on, parity plus miscarriages
+          and/or abortions plus 1.
       - name: miscarriages_abortions
         description: ANC.B6.DE25 Number of miscarriages and/or abortions, as recorded that day.
       - name: parity

@@ -36,12 +36,12 @@ models:
               config:
                 severity: error
       - name: variant_id
-        description: The definition, always samoa_moh_2026 (Samoa Ministry of Health).
+        description: Always blank, as this is a definition of its own rather than a variant of another.
         data_tests:
-          - accepted_values:
-              name: ac_002_derived__episode_pregnancy_samoa_variant_id_accepted
+          - dbt_utils.expression_is_true:
+              name: ac_002_derived__episode_pregnancy_samoa_variant_id_null
               arguments:
-                values: ['samoa_moh_2026']
+                expression: "is null"
       - name: episode_id
         description: The pregnancy, identified by the woman and the day of her first contact.
         data_tests:

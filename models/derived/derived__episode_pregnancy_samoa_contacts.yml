@@ -30,7 +30,7 @@ models:
           - not_null:
               name: ac_003_derived__episode_pregnancy_samoa_contacts_episode_id_not_null
       - name: variant_id
-        description: The definition, always samoa_moh_2026 (Samoa Ministry of Health).
+        description: Always blank, as this is a definition of its own rather than a variant of another.
       - name: subject_id
         description: The pregnant woman.
       - name: contact_day

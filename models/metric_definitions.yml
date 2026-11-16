@@ -88,8 +88,7 @@ models:
                 # AIHW: ed_visit, ed_stay, opd_visit (documentations/metrics/emergency.yml,
                 # outpatient.yml). WHO_UNICEF_WUENIC: immunisation_dose
                 # (documentations/metrics/immunisation.yml). WHO_SMART_ANC: who_dak_anc_contact
-                # (documentations/metrics/who_dak_anc.yml). SAMOA_MOH: who_dak_anc_contact_samoa,
-                # episode_pregnancy_samoa
+                # (documentations/metrics/who_dak_anc.yml). SAMOA_MOH: episode_pregnancy_samoa
                 # (documentations/metrics/who_dak_anc.yml).
                 values: ['WHO_SMART_HIV', 'WHO_SMART_ANC', 'WHO_CORE_100', 'WHO_PEN', 'WHO_UNICEF_WUENIC', 'SDG', 'DHIS2_HDT', 'MANA', 'GLOBAL_FUND', 'OHDSI', 'IYCF', 'AIHW', 'MSF', 'SAMOA_MOH', 'BES']
       - name: definition_source_code

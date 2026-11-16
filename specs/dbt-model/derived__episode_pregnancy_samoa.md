@@ -19,7 +19,7 @@ BL-006, BL-010) are Samoa's.
 | Field | Value |
 |---|---|
 | **Name** | `derived__episode_pregnancy_samoa` + `derived__episode_pregnancy_samoa_contacts` |
-| **Type** | dbt model (Samoa Ministry of Health definition, variant `samoa_moh_2026`) |
+| **Type** | dbt model (Samoa Ministry of Health definition) |
 | **Layer** | `derived` (OMOP-lite episode) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
 | **Status** | `implemented` |
@@ -41,7 +41,7 @@ BL-006, BL-010) are Samoa's.
 
 | Reference | Why |
 |---|---|
-| `int__who_dak_anc_contacts` | The Samoa variant (`samoa_moh_2026`) contacts and the DAK elements recorded on each ([spec](metric__who_dak_anc_indicators.md)) |
+| `int__who_dak_anc_contacts` | The antenatal care contacts and the DAK elements recorded on each ([spec](metric__who_dak_anc_indicators.md)) |
 | `int__who_dak_anc_submissions` | End-of-pregnancy elements, on any day |
 | `patient_additional_data` | A child's mother |
 | `patients` | A child's date of birth, the woman's date of death |
@@ -53,7 +53,7 @@ BL-006, BL-010) are Samoa's.
 | Column | Type | Description |
 |---|---|---|
 | `metric_id` | text | Always `episode_pregnancy_samoa` |
-| `variant_id` | text | Always `samoa_moh_2026` |
+| `variant_id` | text | Always NULL (BL-011) |
 | `episode_id` | varchar | The woman and the day of her first contact |
 | `subject_id` | varchar | The woman |
 | `episode_concept_id` | integer | NULL — deferred to the future `vocab__` layer |
@@ -72,7 +72,7 @@ BL-006, BL-010) are Samoa's.
 | Column | Type | Description |
 |---|---|---|
 | `episode_id` | varchar | The pregnancy |
-| `variant_id` | text | Always `samoa_moh_2026` |
+| `variant_id` | text | Always NULL (BL-011) |
 | `subject_id` | varchar | The woman |
 | `contact_day` | date | The day of the contact |
 | `facility_id` | varchar | Facility of the contact |
@@ -104,15 +104,15 @@ BL-006, BL-010) are Samoa's.
   weeks from the pregnancy's LMP, or from 280 days before its EDD, kept only between 0 and 45 weeks.
 - **BL-010:** A contact in the 42 days after an end-of-pregnancy form's outcome or a child's birth
   is postnatal, and neither starts nor joins a pregnancy.
-- **BL-011:** The pregnancy is assembled from Samoa variant (`samoa_moh_2026`) contacts only, and
-  its rows carry `variant_id` `samoa_moh_2026`.
+- **BL-011:** The pregnancy is assembled from every contact in `int__who_dak_anc_contacts`, and its
+  rows carry a NULL `variant_id`, as a definition of its own rather than a variant of another.
 
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
 | AC-001 | `episode_id` is unique and not null | Grain | `unique`, `not_null` |
-| AC-002 | `metric_id` is always `episode_pregnancy_samoa` and in `metric_definitions`, and `variant_id` is always `samoa_moh_2026` | BL-001, BL-011 | `accepted_values`, `relationships` |
+| AC-002 | `metric_id` is always `episode_pregnancy_samoa` and in `metric_definitions`, and `variant_id` is always NULL | BL-001, BL-011 | `accepted_values`, `relationships`, `dbt_utils.expression_is_true` |
 | AC-003 | `(subject_id, contact_day)` is unique in the contacts model | BL-003 | `dbt_utils.unique_combination_of_columns` |
 | AC-004 | A 140-day gap continues a pregnancy and a 141-day gap starts one; an outcome event between contacts starts one; elements carry from the latest contact recording them; contacts are numbered within their pregnancy; gestational age comes from the pregnancy's LMP or EDD on a contact with none of its own | BL-002–BL-004, BL-008, BL-009 | unit tests `test_derived__episode_pregnancy_samoa_assembly`, `test_derived__episode_pregnancy_samoa_contacts` |
 | AC-005 | An end form outranks a child's birth, which outranks death; an event before the first contact, more than 140 days after the last, or in the next pregnancy does not close it; with no event a pregnancy is lost to follow-up after a 140-day gap or once more than 140 days have passed, and open otherwise | BL-005–BL-007 | unit test `test_derived__episode_pregnancy_samoa_closure` |

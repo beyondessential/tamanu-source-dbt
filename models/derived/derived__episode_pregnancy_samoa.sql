@@ -1,6 +1,6 @@
 -- derived__episode_pregnancy_samoa -- one row per pregnancy of a woman in antenatal care, under
--- Samoa Ministry of Health's definition (samoa_moh_2026): assembled from her samoa_moh_2026 contacts
--- and closed by its outcome.
+-- Samoa Ministry of Health's definition: assembled from her antenatal care contacts and closed by
+-- its outcome.
 -- See specs/dbt-model/derived__episode_pregnancy_samoa.md for the BL clauses this model implements.
 --
 -- Sources only from bases/ and int__ (D10).
@@ -19,10 +19,9 @@
     'tt_dose_5_date',
 ] %}
 
--- BL-011: the samoa_moh_2026 contacts
+-- BL-011: the antenatal care contacts
 with contacts as (
     select * from {{ ref('int__who_dak_anc_contacts') }}
-    where variant_id = 'samoa_moh_2026'
 ),
 
 submissions as (
@@ -217,8 +216,8 @@ closed as (
 
 select
     'episode_pregnancy_samoa'::text as metric_id,
-    -- BL-011: Samoa Ministry of Health's definition
-    'samoa_moh_2026'::text as variant_id,
+    -- BL-011: a definition of its own, not a variant of one
+    null::text as variant_id,
     (b.patient_id || ';' || to_char(b.episode_start_date, 'YYYY-MM-DD'))::varchar as episode_id,
     b.patient_id::varchar as subject_id,
     -- the standard OMOP concept is deferred to the future vocab__ layer

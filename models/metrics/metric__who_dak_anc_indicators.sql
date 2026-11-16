@@ -1,8 +1,8 @@
 -- metric__who_dak_anc_indicators -- D5 metric view for the WHO SMART guidelines antenatal care
 -- DAK indicators registered in documentations/metrics/who_dak_anc.yml.
--- Spec: specs/dbt-model/metric__who_dak_anc_indicators.md (BL-001..BL-020).
+-- Spec: specs/dbt-model/metric__who_dak_anc_indicators.md (BL-001..BL-013).
 --
--- One row per antenatal care contact and definition. The contacts and their DAK data elements
+-- One row per antenatal care contact. The contacts and their DAK data elements
 -- come from int__who_dak_anc_contacts, which reads them from int__who_dak_anc_submissions.
 --
 -- Sources only from clinical__ and int__ (D10).
@@ -16,13 +16,9 @@ person as (
 )
 
 select
-    -- BL-001: the DAK definition is who_dak_anc_contact. BL-020: the samoa_moh_2026 variant is
-    -- who_dak_anc_contact_samoa
-    case
-        when c.variant_id = 'samoa_moh_2026' then 'who_dak_anc_contact_samoa'
-        else 'who_dak_anc_contact'
-    end::text as metric_id,
-    c.variant_id,
+    'who_dak_anc_contact'::text as metric_id,
+    -- BL-001: the standard definition, with no deployment variant
+    null::text as variant_id,
     (c.patient_id || ';' || to_char(c.contact_day, 'YYYY-MM-DD'))::varchar as subject_id,
     c.contact_day as period_start,
     c.contact_day as period_end,

@@ -1,12 +1,10 @@
 {% docs metric__who_dak_anc_indicators %}
 D5 metric view for the WHO SMART guidelines antenatal care Digital Adaptation Kit indicators
-registered in documentations/metrics/who_dak_anc.yml. One row per antenatal care contact and
-definition.
+registered in documentations/metrics/who_dak_anc.yml. One row per antenatal care contact.
 
 | Metric | Measures |
 |---|---|
 | `who_dak_anc_contact` | Antenatal care contacts — the contacts the DAK's `ANC.IND.4` and `ANC.IND.5` count per pregnancy |
-| `who_dak_anc_contact_samoa` | Antenatal care contacts under Samoa Ministry of Health's definition (variant `samoa_moh_2026`) |
 
 **Two routes in, one definition.** A deployment either captures antenatal care on the
 `who-dak-anc` program forms, whose questions are the DAK's own data elements, or keeps its own
@@ -19,11 +17,11 @@ Registration form, or a local form the deployment marks as one — and dated by 
 same woman on the same day are one contact. The contact number and gestational age come from any
 antenatal form filled in for her that day, and are blank when there is none.
 
-**Samoa's definition is a separate metric.** Samoa Ministry of Health records antenatal care on
-its own forms and at antenatal clinic visits, so its definition also counts a visit to a named
-antenatal clinic as a contact, works out gestational age and gravida where they are not recorded,
-and leaves out patients younger than 10. Its rows are `who_dak_anc_contact_samoa`, so the DAK
-definition's rows stay as the DAK states them.
+**Clinic visits can be contacts too.** A deployment that records antenatal care at clinic visits
+names its antenatal clinic location groups, and a visit to one is then a contact as well.
+
+**Recording errors are left out.** A patient recorded as male, or younger than 10 on the day, is
+not counted.
 
 **Counts only.** Antenatal coverage needs an expected-pregnancies estimate Tamanu does not hold,
 so the consumer forms it against its own estimate.
@@ -33,14 +31,11 @@ so compare them with care.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__metric_id %}
-The registered indicator this row counts towards: `who_dak_anc_contact` for the WHO DAK definition,
-or `who_dak_anc_contact_samoa` for Samoa Ministry of Health's.
+The registered indicator this row counts towards. Always `who_dak_anc_contact`.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__variant_id %}
-Deployment variant of the definition. NULL: the WHO DAK definition. `samoa_moh_2026`: Samoa Ministry
-of Health's, which also counts visits to antenatal clinics, works out gestational age and gravida
-where they are not recorded, and leaves out patients younger than 10.
+Deployment variant of the definition. NULL: this is the standard definition.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__subject_id %}
@@ -86,9 +81,9 @@ The ANC contact number recorded for this contact, as entered. NULL where none wa
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__gestational_age_weeks %}
-Gestational age in weeks recorded on the day of the contact, as entered. Under Samoa Ministry of
-Health's definition, where none was recorded, the whole weeks since the last menstrual period, or
-worked out from the expected date of delivery, and blank outside 0 to 45 weeks.
+Gestational age in weeks recorded on the day of the contact, as entered. Where none was recorded
+and the deployment has turned it on, the whole weeks since the last menstrual period, or worked out
+from the expected date of delivery, and blank outside 0 to 45 weeks.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__lmp_date %}
@@ -101,8 +96,8 @@ The expected date of delivery, as recorded on the day of the contact.
 
 {% docs metric__who_dak_anc_indicators__gravida %}
 How many times the woman has been pregnant, including this pregnancy, as recorded on the day of
-the contact. Under Samoa Ministry of Health's definition, where none was recorded, her parity plus
-her miscarriages and abortions plus this pregnancy.
+the contact. Where none was recorded and the deployment has turned it on, her parity plus her
+miscarriages and abortions plus this pregnancy.
 {% enddocs %}
 
 {% docs metric__who_dak_anc_indicators__miscarriages_abortions %}

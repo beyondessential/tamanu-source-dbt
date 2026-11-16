@@ -8,7 +8,6 @@ unit_tests:
       ends at its last contact, lost to follow-up, and carries its LMP from its first contact and
       its gravida from the latest contact recording one. w2's child is born between her two
       contacts, 61 days apart, which closes the first pregnancy as a live birth and starts a second.
-      AC-002 (BL-011): w3's contact is a DAK definition contact only, so she has no Samoa pregnancy.
     overrides:
       vars:
         test_current_date: '2026-12-31'
@@ -26,15 +25,11 @@ unit_tests:
             ('w2', '2026-05-01'::date, 'fac_1', null, null)
           )
           select
-            c.*, 'samoa_moh_2026'::text as variant_id,
+            c.*,
             null::date as edd_date, null::integer as miscarriages_abortions, null::integer as parity,
             null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
             null::date as tt_dose_4_date, null::date as tt_dose_5_date
           from c
-          union all
-          select
-            'w3', '2026-06-01'::date, 'fac_1', null, null, null::text,
-            null, null, null, null, null, null, null, null
       - input: ref('int__who_dak_anc_submissions')
         format: sql
         rows: |
@@ -96,7 +91,7 @@ unit_tests:
             ('w10', '2026-06-01'::date)
           )
           select
-            c.*, 'samoa_moh_2026'::text as variant_id, 'fac_1'::text as facility_id,
+            c.*, 'fac_1'::text as facility_id,
             null::date as lmp_date, null::date as edd_date, null::integer as gravida,
             null::integer as miscarriages_abortions, null::integer as parity,
             null::date as tt_dose_1_date, null::date as tt_dose_2_date, null::date as tt_dose_3_date,
@@ -169,7 +164,7 @@ unit_tests:
             ('w1', '2026-06-21'::date, 'fac_1', null),
             ('w1', '2026-11-09'::date, 'fac_1', null)
           )
-          select *, 'samoa_moh_2026'::text as variant_id from c
+          select * from c
       - input: ref('derived__episode_pregnancy_samoa')
         format: sql
         rows: |

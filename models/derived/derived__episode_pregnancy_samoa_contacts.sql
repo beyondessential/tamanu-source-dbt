@@ -1,13 +1,12 @@
--- derived__episode_pregnancy_samoa_contacts -- one row per samoa_moh_2026 antenatal care contact,
--- with the pregnancy episode it belongs to and its place in it.
+-- derived__episode_pregnancy_samoa_contacts -- one row per antenatal care contact in a pregnancy
+-- episode, with its place in it.
 -- See specs/dbt-model/derived__episode_pregnancy_samoa.md for the BL clauses this model implements.
 --
 -- Sources only from int__ and derived__ (D10).
 
--- BL-011: the samoa_moh_2026 contacts
+-- BL-011: the antenatal care contacts
 with contacts as (
     select * from {{ ref('int__who_dak_anc_contacts') }}
-    where variant_id = 'samoa_moh_2026'
 ),
 
 episodes as (
@@ -32,7 +31,8 @@ assigned as (
 
 select
     a.episode_id,
-    'samoa_moh_2026'::text as variant_id,
+    -- BL-011: a definition of its own, not a variant of one
+    null::text as variant_id,
     a.patient_id::varchar as subject_id,
     a.contact_day,
     a.facility_id,
