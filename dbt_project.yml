@@ -36,6 +36,13 @@ vars:
   # nothing reads only the who-dak-anc forms; a deployment overrides the whole map in its own
   # dbt_project.yml.
   who_dak_anc_local_surveys: {}
+  # Location group name patterns (any letter case, % as a wildcard) whose encounters are also
+  # WHO DAK ANC contacts, for a deployment that records antenatal care at clinic visits. Empty
+  # here, so only contact forms are contacts.
+  who_dak_anc_contact_location_groups: []
+  # Whether a contact's gestational age and gravida are worked out from its LMP, EDD, parity and
+  # miscarriages/abortions where they are not recorded. Off here, so they read as recorded.
+  who_dak_anc_calculate_gestational_age_and_gravida: false
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
     - default
@@ -111,6 +118,12 @@ models:
       +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
       +tags:
         - clinical
+    derived:
+      +docs:
+        show: true
+      +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
+      +tags:
+        - derived
     metrics:
       +docs:
         show: true
