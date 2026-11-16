@@ -14,7 +14,7 @@
 | **Linear issue** | MAUI-6906, MAUI-7122 (pregnancy flags) |
 
 Canonical definition for `death`: one row per deceased patient, with the population, death
-record and encounter died in of `ds__deaths`, and a facility that falls back to the encounter.
+record, encounter died in and facility of `ds__deaths`. The facility falls back to the encounter.
 
 ## Purpose
 
@@ -122,7 +122,7 @@ Registered in `documentations/metrics/mortality.yml` as `death`, `kind: metric`,
 
 | Artefact | Relationship |
 |---|---|
-| `ds__deaths` | The report-layer dataset behind the deceased patients line list; this metric shares its population, death record and encounter died in, and adds the encounter's facility where the record names none |
+| `ds__deaths` | The report-layer dataset behind the deceased patients line list; this metric shares its population, death record, encounter died in and facility |
 
 ## Change log
 
@@ -131,3 +131,4 @@ Registered in `documentations/metrics/mortality.yml` as `death`, `kind: metric`,
 | 2026-10-01 | Maui team | Initial draft (MAUI-6906). Facility falls back to the encounter died in, agreed with Juliana since most FSM death records carry none; not where the record says the death was outside a facility, because recording a death closes every open encounter at that time, so a stale encounter can span a death at home |
 | 2026-11-11 | Maui team | BL-008: `age_days`, the age in whole days at death, added as a measure so a consumer can band early (0–6 days) and late (7–28 days) neonatal deaths (MAUI-7130). New AC-007. |
 | 2026-11-13 | Maui team | BL-009: `was_pregnant` and `pregnancy_contributed`, the death record's yes/no answers as booleans, added as disaggregations for Naoero's maternal mortality cards (MAUI-7122). New AC-008. |
+| 2026-11-17 | Maui team | `ds__deaths` now resolves the facility as BL-004 does, so the deceased patients line list and this metric place a death at the same facility (MAUI-7187). |
