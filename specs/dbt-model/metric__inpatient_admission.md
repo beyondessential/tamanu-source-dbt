@@ -8,7 +8,7 @@
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else (BL-008) |
-| **Status** | `approved` (BL-001–BL-027 implemented and reviewed; registry status `approved`) |
+| **Status** | `approved` (BL-001–BL-029 implemented and reviewed; registry status `approved`) |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear** | MAUI-7069 (separations and AIHW length of stay) |
@@ -106,8 +106,10 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | `clinician_designation` | text | That clinician's designations, comma-separated (BL-018). Never NULL |
 | `patient_days` | integer | AIHW patient days (BL-021). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 | `admission_location_group_name` | text | The location group (ward/area) of the admission segment's location, resolved to a name (BL-026). Always populated (AC-026) |
+| `admission_location_group_id` | text | The Tamanu id of that location group (BL-028). NULL where the location is in no group; not coalesced (AC-028) |
 | `is_same_day` | boolean | Admitted and separated on the same date (BL-022). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
 | `discharge_location_group_name` | text | The location group (ward/area) the patient was discharged from, resolved to a name (BL-027). Populated on every `inpatient_separation` row; NULL on `inpatient_admission` |
+| `discharge_location_group_id` | text | The Tamanu id of that location group (BL-029). NULL on every `inpatient_admission` row and where the location is in no group; not coalesced (AC-029) |
 
 ## Business logic
 
@@ -260,6 +262,17 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
   discharge. Left joined and coalesced to `'Not recorded'` on a separation row, never NULL there
   (AC-027). This carries the discharging ward only; it does not count transfers between wards
   (OQ-001) or occupancy (OQ-002) (MAUI-7122).
+- **BL-028 (admission location group id):** `admission_location_group_id` is
+  `locations.location_group_id` of the same admission segment's location BL-026 resolves, carried
+  as the raw Tamanu id so a consumer can key a ward on an identifier that survives a rename of
+  the group (MAUI-7177). Same grain as `admission_location_group_name`: on both metric_ids. No
+  extra join. Unlike the name it is **not** coalesced -- NULL where the location is in no group,
+  where the name reads `'Not recorded'` (AC-028).
+- **BL-029 (discharge location group id):** `discharge_location_group_id` is
+  `locations.location_group_id` of the location of the encounter's latest segment, as BL-027
+  selects it, carried as the raw id (MAUI-7177). Emitted on `inpatient_separation` rows only and
+  NULL on `inpatient_admission`, the same split as BL-027. Not coalesced -- NULL on a separation
+  row whose location is in no group, where the name reads `'Not recorded'` (AC-029).
  from AIHW
 
 | ID | AIHW rule | Here |
@@ -299,19 +312,21 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 | AC-025 | `is_readmission_within_14_days` is `not_null`; an admission 20 days after the previous discharge is a 30-day readmission and not a 14-day one | BL-025 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
 | AC-026 | `admission_location_group_name` is `not_null`; it is the admission segment's location's group, not an earlier ED segment's, and `'Not recorded'` for a location in no group | BL-026 | `not_null` + unit test `ac_009_int__inpatient_admission_derivations` |
 | AC-027 | `discharge_location_group_name` is populated on every `inpatient_separation` row and NULL on every `inpatient_admission` row; it is the latest segment's location's group, not the admission segment's, `'Not recorded'` for a location in no group, and NULL for an open encounter | BL-027 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) + unit tests `ac_009_int__inpatient_admission_derivations` and `ac_016_metric__inpatient_admission_projection` |
+| AC-028 | `admission_location_group_id` is NULL exactly when `admission_location_group_name` is `'Not recorded'`; otherwise it is the id of the admission segment's location's group | BL-028 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) + unit test `ac_009_int__inpatient_admission_derivations` |
+| AC-029 | `discharge_location_group_id` is NULL on every `inpatient_admission` row; on an `inpatient_separation` row it is NULL exactly when `discharge_location_group_name` is `'Not recorded'`, else the id of the latest segment's location's group | BL-029 | singular test `data_test__metric__inpatient_admission` (`failed_ac`) + unit tests `ac_009_int__inpatient_admission_derivations` and `ac_016_metric__inpatient_admission_projection` |
 
 ## Registry entry
 
 Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: count`,
 `subject_grain: visit`, `status: approved`, `spec_path` pointing here, with
-`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,is_readmission_within_14_days,clinician,clinician_designation,admission_location_group_name`:
+`disaggregations: facility_id,sex,admission_ward_id,admission_source,is_admitted_via_emergency,principal_diagnosis__icd10_chapter,discharge_disposition,is_readmission_within_30_days,is_readmission_within_14_days,clinician,clinician_designation,admission_location_group_name,admission_location_group_id`:
 
 - `inpatient_admission` — as registered.
 - `inpatient_separation` — `definition_source: AIHW`, `definition_source_code: '270045'`, its
   numerator described as separations counted on the separation date, and its description naming
   average length of stay as `sum(patient_days)` over separations (BL-023), linking the AIHW
-  length-of-stay page. `is_same_day` and `discharge_location_group_name` (BL-027) are added to
-  its disaggregations.
+  length-of-stay page. `is_same_day`, `discharge_location_group_name` (BL-027) and `discharge_location_group_id`
+  (BL-029) are added to its disaggregations.
 
 ## Dependencies
 
@@ -381,3 +396,4 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | 2026-11-11 | BL-026: `admission_location_group_name`, the admission location's ward/area, added as a disaggregation on both metric_ids for Naoero's inpatient cards (MAUI-7131). |
 | 2026-11-13 | BL-027: `discharge_location_group_name`, the ward/area the patient was discharged from, added on `inpatient_separation` rows (NULL on `inpatient_admission`) so Naoero's inpatient ward cards count discharges against the ward the patient left (MAUI-7122). |
 | 2026-11-13 | Related: ward and department transfers within an admission are `metric__inpatient_transfer` (MAUI-7122). |
+| 2026-11-16 | BL-028/BL-029: `admission_location_group_id` and `discharge_location_group_id`, the raw Tamanu ids behind the BL-026/BL-027 names (NULL, not `'Not recorded'`, where in no group), so Naoero's maternity ward card can key on id instead of a renameable name (MAUI-7177). |
