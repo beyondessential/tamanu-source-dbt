@@ -45,6 +45,7 @@ metrics:
   - clinician
   - clinician_designation
   - admission_location_group_name
+  - admission_location_group_id
   variant_of: null
   owner: bes-maui
   status: approved
@@ -94,7 +95,9 @@ metrics:
   - clinician_designation
   - is_same_day
   - admission_location_group_name
+  - admission_location_group_id
   - discharge_location_group_name
+  - discharge_location_group_id
   variant_of: null
   owner: bes-maui
   status: approved
