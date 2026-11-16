@@ -20,9 +20,6 @@ antenatal form filled in for her that day, and are blank when there is none.
 **Clinic visits can be contacts too.** A deployment that records antenatal care at clinic visits
 names its antenatal clinic location groups, and a visit to one is then a contact as well.
 
-**Recording errors are left out.** A patient recorded as male, or younger than 10 on the day, is
-not counted.
-
 **Counts only.** Antenatal coverage needs an expected-pregnancies estimate Tamanu does not hold,
 so the consumer forms it against its own estimate.
 

@@ -6,7 +6,7 @@
 -- who_dak_anc_contact_location_groups. Gestational age and gravida are worked out where not
 -- recorded when who_dak_anc_calculate_gestational_age_and_gravida is on.
 --
--- Sources only from bases/, clinical__ and int__who_dak_anc_submissions (D10).
+-- Sources only from bases/ and int__who_dak_anc_submissions (D10).
 
 -- the DAK elements attached to a contact, read from int__who_dak_anc_submissions
 {%- set contact_elements = [
@@ -67,10 +67,6 @@ location_groups as (
 
 encounter_history as (
     select * from {{ ref('encounter_history') }}
-),
-
-person as (
-    select * from {{ ref('clinical__person') }}
 ),
 
 -- BL-014: locations in a location group who_dak_anc_contact_location_groups names
@@ -186,8 +182,3 @@ select
     a.tt_dose_4_date,
     a.tt_dose_5_date
 from attached a
-left join person p on p.person_id = a.patient_id
--- BL-019: a patient recorded as male, or younger than 10 on the day, is not a contact. One with no
--- recorded sex or date of birth is kept
-where lower(p.gender_source_value) is distinct from 'male'
-    and coalesce({{ age_years('a.contact_day', 'p') }}, 10) >= 10

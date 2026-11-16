@@ -5,9 +5,8 @@ models:
     description: >
       One row per antenatal care contact, a woman seen for antenatal care on a day, with the DAK
       data elements recorded for her that day. A contact is a contact form, or an encounter at a
-      location group named in who_dak_anc_contact_location_groups. A patient recorded as male or
-      younger than 10 is left out. Shared by metric__who_dak_anc_indicators and the Samoa pregnancy
-      episode.
+      location group named in who_dak_anc_contact_location_groups. Shared by
+      metric__who_dak_anc_indicators and the Samoa pregnancy episode.
     config:
       tags:
         - clinical

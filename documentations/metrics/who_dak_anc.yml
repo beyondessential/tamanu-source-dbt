@@ -25,8 +25,7 @@ metrics:
   numerator_description: >-
     COUNT of (woman, day) pairs with at least one antenatal contact form, dated by the form's
     Contact date (ANC.A7.DE4) or, where that is blank, by its submission, or at least one visit to
-    a named antenatal clinic location group, dated by its start. A patient recorded as male or
-    younger than 10 on the day is not counted.
+    a named antenatal clinic location group, dated by its start.
   denominator_description: null
   data_source: tamanu
   definition_source: WHO_SMART_ANC

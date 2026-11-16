@@ -56,7 +56,7 @@ the contact day. `subject_grain: visit` in the registry.
 The metric reads `int__who_dak_anc_contacts` and `clinical__person`. The contacts and their
 elements are built in two intermediate models it shares with `derived__episode_pregnancy_samoa`:
 `int__who_dak_anc_submissions` reads the forms (BL-002–BL-004, BL-006, BL-009), and
-`int__who_dak_anc_contacts` assembles the contacts (BL-005, BL-007, BL-008, BL-010, BL-014–BL-019).
+`int__who_dak_anc_contacts` assembles the contacts (BL-005, BL-007, BL-008, BL-010, BL-014–BL-018).
 Between them they read:
 
 | Reference | Why |
@@ -68,7 +68,7 @@ Between them they read:
 | `encounter_history` | Every location a contact encounter occupied |
 | `locations` | The location's facility and location group |
 | `location_groups` | Location group names, matched against the contact location groups |
-| `clinical__person` | Date of birth, for age at contact, and sex |
+| `clinical__person` | Date of birth, for age at contact |
 | `metric_definitions` | Registry FK target |
 
 ### Configuration
@@ -155,9 +155,6 @@ out.
 - **BL-016:** A contact with no native or mapped submission that day is still a contact, with no
   element values.
 
-- **BL-019:** A patient recorded as male, or younger than 10 on the day, is not a contact, and one
-  with no recorded sex or date of birth is.
-
 ### Deployment configuration
 
 - **BL-014:** An encounter is a contact source when its location, or any location in its history,
@@ -186,7 +183,6 @@ out.
 | AC-009 | A mapped contact survey is a contact form on its mapped contact date; a mapped survey without `is_contact` is not, a native non-contact form alone yields no contact, and an unmapped survey is not read | BL-003, BL-004 | unit tests `test_int__who_dak_anc_submissions_local_mapping`, `test_int__who_dak_anc_contacts_elements` |
 | AC-010 | With location groups configured, an encounter at a matching location group is a contact, whether the group is its current location or only in its history, with elements from a form that day and none without one; two encounters and a form on one day are one contact at the earliest source's facility; a form-only encounter and an encounter at a non-matching group yield none; with none configured, no encounter is a contact | BL-014–BL-016 | unit tests `test_int__who_dak_anc_contacts_configured`, `test_int__who_dak_anc_contacts_unconfigured` |
 | AC-011 | A whole number stored as `2.0` reads as 2. With calculation off, gestational age and gravida are as recorded; with it on, gestational age is the recorded value, else from the LMP, else from the EDD, and blank outside 0 to 45 weeks, and gravida is the recorded value, else parity + miscarriages/abortions + 1, and blank without both | BL-009, BL-017, BL-018 | unit tests `test_int__who_dak_anc_submissions_local_mapping`, `test_int__who_dak_anc_contacts_elements`, `test_int__who_dak_anc_contacts_configured` |
-| AC-012 | A patient aged 9 on the contact day, or recorded as male, is not a contact, while one aged 10, and one with no date of birth or sex, are | BL-019 | unit test `test_int__who_dak_anc_contacts_elements` |
 
 ## Consumers
 
@@ -215,5 +211,5 @@ out.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-11-17 | Maui team | Reads the profile elements LMP, EDD, gravida, miscarriages/abortions and parity, and the tetanus toxoid dose dates. A deployment can count encounters at named antenatal clinic location groups as contacts, and work out gestational age and gravida where not recorded. Patients recorded as male or younger than 10 are left out. The forms and contacts are built in `int__who_dak_anc_submissions` and `int__who_dak_anc_contacts`, shared with `derived__episode_pregnancy_samoa` (MAUI-7179). |
+| 2026-11-17 | Maui team | Reads the profile elements LMP, EDD, gravida, miscarriages/abortions and parity, and the tetanus toxoid dose dates. A deployment can count encounters at named antenatal clinic location groups as contacts, and work out gestational age and gravida where not recorded. The forms and contacts are built in `int__who_dak_anc_submissions` and `int__who_dak_anc_contacts`, shared with `derived__episode_pregnancy_samoa` (MAUI-7179). |
 | 2026-10-21 | Maui team | Initial spec, approved. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |

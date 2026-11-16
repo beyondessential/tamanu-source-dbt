@@ -2,14 +2,12 @@ unit_tests:
   - name: test_int__who_dak_anc_contacts_elements
     model: int__who_dak_anc_contacts
     description: >
-      AC-006, AC-007, AC-009, AC-011, AC-012 (specs/dbt-model/metric__who_dak_anc_indicators.md).
+      AC-006, AC-007, AC-009, AC-011 (specs/dbt-model/metric__who_dak_anc_indicators.md).
       Nothing configured. pat_1's two contact forms on one day are one contact at the earlier
       form's facility, with the later submitted form's contact number, and gestational age from a
       non-contact form that day, the submitted one winning over an unsubmitted one. Gestational age
       and gravida are as recorded and not worked out: pat_2 and pat_3 record none, and pat_4's
-      recorded values are kept. pat_6 has only a non-contact form, so no contact. pat_7 is a day
-      short of 10 and pat_9 is recorded as male, so neither is a contact, while pat_8 turns 10 that
-      day and is one. pat_2 to pat_4 have no person record, and are contacts.
+      recorded values are kept. pat_6 has only a non-contact form, so no contact.
     given:
       - input: ref('int__who_dak_anc_submissions')
         format: sql
@@ -32,13 +30,7 @@ unit_tests:
             ('s_7', 'pat_4', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
               null, 20, '2025-01-01'::date, null, 4, 0, 1),
             ('s_9', 'pat_6', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, false, '2026-05-10'::date,
-              null, 18, null, null, null, null, null),
-            ('s_10', 'pat_7', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
-              null, null, null, null, null, null, null),
-            ('s_11', 'pat_8', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
-              null, null, null, null, null, null, null),
-            ('s_12', 'pat_9', 'fac_1', '2026-05-10 09:00'::timestamp, '2026-05-10 09:10'::timestamp, true, '2026-05-10'::date,
-              null, null, null, null, null, null, null)
+              null, 18, null, null, null, null, null)
           )
           select
             s.*,
@@ -67,23 +59,12 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name
           where false
-      - input: ref('clinical__person')
-        format: sql
-        rows: |
-          select
-            'pat_7'::text as person_id, 'Female'::text as gender_source_value,
-            2016::int as year_of_birth, 5::int as month_of_birth, 11::int as day_of_birth
-          union all
-          select 'pat_8', 'Female', 2016, 5, 10
-          union all
-          select 'pat_9', 'Male', 1990, 1, 1
     expect:
       rows:
         - {patient_id: pat_1, contact_day: '2026-03-04', facility_id: fac_1, contact_number: 2, gestational_age_weeks: 24.5, gravida: null}
         - {patient_id: pat_2, contact_day: '2026-03-01', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
         - {patient_id: pat_3, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
         - {patient_id: pat_4, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: 20, gravida: 4}
-        - {patient_id: pat_8, contact_day: '2026-05-10', facility_id: fac_1, contact_number: null, gestational_age_weeks: null, gravida: null}
 
   - name: test_int__who_dak_anc_contacts_configured
     model: int__who_dak_anc_contacts
@@ -93,8 +74,7 @@ unit_tests:
       group join her contact form that day as one contact, at the form's facility, the earliest
       source. pat_2's encounter is now at a gynae location group but passed through the antenatal
       one, so it is a contact at the antenatal group's facility with no elements. pat_2's form-only
-      encounter and pat_4's encounter at the gynae group alone yield none, and pat_3's is left out
-      as she is recorded as male. pat_5's gestational age (12 weeks from her LMP) and gravida
+      encounter and pat_4's encounter at the gynae group alone yield none. pat_5's gestational age (12 weeks from her LMP) and gravida
       (parity 1 + 1 miscarriage/abortion + 1) are worked out.
     overrides:
       vars:
@@ -143,8 +123,6 @@ unit_tests:
           union all
           select 'enc_5', 'pat_2', 'loc_anc', '2026-05-08 10:00:00'::timestamp, 'surveyResponse'
           union all
-          select 'enc_6', 'pat_3', 'loc_anc', '2026-05-07 10:00:00'::timestamp, 'clinic'
-          union all
           select 'enc_7', 'pat_4', 'loc_gyn', '2026-05-07 10:00:00'::timestamp, 'clinic'
       - input: ref('encounter_history')
         format: sql
@@ -154,20 +132,6 @@ unit_tests:
           select 'enc_4', 'loc_anc'
           union all
           select 'enc_4', 'loc_gyn'
-      - input: ref('clinical__person')
-        format: sql
-        rows: |
-          select
-            'pat_1'::text as person_id, 'Female'::text as gender_source_value,
-            1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
-          union all
-          select 'pat_2', 'Female', 1990, 1, 1
-          union all
-          select 'pat_3', 'Male', 1990, 1, 1
-          union all
-          select 'pat_4', 'Female', 1990, 1, 1
-          union all
-          select 'pat_5', 'Female', 1990, 1, 1
     expect:
       rows:
         - {patient_id: pat_1, contact_day: '2026-05-06', facility_id: fac_2, contact_number: 1, gestational_age_weeks: null, gravida: null}
@@ -210,11 +174,5 @@ unit_tests:
         format: sql
         rows: |
           select 'enc_1'::text as encounter_id, 'loc_anc'::text as location_id
-      - input: ref('clinical__person')
-        format: sql
-        rows: |
-          select
-            'pat_1'::text as person_id, 'Female'::text as gender_source_value,
-            1990::int as year_of_birth, 1::int as month_of_birth, 1::int as day_of_birth
     expect:
       rows: []
