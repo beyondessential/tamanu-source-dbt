@@ -4,8 +4,8 @@ models:
   - name: int__who_dak_anc_submissions
     description: >
       One row per WHO DAK ANC form submission, native or mapped through who_dak_anc_local_surveys,
-      with the DAK data elements it carries cast to Annex A's types. Read by
-      int__who_dak_anc_contacts.
+      with the DAK data elements it carries cast to Annex A's types. Shared by
+      int__who_dak_anc_contacts and derived__episode_pregnancy_samoa.
     config:
       tags:
         - clinical
