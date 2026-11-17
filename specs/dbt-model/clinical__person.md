@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-7184](https://linear.app/bes/issue/MAUI-7184) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-11-17 |
+| **Last updated** | 2026-11-18 |
 
 The OMOP-lite `PERSON` domain — the canonical patient-demographics surface every
 other `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to. First
@@ -62,10 +62,8 @@ violation of that invariant.
 | `day_of_birth` | integer | From `date_of_birth` |
 | `birth_datetime` | timestamp | `date_of_birth` at `birth_time`. NULL when no time of birth was recorded |
 | `ethnicity_source_value` | text | `patient_additional_data.ethnicity_id` (BL-004) |
-| `division_source_value` | text | `patient_additional_data.division_id`: the division recorded on the patient's registration details (BL-009) |
-| `subdivision_source_value` | text | `patient_additional_data.subdivision_id` (BL-009) |
 | `medical_area_source_value` | text | `patient_additional_data.medical_area_id` (BL-009) |
-| `location_id` | uuid | `patients.village_id`. FK to `ref__location` (the patient's village). OMOP `PERSON.location_id` |
+| `location_id` | text | The key of the location the patient is grouped under, from `int__patient_address`: by default their village id. FK to `ref__location`. OMOP `PERSON.location_id` (BL-007) |
 | `ethnicity_concept_id` | integer | Always `0`: no standard OMOP concept exists for a deployment's ethnicity list (BL-008) |
 | `ethnicity_source_concept_id` | integer | The deployment's custom concept from `map__omop_ethnicity`. `0` when no ethnicity is recorded or it is unmapped (BL-008) |
 
@@ -96,15 +94,13 @@ violation of that invariant.
   (`reporting_*` production targets) and emitted as NULL on the replica. This keeps the
   canonical clinical layer replica-safe while still exposing the MRN where PII is
   permitted (D10, production-promotion).
-- **BL-007:** `location_id` is the patient's `village_id`, exposed as an OMOP
-  `PERSON.location_id` FK into `ref__location`. The local value is unchanged — the FK
-  simply makes it a typed, validated join target rather than a raw reference.
+- **BL-007:** `location_id` is the patient's `location_id` in `int__patient_address`, a key into
+  [`ref__location`](ref__location.md).
 - **BL-008:** `ethnicity_source_concept_id` is the `map__omop_ethnicity` concept whose
   `local_code` equals `ethnicity_source_value`, and `0` where no ethnicity is recorded or no
   map row matches. `ethnicity_concept_id` is `0` on every row.
-- **BL-009:** `division_source_value`, `subdivision_source_value` and `medical_area_source_value`
-  carry the `division_id`, `subdivision_id` and `medical_area_id` recorded on the patient's
-  additional data, as reference-data ids.
+- **BL-009:** `medical_area_source_value` carries the `medical_area_id` recorded on the
+  patient's additional data, as a reference-data id.
 
 ## Acceptance criteria
 
@@ -122,7 +118,7 @@ violation of that invariant.
 | AC-010 | `ethnicity_source_concept_id` is never NULL | BL-008 | dbt `not_null` |
 | AC-011 | Every non-zero `ethnicity_source_concept_id` exists in `map__omop_ethnicity.concept_id` | BL-008 | dbt `relationships` |
 | AC-012 | A mapped ethnicity carries its custom concept, and an unmapped or unrecorded ethnicity carries `0` | BL-005, BL-008 | dbt unit test |
-| AC-013 | A patient's recorded division, subdivision and medical area ids are carried as-is, and are NULL for a patient with no additional-data record | BL-005, BL-009 | dbt unit test |
+| AC-013 | A patient's recorded medical area id is carried as-is and their `location_id` is the one `int__patient_address` gives them, and both are NULL for a patient with no additional-data record and no location | BL-005, BL-007, BL-009 | dbt unit test |
 
 ## Registry entry
 
@@ -134,12 +130,13 @@ row (D5, dbt-conventions § Documentation).
 
 | Ref | Layer | Role |
 |---|---|---|
-| `patients` | `bases/` | Patient identity, sex, DOB, DOD, village |
-| `patient_additional_data` | `bases/` | Ethnicity, division, subdivision and medical area source values |
+| `patients` | `bases/` | Patient identity, sex, DOB, DOD |
+| `patient_additional_data` | `bases/` | Ethnicity and medical area source values |
+| `int__patient_address` | `intermediate/omop` | The patient's location (`location_id`) |
 | `patient_birth_data` | `bases/` | Time of birth for `birth_datetime` |
 | `map__omop_sex` | `maps/` | Tamanu sex → OMOP Gender concept (universal) |
 | `map__omop_ethnicity` | `maps/` | Tamanu ethnicity → the deployment's custom concept. Empty extension point unless the deployment supplies its own |
-| `ref__location` | `ref/` | OMOP LOCATION target for `location_id` (patient's village) |
+| `ref__location` | `ref/` | OMOP LOCATION target for `location_id` |
 
 ## Open questions
 
@@ -153,4 +150,4 @@ row (D5, dbt-conventions § Documentation).
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-14 | @julianam-w | Add `ethnicity_concept_id` and `ethnicity_source_concept_id` from the deployment's `map__omop_ethnicity` (MAUI-7184) |
-| 2026-11-17 | @julianam-w | Add `division_source_value`, `subdivision_source_value` and `medical_area_source_value` (MAUI-7190) |
+| 2026-11-18 | @julianam-w | Add `medical_area_source_value`, and read `location_id` from `int__patient_address`, which a deployment may replace (MAUI-7190) |

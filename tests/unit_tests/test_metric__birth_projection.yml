@@ -48,30 +48,30 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'b_1' as id, '2024-05-15'::date as date_of_birth
+          select 'b_1' as id, '2024-05-15'::date as date_of_birth, 'vil_1' as village_id
           union all
-          select 'b_2', '2024-05-16'::date
+          select 'b_2', '2024-05-16'::date, 'vil_2'
           union all
-          select 'b_3', '2024-05-17'::date
+          select 'b_3', '2024-05-17'::date, null::varchar
           union all
-          select 'b_4', '2024-05-19'::date
+          select 'b_4', '2024-05-19'::date, 'vil_1'
           union all
-          select 'b_5', null::date
+          select 'b_5', null::date, 'vil_2'
           union all
-          select 'b_6', '2024-06-02'::date
+          select 'b_6', '2024-06-02'::date, null::varchar
 
       - input: ref('clinical__person')
         format: sql
         rows: |
-          select 'b_1' as person_id, 'Female' as gender_source_value, 'vil_1' as location_id
+          select 'b_1' as person_id, 'Female' as gender_source_value, 'loc_a' as location_id
           union all
-          select 'b_2', 'Male', 'vil_2'
+          select 'b_2', 'Male', 'loc_a'
           union all
-          select 'b_3', 'Female', null::varchar
+          select 'b_3', 'Female', 'loc_a'
           union all
-          select 'b_4', 'Male', 'vil_1'
+          select 'b_4', 'Male', 'loc_a'
           union all
-          select 'b_5', 'Female', 'vil_2'
+          select 'b_5', 'Female', 'loc_a'
           union all
           select 'b_6', 'Male', null::varchar
 
