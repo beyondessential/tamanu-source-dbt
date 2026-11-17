@@ -34,7 +34,7 @@ was recorded.
 {% enddocs %}
 
 {% docs clinical__person__location_id %}
-Reference to the patient's address in ref__location: their village, subdivision and division.
+Reference to the patient's geographic location (their village) in ref__location.
 {% enddocs %}
 
 {% docs clinical__person__ethnicity_concept_id %}

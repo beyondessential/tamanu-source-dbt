@@ -80,10 +80,6 @@ unit_tests:
           select 'mb_6', 'Male', null::varchar
           union all
           select 'mb_7', 'Female', null::varchar
-      - input: ref('ref__location')
-        format: sql
-        rows: |
-          select null::text as location_id, null::text as village_id where false
 
       - input: ref('patient_additional_data')
         format: sql
