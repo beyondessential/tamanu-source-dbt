@@ -4,11 +4,11 @@
 -- Per-death (subject) grain: one row per deceased patient, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs.
 --
--- The population, the death record chosen for each patient and the encounter the patient died
--- in are those of ds__deaths, the dataset behind the deceased patients line list, so a dashboard
--- count and that report agree. The facility is the death record's, falling back to the facility
--- of the encounter the patient died in, unless the record says the death was outside a health
--- facility.
+-- The population, the death record chosen for each patient, the encounter the patient died in
+-- and the facility are those of ds__deaths, the dataset behind the deceased patients line list,
+-- so a dashboard count and that report agree. The facility is the death record's, falling back
+-- to the facility of the encounter the patient died in, unless the record says the death was
+-- outside a health facility.
 --
 -- The registry carries the definition and this model is its implementation.
 -- See specs/dbt-model/metric__death.md for BL-001..BL-009.

@@ -5,9 +5,10 @@ models:
     description: >-
       D5 metric view for the death indicator registered in documentations/metrics/*.yml: death.
       One row per deceased patient, on the date of death, with the primary cause and place of
-      death from the patient's death record. The population, death record and encounter died in
-      are those of ds__deaths, the dataset behind the deceased patients line list. The facility
-      is the death record's, falling back to that of the encounter the patient died in.
+      death from the patient's death record. The population, death record, encounter died in
+      and facility are those of ds__deaths, the dataset behind the deceased patients line list.
+      The facility is the death record's, falling back to that of the encounter the patient
+      died in.
     config:
       tags:
         - clinical
@@ -99,8 +100,8 @@ models:
           The facility on the patient's death record, falling back to the facility of the
           encounter the patient died in -- its final location's -- where the record names none
           and does not say the death was outside a health facility. NULL where neither applies,
-          and a consumer rooted at a facility does not count those deaths. ds__deaths reports the death record's facility only, so the two differ on the
-          rows whose facility_source is 'Encounter'.
+          and a consumer rooted at a facility does not count those deaths. The deceased patients
+          line list places each death at the same facility.
       - name: facility_source
         data_type: text
         description: >-

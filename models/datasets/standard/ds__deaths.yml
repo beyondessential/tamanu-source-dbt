@@ -50,7 +50,16 @@ models:
         description: "{{ doc('generic__reference_data') }} of the patient's nationality."
       - name: place_of_death
         data_type: character varying(255)
-        description: "{{ doc('patient_death_data__outside_health_facility') }}"
+        description: >-
+          Name of the facility in facility_id, or 'Died outside health facility' where the death
+          record says the death was outside a health facility.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          The facility on the patient's death record, falling back to the facility of the
+          encounter the patient died in where the record names none and does not say the death
+          was outside a health facility. NULL where neither applies. The Tupaia death count
+          places each death at the same facility.
       - name: department_id
         data_type: character varying(255)
         description: "{{ doc('encounters__department_id') }}"
