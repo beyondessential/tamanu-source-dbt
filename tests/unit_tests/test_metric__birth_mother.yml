@@ -44,25 +44,25 @@ unit_tests:
       - input: ref('patients')
         format: sql
         rows: |
-          select 'mb_1' as id, '2024-03-09'::date as date_of_birth
+          select 'mb_1' as id, '2024-03-09'::date as date_of_birth, null::varchar as village_id
           union all
-          select 'mb_2', '2024-06-01'::date
+          select 'mb_2', '2024-06-01'::date, null
           union all
-          select 'mb_3', '2024-07-01'::date
+          select 'mb_3', '2024-07-01'::date, null
           union all
-          select 'mb_4', '2024-07-02'::date
+          select 'mb_4', '2024-07-02'::date, null
           union all
-          select 'mb_5', '2024-07-03'::date
+          select 'mb_5', '2024-07-03'::date, null
           union all
-          select 'mb_6', '2024-07-04'::date
+          select 'mb_6', '2024-07-04'::date, null
           union all
-          select 'mb_7', null::date
+          select 'mb_7', null::date, null
           union all
-          select 'mum_1', '1994-03-10'::date
+          select 'mum_1', '1994-03-10'::date, null
           union all
-          select 'mum_2', '2000-01-01'::date
+          select 'mum_2', '2000-01-01'::date, null
           union all
-          select 'mum_3', '1990-07-01'::date
+          select 'mum_3', '1990-07-01'::date, null
 
       - input: ref('clinical__person')
         format: sql
