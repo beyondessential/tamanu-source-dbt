@@ -1,0 +1,142 @@
+unit_tests:
+  - name: ac_006_ds__deaths_facility
+    model: ds__deaths
+    description: >
+      BL-012, BL-013 (specs/reports/deceased-patients-line-list.md). p1's death record names
+      facA, which wins over the ward p1 died on (e1, fac9). p2's record says the death was
+      outside a health facility and names no facility, so p2's stale clinic encounter (e2, facC)
+      supplies none and place_of_death says so. p3 has no death record and died during e3, so
+      p3 takes e3's facility (facC). p5's record names no facility and e5 has no end yet, so it
+      is not matched and the facility is NULL. p7's record names no facility, and recording the
+      death closed both of p7's open encounters at the time of death -- a stale clinic visit
+      (e7a) and a later admission (e7b) -- so the later-started e7b is matched, giving fac9,
+      Medical and Ward 1.
+    given:
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+              v.id,
+              v.date_of_death,
+              '1990-06-01'::date as date_of_birth,
+              v.id as display_id,
+              null::text as first_name,
+              null::text as last_name,
+              null::text as sex,
+              null::text as village_id
+          from (values
+              ('p1', '2026-03-05 10:00:00'::timestamp),
+              ('p2', '2026-03-10 10:00:00'::timestamp),
+              ('p3', '2026-03-12 10:00:00'::timestamp),
+              ('p5', '2026-03-20 10:00:00'::timestamp),
+              ('p7', '2026-03-25 10:00:00'::timestamp)
+          ) v (id, date_of_death)
+
+      - input: ref('patient_death_data')
+        format: sql
+        rows: |
+          select
+              v.id,
+              v.patient_id,
+              'current' as visibility_status,
+              true as is_final,
+              v.facility_id,
+              v.was_outside_health_facility,
+              null::text as primary_cause_condition_id,
+              null::int as primary_cause_mins_after_onset,
+              null::text as antecedent_cause1_condition_id,
+              null::text as antecedent_cause2_condition_id,
+              null::text as had_recent_surgery,
+              null::date as last_surgery_date,
+              null::text as last_surgery_reason_id,
+              null::text as manner,
+              null::date as external_cause_date,
+              null::text as external_cause_location,
+              null::text as was_pregnant,
+              null::boolean as pregnancy_contributed,
+              null::boolean as was_fetal_or_infant,
+              null::text as was_stillborn,
+              null::numeric as birth_weight,
+              null::int as carrier_pregnancy_weeks,
+              null::int as carrier_age,
+              null::text as mother_condition_description,
+              null::boolean as was_within_day_of_birth,
+              null::int as hours_survived_since_birth,
+              null::text as recorded_by_id
+          from (values
+              ('d1', 'p1', 'facA', false),
+              ('d2', 'p2', null::text, true),
+              ('d5', 'p5', null::text, false),
+              ('d7', 'p7', null::text, false)
+          ) v (id, patient_id, facility_id, was_outside_health_facility)
+
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'e1' as id, 'p1' as patient_id, '2026-03-04 08:00:00'::timestamp as start_datetime, '2026-03-06 08:00:00'::timestamp as end_datetime, 'dept_med' as department_id, 'loc_ward' as location_id, null::text as clinician_id
+          union all
+          select 'e2', 'p2', '2026-02-01 09:00:00'::timestamp, '2026-03-10 10:00:00'::timestamp, 'dept_opd', 'loc_clinic', null::text
+          union all
+          select 'e3', 'p3', '2026-03-12 06:00:00'::timestamp, '2026-03-12 12:00:00'::timestamp, 'dept_opd', 'loc_clinic', null::text
+          union all
+          select 'e5', 'p5', '2026-03-19 08:00:00'::timestamp, null::timestamp, 'dept_med', 'loc_ward', null::text
+          union all
+          select 'e7a', 'p7', '2026-02-01 09:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_opd', 'loc_clinic', null::text
+          union all
+          select 'e7b', 'p7', '2026-03-24 14:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_med', 'loc_ward', null::text
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_ward' as id, 'Ward 1' as name, 'fac9' as facility_id, null::text as location_group_id
+          union all
+          select 'loc_clinic', 'Clinic room', 'facC', null::text
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'facA' as id, 'Facility A' as name
+          union all
+          select 'facC', 'Facility C'
+          union all
+          select 'fac9', 'Facility 9'
+
+      - input: ref('departments')
+        format: sql
+        rows: |
+          select 'dept_med' as id, 'Medical' as name
+          union all
+          select 'dept_opd', 'General OPD'
+
+      - input: ref('contributing_death_causes')
+        format: sql
+        rows: |
+          select null::text as patient_death_data_id, null::text as condition_id, null::int as time_after_onset where false
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as nationality_id where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('users')
+        format: sql
+        rows: |
+          select null::text as id, null::text as display_name where false
+
+    expect:
+      rows:
+        - {patient_id: p1, facility_id: facA, place_of_death: Facility A, department: Medical, location: Ward 1}
+        - {patient_id: p2, facility_id: null, place_of_death: Died outside health facility, department: General OPD, location: Clinic room}
+        - {patient_id: p3, facility_id: facC, place_of_death: Facility C, department: General OPD, location: Clinic room}
+        - {patient_id: p5, facility_id: null, place_of_death: null, department: null, location: null}
+        - {patient_id: p7, facility_id: fac9, place_of_death: Facility 9, department: Medical, location: Ward 1}
