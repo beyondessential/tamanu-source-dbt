@@ -26,8 +26,13 @@ patients as (
     select * from {{ ref('patients') }}
 ),
 
+-- the patient's village is read from their address in ref__location
 person as (
-    select * from {{ ref('clinical__person') }}
+    select
+        per.*,
+        addr.village_id
+    from {{ ref('clinical__person') }} per
+    left join {{ ref('ref__location') }} addr on addr.location_id = per.location_id
 ),
 
 patient_additional_data as (
@@ -98,8 +103,8 @@ births as (
         ) as period_start,
         pbd.birth_facility_id as facility_id,
         per.gender_source_value as sex,
-        -- BL-015: the newborn's own home village, from their clinical__person record.
-        per.location_id as patient_location_id,
+        -- BL-015: the newborn's own home village, from their clinical__person address.
+        per.village_id as patient_location_id,
         pbd.birth_delivery_type,
         pbd.attendant_at_birth,
         pbd.registered_birth_place,
