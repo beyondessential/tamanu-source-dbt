@@ -33,7 +33,7 @@ was recorded.
 {% enddocs %}
 
 {% docs clinical__person__location_id %}
-Reference to the patient's geographic location (their village) in ref__location.
+Reference to the location the patient is grouped under in ref__location. By default, their village.
 {% enddocs %}
 
 {% docs clinical__person__ethnicity_concept_id %}
