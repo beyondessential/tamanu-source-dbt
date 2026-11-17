@@ -11,7 +11,7 @@ models:
         domain: reference
     columns:
       - name: location_id
-        data_type: text
+        data_type: character varying(255)
         description: "{{ doc('ref__location__location_id') }}"
         data_tests:
           - not_null:
@@ -19,7 +19,7 @@ models:
           - unique:
               name: ac_002_ref__location_location_id_unique
       - name: location_source_value
-        data_type: text
+        data_type: character varying(255)
         description: "{{ doc('ref__location__location_source_value') }}"
       - name: city
         data_type: character varying(255)
@@ -33,15 +33,3 @@ models:
       - name: country_source_value
         data_type: character varying(255)
         description: "{{ doc('ref__location__country_source_value') }}"
-      - name: village_id
-        data_type: character varying(255)
-        description: "{{ doc('ref__location__village_id') }}"
-      - name: subdivision_id
-        data_type: character varying(255)
-        description: "{{ doc('ref__location__subdivision_id') }}"
-      - name: division_id
-        data_type: character varying(255)
-        description: "{{ doc('ref__location__division_id') }}"
-      - name: country_id
-        data_type: character varying(255)
-        description: "{{ doc('ref__location__country_id') }}"
