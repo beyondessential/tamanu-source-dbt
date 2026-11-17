@@ -63,24 +63,17 @@ unit_tests:
       - input: ref('clinical__person')
         format: sql
         rows: |
-          select 'b_1' as person_id, 'Female' as gender_source_value, 'vil_1_sd_1_dv_1' as location_id
+          select 'b_1' as person_id, 'Female' as gender_source_value, 'vil_1' as location_id
           union all
-          select 'b_2', 'Male', 'vil_2_sd_1_dv_1'
+          select 'b_2', 'Male', 'vil_2'
           union all
           select 'b_3', 'Female', null::varchar
           union all
-          select 'b_4', 'Male', 'vil_1_sd_1_dv_1'
+          select 'b_4', 'Male', 'vil_1'
           union all
-          select 'b_5', 'Female', 'vil_2_sd_1_dv_1'
+          select 'b_5', 'Female', 'vil_2'
           union all
           select 'b_6', 'Male', null::varchar
-
-      - input: ref('ref__location')
-        format: sql
-        rows: |
-          select 'vil_1_sd_1_dv_1' as location_id, 'vil_1' as village_id
-          union all
-          select 'vil_2_sd_1_dv_1', 'vil_2'
 
       # BL-016/BL-017: no birth here has a linked mother -- the mother columns read NULL and
       # false throughout. ac_017_metric__birth_mother covers them.
