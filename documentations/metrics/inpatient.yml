@@ -137,5 +137,5 @@ metrics:
   - is_department_change
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__inpatient_transfer.md

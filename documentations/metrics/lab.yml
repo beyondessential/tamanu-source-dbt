@@ -52,5 +52,5 @@ metrics:
   - lab_test_category
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__lab_order.md

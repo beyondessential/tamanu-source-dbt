@@ -34,7 +34,7 @@ metrics:
   - treatment_status
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_gonorrhoea_test
   kind: metric
@@ -62,7 +62,7 @@ metrics:
   - treatment_status
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_chlamydia_test
   kind: metric
@@ -90,7 +90,7 @@ metrics:
   - treatment_status
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_syphilis_test_key_population
   kind: metric
@@ -119,7 +119,7 @@ metrics:
   - key_population
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_gonorrhoea_test_key_population
   kind: metric
@@ -148,7 +148,7 @@ metrics:
   - key_population
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_chlamydia_test_key_population
   kind: metric
@@ -177,7 +177,7 @@ metrics:
   - key_population
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening.md
 - metric_id: sti_syphilis_screening_coverage
   kind: metric
@@ -217,7 +217,7 @@ metrics:
   - tested
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening_coverage.md
 - metric_id: sti_gonorrhoea_screening_coverage
   kind: metric
@@ -257,7 +257,7 @@ metrics:
   - tested
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening_coverage.md
 - metric_id: sti_chlamydia_screening_coverage
   kind: metric
@@ -297,7 +297,7 @@ metrics:
   - tested
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_screening_coverage.md
 - metric_id: sti_urethral_discharge_syndrome_case
   kind: metric
@@ -329,7 +329,7 @@ metrics:
   - sex
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_reported_cases.md
 - metric_id: sti_gonorrhoea_case
   kind: metric
@@ -360,7 +360,7 @@ metrics:
   - sex
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_reported_cases.md
 - metric_id: sti_syphilis_case
   kind: metric
@@ -391,5 +391,5 @@ metrics:
   - sex
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__sti_reported_cases.md

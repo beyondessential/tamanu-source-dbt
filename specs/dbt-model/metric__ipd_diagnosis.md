@@ -31,7 +31,7 @@ concept (9202) instead of the inpatient one (9201).
 |---|---|---|---|
 | `metric_id` | BES | n/a | No external body registers a diagnosis-count indicator scoped to inpatient care |
 
-`status: draft`, `spec_path` pointing here.
+`status: approved`, `spec_path` pointing here.
 
 ## Grain
 
@@ -148,7 +148,7 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
 
 ## Registry entry
 
-`ipd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: draft`,
+`ipd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: approved`,
 `disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary`.
 No vocabulary change needed -- all admitted via `metric__encounter_diagnosis`'s own
 registration.

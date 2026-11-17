@@ -31,7 +31,7 @@ disaggregation instead.
 |---|---|---|---|
 | `metric_id` | BES | n/a | No external body registers a diagnosis-count indicator scoped to outpatient care |
 
-`status: draft`, `spec_path` pointing here.
+`status: approved`, `spec_path` pointing here.
 
 ## Grain
 
@@ -156,7 +156,7 @@ This model carries no `data_table_*` meta. Not yet built as of this spec.
 
 ## Registry entry
 
-`opd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: draft`,
+`opd_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: approved`,
 `disaggregations: facility_id,sex,diagnosis,diagnosis_code,diagnosis_certainty,is_primary,department,location_group_name`.
 No vocabulary change needed -- all admitted via `metric__encounter_diagnosis`'s own
 registration.

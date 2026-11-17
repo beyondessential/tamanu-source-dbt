@@ -83,7 +83,7 @@ metrics:
   - is_primary
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__ipd_diagnosis.md
 
 - metric_id: patient_condition
@@ -114,5 +114,5 @@ metrics:
   - is_resolved
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__patient_condition.md

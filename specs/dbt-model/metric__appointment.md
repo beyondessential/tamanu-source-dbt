@@ -118,7 +118,7 @@ The Tupaia data tables over this view are configured in `tupaia-data-product`, a
 ## Registry entry
 
 One row in `documentations/metrics/outpatient.yml`: `outpatient_appointment`, `kind: metric`,
-`unit: count`, `subject_grain: appointment`, `status: draft`, `spec_path` pointing here, with
+`unit: count`, `subject_grain: appointment`, `status: approved`, `spec_path` pointing here, with
 `disaggregations: facility_id,sex,appointment_status,appointment_type,location_group_name`.
 `age_years` is absent: it is a measure (BL-009). `appointment_status` and `appointment_type` are
 in the allowlist in `assert__metric_definitions__disaggregations`.

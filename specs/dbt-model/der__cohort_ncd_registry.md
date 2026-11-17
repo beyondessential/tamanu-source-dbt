@@ -104,7 +104,7 @@ verbatim):
 | `subject_grain` | `patient` |
 | `disaggregations` | `sex,facility_id` |
 | `definition_source` | `MSF` |
-| `status` | `draft` (promotes to `approved` once a canonical implementation lands in `tamanu-source-dbt`) |
+| `status` | `approved` |
 
 ## Implementations
 
