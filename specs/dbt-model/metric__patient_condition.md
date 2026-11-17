@@ -71,8 +71,8 @@ D5 wide format, plus disaggregations and measures.
   condition against the patient, not against an encounter or facility.
 - **BL-005 (age):** `age_years` is the patient's age at the recorded date in whole completed
   years, unbanded and NULL with no date of birth.
-- **BL-006 (patient village):** `patient_location_id` is the `village_id` of the patient's own
-  `clinical__person` address in `ref__location`, NULL when the record carries none.
+- **BL-006 (patient village):** `patient_location_id` is the patient's own
+  `clinical__person.location_id`, NULL when the record carries none.
 - **BL-007 (patient):** `person_id` is the condition's patient, never NULL, so a consumer counts
   patients with a distinct count over it.
 - **BL-008 (condition):** `condition_id` is the condition's reference data id, `condition_code`
@@ -142,4 +142,3 @@ not a disaggregation: a consumer only takes a distinct count over it.
 | Date | Change |
 |---|---|
 | 2026-11-13 | Created: one row per patient ongoing condition, for condition registration and prevalence cards (MAUI-7122). |
-| 2026-11-18 | BL-006: the village is read from the patient's `ref__location` address, now that `clinical__person.location_id` is an address key rather than the village id (MAUI-7190). |

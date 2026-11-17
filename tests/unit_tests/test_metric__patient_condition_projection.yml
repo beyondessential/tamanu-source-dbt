@@ -31,14 +31,10 @@ unit_tests:
       - input: ref('clinical__person')
         format: sql
         rows: |
-          select 'pat_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth, 'vil_1_sd_1_dv_1' as location_id
+          select 'pat_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 6 as month_of_birth, 15 as day_of_birth, 'vil_1' as location_id
           union all
           select 'pat_2', 'male', null::int, null::int, null::int, null::text
 
-      - input: ref('ref__location')
-        format: sql
-        rows: |
-          select 'vil_1_sd_1_dv_1' as location_id, 'vil_1' as village_id
       - input: ref('reference_data')
         format: sql
         rows: |
