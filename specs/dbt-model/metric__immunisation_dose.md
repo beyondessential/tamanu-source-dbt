@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.57`, forward-ported) |
 | **Linear issue** | [MAUI-6808](https://linear.app/bes/issue/MAUI-6808) (initial), [MAUI-7034](https://linear.app/bes/issue/MAUI-7034) (BL-009 to BL-014), [MAUI-7122](https://linear.app/bes/issue/MAUI-7122) (BL-015) |
 | **Created** | 2026-10-20 (the model shipped in MAUI-6808 without this file; its clauses are recorded here as implemented) |
-| **Last updated** | 2026-11-13 |
+| **Last updated** | 2026-11-18 |
 
 Canonical definition for `immunisation_dose`: one row per vaccine dose given, recorded in Tamanu.
 
@@ -101,8 +101,8 @@ Tupaia data tables over this view are configured in `tupaia-data-product` at
   with `age_group__who_epi_schedule()`, `'Unknown age'` with no date of birth.
 - **BL-007 (dose position):** `dose_label` is the schedule's dose label, `'Not recorded'` for an
   ad hoc dose with no schedule.
-- **BL-008 (patient village):** `patient_location_id` is the patient's own
-  `clinical__person.location_id`, passed through and left NULL when the record carries none.
+- **BL-008 (patient village):** `patient_location_id` is the `village_id` on the patient's own
+  patient record, passed through and left NULL when the record carries none.
 - **BL-009 (patient):** `person_id` is the patient of the dose's encounter, never NULL, so a
   consumer can count people with a distinct count rather than doses.
 - **BL-010 (scheduled vaccine):** `vaccine_id`, `vaccine_label` and `vaccine_category` are the
@@ -198,3 +198,4 @@ It bands `age_days` / `age_years` itself, maps `facility_id`, `patient_location_
 | 2026-10-20 | Maui team | Spec written for the model shipped in MAUI-6808, recording BL-001 to BL-008 as implemented. Added BL-009 to BL-013 (MAUI-7034): `person_id`, `vaccine_id` / `vaccine_label` / `vaccine_category`, `location_group_id`, `age_days` / `age_years`, and the move to `classification: restricted`; AC-014 to AC-016 and AC-009 extended |
 | 2026-10-21 | Maui team | BL-004 rewritten (MAUI-7034): the location falls back to the encounter's, and doses with no location of their own or given elsewhere are kept. The old inner join on the dose's own location dropped ~34,600 of Tuvalu's ~70,700 given doses — older and migrated records held the location only on the encounter — where the legacy pipeline counted them. BL-014: `facility_source` and `is_given_elsewhere`. BL-001 restated (only the patient now excludes). AC-017 to AC-019 added |
 | 2026-11-13 | Maui team | BL-015 (MAUI-7122): `department`, the dose's encounter's department by name, for Naoero's immunisation dashboards. AC-020 added and AC-009 extended |
+| 2026-11-18 | Maui team | BL-008: the village is read from the patient record rather than `clinical__person.location_id`, which a deployment may key by other places (MAUI-7190) |
