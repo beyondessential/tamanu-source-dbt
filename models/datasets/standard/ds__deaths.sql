@@ -19,6 +19,10 @@ death_data as (
     order by patient_id asc, is_final desc nulls last, id asc
 ),
 
+-- BL-013 (see specs/reports/deceased-patients-line-list.md): the encounter the patient died
+-- in is the latest one whose span covers the date of death. Recording a death closes every
+-- open encounter at the time of death, so several can end together, and the most recently
+-- started of those is taken. metric__death makes the same match.
 encounters_with_death as (
     select distinct on (e.patient_id)
         e.patient_id,
@@ -31,7 +35,7 @@ encounters_with_death as (
     join {{ ref("patients") }} p
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
-    order by e.patient_id asc, e.end_datetime desc
+    order by e.patient_id asc, e.end_datetime desc, e.start_datetime desc, e.id asc
 )
 
 select
@@ -145,12 +149,19 @@ left join {{ ref("reference_data") }} surgery_reason
     on surgery_reason.id = pdd.last_surgery_reason_id
 left join encounters_with_death ewd
     on ewd.patient_id = p.id
-left join {{ ref("facilities") }} facility
-    on facility.id = pdd.facility_id
 left join {{ ref("departments") }} department
     on department.id = ewd.department_id
 left join {{ ref("locations") }} location
     on location.id = ewd.location_id
+-- BL-012 (see specs/reports/deceased-patients-line-list.md): the death record's facility,
+-- falling back to the facility of the encounter the patient died in unless the record says
+-- the death was outside a health facility. metric__death resolves the facility the same way,
+-- so the report and the Tupaia death count agree.
+left join {{ ref("facilities") }} facility
+    on facility.id = coalesce(
+        pdd.facility_id,
+        case when pdd.was_outside_health_facility is not true then location.facility_id end
+    )
 left join {{ ref("location_groups") }} location_group
     on location_group.id = location.location_group_id
 left join {{ ref("users") }} clinician
