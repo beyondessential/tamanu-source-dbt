@@ -10,7 +10,10 @@ with patients as (
 additional as (
     select
         patient_id,
-        ethnicity_id
+        ethnicity_id,
+        division_id,
+        subdivision_id,
+        medical_area_id
     from {{ ref('patient_additional_data') }}
 ),
 
@@ -54,6 +57,11 @@ select
 
     -- ethnicity source value (BL-004)
     a.ethnicity_id as ethnicity_source_value,
+
+    -- BL-009: the areas recorded on the patient's registration details, as reference-data ids
+    a.division_id as division_source_value,
+    a.subdivision_id as subdivision_source_value,
+    a.medical_area_id as medical_area_source_value,
 
     -- location: FK to ref__location (patient's village) (BL-007)
     p.village_id as location_id,
