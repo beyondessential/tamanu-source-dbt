@@ -60,7 +60,7 @@ def generate_project_reports(language):
         language (str): The language to use for report generation.
 
     Returns:
-        None: Creates compiled report JSON files in the reports directory.
+        list[str]: The paths of the report JSON files written.
     """
     manifest_path = os.path.join(BASE_DIR, "target", "manifest.json")
     manifest = read_file(manifest_path, "json")
@@ -81,10 +81,11 @@ def generate_project_reports(language):
 
     if not nodes:
         cprint(f"No report models found", "error")
-        return
+        return []
 
     ensure_directory_exists(VERSION_DIR)
 
+    written = []
     for node in nodes:
         report = manifest["nodes"][node]
 
@@ -109,6 +110,9 @@ def generate_project_reports(language):
 
         compile_report(report["database"], sql_file, config_file, output_file)
         cprint(f"Compiled report: {filename}", "success")
+        written.append(output_file)
+
+    return written
 
 
 def generate_import_report_script():
