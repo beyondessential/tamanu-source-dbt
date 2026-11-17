@@ -2,10 +2,10 @@ unit_tests:
   - name: ac_013_clinical__person_area_source_values
     model: clinical__person
     description: >-
-      AC-013 (BL-009): the division, subdivision and medical area ids recorded on a patient's
-      additional data are carried as-is. pat_1 has all three, pat_2 has a division only, and pat_3
-      has no additional-data record at all, so all three are NULL and the patient is still
-      returned (BL-005).
+      AC-013 (BL-007, BL-009): the medical area id recorded on a patient's additional data is
+      carried as-is, and location_id is the patient's address key. pat_1 has both, pat_2 has an
+      address and no medical area, and pat_3 has no additional-data record and no address, so
+      both are NULL and the patient is still returned (BL-005).
     given:
       - input: ref('patients')
         format: sql
@@ -21,10 +21,17 @@ unit_tests:
         format: sql
         rows: |
           select
-            'pat_1' as patient_id, null::text as ethnicity_id, 'div_central' as division_id,
-            'subdiv_rewa' as subdivision_id, 'ma_suva' as medical_area_id
+            'pat_1' as patient_id, null::text as ethnicity_id, 'ma_suva' as medical_area_id
           union all
-          select 'pat_2', null, 'div_western', null, null
+          select 'pat_2', null, null
+      - input: ref('int__patient_address')
+        format: sql
+        rows: |
+          select 'pat_1' as patient_id, 'v1_sd1_dv1' as location_id
+          union all
+          select 'pat_2', 'unknown_unknown_dv2'
+          union all
+          select 'pat_3', null
       - input: ref('patient_birth_data')
         format: sql
         rows: |
@@ -42,14 +49,11 @@ unit_tests:
     expect:
       rows:
         - person_id: pat_1
-          division_source_value: div_central
-          subdivision_source_value: subdiv_rewa
           medical_area_source_value: ma_suva
+          location_id: v1_sd1_dv1
         - person_id: pat_2
-          division_source_value: div_western
-          subdivision_source_value: null
           medical_area_source_value: null
+          location_id: unknown_unknown_dv2
         - person_id: pat_3
-          division_source_value: null
-          subdivision_source_value: null
           medical_area_source_value: null
+          location_id: null

@@ -35,13 +35,16 @@ locations as (
 -- month_of_birth/day_of_birth are extracted from the same date_of_birth column in
 -- clinical__person, so they're populated whenever year_of_birth is -- make_date never
 -- errors on a partial date. NULL year_of_birth -> NULL date_of_birth -> NULL ages.
+-- The patient's village is read from their address in ref__location.
 person as (
     select
-        *,
+        per.*,
+        addr.village_id,
         case
-            when year_of_birth is not null then make_date(year_of_birth, month_of_birth, day_of_birth)
+            when per.year_of_birth is not null then make_date(per.year_of_birth, per.month_of_birth, per.day_of_birth)
         end as date_of_birth
-    from {{ ref('clinical__person') }}
+    from {{ ref('clinical__person') }} per
+    left join {{ ref('ref__location') }} addr on addr.location_id = per.location_id
 ),
 
 encounters as (
@@ -76,8 +79,8 @@ select
     -- legitimate row, not excluded.
     vs.dose_label,
     pr.gender_source_value as sex,
-    -- the patient's own residence, distinct from facility_id (where the event happened).
-    pr.location_id as patient_location_id,
+    -- the patient's own village, distinct from facility_id (where the event happened).
+    pr.village_id as patient_location_id,
     -- reason a dose was not given -- reference_data's name for the coded reason, falling back
     -- to the free-text reason. NULL for a GIVEN row: only a NOT_GIVEN row carries this.
     case
