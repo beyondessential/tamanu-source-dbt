@@ -6,13 +6,19 @@ unit_tests:
       own location_id. proc1 records location_id locX (facility facX) while its segment sits
       at loc1 (facility fac1) -- fac1 wins. proc2 records no location_id at all and is still
       emitted, attributed to its segment's facility.
+
+      BL-011, BL-012 (MAUI-7122). location_group_name follows the procedure's own location,
+      not the segment's: proc1's locX is in the Operating Theatre group while its segment's
+      loc1 is in the Ward group, so Operating Theatre wins; proc2 has no location and reads
+      'Not recorded'. proc1's clinician, anaesthetist and anaesthetic resolve to names; proc2
+      records none of them and reads 'Not recorded' for each.
     given:
       - input: ref('clinical__procedure_occurrence')
         format: sql
         rows: |
           select 'proc1' as procedure_occurrence_id, 'p1' as person_id, '2026-02-01'::date as procedure_date, '2026-02-01 10:00:00'::timestamp as procedure_datetime, 32817 as procedure_type_concept_id, 'procedure' as procedure_type_source_value, 'u1' as provider_id, 'e10' as visit_occurrence_id, 'vd10a' as visit_detail_id, 'locX' as location_id, 'code1' as procedure_source_value, 'Procedure One' as procedure_source_name, true as is_completed
           union all
-          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, 32817, 'procedure', 'u1', 'e11', 'vd11a', null::varchar, 'code2', 'Procedure Two', true
+          select 'proc2', 'p1', '2026-02-02'::date, '2026-02-02 10:00:00'::timestamp, 32817, 'procedure', null::varchar, 'e11', 'vd11a', null::varchar, 'code2', 'Procedure Two', true
 
       - input: ref('clinical__visit_detail')
         format: sql
@@ -29,9 +35,35 @@ unit_tests:
       - input: ref('locations')
         format: sql
         rows: |
-          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, null::varchar as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
+          select 'loc1' as id, 'LOC1' as code, 'Location 1' as name, null::int as max_occupancy, 'lg_ward' as location_group_id, 'fac1' as facility_id, 'current' as visibility_status
           union all
-          select 'locX', 'LOCX', 'Location X', null::int, null::varchar, 'facX', 'current'
+          select 'locX', 'LOCX', 'Location X', null::int, 'lg_ot', 'facX', 'current'
+
+      - input: ref('location_groups')
+        format: sql
+        rows: |
+          select 'lg_ward' as id, 'WARD' as code, 'Ward' as name, 'fac1' as facility_id, 'current' as visibility_status
+          union all
+          select 'lg_ot', 'OT', 'Operating Theatre', 'facX', 'current'
+
+      - input: ref('procedures')
+        format: sql
+        rows: |
+          select 'proc1' as id, 'an_ga' as anaesthetic_id, 'u2' as anaesthetist_id
+          union all
+          select 'proc2', null::varchar, null::varchar
+
+      - input: ref('ref__provider')
+        format: sql
+        rows: |
+          select 'u1' as provider_id, 'Dr Ana' as provider_name
+          union all
+          select 'u2', 'Dr Ben'
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'an_ga' as id, 'GA' as code, 'General anaesthetic' as name, 'anaesthetic' as type
 
       - input: ref('departments')
         format: sql
@@ -40,6 +72,6 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department
+        select 'procedure' as metric_id, null::text as variant_id, 'proc1' as subject_id, '2026-02-01'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac1' as facility_id, 'clinic' as encounter_type, 9202 as visit_detail_concept_id, 'Outpatient Visit' as visit_detail_concept_name, 'female' as sex, 'Procedure One' as procedure, 'code1' as procedure_code, true as is_completed, 30 as age_years, 'Not recorded' as department, 'Operating Theatre' as location_group_name, 'Dr Ana' as procedure_clinician, 'Dr Ben' as procedure_anaesthetist, 'General anaesthetic' as anaesthetic
         union all
-        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded'
+        select 'procedure', null::text, 'proc2', '2026-02-02'::date, null::date, 'day', 1::numeric, null::boolean, 'fac1', 'admission', 9201, 'Inpatient Visit', 'female', 'Procedure Two', 'code2', true, 30, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded'

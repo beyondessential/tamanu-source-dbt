@@ -53,6 +53,10 @@ procedures at any grouping.
 | `is_completed` | boolean | Whether the procedure was marked completed (BL-006) |
 | `age_years` | integer | Age in whole years at the procedure, unbanded (BL-007). A measure, not a dimension |
 | `department` | text | The department of that segment, resolved to a name (BL-009). Never NULL |
+| `location_group_name` | text | The area: the location group of the procedure's own location (BL-011). Never NULL: `'Not recorded'` when absent |
+| `procedure_clinician` | text | The procedure's clinician, resolved to a display name (BL-012). Never NULL |
+| `procedure_anaesthetist` | text | The procedure's anaesthetist, resolved to a display name (BL-012). Never NULL |
+| `anaesthetic` | text | The procedure's anaesthetic, resolved to its reference-data name (BL-012). Never NULL |
 
 ## Business logic
 
@@ -106,6 +110,23 @@ procedures at any grouping.
   uses rather than an opaque Tamanu id. `bases/locations` carries no `department_id`, so it
   comes off the segment directly. Never NULL -- falls back to `'Not recorded'`.
 - **BL-010 (visit concept):** `visit_detail_concept_id` and `visit_detail_concept_name` are the resolved segment's OMOP Visit concept and its name, as `clinical__visit_detail` carries them.
+- **BL-011 (area):** `location_group_name` is the location group of the procedure's own
+  `location_id` (`clinical__procedure_occurrence` BL-004), through `bases/locations` to
+  `bases/location_groups`, as `metric__lab_order`'s `location_group_name` resolves it. It is
+  deliberately not the segment's location: a procedure can be performed somewhere other than
+  the ward the patient is in, and the operating theatre is the area the theatre dashboard
+  splits by. `facility_id` stays the segment's (BL-004). Left joined and coalesced to
+  `'Not recorded'`, so a procedure with no location, or a location in no group, still counts
+  (MAUI-7122).
+- **BL-012 (clinician, anaesthetist and anaesthetic):** `procedure_clinician` is the
+  procedure's physician (`procedures.physician_id`, carried as
+  `clinical__procedure_occurrence.provider_id`) and `procedure_anaesthetist` is
+  `procedures.anaesthetist_id`, each resolved to a display name through `ref__provider`.
+  `anaesthetic` is `procedures.anaesthetic_id` resolved to its `bases/reference_data` name.
+  The two ids `clinical__procedure_occurrence` does not carry are read from `bases/procedures`
+  on `procedures.id` (unique, so the join cannot fan out); its free-text notes are not read,
+  so the model stays unrestricted. Each is left joined and coalesced to `'Not recorded'`, the
+  same array-filter reason as BL-006 (MAUI-7122).
 
 ## Acceptance criteria
 
@@ -126,6 +147,8 @@ procedures at any grouping.
 | AC-013 | `is_completed` is `not_null` | BL-006 | `not_null` (`ac_metric__procedure_is_completed_not_null`) |
 | AC-014 | `encounter_type` is `not_null` | BL-003 | `not_null` (`ac_metric__procedure_encounter_type_not_null`) |
 | AC-016 | `department` is `not_null` | BL-009 | `not_null` (`ac_metric__procedure_department_not_null`) |
+| AC-020 | `location_group_name`, `procedure_clinician`, `procedure_anaesthetist` and `anaesthetic` are `not_null` | BL-011, BL-012 | `not_null` (`ac_metric__procedure_<column>_not_null`) |
+| AC-021 | `location_group_name` follows the procedure's own location, not the segment's, and is `'Not recorded'` with no location; the clinician, anaesthetist and anaesthetic resolve to names and read `'Not recorded'` when absent | BL-011, BL-012 | dbt unit test `test_metric__procedure_facility_attribution` |
 | AC-017 | Each row carries its own segment's `encounter_type`, a procedure whose segment did not resolve (NULL FK) is dropped, the imaging branch is excluded, a 9202 segment that is not `clinic` still carries 9202, and a 9203 segment carries 9203 | BL-001, BL-003, BL-010 | dbt unit test `test_metric__procedure_segment_scope` |
 | AC-018 | `facility_id` follows the segment's `care_site_id`, including where the procedure's own `location_id` names a different facility or is absent | BL-004 | dbt unit test `test_metric__procedure_facility_attribution` |
 | AC-019 | The as-of match and first-segment clamp that resolve the segment | `clinical__procedure_occurrence` BL-005 | dbt unit test `test_clinical__procedure_occurrence_visit_detail_resolution` (upstream) |
@@ -141,8 +164,12 @@ AC numbering is for cross-reference within this document only.
 | `clinical__procedure_occurrence` | `clinical` | Procedure identity, date, completion flag, and the resolved `visit_detail_id` (BL-001) |
 | `clinical__visit_detail` | `clinical` | The segment's encounter type, visit concept, care site and department (BL-003, BL-004, BL-009, BL-010) |
 | `clinical__person` | `clinical` | Sex and birth date for `age_years` |
-| `locations` | `bases/` | Facility id of the resolved segment's care site (BL-004) |
+| `locations` | `bases/` | Facility id of the resolved segment's care site (BL-004), and the procedure's own location's group (BL-011) |
 | `departments` | `bases/` | Department name for the resolved segment (BL-009) |
+| `location_groups` | `bases/` | Location group name of the procedure's own location (BL-011) |
+| `procedures` | `bases/` | Anaesthetist and anaesthetic ids (BL-012) |
+| `ref__provider` | `ref/` | Clinician and anaesthetist display names (BL-012) |
+| `reference_data` | `bases/` | Anaesthetic name (BL-012) |
 
 ## Consumers
 
@@ -161,5 +188,6 @@ Tupaia data tables over this model are configured in `tupaia-data-product` at
 
 | Date | Change | Issue |
 |---|---|---|
+| 2026-11-13 | `location_group_name`, `procedure_clinician`, `procedure_anaesthetist` and `anaesthetic` added for Naoero's Operating Theatre dashboard (BL-011, BL-012) | MAUI-7122 |
 | 2026-10-03 | `encounter_setting` retired: a consumer scopes a setting on `visit_detail_concept_id` and labels it with `visit_detail_concept_name` | -- |
 | 2026-09-28 | Facility resolved from the segment's `care_site_id`; OPD/IPD scoped metrics folded into this one behind the segment's OMOP Visit concept; `department` added | -- |

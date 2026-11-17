@@ -11,7 +11,7 @@
 | **Status** | `review` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Linear issue** | MAUI-6906 |
+| **Linear issue** | MAUI-6906, MAUI-7122 (pregnancy flags) |
 
 Canonical definition for `death`: one row per deceased patient, with the population, death
 record and encounter died in of `ds__deaths`, and a facility that falls back to the encounter.
@@ -59,6 +59,8 @@ AC-001.
 | `manner_of_death` | text | The death record's manner of death (BL-005) |
 | `department` | text | The department of the encounter the patient died in (BL-006) |
 | `age_days` | integer | Age in whole days at death, unbanded -- a measure, not a dimension (BL-008). NULL where the birth date is not recorded |
+| `was_pregnant` | boolean | The death record says the deceased was pregnant (BL-009). Nullable |
+| `pregnancy_contributed` | boolean | The death record says the pregnancy contributed to the death (BL-009). Nullable |
 
 ## Data tables
 
@@ -75,6 +77,7 @@ so this model carries no `data_table_*` meta.
 - **BL-006 (encounter died in):** the encounter the patient died in is the one whose span, start to end, covers the date of death, the match `ds__deaths` makes, taking the latest end and then the latest start. Recording a death closes every open encounter at the time of death, so encounters open at the time are matched, and where several end together the most recently started is taken. An encounter still without an end does not match. `department` is that encounter's department, `'Not recorded'` where there is none.
 - **BL-007 (registration and count):** `metric_id` is the constant `'death'` and `value_numeric` the constant `1`, so a consumer sums it to count deaths at any grain.
 - **BL-008 (age in days):** `age_days` is the date of death minus the patient's date of birth (`bases/patients`), in whole days -- the derivation `metric__immunisation_dose` uses for its `age_days`. It exists so a consumer can band neonatal deaths (0–6 days early, 7–28 days late), which `age_years` is too coarse for. NULL where the date of birth is not recorded (the date of death is always present, BL-001). A measure, like `age_years`, so it is unbanded and not registered as a disaggregation.
+- **BL-009 (pregnancy flags):** `was_pregnant` and `pregnancy_contributed` are the death record's (BL-002) `was_pregnant` and `pregnancy_contributed` answers, `true` for `yes` and `false` for `no`, matched case-insensitively; NULL for `unknown`, for no answer and for a death with no record.
 
 ## Acceptance criteria
 
@@ -87,19 +90,21 @@ so this model carries no `data_table_*` meta.
 | AC-005 | `place_of_death` is one of `Health facility`, `Outside health facility`, `Not recorded`, and `facility_source` one of `Death record`, `Encounter`, `Not recorded` | BL-004, BL-005 | `accepted_values` |
 | AC-006 | A patient with two current death records reads the finalised one and its facility; a record with no facility takes the facility of the encounter spanning the death, unless it says the death was outside a health facility; where two encounters end at the time of death the later-started one is matched; a death with neither has a NULL facility; a death during an encounter with no end matches no encounter; a patient with no date of death is not counted | BL-001 -- BL-006 | unit test `ac_006_metric__death_population` |
 | AC-007 | `age_days` is the date of death minus the date of birth: a patient born 7 days before death reads 7 (and `age_years` 0); a patient with no recorded birth date reads NULL | BL-008 | unit test `ac_006_metric__death_population` |
+| AC-008 | `was_pregnant` and `pregnancy_contributed` read `yes` as true and `no` as false, and `unknown`, no answer and no death record as NULL | BL-009 | unit test `ac_006_metric__death_population` |
 
 ## Registry entry
 
 Registered in `documentations/metrics/mortality.yml` as `death`, `kind: metric`, `unit: count`,
 `subject_grain: patient`, with disaggregations `facility_id`, `facility_source`, `sex`, `primary_cause`,
-`primary_cause_code`, `place_of_death`, `manner_of_death` and `department`.
+`primary_cause_code`, `place_of_death`, `manner_of_death`, `department`, `was_pregnant` and
+`pregnancy_contributed`.
 
 ## Dependencies
 
 | Model | Why |
 |---|---|
 | `patients` | The population, date of death and date of birth (BL-001, BL-003, BL-008) |
-| `patient_death_data` | The death record (BL-002, BL-004, BL-005) |
+| `patient_death_data` | The death record (BL-002, BL-004, BL-005, BL-009) |
 | `encounters` | The encounter the patient died in (BL-006) |
 | `locations` | The encounter's facility, for the fallback (BL-004) |
 | `clinical__person` | Sex and birth date |
@@ -125,3 +130,4 @@ Registered in `documentations/metrics/mortality.yml` as `death`, `kind: metric`,
 |---|---|---|
 | 2026-10-01 | Maui team | Initial draft (MAUI-6906). Facility falls back to the encounter died in, agreed with Juliana since most FSM death records carry none; not where the record says the death was outside a facility, because recording a death closes every open encounter at that time, so a stale encounter can span a death at home |
 | 2026-11-11 | Maui team | BL-008: `age_days`, the age in whole days at death, added as a measure so a consumer can band early (0–6 days) and late (7–28 days) neonatal deaths (MAUI-7130). New AC-007. |
+| 2026-11-13 | Maui team | BL-009: `was_pregnant` and `pregnancy_contributed`, the death record's yes/no answers as booleans, added as disaggregations for Naoero's maternal mortality cards (MAUI-7122). New AC-008. |

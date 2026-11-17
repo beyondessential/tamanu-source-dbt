@@ -18,7 +18,10 @@ unit_tests:
       counted, and d4 is a historical record and is ignored. BL-008: age_days is the date of
       death minus the date of birth -- p3 is a newborn who died 7 days after birth (0 years,
       7 days, a late-neonatal death), and p5's birth date is not recorded, so both age_years
-      and age_days are NULL.
+      and age_days are NULL. BL-009: d1b answers yes to both pregnancy questions, so p1 reads
+      true and true; d2 answers unknown and d5 leaves both blank, so p2 and p5 read NULL; d7
+      answers 'NO', upper case, to was_pregnant and leaves the other blank; p3 has no record, so
+      both are NULL.
     given:
       - input: ref('patients')
         format: sql
@@ -53,17 +56,17 @@ unit_tests:
       - input: ref('patient_death_data')
         format: sql
         rows: |
-          select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner
+          select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner, 'no' as was_pregnant, 'no' as pregnancy_contributed
           union all
-          select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease'
+          select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease', 'yes', 'yes'
           union all
-          select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text
+          select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text, 'unknown', 'unknown'
           union all
-          select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease'
+          select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease', 'yes', 'yes'
           union all
-          select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease'
+          select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease', null::text, null::text
           union all
-          select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease'
+          select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease', 'NO', null::text
 
       - input: ref('encounters')
         format: sql
@@ -104,12 +107,12 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'death' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'facB' as facility_id, 'Death record' as facility_source, 'male' as sex, 35 as age_years, 'Pneumonia' as primary_cause, 'J18' as primary_cause_code, 'Health facility' as place_of_death, 'Disease' as manner_of_death, 'Medical' as department, 13061 as age_days
+        select 'death' as metric_id, null::text as variant_id, 'p1' as subject_id, '2026-03-05'::date as period_start, null::date as period_end, 'day' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'facB' as facility_id, 'Death record' as facility_source, 'male' as sex, 35 as age_years, 'Pneumonia' as primary_cause, 'J18' as primary_cause_code, 'Health facility' as place_of_death, 'Disease' as manner_of_death, 'Medical' as department, 13061 as age_days, true as was_pregnant, true as pregnancy_contributed
         union all
-        select 'death', null::text, 'p2', '2026-03-10'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Not recorded', 'Not recorded', 'Outside health facility', 'Not recorded', 'General OPD', 13066
+        select 'death', null::text, 'p2', '2026-03-10'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', 35, 'Not recorded', 'Not recorded', 'Outside health facility', 'Not recorded', 'General OPD', 13066, null::boolean, null::boolean
         union all
-        select 'death', null::text, 'p3', '2026-03-12'::date, null::date, 'day', 1::numeric, null::boolean, 'facC', 'Encounter', 'male', 0, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'General OPD', 7
+        select 'death', null::text, 'p3', '2026-03-12'::date, null::date, 'day', 1::numeric, null::boolean, 'facC', 'Encounter', 'male', 0, 'Not recorded', 'Not recorded', 'Not recorded', 'Not recorded', 'General OPD', 7, null::boolean, null::boolean
         union all
-        select 'death', null::text, 'p5', '2026-03-20'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', null::int, 'Myocardial infarction', 'I21', 'Not recorded', 'Disease', 'Not recorded', null::int
+        select 'death', null::text, 'p5', '2026-03-20'::date, null::date, 'day', 1::numeric, null::boolean, null::text, 'Not recorded', 'female', null::int, 'Myocardial infarction', 'I21', 'Not recorded', 'Disease', 'Not recorded', null::int, null::boolean, null::boolean
         union all
-        select 'death', null::text, 'p7', '2026-03-25'::date, null::date, 'day', 1::numeric, null::boolean, 'fac9', 'Encounter', 'male', 35, 'Pneumonia', 'J18', 'Health facility', 'Disease', 'Medical', 13081
+        select 'death', null::text, 'p7', '2026-03-25'::date, null::date, 'day', 1::numeric, null::boolean, 'fac9', 'Encounter', 'male', 35, 'Pneumonia', 'J18', 'Health facility', 'Disease', 'Medical', 13081, false, null::boolean

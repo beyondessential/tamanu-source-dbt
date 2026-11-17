@@ -128,6 +128,8 @@ outpatient_visits as (
         -- join to bases/location_groups (or similar) for area/clinic detail later, without
         -- this model resolving that join itself
         loc.id as location_id,
+        -- BL-018: the patient's home village, not where the visit happened
+        pr.location_id as patient_location_id,
         pr.gender_source_value as sex,
         -- age in whole years at the visit; the NULL rule lives in the macro
         {{ age_years('i.visit_detail_start_date', 'pr') }} as age_years,
@@ -234,6 +236,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     location_id,
+    -- BL-018: an id, so NULL where the patient's record carries no village
+    patient_location_id,
     sex,
     -- BL-004: age in whole years at the visit. Unbanded -- an age classification is a
     -- presentation choice a deployment may set differently, so the consumer's data table

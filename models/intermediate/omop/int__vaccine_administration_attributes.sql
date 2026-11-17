@@ -2,7 +2,8 @@
 -- any status, carrying every attribute both immunisation metrics disaggregate by: facility,
 -- antigen, schedule dose position, sex, EPI age-cohort input, and patient village. Also
 -- resolves the not-given reason, populated only for a NOT_GIVEN row, and carries the
--- patient, the scheduled vaccine, the location group and age at the event (MAUI-7034).
+-- patient, the scheduled vaccine, the location group and age at the event (MAUI-7034), and
+-- the encounter's department (MAUI-7122).
 --
 -- Shared base for metric__immunisation_dose (status = 'GIVEN') and
 -- metric__immunisation_refusal (status = 'NOT_GIVEN'). Each reads its own identity and date
@@ -49,6 +50,10 @@ encounters as (
 
 reference_data as (
     select * from {{ ref('reference_data') }}
+),
+
+departments as (
+    select * from {{ ref('departments') }}
 )
 
 select
@@ -100,7 +105,10 @@ select
     -- BL-012: age at the event date in
     -- whole days and whole completed years, unbanded -- banding is the consumer's.
     (av.datetime::date - pr.date_of_birth) as age_days,
-    extract(year from age(av.datetime::date, pr.date_of_birth))::int as age_years
+    extract(year from age(av.datetime::date, pr.date_of_birth))::int as age_years,
+    -- BL-015: the department of the event's encounter, as a name. NULL when the encounter
+    -- has none or it no longer resolves.
+    dept.name as department
 from vaccine_administrations av
 join encounters e
     on e.id = av.encounter_id
@@ -112,6 +120,9 @@ left join vaccine_schedules vs
     on vs.id = av.scheduled_vaccine_id
 left join reference_data rdr
     on rdr.id = av.not_given_reason_id
+-- BL-015: left join -- an encounter with no department keeps its event
+left join departments dept
+    on dept.id = e.department_id
 -- inner join: a row whose patient bases/patients excludes (soft-deleted or merged away) is
 -- excluded rather than carried with blank demographics -- same convention every other
 -- metric__ model uses.

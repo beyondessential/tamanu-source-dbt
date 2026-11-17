@@ -19,7 +19,9 @@ separation_rows as (
         period_start,
         period_end,
         patient_days,
-        is_same_day
+        is_same_day,
+        discharge_location_group_name,
+        discharge_location_group_id
     from inpatient_admission
     where metric_id = 'inpatient_separation'
 ),
@@ -76,6 +78,56 @@ ac_022 as (
     from inpatient_admission
     where metric_id = 'inpatient_admission'
         and (patient_days is not null or is_same_day is not null)
+),
+
+-- AC-027: discharge_location_group_name is populated on every separation row and NULL on
+-- every admission row (BL-027).
+ac_027 as (
+    select
+        subject_id,
+        'AC-027 (discharge_location_group_name missing on a separation row)' as failed_ac
+    from separation_rows
+    where discharge_location_group_name is null
+
+    union all
+
+    select
+        subject_id,
+        'AC-027 (discharge_location_group_name populated on an admission row)' as failed_ac
+    from inpatient_admission
+    where metric_id = 'inpatient_admission'
+        and discharge_location_group_name is not null
+),
+
+-- AC-028: admission_location_group_id is NULL exactly when admission_location_group_name reads
+-- 'Not recorded' (BL-028). The id is not coalesced; the name is.
+ac_028 as (
+    select
+        subject_id,
+        'AC-028 (admission_location_group_id and _name disagree on whether a group is recorded)' as failed_ac
+    from inpatient_admission
+    where (admission_location_group_id is null)
+        != (admission_location_group_name = 'Not recorded')
+),
+
+-- AC-029: discharge_location_group_id is NULL on every admission row, and on a separation row
+-- is NULL exactly when discharge_location_group_name reads 'Not recorded' (BL-029).
+ac_029 as (
+    select
+        subject_id,
+        'AC-029 (discharge_location_group_id populated on an admission row)' as failed_ac
+    from inpatient_admission
+    where metric_id = 'inpatient_admission'
+        and discharge_location_group_id is not null
+
+    union all
+
+    select
+        subject_id,
+        'AC-029 (discharge_location_group_id and _name disagree on a separation row)' as failed_ac
+    from separation_rows
+    where (discharge_location_group_id is null)
+        != (discharge_location_group_name = 'Not recorded')
 )
 
 select
@@ -92,3 +144,18 @@ select
     subject_id,
     failed_ac
 from ac_022
+union all
+select
+    subject_id,
+    failed_ac
+from ac_027
+union all
+select
+    subject_id,
+    failed_ac
+from ac_028
+union all
+select
+    subject_id,
+    failed_ac
+from ac_029

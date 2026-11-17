@@ -1,0 +1,149 @@
+version: 2
+
+# See specs/dbt-model/metric__patient_condition.md for the BL clauses this file implements.
+
+models:
+  - name: metric__patient_condition
+    description: >-
+      D5 metric view for the patient condition indicator registered in
+      documentations/metrics/*.yml: patient_condition. One row per patient ongoing condition (the
+      patient's ongoing conditions list), dated from when it was recorded to when it was resolved.
+      Count patients with a distinct count over person_id; prevalence at a date is the rows whose
+      period covers it.
+    config:
+      tags:
+        - clinical
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-010: person_id beside a condition, age and village can identify a patient in a small
+        # deployment. No direct identifier -- no name, MRN or date of birth -- so pii stays false.
+        pii: false
+        classification: restricted
+    data_tests:
+      # One row per condition record. A duplicate would double-count a condition in any consumer
+      # that sums value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__patient_condition_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          name: ac_007_metric__patient_condition_period_end_at_or_after_start
+          arguments:
+            column_A: period_end
+            column_B: period_start
+            or_equal: true
+            row_condition: "period_end is not null"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'patient_condition'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__patient_condition_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__patient_condition_metric_id_values
+              arguments:
+                values:
+                  - patient_condition
+          - relationships:
+              name: ac_003_metric__patient_condition_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: The patient_conditions id -- one row per condition record.
+        data_tests:
+          - not_null:
+              name: ac_008_metric__patient_condition_subject_id_not_null
+      - name: period_start
+        data_type: date
+        description: The date the condition was recorded.
+        data_tests:
+          - not_null:
+              name: ac_004_metric__patient_condition_period_start_not_null
+      - name: period_end
+        data_type: date
+        description: The date a resolved condition was resolved. NULL while the condition is ongoing.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'day'.
+        data_tests:
+          - not_null:
+              name: ac_005_metric__patient_condition_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__patient_condition_period_granularity_is_day
+              arguments:
+                values: ['day']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one condition record per row.
+        data_tests:
+          - not_null:
+              name: ac_006_metric__patient_condition_value_numeric_not_null
+          - accepted_values:
+              name: ac_006_metric__patient_condition_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: >-
+          Always NULL -- Tamanu records an ongoing condition against the patient, not an encounter
+          or facility.
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age_years
+        data_type: integer
+        description: >-
+          The patient's age at the recorded date in whole completed years. NULL with no date of
+          birth. A measure -- banding is the consumer's.
+      - name: patient_location_id
+        data_type: character varying(255)
+        description: The patient's home village (reference data id). NULL when not recorded.
+      - name: person_id
+        data_type: character varying(255)
+        description: >-
+          The patient's Tamanu id. Only ever aggregated by a consumer (a distinct count), never
+          exposed.
+        data_tests:
+          - not_null:
+              name: ac_010_metric__patient_condition_person_id_not_null
+      - name: condition_id
+        data_type: character varying(255)
+        description: "{{ doc('patient_conditions__condition_id') }}"
+      - name: condition_code
+        data_type: character varying(255)
+        description: >-
+          The condition's ICD-10 code, where its reference data is a diagnosis; NULL otherwise.
+      - name: condition_name
+        data_type: character varying(255)
+        description: The condition's name, 'Not recorded' where its reference data does not resolve.
+        data_tests:
+          - not_null:
+              name: ac_011_metric__patient_condition_condition_name_not_null
+      - name: is_resolved
+        data_type: boolean
+        description: "{{ doc('patient_conditions__resolved') }} False when unset."
+        data_tests:
+          - not_null:
+              name: ac_012_metric__patient_condition_is_resolved_not_null
+      - name: resolved_date
+        data_type: date
+        description: The resolution date of a resolved condition. NULL otherwise.
