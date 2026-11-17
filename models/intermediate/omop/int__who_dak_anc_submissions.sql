@@ -63,14 +63,6 @@ with responses as (
     select * from {{ ref('survey_responses') }}
 ),
 
-answers as (
-    select * from {{ ref('survey_response_answers') }}
-),
-
-data_elements as (
-    select * from {{ ref('program_data_elements') }}
-),
-
 encounters as (
     select * from {{ ref('encounters') }}
 ),
@@ -107,7 +99,8 @@ contact_surveys as (
     {%- endfor %}
 ),
 
--- every native or mapped ANC submission, with the patient and facility of its encounter
+-- every native or mapped ANC submission, with the patient and facility of its encounter. The
+-- surveys are named as literals so the survey_id index narrows the responses
 anc_submissions as (
     select
         r.id as response_id,
@@ -122,22 +115,33 @@ anc_submissions as (
     join encounters e on e.id = r.encounter_id
     left join locations l on l.id = e.location_id
     where r.survey_id like 'program-whodakanc-%'
-        or r.survey_id in (select lm.survey_id from local_map lm)
-        or r.survey_id in (select cs.survey_id from contact_surveys cs)
+    {%- for survey_id in local_surveys %}
+        or r.survey_id = '{{ survey_id }}'
+    {%- endfor %}
+),
+
+-- every answer on an ANC submission, read once and shared by both routes below
+anc_answers as (
+    select
+        a.response_id,
+        s.survey_id,
+        pde.code as question_code,
+        nullif(trim(a.body), '') as body
+    from {{ ref('survey_response_answers') }} a
+    join anc_submissions s on s.response_id = a.response_id
+    join {{ ref('program_data_elements') }} pde on pde.id = a.data_element_id
 ),
 
 -- one row per (submission, DAK element), whichever route it came by
 element_answers as (
     -- BL-002: native forms, whose question code is the DAK element's
     select
-        a.response_id,
-        pde.code as element_code,
-        nullif(trim(a.body), '') as body
-    from answers a
-    join anc_submissions s on s.response_id = a.response_id
-    join data_elements pde on pde.id = a.data_element_id
-    where s.survey_id like 'program-whodakanc-%'
-        and pde.code in (
+        aa.response_id,
+        aa.question_code as element_code,
+        aa.body
+    from anc_answers aa
+    where aa.survey_id like 'program-whodakanc-%'
+        and aa.question_code in (
             {%- for code in element_codes.values() %}
                 '{{ code }}'{{ "," if not loop.last }}
             {%- endfor %}
@@ -147,15 +151,13 @@ element_answers as (
 
     -- BL-003: a mapped answer is read exactly as the native answer to its DAK element
     select
-        a.response_id,
+        aa.response_id,
         m.element_code,
-        nullif(trim(a.body), '') as body
-    from answers a
-    join anc_submissions s on s.response_id = a.response_id
-    join data_elements pde on pde.id = a.data_element_id
+        aa.body
+    from anc_answers aa
     join local_map m
-        on m.survey_id = s.survey_id
-        and m.local_code = pde.code
+        on m.survey_id = aa.survey_id
+        and m.local_code = aa.question_code
 ),
 
 -- one row per submission, one column per element. A form asks a question at most once
