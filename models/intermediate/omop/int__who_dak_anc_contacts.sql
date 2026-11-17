@@ -40,10 +40,6 @@ with submissions as (
     select * from {{ ref('int__who_dak_anc_submissions') }}
 ),
 
-encounters as (
-    select * from {{ ref('encounters') }}
-),
-
 locations as (
     select * from {{ ref('locations') }}
 ),
@@ -67,12 +63,13 @@ contact_locations as (
 ),
 
 -- BL-014: an encounter is at a contact location when its own location, or any location in its
--- history, is one
+-- history, is one. encounters is read through ref() at each use, not a shared CTE, so Postgres
+-- does not materialise every encounter
 contact_location_encounters as (
     select
         e.id as encounter_id,
         cl.facility_id
-    from encounters e
+    from {{ ref('encounters') }} e
     join contact_locations cl on cl.location_id = e.location_id
 
     union
@@ -93,7 +90,7 @@ encounter_contacts as (
         e.start_datetime as source_datetime,
         e.id as source_id
     from contact_location_encounters cle
-    join encounters e on e.id = cle.encounter_id
+    join {{ ref('encounters') }} e on e.id = cle.encounter_id
     where e.encounter_type != 'surveyResponse'
 ),
 
