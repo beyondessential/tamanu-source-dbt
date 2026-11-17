@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int__patient_address
+    description: >
+      One row per patient: the location the patient is grouped under and the places it
+      covers. By default a patient's location is their village, with the village's subdivision,
+      division and country from the reference-data hierarchy. A deployment that groups
+      patients by other places replaces this model and keeps these columns.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    columns:
+      - name: patient_id
+        description: The patient.
+      - name: location_id
+        description: The key of the patient's location in ref__location. Blank when the patient has none.
+      - name: location_source_value
+        description: The location's code.
+      - name: village_id
+        description: The location's village, where the location is a single village.
+      - name: subdivision_id
+        description: The location's subdivision.
+      - name: division_id
+        description: The location's division.
+      - name: country_id
+        description: The location's country.
