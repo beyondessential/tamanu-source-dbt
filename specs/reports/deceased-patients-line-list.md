@@ -110,6 +110,7 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
   any of `other_condition_1_id` through `other_condition_4_id`; when null, no
   filter is applied.
 - **BL-008:** Output is sorted by `date_of_death` ascending.
+- **BL-014:** The report runs on the all facilities data source only.
 
 ## Acceptance criteria
 
@@ -145,4 +146,4 @@ _None._
 | Date | Author | Change |
 |---|---|---|
 | 2026-06-17 | Maui team | Initial retrospective spec (MAUI-6671): default the report to all time, treat the 1970-01-01 floor as unbounded, and rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped |
-| 2026-11-17 | Maui team | BL-012, BL-013: facility falls back to the encounter died in, as in `metric__death`, so filtering by facility matches the Tupaia death count (MAUI-7187). New AC-006. |
+| 2026-11-17 | Maui team | BL-012, BL-013: facility falls back to the encounter died in, as in `metric__death`, so filtering by facility matches the Tupaia death count (MAUI-7187). New AC-006. BL-014: the report runs on all facilities only. |
