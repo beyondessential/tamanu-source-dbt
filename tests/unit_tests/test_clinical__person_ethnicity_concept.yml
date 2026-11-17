@@ -20,9 +20,11 @@ unit_tests:
       - input: ref('patient_additional_data')
         format: sql
         rows: |
-          select 'pat_1' as patient_id, 'eth_mapped' as ethnicity_id
+          select
+            'pat_1' as patient_id, 'eth_mapped' as ethnicity_id, null::text as division_id,
+            null::text as subdivision_id, null::text as medical_area_id
           union all
-          select 'pat_2', 'eth_unmapped'
+          select 'pat_2', 'eth_unmapped', null, null, null
       - input: ref('patient_birth_data')
         format: sql
         rows: |
