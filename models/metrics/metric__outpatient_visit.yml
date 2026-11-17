@@ -123,9 +123,9 @@ models:
       - name: patient_location_id
         data_type: character varying(255)
         description: >-
-          The patient's own home village (clinical__person.location_id, an id into
-          ref__location) -- where the patient lives, not where the visit happened. NULL when
-          the patient's record carries no village.
+          The patient's own home village (a Tamanu reference-data id) -- where the patient
+          lives, not where the visit happened. NULL when the patient's record carries no
+          village.
         # BL-018: deliberately no not_null test -- a patient with no village is a real state.
       - name: sex
         data_type: character varying(255)

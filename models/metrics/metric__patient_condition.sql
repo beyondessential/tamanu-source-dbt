@@ -11,8 +11,13 @@ with patient_conditions as (
     select * from {{ ref('patient_conditions') }}
 ),
 
+-- the patient's village is read from their patient record
 person as (
-    select * from {{ ref('clinical__person') }}
+    select
+        per.*,
+        pat.village_id
+    from {{ ref('clinical__person') }} per
+    left join {{ ref('patients') }} pat on pat.id = per.person_id
 ),
 
 reference_data as (
@@ -31,7 +36,7 @@ conditions as (
         coalesce(pc.is_resolved, false) as is_resolved,
         case when pc.is_resolved then pc.resolved_datetime::date end as resolved_date,
         pr.gender_source_value as sex,
-        pr.location_id as patient_location_id,
+        pr.village_id as patient_location_id,
         case
             when pr.year_of_birth is not null then
                 make_date(pr.year_of_birth, pr.month_of_birth, pr.day_of_birth)
