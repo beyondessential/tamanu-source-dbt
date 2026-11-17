@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (branch line `2.60`) |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
 | **Created** | 2026-08-26 |
-| **Last updated** | 2026-11-18 |
+| **Last updated** | 2026-11-11 |
 
 Canonical definition for `birth`, `low_birth_weight`, `preterm_birth` and `low_apgar_5min`: one
 row per live birth registered in Tamanu, at the newborn's `patient_id`.
@@ -209,8 +209,8 @@ carries no `data_table_*` meta.
   disaggregations. Banding them (a low-birth-weight severity split, a gestational-age band, an
   Apgar band) is a deployment concern set in the data table, the same division of labour as
   `age_years` in `ed_visit` BL-019.
-- **BL-015 (newborn's village):** `patient_location_id` is the `village_id` of the newborn's
-  own `clinical__person` address in `ref__location`, passed through as a Tamanu id and left NULL when the record
+- **BL-015 (newborn's village):** `patient_location_id` is the newborn's own
+  `clinical__person.location_id`, passed through as a Tamanu id and left NULL when the record
   carries no village — the same column, rule and village list as
   `metric__immunisation_dose`'s `patient_location_id`, so births and birth doses can be read by
   village side by side.
@@ -340,6 +340,5 @@ Every disaggregation must be added to the allowlist in
 | 2026-08-26 | Maui team | Initial draft |
 | 2026-08-30 | Maui team | BL-009: the four disaggregations coalesce to `'Not recorded'` (new AC-015) — a raw NULL was droppable by Tupaia's array filter. BL-010: `facility_id` carried as recorded rather than left-joined to `bases/facilities`, which turned a soft-deleted facility into an apparent home birth. BL-012: corrected the `pii: false` justification — the newborn's date of birth *is* emitted as `period_start`. AC-013 restated as a source-anchored, falsifiable check. Registry `subject_grain` corrected to `patient` |
 | 2026-10-20 | Maui team | BL-015: `patient_location_id`, the newborn's village, added as a disaggregation (MAUI-7034), matching `metric__immunisation_dose`'s. AC-014 extended to cover it |
-| 2026-11-18 | Maui team | BL-015: the village is read from the newborn's `ref__location` address, now that `clinical__person.location_id` is an address key rather than the village id (MAUI-7190) |
 | 2026-11-11 | Maui team | BL-016/BL-017: `mother_age_years` (measure) and `is_mother_diabetic` (disaggregation), derived from the newborn's linked mother without emitting any identifier of hers (MAUI-7132). They replace `data-staging`'s `fct_births` mother columns, which exposed the mother's patient id and matched diabetes on a hard-coded list of condition ids; matching the ICD-10 code keeps the rule deployment-neutral. New AC-016, AC-017; OQ-001 (maternal age) closed by BL-016 |
 | 2026-10-21 | Maui team | Antenatal care cross-referenced to `metric__who_dak_anc_indicators`, which folds in bookings (MAUI-6838) |
