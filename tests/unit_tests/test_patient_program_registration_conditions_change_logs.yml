@@ -3,6 +3,8 @@ unit_tests:
     model: patient_program_registration_conditions_change_logs
     description: Test basic functionality of patient_program_registration_conditions_change_logs model
     overrides:
+      macros:
+        is_incremental: false
       vars:
         timezone: UTC
     given:
