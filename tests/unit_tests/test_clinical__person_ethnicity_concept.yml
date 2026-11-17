@@ -21,13 +21,10 @@ unit_tests:
         format: sql
         rows: |
           select
-            'pat_1' as patient_id, 'eth_mapped' as ethnicity_id, null::text as medical_area_id
+            'pat_1' as patient_id, 'eth_mapped' as ethnicity_id, null::text as division_id,
+            null::text as subdivision_id, null::text as medical_area_id
           union all
-          select 'pat_2', 'eth_unmapped', null
-      - input: ref('int__patient_address')
-        format: sql
-        rows: |
-          select null::text as patient_id, null::text as location_id where false
+          select 'pat_2', 'eth_unmapped', null, null, null
       - input: ref('patient_birth_data')
         format: sql
         rows: |

@@ -15,13 +15,8 @@ visit_occurrence as (
     select * from {{ ref('clinical__visit_occurrence') }}
 ),
 
--- the patient's village is read from their address in ref__location
 person as (
-    select
-        per.*,
-        addr.village_id
-    from {{ ref('clinical__person') }} per
-    left join {{ ref('ref__location') }} addr on addr.location_id = per.location_id
+    select * from {{ ref('clinical__person') }}
 ),
 
 locations as (
@@ -134,7 +129,7 @@ outpatient_visits as (
         -- this model resolving that join itself
         loc.id as location_id,
         -- BL-018: the patient's home village, not where the visit happened
-        pr.village_id as patient_location_id,
+        pr.location_id as patient_location_id,
         pr.gender_source_value as sex,
         -- age in whole years at the visit; the NULL rule lives in the macro
         {{ age_years('i.visit_detail_start_date', 'pr') }} as age_years,
