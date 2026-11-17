@@ -113,7 +113,7 @@ as birth_delivery_type -- an unrecorded place reads 'Not recorded'.
 {% enddocs %}
 
 {% docs metric__birth__patient_location_id %}
-The newborn's own home village (clinical__person.location_id, an id into ref__location) -- where
+The newborn's own home village (a Tamanu reference-data id) -- where
 the baby lives, not where it was born. Distinct from facility_id, the facility of the birth.
 
 NULL when the newborn's record carries no village. Not coalesced to a placeholder: this is an id
