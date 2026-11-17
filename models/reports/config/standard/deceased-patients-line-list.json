@@ -8,7 +8,6 @@
     "defaultDateRange": "allTime",
     "dateRangeLabel": "Enter date of death range (or leave blank for all)",
     "dataSources": [
-      "thisFacility",
       "allFacilities"
     ],
     "parameters": [
