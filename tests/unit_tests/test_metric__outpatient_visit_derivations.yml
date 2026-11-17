@@ -89,7 +89,12 @@ unit_tests:
       - input: ref('clinical__person')
         format: sql
         rows: |
-          select 'per_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 15 as day_of_birth, 'vil_1' as location_id
+          select 'per_1' as person_id, 'female' as gender_source_value, 1984 as year_of_birth, 5 as month_of_birth, 15 as day_of_birth, 'vil_1_sd_1_dv_1' as location_id
+
+      - input: ref('ref__location')
+        format: sql
+        rows: |
+          select 'vil_1_sd_1_dv_1' as location_id, 'vil_1' as village_id
 
       # BL-015: loc_opd_nogroup belongs to no location group.
       - input: ref('locations')
