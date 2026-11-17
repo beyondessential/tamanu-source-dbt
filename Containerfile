@@ -17,6 +17,9 @@ COPY --chown=build:build . .
 
 ENV PATH="/dbt/.venv/bin:$PATH"
 
+# uv fetches the interpreter a deployment pins; under /root the build user cannot run it.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
+
 # The profile renders before deps runs and its env_var calls have no defaults; deps never connects.
 RUN pip install --no-cache-dir uv \
 	&& uv sync --frozen --no-dev \
