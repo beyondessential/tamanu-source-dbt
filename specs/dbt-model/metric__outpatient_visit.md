@@ -326,11 +326,11 @@ This model therefore carries no `data_table_*` meta.
   timezones gets the central zone's hour. A disaggregation, as `ed_start__hour` is, so a
   "visits by hour of day" card groups by it. Never NULL (AC-019): an intake segment always has
   a start.
-- **BL-018 (patient home village):** `patient_location_id` is `clinical__person.location_id`,
-  the patient's home village as an id into `ref__location` (the derivation
-  `metric__immunisation_dose` BL-008 uses), distinct from `location_id` and `facility_id`, which
+- **BL-018 (patient home village):** `patient_location_id` is the `village_id` of the patient's
+  `clinical__person` address in `ref__location` (the derivation `metric__immunisation_dose`
+  BL-008 uses), distinct from `location_id` and `facility_id`, which
   are where the visit happened. It is passed through untranslated and NULL where the patient's
-  record carries no village, since a consumer joins it to `ref__location`.
+  record carries no village.
 
 ## Acceptance criteria
 
@@ -434,6 +434,7 @@ which keeps the registry and the model from drifting.
 
 | Date | Change |
 |---|---|
+| 2026-11-18 | BL-018: the village is read from the patient's `ref__location` address, now that `clinical__person.location_id` is an address key rather than the village id (MAUI-7190). |
 | 2026-11-13 | BL-018: `patient_location_id` (the patient's home village) added as a disaggregation, the same derivation as `metric__immunisation_dose`, for Naoero's dashboards (MAUI-7122). New AC-020. |
 | 2026-11-11 | BL-015/BL-016: `location_group_name` (the intake location's clinic/area) and `referral_source` (the encounter's referral source) added as disaggregations, for Naoero's Outpatient dashboard (MAUI-7131). BL-006 and § Data tables no longer leave the location group to the consumer. New AC-017, AC-018. |
 | 2026-11-11 | BL-017: `visit_start__hour` (the local hour the visit started, 0–23) added as a disaggregation, mirroring `metric__emergency_visit`'s `ed_start__hour`, for Naoero's visits-by-hour card (MAUI-7131). New AC-019. |
