@@ -1,0 +1,87 @@
+unit_tests:
+  - name: ac_003_int__patient_address_village_hierarchy
+    model: int__patient_address
+    description: >-
+      AC-003 to AC-006 of specs/dbt-model/ref__location.md. p1's village resolves every level
+      from a full hierarchy. p2's village reaches its subdivision through a settlement. p3's
+      village sits directly under a division, so it has no subdivision or country. p4 has no
+      village and gets no location. A link to a place outside the address hierarchy is ignored.
+    given:
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v1' as id, 'VIL1' as code, 'village' as type
+          union all select 'v2', 'VIL2', 'village'
+          union all select 'v3', 'VIL3', 'village'
+          union all select 'st1', 'SET1', 'settlement'
+          union all select 'sd1', 'SUB1', 'subdivision'
+          union all select 'sd2', 'SUB2', 'subdivision'
+          union all select 'dv1', 'DIV1', 'division'
+          union all select 'dv2', 'DIV2', 'division'
+          union all select 'c1', 'CTY1', 'country'
+          union all select 'eth1', 'ETH1', 'ethnicity'
+      - input: ref('reference_data_relations')
+        format: sql
+        rows: |
+          select 'v1' as reference_data_id, 'sd1' as reference_data_parent_id
+          union all select 'sd1', 'dv1'
+          union all select 'dv1', 'c1'
+          union all select 'v2', 'st1'
+          union all select 'st1', 'sd2'
+          union all select 'sd2', 'dv1'
+          union all select 'v3', 'dv2'
+          union all select 'v1', 'eth1'
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'p1' as id, 'v1' as village_id
+          union all select 'p2', 'v2'
+          union all select 'p3', 'v3'
+          union all select 'p4', null
+    expect:
+      format: sql
+      rows: |
+        select 'p1' as patient_id, 'v1' as location_id, 'VIL1' as location_source_value, 'v1' as village_id, 'sd1' as subdivision_id, 'dv1' as division_id, 'c1' as country_id
+        union all select 'p2', 'v2', 'VIL2', 'v2', 'sd2', 'dv1', 'c1'
+        union all select 'p3', 'v3', 'VIL3', 'v3', null, 'dv2', null
+        union all select 'p4', null, null, null, null, null, null
+
+  - name: ac_007_ref__location_one_row_per_location
+    model: ref__location
+    description: >-
+      AC-007 of specs/dbt-model/ref__location.md. Two patients at the same location collapse
+      to one row, a patient with no location emits none, and each row carries the names and
+      ids of the places its location covers.
+    given:
+      - input: ref('int__patient_address')
+        format: sql
+        rows: |
+          select 'p1' as patient_id, 'v1' as location_id, 'VIL1' as location_source_value, 'v1' as village_id, 'sd1' as subdivision_id, 'dv1' as division_id, 'c1' as country_id
+          union all select 'p2', 'v1', 'VIL1', 'v1', 'sd1', 'dv1', 'c1'
+          union all select 'p3', 'v3', 'VIL3', 'v3', null, 'dv1', null
+          union all select 'p4', null, null, null, null, null, null
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select 'v1' as id, 'Vila' as name
+          union all select 'v3', 'Vila Three'
+          union all select 'sd1', 'Subdistrict'
+          union all select 'dv1', 'Division One'
+          union all select 'c1', 'Countryland'
+    expect:
+      format: sql
+      rows: |
+        select
+          'v1' as location_id,
+          'VIL1' as location_source_value,
+          'Vila' as city,
+          'Subdistrict' as county,
+          'Division One' as state,
+          'Countryland' as country_source_value,
+          'v1' as village_id,
+          'sd1' as subdivision_id,
+          'dv1' as division_id,
+          'c1' as country_id
+        union all select
+          'v3', 'VIL3', 'Vila Three', null, 'Division One', null,
+          'v3', null, 'dv1', null
