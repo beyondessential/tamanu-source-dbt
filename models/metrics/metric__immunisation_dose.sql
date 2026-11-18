@@ -89,7 +89,7 @@ select
     -- BL-008: the patient's home village, not the event's facility. NULL when the patient's
     -- own record carries no village -- deliberately not coalesced to a placeholder text
     -- value, since this is an id column, not a label, and a consumer joining it to
-    -- ref__location needs a real id or a real NULL, not a sentinel string.
+    -- reference data needs a real id or a real NULL, not a sentinel string.
     patient_location_id,
     -- BL-009: the patient the dose was given to, so a consumer can count people (a distinct
     -- count over this column) rather than doses. Never NULL -- the shared attributes model
