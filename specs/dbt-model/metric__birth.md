@@ -102,7 +102,7 @@ D5 wide format, plus eight disaggregation columns and five measure attributes.
 | `birth_weight` | numeric | Kilograms, 1 dp as recorded. A measure, not a dimension (BL-014) |
 | `gestational_age_estimate` | numeric | Completed weeks as recorded. A measure, not a dimension (BL-014) |
 | `apgar_score_five_minutes` | integer | As recorded. A measure, not a dimension (BL-014) |
-| `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu id into `ref__location` (BL-015). Nullable — not coalesced |
+| `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu reference-data id (BL-015). Nullable — not coalesced |
 | `mother_age_years` | integer | The linked mother's age in whole years on the newborn's date of birth (BL-016). A measure, not a dimension. NULL where no mother is linked or a date of birth is missing |
 | `is_mother_diabetic` | boolean | The linked mother has a recorded condition coded ICD-10 E10–E14 or O24 (BL-017). Never NULL — `false` where no mother is linked (AC-016) |
 
