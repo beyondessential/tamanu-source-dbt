@@ -1,0 +1,59 @@
+unit_tests:
+  - name: ac_013_clinical__person_area_source_values
+    model: clinical__person
+    description: >-
+      AC-013 (BL-007, BL-009): the medical area id recorded on a patient's additional data is
+      carried as-is, and location_id is the patient's location from int__patient_address. pat_1
+      has both, pat_2 has a location and no medical area, and pat_3 has no additional-data record
+      and no location, so both are NULL and the patient is still returned (BL-005).
+    given:
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select
+            'pat_1' as id, 'P1' as display_id, 'female' as sex,
+            '1990-01-01'::date as date_of_birth, null::text as village_id
+          union all
+          select 'pat_2', 'P2', 'male', '1985-06-15'::date, null
+          union all
+          select 'pat_3', 'P3', 'male', '2000-03-03'::date, null
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select
+            'pat_1' as patient_id, null::text as ethnicity_id, 'ma_suva' as medical_area_id
+          union all
+          select 'pat_2', null, null
+      - input: ref('int__patient_address')
+        format: sql
+        rows: |
+          select 'pat_1' as patient_id, 'loc_1' as location_id
+          union all
+          select 'pat_2', 'loc_2'
+          union all
+          select 'pat_3', null
+      - input: ref('patient_birth_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::time as birth_time where false
+      - input: ref('map__omop_sex')
+        format: sql
+        rows: |
+          select 'female' as local_code, 8532 as concept_id
+          union all
+          select 'male', 8507
+      - input: ref('map__omop_ethnicity')
+        format: sql
+        rows: |
+          select null::text as local_code, null::int as concept_id where false
+    expect:
+      rows:
+        - person_id: pat_1
+          medical_area_source_value: ma_suva
+          location_id: loc_1
+        - person_id: pat_2
+          medical_area_source_value: null
+          location_id: loc_2
+        - person_id: pat_3
+          medical_area_source_value: null
+          location_id: null
