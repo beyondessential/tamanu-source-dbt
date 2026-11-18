@@ -16,7 +16,7 @@ where patients live replaces `int__patient_address` to group patients by other p
 | **Type** | dbt model (canonical definition) |
 | **Layer** | `ref` |
 | **Materialisation** | `view` (always — OMOP health-system wrapper) |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Linear** | [MAUI-7190](https://linear.app/bes/issue/MAUI-7190) |
