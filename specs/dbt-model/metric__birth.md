@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (`main`) |
 | **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838) |
 | **Created** | 2026-08-26 |
-| **Last updated** | 2026-11-11 |
+| **Last updated** | 2026-11-18 |
 
 Canonical definition for `birth`, `low_birth_weight`, `preterm_birth` and `low_apgar_5min`: one
 row per live birth registered in Tamanu, at the newborn's `patient_id`.
@@ -102,7 +102,7 @@ D5 wide format, plus eight disaggregation columns and five measure attributes.
 | `birth_weight` | numeric | Kilograms, 1 dp as recorded. A measure, not a dimension (BL-014) |
 | `gestational_age_estimate` | numeric | Completed weeks as recorded. A measure, not a dimension (BL-014) |
 | `apgar_score_five_minutes` | integer | As recorded. A measure, not a dimension (BL-014) |
-| `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu id into `ref__location` (BL-015). Nullable — not coalesced |
+| `patient_location_id` | varchar(255) | The newborn's own home village, a Tamanu reference-data id (BL-015). Nullable — not coalesced |
 | `mother_age_years` | integer | The linked mother's age in whole years on the newborn's date of birth (BL-016). A measure, not a dimension. NULL where no mother is linked or a date of birth is missing |
 | `is_mother_diabetic` | boolean | The linked mother has a recorded condition coded ICD-10 E10–E14 or O24 (BL-017). Never NULL — `false` where no mother is linked (AC-016) |
 
@@ -209,8 +209,8 @@ carries no `data_table_*` meta.
   disaggregations. Banding them (a low-birth-weight severity split, a gestational-age band, an
   Apgar band) is a deployment concern set in the data table, the same division of labour as
   `age_years` in `ed_visit` BL-019.
-- **BL-015 (newborn's village):** `patient_location_id` is the newborn's own
-  `clinical__person.location_id`, passed through as a Tamanu id and left NULL when the record
+- **BL-015 (newborn's village):** `patient_location_id` is the `village_id` on the newborn's own
+  patient record, passed through as a Tamanu id and left NULL when the record
   carries no village — the same column, rule and village list as
   `metric__immunisation_dose`'s `patient_location_id`, so births and birth doses can be read by
   village side by side.
@@ -342,3 +342,4 @@ Every disaggregation must be added to the allowlist in
 | 2026-10-20 | Maui team | BL-015: `patient_location_id`, the newborn's village, added as a disaggregation (MAUI-7034), matching `metric__immunisation_dose`'s. AC-014 extended to cover it |
 | 2026-10-21 | Maui team | Antenatal care cross-referenced to `metric__who_dak_anc_indicators`, which folds in bookings (MAUI-6838) |
 | 2026-11-11 | Maui team | BL-016/BL-017: `mother_age_years` (measure) and `is_mother_diabetic` (disaggregation), derived from the newborn's linked mother without emitting any identifier of hers (MAUI-7132). They replace `data-staging`'s `fct_births` mother columns, which exposed the mother's patient id and matched diabetes on a hard-coded list of condition ids; matching the ICD-10 code keeps the rule deployment-neutral. New AC-016, AC-017; OQ-001 (maternal age) closed by BL-016 |
+| 2026-11-18 | Maui team | BL-015: the village is read from the newborn's patient record rather than `clinical__person.location_id`, which a deployment may key by other places (MAUI-7190) |
