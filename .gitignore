@@ -30,14 +30,3 @@ macros/default_translations.sql
 models/surveys/
 target/
 .temp/
-
-# Downloaded WHO DAK annexes. Third-party publications fetched rather than committed: each DAK
-# publishes Web Annexes A-D as ~1 MB spreadsheets at stable URLs, and every domain has its own
-# set. `dak_generator.py` names the URL and checksum per domain and prints the fetch command
-# when a file is absent.
-#
-# Scoped to the annexes directory, NOT to `forms/who-dak/` — that path also holds the
-# standard's code, and on a case-insensitive filesystem `forms/WHO-DAK/` and `forms/who-dak/`
-# are the same directory, so a rule on the latter silently swallows the generator on Windows
-# while tracking it on Linux.
-forms/who-dak/*/annexes/
